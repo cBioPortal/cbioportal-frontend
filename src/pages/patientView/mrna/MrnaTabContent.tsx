@@ -1362,61 +1362,6 @@ export default class MrnaTabContent extends React.Component<
         return rows;
     }
 
-    @observable hideGenesWithoutData: boolean = true;
-
-    @action.bound
-    onHideGenesWithoutDataChange(e: React.ChangeEvent<HTMLInputElement>) {
-        this.hideGenesWithoutData = e.target.checked;
-    }
-
-    // Rows fed to the table. Sorting, free-text search (via each column's
-    // `filter`), and pagination are all handled internally by LazyMobXTable
-    // from here — this only applies the "Hide genes without data" checkbox,
-    // which isn't a per-column text-search concern LazyMobXTable's own filter
-    // string can express.
-    @computed get tableData(): ExpressionTableRow[] {
-        // Gate on isComplete (not just "not pending") — a failed fetch's
-        // default [] result would otherwise make every row look data-less,
-        // and this checkbox would hide all of them as if that were a
-        // legitimate "no data anywhere" result instead of an error.
-        const hideNoData =
-            this.hideGenesWithoutData &&
-            this.plotsStore.patientSamplesExpression.isComplete;
-        if (!hideNoData) {
-            return this.expressionTableRows;
-        }
-        return this.expressionTableRows.filter(
-            r => Object.keys(r.values).length > 0
-        );
-    }
-
-    private renderHideNoDataCheckbox(): JSX.Element {
-        const isPending = this.plotsStore.patientSamplesExpression.isPending;
-        return (
-            <label
-                style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    fontSize: 12,
-                    fontWeight: 400,
-                    color: isPending ? '#999' : '#333',
-                    marginRight: 8,
-                    cursor: isPending ? 'not-allowed' : 'pointer',
-                }}
-            >
-                <input
-                    type="checkbox"
-                    checked={this.hideGenesWithoutData}
-                    disabled={isPending}
-                    onChange={this.onHideGenesWithoutDataChange}
-                    style={{ margin: 0 }}
-                />
-                Hide genes without data
-            </label>
-        );
-    }
-
     // Patient samples that have at least one expression value — the only ones
     // worth a column (the rest are listed in a footnote). Derived from the full
     // row set so the columns stay stable as the table is filtered.
@@ -1525,10 +1470,10 @@ export default class MrnaTabContent extends React.Component<
                 // there's no separate "add" state to show here, since a
                 // selected gene is (at most transiently, while its chart data
                 // is still loading) ever anything but on the chart. "No data"
-                // is only ever a display/tooltip distinction, never a reason
-                // to disable the click — otherwise a selected gene that
-                // happens to lack expression data could never be removed
-                // from the table.
+                // is only ever a tooltip distinction (see tooltipText), never
+                // a reason to disable the click or change the icon —
+                // otherwise a selected gene that happens to lack expression
+                // data could never be removed from the table.
                 const tooltipText = noData
                     ? 'No expression data for this gene — click to remove'
                     : 'Click to remove';
@@ -1548,7 +1493,7 @@ export default class MrnaTabContent extends React.Component<
                         >
                             <i
                                 aria-hidden={true}
-                                className={noData ? 'fa fa-ban' : 'fa fa-xmark'}
+                                className="fa fa-xmark"
                                 style={{ fontSize: ADD_ICON_FONT_SIZE }}
                             />
                         </button>
@@ -2403,19 +2348,10 @@ export default class MrnaTabContent extends React.Component<
                   } no expression data.`;
         return (
             <div className={styles.expressionTable} style={{ flexShrink: 0 }}>
-                <div
-                    style={{
-                        marginBottom: 6,
-                        display: 'flex',
-                        justifyContent: 'flex-end',
-                    }}
-                >
-                    {this.renderHideNoDataCheckbox()}
-                </div>
                 <LazyMobXTable<ExpressionTableRow>
                     className={styles.compactExpressionTable}
                     columns={this.expressionTableColumns}
-                    data={this.tableData}
+                    data={this.expressionTableRows}
                     // No initialSortColumn: default to the rows' own order
                     // (gene-set/list selection order — see
                     // expressionTableRows) rather than forcing an alphabetical
