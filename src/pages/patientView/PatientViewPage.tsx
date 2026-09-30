@@ -283,6 +283,30 @@ export class PatientViewPageInner extends React.Component<
         }
     }
 
+    /**
+     * The Pathology Slides tab is shown for patients with slides (the Core
+     * WSI_PATIENT_SLIDE_COUNT attribute), and always when it is the active
+     * tab so a link to it never lands elsewhere.
+     */
+    @computed
+    get shouldShowPathologySlides(): boolean {
+        if (!getServerConfig().msk_wsi_tile_server_url) {
+            return false;
+        }
+        if (this.urlWrapper.activeTabId === PatientViewPageTabs.WSIHESlides) {
+            return true;
+        }
+        const clinicalData = this.pageStore.clinicalDataPatient;
+        return (
+            clinicalData.isComplete &&
+            clinicalData.result.some(
+                d =>
+                    d.clinicalAttributeId === 'WSI_PATIENT_SLIDE_COUNT' &&
+                    parseInt(d.value, 10) > 0
+            )
+        );
+    }
+
     @computed
     get shouldShowPathologyReport(): boolean {
         return (

@@ -586,7 +586,7 @@ export function tabs(
     );
 
     const tileServerUrl = getServerConfig().msk_wsi_tile_server_url;
-    if (tileServerUrl) {
+    if (tileServerUrl && pageComponent.shouldShowPathologySlides) {
         tabs.push(
             <MSKTab
                 key={6}

@@ -611,6 +611,54 @@ describe('WsiNavPanel', () => {
         ).toHaveLength(1);
     });
 
+    function emptyStateText(hierarchy: any) {
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={hierarchy}
+                selectedSlide={null}
+                stainFilter="all"
+                matchFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                theme={theme}
+                navWidth={252}
+                sectionTitleStyle={sectionTitleStyle}
+            />
+        );
+        return renderer.root
+            .findByProps({ 'data-testid': 'wsi-filtered-slide-count' })
+            .children.join('');
+    }
+
+    it('says so when the patient has no pathology slides', () => {
+        expect(emptyStateText(makeHierarchy([], []))).toBe(
+            'No pathology slides for this patient'
+        );
+    });
+
+    it('says so when none of the patient slides can be viewed', () => {
+        const sample = makeSample('S-1', [
+            makeSlide({ image_id: 'not-scanned', can_serve_tiles: false }),
+        ]);
+        expect(
+            emptyStateText(
+                makeHierarchy(
+                    [sample],
+                    [
+                        {
+                            image_id: 'not-scanned',
+                            sample_id: 'S-1',
+                            match_level: 'PART',
+                            specimen_key: 'PART::not-scanned',
+                            slide_type: 'H&E',
+                            can_serve_tiles: false,
+                        },
+                    ]
+                )
+            )
+        ).toBe('No viewable pathology slides for this patient');
+    });
+
     it('explains when the selected filters have no matching slides', () => {
         const sample = makeSample('S-1', [makeSlide({ image_id: 'part-hne' })]);
         const renderer = TestRenderer.create(

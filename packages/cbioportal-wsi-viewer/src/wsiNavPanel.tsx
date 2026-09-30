@@ -392,6 +392,25 @@ function WsiNavPanelComponent({
 
         return visible;
     }, [deferOffscreenSamples, filteredSampleEntries, selectedSlideId]);
+    /** Why no slide is listed when the patient has none to show at all. */
+    const emptyPatientMessage = React.useMemo(() => {
+        let slides = 0;
+        let viewable = 0;
+        hierarchy.samples.forEach(sample =>
+            sample.parts.forEach(part =>
+                part.blocks.forEach(block =>
+                    block.slides.forEach(slide => {
+                        slides += 1;
+                        if (slide.can_serve_tiles) viewable += 1;
+                    })
+                )
+            )
+        );
+        if (slides === 0) return 'No pathology slides for this patient';
+        if (viewable === 0)
+            return 'No viewable pathology slides for this patient';
+        return undefined;
+    }, [hierarchy]);
     const filteredSlideCount = React.useMemo(
         () =>
             filteredSampleEntries.reduce(
@@ -794,7 +813,7 @@ function WsiNavPanelComponent({
                     data-testid="wsi-filtered-slide-count"
                 >
                     {filteredSlideCount === 0
-                        ? 'No slides match these filters'
+                        ? emptyPatientMessage || 'No slides match these filters'
                         : `Showing ${filteredSlideCount} ${pluralize(
                               'slide',
                               filteredSlideCount
