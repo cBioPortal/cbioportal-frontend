@@ -15,7 +15,7 @@ const RESOURCE_DATA_IDS: Record<string, string> = {
 export interface FoundationMockOptions {
     /** Adds a second servable slide with an ID that needs URL encoding. */
     includeSecondSlide?: boolean;
-    /** Collects every resource access request URL. */
+    /** Collects every slide access request URL. */
     accessRequests?: string[];
 }
 
@@ -149,24 +149,16 @@ export async function installFoundationMocks(
         })
     );
     await page.route(
-        `**/api/wsi/v2/resources/${STUDY_ID}/*/*/*/access`,
+        `**/api/wsi/v2/resources/${STUDY_ID}/*/access?*`,
         route => {
-            const url = route.request().url();
-            options.accessRequests?.push(url);
-            const [patientId, resourceId, resourceDataId] = new URL(
-                url
-            ).pathname
-                .split('/')
-                .slice(-4, -1)
-                .map(decodeURIComponent);
-            const imageId = Object.keys(RESOURCE_DATA_IDS).find(
-                id => RESOURCE_DATA_IDS[id] === resourceDataId
+            const url = new URL(route.request().url());
+            options.accessRequests?.push(url.toString());
+            const patientId = decodeURIComponent(
+                url.pathname.split('/').slice(-2, -1)[0]
             );
-            if (
-                patientId !== PATIENT_ID ||
-                resourceId !== RESOURCE_ID ||
-                !imageId
-            ) {
+            const imageId = url.searchParams.get('imageId') || '';
+            const resourceDataId = RESOURCE_DATA_IDS[imageId];
+            if (patientId !== PATIENT_ID || !resourceDataId) {
                 return route.fulfill({ status: 404, body: '' });
             }
             return route.fulfill({

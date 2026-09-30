@@ -7,10 +7,13 @@ import {
     SECOND_IMAGE_ID,
 } from './wsi-foundation-mocks';
 
-function resourceAccessPath(url: string): string {
-    return decodeURIComponent(new URL(url).pathname)
+/** "{study}/{patient}/{imageId}" of a slide access request. */
+function slideAccessTarget(url: string): string {
+    const parsed = new URL(url);
+    const studyAndPatient = decodeURIComponent(parsed.pathname)
         .replace(/^.*\/api\/wsi\/v2\/resources\//, '')
         .replace(/\/access$/, '');
+    return `${studyAndPatient}/${parsed.searchParams.get('imageId')}`;
 }
 
 if (process.env.PW_SUITE === 'wsi' && process.env.WSI_CHILD_CONTRACT !== '1') {
@@ -150,10 +153,10 @@ if (process.env.PW_SUITE === 'wsi' && process.env.WSI_CHILD_CONTRACT !== '1') {
                 page.getByTestId('wsi-requested-slide-unavailable')
             ).toHaveCount(0);
             await expect
-                .poll(() => accessRequests.map(resourceAccessPath), {
+                .poll(() => accessRequests.map(slideAccessTarget), {
                     timeout: 30000,
                 })
-                .toContain(`${STUDY_ID}/${PATIENT_ID}/WSI_SLIDE/102`);
+                .toContain(`${STUDY_ID}/${PATIENT_ID}/${SECOND_IMAGE_ID}`);
             expect(new URL(page.url()).hash).toContain(
                 `slide=${encodeURIComponent(SECOND_IMAGE_ID)}`
             );
@@ -202,19 +205,19 @@ if (process.env.PW_SUITE === 'wsi' && process.env.WSI_CHILD_CONTRACT !== '1') {
             await expect
                 .poll(() => accessRequests.length, { timeout: 30000 })
                 .toBeGreaterThan(0);
-            // Access is only requested for resource identities published by
-            // the hierarchy; the unknown image ID never reaches the backend.
-            expect(accessRequests.map(resourceAccessPath)).toContain(
-                `${STUDY_ID}/${PATIENT_ID}/WSI_SLIDE/101`
+            // Access is only requested for slides the hierarchy published; the
+            // unknown image ID never reaches the backend.
+            expect(accessRequests.map(slideAccessTarget)).toContain(
+                `${STUDY_ID}/${PATIENT_ID}/${IMAGE_ID}`
             );
             expect(
                 accessRequests
-                    .map(resourceAccessPath)
+                    .map(slideAccessTarget)
                     .filter(
                         path =>
                             ![
-                                `${STUDY_ID}/${PATIENT_ID}/WSI_SLIDE/101`,
-                                `${STUDY_ID}/${PATIENT_ID}/WSI_SLIDE/102`,
+                                `${STUDY_ID}/${PATIENT_ID}/${IMAGE_ID}`,
+                                `${STUDY_ID}/${PATIENT_ID}/${SECOND_IMAGE_ID}`,
                             ].includes(path)
                     )
             ).toEqual([]);
