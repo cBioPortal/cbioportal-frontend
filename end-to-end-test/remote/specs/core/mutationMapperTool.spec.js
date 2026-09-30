@@ -284,10 +284,10 @@ describe('Mutation Mapper Tool', function() {
             // T790M is not necessarily on the first page, so search for it
             await setInputText('input.tableSearchInput', 'T790M');
             await (
-                await getElement('.//*[text()[contains(.,"T790M")]]')
+                await getElement('.//td//*[text()[contains(.,"T790M")]]')
             ).waitForExist();
             const mutationsT790M = await $$(
-                './/*[text()[contains(.,"T790M")]]'
+                './/td//*[text()[contains(.,"T790M")]]'
             );
             assert.equal(
                 mutationsT790M.length,
