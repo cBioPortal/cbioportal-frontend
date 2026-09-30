@@ -69,8 +69,6 @@ const sectionTitleStyle: React.CSSProperties = {
     letterSpacing: '.8px',
 };
 
-// ---- shared utility functions ----
-
 interface Props {
     /** Tile-server base URL (never a patient-scoped or resource URL). */
     tileServerUrl: string;

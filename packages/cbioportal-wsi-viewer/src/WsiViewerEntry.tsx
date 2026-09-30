@@ -47,20 +47,8 @@ export default function WsiViewer({
     config,
     patientId,
     studyId,
-    tileServerUrl,
-    height,
-    studyName,
-    initialStainFilter,
-    initialMatchFilter,
-    initialTimepointDays,
-    onTimepointChange,
-    onStainFilterChange,
-    onMatchFilterChange,
-    onClearFilters,
-    preferredSampleId,
-    pathologyFilter,
-    requestedImageId,
     clinicalEvents,
+    ...viewerProps
 }: WsiViewerProps) {
     // Installed while rendering so that the viewer's mount effects, which
     // run before this component's, already see the host services.
@@ -80,25 +68,13 @@ export default function WsiViewer({
 
     return (
         <WSIViewer
-            tileServerUrl={tileServerUrl}
+            {...viewerProps}
             hierarchyUrl={hierarchyUrl}
             patientId={patientId}
             studyId={studyId}
-            studyName={studyName}
             authScope={config.authScope}
             showDownload={config.showDownload}
             renderLoading={config.renderLoading}
-            height={height}
-            initialStainFilter={initialStainFilter}
-            initialMatchFilter={initialMatchFilter}
-            initialTimepointDays={initialTimepointDays}
-            onTimepointChange={onTimepointChange}
-            onStainFilterChange={onStainFilterChange}
-            onMatchFilterChange={onMatchFilterChange}
-            onClearFilters={onClearFilters}
-            preferredSampleId={preferredSampleId}
-            pathologyFilter={pathologyFilter}
-            requestedImageId={requestedImageId}
             sampleTimelines={sampleTimelines}
         />
     );

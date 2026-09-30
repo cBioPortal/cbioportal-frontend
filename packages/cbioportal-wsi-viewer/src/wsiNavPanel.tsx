@@ -1,3 +1,4 @@
+import { pluralize } from 'cbioportal-frontend-commons';
 import * as React from 'react';
 import {
     PatientHierarchy,
@@ -42,6 +43,7 @@ import { scheduleThumbnailRequest } from './thumbnailRequestLimiter';
 import { getWsiSlideAccess } from './wsiAuth';
 import {
     fetchWsiThumbnailBlob,
+    parseMaxAgeMs,
     WsiThumbnailFetchError,
 } from './wsiThumbnailFetchCache';
 
@@ -93,15 +95,6 @@ const ellipsisStyle: React.CSSProperties = {
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
 };
-
-function parseMaxAgeMs(cacheControl: string | null): number | undefined {
-    const match = cacheControl?.match(/(?:^|,)\s*max-age\s*=\s*(\d+)/i);
-    if (!match) {
-        return undefined;
-    }
-    const seconds = Number(match[1]);
-    return Number.isFinite(seconds) ? seconds * 1000 : undefined;
-}
 
 function parseRetryAfterMs(retryAfter: string | null): number | undefined {
     if (!retryAfter) {
@@ -170,16 +163,28 @@ function matchesMatchFilter(
     );
 }
 
+function associationStainKind(
+    association: Pick<SlideAssociation, 'slide_type'>
+): Exclude<WsiStainFilter, 'all'> {
+    switch (association.slide_type) {
+        case 'H&E':
+            return 'hne';
+        case 'IHC':
+            return 'ihc';
+        case 'Other':
+            return 'other';
+        default:
+            return 'unknown';
+    }
+}
+
 function matchesStainFilter(
     association: Pick<SlideAssociation, 'slide_type'>,
     stainFilter: WsiStainFilter
 ): boolean {
     return (
         stainFilter === 'all' ||
-        (stainFilter === 'hne' && association.slide_type === 'H&E') ||
-        (stainFilter === 'ihc' && association.slide_type === 'IHC') ||
-        (stainFilter === 'other' && association.slide_type === 'Other') ||
-        (stainFilter === 'unknown' && association.slide_type === 'Unknown')
+        associationStainKind(association) === stainFilter
     );
 }
 
@@ -504,13 +509,7 @@ function WsiNavPanelComponent({
             }
             filteredCounts.all += 1;
             const stainType = association
-                ? association.slide_type === 'H&E'
-                    ? 'hne'
-                    : association.slide_type === 'IHC'
-                    ? 'ihc'
-                    : association.slide_type === 'Other'
-                    ? 'other'
-                    : 'unknown'
+                ? associationStainKind(association)
                 : getStainKind(slide);
             if (stainType === 'hne') {
                 filteredCounts.hne += 1;
@@ -825,9 +824,10 @@ function WsiNavPanelComponent({
                 >
                     {filteredSlideCount === 0
                         ? 'No slides match these filters'
-                        : `Showing ${filteredSlideCount} slide${
-                              filteredSlideCount === 1 ? '' : 's'
-                          }`}
+                        : `Showing ${filteredSlideCount} ${pluralize(
+                              'slide',
+                              filteredSlideCount
+                          )}`}
                 </div>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '6px 0' }}>
@@ -867,8 +867,8 @@ function WsiNavPanelComponent({
                             color: theme.muted,
                         }}
                     >
-                        Loading {hiddenSampleCount} more sample
-                        {hiddenSampleCount === 1 ? '' : 's'}...
+                        Loading {hiddenSampleCount} more{' '}
+                        {pluralize('sample', hiddenSampleCount)}...
                     </div>
                 )}
             </div>

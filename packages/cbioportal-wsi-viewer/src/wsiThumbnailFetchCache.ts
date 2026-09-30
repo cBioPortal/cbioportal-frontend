@@ -66,7 +66,7 @@ function cacheKey(
     ].join('::');
 }
 
-function parseMaxAgeMs(cacheControl: string | null): number | undefined {
+export function parseMaxAgeMs(cacheControl: string | null): number | undefined {
     const match = cacheControl?.match(/(?:^|,)\s*max-age\s*=\s*(\d+)/i);
     if (!match) return undefined;
     const seconds = Number(match[1]);
