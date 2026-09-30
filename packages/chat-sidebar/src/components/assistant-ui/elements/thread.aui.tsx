@@ -212,15 +212,19 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
                         </ThreadPrimitive.Messages>
                     </div>
 
+                    {/* Docked, messages scroll behind the footer; the gradient
+                        on its top edge fades them out rather than cutting
+                        them off. A mask such as shadcn's scroll-fade can't do
+                        this: the footer sticks inside the viewport, so
+                        masking the viewport's edge would fade the footer. */}
                     <ThreadPrimitive.ViewportFooter
                         className={cn(
                             'aui-thread-viewport-footer bg-background flex flex-col gap-4 overflow-visible pb-4 md:pb-6',
                             !isEmpty &&
-                                'sticky bottom-0 mt-auto rounded-t-(--composer-radius)'
+                                'before:from-background sticky bottom-0 mt-auto before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-16 before:bg-linear-to-t before:from-25% before:to-transparent'
                         )}
                     >
                         <ThreadScrollToBottom />
-                        <ThreadFollowupSuggestions />
                         <Composer autoFocus={autoFocus} />
                     </ThreadPrimitive.ViewportFooter>
                 </div>
@@ -346,6 +350,19 @@ const ComposerSuggestions: FC<{
     );
 };
 
+// Called from a suggestion's click, before it sets the composer text; the
+// caret is placed after that text on the next frame.
+const focusInputAtEnd = (inputRef: RefObject<HTMLTextAreaElement | null>) => {
+    const input = inputRef.current;
+    if (!input) return;
+    input.focus();
+    requestAnimationFrame(() => {
+        const end = input.value.length;
+        input.setSelectionRange(end, end);
+        input.scrollTop = input.scrollHeight;
+    });
+};
+
 // Replaces the composer text with the prompt, for the user to edit or send,
 // and moves focus to the input. Highlighted while the composer holds its
 // prompt unedited.
@@ -356,21 +373,9 @@ const ComposerSuggestionItem: FC<{
         s => s.composer.text !== '' && s.composer.text === s.suggestion.prompt
     );
 
-    // Runs before the trigger sets the text; the caret is placed after it.
-    const focusInput = () => {
-        const input = inputRef.current;
-        if (!input) return;
-        input.focus();
-        requestAnimationFrame(() => {
-            const end = input.value.length;
-            input.setSelectionRange(end, end);
-            input.scrollTop = input.scrollHeight;
-        });
-    };
-
     return (
         <SuggestionPrimitive.Trigger
-            onClick={focusInput}
+            onClick={() => focusInputAtEnd(inputRef)}
             aria-pressed={selected}
             render={
                 <Button
@@ -408,6 +413,9 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
             <AuiIf condition={isNewChatView}>
                 <ComposerSuggestions inputRef={inputRef} />
             </AuiIf>
+            <ThreadFollowupSuggestions
+                onSelect={() => focusInputAtEnd(inputRef)}
+            />
             <div
                 data-slot="aui_composer-shell"
                 className="border-border focus-within:border-muted-foreground/40 dark:border-muted-foreground/15 dark:focus-within:border-muted-foreground/30 flex w-full cursor-text flex-col gap-2 rounded-(--composer-radius) border bg-(--composer-bg) p-(--composer-padding) transition-[border-color]"

@@ -11,6 +11,7 @@ import {
 } from '@assistant-ui/react';
 import { useAISDKRuntime } from '@assistant-ui/ai-sdk';
 import { AuthErrorStatus, getSelectedModel, setAuthError } from './chatSession';
+import { followupSuggestionAdapter } from './followups';
 import { isPortalLink, notifyNavigate } from './portal-link';
 import { getLatestPageEvents } from './page-events';
 
@@ -91,6 +92,9 @@ export function useChatThreadRuntime(): AssistantRuntime {
     const { addToolOutput } = chat;
 
     return useAISDKRuntime(chat, {
-        adapters: { attachments: attachmentAdapter },
+        adapters: {
+            attachments: attachmentAdapter,
+            suggestion: followupSuggestionAdapter,
+        },
     });
 }
