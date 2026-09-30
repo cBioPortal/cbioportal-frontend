@@ -41,6 +41,7 @@ import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
 import request from 'superagent';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import {
+    buildCBioPortalAPIUrl,
     getDarwinUrl,
     getDigitalSlideArchiveMetaUrl,
     getGenomeNexusHgvsgUrl,
@@ -1790,6 +1791,40 @@ export class PatientViewPageStore {
         },
         []
     );
+
+    /**
+     * Whether the patient has pathology slides, from the WSI hierarchy that
+     * the backend builds from resource_data. False when slides aren't served
+     * or the hierarchy can't be read.
+     */
+    readonly hasPathologySlides = remoteData<boolean>({
+        invoke: async () => {
+            if (!getServerConfig().msk_wsi_tile_server_url) {
+                return false;
+            }
+            try {
+                const response = await fetch(
+                    buildCBioPortalAPIUrl(
+                        `api/wsi/v2/hierarchy/${encodeURIComponent(
+                            this.studyId
+                        )}/${encodeURIComponent(this.patientId)}`
+                    ),
+                    { credentials: 'same-origin' }
+                );
+                if (!response.ok) {
+                    return false;
+                }
+                const hierarchy = await response.json();
+                return (
+                    Array.isArray(hierarchy?.sampleGroups) &&
+                    hierarchy.sampleGroups.length > 0
+                );
+            } catch (e) {
+                return false;
+            }
+        },
+        default: false,
+    });
 
     // Pathology slides are shown in the Pathology Slides tab, so their
     // resources are left out of Files & Links and the resource tabs.
