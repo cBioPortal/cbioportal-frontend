@@ -33,7 +33,6 @@ import { fetchWsiThumbnailBlob } from './wsiThumbnailFetchCache';
 import { hasCachedPatientHierarchy } from './wsiHierarchyFetchCache';
 import {
     evictSlideMetadataCache,
-    fetchSlideMetadataCached,
     fetchSlideMetadataCachedReadOnly,
     hasCachedSlideMetadata,
 } from './wsiMetadataFetchCache';
@@ -68,7 +67,7 @@ export interface WsiInitialSlideLoadPerformance {
     hierarchyCacheHit: boolean;
     metadataCacheHit: boolean;
     hierarchySource: 'shared-cache' | 'network';
-    metadataSource: 'viewer-cache' | 'shared-cache' | 'network';
+    metadataSource: 'shared-cache' | 'network';
     hierarchyMs: number;
     metadataMs: number | null;
     osdOpenMs: number | null;
@@ -126,8 +125,6 @@ export class WsiViewerController {
     private static readonly METADATA_PREFETCH_CONCURRENCY = 3;
     private static readonly METADATA_PREFETCH_LIMIT = 12;
     private static readonly METADATA_PREFETCH_BATCH_DELAY_MS = 150;
-    private metaCache = new Map<string, TileMetadata>();
-    private metaRequestCache = new Map<string, Promise<TileMetadata>>();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private osdViewer: any = null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -166,7 +163,7 @@ export class WsiViewerController {
         hierarchyCacheHit: boolean;
         metadataCacheHit: boolean;
         hierarchySource: 'shared-cache' | 'network';
-        metadataSource: 'viewer-cache' | 'shared-cache' | 'network';
+        metadataSource: 'shared-cache' | 'network';
         hierarchyLoadedAt?: number;
         metadataLoadedAt?: number;
         osdOpenAt?: number;
@@ -179,7 +176,6 @@ export class WsiViewerController {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private openSeadragon: any | null = null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private openSeadragonPromise: Promise<any> | null = null;
     private static readonly MIN_SPINNER_MS = 250;
 
     public readonly navId = `wsi-nav-${Math.random()
@@ -218,7 +214,6 @@ export class WsiViewerController {
             this.selectionTimeoutTimer = null;
         }
         this.cancelWsiTokenRefresh();
-        this.metaRequestCache.clear();
         this.hierarchyAbortController?.abort();
         this.hierarchyAbortController = null;
         this.cancelBackgroundWorkSchedule();
@@ -451,24 +446,10 @@ export class WsiViewerController {
     }
 
     private primeOpenSeadragonLoad() {
-        if (this.openSeadragon) {
-            return Promise.resolve(this.openSeadragon);
-        }
-        if (this.openSeadragonPromise) {
-            return this.openSeadragonPromise;
-        }
-
-        this.openSeadragonPromise = this.loadOpenSeadragon()
-            .then(openSeadragon => {
-                this.openSeadragon = openSeadragon;
-                return openSeadragon;
-            })
-            .catch(error => {
-                this.openSeadragonPromise = null;
-                throw error;
-            });
-
-        return this.openSeadragonPromise;
+        return this.loadOpenSeadragon().then(openSeadragon => {
+            this.openSeadragon = openSeadragon;
+            return openSeadragon;
+        });
     }
 
     private writeHashState() {
@@ -672,8 +653,6 @@ export class WsiViewerController {
         this.nativeTileReadySeq = null;
         this.nativeTileDrawnSeq = null;
         this.clearThumbnailPreview();
-        this.metaCache.clear();
-        this.metaRequestCache.clear();
         this.backgroundWorkStarted = false;
         this.backgroundWorkScheduled = false;
         this.initialSlideImageId = undefined;
@@ -906,52 +885,23 @@ export class WsiViewerController {
     }
 
     private fetchSlideMetadata(imageId: string): Promise<TileMetadata> {
-        const cached = this.metaCache.get(imageId);
-        if (cached) {
-            if (
-                imageId === this.initialSlideImageId &&
-                this.initialSlideLoadTrace
-            ) {
-                this.initialSlideLoadTrace.metadataCacheHit = true;
-                this.initialSlideLoadTrace.metadataSource = 'viewer-cache';
-            }
-            return Promise.resolve(cached);
-        }
-        const pending = this.metaRequestCache.get(imageId);
-        if (pending) {
-            return pending;
-        }
+        const tileServerBase = this.host.getTileServerBase();
+        const { studyId, authScope } = this.host.getProps();
         if (
             imageId === this.initialSlideImageId &&
             this.initialSlideLoadTrace &&
-            hasCachedSlideMetadata(
-                this.host.getTileServerBase(),
-                imageId,
-                this.host.getProps().studyId,
-                this.host.getProps().authScope
-            )
+            hasCachedSlideMetadata(tileServerBase, imageId, studyId, authScope)
         ) {
             this.initialSlideLoadTrace.metadataCacheHit = true;
             this.initialSlideLoadTrace.metadataSource = 'shared-cache';
         }
-        const request = fetchSlideMetadataCachedReadOnly(
-            this.host.getTileServerBase(),
+        return fetchSlideMetadataCachedReadOnly(
+            tileServerBase,
             imageId,
             undefined,
-            this.host.getProps().studyId,
-            this.host.getProps().authScope
-        )
-            .then(meta => {
-                this.metaCache.set(imageId, meta);
-                this.metaRequestCache.delete(imageId);
-                return meta;
-            })
-            .catch(error => {
-                this.metaRequestCache.delete(imageId);
-                throw error;
-            });
-        this.metaRequestCache.set(imageId, request);
-        return request;
+            studyId,
+            authScope
+        );
     }
 
     private async prefetchSlideMetadata(
@@ -965,7 +915,13 @@ export class WsiViewerController {
                 stainFilter: this.host.getStainFilter(),
                 limit: WsiViewerController.METADATA_PREFETCH_LIMIT,
                 skipImageId,
-                isCached: imageId => this.metaCache.has(imageId),
+                isCached: imageId =>
+                    hasCachedSlideMetadata(
+                        this.host.getTileServerBase(),
+                        imageId,
+                        this.host.getProps().studyId,
+                        this.host.getProps().authScope
+                    ),
             }
         );
 
@@ -1042,8 +998,6 @@ export class WsiViewerController {
         const sample = this.host.getSelectedSample();
         if (!slide || !sample) return;
 
-        this.metaCache.delete(slide.image_id);
-        this.metaRequestCache.delete(slide.image_id);
         evictSlideMetadataCache(
             this.host.getTileServerBase(),
             slide.image_id,
@@ -1476,32 +1430,29 @@ export class WsiViewerController {
             // slide metadata initialize.
             this.startThumbnailPreview(slide.image_id, seq, accessPromise);
         }
-        let meta = this.metaCache.get(slide.image_id);
-        if (!meta) {
-            try {
-                meta = await this.fetchSlideMetadata(slide.image_id);
-            } catch (err) {
-                if (seq !== this.mountSeq) return;
-                // eslint-disable-next-line no-console
-                console.error('[WSIViewer] metadata fetch failed', err);
-                this.host.setError(`Failed to load slide metadata: ${err}`);
-                this.clearThumbnailPreview();
-                if (this.selectionTimeoutTimer !== null) {
-                    clearTimeout(this.selectionTimeoutTimer);
-                    this.selectionTimeoutTimer = null;
-                }
-                // The error overlay replaces the spinner and exposes Retry.
-                // Mark the attempted load as finished so a failed metadata
-                // request cannot leave the viewer in a perpetual loading state.
-                this.host.setSpinnerVisible(false);
-                this.host.setTilesReady(true);
-                this.finishInitialSlideLoad(
-                    this.initialSlideLoadTrace?.loadSeq ??
-                        this.hierarchyLoadSeq,
-                    'metadata_failed'
-                );
-                return;
+        let meta: TileMetadata;
+        try {
+            meta = await this.fetchSlideMetadata(slide.image_id);
+        } catch (err) {
+            if (seq !== this.mountSeq) return;
+            // eslint-disable-next-line no-console
+            console.error('[WSIViewer] metadata fetch failed', err);
+            this.host.setError(`Failed to load slide metadata: ${err}`);
+            this.clearThumbnailPreview();
+            if (this.selectionTimeoutTimer !== null) {
+                clearTimeout(this.selectionTimeoutTimer);
+                this.selectionTimeoutTimer = null;
             }
+            // The error overlay replaces the spinner and exposes Retry.
+            // Mark the attempted load as finished so a failed metadata
+            // request cannot leave the viewer in a perpetual loading state.
+            this.host.setSpinnerVisible(false);
+            this.host.setTilesReady(true);
+            this.finishInitialSlideLoad(
+                this.initialSlideLoadTrace?.loadSeq ?? this.hierarchyLoadSeq,
+                'metadata_failed'
+            );
+            return;
         }
 
         if (seq !== this.mountSeq) return;
