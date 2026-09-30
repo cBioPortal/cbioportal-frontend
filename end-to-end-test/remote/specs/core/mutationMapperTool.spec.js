@@ -281,6 +281,11 @@ describe('Mutation Mapper Tool', function() {
                 )
             ).waitForDisplayed({ timeout: 60000 });
 
+            // T790M is not necessarily on the first page, so search for it
+            await setInputText('input.tableSearchInput', 'T790M');
+            await (
+                await getElement('.//*[text()[contains(.,"T790M")]]')
+            ).waitForExist();
             const mutationsT790M = await $$(
                 './/*[text()[contains(.,"T790M")]]'
             );
@@ -289,6 +294,7 @@ describe('Mutation Mapper Tool', function() {
                 2,
                 'there should be two samples with a T790M mutation'
             );
+            await setInputText('input.tableSearchInput', '');
 
             // check total number of mutations (this gets Showing 1-25 of 124
             // Mutations)
