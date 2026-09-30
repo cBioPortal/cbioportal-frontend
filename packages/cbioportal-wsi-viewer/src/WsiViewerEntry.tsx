@@ -2,7 +2,7 @@ import * as React from 'react';
 import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import { buildWsiHierarchyApiUrl } from './wsiUrls';
 import { buildWsiSampleTimelineMap } from './wsiSampleTimeline';
-import { configureWsiViewerRuntime, WsiViewerConfig } from './wsiViewerConfig';
+import { getWsiViewerRuntime } from './wsiViewerConfig';
 import WSIViewer from './WSIViewer';
 import {
     PathologySlideFilter,
@@ -12,8 +12,12 @@ import {
 } from './wsiViewerTypes';
 
 export interface WsiViewerProps {
-    /** Host services and settings. */
-    config: WsiViewerConfig;
+    /** Subject that isolates protected in-memory caches (the user name). */
+    authScope: string;
+    /** Shows the "download view" control. */
+    showDownload?: boolean;
+    /** Indicator shown while the hierarchy loads; a plain spinner when unset. */
+    renderLoading?: () => React.ReactNode;
     patientId: string;
     studyId: string;
     tileServerUrl: string;
@@ -44,17 +48,13 @@ export interface WsiViewerProps {
  * contract used by the viewer itself.
  */
 export default function WsiViewer({
-    config,
     patientId,
     studyId,
     clinicalEvents,
     ...viewerProps
 }: WsiViewerProps) {
-    // Installed while rendering so that the viewer's mount effects, which
-    // run before this component's, already see the host services.
-    configureWsiViewerRuntime(config);
     const hierarchyUrl = buildWsiHierarchyApiUrl(
-        config.buildApiUrl,
+        getWsiViewerRuntime().buildApiUrl,
         studyId,
         patientId
     );
@@ -72,9 +72,6 @@ export default function WsiViewer({
             hierarchyUrl={hierarchyUrl}
             patientId={patientId}
             studyId={studyId}
-            authScope={config.authScope}
-            showDownload={config.showDownload}
-            renderLoading={config.renderLoading}
             sampleTimelines={sampleTimelines}
         />
     );

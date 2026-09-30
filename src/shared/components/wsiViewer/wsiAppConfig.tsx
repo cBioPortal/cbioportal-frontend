@@ -13,9 +13,7 @@ function renderWsiLoading() {
 
 /** SAML portals, or portals that opt in, authenticate WSI users. */
 export function isPortalWsiAuthEnabled(): boolean {
-    const config = getServerConfig() as ReturnType<typeof getServerConfig> & {
-        msk_wsi_authentication_enabled?: boolean;
-    };
+    const config = getServerConfig();
     // Portals without authentication report `authenticate=false` as a boolean.
     const authenticationMethod =
         typeof config.authenticationMethod === 'string'
@@ -28,24 +26,21 @@ export function isPortalWsiAuthEnabled(): boolean {
     );
 }
 
-/**
- * Viewer services and settings from the portal configuration. The signed-in
- * user name scopes the viewer caches; without one, the configured display
- * name or the anonymous user does.
- */
-export function buildWsiViewerConfig(userName?: string): WsiViewerConfig {
-    const serverConfig = getServerConfig();
+/** Viewer services from the portal configuration, installed at startup. */
+export function buildWsiViewerConfig(): WsiViewerConfig {
     return {
         buildApiUrl: (path: string) => buildCBioPortalAPIUrl(path),
         authEnabled: isPortalWsiAuthEnabled(),
-        authScope:
-            userName || serverConfig.user_display_name || 'anonymousUser',
-        showDownload:
-            serverConfig.skin_hide_download_controls ===
-            DownloadControlOption.SHOW_ALL,
         osdPrefixUrl: WSI_OSD_PREFIX_URL,
-        renderLoading: renderWsiLoading,
     };
+}
+
+/**
+ * Subject that scopes the viewer caches: the signed-in user name, else the
+ * configured display name, else the anonymous user.
+ */
+export function wsiAuthScope(userName?: string): string {
+    return userName || getServerConfig().user_display_name || 'anonymousUser';
 }
 
 // The viewer is its own async chunk, and OpenSeadragon another one loaded on
@@ -57,16 +52,16 @@ export const LazyWsiViewer = React.lazy(() => {
     return import('cbioportal-wsi-viewer/viewer');
 });
 
-export type AppWsiViewerProps = Omit<WsiViewerProps, 'config'> & {
+export type AppWsiViewerProps = Omit<
+    WsiViewerProps,
+    'authScope' | 'showDownload' | 'renderLoading'
+> & {
     /** Signed-in user name, when the page knows it. */
     userName?: string;
 };
 
 /** The package viewer configured for this portal, loaded lazily. */
 export function AppWsiViewer({ userName, ...viewerProps }: AppWsiViewerProps) {
-    const config = React.useMemo(() => buildWsiViewerConfig(userName), [
-        userName,
-    ]);
     return (
         <React.Suspense
             fallback={
@@ -75,7 +70,15 @@ export function AppWsiViewer({ userName, ...viewerProps }: AppWsiViewerProps) {
                 </div>
             }
         >
-            <LazyWsiViewer config={config} {...viewerProps} />
+            <LazyWsiViewer
+                {...viewerProps}
+                authScope={wsiAuthScope(userName)}
+                showDownload={
+                    getServerConfig().skin_hide_download_controls ===
+                    DownloadControlOption.SHOW_ALL
+                }
+                renderLoading={renderWsiLoading}
+            />
         </React.Suspense>
     );
 }

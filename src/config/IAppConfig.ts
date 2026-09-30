@@ -161,6 +161,8 @@ export interface IServerConfig {
      * Null/undefined = feature hidden.
      */
     msk_wsi_tile_server_url: string | null;
+    /** Authenticates WSI users on portals without SAML. */
+    msk_wsi_authentication_enabled?: boolean;
     query_product_limit: number;
     clinical_attribute_product_limit: number;
     dat_method: string;

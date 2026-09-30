@@ -34,8 +34,6 @@ function makeConfig(overrides: Partial<WsiViewerConfig> = {}): WsiViewerConfig {
     return {
         buildApiUrl: (path: string) => `https://portal.example/beta/${path}`,
         authEnabled: false,
-        authScope: 'user-a',
-        showDownload: true,
         ...overrides,
     };
 }
@@ -77,7 +75,7 @@ describe('WSI viewer runtime', () => {
         expect(runtime.authEnabled).toBe(false);
         expect(runtime.osdPrefixUrl).toBeUndefined();
         expect(() => runtime.buildApiUrl('api/x')).toThrow(
-            'WSI viewer API URLs are not configured'
+            'WSI viewer is not configured'
         );
     });
 
@@ -190,20 +188,24 @@ describe('WsiViewer', () => {
         mockWsiViewer.mockClear();
     });
 
-    it('installs the host services and passes the viewer settings', () => {
+    it('uses the installed host services and passes the viewer settings', () => {
         const urlState = makeMemoryUrlState();
         const fetchImpl = (jest.fn() as unknown) as typeof fetch;
         const renderLoading = () => 'loading';
+        configureWsiViewerRuntime(
+            makeConfig({
+                authEnabled: true,
+                osdPrefixUrl: '/osd/',
+                urlState,
+                fetchImpl,
+            })
+        );
 
         render(
             <WsiViewer
-                config={makeConfig({
-                    authEnabled: true,
-                    osdPrefixUrl: '/osd/',
-                    urlState,
-                    fetchImpl,
-                    renderLoading,
-                })}
+                authScope="user-a"
+                showDownload={true}
+                renderLoading={renderLoading}
                 patientId="P 1"
                 studyId="study/1"
                 tileServerUrl="https://tiles.example"

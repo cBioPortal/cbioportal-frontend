@@ -11,8 +11,6 @@ function configureRuntime(overrides: Partial<WsiViewerConfig> = {}) {
     configureWsiViewerRuntime({
         buildApiUrl: (path: string) => `/${path}`,
         authEnabled: true,
-        authScope: 'anonymousUser',
-        showDownload: false,
         ...overrides,
     });
 }

@@ -16,8 +16,6 @@ import { configureWsiViewerRuntime } from './wsiViewerConfig';
 configureWsiViewerRuntime({
     buildApiUrl: (path: string) => `/${path}`,
     authEnabled: true,
-    authScope: 'anonymousUser',
-    showDownload: false,
 });
 
 function makeHierarchy() {

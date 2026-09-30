@@ -1,7 +1,9 @@
-import * as React from 'react';
 import { hashUrlState, WsiUrlStateAdapter } from './wsiViewStateUtils';
 
-/** Host services and settings the viewer needs. */
+/**
+ * Host services shared by every viewer on the page. Hosts install them once,
+ * at startup, with `configureWsiViewerRuntime`.
+ */
 export interface WsiViewerConfig {
     /**
      * Resolves a portal API path such as `api/wsi/v2/hierarchy/...` to the
@@ -13,14 +15,8 @@ export interface WsiViewerConfig {
      * responses are then never kept in sessionStorage.
      */
     authEnabled: boolean;
-    /** Subject that isolates protected in-memory caches (the user name). */
-    authScope: string;
-    /** Shows the "download view" control. */
-    showDownload: boolean;
     /** OpenSeadragon `prefixUrl`; OpenSeadragon's own default when unset. */
     osdPrefixUrl?: string;
-    /** Indicator shown while the hierarchy loads; a plain spinner when unset. */
-    renderLoading?: () => React.ReactNode;
     /** Slide and viewport link state; the `#wsi:` URL hash when unset. */
     urlState?: WsiUrlStateAdapter;
     /**
@@ -45,7 +41,9 @@ const globalFetch: typeof fetch = (...args: Parameters<typeof fetch>) =>
 
 const DEFAULT_RUNTIME: WsiViewerRuntime = {
     buildApiUrl: () => {
-        throw new Error('WSI viewer API URLs are not configured');
+        throw new Error(
+            'WSI viewer is not configured: call configureWsiViewerRuntime at startup'
+        );
     },
     authEnabled: false,
     fetchImpl: globalFetch,
@@ -54,11 +52,7 @@ const DEFAULT_RUNTIME: WsiViewerRuntime = {
 
 let runtime: WsiViewerRuntime = DEFAULT_RUNTIME;
 
-/**
- * Installs the services of a mounted viewer. The caches behind them are
- * shared by every viewer on the page, so the last configured viewer's
- * services apply to all of them.
- */
+/** Installs the host services. Call once, before any viewer renders. */
 export function configureWsiViewerRuntime(config: WsiViewerConfig): void {
     runtime = {
         buildApiUrl: config.buildApiUrl,

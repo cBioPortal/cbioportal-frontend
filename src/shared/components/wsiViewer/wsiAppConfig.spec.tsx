@@ -7,6 +7,7 @@ import {
     AppWsiViewer,
     buildWsiViewerConfig,
     isPortalWsiAuthEnabled,
+    wsiAuthScope,
 } from './wsiAppConfig';
 
 const mockServerConfig: Record<string, unknown> = {};
@@ -34,8 +35,8 @@ describe('buildWsiViewerConfig', () => {
         mockServerConfig.skin_hide_download_controls = 'show';
     });
 
-    it('builds portal API URLs and the viewer settings', () => {
-        const config = buildWsiViewerConfig('user-a');
+    it('builds portal API URLs and the host services', () => {
+        const config = buildWsiViewerConfig();
 
         expect(config.buildApiUrl('api/wsi/v2/hierarchy/s/p')).toBe(
             'https://portal.example/beta/api/wsi/v2/hierarchy/s/p'
@@ -43,25 +44,18 @@ describe('buildWsiViewerConfig', () => {
         expect(config).toEqual(
             expect.objectContaining({
                 authEnabled: false,
-                authScope: 'user-a',
-                showDownload: true,
                 osdPrefixUrl: '/reactapp/osd-images/',
             })
         );
-        expect(config.renderLoading).toBeDefined();
     });
 
-    it('scopes caches by the display name or the anonymous user without a user name', () => {
+    it('scopes caches by the user, the display name or the anonymous user', () => {
         mockServerConfig.user_display_name = 'display-user';
-        expect(buildWsiViewerConfig().authScope).toBe('display-user');
+        expect(wsiAuthScope('user-a')).toBe('user-a');
+        expect(wsiAuthScope()).toBe('display-user');
 
         delete mockServerConfig.user_display_name;
-        expect(buildWsiViewerConfig().authScope).toBe('anonymousUser');
-    });
-
-    it('hides the download control unless downloads are shown', () => {
-        mockServerConfig.skin_hide_download_controls = 'hide';
-        expect(buildWsiViewerConfig().showDownload).toBe(false);
+        expect(wsiAuthScope()).toBe('anonymousUser');
     });
 
     it('enables WSI auth for SAML portals and the explicit opt-in', () => {
@@ -82,7 +76,29 @@ describe('buildWsiViewerConfig', () => {
 });
 
 describe('AppWsiViewer', () => {
-    it('loads the package viewer with the portal configuration', async () => {
+    beforeEach(() => mockWsiViewer.mockClear());
+
+    it('hides the download control unless downloads are shown', async () => {
+        mockServerConfig.skin_hide_download_controls = 'hide';
+
+        await act(async () => {
+            render(
+                <AppWsiViewer
+                    patientId="P-1"
+                    studyId="study-1"
+                    tileServerUrl="/wsi"
+                    height={600}
+                />
+            );
+        });
+
+        expect(mockWsiViewer).toHaveBeenLastCalledWith(
+            expect.objectContaining({ showDownload: false })
+        );
+    });
+
+    it('loads the package viewer with the portal settings', async () => {
+        mockServerConfig.skin_hide_download_controls = 'show';
         mockServerConfig.user_display_name = 'display-user';
 
         await act(async () => {
@@ -104,7 +120,9 @@ describe('AppWsiViewer', () => {
                 studyId: 'study-1',
                 tileServerUrl: '/wsi',
                 height: 600,
-                config: expect.objectContaining({ authScope: 'user-a' }),
+                authScope: 'user-a',
+                showDownload: true,
+                renderLoading: expect.any(Function),
             })
         );
     });
