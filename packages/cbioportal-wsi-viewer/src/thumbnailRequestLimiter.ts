@@ -1,3 +1,5 @@
+import { abortError } from './wsiCacheUtils';
+
 type PendingRequest<T> = {
     task: () => Promise<T>;
     signal: AbortSignal;
@@ -9,12 +11,6 @@ export const THUMBNAIL_REQUEST_CONCURRENCY = 4;
 
 let activeRequests = 0;
 const pendingRequests: PendingRequest<unknown>[] = [];
-
-function abortError(): Error {
-    const error = new Error('Thumbnail request aborted');
-    error.name = 'AbortError';
-    return error;
-}
 
 function drainQueue(): void {
     while (

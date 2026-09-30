@@ -1,5 +1,6 @@
 import { getWsiViewerRuntime } from './wsiViewerConfig';
 import { PatientHierarchy, WsiSlideAccess } from './wsiViewerTypes';
+import { deleteExpiredEntries } from './wsiCacheUtils';
 
 const CURRENT_WSI_DECODE_POLICY =
     'geometry-v2;tile-max=16777216;thumbnail-max=16777216';
@@ -482,6 +483,7 @@ async function requestSlideAccess(
         ...payload,
         expiresAt: Date.now() + payload.expiresIn * 1000,
     };
+    deleteExpiredEntries(slideAccess);
     slideAccess.set(
         slideAccessKey(studyId, imageId, authScope, target),
         access

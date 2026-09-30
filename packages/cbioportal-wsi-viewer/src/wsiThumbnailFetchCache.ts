@@ -7,6 +7,7 @@ import {
 } from './wsiUrls';
 import { normalizeWsiAuthScope } from './wsiAuth';
 import { getWsiViewerRuntime } from './wsiViewerConfig';
+import { abortError } from './wsiCacheUtils';
 
 const THUMBNAIL_CACHE_TTL_MS = 5 * 60 * 1000;
 const THUMBNAIL_CACHE_CAPACITY = 128;
@@ -70,10 +71,6 @@ function parseMaxAgeMs(cacheControl: string | null): number | undefined {
     if (!match) return undefined;
     const seconds = Number(match[1]);
     return Number.isFinite(seconds) ? seconds * 1000 : undefined;
-}
-
-function abortError(): DOMException {
-    return new DOMException('Aborted', 'AbortError');
 }
 
 function releaseThumbnailConsumer(key: string, entry: PendingThumbnail): void {

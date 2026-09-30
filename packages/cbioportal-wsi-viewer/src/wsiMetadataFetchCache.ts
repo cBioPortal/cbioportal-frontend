@@ -5,6 +5,7 @@ import {
     normalizeWsiAuthScope,
     validateWsiTileMetadata,
 } from './wsiAuth';
+import { deleteExpiredEntries, withAbort } from './wsiCacheUtils';
 
 const METADATA_CACHE_TTL_MS = 5 * 60 * 1000;
 const METADATA_STORAGE_KEY_PREFIX = 'wsi-metadata-cache::';
@@ -165,41 +166,6 @@ function cloneTileMetadata(metadata: TileMetadata): TileMetadata {
     };
 }
 
-function wrapWithAbort<T>(
-    promise: Promise<T>,
-    signal?: AbortSignal
-): Promise<T> {
-    if (!signal) {
-        return promise;
-    }
-
-    if (signal.aborted) {
-        return Promise.reject(new DOMException('Aborted', 'AbortError'));
-    }
-
-    return new Promise<T>((resolve, reject) => {
-        const onAbort = () => {
-            cleanup();
-            reject(new DOMException('Aborted', 'AbortError'));
-        };
-        const cleanup = () => {
-            signal.removeEventListener('abort', onAbort);
-        };
-
-        signal.addEventListener('abort', onAbort, { once: true });
-        promise.then(
-            value => {
-                cleanup();
-                resolve(value);
-            },
-            error => {
-                cleanup();
-                reject(error);
-            }
-        );
-    });
-}
-
 function getOrCreateMetadataRequest(
     tileServerBase: string,
     imageId: string,
@@ -230,6 +196,7 @@ function getOrCreateMetadataRequest(
     }
 
     const expiresAt = now + METADATA_CACHE_TTL_MS;
+    deleteExpiredEntries(metadataCache, now);
 
     if (!studyId) {
         const promise = Promise.reject(
@@ -301,7 +268,7 @@ export async function fetchSlideMetadataCached(
     studyId?: string,
     authScope?: string
 ): Promise<TileMetadata> {
-    const metadata = await wrapWithAbort(
+    const metadata = await withAbort(
         getOrCreateMetadataRequest(tileServerBase, imageId, studyId, authScope),
         signal
     );
@@ -315,7 +282,7 @@ export async function fetchSlideMetadataCachedReadOnly(
     studyId?: string,
     authScope?: string
 ): Promise<TileMetadata> {
-    return wrapWithAbort(
+    return withAbort(
         getOrCreateMetadataRequest(tileServerBase, imageId, studyId, authScope),
         signal
     );

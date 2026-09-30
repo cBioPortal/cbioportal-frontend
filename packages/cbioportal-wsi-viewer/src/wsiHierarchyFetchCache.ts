@@ -10,6 +10,7 @@ import {
     registerWsiResourceAccess,
 } from './wsiAuth';
 import { getWsiViewerRuntime } from './wsiViewerConfig';
+import { deleteExpiredEntries, withAbort } from './wsiCacheUtils';
 
 const HIERARCHY_CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -238,41 +239,6 @@ function clonePatientHierarchy(hierarchy: PatientHierarchy): PatientHierarchy {
     return cloned;
 }
 
-function wrapWithAbort<T>(
-    promise: Promise<T>,
-    signal?: AbortSignal
-): Promise<T> {
-    if (!signal) {
-        return promise;
-    }
-
-    if (signal.aborted) {
-        return Promise.reject(new DOMException('Aborted', 'AbortError'));
-    }
-
-    return new Promise<T>((resolve, reject) => {
-        const onAbort = () => {
-            cleanup();
-            reject(new DOMException('Aborted', 'AbortError'));
-        };
-        const cleanup = () => {
-            signal.removeEventListener('abort', onAbort);
-        };
-
-        signal.addEventListener('abort', onAbort, { once: true });
-        promise.then(
-            value => {
-                cleanup();
-                resolve(value);
-            },
-            error => {
-                cleanup();
-                reject(error);
-            }
-        );
-    });
-}
-
 /**
  * Publishes the resource identities of a hierarchy for slide access, but only
  * while that hierarchy is still the cached one for its URL. A superseded
@@ -349,6 +315,7 @@ function getOrCreateHierarchyRequest(
             throw error;
         });
 
+    deleteExpiredEntries(hierarchyCache, now);
     hierarchyCache.set(cacheKey, {
         expiresAt,
         promise,
@@ -445,7 +412,7 @@ export async function fetchPatientHierarchyReadOnly(
     studyId?: string,
     patientId?: string
 ): Promise<PatientHierarchy> {
-    return wrapWithAbort(
+    return withAbort(
         getOrCreateHierarchyRequest(url, authScope, studyId, patientId),
         signal
     );
