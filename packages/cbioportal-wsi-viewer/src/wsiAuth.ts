@@ -191,18 +191,19 @@ function fetchSlideAccess(
     imageId: string
 ): Promise<Response> {
     const { buildApiUrl, fetchImpl } = getWsiViewerRuntime();
+    // The host builds only the path: the portal's URL builder encodes a `?`
+    // inside it, so the image ID is added as a query parameter afterwards.
     const url = new URL(
         buildApiUrl(
             `api/wsi/v2/resources/${encodeURIComponent(
                 studyId
-            )}/${encodeURIComponent(
-                patientId
-            )}/access?imageId=${encodeURIComponent(imageId)}`
+            )}/${encodeURIComponent(patientId)}/access`
         ),
         typeof window === 'undefined'
             ? 'http://localhost'
             : window.location.origin
     );
+    url.search = `?imageId=${encodeURIComponent(imageId)}`;
     return fetchImpl(url.toString(), {
         credentials: 'same-origin',
         cache: 'no-store',

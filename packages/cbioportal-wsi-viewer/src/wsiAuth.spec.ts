@@ -262,6 +262,26 @@ describe('WSI access capability', () => {
             ]);
         });
 
+        it('adds the image ID after the host builds the path', async () => {
+            // The portal's URL builder encodes a "?" inside the path.
+            configureWsiViewerRuntime({
+                buildApiUrl: (path: string) => `/${path.replace(/\?/g, '%3F')}`,
+                authEnabled: true,
+            });
+            registerWsiResourceAccess('study-1', hierarchy(['slide-1']));
+            const fetchSpy = jest
+                .spyOn(global, 'fetch')
+                .mockResolvedValue(response(200));
+
+            await getWsiSlideAccess('study-1', 'slide-1');
+
+            const requested = new URL(String(fetchSpy.mock.calls[0][0]));
+            expect(requested.pathname).toBe(
+                '/api/wsi/v2/resources/study-1/patient-1/access'
+            );
+            expect(requested.searchParams.get('imageId')).toBe('slide-1');
+        });
+
         it('reports a 404 once, without a retry', async () => {
             registerWsiResourceAccess('study-1', hierarchy(['slide-1']));
             jest.spyOn(global, 'fetch').mockResolvedValue(response(404));
