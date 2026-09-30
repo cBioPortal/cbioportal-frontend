@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useLayoutEffect, useRef } from 'react';
-import { gsap } from 'gsap';
+import { resetTween, tweenAttrs, easeOutQuad } from './svgTween';
 import {
     ProteinDomain,
     TranscriptData,
@@ -31,7 +31,7 @@ const LABEL_HEIGHT = 16;
 const PADDING_TOP = 4;
 const BACKBONE_HEIGHT = 4;
 const TWEEN_DURATION = 0.35;
-const TWEEN_EASE = 'power2.out';
+const TWEEN_EASE = easeOutQuad;
 // Skip tween if the domain barely moved — prevents "wobble" on tiny
 // protein-length differences between transcripts.
 const POS_EPSILON = 3;
@@ -301,23 +301,14 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
             const ghostRect = ghostRectRefs.current.get(slot.key);
             const prev = prevSlots.get(slot.key);
 
-            // Always force opacity back to 1 first. GSAP mutates the DOM
+            // Always force opacity back to 1 first. The tween mutates the DOM
             // directly and opacity is NOT a React-controlled prop here, so an
             // interrupted fade (rapid transcript switching) would otherwise
             // leave a domain stuck invisible. Heal it every run; only the
             // position still tweens.
-            if (rect) {
-                gsap.killTweensOf(rect);
-                gsap.set(rect, { opacity: 1 });
-            }
-            if (label) {
-                gsap.killTweensOf(label);
-                gsap.set(label, { opacity: 1 });
-            }
-            if (ghostRect) {
-                gsap.killTweensOf(ghostRect);
-                gsap.set(ghostRect, { opacity: 1 });
-            }
+            if (rect) resetTween(rect);
+            if (label) resetTween(label);
+            if (ghostRect) resetTween(ghostRect);
 
             // Newly appeared (no previous position) — already visible, no slide.
             if (!prev) return;
@@ -330,36 +321,27 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
             }
 
             if (rect) {
-                gsap.fromTo(
+                tweenAttrs(
                     rect,
-                    { attr: { x: prev.x, width: prev.width } },
-                    {
-                        attr: { x: slot.x, width: slot.width },
-                        duration: TWEEN_DURATION,
-                        ease: TWEEN_EASE,
-                    }
+                    { x: prev.x, width: prev.width },
+                    { x: slot.x, width: slot.width },
+                    { duration: TWEEN_DURATION, ease: TWEEN_EASE }
                 );
             }
             if (label) {
-                gsap.fromTo(
+                tweenAttrs(
                     label,
-                    { attr: { x: prev.x + prev.width / 2 } },
-                    {
-                        attr: { x: slot.x + slot.width / 2 },
-                        duration: TWEEN_DURATION,
-                        ease: TWEEN_EASE,
-                    }
+                    { x: prev.x + prev.width / 2 },
+                    { x: slot.x + slot.width / 2 },
+                    { duration: TWEEN_DURATION, ease: TWEEN_EASE }
                 );
             }
             if (ghostRect) {
-                gsap.fromTo(
+                tweenAttrs(
                     ghostRect,
-                    { attr: { x: prev.ghostX, width: prev.ghostWidth } },
-                    {
-                        attr: { x: slot.ghostX, width: slot.ghostWidth },
-                        duration: TWEEN_DURATION,
-                        ease: TWEEN_EASE,
-                    }
+                    { x: prev.ghostX, width: prev.ghostWidth },
+                    { x: slot.ghostX, width: slot.ghostWidth },
+                    { duration: TWEEN_DURATION, ease: TWEEN_EASE }
                 );
             }
         });
@@ -368,15 +350,11 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
         if (boundary && boundaryX !== null) {
             const prev = prevBoundaryRef.current;
             if (prev !== null && Math.abs(prev - boundaryX) >= POS_EPSILON) {
-                gsap.killTweensOf(boundary);
-                gsap.fromTo(
+                tweenAttrs(
                     boundary,
-                    { attr: { x1: prev, x2: prev } },
-                    {
-                        attr: { x1: boundaryX, x2: boundaryX },
-                        duration: TWEEN_DURATION,
-                        ease: TWEEN_EASE,
-                    }
+                    { x1: prev, x2: prev },
+                    { x1: boundaryX, x2: boundaryX },
+                    { duration: TWEEN_DURATION, ease: TWEEN_EASE }
                 );
             }
         }

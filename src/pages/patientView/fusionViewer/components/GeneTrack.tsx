@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useLayoutEffect, useRef } from 'react';
-import { gsap } from 'gsap';
+import { tween } from './svgTween';
 import { Exon, TranscriptData, COLOR_BREAKPOINT } from '../data/types';
 import { ExonTooltip, BreakpointTooltip } from './ExonTooltip';
 
@@ -421,7 +421,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         }
     }
 
-    // ---- Active transcript row geometry (for GSAP-animated chrome) ----
+    // ---- Active transcript row geometry (for animated chrome) ----
     const rowList: { transcript: TranscriptData; yPos: number }[] = [
         { transcript: forteTranscript, yPos: forteY },
     ];
@@ -438,26 +438,32 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
     const activeTranscript = activeRow?.transcript;
 
     const activeGroupRef = useRef<SVGGElement | null>(null);
-    const prevActiveYPos = useRef<number | null>(null);
+    // Last y actually painted (tracks mid-tween values), so a switch during a
+    // running slide continues from where the outline currently is.
+    const shownActiveYPos = useRef<number | null>(null);
 
+    // The group's transform is rendered declaratively (correct on first
+    // render, no animation). On a change, React has already written the new
+    // transform; the tween immediately rewinds it to the old y and slides.
     useLayoutEffect(() => {
         const el = activeGroupRef.current;
         if (!el || activeYPos === undefined) {
-            prevActiveYPos.current = null;
+            shownActiveYPos.current = null;
             return;
         }
-        if (prevActiveYPos.current === null) {
-            // First render with an active row — snap into place, don't animate.
-            gsap.set(el, { y: activeYPos });
-        } else if (prevActiveYPos.current !== activeYPos) {
-            gsap.killTweensOf(el);
-            gsap.to(el, {
-                y: activeYPos,
-                duration: 0.35,
-                ease: 'power2.out',
-            });
-        }
-        prevActiveYPos.current = activeYPos;
+        const fromY = shownActiveYPos.current;
+        shownActiveYPos.current = activeYPos;
+        if (fromY === null || fromY === activeYPos) return;
+        tween(
+            el,
+            { y: fromY },
+            { y: activeYPos },
+            { duration: 0.35 },
+            (node, v) => {
+                shownActiveYPos.current = v.y;
+                node.setAttribute('transform', `translate(0, ${v.y})`);
+            }
+        );
     }, [activeYPos]);
 
     // ---- Render a transcript row ----
@@ -859,7 +865,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         }
 
         // Active chrome (outline, name pill, VISUALIZED FUSION badge) is rendered
-        // once at the GeneTrack top level and animated with GSAP on change —
+        // once at the GeneTrack top level and animated with svgTween on change —
         // see the activeGroupRef block below. Individual rows only control
         // their own exon rendering and the gray inactive label.
 
@@ -1050,10 +1056,15 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
             })}
 
             {/* Active-transcript chrome (dashed outline + name pill + DRIVING
-                FUSION badge). Rendered once and re-positioned via GSAP when
-                the active transcript changes, so the transition is smooth. */}
+                FUSION badge). Rendered once and re-positioned via svgTween
+                when the active transcript changes, so the transition is
+                smooth. */}
             {activeTranscript && activeYPos !== undefined && (
-                <g ref={activeGroupRef} style={{ pointerEvents: 'none' }}>
+                <g
+                    ref={activeGroupRef}
+                    transform={`translate(0, ${activeYPos})`}
+                    style={{ pointerEvents: 'none' }}
+                >
                     <rect
                         data-testid={`gene-track-active-outline-${activeTranscript.transcriptId}`}
                         x={drawX - ACTIVE_OUTLINE_X_PAD}

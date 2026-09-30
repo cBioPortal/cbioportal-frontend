@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useLayoutEffect, useRef } from 'react';
-import { gsap } from 'gsap';
+import { resetTween, tweenAttrs, easeOutQuad } from './svgTween';
 import {
     TranscriptData,
     GenePartner,
@@ -20,7 +20,7 @@ const LABEL_BELOW = 14;
 const PADDING_TOP = 6;
 const PADDING_BOTTOM = 30; // room for exon labels below the product
 const TWEEN_DURATION = 0.35;
-const TWEEN_EASE = 'power2.out';
+const TWEEN_EASE = easeOutQuad;
 
 export function getFusionProductHeight(): number {
     return PADDING_TOP + PRODUCT_HEIGHT + PADDING_BOTTOM;
@@ -338,37 +338,27 @@ export const FusionProduct: React.FC<FusionProductProps> = ({
             const prev = prevSlots.get(slot.key);
             if (!rect) return;
 
-            // Always force opacity back to 1 first. GSAP mutates the DOM
+            // Always force opacity back to 1 first. The tween mutates the DOM
             // directly and opacity is NOT a React-controlled prop here, so an
             // interrupted fade (rapid transcript switching) would otherwise
             // leave an exon stuck invisible. Healing it every run guarantees
             // every current exon is visible; only the position still tweens.
-            gsap.killTweensOf(rect);
-            gsap.set(rect, { opacity: 1 });
-            if (label) {
-                gsap.killTweensOf(label);
-                gsap.set(label, { opacity: 1 });
-            }
+            resetTween(rect);
+            if (label) resetTween(label);
 
             if (prev) {
-                gsap.fromTo(
+                tweenAttrs(
                     rect,
-                    { attr: { x: prev.x, width: prev.width } },
-                    {
-                        attr: { x: slot.x, width: slot.width },
-                        duration: TWEEN_DURATION,
-                        ease: TWEEN_EASE,
-                    }
+                    { x: prev.x, width: prev.width },
+                    { x: slot.x, width: slot.width },
+                    { duration: TWEEN_DURATION, ease: TWEEN_EASE }
                 );
                 if (label) {
-                    gsap.fromTo(
+                    tweenAttrs(
                         label,
-                        { attr: { x: prev.x + prev.width / 2 } },
-                        {
-                            attr: { x: slot.x + slot.width / 2 },
-                            duration: TWEEN_DURATION,
-                            ease: TWEEN_EASE,
-                        }
+                        { x: prev.x + prev.width / 2 },
+                        { x: slot.x + slot.width / 2 },
+                        { duration: TWEEN_DURATION, ease: TWEEN_EASE }
                     );
                 }
             }
