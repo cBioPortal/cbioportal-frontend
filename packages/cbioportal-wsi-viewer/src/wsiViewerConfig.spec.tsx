@@ -85,11 +85,7 @@ describe('WSI viewer runtime', () => {
             status: 403,
         })) as unknown) as typeof fetch;
         configureWsiViewerRuntime(makeConfig({ fetchImpl }));
-        registerWsiResourceAccessTarget('study-1', 'slide-1', {
-            patientId: 'patient 1',
-            resourceId: 'WSI_SAMPLE',
-            resourceDataId: '42',
-        });
+        registerWsiResourceAccessTarget('study-1', 'slide-1', 'patient 1');
 
         await expect(
             getWsiSlideAccess('study-1', 'slide-1', false, 'user-a')
@@ -97,7 +93,7 @@ describe('WSI viewer runtime', () => {
         expect(
             fetchImpl
         ).toHaveBeenCalledWith(
-            'https://portal.example/beta/api/wsi/v2/resources/study-1/patient%201/WSI_SAMPLE/42/access',
+            'https://portal.example/beta/api/wsi/v2/resources/study-1/patient%201/access?imageId=slide-1',
             { credentials: 'same-origin', cache: 'no-store' }
         );
     });

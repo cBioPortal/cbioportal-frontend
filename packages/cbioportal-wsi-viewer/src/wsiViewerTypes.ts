@@ -1,7 +1,5 @@
 export interface Slide {
     image_id: string;
-    resource_id?: string;
-    resource_data_id?: string;
     stain_name: string;
     stain_group: string;
     is_hne: boolean;

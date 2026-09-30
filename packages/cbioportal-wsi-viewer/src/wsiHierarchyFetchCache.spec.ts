@@ -516,34 +516,6 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
         };
     }
 
-    function normalizedHierarchy(
-        patientId: string,
-        slides: Array<[string, string]>
-    ): any {
-        return {
-            patient_id: patientId,
-            samples: [
-                {
-                    sample_id: 'S-1',
-                    parts: [
-                        {
-                            blocks: [
-                                {
-                                    slides: slides.map(([imageId, rowId]) => ({
-                                        image_id: imageId,
-                                        resource_id: 'WSI_SLIDE',
-                                        resource_data_id: rowId,
-                                    })),
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-            slide_associations: [],
-        };
-    }
-
     const accessPayload = {
         imageId: 'slide',
         sourceUrl: 's3://bucket/slide.svs',
@@ -574,10 +546,14 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
     function accessCalls(): string[] {
         return fetchMock.mock.calls
             .map(([called]) => String(called))
-            .filter(called => called.endsWith('/access'))
-            .map(called =>
-                new URL(called).pathname.replace('/api/wsi/v2/resources/', '')
-            );
+            .filter(called => called.includes('/access?'))
+            .map(called => {
+                const parsed = new URL(called);
+                return `${parsed.pathname.replace(
+                    '/api/wsi/v2/resources/',
+                    ''
+                )}${parsed.search}`;
+            });
     }
 
     beforeEach(() => {
@@ -587,7 +563,7 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
         hierarchyResponses = {};
         accessStatuses = [];
         fetchMock = jest.fn((url: string) => {
-            if (String(url).endsWith('/access')) {
+            if (String(url).includes('/access?')) {
                 const status = accessStatuses.shift() ?? 200;
                 return Promise.resolve({
                     ok: status >= 200 && status < 300,
@@ -611,7 +587,7 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
         clearPatientHierarchyCache();
     });
 
-    it('registers resource targets from a network hierarchy', async () => {
+    it('registers the slides of a network hierarchy', async () => {
         hierarchyResponses[URL_P1] = [v2Hierarchy([['slide-1', '11']])];
 
         await fetchPatientHierarchyReadOnly(
@@ -623,10 +599,10 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
         );
         await getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a');
 
-        expect(accessCalls()).toEqual(['study-1/P-1/WSI_SLIDE/11/access']);
+        expect(accessCalls()).toEqual(['study-1/P-1/access?imageId=slide-1']);
     });
 
-    it('does not register targets without an explicit study', async () => {
+    it('does not register slides without an explicit study', async () => {
         hierarchyResponses[URL_P1] = [v2Hierarchy([['slide-1', '11']])];
 
         await fetchPatientHierarchyReadOnly(URL_P1, undefined, 'user-a');
@@ -637,7 +613,7 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
         expect(accessCalls()).toEqual([]);
     });
 
-    it('re-registers resource targets on a cache hit', async () => {
+    it('re-registers the slides on a cache hit', async () => {
         hierarchyResponses[URL_P1] = [v2Hierarchy([['slide-1', '11']])];
         await fetchPatientHierarchyReadOnly(
             URL_P1,
@@ -658,52 +634,10 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
         await getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a');
 
         expect(hierarchyCalls(URL_P1)).toBe(1);
-        expect(accessCalls()).toEqual(['study-1/P-1/WSI_SLIDE/11/access']);
+        expect(accessCalls()).toEqual(['study-1/P-1/access?imageId=slide-1']);
     });
 
-    it('refreshes once when a reimport changed resource-data row IDs', async () => {
-        hierarchyResponses[URL_P1] = [
-            v2Hierarchy([
-                ['slide-1', '11'],
-                ['slide-2', '12'],
-            ]),
-            v2Hierarchy([['slide-1', '21']]),
-        ];
-        await fetchPatientHierarchyReadOnly(
-            URL_P1,
-            undefined,
-            'user-a',
-            STUDY,
-            PATIENT
-        );
-        accessStatuses = [404, 200];
-
-        await expect(
-            getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a')
-        ).resolves.toEqual(expect.objectContaining({ accessToken: 'token' }));
-
-        expect(hierarchyCalls(URL_P1)).toBe(2);
-        expect(accessCalls()).toEqual([
-            'study-1/P-1/WSI_SLIDE/11/access',
-            'study-1/P-1/WSI_SLIDE/21/access',
-        ]);
-
-        // The refreshed hierarchy replaced the cache and pruned slide-2.
-        await fetchPatientHierarchyReadOnly(
-            URL_P1,
-            undefined,
-            'user-a',
-            STUDY,
-            PATIENT
-        );
-        expect(hierarchyCalls(URL_P1)).toBe(2);
-        await expect(
-            getWsiSlideAccess(STUDY, 'slide-2', false, 'user-a')
-        ).rejects.toThrow('WSI resource selection is unavailable');
-        expect(accessCalls()).toHaveLength(2);
-    });
-
-    it('surfaces the error without a retry when the refresh keeps the slide', async () => {
+    it('surfaces a 404 without reloading the hierarchy', async () => {
         hierarchyResponses[URL_P1] = [v2Hierarchy([['slide-1', '11']])];
         await fetchPatientHierarchyReadOnly(
             URL_P1,
@@ -712,20 +646,17 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
             STUDY,
             PATIENT
         );
-        accessStatuses = [404, 404];
+        accessStatuses = [404];
 
         await expect(
             getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a')
         ).rejects.toThrow('WSI authorization failed (404)');
-        await expect(
-            getWsiSlideAccess(STUDY, 'slide-1', true, 'user-a')
-        ).rejects.toThrow('WSI authorization failed (404)');
 
-        expect(hierarchyCalls(URL_P1)).toBe(2);
+        expect(hierarchyCalls(URL_P1)).toBe(1);
         expect(accessCalls()).toHaveLength(1);
     });
 
-    it('clears resource targets with the whole hierarchy cache', async () => {
+    it('forgets the slides with the whole hierarchy cache', async () => {
         hierarchyResponses[URL_P1] = [v2Hierarchy([['slide-1', '11']])];
         await fetchPatientHierarchyReadOnly(
             URL_P1,

@@ -167,8 +167,6 @@ function normalizeV2Hierarchy(
                     block_label: block.blockLabel,
                     slides: block.slides.map(slide => ({
                         image_id: slide.imageId,
-                        resource_id: slide.resourceId,
-                        resource_data_id: slide.resourceDataId,
                         stain_name: slide.stainName,
                         stain_group: slide.stainGroup,
                         is_hne: slide.isHne,
@@ -230,10 +228,9 @@ function normalizeHierarchyPayload(
 }
 
 /**
- * Publishes the resource identities of a hierarchy for slide access, but only
- * while that hierarchy is still the cached one for its URL. A superseded
- * response (for example one overtaken by a refresh) must not overwrite the
- * newer targets.
+ * Publishes the slides of a hierarchy for slide access, but only while that
+ * hierarchy is still the cached one for its URL, so a superseded response
+ * cannot overwrite a newer one.
  */
 function registerIfCurrent(
     url: string,
@@ -245,22 +242,19 @@ function registerIfCurrent(
     if (!studyId) return;
     const current = hierarchyCache.get(hierarchyCacheKey(url, authScope));
     if (current?.promise !== promise) return;
-    registerWsiResourceAccess(studyId, hierarchy, () =>
-        refreshPatientHierarchy(url, authScope, studyId, hierarchy.patient_id)
-    );
+    registerWsiResourceAccess(studyId, hierarchy);
 }
 
 function getOrCreateHierarchyRequest(
     url: string,
     authScope: string | undefined,
     studyId: string | undefined,
-    patientId: string | undefined,
-    bypassCache = false
+    patientId: string | undefined
 ): Promise<PatientHierarchy> {
     const cacheKey = hierarchyCacheKey(url, authScope);
     const now = Date.now();
     const cached = hierarchyCache.get(cacheKey);
-    if (!bypassCache && cached && cached.expiresAt > now) {
+    if (cached && cached.expiresAt > now) {
         const cachedPromise = cached.promise;
         const targetStudyId = studyId ?? cached.studyId;
         if (studyId && !cached.studyId) {
@@ -316,29 +310,9 @@ function getOrCreateHierarchyRequest(
 }
 
 /**
- * Reloads a hierarchy from the network, replacing its cache entry and
- * re-registering its resource access targets. Used when resource-data row
- * IDs may have changed, for example after a reimport.
- */
-export function refreshPatientHierarchy(
-    url: string,
-    authScope: string | undefined,
-    studyId: string,
-    patientId: string
-): Promise<PatientHierarchy> {
-    return getOrCreateHierarchyRequest(
-        url,
-        authScope,
-        studyId,
-        patientId,
-        true
-    );
-}
-
-/**
  * Loads a patient hierarchy through the shared cache. When `studyId` is given,
- * every returned hierarchy (network, cached or seeded) registers the resource
- * identities that slide access requests use. `patientId` is recorded on the
+ * every returned hierarchy (network or cached) registers the slides that slide
+ * access requests may name. `patientId` is recorded on the
  * normalized hierarchy; the URL is never parsed for either identity.
  */
 export async function fetchPatientHierarchyReadOnly(
