@@ -85,6 +85,25 @@ export function sampleSequencedTooltip(
         : undefined;
 }
 
+/**
+ * Offset of a procedure from its sample's sequencing: `days` apart, with the
+ * procedure `before` or `after` sequencing, or on the `same` day. Undefined
+ * when either day is unknown.
+ */
+export function procedureSequencingOffset(
+    procedureDays: number | null | undefined,
+    sequencingDays: number | null | undefined
+): { days: number; relation: 'before' | 'after' | 'same' } | undefined {
+    if (procedureDays == null || sequencingDays == null) {
+        return undefined;
+    }
+    const delta = sequencingDays - procedureDays;
+    return {
+        days: Math.abs(delta),
+        relation: delta === 0 ? 'same' : delta > 0 ? 'before' : 'after',
+    };
+}
+
 /** Tooltip for a slide's procedure timepoint, with its sample's sequencing when known. */
 export function procedureTooltip(
     procedureDays: number | null | undefined,
@@ -94,17 +113,17 @@ export function procedureTooltip(
         return undefined;
     }
     const procedure = `Procedure on ${formatDaysSinceDiagnosis(procedureDays)}`;
-    if (sequencingDays == null) {
+    const offset = procedureSequencingOffset(procedureDays, sequencingDays);
+    if (!offset) {
         return `${procedure}. ${DAY_ZERO_TOOLTIP}`;
     }
-    const delta = sequencingDays - procedureDays;
     const relation =
-        delta === 0
+        offset.relation === 'same'
             ? 'the same day this sample was sequenced'
-            : `${Math.abs(delta)} days ${
-                  delta > 0 ? 'before' : 'after'
+            : `${offset.days} days ${
+                  offset.relation
               } this sample was sequenced (${formatDaysSinceDiagnosis(
-                  sequencingDays
+                  sequencingDays!
               )})`;
     return `${procedure}, ${relation}. ${DAY_ZERO_TOOLTIP}`;
 }
@@ -123,16 +142,13 @@ export function procedureRelativeToSequencingText(
     procedureDays: number | null | undefined,
     sequencingDays: number | null | undefined
 ): string | null {
-    if (procedureDays == null || sequencingDays == null) {
+    const offset = procedureSequencingOffset(procedureDays, sequencingDays);
+    if (!offset) {
         return null;
     }
-    const delta = sequencingDays - procedureDays;
-    if (delta === 0) {
-        return 'Proc same day as sequencing';
-    }
-    return `Proc ${Math.abs(delta)} d ${
-        delta > 0 ? 'before' : 'after'
-    } sequencing`;
+    return offset.relation === 'same'
+        ? 'Proc same day as sequencing'
+        : `Proc ${offset.days} d ${offset.relation} sequencing`;
 }
 
 /**
@@ -144,12 +160,14 @@ export function sequencedRelativeToProcedureText(
     procedureDays: number | null | undefined
 ): string {
     const day = formatDaysSinceDiagnosis(sequencingDays);
-    if (procedureDays == null) {
+    const offset = procedureSequencingOffset(procedureDays, sequencingDays);
+    if (!offset) {
         return day;
     }
-    const delta = sequencingDays - procedureDays;
-    if (delta === 0) {
+    if (offset.relation === 'same') {
         return `${day} (same day)`;
     }
-    return `${day} (${Math.abs(delta)} d ${delta > 0 ? 'later' : 'earlier'})`;
+    return `${day} (${offset.days} d ${
+        offset.relation === 'before' ? 'later' : 'earlier'
+    })`;
 }

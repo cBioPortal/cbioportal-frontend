@@ -3,6 +3,7 @@ import {
     buildWsiSampleTimelineMap,
     DAY_ZERO_TOOLTIP,
     procedureRelativeToSequencingText,
+    procedureSequencingOffset,
     procedureTooltip,
     sampleSequencedText,
     sampleSequencedTooltip,
@@ -145,5 +146,27 @@ describe('sample timeline text', () => {
         );
         expect(sequencedRelativeToProcedureText(0, 0)).toBe('d0 (same day)');
         expect(sequencedRelativeToProcedureText(7, undefined)).toBe('d+7');
+    });
+});
+
+describe('procedureSequencingOffset', () => {
+    it('measures the procedure against sequencing', () => {
+        expect(procedureSequencingOffset(-42, 0)).toEqual({
+            days: 42,
+            relation: 'before',
+        });
+        expect(procedureSequencingOffset(10, 3)).toEqual({
+            days: 7,
+            relation: 'after',
+        });
+        expect(procedureSequencingOffset(5, 5)).toEqual({
+            days: 0,
+            relation: 'same',
+        });
+    });
+
+    it('is undefined when either day is unknown', () => {
+        expect(procedureSequencingOffset(undefined, 5)).toBeUndefined();
+        expect(procedureSequencingOffset(5, null)).toBeUndefined();
     });
 });
