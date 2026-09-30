@@ -61,6 +61,7 @@ import {
     MoreHorizontalIcon,
     PencilIcon,
     RefreshCwIcon,
+    SparklesIcon,
     SquareIcon,
     TriangleAlertIcon,
 } from 'lucide-react';
@@ -70,7 +71,9 @@ import {
     ComponentType,
     FC,
     PropsWithChildren,
+    RefObject,
     useEffect,
+    useRef,
     useSyncExternalStore,
 } from 'react';
 
@@ -294,22 +297,40 @@ const ThreadWelcome: FC = () => {
 // Widths vary so the placeholders read as pills of different lengths.
 const STARTER_SKELETON_WIDTHS = ['w-56', 'w-48', 'w-64'];
 
-const ComposerSuggestions: FC = () => {
+const ComposerSuggestions: FC<{
+    inputRef: RefObject<HTMLTextAreaElement | null>;
+}> = ({ inputRef }) => {
     const starters = useSyncExternalStore(
         subscribeToStarters,
         getStartersState,
         getStartersState
     );
+    const loading = starters.status === 'loading';
 
     return (
         <div
             data-slot="aui_composer-suggestions"
             className="aui-composer-suggestions mb-3 flex flex-col items-start gap-1.5"
         >
-            <p className="aui-composer-suggestions-heading text-muted-foreground px-2 pt-0.5 text-xs font-medium">
-                Try an example
+            <p
+                aria-live="polite"
+                className="aui-composer-suggestions-heading text-muted-foreground flex items-center gap-1.5 px-2 pt-0.5 text-xs font-medium"
+            >
+                {loading ? (
+                    <>
+                        <SparklesIcon
+                            className="size-3.5 shrink-0"
+                            aria-hidden
+                        />
+                        <span className="shimmer motion-reduce:animate-none">
+                            Thinking…
+                        </span>
+                    </>
+                ) : (
+                    'Try an example'
+                )}
             </p>
-            {starters.status === 'loading' ? (
+            {loading ? (
                 STARTER_SKELETON_WIDTHS.map(width => (
                     <Skeleton
                         key={width}
@@ -318,39 +339,74 @@ const ComposerSuggestions: FC = () => {
                 ))
             ) : (
                 <ThreadPrimitive.Suggestions>
-                    {() => <ComposerSuggestionItem />}
+                    {() => <ComposerSuggestionItem inputRef={inputRef} />}
                 </ThreadPrimitive.Suggestions>
             )}
         </div>
     );
 };
 
-const ComposerSuggestionItem: FC = () => {
+// Replaces the composer text with the prompt, for the user to edit or send,
+// and moves focus to the input. Highlighted while the composer holds its
+// prompt unedited.
+const ComposerSuggestionItem: FC<{
+    inputRef: RefObject<HTMLTextAreaElement | null>;
+}> = ({ inputRef }) => {
+    const selected = useAuiState(
+        s => s.composer.text !== '' && s.composer.text === s.suggestion.prompt
+    );
+
+    // Runs before the trigger sets the text; the caret is placed after it.
+    const focusInput = () => {
+        const input = inputRef.current;
+        if (!input) return;
+        input.focus();
+        requestAnimationFrame(() => {
+            const end = input.value.length;
+            input.setSelectionRange(end, end);
+            input.scrollTop = input.scrollHeight;
+        });
+    };
+
     return (
         <SuggestionPrimitive.Trigger
-            send
+            onClick={focusInput}
+            aria-pressed={selected}
             render={
                 <Button
                     type="button"
                     variant="ghost"
-                    className="aui-composer-suggestion fade-in slide-in-from-bottom-1 animate-in fill-mode-both border-border hover:border-muted-foreground/40 bg-(--composer-bg) dark:border-muted-foreground/20 h-auto max-w-full cursor-pointer justify-start gap-2 rounded-full px-3.5 py-1.5 text-left font-normal duration-200"
+                    className={cn(
+                        'aui-composer-suggestion fade-in slide-in-from-bottom-1 animate-in fill-mode-both h-auto max-w-full cursor-pointer justify-start gap-2 rounded-full px-3.5 py-1.5 text-left font-normal duration-200',
+                        selected
+                            ? 'border-primary/60 bg-accent hover:bg-accent dark:hover:bg-accent'
+                            : 'border-border hover:border-muted-foreground/40 bg-(--composer-bg) dark:border-muted-foreground/20'
+                    )}
                 />
             }
         >
+            <SparklesIcon
+                className={cn(
+                    'size-3.5 shrink-0',
+                    selected ? 'text-primary' : 'text-muted-foreground'
+                )}
+                aria-hidden
+            />
             <SuggestionPrimitive.Title className="aui-composer-suggestion-title text-foreground min-w-0 truncate text-sm" />
         </SuggestionPrimitive.Trigger>
     );
 };
 
 const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
-    // The placeholder is only visible while the composer is empty, which is
-    // exactly when the starter suggestions are shown above it.
+    // On a new chat the placeholder continues the starter suggestions shown
+    // above it.
     const showsSuggestions = useAuiState(isNewChatView);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
 
     return (
         <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
-            <AuiIf condition={s => isNewChatView(s) && s.composer.isEmpty}>
-                <ComposerSuggestions />
+            <AuiIf condition={isNewChatView}>
+                <ComposerSuggestions inputRef={inputRef} />
             </AuiIf>
             <div
                 data-slot="aui_composer-shell"
@@ -358,6 +414,7 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
             >
                 <ComposerAttachments />
                 <ComposerPrimitive.Input
+                    ref={inputRef}
                     placeholder={
                         showsSuggestions
                             ? 'Or ask your own question…'
