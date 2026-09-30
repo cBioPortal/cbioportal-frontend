@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import { isWsiResourceId } from 'shared/lib/ResourcePolicy';
 import {
     CBioPortalAPIInternal,
     ClinicalData,
@@ -1790,11 +1791,17 @@ export class PatientViewPageStore {
         []
     );
 
+    // Pathology slides are shown in the Pathology Slides tab, so their
+    // resources are left out of Files & Links and the resource tabs.
     readonly resourceDefinitions = remoteData({
         invoke: () =>
-            internalClient.getAllResourceDefinitionsInStudyUsingGET({
-                studyId: this.studyId,
-            }),
+            internalClient
+                .getAllResourceDefinitionsInStudyUsingGET({
+                    studyId: this.studyId,
+                })
+                .then(defs =>
+                    defs.filter(def => !isWsiResourceId(def.resourceId))
+                ),
         onResult: defs => {
             // open resources which have `openByDefault` set to true
             if (defs) {

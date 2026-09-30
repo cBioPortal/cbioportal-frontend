@@ -2,9 +2,9 @@ import { ResourceData } from 'cbioportal-ts-api-client';
 import { getServerConfig } from 'config/config';
 
 const LEGACY_HE_RESOURCE_IDS = new Set(['HE', 'MSK_HNE']);
-// Whole-slide images are stored as these resources. A large study has one row
-// per slide (1.7M for MSK-IMPACT), so study-wide resource listings skip them;
-// slides are reached through the Pathology Slides views and patient resources.
+// Whole-slide images are stored as these resources, one row per slide (1.7M
+// for MSK-IMPACT). Files & Links and the resource tabs leave them out; slides
+// are reached through the Pathology Slides views.
 const WSI_RESOURCE_IDS = new Set(['WSI_SAMPLE', 'WSI_PATIENT']);
 const LEGACY_HE_DISPLAY_NAME_PATTERNS = [
     /^h&e slide(s)?$/i,
