@@ -126,46 +126,6 @@ function persistMetadata(
     }
 }
 
-function cloneTileMetadata(metadata: TileMetadata): TileMetadata {
-    // Metadata is a small fixed JSON shape, so clone it directly to keep the
-    // shared cache immutable without paying generic clone/serialization costs.
-    const levelDimensions = new Array(metadata.level_dimensions.length);
-    for (let index = 0; index < metadata.level_dimensions.length; index += 1) {
-        const level = metadata.level_dimensions[index];
-        levelDimensions[index] = {
-            width: level.width,
-            height: level.height,
-        };
-    }
-
-    return {
-        dimensions: {
-            width: metadata.dimensions.width,
-            height: metadata.dimensions.height,
-        },
-        levels: metadata.levels,
-        level_dimensions: levelDimensions,
-        level_downsamples: metadata.level_downsamples
-            ? [...metadata.level_downsamples]
-            : undefined,
-        max_zoom: metadata.max_zoom,
-        tile_metadata_schema_version: metadata.tile_metadata_schema_version,
-        decode_policy_version: metadata.decode_policy_version,
-        max_decode_pixels: metadata.max_decode_pixels,
-        thumbnail_max_decode_pixels: metadata.thumbnail_max_decode_pixels,
-        safe_min_level: metadata.safe_min_level,
-        tile_size: metadata.tile_size,
-        mpp: metadata.mpp
-            ? {
-                  x: metadata.mpp.x,
-                  y: metadata.mpp.y,
-              }
-            : undefined,
-        objective_power: metadata.objective_power,
-        vendor: metadata.vendor,
-    };
-}
-
 function getOrCreateMetadataRequest(
     tileServerBase: string,
     imageId: string,
@@ -234,47 +194,6 @@ function getOrCreateMetadataRequest(
     return promise;
 }
 
-export function seedSlideMetadataCache(
-    tileServerBase: string,
-    imageId: string,
-    metadata: TileMetadata,
-    studyId?: string,
-    authScope?: string
-): void {
-    const expiresAt = Date.now() + METADATA_CACHE_TTL_MS;
-    const cloned = cloneTileMetadata(metadata);
-    validateWsiTileMetadata(cloned);
-    metadataCache.set(
-        buildMetadataCacheKey(tileServerBase, imageId, studyId, authScope),
-        {
-            expiresAt,
-            promise: Promise.resolve(cloned),
-        }
-    );
-    persistMetadata(
-        tileServerBase,
-        imageId,
-        expiresAt,
-        cloned,
-        studyId,
-        authScope
-    );
-}
-
-export async function fetchSlideMetadataCached(
-    tileServerBase: string,
-    imageId: string,
-    signal?: AbortSignal,
-    studyId?: string,
-    authScope?: string
-): Promise<TileMetadata> {
-    const metadata = await withAbort(
-        getOrCreateMetadataRequest(tileServerBase, imageId, studyId, authScope),
-        signal
-    );
-    return cloneTileMetadata(metadata);
-}
-
 export async function fetchSlideMetadataCachedReadOnly(
     tileServerBase: string,
     imageId: string,
@@ -285,20 +204,6 @@ export async function fetchSlideMetadataCachedReadOnly(
     return withAbort(
         getOrCreateMetadataRequest(tileServerBase, imageId, studyId, authScope),
         signal
-    );
-}
-
-export async function preloadSlideMetadata(
-    tileServerBase: string,
-    imageId: string,
-    studyId?: string,
-    authScope?: string
-): Promise<void> {
-    await getOrCreateMetadataRequest(
-        tileServerBase,
-        imageId,
-        studyId,
-        authScope
     );
 }
 

@@ -109,22 +109,16 @@ type SampleSlideData = {
     slides: Slide[];
     orderedSlides: OrderedServableSlideEntry[];
     slideCounts: ServableSlideCounts;
-    blockCounts: ServableSlideCounts;
     partDescriptionCount: number;
     slideImageIds: Set<string>;
-};
-
-type HierarchySlideData = {
-    entries: ServableSlideEntry[];
-    counts: ServableSlideCounts;
 };
 
 // A normalized hierarchy is never mutated, so everything derived from it is
 // memoized by object identity.
 const sampleSlideDataCache = new WeakMap<Sample, SampleSlideData>();
-const hierarchySlideDataCache = new WeakMap<
+const hierarchySlideEntriesCache = new WeakMap<
     PatientHierarchy,
-    HierarchySlideData
+    ServableSlideEntry[]
 >();
 const servableAssociationsByImageIdCache = new WeakMap<
     SlideAssociation[],
@@ -283,13 +277,6 @@ function buildSampleSlideData(sample: Sample): SampleSlideData {
         other: 0,
         unknown: 0,
     };
-    const seenBlocks = {
-        all: new Set<string>(),
-        hne: new Set<string>(),
-        ihc: new Set<string>(),
-        other: new Set<string>(),
-        unknown: new Set<string>(),
-    };
     const partDescriptions = new Set<string>();
     const slideImageIds = new Set<string>();
     for (const part of sample.parts) {
@@ -333,28 +320,6 @@ function buildSampleSlideData(sample: Sample): SampleSlideData {
                 ) {
                     slideCounts.unknown += 1;
                 }
-                const blockKey = uniqueBlockKey(sample.sample_id, slide);
-                seenBlocks.all.add(blockKey);
-                if (slide.is_hne) {
-                    seenBlocks.hne.add(blockKey);
-                }
-                if (slide.is_ihc) {
-                    seenBlocks.ihc.add(blockKey);
-                }
-                if (
-                    !slide.is_hne &&
-                    !slide.is_ihc &&
-                    slide.slide_type === 'Other'
-                ) {
-                    seenBlocks.other.add(blockKey);
-                }
-                if (
-                    !slide.is_hne &&
-                    !slide.is_ihc &&
-                    slide.slide_type === 'Unknown'
-                ) {
-                    seenBlocks.unknown.add(blockKey);
-                }
             }
         }
     }
@@ -385,13 +350,6 @@ function buildSampleSlideData(sample: Sample): SampleSlideData {
         slides: deduped,
         orderedSlides,
         slideCounts,
-        blockCounts: {
-            all: seenBlocks.all.size,
-            hne: seenBlocks.hne.size,
-            ihc: seenBlocks.ihc.size,
-            other: seenBlocks.other.size,
-            unknown: seenBlocks.unknown.size,
-        },
         partDescriptionCount: partDescriptions.size,
         slideImageIds,
     };
@@ -410,49 +368,20 @@ export function getServableSlidesForSampleReadOnly(sample: Sample): Slide[] {
     return getCachedServableSlideData(sample).slides;
 }
 
-function getHierarchySlideData(
-    hierarchy: PatientHierarchy
-): HierarchySlideData {
-    const cached = hierarchySlideDataCache.get(hierarchy);
-    if (cached) {
-        return cached;
-    }
-
-    const entries: ServableSlideEntry[] = [];
-    const counts: ServableSlideCounts = {
-        all: 0,
-        hne: 0,
-        ihc: 0,
-        other: 0,
-        unknown: 0,
-    };
-    for (const sample of hierarchy.samples) {
-        const sampleData = getCachedServableSlideData(sample);
-        counts.all += sampleData.slideCounts.all;
-        counts.hne += sampleData.slideCounts.hne;
-        counts.ihc += sampleData.slideCounts.ihc;
-        counts.other += sampleData.slideCounts.other;
-        counts.unknown += sampleData.slideCounts.unknown;
-        for (const slide of sampleData.slides) {
-            entries.push({ slide, sample });
-        }
-    }
-
-    const data = { entries, counts };
-    hierarchySlideDataCache.set(hierarchy, data);
-    return data;
-}
-
 export function getServableSlideEntriesForHierarchyReadOnly(
     hierarchy: PatientHierarchy
 ): ServableSlideEntry[] {
-    return getHierarchySlideData(hierarchy).entries;
-}
-
-export function getServableSlideCountsForHierarchyReadOnly(
-    hierarchy: PatientHierarchy
-): ServableSlideCounts {
-    return getHierarchySlideData(hierarchy).counts;
+    let entries = hierarchySlideEntriesCache.get(hierarchy);
+    if (!entries) {
+        entries = hierarchy.samples.flatMap(sample =>
+            getCachedServableSlideData(sample).slides.map(slide => ({
+                slide,
+                sample,
+            }))
+        );
+        hierarchySlideEntriesCache.set(hierarchy, entries);
+    }
+    return entries;
 }
 
 export function countServableSlidesForSample(
@@ -480,21 +409,6 @@ export function sampleHasServableSlide(
         !!slideId &&
         getCachedServableSlideData(sample).slideImageIds.has(slideId)
     );
-}
-
-function uniqueBlockKey(
-    sampleId: string,
-    slide: Pick<Slide, 'block_number' | 'block_label'>
-): string {
-    return `${sampleId}::${slide.block_number || ''}::${slide.block_label ||
-        ''}`;
-}
-
-export function countServableBlocksForSample(
-    sample: Sample,
-    stainFilter: Exclude<WsiStainFilter, 'all'> | 'all' = 'all'
-): number {
-    return getCachedServableSlideData(sample).blockCounts[stainFilter];
 }
 
 function normalizeMatchLevel(

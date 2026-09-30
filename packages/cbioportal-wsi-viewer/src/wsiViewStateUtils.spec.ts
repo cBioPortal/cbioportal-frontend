@@ -2,11 +2,13 @@
  * @jest-environment jsdom
  */
 import {
-    buildWsiHash,
+    buildWsiViewState,
+    formatWsiHash,
+    hashUrlState,
     clearWsiHashFromCurrentUrl,
     hasWsiHashViewport,
     readWsiHashState,
-    writeSelectedSlideHashToCurrentUrl,
+    writeSelectedSlideState,
     writeWsiHashToCurrentUrl,
 } from './wsiViewStateUtils';
 
@@ -25,7 +27,7 @@ describe('wsiViewStateUtils', () => {
     });
 
     it('builds the WSI hash without URLSearchParams allocation and preserves encoded slide ids', () => {
-        const hash = buildWsiHash({
+        const state = buildWsiViewState({
             selectedSlideId: 'slide id/1',
             osdViewer: {
                 viewport: {
@@ -38,6 +40,7 @@ describe('wsiViewStateUtils', () => {
             },
         });
 
+        const hash = state && formatWsiHash(state);
         expect(hash).toBe('wsi:slide=slide%20id%2F1&x=1234&y=5679&z=1.234568');
         window.location.hash = `#${hash}`;
         expect(readWsiHashState()).toEqual({
@@ -106,7 +109,7 @@ describe('wsiViewStateUtils', () => {
     it('keeps a coordinate-less selection when switching slides', () => {
         window.location.hash = '#wsi:slide=slide-1';
 
-        const href = writeSelectedSlideHashToCurrentUrl('slide-2');
+        const href = writeSelectedSlideState(hashUrlState, 'slide-2');
 
         expect(href).toMatch(/#wsi:slide=slide-2$/);
         expect(readWsiHashState()).toEqual({ slideId: 'slide-2' });
@@ -115,7 +118,7 @@ describe('wsiViewStateUtils', () => {
     it('carries the viewport when switching slides from a full hash', () => {
         window.location.hash = '#wsi:slide=slide-1&x=1&y=2&z=3';
 
-        const href = writeSelectedSlideHashToCurrentUrl('slide-2');
+        const href = writeSelectedSlideState(hashUrlState, 'slide-2');
 
         expect(href).toContain('#wsi:slide=slide-2&x=1&y=2&z=3.000000');
         expect(hasWsiHashViewport(readWsiHashState())).toBe(true);

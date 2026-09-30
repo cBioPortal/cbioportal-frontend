@@ -3,11 +3,8 @@
  */
 import {
     clearSlideMetadataCache,
-    fetchSlideMetadataCached,
     fetchSlideMetadataCachedReadOnly,
     hasCachedSlideMetadata,
-    preloadSlideMetadata,
-    seedSlideMetadataCache,
 } from './wsiMetadataFetchCache';
 import { getWsiSlideAccess } from './wsiAuth';
 
@@ -75,13 +72,13 @@ describe('wsiMetadataFetchCache', () => {
         mockAccess(metadata);
 
         const [first, second] = await Promise.all([
-            fetchSlideMetadataCached(
+            fetchSlideMetadataCachedReadOnly(
                 'https://tiles.example.com',
                 'A',
                 undefined,
                 'study-1'
             ),
-            fetchSlideMetadataCached(
+            fetchSlideMetadataCachedReadOnly(
                 'https://tiles.example.com',
                 'A',
                 undefined,
@@ -92,37 +89,17 @@ describe('wsiMetadataFetchCache', () => {
         expect(mockGetWsiSlideAccess).toHaveBeenCalledTimes(1);
         expect(first).toEqual(metadata);
         expect(second).toEqual(metadata);
-        expect(first).not.toBe(second);
-    });
-
-    it('returns cloned metadata objects so consumers cannot mutate the cache', async () => {
-        const first = await fetchSlideMetadataCached(
-            'https://tiles.example.com',
-            'A',
-            undefined,
-            'study-1'
-        );
-        first.dimensions.width = 1;
-
-        const second = await fetchSlideMetadataCached(
-            'https://tiles.example.com',
-            'A',
-            undefined,
-            'study-1'
-        );
-
-        expect(mockGetWsiSlideAccess).toHaveBeenCalledTimes(1);
-        expect(second.dimensions.width).toBe(1000);
+        expect(second).toBe(first);
     });
 
     it('does not reuse metadata across study scopes', async () => {
-        await fetchSlideMetadataCached(
+        await fetchSlideMetadataCachedReadOnly(
             'https://tiles.example.com',
             'A',
             undefined,
             'study-1'
         );
-        await fetchSlideMetadataCached(
+        await fetchSlideMetadataCachedReadOnly(
             'https://tiles.example.com',
             'A',
             undefined,
@@ -144,31 +121,6 @@ describe('wsiMetadataFetchCache', () => {
         ]);
     });
 
-    it('clones optional metadata fields so callers cannot mutate cached rich metadata', async () => {
-        mockAccess(makeRichMetadata());
-
-        const first = await fetchSlideMetadataCached(
-            'https://tiles.example.com',
-            'A',
-            undefined,
-            'study-1'
-        );
-        first.mpp!.x = 9;
-        first.level_dimensions[0].width = 1;
-
-        const second = await fetchSlideMetadataCached(
-            'https://tiles.example.com',
-            'A',
-            undefined,
-            'study-1'
-        );
-
-        expect(mockGetWsiSlideAccess).toHaveBeenCalledTimes(1);
-        expect(second.mpp).toEqual({ x: 0.25, y: 0.3 });
-        expect(second.level_dimensions[0].width).toBe(1000);
-        expect(second.objective_power).toBe(40);
-    });
-
     it('lets read-only consumers reuse the cached metadata object without cloning', async () => {
         const first = await fetchSlideMetadataCachedReadOnly(
             'https://tiles.example.com',
@@ -187,12 +139,17 @@ describe('wsiMetadataFetchCache', () => {
         expect(second).toBe(first);
     });
 
-    it('preloads slide metadata into cache for later fetches', async () => {
+    it('serves later fetches from the cache', async () => {
         const metadata = makeMetadata();
         mockAccess(metadata);
 
-        await preloadSlideMetadata('https://tiles.example.com', 'A', 'study-1');
-        const fetched = await fetchSlideMetadataCached(
+        await fetchSlideMetadataCachedReadOnly(
+            'https://tiles.example.com',
+            'A',
+            undefined,
+            'study-1'
+        );
+        const fetched = await fetchSlideMetadataCachedReadOnly(
             'https://tiles.example.com',
             'A',
             undefined,
@@ -201,7 +158,6 @@ describe('wsiMetadataFetchCache', () => {
 
         expect(mockGetWsiSlideAccess).toHaveBeenCalledTimes(1);
         expect(fetched).toEqual(metadata);
-        expect(fetched).not.toBe(metadata);
     });
 
     it('lets aborted callers exit without cancelling the shared metadata request', async () => {
@@ -214,13 +170,13 @@ describe('wsiMetadataFetchCache', () => {
         );
 
         const abortController = new AbortController();
-        const abortedPromise = fetchSlideMetadataCached(
+        const abortedPromise = fetchSlideMetadataCachedReadOnly(
             'https://tiles.example.com',
             'A',
             abortController.signal,
             'study-1'
         );
-        const sharedPromise = fetchSlideMetadataCached(
+        const sharedPromise = fetchSlideMetadataCachedReadOnly(
             'https://tiles.example.com',
             'A',
             undefined,
@@ -247,7 +203,12 @@ describe('wsiMetadataFetchCache', () => {
         const metadata = makeMetadata();
         mockAccess(metadata);
 
-        await preloadSlideMetadata('https://tiles.example.com', 'A', 'study-1');
+        await fetchSlideMetadataCachedReadOnly(
+            'https://tiles.example.com',
+            'A',
+            undefined,
+            'study-1'
+        );
 
         expect(mockGetWsiSlideAccess).toHaveBeenCalledTimes(1);
 
@@ -262,7 +223,7 @@ describe('wsiMetadataFetchCache', () => {
             window.sessionStorage.setItem(storedEntries[0], persistedValue);
         }
 
-        const fetched = await fetchSlideMetadataCached(
+        const fetched = await fetchSlideMetadataCachedReadOnly(
             'https://tiles.example.com',
             'A',
             undefined,
@@ -274,48 +235,16 @@ describe('wsiMetadataFetchCache', () => {
         expect(fetched).not.toBe(metadata);
     });
 
-    it('hydrates cloned metadata from sessionStorage so callers cannot mutate persisted cache state', async () => {
-        const metadata = makeMetadata();
-        seedSlideMetadataCache(
-            'https://tiles.example.com',
-            'A',
-            metadata,
-            'study-1'
-        );
-
-        const storedEntries = Object.keys(window.sessionStorage).filter(key =>
-            key.startsWith('wsi-metadata-cache::')
-        );
-        const persistedValue = window.sessionStorage.getItem(storedEntries[0]);
-
-        clearSlideMetadataCache();
-        if (persistedValue) {
-            window.sessionStorage.setItem(storedEntries[0], persistedValue);
-        }
-
-        const first = await fetchSlideMetadataCached(
-            'https://tiles.example.com',
-            'A',
-            undefined,
-            'study-1'
-        );
-        first.level_dimensions[0].width = 1;
-
-        const second = await fetchSlideMetadataCached(
-            'https://tiles.example.com',
-            'A',
-            undefined,
-            'study-1'
-        );
-
-        expect(second.level_dimensions[0].width).toBe(1000);
-    });
-
     it('reports persisted slide metadata entries as cached', async () => {
         const metadata = makeMetadata();
         mockAccess(metadata);
 
-        await preloadSlideMetadata('https://tiles.example.com', 'A', 'study-1');
+        await fetchSlideMetadataCachedReadOnly(
+            'https://tiles.example.com',
+            'A',
+            undefined,
+            'study-1'
+        );
 
         const storedEntries = Object.keys(window.sessionStorage).filter(key =>
             key.startsWith('wsi-metadata-cache::')

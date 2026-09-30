@@ -1,9 +1,7 @@
 import {
-    countServableBlocksForSample,
     countServableSlidesForSample,
     getOrderedServableSlidesForSampleReadOnly,
     getServableSlideAssociationsByImageIdReadOnly,
-    getServableSlideCountsForHierarchyReadOnly,
     getServableSlideEntriesForHierarchyReadOnly,
     getServableSlideIdsForPathologyFilterReadOnly,
     getServableSlidesForSampleReadOnly,
@@ -180,7 +178,7 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         ).toEqual([]);
     });
 
-    it('derives stain and block counts from servable slides', () => {
+    it('derives stain counts from servable slides', () => {
         const sample = makeSample('S-1', [
             makeSlide({ image_id: 'slide-hne', block_label: 'A1' }),
             makeSlide({
@@ -196,11 +194,9 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         expect(countServableSlidesForSample(sample, 'all')).toBe(3);
         expect(countServableSlidesForSample(sample, 'hne')).toBe(2);
         expect(countServableSlidesForSample(sample, 'ihc')).toBe(1);
-        expect(countServableBlocksForSample(sample, 'all')).toBe(2);
-        expect(countServableBlocksForSample(sample, 'ihc')).toBe(1);
     });
 
-    it('aggregates hierarchy entries and counts from samples', () => {
+    it('aggregates hierarchy entries from samples', () => {
         const hierarchy: PatientHierarchy = {
             patient_id: 'P-1',
             samples: [
@@ -212,13 +208,6 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         expect(
             getServableSlideEntriesForHierarchyReadOnly(hierarchy)
         ).toHaveLength(2);
-        expect(getServableSlideCountsForHierarchyReadOnly(hierarchy)).toEqual({
-            all: 2,
-            hne: 2,
-            ihc: 0,
-            other: 0,
-            unknown: 0,
-        });
     });
 
     it('memoizes hierarchy entries by hierarchy identity', () => {

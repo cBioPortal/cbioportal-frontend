@@ -26,12 +26,6 @@ export function loadOpenSeadragon(): Promise<typeof import('openseadragon')> {
     return openSeadragonPromise;
 }
 
-export function preloadOpenSeadragon() {
-    void loadOpenSeadragon().catch(() => {
-        // Best-effort warmup only; the viewer will surface a real error on use.
-    });
-}
-
 export function hasPreloadedOpenSeadragon(): boolean {
     return openSeadragonPromise !== null;
 }

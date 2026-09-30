@@ -2,7 +2,6 @@ import {
     clearWsiResourceAccessTargets,
     clearWsiSlideAccess,
     getWsiSlideAccess,
-    isWsiAuthEnabled,
     registerWsiResourceAccess,
     registerWsiResourceAccessTarget,
 } from './wsiAuth';
@@ -43,10 +42,6 @@ describe('WSI access capability', () => {
             resourceId: 'WSI_SAMPLE',
             resourceDataId: '42',
         });
-    });
-
-    it('enables WSI auth for saml-backed portals', () => {
-        expect(isWsiAuthEnabled()).toBe(true);
     });
 
     it('requests and caches source-bound access for one slide', async () => {
@@ -128,11 +123,6 @@ describe('WSI access capability', () => {
             getWsiSlideAccess('study-1', 'slide-1', false, 'user-b')
         ).resolves.toEqual(expect.objectContaining({ accessToken: 'token-b' }));
         expect(global.fetch).toHaveBeenCalledTimes(2);
-    });
-
-    it('always enables the source-bound WSI capability contract', () => {
-        configureRuntime({ authEnabled: false });
-        expect(isWsiAuthEnabled()).toBe(true);
     });
 
     it('rejects a schema-v2 metadata object with a non-current decode policy', async () => {

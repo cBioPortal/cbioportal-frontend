@@ -84,15 +84,6 @@ export function buildWsiViewState({
     }
 }
 
-export function buildWsiHash(args: {
-    selectedSlideId?: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    osdViewer: any;
-}): string | null {
-    const state = buildWsiViewState(args);
-    return state ? formatWsiHash(state) : null;
-}
-
 export function writeWsiHashToCurrentUrl(hash: string): string {
     const nextHash = hash.startsWith('#') ? hash : `#${hash}`;
     if (window.location.hash === nextHash) {
@@ -124,12 +115,6 @@ export function writeSelectedSlideState(
     }
 
     return urlState.write({ slideId: selectedSlideId });
-}
-
-export function writeSelectedSlideHashToCurrentUrl(
-    selectedSlideId: string
-): string {
-    return writeSelectedSlideState(hashUrlState, selectedSlideId);
 }
 
 export function clearWsiHashFromCurrentUrl(): void {

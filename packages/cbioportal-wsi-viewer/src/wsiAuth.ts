@@ -88,11 +88,6 @@ export function isWsiAuthConfigured(): boolean {
     return getWsiViewerRuntime().authEnabled;
 }
 
-export function isWsiAuthEnabled(): boolean {
-    // The capability backend contract is mandatory for every deployed viewer mode.
-    return true;
-}
-
 export function getWsiSessionStorage(): Storage | null {
     if (typeof window === 'undefined') {
         return null;

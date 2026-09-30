@@ -229,16 +229,6 @@ function normalizeHierarchyPayload(
     );
 }
 
-function clonePatientHierarchy(hierarchy: PatientHierarchy): PatientHierarchy {
-    // The hierarchy is plain JSON and consumers mutate it after load, so return
-    // a fresh deep copy to keep the shared cache immutable from callers.
-    const cloned =
-        typeof structuredClone === 'function'
-            ? (structuredClone(hierarchy) as PatientHierarchy)
-            : (JSON.parse(JSON.stringify(hierarchy)) as PatientHierarchy);
-    return cloned;
-}
-
 /**
  * Publishes the resource identities of a hierarchy for slide access, but only
  * while that hierarchy is still the cached one for its URL. A superseded
@@ -345,60 +335,6 @@ export function refreshPatientHierarchy(
     );
 }
 
-export function seedPatientHierarchyCache(
-    url: string,
-    hierarchy: PatientHierarchy,
-    authScope?: string,
-    studyId?: string
-): void {
-    const expiresAt = Date.now() + HIERARCHY_CACHE_TTL_MS;
-    const cloned = clonePatientHierarchy(hierarchy);
-    const promise = Promise.resolve(cloned);
-    hierarchyCache.set(hierarchyCacheKey(url, authScope), {
-        expiresAt,
-        promise,
-        studyId,
-        patientId: cloned.patient_id,
-    });
-    registerIfCurrent(url, authScope, promise, cloned, studyId);
-}
-
-export function seedPatientHierarchyCachePromise(
-    url: string,
-    hierarchyPromise: Promise<PatientHierarchy>,
-    authScope?: string,
-    studyId?: string
-): void {
-    const cacheKey = hierarchyCacheKey(url, authScope);
-    const expiresAt = Date.now() + HIERARCHY_CACHE_TTL_MS;
-    const promise: Promise<PatientHierarchy> = hierarchyPromise
-        .then(hierarchy => {
-            const cloned = clonePatientHierarchy(hierarchy);
-            const current = hierarchyCache.get(cacheKey);
-            if (current?.promise === promise) {
-                current.patientId = cloned.patient_id;
-            }
-            registerIfCurrent(url, authScope, promise, cloned, studyId);
-            return cloned;
-        })
-        .catch(error => {
-            const current = hierarchyCache.get(cacheKey);
-            if (current?.promise === promise) {
-                hierarchyCache.delete(cacheKey);
-            }
-            throw error;
-        });
-
-    hierarchyCache.set(cacheKey, {
-        expiresAt,
-        promise,
-        studyId,
-    });
-
-    // Keep rejection observable for awaiters while handling unused prefetch work.
-    promise.catch(() => undefined);
-}
-
 /**
  * Loads a patient hierarchy through the shared cache. When `studyId` is given,
  * every returned hierarchy (network, cached or seeded) registers the resource
@@ -430,15 +366,4 @@ export function hasCachedPatientHierarchy(
 export function clearPatientHierarchyCache() {
     hierarchyCache.clear();
     clearWsiResourceAccessTargets();
-}
-
-export function clearPatientHierarchyCacheEntry(url: string): void {
-    for (const [key, entry] of hierarchyCache) {
-        if (key.endsWith(`::${url}`)) {
-            hierarchyCache.delete(key);
-            if (entry.studyId && entry.patientId !== undefined) {
-                clearWsiResourceAccessTargets(entry.studyId, entry.patientId);
-            }
-        }
-    }
 }

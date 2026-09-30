@@ -3,11 +3,8 @@
  */
 import {
     clearPatientHierarchyCache,
-    clearPatientHierarchyCacheEntry,
     fetchPatientHierarchyReadOnly,
     hasCachedPatientHierarchy,
-    seedPatientHierarchyCache,
-    seedPatientHierarchyCachePromise,
 } from './wsiHierarchyFetchCache';
 import {
     clearWsiResourceAccessTargets,
@@ -666,42 +663,6 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
         expect(accessCalls()).toEqual(['study-1/P-1/WSI_SLIDE/11/access']);
     });
 
-    it('registers resource targets from a seeded hierarchy', async () => {
-        seedPatientHierarchyCache(
-            URL_P1,
-            normalizedHierarchy(PATIENT, [['slide-1', '11']]),
-            'user-a',
-            STUDY
-        );
-
-        await getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a');
-        await fetchPatientHierarchyReadOnly(
-            URL_P1,
-            undefined,
-            'user-a',
-            STUDY,
-            PATIENT
-        );
-
-        expect(hierarchyCalls(URL_P1)).toBe(0);
-        expect(accessCalls()).toEqual(['study-1/P-1/WSI_SLIDE/11/access']);
-    });
-
-    it('registers resource targets when a seeded promise resolves', async () => {
-        seedPatientHierarchyCachePromise(
-            URL_P1,
-            Promise.resolve(normalizedHierarchy(PATIENT, [['slide-1', '11']])),
-            'user-a',
-            STUDY
-        );
-
-        await fetchPatientHierarchyReadOnly(URL_P1, undefined, 'user-a');
-        await getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a');
-
-        expect(hierarchyCalls(URL_P1)).toBe(0);
-        expect(accessCalls()).toEqual(['study-1/P-1/WSI_SLIDE/11/access']);
-    });
-
     it('refreshes once when a reimport changed resource-data row IDs', async () => {
         hierarchyResponses[URL_P1] = [
             v2Hierarchy([
@@ -782,33 +743,5 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
             getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a')
         ).rejects.toThrow('WSI resource selection is unavailable');
         expect(accessCalls()).toEqual([]);
-    });
-
-    it('clears only the targets of a cleared hierarchy entry', async () => {
-        hierarchyResponses[URL_P1] = [v2Hierarchy([['slide-1', '11']])];
-        hierarchyResponses[URL_P2] = [v2Hierarchy([['slide-9', '19']])];
-        await fetchPatientHierarchyReadOnly(
-            URL_P1,
-            undefined,
-            'user-a',
-            STUDY,
-            PATIENT
-        );
-        await fetchPatientHierarchyReadOnly(
-            URL_P2,
-            undefined,
-            'user-a',
-            STUDY,
-            'P-2'
-        );
-
-        clearPatientHierarchyCacheEntry(URL_P1);
-
-        expect(hasCachedPatientHierarchy(URL_P1, 'user-a')).toBe(false);
-        await expect(
-            getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a')
-        ).rejects.toThrow('WSI resource selection is unavailable');
-        await getWsiSlideAccess(STUDY, 'slide-9', false, 'user-a');
-        expect(accessCalls()).toEqual(['study-1/P-2/WSI_SLIDE/19/access']);
     });
 });

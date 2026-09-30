@@ -61,11 +61,6 @@ const SIDEBAR_MAX_W = 520;
 const SIDEBAR_HANDLE_W = 8;
 const SLIDE_SELECTION_DEBOUNCE_MS = 120;
 
-function freezeMetaRows(rows: MetaRow[]): MetaRow[] {
-    rows.forEach(row => Object.freeze(row));
-    return Object.freeze(rows) as MetaRow[];
-}
-
 const sectionTitleStyle: React.CSSProperties = {
     fontSize: 10,
     fontWeight: 700,
