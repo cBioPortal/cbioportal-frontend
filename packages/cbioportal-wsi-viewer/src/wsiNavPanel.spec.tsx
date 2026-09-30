@@ -802,6 +802,7 @@ describe('WsiNavPanel', () => {
                 image_id: 'other-slide',
                 stain_name: 'Other',
                 stain_group: 'Other',
+                slide_type: 'Other',
                 is_hne: false,
                 is_ihc: false,
             }),
@@ -845,13 +846,14 @@ describe('WsiNavPanel', () => {
         );
     });
 
-    it('uses canonical association slide types for both visible slides and facet counts', () => {
+    it('classifies by the resolved stain flags, not the source stain group, for slides and facet counts', () => {
         const sample = makeSample('S-1', [
             makeSlide({
                 image_id: 'submitted-hne',
                 stain_name: 'SLIDES SUBMITTED',
                 stain_group: 'Surgical Submitted',
-                is_hne: false,
+                slide_type: 'H&E',
+                is_hne: true,
                 is_ihc: false,
             }),
             makeSlide({

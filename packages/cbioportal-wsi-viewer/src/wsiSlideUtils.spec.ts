@@ -10,6 +10,7 @@ import {
     sampleHasMultiplePartDescriptions,
     sampleHasServableSlide,
     selectMetadataPrefetchSlides,
+    wsiStainKind,
 } from './wsiSlideUtils';
 import {
     PatientHierarchy,
@@ -549,5 +550,29 @@ describe('selectMetadataPrefetchSlides', () => {
                 limit: 5,
             })
         ).toEqual([]);
+    });
+});
+
+describe('wsiStainKind', () => {
+    it('prefers the resolved flags', () => {
+        expect(
+            wsiStainKind({ is_hne: true, is_ihc: false, slide_type: 'IHC' })
+        ).toBe('hne');
+        expect(
+            wsiStainKind({ is_hne: false, is_ihc: true, slide_type: 'H&E' })
+        ).toBe('ihc');
+    });
+
+    it('keeps Other and Unknown distinct', () => {
+        expect(
+            wsiStainKind({ is_hne: false, is_ihc: false, slide_type: 'Other' })
+        ).toBe('other');
+        expect(
+            wsiStainKind({
+                is_hne: false,
+                is_ihc: false,
+                slide_type: 'Unknown',
+            })
+        ).toBe('unknown');
     });
 });

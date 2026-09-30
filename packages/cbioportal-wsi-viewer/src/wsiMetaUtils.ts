@@ -15,6 +15,7 @@ import {
     procedureSlideTimepointText,
 } from './wsiNavUtils';
 import { blockName, formatSpecimenLabel } from './wsiSpecimenUtils';
+import { wsiStainKind } from './wsiSlideUtils';
 import {
     DAY_ZERO_TOOLTIP,
     sequencedRelativeToProcedureText,
@@ -70,39 +71,10 @@ export function buildSampleUrl(
     )}&sampleId=${encodeURIComponent(sampleId)}`;
 }
 
-export function getStainKind(slide: {
-    stain_group?: string;
-    slide_type?: string;
-    is_hne?: boolean;
-    is_ihc?: boolean;
-}): 'hne' | 'ihc' | 'other' | 'unknown' {
-    // Resolved flags are authoritative; stain_group is retained as source
-    // metadata and may intentionally disagree after adjudication.
-    if (slide.is_ihc === true) {
-        return 'ihc';
-    }
-    if (slide.is_hne === true) {
-        return 'hne';
-    }
-    if (slide.slide_type === 'Other' || slide.stain_group === 'Other') {
-        return 'other';
-    }
-    if (slide.slide_type === 'Unknown' || slide.stain_group === 'Unknown') {
-        return 'unknown';
-    }
-    const stainGroup = (slide.stain_group || '').toLowerCase();
-    if (stainGroup === 'ihc') return 'ihc';
-    if (stainGroup === 'h&e' || stainGroup === 'he') return 'hne';
-    return 'unknown';
-}
-
-export function getStainBadge(slide: {
-    stain_group?: string;
-    slide_type?: string;
-    is_hne?: boolean;
-    is_ihc?: boolean;
-}): string {
-    const kind = getStainKind(slide);
+export function getStainBadge(
+    slide: Pick<Slide, 'is_hne' | 'is_ihc' | 'slide_type'>
+): string {
+    const kind = wsiStainKind(slide);
     return kind === 'ihc'
         ? 'IHC'
         : kind === 'hne'
@@ -113,16 +85,15 @@ export function getStainBadge(slide: {
 }
 
 export function getStainDotColor(
-    slide: {
-        stain_group?: string;
-        slide_type?: string;
-        is_hne?: boolean;
-        is_ihc?: boolean;
-    },
+    slide: Pick<Slide, 'is_hne' | 'is_ihc' | 'slide_type'>,
     colors: { blue: string; orange: string }
 ): string {
-    const kind = getStainKind(slide);
-    return kind === 'ihc' ? colors.orange : kind === 'hne' ? colors.blue : '#777';
+    const kind = wsiStainKind(slide);
+    return kind === 'ihc'
+        ? colors.orange
+        : kind === 'hne'
+        ? colors.blue
+        : '#777';
 }
 
 export function buildWsiRows(
@@ -184,9 +155,8 @@ export function buildWsiRows(
             label: 'Zoom levels',
             labelTip: 'Number of resolution tiers available to the viewer',
             value: String(meta.max_zoom + 1),
-            valueTip: `${
-                meta.max_zoom + 1
-            } levels, from a whole-slide overview down to full resolution`,
+            valueTip: `${meta.max_zoom +
+                1} levels, from a whole-slide overview down to full resolution`,
         },
         {
             label: 'Tile size',
@@ -341,7 +311,8 @@ export function buildPathRows(
     if (sample.cancer_type_detailed || sample.cancer_type) {
         rows.push({
             label: 'Cancer type',
-            labelTip: 'Cancer type of the sequenced sample from cBioPortal clinical data',
+            labelTip:
+                'Cancer type of the sequenced sample from cBioPortal clinical data',
             value: sample.cancer_type_detailed || sample.cancer_type || '',
             href: cancerTypeUrl,
         });

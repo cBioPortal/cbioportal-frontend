@@ -209,24 +209,23 @@ export function isServableDiagnosticSlide(
     return !!(slide.can_serve_tiles && slide.image_id);
 }
 
+/**
+ * Classifies a slide's stain. The resolved flags are authoritative; the
+ * importer guarantees `slide_type` agrees with them.
+ */
+export function wsiStainKind(
+    slide: Pick<Slide, 'is_hne' | 'is_ihc' | 'slide_type'>
+): Exclude<WsiStainFilter, 'all'> {
+    if (slide.is_ihc) return 'ihc';
+    if (slide.is_hne) return 'hne';
+    return slide.slide_type === 'Other' ? 'other' : 'unknown';
+}
+
 export function matchesWsiStainFilter(
     slide: Pick<Slide, 'is_hne' | 'is_ihc' | 'slide_type'>,
     stainFilter: WsiStainFilter
 ): boolean {
-    const slideType = slide.slide_type;
-    return (
-        stainFilter === 'all' ||
-        (stainFilter === 'hne' && slide.is_hne) ||
-        (stainFilter === 'ihc' && slide.is_ihc) ||
-        (stainFilter === 'other' &&
-            !slide.is_hne &&
-            !slide.is_ihc &&
-            slideType === 'Other') ||
-        (stainFilter === 'unknown' &&
-            !slide.is_hne &&
-            !slide.is_ihc &&
-            slideType === 'Unknown')
-    );
+    return stainFilter === 'all' || wsiStainKind(slide) === stainFilter;
 }
 
 /**

@@ -1,4 +1,4 @@
-import { buildPathRows, buildWsiRows, getStainKind } from './wsiMetaUtils';
+import { buildPathRows, buildWsiRows } from './wsiMetaUtils';
 import {
     Sample,
     Slide,
@@ -43,34 +43,6 @@ const metadata: TileMetadata = {
     tile_size: 256,
     vendor: 'aperio',
 };
-
-describe('getStainKind', () => {
-    it('prefers resolved flags over conflicting source metadata', () => {
-        expect(
-            getStainKind({ stain_group: 'IHC', is_hne: true, is_ihc: false })
-        ).toBe('hne');
-        expect(
-            getStainKind({
-                stain_group: 'H&E (Initial)',
-                is_hne: false,
-                is_ihc: true,
-            })
-        ).toBe('ihc');
-    });
-
-    it('keeps explicit Other and unknown metadata distinct', () => {
-        expect(
-            getStainKind({ slide_type: 'Other', is_hne: false, is_ihc: false })
-        ).toBe('other');
-        expect(
-            getStainKind({
-                slide_type: 'Unknown',
-                is_hne: false,
-                is_ihc: false,
-            })
-        ).toBe('unknown');
-    });
-});
 
 function association(
     matchLevel: SlideAssociation['match_level'],

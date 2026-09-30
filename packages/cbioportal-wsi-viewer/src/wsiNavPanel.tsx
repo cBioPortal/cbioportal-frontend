@@ -14,8 +14,10 @@ import {
     getOrderedServableSlidesForSampleReadOnly,
     getServableSlideAssociationsByImageIdReadOnly,
     getWsiTimepointOptions,
+    matchesWsiStainFilter,
     matchesWsiTimepointFilter,
     sampleHasMultiplePartDescriptions,
+    wsiStainKind,
 } from './wsiSlideUtils';
 import {
     abbreviatePartDesc,
@@ -29,7 +31,7 @@ import {
     procedureSlideTimepointText,
     stainQualifier,
 } from './wsiNavUtils';
-import { getStainDotColor, getStainKind } from './wsiMetaUtils';
+import { getStainDotColor } from './wsiMetaUtils';
 import {
     DAY_ZERO_TOOLTIP,
     procedureRelativeToSequencingText,
@@ -163,31 +165,6 @@ function matchesMatchFilter(
     );
 }
 
-function associationStainKind(
-    association: Pick<SlideAssociation, 'slide_type'>
-): Exclude<WsiStainFilter, 'all'> {
-    switch (association.slide_type) {
-        case 'H&E':
-            return 'hne';
-        case 'IHC':
-            return 'ihc';
-        case 'Other':
-            return 'other';
-        default:
-            return 'unknown';
-    }
-}
-
-function matchesStainFilter(
-    association: Pick<SlideAssociation, 'slide_type'>,
-    stainFilter: WsiStainFilter
-): boolean {
-    return (
-        stainFilter === 'all' ||
-        associationStainKind(association) === stainFilter
-    );
-}
-
 function matchesSlideFilters(
     slide: Slide,
     association: SlideAssociation | undefined,
@@ -195,9 +172,7 @@ function matchesSlideFilters(
     matchFilter: PathologySlideMatchFilter,
     timepointDays?: WsiTimepointSelection
 ): boolean {
-    const matchesStain = association
-        ? matchesStainFilter(association, stainFilter)
-        : stainFilter === 'all' || getStainKind(slide) === stainFilter;
+    const matchesStain = matchesWsiStainFilter(slide, stainFilter);
     const matchesMatch = association
         ? matchesMatchFilter(association, matchFilter)
         : matchFilter === 'all';
@@ -508,9 +483,7 @@ function WsiNavPanelComponent({
                 return;
             }
             filteredCounts.all += 1;
-            const stainType = association
-                ? associationStainKind(association)
-                : getStainKind(slide);
+            const stainType = wsiStainKind(slide);
             if (stainType === 'hne') {
                 filteredCounts.hne += 1;
             }
@@ -526,9 +499,7 @@ function WsiNavPanelComponent({
     const matchCounts = React.useMemo(() => {
         const filteredCounts = { part: 0, block: 0, unmatched: 0 };
         facetSlideEntries.forEach(({ slide, association }) => {
-            const matchesStain = association
-                ? matchesStainFilter(association, stainFilter)
-                : stainFilter === 'all' || getStainKind(slide) === stainFilter;
+            const matchesStain = matchesWsiStainFilter(slide, stainFilter);
             if (
                 !matchesStain ||
                 !association ||
@@ -1176,7 +1147,7 @@ function SlideItem({
     theme: WsiTheme;
 }) {
     const [hovered, setHovered] = React.useState(false);
-    const isHE = getStainKind(slide) === 'hne';
+    const isHE = wsiStainKind(slide) === 'hne';
     const dotColor = getStainDotColor(slide, theme);
     const mag = slide.magnification || '';
     const sz = fmtMB(slide.file_size_bytes);
