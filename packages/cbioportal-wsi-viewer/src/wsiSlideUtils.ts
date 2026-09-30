@@ -496,6 +496,43 @@ export function matchesWsiStainFilter(
     );
 }
 
+/**
+ * Picks the slides whose metadata is worth fetching ahead of a click: the
+ * selected sample's slides, matching stain first, capped at `limit`. Each
+ * metadata fetch costs a slide-access request, so other samples load on demand.
+ */
+export function selectMetadataPrefetchSlides(
+    entries: ReadonlyArray<ServableSlideEntry>,
+    options: {
+        selectedSampleId: string | undefined;
+        stainFilter: WsiStainFilter;
+        limit: number;
+        skipImageId?: string;
+        isCached?: (imageId: string) => boolean;
+    }
+): Slide[] {
+    const matching: Slide[] = [];
+    const otherStain: Slide[] = [];
+    const seen = new Set<string>();
+    for (const { slide, sample } of entries) {
+        const imageId = slide.image_id;
+        if (
+            sample.sample_id !== options.selectedSampleId ||
+            imageId === options.skipImageId ||
+            seen.has(imageId) ||
+            options.isCached?.(imageId)
+        ) {
+            continue;
+        }
+        seen.add(imageId);
+        (matchesWsiStainFilter(slide, options.stainFilter)
+            ? matching
+            : otherStain
+        ).push(slide);
+    }
+    return matching.concat(otherStain).slice(0, options.limit);
+}
+
 export function getServableSlidesForSampleReadOnly(sample: Sample): Slide[] {
     const cached = servableSlidesBySampleCache.get(sample);
     if (

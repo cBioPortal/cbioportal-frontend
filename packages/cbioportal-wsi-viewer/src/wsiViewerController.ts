@@ -1,4 +1,4 @@
-import { matchesWsiStainFilter } from './wsiSlideUtils';
+import { selectMetadataPrefetchSlides } from './wsiSlideUtils';
 import { WsiStainFilter } from './wsiViewerTypes';
 import { fetchPatientHierarchyReadOnly } from './wsiHierarchyFetchCache';
 import {
@@ -124,6 +124,7 @@ export interface WsiViewerControllerHost {
 
 export class WsiViewerController {
     private static readonly METADATA_PREFETCH_CONCURRENCY = 3;
+    private static readonly METADATA_PREFETCH_LIMIT = 12;
     private static readonly METADATA_PREFETCH_BATCH_DELAY_MS = 150;
     private metaCache = new Map<string, TileMetadata>();
     private metaRequestCache = new Map<string, Promise<TileMetadata>>();
@@ -957,43 +958,16 @@ export class WsiViewerController {
         skipImageId?: string,
         expectedLoadSeq = this.hierarchyLoadSeq
     ) {
-        const selectedSampleId = this.host.getSelectedSample()?.sample_id;
-        const stainFilter = this.host.getStainFilter();
-        const prioritizedSlides: Slide[] = [];
-        const sameSampleOtherStain: Slide[] = [];
-        const otherSampleMatchingStain: Slide[] = [];
-        const otherSampleOtherStain: Slide[] = [];
-        const queuedImageIds = new Set<string>();
-
-        for (const entry of this.host.getServableSlides()) {
-            if (
-                entry.slide.image_id === skipImageId ||
-                this.metaCache.has(entry.slide.image_id) ||
-                queuedImageIds.has(entry.slide.image_id)
-            ) {
-                continue;
+        const prioritizedSlides = selectMetadataPrefetchSlides(
+            this.host.getServableSlides(),
+            {
+                selectedSampleId: this.host.getSelectedSample()?.sample_id,
+                stainFilter: this.host.getStainFilter(),
+                limit: WsiViewerController.METADATA_PREFETCH_LIMIT,
+                skipImageId,
+                isCached: imageId => this.metaCache.has(imageId),
             }
-            queuedImageIds.add(entry.slide.image_id);
-
-            const sameSample = entry.sample.sample_id === selectedSampleId;
-            const matchesStain = matchesWsiStainFilter(
-                entry.slide,
-                stainFilter
-            );
-            if (sameSample && matchesStain) {
-                prioritizedSlides.push(entry.slide);
-            } else if (sameSample) {
-                sameSampleOtherStain.push(entry.slide);
-            } else if (matchesStain) {
-                otherSampleMatchingStain.push(entry.slide);
-            } else {
-                otherSampleOtherStain.push(entry.slide);
-            }
-        }
-
-        prioritizedSlides.push(...sameSampleOtherStain);
-        prioritizedSlides.push(...otherSampleMatchingStain);
-        prioritizedSlides.push(...otherSampleOtherStain);
+        );
 
         for (
             let index = 0;
