@@ -271,89 +271,6 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         ).toEqual(new Set(['slide-2']));
     });
 
-    it('accepts legacy block keys from older pathology linkouts', () => {
-        const hierarchy: PatientHierarchy = {
-            patient_id: 'P-1',
-            samples: [
-                makeSample('S-1', [
-                    makeSlide({ image_id: 'slide-1' }),
-                    makeSlide({ image_id: 'slide-2' }),
-                    makeSlide({ image_id: 'slide-3' }),
-                ]),
-            ],
-            slide_associations: [
-                {
-                    image_id: 'slide-1',
-                    sample_id: 'S-1',
-                    match_level: 'BLOCK',
-                    specimen_key: 'block::part:1::block:S16-10037/1-3TLN',
-                    part_number: '1',
-                    block_number: 'S16-10037/1-3TLN',
-                    block_label: '3TLN',
-                    slide_type: 'H&E',
-                    can_serve_tiles: true,
-                },
-                {
-                    image_id: 'slide-2',
-                    sample_id: 'S-1',
-                    match_level: 'BLOCK',
-                    specimen_key: 'block::part:1::block:S16-10037/1-4TLN',
-                    part_number: '1',
-                    block_number: 'S16-10037/1-4TLN',
-                    block_label: '4TLN',
-                    slide_type: 'H&E',
-                    can_serve_tiles: true,
-                },
-                {
-                    image_id: 'slide-3',
-                    sample_id: 'S-1',
-                    match_level: 'BLOCK',
-                    specimen_key: 'block::part:1::block:S16-10037/1-3TLN',
-                    part_number: '1',
-                    block_number: 'S16-10037/1-3TLN',
-                    block_label: '3TLN',
-                    slide_type: 'H&E',
-                    can_serve_tiles: true,
-                },
-            ],
-        };
-
-        expect(
-            getServableSlideIdsForPathologyFilterReadOnly(hierarchy, {
-                sampleId: 'S-1',
-                matchLevel: 'BLOCK',
-                specimenKey: 'block::1::3',
-            })
-        ).toEqual(new Set(['slide-1', 'slide-3']));
-    });
-
-    it('accepts placeholder keys from unmatched legacy linkouts', () => {
-        const hierarchy: PatientHierarchy = {
-            patient_id: 'P-1',
-            samples: [],
-            slide_associations: [
-                {
-                    image_id: 'unmatched-slide',
-                    sample_id: null,
-                    match_level: 'UNMATCHED',
-                    specimen_key: 'unmatched::part:x::block:y',
-                    part_number: null,
-                    block_number: null,
-                    block_label: null,
-                    slide_type: 'H&E',
-                    can_serve_tiles: true,
-                },
-            ],
-        };
-
-        expect(
-            getServableSlideIdsForPathologyFilterReadOnly(hierarchy, {
-                matchLevel: 'Unmatched',
-                specimenKey: 'unmatched::?::?',
-            })
-        ).toEqual(new Set(['unmatched-slide']));
-    });
-
     it('matches linkouts whose source sample is represented by the unmatched group', () => {
         const hierarchy: PatientHierarchy = {
             patient_id: 'P-1',
@@ -381,51 +298,9 @@ describe('wsiSlideUtils read-only slide derivation', () => {
             getServableSlideIdsForPathologyFilterReadOnly(hierarchy, {
                 sampleId: 'P-1-T01-IM5',
                 matchLevel: 'BLOCK',
-                specimenKey: 'block::1::4',
+                specimenKey: 'block::part:1::block:S16-1681/1-4TC',
             })
         ).toEqual(new Set(['source-slide']));
-    });
-
-    it('treats a block-qualified PART linkout as a part-scoped filter', () => {
-        const hierarchy: PatientHierarchy = {
-            patient_id: 'P-1',
-            samples: [
-                makeSample('S-1', [
-                    makeSlide({ image_id: 'part-slide-1' }),
-                    makeSlide({ image_id: 'part-slide-2' }),
-                ]),
-            ],
-            slide_associations: [
-                {
-                    image_id: 'part-slide-1',
-                    sample_id: 'S-1',
-                    match_level: 'PART',
-                    specimen_key: 'part::part:1::block:1',
-                    part_number: 'part:1',
-                    block_number: '1',
-                    slide_type: 'H&E',
-                    can_serve_tiles: true,
-                },
-                {
-                    image_id: 'part-slide-2',
-                    sample_id: 'S-1',
-                    match_level: 'PART',
-                    specimen_key: 'part::part:1::block:2',
-                    part_number: 'part:1',
-                    block_number: '2',
-                    slide_type: 'H&E',
-                    can_serve_tiles: true,
-                },
-            ],
-        };
-
-        expect(
-            getServableSlideIdsForPathologyFilterReadOnly(hierarchy, {
-                sampleId: 'S-1',
-                matchLevel: 'PART',
-                specimenKey: 'part::part:1::block:1',
-            })
-        ).toEqual(new Set(['part-slide-1', 'part-slide-2']));
     });
 
     it('memoizes pathology filter results per associations and filter', () => {

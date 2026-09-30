@@ -443,96 +443,6 @@ function buildPathologyFilterCacheKey(
     ].join('::');
 }
 
-function startsWithNumericOrLabelToken(value: string, token: string): boolean {
-    if (!value || !token) {
-        return false;
-    }
-    const normalizedValue = value.toLowerCase();
-    const normalizedToken = token.toLowerCase();
-    if (normalizedValue === normalizedToken) {
-        return true;
-    }
-    if (!normalizedValue.startsWith(normalizedToken)) {
-        return false;
-    }
-    return !/^\d/.test(normalizedValue.slice(normalizedToken.length));
-}
-
-function matchesPartToken(
-    association: SlideAssociation,
-    requestedPart: string
-): boolean {
-    const normalizedRequestedPart = requestedPart.replace(/^part:/i, '');
-    const associationPart = association.part_number || '';
-    const normalizedAssociationPart = associationPart.replace(/^part:/i, '');
-    return (
-        associationPart === requestedPart ||
-        associationPart === normalizedRequestedPart ||
-        normalizedAssociationPart === normalizedRequestedPart
-    );
-}
-
-/**
- * Preserve compatibility with timeline links generated before the hierarchy
- * API exposed canonical specimen_key values. New links use the exact key.
- */
-function matchesLegacySpecimenKey(
-    association: SlideAssociation,
-    specimenKey: string
-): boolean {
-    const parts = specimenKey.split('::');
-    const matchLevel = parts[0]?.toUpperCase();
-    if (matchLevel !== association.match_level) {
-        return false;
-    }
-
-    if (matchLevel === 'PART') {
-        if (parts.length === 2 || parts.length === 3) {
-            return (
-                !!association.part_number &&
-                matchesPartToken(association, parts[1])
-            );
-        }
-        return false;
-    }
-    if (matchLevel !== 'BLOCK' && matchLevel !== 'UNMATCHED') {
-        return false;
-    }
-    if (parts.length !== 3 || parts[1].includes(':')) {
-        return false;
-    }
-    const requestedPart = parts[1];
-    if (
-        requestedPart !== '?' &&
-        association.part_number &&
-        association.part_number !== requestedPart
-    ) {
-        return false;
-    }
-
-    const requestedBlock = parts[2];
-    if (requestedBlock === '?') {
-        return true;
-    }
-    const blockNumber = association.block_number || '';
-    const blockLabel = association.block_label || '';
-    const blockNumberSuffix = blockNumber.split('/').pop() || blockNumber;
-    return (
-        startsWithNumericOrLabelToken(blockLabel, requestedBlock) ||
-        startsWithNumericOrLabelToken(blockNumberSuffix, requestedBlock)
-    );
-}
-
-function matchesPathologySpecimenKey(
-    association: SlideAssociation,
-    specimenKey: string
-): boolean {
-    return (
-        association.specimen_key === specimenKey ||
-        matchesLegacySpecimenKey(association, specimenKey)
-    );
-}
-
 export function getServableSlideIdsForPathologyFilterReadOnly(
     hierarchy: PatientHierarchy,
     filter: PathologySlideFilter
@@ -584,7 +494,7 @@ export function getServableSlideIdsForPathologyFilterReadOnly(
         }
         if (
             filter.specimenKey &&
-            !matchesPathologySpecimenKey(association, filter.specimenKey)
+            association.specimen_key !== filter.specimenKey
         ) {
             return false;
         }
