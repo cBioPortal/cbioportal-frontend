@@ -30,6 +30,8 @@ export interface ILazyMobXTableApplicationDataStore<T> {
     filterString: string;
     sortAscending: boolean | undefined;
     sortMetric: SortMetric<T> | undefined;
+    // orders rows with equal sort values, see lazyMobXTableSort
+    sortTieBreaker?: SortMetric<T>;
     itemsPerPage: number;
     page: number;
 }
@@ -45,11 +47,12 @@ export type DataFilterFunction<T> = (
 export function getSortedData<T>(
     data: T[],
     sortMetric: SortMetric<T> = () => 0,
-    sortAscending: boolean | undefined
+    sortAscending: boolean | undefined,
+    sortTieBreaker?: SortMetric<T>
 ): T[] {
     const ascending = sortAscending !== undefined ? sortAscending : true;
 
-    return lazyMobXTableSort(data, sortMetric, ascending);
+    return lazyMobXTableSort(data, sortMetric, ascending, sortTieBreaker);
 }
 
 export function getSortedFilteredData<T>(
@@ -95,6 +98,7 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
 
     @observable.ref public filterString: string;
     @observable public sortMetric: SortMetric<T> | undefined;
+    @observable.ref public sortTieBreaker: SortMetric<T> | undefined;
     @observable public sortAscending: boolean | undefined;
     @observable public page: number;
     @observable public itemsPerPage: number;
@@ -111,7 +115,8 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
             return getSortedData(
                 this.allData,
                 this.sortMetric,
-                this.sortAscending
+                this.sortAscending,
+                this.sortTieBreaker
             );
         } else {
             return this.getSortedData();

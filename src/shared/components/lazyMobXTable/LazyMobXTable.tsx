@@ -89,6 +89,8 @@ type LazyMobXTableProps<T> = {
         | undefined;
     initialSortColumn?: string;
     initialSortDirection?: SortDirection;
+    // orders rows with equal values in the sort column, always ascending
+    sortTieBreaker?: SortMetric<T>;
     initialItemsPerPage?: number;
     itemsLabel?: string;
     itemsLabelPlural?: string;
@@ -190,7 +192,10 @@ function compareLists<U extends number | string>(
 export function lazyMobXTableSort<T>(
     data: T[],
     metric: SortMetric<T>,
-    ascending: boolean = true
+    ascending: boolean = true,
+    // orders rows with equal sort values, always ascending, so the order does
+    // not depend on the order of the data
+    tieBreaker?: SortMetric<T>
 ): T[] {
     // Separating this for testing, so that classes can test their comparators
     //  against how the table will sort.
@@ -198,6 +203,7 @@ export function lazyMobXTableSort<T>(
         data: T;
         initialPosition: number;
         sortBy: any[];
+        tieBreakBy: any[];
     }[] = [];
 
     for (let i = 0; i < data.length; i++) {
@@ -208,11 +214,15 @@ export function lazyMobXTableSort<T>(
             data: d,
             initialPosition: i, // for stable sorting
             sortBy: ([] as any[]).concat(metric(d)), // ensure it's wrapped in an array, even if metric is number or string
+            tieBreakBy: tieBreaker ? ([] as any[]).concat(tieBreaker(d)) : [],
         });
     }
     let cmp: number, initialPositionA: number, initialPositionB: number;
     dataAndValue.sort((a, b) => {
         cmp = compareLists(a.sortBy, b.sortBy, ascending);
+        if (cmp === 0 && tieBreaker) {
+            cmp = compareLists(a.tieBreakBy, b.tieBreakBy, true);
+        }
         if (cmp === 0) {
             // stable sort
             initialPositionA = a.initialPosition;
@@ -813,6 +823,9 @@ export class LazyMobXTableStore<T> {
         }
         if (this.dataStore.page === undefined) {
             this.dataStore.page = 0;
+        }
+        if (props.sortTieBreaker) {
+            this.dataStore.sortTieBreaker = props.sortTieBreaker;
         }
         if (this.itemsPerPage === undefined) {
             this.itemsPerPage = props.initialItemsPerPage || 50;

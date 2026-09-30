@@ -497,6 +497,23 @@ describe('LazyMobXTable', () => {
     });
 
     describe('lazyMobXTableSort', () => {
+        it('orders ties by the tie breaker, ascending in both directions', () => {
+            const rows = [
+                { score: 1, gene: 'TP53' },
+                { score: 2, gene: 'KRAS' },
+                { score: 1, gene: 'BRAF' },
+                { score: 2, gene: 'AKT1' },
+            ];
+            const genes = (ascending: boolean) =>
+                lazyMobXTableSort(
+                    rows,
+                    r => r.score,
+                    ascending,
+                    r => r.gene
+                ).map(r => r.gene);
+            assert.deepEqual(genes(true), ['BRAF', 'TP53', 'AKT1', 'KRAS']);
+            assert.deepEqual(genes(false), ['AKT1', 'KRAS', 'BRAF', 'TP53']);
+        });
         it('does not sort in place', () => {
             sortedList = lazyMobXTableSort(data, d => d.num, true);
             assert.deepEqual(
