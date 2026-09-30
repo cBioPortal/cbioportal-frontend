@@ -1,5 +1,11 @@
-export function abortError(): DOMException {
-    return new DOMException('Aborted', 'AbortError');
+/**
+ * The error an aborted wait rejects with. Callers match it by name, so a
+ * plain Error works where DOMException is unavailable (e.g. Node tests).
+ */
+export function abortError(): Error {
+    const error = new Error('Aborted');
+    error.name = 'AbortError';
+    return error;
 }
 
 /**
