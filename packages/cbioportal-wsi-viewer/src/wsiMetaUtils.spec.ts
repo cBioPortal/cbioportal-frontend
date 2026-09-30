@@ -1,10 +1,4 @@
-import {
-    buildPathRows,
-    buildPathRowsReadOnly,
-    buildWsiRows,
-    buildWsiRowsReadOnly,
-    getStainKind,
-} from './wsiMetaUtils';
+import { buildPathRows, buildWsiRows, getStainKind } from './wsiMetaUtils';
 import {
     Sample,
     Slide,
@@ -69,7 +63,11 @@ describe('getStainKind', () => {
             getStainKind({ slide_type: 'Other', is_hne: false, is_ihc: false })
         ).toBe('other');
         expect(
-            getStainKind({ slide_type: 'Unknown', is_hne: false, is_ihc: false })
+            getStainKind({
+                slide_type: 'Unknown',
+                is_hne: false,
+                is_ihc: false,
+            })
         ).toBe('unknown');
     });
 });
@@ -186,31 +184,6 @@ describe('buildPathRows', () => {
         );
     });
 
-    it('reuses the same read-only path rows for the same slide/sample/association context', () => {
-        const first = buildPathRowsReadOnly(
-            slide,
-            sample,
-            'P-1',
-            'study-1',
-            association('BLOCK', {
-                part_number: '4',
-                block_label: 'A1',
-            })
-        );
-        const second = buildPathRowsReadOnly(
-            slide,
-            sample,
-            'P-1',
-            'study-1',
-            association('BLOCK', {
-                part_number: '4',
-                block_label: 'A1',
-            })
-        );
-
-        expect(second).toBe(first);
-    });
-
     it('hides Path Dx when it duplicates the anatomical site text', () => {
         const rows = buildPathRows(
             {
@@ -234,7 +207,7 @@ describe('buildPathRows', () => {
     });
 });
 
-describe('buildPathRowsReadOnly sample timeline rows', () => {
+describe('buildPathRows sample timeline rows', () => {
     const procedureSlide: Slide = {
         ...slide,
         image_id: 'slide-timeline',
@@ -242,13 +215,13 @@ describe('buildPathRowsReadOnly sample timeline rows', () => {
         slide_timepoint_source: 'Procedure date',
     };
 
-    function rowValues(rows: ReturnType<typeof buildPathRowsReadOnly>) {
+    function rowValues(rows: ReturnType<typeof buildPathRows>) {
         return rows.map(row => [row.label, row.value]);
     }
 
     it('shows procedure, acquisition and sequencing days for a matched sample', () => {
         const rows = rowValues(
-            buildPathRowsReadOnly(
+            buildPathRows(
                 { ...procedureSlide },
                 sample,
                 'P-1',
@@ -277,11 +250,9 @@ describe('buildPathRowsReadOnly sample timeline rows', () => {
     });
 
     it('omits acquisition and sequencing rows when unknown', () => {
-        const labels = buildPathRowsReadOnly(
-            { ...procedureSlide },
-            sample,
-            'P-1'
-        ).map(row => row.label);
+        const labels = buildPathRows({ ...procedureSlide }, sample, 'P-1').map(
+            row => row.label
+        );
 
         expect(labels).toContain('Procedure');
         expect(labels).not.toContain('Acquired');
@@ -290,7 +261,7 @@ describe('buildPathRowsReadOnly sample timeline rows', () => {
 
     it('shows sequencing without an offset for an undated slide', () => {
         const rows = rowValues(
-            buildPathRowsReadOnly(
+            buildPathRows(
                 { ...slide },
                 sample,
                 'P-1',
@@ -309,7 +280,7 @@ describe('buildPathRowsReadOnly sample timeline rows', () => {
 
     it('keeps the timepoint row for unmatched slides', () => {
         const rows = rowValues(
-            buildPathRowsReadOnly(
+            buildPathRows(
                 { ...procedureSlide },
                 { ...sample, sample_id: 'UNMATCHED' },
                 'P-1',
@@ -326,11 +297,10 @@ describe('buildPathRowsReadOnly sample timeline rows', () => {
         expect(labels).not.toContain('Sequenced');
     });
 
-    it('rebuilds cached rows when timeline data arrives', () => {
-        const cachedSlide = { ...procedureSlide };
-        const before = buildPathRowsReadOnly(cachedSlide, sample, 'P-1');
-        const after = buildPathRowsReadOnly(
-            cachedSlide,
+    it('adds the sequencing row when timeline data is given', () => {
+        const before = buildPathRows(procedureSlide, sample, 'P-1');
+        const after = buildPathRows(
+            procedureSlide,
             sample,
             'P-1',
             undefined,
@@ -414,35 +384,10 @@ describe('buildWsiRows', () => {
         ]);
     });
 
-    it('returns cloned rows for the same metadata and slide reference', () => {
-        const first = buildWsiRows(slide, metadata);
-        const second = buildWsiRows(slide, metadata);
+    it('returns frozen rows', () => {
+        const rows = buildWsiRows(slide, metadata);
 
-        expect(second).toEqual(first);
-        expect(second).not.toBe(first);
-    });
-
-    it('returns cloned rows for an equivalent slide clone with the same metadata', () => {
-        const first = buildWsiRows(slide, metadata);
-        const second = buildWsiRows({ ...slide }, metadata);
-
-        expect(second).toEqual(first);
-        expect(second).not.toBe(first);
-    });
-
-    it('does not let callers mutate cached sidebar rows', () => {
-        const first = buildWsiRows(slide, metadata);
-        first[0].value = 'mutated';
-
-        const second = buildWsiRows(slide, metadata);
-
-        expect(second[0].value).toBe('1,000 × 2,000 px');
-    });
-
-    it('reuses the same read-only rows for the same metadata and slide reference', () => {
-        const first = buildWsiRowsReadOnly(slide, metadata);
-        const second = buildWsiRowsReadOnly(slide, metadata);
-
-        expect(second).toBe(first);
+        expect(Object.isFrozen(rows)).toBe(true);
+        expect(Object.isFrozen(rows[0])).toBe(true);
     });
 });

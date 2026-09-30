@@ -1,114 +1,15 @@
 import { Sample, Slide } from './wsiViewerTypes';
 
-type CachedSampleTimepointEntry = {
-    earliest: number | undefined;
-    partsRef: Sample['parts'];
-    slideSignature: string;
-};
-
-type CachedProcedureSlideTimepointEntry = {
-    signature: string;
-    value: string | null;
-};
-
+// A normalized hierarchy is never mutated, so the per-sample value is
+// memoized by object identity.
 const earliestServableSlideTimepointCache = new WeakMap<
     Sample,
-    CachedSampleTimepointEntry
+    number | undefined
 >();
-const procedureSlideTimepointCache = new WeakMap<
-    Pick<Slide, 'slide_timepoint_days' | 'slide_timepoint_source'>,
-    CachedProcedureSlideTimepointEntry
->();
-const timepointTextCache = new Map<string, string | null>();
-const MAX_TIMEPOINT_TEXT_CACHE_ENTRIES = 200;
-
-function buildServableSlideTimepointSignature(parts: Sample['parts']): string {
-    const entries: string[] = [];
-
-    for (const part of parts) {
-        for (const block of part.blocks) {
-            for (const slide of block.slides) {
-                if (
-                    !slide.can_serve_tiles ||
-                    !slide.image_id ||
-                    (!slide.is_hne && !slide.is_ihc)
-                ) {
-                    continue;
-                }
-
-                entries.push(
-                    [
-                        slide.image_id || '',
-                        slide.slide_timepoint_days ?? '',
-                        slide.slide_timepoint_source || '',
-                        slide.is_hne ? '1' : '0',
-                        slide.is_ihc ? '1' : '0',
-                    ].join('::')
-                );
-            }
-        }
-    }
-
-    return entries.sort((left, right) => left.localeCompare(right)).join('|');
-}
-
-function getServableSlideTimepointSnapshot(
-    parts: Sample['parts']
-): {
-    earliest: number | undefined;
-    slideSignature: string;
-} {
-    const entries: string[] = [];
-    let earliest: number | undefined;
-
-    for (const part of parts) {
-        for (const block of part.blocks) {
-            for (const slide of block.slides) {
-                if (
-                    !slide.can_serve_tiles ||
-                    !slide.image_id ||
-                    (!slide.is_hne && !slide.is_ihc)
-                ) {
-                    continue;
-                }
-
-                entries.push(
-                    [
-                        slide.image_id || '',
-                        slide.slide_timepoint_days ?? '',
-                        slide.slide_timepoint_source || '',
-                        slide.is_hne ? '1' : '0',
-                        slide.is_ihc ? '1' : '0',
-                    ].join('::')
-                );
-
-                const days = asFiniteNumber(slide.slide_timepoint_days);
-                if (days != null) {
-                    earliest =
-                        earliest == null ? days : Math.min(earliest, days);
-                }
-            }
-        }
-    }
-
-    entries.sort((left, right) => left.localeCompare(right));
-
-    return {
-        earliest,
-        slideSignature: entries.join('|'),
-    };
-}
 
 export function formatDaysSinceDiagnosis(days: number): string {
     if (days === 0) return 'd0';
     return days > 0 ? `d+${days}` : `d${days}`;
-}
-
-function buildTimepointTextCacheKey(
-    days: number | null | undefined,
-    source: string | null | undefined
-): string {
-    return `${days ?? ''}::${source || ''}`;
 }
 
 function timepointSourceAbbreviation(source: string): string {
@@ -130,45 +31,20 @@ export function timepointText(
     days: number | null | undefined,
     source: string | null | undefined
 ): string | null {
-    const cacheKey = buildTimepointTextCacheKey(days, source);
-    if (timepointTextCache.has(cacheKey)) {
-        const cached = timepointTextCache.get(cacheKey)!;
-        timepointTextCache.delete(cacheKey);
-        timepointTextCache.set(cacheKey, cached);
-        return cached;
-    }
-
     const normalizedDays = asFiniteNumber(days);
-    let value: string | null;
     if (normalizedDays == null || !source) {
-        value = null;
-    } else {
-        const normalizedSource = source.toLowerCase();
-        if (
-            !normalizedSource.includes('procedure') &&
-            normalizedSource.includes('sequencing')
-        ) {
-            value = null;
-        } else {
-            value = `${timepointSourceAbbreviation(
-                source
-            )} ${formatDaysSinceDiagnosis(normalizedDays)}`;
-        }
+        return null;
     }
-
-    if (timepointTextCache.has(cacheKey)) {
-        timepointTextCache.delete(cacheKey);
+    const normalizedSource = source.toLowerCase();
+    if (
+        !normalizedSource.includes('procedure') &&
+        normalizedSource.includes('sequencing')
+    ) {
+        return null;
     }
-    timepointTextCache.set(cacheKey, value);
-
-    if (timepointTextCache.size > MAX_TIMEPOINT_TEXT_CACHE_ENTRIES) {
-        const oldestKey = timepointTextCache.keys().next().value;
-        if (oldestKey) {
-            timepointTextCache.delete(oldestKey);
-        }
-    }
-
-    return value;
+    return `${timepointSourceAbbreviation(source)} ${formatDaysSinceDiagnosis(
+        normalizedDays
+    )}`;
 }
 
 export function getSlideTimepointDays(
@@ -180,49 +56,47 @@ export function getSlideTimepointDays(
 export function procedureSlideTimepointText(
     slide: Pick<Slide, 'slide_timepoint_days' | 'slide_timepoint_source'>
 ): string | null {
-    const signature = buildTimepointTextCacheKey(
-        slide.slide_timepoint_days,
-        slide.slide_timepoint_source
-    );
-    const cached = procedureSlideTimepointCache.get(slide);
-    if (cached && cached.signature === signature) {
-        return cached.value;
-    }
-
-    const value = slide.slide_timepoint_source
-        ?.toLowerCase()
-        .includes('procedure')
+    return slide.slide_timepoint_source?.toLowerCase().includes('procedure')
         ? timepointText(
               slide.slide_timepoint_days,
               slide.slide_timepoint_source
           )
         : null;
+}
 
-    procedureSlideTimepointCache.set(slide, {
-        signature,
-        value,
-    });
-
-    return value;
+function computeEarliestServableSlideTimepoint(
+    sample: Sample
+): number | undefined {
+    let earliest: number | undefined;
+    for (const part of sample.parts) {
+        for (const block of part.blocks) {
+            for (const slide of block.slides) {
+                if (
+                    !slide.can_serve_tiles ||
+                    !slide.image_id ||
+                    (!slide.is_hne && !slide.is_ihc)
+                ) {
+                    continue;
+                }
+                const days = asFiniteNumber(slide.slide_timepoint_days);
+                if (days != null) {
+                    earliest =
+                        earliest == null ? days : Math.min(earliest, days);
+                }
+            }
+        }
+    }
+    return earliest;
 }
 
 function getEarliestServableSlideTimepoint(sample: Sample): number | undefined {
-    const cached = earliestServableSlideTimepointCache.get(sample);
-    const snapshot = getServableSlideTimepointSnapshot(sample.parts);
-    if (
-        cached &&
-        cached.partsRef === sample.parts &&
-        cached.slideSignature === snapshot.slideSignature
-    ) {
-        return cached.earliest;
+    if (!earliestServableSlideTimepointCache.has(sample)) {
+        earliestServableSlideTimepointCache.set(
+            sample,
+            computeEarliestServableSlideTimepoint(sample)
+        );
     }
-
-    earliestServableSlideTimepointCache.set(sample, {
-        earliest: snapshot.earliest,
-        partsRef: sample.parts,
-        slideSignature: snapshot.slideSignature,
-    });
-    return snapshot.earliest;
+    return earliestServableSlideTimepointCache.get(sample);
 }
 
 export function compareSamplesByTimepoint(a: Sample, b: Sample): number {

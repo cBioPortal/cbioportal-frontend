@@ -197,7 +197,6 @@ describe('WsiNavPanel', () => {
         TestRenderer.create(
             <WsiNavPanel
                 hierarchy={makeHierarchy([sample])}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 onFilterChange={() => {}}
@@ -226,7 +225,6 @@ describe('WsiNavPanel', () => {
         const renderer = TestRenderer.create(
             <WsiNavPanel
                 hierarchy={hierarchy}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 onFilterChange={() => {}}
@@ -245,7 +243,6 @@ describe('WsiNavPanel', () => {
             renderer.update(
                 <WsiNavPanel
                     hierarchy={hierarchy}
-                    dataVersion={0}
                     selectedSlide={slide2}
                     stainFilter="all"
                     onFilterChange={() => {}}
@@ -284,7 +281,6 @@ describe('WsiNavPanel', () => {
                         },
                     ]
                 )}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 onFilterChange={() => {}}
@@ -305,7 +301,6 @@ describe('WsiNavPanel', () => {
         const renderer = TestRenderer.create(
             <WsiNavPanel
                 hierarchy={makeHierarchy([sample])}
-                dataVersion={0}
                 selectedSlide={slide}
                 stainFilter="all"
                 onFilterChange={() => {}}
@@ -406,7 +401,6 @@ describe('WsiNavPanel', () => {
         const renderer = TestRenderer.create(
             <WsiNavPanel
                 hierarchy={makeHierarchy([sample])}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 onFilterChange={onFilterChange}
@@ -434,7 +428,6 @@ describe('WsiNavPanel', () => {
         const renderer = TestRenderer.create(
             <WsiNavPanel
                 hierarchy={makeHierarchy([sample])}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 matchFilter="all"
@@ -483,7 +476,6 @@ describe('WsiNavPanel', () => {
                         association('unmatched-slide', 'UNMATCHED'),
                     ]
                 )}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 onFilterChange={() => {}}
@@ -523,7 +515,6 @@ describe('WsiNavPanel', () => {
                         }),
                     ]),
                 ])}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 onFilterChange={() => {}}
@@ -564,7 +555,6 @@ describe('WsiNavPanel', () => {
                         association('unmatched-slide', 'UNMATCHED'),
                     ]
                 )}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 matchFilter="part"
@@ -603,7 +593,6 @@ describe('WsiNavPanel', () => {
                         },
                     ]
                 )}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 matchFilter="unmatched"
@@ -639,7 +628,6 @@ describe('WsiNavPanel', () => {
                         },
                     ]
                 )}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="hne"
                 matchFilter="block"
@@ -712,7 +700,6 @@ describe('WsiNavPanel', () => {
                         },
                     ]
                 )}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="hne"
                 onFilterChange={() => {}}
@@ -784,7 +771,6 @@ describe('WsiNavPanel', () => {
                         },
                     ]
                 )}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 matchFilter="block"
@@ -835,7 +821,6 @@ describe('WsiNavPanel', () => {
                         },
                     ]
                 )}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 matchFilter="all"
@@ -900,7 +885,6 @@ describe('WsiNavPanel', () => {
                         },
                     ]
                 )}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="hne"
                 matchFilter="all"
@@ -955,7 +939,6 @@ describe('WsiNavPanel', () => {
                         },
                     ]
                 )}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 matchFilter="all"
@@ -981,7 +964,6 @@ describe('WsiNavPanel', () => {
         const renderer = TestRenderer.create(
             <WsiNavPanel
                 hierarchy={makeHierarchy([sample1, sample2])}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 onFilterChange={() => {}}
@@ -1009,7 +991,6 @@ describe('WsiNavPanel', () => {
         const renderer = TestRenderer.create(
             <WsiNavPanel
                 hierarchy={makeHierarchy([sample1, sample2])}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 onFilterChange={() => {}}
@@ -1024,7 +1005,6 @@ describe('WsiNavPanel', () => {
             renderer.update(
                 <WsiNavPanel
                     hierarchy={makeHierarchy([sample1, sample2])}
-                    dataVersion={1}
                     selectedSlide={slide2}
                     stainFilter="all"
                     onFilterChange={() => {}}
@@ -1057,7 +1037,6 @@ describe('WsiNavPanel', () => {
         const renderer = TestRenderer.create(
             <WsiNavPanel
                 hierarchy={makeHierarchy([sample])}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 onFilterChange={() => {}}
@@ -1084,7 +1063,6 @@ describe('WsiNavPanel', () => {
                         }),
                     ]),
                 ])}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 onFilterChange={() => {}}
@@ -1114,7 +1092,6 @@ describe('WsiNavPanel', () => {
         const renderer = TestRenderer.create(
             <WsiNavPanel
                 hierarchy={makeHierarchy([sample])}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 onFilterChange={() => {}}
@@ -1141,7 +1118,6 @@ describe('WsiNavPanel', () => {
             return TestRenderer.create(
                 <WsiNavPanel
                     hierarchy={makeHierarchy(samples)}
-                    dataVersion={0}
                     selectedSlide={null}
                     stainFilter="all"
                     onFilterChange={() => {}}
@@ -1260,7 +1236,6 @@ describe('WsiNavPanel', () => {
         const renderer = TestRenderer.create(
             <WsiNavPanel
                 hierarchy={makeHierarchy([sample])}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 timepointDays={undefined}
@@ -1290,7 +1265,6 @@ describe('WsiNavPanel', () => {
             renderer.update(
                 <WsiNavPanel
                     hierarchy={makeHierarchy([sample])}
-                    dataVersion={0}
                     selectedSlide={null}
                     stainFilter="all"
                     timepointDays={-20}
@@ -1335,7 +1309,6 @@ describe('WsiNavPanel', () => {
                         makeSlide({ image_id: 'undated' }),
                     ]),
                 ])}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 onFilterChange={() => {}}
@@ -1371,7 +1344,6 @@ describe('WsiNavPanel', () => {
                         }),
                     ]),
                 ])}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 timepointDays={-20}
@@ -1408,7 +1380,6 @@ describe('WsiNavPanel', () => {
                 hierarchy={makeHierarchy([
                     makeSample('S-1', [makeSlide({ image_id: 'slide-1' })]),
                 ])}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 showClearFilters={true}
@@ -1448,7 +1419,6 @@ describe('WsiNavPanel', () => {
                         }),
                     ]),
                 ])}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 matchFilter="all"
@@ -1486,7 +1456,6 @@ describe('WsiNavPanel', () => {
         const renderer = TestRenderer.create(
             <WsiNavPanel
                 hierarchy={makeHierarchy(samples)}
-                dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
                 deferOffscreenSamples={true}
@@ -1525,7 +1494,6 @@ describe('WsiNavPanel', () => {
         const renderer = TestRenderer.create(
             <WsiNavPanel
                 hierarchy={makeHierarchy(samples)}
-                dataVersion={0}
                 selectedSlide={samples[7].parts[0].blocks[0].slides[0]}
                 stainFilter="all"
                 deferOffscreenSamples={true}

@@ -42,7 +42,7 @@ describe('wsiNavUtils', () => {
             ).toBeNull();
         });
 
-        it('recomputes the cached procedure slide timepoint text when the slide changes in place', () => {
+        it('reflects the slide timepoint fields it is given', () => {
             const slide = {
                 slide_timepoint_days: -9,
                 slide_timepoint_source: 'Procedure date',
@@ -327,63 +327,6 @@ describe('wsiNavUtils', () => {
                     ],
                 },
             ];
-
-            expect(compareSamplesByTimepoint(sample, comparator)).toBeLessThan(
-                0
-            );
-        });
-
-        it('recomputes the cached earliest servable slide timepoint when a slide timepoint mutates in place', () => {
-            const sample = makeSample({
-                sample_id: 'S-cache-in-place',
-                sample_timepoint_days: -5,
-                sample_timepoint_source: 'Procedure date',
-                parts: [
-                    {
-                        part_number: '1',
-                        part_designator: '1',
-                        part_type: '',
-                        part_description: '',
-                        subspecialty: '',
-                        path_dx_title: '',
-                        blocks: [
-                            {
-                                block_number: '1',
-                                block_label: 'A1',
-                                slides: [
-                                    {
-                                        image_id: 'img-1',
-                                        stain_name: 'H&E',
-                                        stain_group: 'H&E (Initial)',
-                                        is_hne: true,
-                                        is_ihc: false,
-                                        magnification: '',
-                                        file_size_bytes: '',
-                                        can_serve_tiles: true,
-                                        barcode: '',
-                                        block_label: 'A1',
-                                        block_number: '1',
-                                        slide_timepoint_days: -20,
-                                        slide_timepoint_source:
-                                            'Procedure date',
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            });
-            const comparator = makeSample({
-                sample_id: 'S-compare',
-                sample_timepoint_days: -10,
-                sample_timepoint_source: 'Procedure date',
-            });
-
-            expect(compareSamplesByTimepoint(sample, comparator)).toBeLessThan(
-                0
-            );
-
-            sample.parts[0].blocks[0].slides[0].slide_timepoint_days = 5;
 
             expect(compareSamplesByTimepoint(sample, comparator)).toBeLessThan(
                 0

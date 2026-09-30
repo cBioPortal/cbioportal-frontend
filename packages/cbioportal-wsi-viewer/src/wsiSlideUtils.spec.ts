@@ -144,39 +144,40 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         ).toBe('BLOCK');
     });
 
-    it('recomputes association precedence after in-place association changes', () => {
-        const associations: SlideAssociation[] = [
-            {
-                image_id: 'slide-1',
-                sample_id: 'S-1',
-                match_level: 'PART',
-                specimen_key: 'part::1',
-                slide_type: 'H&E',
-                can_serve_tiles: true,
-            },
-        ];
+    it('memoizes the preferred associations by array identity', () => {
+        const association: SlideAssociation = {
+            image_id: 'slide-1',
+            sample_id: 'S-1',
+            match_level: 'PART',
+            specimen_key: 'part::1',
+            slide_type: 'H&E',
+            can_serve_tiles: true,
+        };
+        const associations = [association];
         const first = getServableSlideAssociationsByImageIdReadOnly(
             associations
         );
-        expect(first.get('slide-1')?.match_level).toBe('PART');
-
-        associations[0].match_level = 'BLOCK';
-        associations[0].specimen_key = 'block::1::A1';
 
         expect(
-            getServableSlideAssociationsByImageIdReadOnly(associations).get(
-                'slide-1'
-            )?.match_level
-        ).toBe('BLOCK');
+            getServableSlideAssociationsByImageIdReadOnly(associations)
+        ).toBe(first);
+        expect(
+            getServableSlideAssociationsByImageIdReadOnly([association])
+        ).not.toBe(first);
     });
 
-    it('caches servable slides while invalidating in-place slide changes', () => {
+    it('memoizes servable slides by sample identity', () => {
         const sample = makeSample('S-1', [makeSlide({ image_id: 'slide-1' })]);
         const first = getServableSlidesForSampleReadOnly(sample);
-        expect(getServableSlidesForSampleReadOnly(sample)).toBe(first);
 
-        sample.parts[0].blocks[0].slides[0].can_serve_tiles = false;
-        expect(getServableSlidesForSampleReadOnly(sample)).toEqual([]);
+        expect(getServableSlidesForSampleReadOnly(sample)).toBe(first);
+        expect(
+            getServableSlidesForSampleReadOnly(
+                makeSample('S-1', [
+                    makeSlide({ image_id: 'slide-1', can_serve_tiles: false }),
+                ])
+            )
+        ).toEqual([]);
     });
 
     it('derives stain and block counts from servable slides', () => {
@@ -220,34 +221,19 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         });
     });
 
-    it('invalidates hierarchy entries and counts when a slide changes in place', () => {
-        const sample = makeSample('S-1', [
-            makeSlide({ image_id: 'slide-1' }),
-            makeSlide({ image_id: 'slide-2', is_hne: false, is_ihc: true }),
-        ]);
+    it('memoizes hierarchy entries by hierarchy identity', () => {
         const hierarchy: PatientHierarchy = {
             patient_id: 'P-1',
-            samples: [sample],
+            samples: [makeSample('S-1', [makeSlide({ image_id: 'slide-1' })])],
         };
+        const first = getServableSlideEntriesForHierarchyReadOnly(hierarchy);
 
-        expect(getServableSlideCountsForHierarchyReadOnly(hierarchy)).toEqual({
-            all: 2,
-            hne: 1,
-            ihc: 1,
-            other: 0,
-            unknown: 0,
-        });
-        sample.parts[0].blocks[0].slides[1].can_serve_tiles = false;
+        expect(getServableSlideEntriesForHierarchyReadOnly(hierarchy)).toBe(
+            first
+        );
         expect(
-            getServableSlideEntriesForHierarchyReadOnly(hierarchy)
-        ).toHaveLength(1);
-        expect(getServableSlideCountsForHierarchyReadOnly(hierarchy)).toEqual({
-            all: 1,
-            hne: 1,
-            ihc: 0,
-            other: 0,
-            unknown: 0,
-        });
+            getServableSlideEntriesForHierarchyReadOnly({ ...hierarchy })
+        ).not.toBe(first);
     });
 
     it('orders slides by slide-level timepoint', () => {
@@ -452,7 +438,7 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         ).toEqual(new Set(['part-slide-1', 'part-slide-2']));
     });
 
-    it('invalidates pathology filter results when associations are reordered or edited', () => {
+    it('memoizes pathology filter results per associations and filter', () => {
         const hierarchy: PatientHierarchy = {
             patient_id: 'P-1',
             samples: [],
@@ -475,19 +461,25 @@ describe('wsiSlideUtils read-only slide derivation', () => {
                 },
             ],
         };
-        const filter = {
+        const partFilter = {
             matchLevel: 'PART' as const,
             specimenKey: 'part::1',
         };
+        const first = getServableSlideIdsForPathologyFilterReadOnly(
+            hierarchy,
+            partFilter
+        );
 
+        expect(first).toEqual(new Set(['slide-1']));
         expect(
-            getServableSlideIdsForPathologyFilterReadOnly(hierarchy, filter)
-        ).toEqual(new Set(['slide-1']));
-        hierarchy.slide_associations![0].match_level = 'BLOCK';
-        hierarchy.slide_associations![0].specimen_key = 'block::1::A1';
+            getServableSlideIdsForPathologyFilterReadOnly(hierarchy, partFilter)
+        ).toBe(first);
         expect(
-            getServableSlideIdsForPathologyFilterReadOnly(hierarchy, filter)
-        ).toEqual(new Set());
+            getServableSlideIdsForPathologyFilterReadOnly(hierarchy, {
+                matchLevel: 'BLOCK',
+                specimenKey: 'block::1::A1',
+            })
+        ).toEqual(new Set(['slide-2']));
     });
 
     it('keeps sample lookup helpers based on the same cached slide set', () => {
@@ -523,11 +515,7 @@ describe('selectMetadataPrefetchSlides', () => {
             { selectedSampleId: 'S1', stainFilter: 'hne', limit: 10 }
         );
 
-        expect(picked.map(slide => slide.image_id)).toEqual([
-            'h1',
-            'h2',
-            'i1',
-        ]);
+        expect(picked.map(slide => slide.image_id)).toEqual(['h1', 'h2', 'i1']);
     });
 
     it('skips the given image, already-cached slides and duplicates', () => {

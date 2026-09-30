@@ -25,7 +25,7 @@ import {
     chooseInitialServableSlide,
 } from './wsiInitialSlideUtils';
 import { MetaRow, WsiMetaSidebar } from './wsiMetaSidebar';
-import { buildPathRowsReadOnly, buildWsiRowsReadOnly } from './wsiMetaUtils';
+import { buildPathRows, buildWsiRows } from './wsiMetaUtils';
 import { getWsiViewerRuntime } from './wsiViewerConfig';
 import { BLOCK_LABEL_TIP, compareSamplesByTimepoint } from './wsiNavUtils';
 import { WsiNavPanel } from './wsiNavPanel';
@@ -194,31 +194,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private resizeStartWidth = 0;
     private isResizingSidebar = false;
     private controller: WsiViewerController;
-    // Keep the hierarchy object identity stable while viewer state changes.
-    // The observable version invalidates derived row caches.
-    @observable private hierarchyDataVersion = 0;
     @observable private requestedSlideNoticeDismissed = false;
     private slideSelectionTimer: ReturnType<typeof setTimeout> | null = null;
-    private cachedWsiRows:
-        | {
-              slide: Slide | null;
-              meta: TileMetadata | null;
-              version: number;
-              rows: ReturnType<typeof buildWsiRowsReadOnly>;
-          }
-        | undefined;
-    private cachedPathRows:
-        | {
-              slide: Slide | null;
-              sample: Sample | null;
-              patientId?: string;
-              studyId?: string;
-              studyName?: string;
-              sampleTimelines?: WsiSampleTimelineMap;
-              version: number;
-              rows: ReturnType<typeof buildPathRowsReadOnly>;
-          }
-        | undefined;
 
     private get navId() {
         return this.controller.navId;
@@ -638,23 +615,19 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
     @action.bound
     private applyPathologyFilterFromSourceHierarchy() {
-        if (!this.hierarchy) {
+        const hierarchy = this.hierarchy;
+        if (!hierarchy) {
             return;
         }
 
-        const nextHierarchy = this.hierarchy;
-
-        this.hierarchy = nextHierarchy;
-        this.hierarchyDataVersion++;
-
         const preferredImageIds = getPathologyPreferredImageIds(
-            nextHierarchy,
+            hierarchy,
             this.activePathologyFilter
         );
         if (preferredImageIds) {
             const currentImageId = this.selectedSlide?.image_id;
             const currentSampleId = this.selectedSample?.sample_id;
-            const currentSample = nextHierarchy.samples.find(
+            const currentSample = hierarchy.samples.find(
                 sample => sample.sample_id === currentSampleId
             );
             const firstMatchingSlide = currentSample
@@ -684,7 +657,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
             return;
         }
 
-        const matchingSample = nextHierarchy.samples.find(
+        const matchingSample = hierarchy.samples.find(
             sample =>
                 sample.sample_id === currentSampleId &&
                 sampleHasServableSlide(sample, currentImageId)
@@ -912,72 +885,31 @@ export default class WSIViewer extends React.Component<Props, {}> {
         return this.props.patientId;
     }
 
-    private get selectedWsiRows() {
-        if (
-            this.cachedWsiRows &&
-            this.cachedWsiRows.slide === this.selectedSlide &&
-            this.cachedWsiRows.meta === this.selectedMeta &&
-            this.cachedWsiRows.version === this.hierarchyDataVersion
-        ) {
-            return this.cachedWsiRows.rows;
-        }
-
-        const rows = this.selectedMeta
-            ? buildWsiRowsReadOnly(this.selectedSlide, this.selectedMeta)
+    @computed
+    private get selectedWsiRows(): MetaRow[] {
+        return this.selectedMeta
+            ? buildWsiRows(this.selectedSlide, this.selectedMeta)
             : [];
-        this.cachedWsiRows = {
-            slide: this.selectedSlide,
-            meta: this.selectedMeta,
-            version: this.hierarchyDataVersion,
-            rows: rows as MetaRow[],
-        };
-        return this.cachedWsiRows.rows;
     }
 
-    private get selectedPathRows() {
-        if (
-            this.cachedPathRows &&
-            this.cachedPathRows.slide === this.selectedSlide &&
-            this.cachedPathRows.sample === this.selectedSample &&
-            this.cachedPathRows.patientId === this.viewerPatientId &&
-            this.cachedPathRows.studyId === this.props.studyId &&
-            this.cachedPathRows.studyName === this.props.studyName &&
-            this.cachedPathRows.sampleTimelines ===
-                this.props.sampleTimelines &&
-            this.cachedPathRows.version === this.hierarchyDataVersion
-        ) {
-            return this.cachedPathRows.rows;
+    @computed
+    private get selectedPathRows(): MetaRow[] {
+        if (!this.selectedSlide || !this.selectedSample) {
+            return [];
         }
-
-        const rows =
-            this.selectedSlide && this.selectedSample
-                ? buildPathRowsReadOnly(
-                      this.selectedSlide,
-                      this.selectedSample,
-                      this.viewerPatientId,
-                      this.props.studyId,
-                      this.hierarchy
-                          ? getServableSlideAssociationsByImageIdReadOnly(
-                                this.hierarchy.slide_associations
-                            ).get(this.selectedSlide.image_id)
-                          : undefined,
-                      this.props.studyName,
-                      this.props.sampleTimelines?.get(
-                          this.selectedSample.sample_id
-                      )
-                  )
-                : [];
-        this.cachedPathRows = {
-            slide: this.selectedSlide,
-            sample: this.selectedSample,
-            patientId: this.viewerPatientId,
-            studyId: this.props.studyId,
-            studyName: this.props.studyName,
-            sampleTimelines: this.props.sampleTimelines,
-            version: this.hierarchyDataVersion,
-            rows: rows as MetaRow[],
-        };
-        return this.cachedPathRows.rows;
+        return buildPathRows(
+            this.selectedSlide,
+            this.selectedSample,
+            this.viewerPatientId,
+            this.props.studyId,
+            this.hierarchy
+                ? getServableSlideAssociationsByImageIdReadOnly(
+                      this.hierarchy.slide_associations
+                  ).get(this.selectedSlide.image_id)
+                : undefined,
+            this.props.studyName,
+            this.props.sampleTimelines?.get(this.selectedSample.sample_id)
+        );
     }
 
     @computed
@@ -1063,7 +995,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 {/* Left nav panel */}
                 <WsiNavPanel
                     hierarchy={hierarchy}
-                    dataVersion={this.hierarchyDataVersion}
                     selectedSlide={selectedSlide}
                     slideIdFilter={getPathologyPreferredImageIds(
                         hierarchy,

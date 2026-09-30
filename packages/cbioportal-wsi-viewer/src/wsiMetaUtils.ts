@@ -21,27 +21,6 @@ import {
     WsiSampleTimeline,
 } from './wsiSampleTimeline';
 
-type CachedWsiRowsEntry = {
-    rows: MetaRow[];
-    signature: string;
-};
-
-type CachedPathRowsEntry = {
-    rows: MetaRow[];
-    signature: string;
-};
-
-const wsiRowsCache = new WeakMap<TileMetadata, CachedWsiRowsEntry>();
-const pathRowsCache = new WeakMap<Slide, CachedPathRowsEntry>();
-
-function cloneMetaRows(rows: MetaRow[]): MetaRow[] {
-    const cloned = new Array<MetaRow>(rows.length);
-    for (let index = 0; index < rows.length; index += 1) {
-        cloned[index] = { ...rows[index] };
-    }
-    return cloned;
-}
-
 function freezeMetaRows(rows: MetaRow[]): MetaRow[] {
     rows.forEach(row => Object.freeze(row));
     return Object.freeze(rows) as MetaRow[];
@@ -60,66 +39,6 @@ function getStudyDisplayName(
 ): string | undefined {
     const normalizedName = studyName?.trim();
     return normalizedName || studyId;
-}
-
-function buildWsiRowsSignature(
-    slide: Slide | null,
-    meta: TileMetadata
-): string {
-    return [
-        slide?.file_size_bytes || '',
-        slide?.magnification || '',
-        meta.dimensions.width,
-        meta.dimensions.height,
-        meta.mpp?.x || '',
-        meta.mpp?.y || '',
-        meta.objective_power || '',
-        meta.vendor || '',
-        meta.max_zoom,
-        meta.tile_size,
-    ].join('::');
-}
-
-function buildPathRowsSignature(
-    slide: Slide,
-    sample: Sample,
-    patientId?: string,
-    studyId?: string,
-    association?: SlideAssociation,
-    studyName?: string,
-    sampleTimeline?: WsiSampleTimeline
-): string {
-    return [
-        patientId || '',
-        studyId || '',
-        studyName || '',
-        slide.image_id || '',
-        slide.stain_name || '',
-        slide.stain_group || '',
-        slide.is_hne ? '1' : '0',
-        slide.is_ihc ? '1' : '0',
-        slide.barcode || '',
-        slide.block_label || '',
-        slide.block_number || '',
-        slide.path_dx_title || '',
-        slide.part_description || '',
-        slide.slide_timepoint_days ?? '',
-        slide.slide_timepoint_source || '',
-        sample.sample_id || '',
-        sample.cancer_type || '',
-        sample.cancer_type_detailed || '',
-        sample.oncotree_code || '',
-        sample.primary_site || '',
-        sample.sample_type || '',
-        association?.match_level || '',
-        association?.specimen_key || '',
-        association?.part_number || '',
-        association?.part_description || '',
-        association?.block_label || '',
-        association?.block_number || '',
-        sampleTimeline?.acquisitionDays ?? '',
-        sampleTimeline?.sequencingDays ?? '',
-    ].join('::');
 }
 
 export function getPatientId(sampleId: string, patientId?: string): string {
@@ -210,19 +129,6 @@ export function buildWsiRows(
     slide: Slide | null,
     meta: TileMetadata
 ): MetaRow[] {
-    return cloneMetaRows(buildWsiRowsReadOnly(slide, meta));
-}
-
-export function buildWsiRowsReadOnly(
-    slide: Slide | null,
-    meta: TileMetadata
-): MetaRow[] {
-    const signature = buildWsiRowsSignature(slide, meta);
-    const cached = wsiRowsCache.get(meta);
-    if (cached && cached.signature === signature) {
-        return cached.rows;
-    }
-
     const w = meta.dimensions.width;
     const h = meta.dimensions.height;
     const mppX = meta.mpp?.x || 0;
@@ -298,9 +204,7 @@ export function buildWsiRowsReadOnly(
         });
     }
 
-    const frozenRows = freezeMetaRows(rows);
-    wsiRowsCache.set(meta, { rows: frozenRows, signature });
-    return frozenRows;
+    return freezeMetaRows(rows);
 }
 
 function specimenTooltip(association: {
@@ -334,43 +238,9 @@ export function buildPathRows(
     patientId?: string,
     studyId?: string,
     association?: SlideAssociation,
-    studyName?: string
-): MetaRow[] {
-    return cloneMetaRows(
-        buildPathRowsReadOnly(
-            slide,
-            sample,
-            patientId,
-            studyId,
-            association,
-            studyName
-        )
-    );
-}
-
-export function buildPathRowsReadOnly(
-    slide: Slide,
-    sample: Sample,
-    patientId?: string,
-    studyId?: string,
-    association?: SlideAssociation,
     studyName?: string,
     sampleTimeline?: WsiSampleTimeline
 ): MetaRow[] {
-    const signature = buildPathRowsSignature(
-        slide,
-        sample,
-        patientId,
-        studyId,
-        association,
-        studyName,
-        sampleTimeline
-    );
-    const cached = pathRowsCache.get(slide);
-    if (cached && cached.signature === signature) {
-        return cached.rows;
-    }
-
     const isUnmatchedSample = sample.sample_id === 'UNMATCHED';
     const stainBadge = getStainBadge(slide);
     const oncotreeUrl = sample.oncotree_code
@@ -587,7 +457,5 @@ export function buildPathRowsReadOnly(
         });
     }
 
-    const frozenRows = freezeMetaRows(rows);
-    pathRowsCache.set(slide, { rows: frozenRows, signature });
-    return frozenRows;
+    return freezeMetaRows(rows);
 }
