@@ -8,6 +8,7 @@ import FusionComparisonView, {
 import { sampleFusionViewerHref } from './data/cohortLinks';
 import { FusionCohortStore } from './FusionCohortStore';
 import { TranscriptData } from './data/types';
+import { frameStatusStyle } from './components/frameStatusStyle';
 import AnchorGeneTrackRuler from './components/AnchorGeneTrackRuler';
 import FusionStripList from './components/FusionStripList';
 import { computeComparisonFrame } from './components/comparisonFrame';
@@ -630,12 +631,161 @@ describe('FusionComparisonView gene mode', () => {
         runInAction(() => store.setTrackMode('genomic'));
         w.update();
         assert.lengthOf(w.find('g[data-testid="lollipop-stick"]'), 0);
+        assert.isTrue(
+            w.find('button[data-testid="trackmode-lollipop"]').exists()
+        );
         runInAction(() => store.setAnchorMode('pair'));
         w.update();
         assert.isFalse(
             w.find('button[data-testid="trackmode-lollipop"]').exists()
         );
     });
+
+    function lolliStore(side: '5p' | '3p', evs: any[]) {
+        const store = new FusionCohortStore();
+        store.setStructuralVariants(
+            evs.map(e =>
+                side === '3p'
+                    ? {
+                          site1HugoSymbol: e.partner,
+                          site2HugoSymbol: 'ALK',
+                          sampleId: e.id,
+                          site1Position: 100,
+                          site2Position: e.pos,
+                          site1Chromosome: '2',
+                          site2Chromosome: '2',
+                          variantClass: e.sv,
+                          site2EffectOnFrame: e.frame,
+                      }
+                    : {
+                          site1HugoSymbol: 'ALK',
+                          site2HugoSymbol: e.partner,
+                          sampleId: e.id,
+                          site1Position: e.pos,
+                          site2Position: 100,
+                          site1Chromosome: '2',
+                          site2Chromosome: '2',
+                          variantClass: e.sv,
+                          site2EffectOnFrame: e.frame,
+                      }
+            ) as any
+        );
+        store.mergeTranscripts([
+            ['GRCh38|ALK|', tx('ALK')],
+            ['GRCh38|EML4|', tx('EML4')],
+            ['GRCh38|KIF5B|', tx('KIF5B')],
+        ]);
+        store.setAnchor({ mode: 'gene', gene: 'ALK', side });
+        return store;
+    }
+    const EVS = [
+        { id: 'S1', partner: 'EML4', pos: 450, sv: 'DEL', frame: 'in_frame' },
+        { id: 'S1', partner: 'KIF5B', pos: 450, sv: 'INV', frame: 'in_frame' },
+        { id: 'S2', partner: 'EML4', pos: 450, sv: 'DEL', frame: 'in_frame' },
+        { id: 'S3', partner: 'EML4', pos: 250, sv: 'DEL', frame: '' },
+    ];
+
+    it('stick tooltip has slot label and span; click filters with a histogram-style label and unique samples', () => {
+        const spy = jest.fn();
+        const w = mount(
+            <FusionComparisonView
+                store={lolliStore('3p', EVS)}
+                onFilterCohortBySamples={spy}
+            />
+        );
+        const stick = w.find('g[data-key="exon:E3"]');
+        const t = stick.find('title').text();
+        assert.include(t, 'E3');
+        assert.notInclude(t, 'exon:');
+        assert.include(
+            t,
+            `${(400).toLocaleString()}–${(500).toLocaleString()}`
+        );
+        stick.simulate('click');
+        assert.equal(spy.mock.calls.length, 1);
+        assert.equal(spy.mock.calls[0][1], 'ALK breakpoint: E3');
+        assert.sameMembers(
+            spy.mock.calls[0][2].map((x: any) => x.sampleId),
+            ['S1', 'S2']
+        );
+    });
+
+    it('frame colour-by uses frameStatusStyle colours and labels', () => {
+        const store = lolliStore('3p', EVS.slice(0, 1));
+        store.setLollipopColorBy('frame');
+        const w = mount(<FusionComparisonView store={store} />);
+        assert.equal(
+            w
+                .find(
+                    'g[data-key="exon:E3"] circle[data-testid="lollipop-head"]'
+                )
+                .prop('fill'),
+            frameStatusStyle('inFrame').fill
+        );
+        assert.include(
+            w.find('g[data-key="exon:E3"] title').text(),
+            'In-frame 1'
+        );
+    });
+
+    it('legend appears for frame and SV-type colouring only', () => {
+        const store = lolliStore('3p', EVS);
+        const w = mount(<FusionComparisonView store={store} />);
+        const legend = () => w.find('[data-testid="lollipop-legend"]');
+        assert.isFalse(legend().exists());
+        runInAction(() => store.setLollipopColorBy('frame'));
+        w.update();
+        assert.include(legend().text(), 'In-frame');
+        runInAction(() => store.setLollipopColorBy('svType'));
+        w.update();
+        assert.include(legend().text(), 'DEL');
+        assert.include(legend().text(), 'INV');
+        runInAction(() => store.setLollipopColorBy('partner'));
+        w.update();
+        assert.isFalse(legend().exists());
+    });
+
+    it('SV-type colours do not shift when partner boxes are toggled', () => {
+        const store = lolliStore('3p', EVS);
+        store.setLollipopColorBy('svType');
+        const w = mount(<FusionComparisonView store={store} />);
+        const view = w.instance() as any;
+        const before = ['DEL', 'INV'].map(c => view.lollipopColorOf(c));
+        runInAction(() => store.togglePartnerFacet('KIF5B'));
+        w.update();
+        const after = ['DEL', 'INV'].map(c => view.lollipopColorOf(c));
+        assert.deepEqual(after, before);
+    });
+
+    it.each(['5p', '3p'] as const)(
+        'D25: %s anchor sticks sit at the centre of their exon rects',
+        side => {
+            const w = mount(
+                <FusionComparisonView store={lolliStore(side, EVS)} />
+            );
+            const rects = w
+                .find(AnchorGeneTrackRuler)
+                .filterWhere(n => n.prop('symbol') === 'ALK')
+                .find('rect[data-testid="feature-exon"]');
+            const sticks = w.find('g[data-testid="lollipop-stick"]');
+            assert.isAbove(sticks.length, 0);
+            sticks.forEach(st => {
+                const label = String(st.prop('data-key')).replace('exon:', '');
+                const rect = rects.filterWhere(
+                    r =>
+                        r
+                            .find('title')
+                            .text()
+                            .indexOf(label + ' ') === 0
+                );
+                assert.lengthOf(rect, 1);
+                const cx =
+                    Number(rect.prop('x')) + Number(rect.prop('width')) / 2;
+                const x1 = Number(st.find('line').prop('x1'));
+                assert.closeTo(x1, cx, 0.5);
+            });
+        }
+    );
 
     it('3′ gene anchor: no TMPRSS2-ERG rows, partner half captioned, no dominant partner', () => {
         const store = alkStore();
