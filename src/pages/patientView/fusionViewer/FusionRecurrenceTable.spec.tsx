@@ -178,4 +178,31 @@ describe('FusionRecurrenceTable', () => {
             12
         );
     });
+    it('Gene mode lists partner categories and toggles the partner facet', () => {
+        const store = new FusionCohortStore();
+        const sv = (sample: string, a: string, b: string, pos: number) => ({
+            sampleId: sample,
+            studyId: 'demo_cohort',
+            molecularProfileId: 'demo_cohort_fusion',
+            site1HugoSymbol: a,
+            site2HugoSymbol: b,
+            site1Chromosome: '2',
+            site2Chromosome: '2',
+            site1Position: pos,
+            site2Position: pos + 1000,
+            ncbiBuild: 'GRCh38',
+            variantClass: 'FUSION',
+        });
+        store.setStructuralVariants([
+            sv('S1', 'EML4', 'ALK', 100),
+            sv('S2', 'EML4', 'ALK', 200),
+            sv('S3', 'KIF5B', 'ALK', 300),
+        ] as any);
+        store.setAnchor({ mode: 'gene', gene: 'ALK', side: '3p' });
+        const w = mount(<FusionRecurrenceTable store={store} />);
+        assert.isTrue(w.find('[data-test="partner-row-EML4"]').exists());
+        assert.isTrue(w.find('[data-test="partner-row-KIF5B"]').exists());
+        w.find('input[data-test="partner-filter-EML4"]').simulate('change');
+        assert.deepEqual(store.effectiveAnchorPartners, ['EML4']);
+    });
 });

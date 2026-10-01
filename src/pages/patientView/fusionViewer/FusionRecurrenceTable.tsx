@@ -5,6 +5,7 @@ import LazyMobXTable, {
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import { FusionCohortStore } from './FusionCohortStore';
 import { FusionPairSummary } from './data/types';
+import { PartnerSummary } from './data/anchorSummaries';
 import { frameStatusStyle } from './components/frameStatusStyle';
 
 interface IFusionRecurrenceTableProps {
@@ -13,6 +14,7 @@ interface IFusionRecurrenceTableProps {
 }
 
 class PairTable extends LazyMobXTable<FusionPairSummary> {}
+class PartnerTable extends LazyMobXTable<PartnerSummary> {}
 
 export function summaryTitle(hasFusionAnnotation: boolean): string {
     return hasFusionAnnotation ? 'Top recurrent fusions' : 'Top SV gene pairs';
@@ -45,6 +47,79 @@ export class FusionRecurrenceTable extends React.Component<
 > {
     render() {
         const { store, hasFusionAnnotation = false } = this.props;
+        const anchor = store.anchor;
+        if (anchor && anchor.mode === 'gene') {
+            const checked = new Set(store.effectiveAnchorPartners);
+            const partnerColumns: Column<PartnerSummary>[] = [
+                {
+                    name: 'Filter',
+                    render: (d: PartnerSummary) => (
+                        <input
+                            type="checkbox"
+                            data-test={`partner-filter-${d.category}`}
+                            aria-label={`Filter strips to ${d.category}`}
+                            checked={checked.has(d.category)}
+                            onChange={() =>
+                                store.togglePartnerFacet(d.category)
+                            }
+                        />
+                    ),
+                    sortBy: (d: PartnerSummary) =>
+                        checked.has(d.category) ? 1 : 0,
+                    download: (d: PartnerSummary) =>
+                        `${checked.has(d.category)}`,
+                },
+                {
+                    name: `${anchor.gene} partner`,
+                    render: (d: PartnerSummary) => (
+                        <span data-test={`partner-row-${d.category}`}>
+                            {d.category}
+                        </span>
+                    ),
+                    sortBy: (d: PartnerSummary) => d.category,
+                    download: (d: PartnerSummary) => d.category,
+                    filter: (d: PartnerSummary, _f: string, up: string) =>
+                        d.category.toUpperCase().indexOf(up) > -1,
+                },
+                {
+                    name: '# samples',
+                    render: (d: PartnerSummary) => <span>{d.sampleCount}</span>,
+                    sortBy: (d: PartnerSummary) => d.sampleCount,
+                    download: (d: PartnerSummary) => `${d.sampleCount}`,
+                },
+                {
+                    name: '# events',
+                    render: (d: PartnerSummary) => <span>{d.eventCount}</span>,
+                    sortBy: (d: PartnerSummary) => d.eventCount,
+                    download: (d: PartnerSummary) => `${d.eventCount}`,
+                },
+                {
+                    name: 'In-frame?',
+                    render: (d: PartnerSummary) => framePill(d.anyInFrame),
+                    sortBy: (d: PartnerSummary) => (d.anyInFrame ? 1 : 0),
+                    download: (d: PartnerSummary) => `${d.anyInFrame}`,
+                },
+            ];
+            return (
+                <div>
+                    <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                        {anchor.gene} partners (
+                        {anchor.side === '5p' ? '5′' : '3′'} side)
+                    </div>
+                    <PartnerTable
+                        columns={partnerColumns}
+                        data={store.partnerSummaries}
+                        showPagination={true}
+                        initialItemsPerPage={25}
+                        paginationProps={{ showMoreButton: false }}
+                        showColumnVisibility={false}
+                        showCopyDownload={true}
+                        initialSortColumn="# samples"
+                        initialSortDirection="desc"
+                    />
+                </div>
+            );
+        }
         const selected = new Set(store.filter.fusionPairKeys);
         const anchoredKey =
             store.anchor && store.anchor.mode === 'pair'
