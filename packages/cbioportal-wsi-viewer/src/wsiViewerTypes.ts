@@ -196,4 +196,6 @@ export interface WsiClinicalRow {
     label: string;
     value: string;
     labelTip?: string;
+    /** Set for a sample attribute: shown only while that sample is selected. */
+    sampleId?: string;
 }
