@@ -1483,6 +1483,7 @@ export function makeClinicalTracksMobxPromise(
                     ];
                 ret.sortOrder = trackConfig.sortOrder || undefined;
                 ret.gapOn = trackConfig.gapOn || undefined;
+                ret.gapMode = trackConfig.gapMode || undefined;
 
                 return ret as ClinicalTrackSpec;
             });

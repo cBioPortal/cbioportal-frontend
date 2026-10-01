@@ -127,6 +127,7 @@ export type UserTrackSpec<D> = {
     $track_info_tooltip_elt?: JQuery;
     track_can_show_gaps?: boolean;
     show_gaps_on_init?: boolean;
+    gap_mode_on_init?: GAP_MODE_ENUM;
     // Optional overrides for Move up / Move down: a callback fully replaces the
     // default within-group move; the disabled flags gray out the item.
     on_move_up?: () => void;
@@ -1475,10 +1476,18 @@ export default class OncoprintModel {
             false
         );
 
-        const trackShowGaps = ifndef(params.show_gaps_on_init, false);
-        this.track_show_gaps[track_id] = trackShowGaps
-            ? GAP_MODE_ENUM.SHOW_GAPS_PERCENT
-            : GAP_MODE_ENUM.HIDE_GAPS;
+        // gap_mode_on_init carries the exact mode; show_gaps_on_init only
+        // knows on/off and maps "on" to SHOW_GAPS_PERCENT
+        let initGapMode: GAP_MODE_ENUM;
+        if (params.gap_mode_on_init !== undefined) {
+            initGapMode = params.gap_mode_on_init;
+        } else {
+            initGapMode = ifndef(params.show_gaps_on_init, false)
+                ? GAP_MODE_ENUM.SHOW_GAPS_PERCENT
+                : GAP_MODE_ENUM.HIDE_GAPS;
+        }
+        this.track_show_gaps[track_id] = initGapMode;
+        const trackShowGaps = initGapMode !== GAP_MODE_ENUM.HIDE_GAPS;
         const trackNotSorted = this.track_sort_direction[track_id] === 0;
         if (trackShowGaps && trackNotSorted) {
             this.track_sort_direction[track_id] = 1;
