@@ -18,7 +18,7 @@ import { SelectionOverlay } from './overlays/SelectionOverlay';
 // Import utility functions
 import { dataToScreen, colorToRgb } from './utils/coordinateUtils';
 import { calculateDataBounds } from './utils/dataUtils';
-import { createScatterplotLayer } from './utils/layerUtils';
+import { createScatterplotLayer, createIconLayer } from './utils/layerUtils';
 
 interface EmbeddingDeckGLVisualizationState {
     hoveredPoint: EmbeddingPoint | null;
@@ -130,8 +130,17 @@ export class EmbeddingDeckGLVisualization extends React.Component<
 
         if (!data || data.length === 0) return [];
 
+        // shapeByEnabled is still a standalone flag (currently hardcoded on
+        // by the caller) rather than being derived from whether a shape-by
+        // attribute is actually selected. IconLayer replaces ScatterplotLayer
+        // entirely rather than running alongside it, so the common case
+        // (shape off) never pays for the icon atlas/texture setup.
+        const createLayer = this.props.shapeByEnabled
+            ? createIconLayer
+            : createScatterplotLayer;
+
         return [
-            createScatterplotLayer(
+            createLayer(
                 data,
                 selectedPoints,
                 this.props.selectedPatientIds || [],
@@ -248,6 +257,10 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 onGradientOverrideReset={this.props.onGradientOverrideReset}
                 onClipToPercentile={this.props.onClipToPercentile}
                 isFilterActive={this.props.isFilterActive}
+                shapeLegendEntries={this.props.shapeLegendEntries}
+                shapeAttributeDisplayName={
+                    this.props.shapeAttributeDisplayName
+                }
             />
         );
     }
