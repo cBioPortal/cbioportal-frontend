@@ -481,8 +481,8 @@ export default class FusionComparisonView extends React.Component<
     // Consensus 5′ gene for the pair = the majority resolved 5′ symbol.
     @computed get anchorGene(): string {
         const { store } = this.props;
-        if (store.anchor && store.anchor.mode === 'driver') {
-            return store.anchor.key;
+        if (store.anchor && store.anchor.mode === 'gene') {
+            return store.anchor.gene;
         }
         const resolved = this.resolvedRows;
         if (resolved.length === 0) return '';
