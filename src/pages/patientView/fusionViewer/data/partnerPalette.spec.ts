@@ -21,4 +21,10 @@ describe('partnerPalette', () => {
         assert.equal(colorFor(m, 'P8'), OTHER_COLOR);
         assert.equal(colorFor(m, 'never-seen'), OTHER_COLOR);
     });
+
+    it('prototype-key category names are ordinary partners', () => {
+        const m = rankedColorMap(['constructor', 'EML4']);
+        assert.equal(m.get('constructor'), PARTNER_PALETTE[0]);
+        assert.equal(m.get('EML4'), PARTNER_PALETTE[1]);
+    });
 });

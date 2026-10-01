@@ -15,10 +15,10 @@ export const OTHER_COLOR = '#bab0ac';
 export const NO_PARTNER_COLOR = '#d9d9d9';
 export const INTRAGENIC_COLOR = '#8c8c8c';
 
-const SENTINELS: Record<string, string> = {
-    [NO_PARTNER]: NO_PARTNER_COLOR,
-    [INTRAGENIC]: INTRAGENIC_COLOR,
-};
+const SENTINELS = new Map<string, string>([
+    [NO_PARTNER, NO_PARTNER_COLOR],
+    [INTRAGENIC, INTRAGENIC_COLOR],
+]);
 
 /**
  * Colour map for categories already ranked by unique samples (desc). Shared
@@ -30,8 +30,8 @@ export function rankedColorMap(
     const map = new Map<string, string>();
     let next = 0;
     rankedCategories.forEach(c => {
-        if (SENTINELS[c]) {
-            map.set(c, SENTINELS[c]);
+        if (SENTINELS.has(c)) {
+            map.set(c, SENTINELS.get(c)!);
         } else if (next < PARTNER_PALETTE.length) {
             map.set(c, PARTNER_PALETTE[next]);
             next += 1;
