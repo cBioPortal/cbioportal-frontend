@@ -95,6 +95,14 @@ export interface FusionStripListProps {
     junctionLabelMode?: JunctionLabelMode;
     // Which gene the rows are anchored on. Defaults to '5p'.
     anchorSide?: AnchorSide;
+    // Linked-hover dimming per row (or collapsed group).
+    rowOpacity?: (row: ComparisonRow, group?: CollapsedGroup) => number;
+    // Fired with the hovered row (+ group in collapsed mode); undefined on
+    // leave, scroll, or strip/exon mode change.
+    onRowHover?: (
+        row: ComparisonRow | undefined,
+        group?: CollapsedGroup
+    ) => void;
 }
 
 const FusionStripList: React.FC<FusionStripListProps> = ({
@@ -116,6 +124,8 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
     referenceTranscript3p,
     junctionLabelMode,
     anchorSide = '5p',
+    rowOpacity,
+    onRowHover,
 }) => {
     const rowHeight =
         rowHeightProp ?? (mode === 'dense' ? DENSE_ROW_HEIGHT : 50);
@@ -135,6 +145,7 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
     // clearing what's already showing.
     React.useEffect(() => {
         setHoveredExon(null);
+        onRowHover && onRowHover(undefined);
     }, [exonMode, mode]);
     const effective = controlledScroll ?? scrollTop;
     const { start, end } = visibleWindow(
@@ -157,6 +168,7 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
                 onScroll={e => {
                     setScrollTop((e.target as HTMLDivElement).scrollTop);
                     setHoveredExon(null);
+                    onRowHover && onRowHover(undefined);
                 }}
                 onMouseLeave={() => setHoveredExon(null)}
             >
@@ -217,6 +229,20 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
                                 onExonHover={
                                     exonMode === 'full' && mode !== 'dense'
                                         ? setHoveredExon
+                                        : undefined
+                                }
+                                opacity={
+                                    rowOpacity
+                                        ? rowOpacity(row, group)
+                                        : undefined
+                                }
+                                onHoverChange={
+                                    onRowHover
+                                        ? h =>
+                                              onRowHover(
+                                                  h ? row : undefined,
+                                                  h ? group : undefined
+                                              )
                                         : undefined
                                 }
                                 onClick={() => {

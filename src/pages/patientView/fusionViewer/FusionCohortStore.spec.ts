@@ -327,6 +327,12 @@ describe('FusionCohortStore', () => {
         });
     });
 
+    it('links are on by default and can be toggled', () => {
+        assert.isTrue(store.showLinks);
+        store.setShowLinks(false);
+        assert.isFalse(store.showLinks);
+    });
+
     describe('actions', () => {
         beforeEach(() => {
             store.setStructuralVariants([makeEvent({ id: 'e1' }) as any]);

@@ -10,6 +10,7 @@ import {
     HIST_BASELINE,
     HIST_MAX_H,
     BIN_PX,
+    featureSlotKey,
 } from '../data/trackGeometry';
 
 export {
@@ -47,6 +48,10 @@ export interface AnchorGeneTrackRulerProps {
      * with a pointer cursor and hover highlight.
      */
     onSelectBar?: (selection: { members: number[]; label: string }) => void;
+    /** Per-bar opacity by slot key (featureSlotKey / `bin:<n>`); undefined keeps the default. */
+    barOpacity?: (slotKey: string) => number | undefined;
+    /** Fired with the hovered bar's slot key on enter, undefined on leave. When set, replaces the old hover highlight. */
+    onBarHover?: (slotKey: string | undefined) => void;
 }
 
 export interface BreakpointBin {
@@ -242,6 +247,8 @@ const GenomicBody: React.FC<AnchorGeneTrackRulerProps> = ({
     labelAnchor,
     fill = COLOR_5PRIME,
     onSelectBar,
+    barOpacity,
+    onBarHover,
 }) => {
     const { strand, exons } = transcript;
     const offTranscript = breakpoints.filter(
@@ -280,6 +287,7 @@ const GenomicBody: React.FC<AnchorGeneTrackRulerProps> = ({
             {/* breakpoint density histogram — bars grow up from the gene body */}
             {bins.map(bin => {
                 const h = (bin.count / maxCount) * HIST_MAX_H;
+                const binKey = `bin:${Math.round((bin.x - drawX) / BIN_PX)}`;
                 return (
                     <rect
                         key={bin.x}
@@ -289,7 +297,7 @@ const GenomicBody: React.FC<AnchorGeneTrackRulerProps> = ({
                         width={BIN_PX - 1}
                         height={h}
                         fill={fill}
-                        opacity={0.85}
+                        opacity={barOpacity?.(binKey) ?? 0.85}
                         style={onSelectBar ? { cursor: 'pointer' } : undefined}
                         onClick={
                             onSelectBar
@@ -300,13 +308,17 @@ const GenomicBody: React.FC<AnchorGeneTrackRulerProps> = ({
                                       })
                                 : undefined
                         }
-                        onMouseOver={
-                            onSelectBar
+                        onMouseEnter={
+                            onBarHover
+                                ? () => onBarHover(binKey)
+                                : onSelectBar
                                 ? e => (e.currentTarget.style.opacity = '1')
                                 : undefined
                         }
-                        onMouseOut={
-                            onSelectBar
+                        onMouseLeave={
+                            onBarHover
+                                ? () => onBarHover(undefined)
+                                : onSelectBar
                                 ? e => (e.currentTarget.style.opacity = '0.85')
                                 : undefined
                         }
@@ -394,6 +406,8 @@ const FeatureBody: React.FC<AnchorGeneTrackRulerProps> = ({
     fill = COLOR_5PRIME,
     chromosome,
     onSelectBar,
+    barOpacity,
+    onBarHover,
 }) => {
     const { strand } = transcript;
     const { features, offTranscript } = assignBreakpointsToFeatures(
@@ -445,7 +459,9 @@ const FeatureBody: React.FC<AnchorGeneTrackRulerProps> = ({
                                 width={Math.max(1, slotW - barPad * 2)}
                                 height={h}
                                 fill={barColor}
-                                opacity={0.85}
+                                opacity={
+                                    barOpacity?.(featureSlotKey(f)) ?? 0.85
+                                }
                                 style={
                                     onSelectBar
                                         ? { cursor: 'pointer' }
@@ -460,15 +476,19 @@ const FeatureBody: React.FC<AnchorGeneTrackRulerProps> = ({
                                               })
                                         : undefined
                                 }
-                                onMouseOver={
-                                    onSelectBar
+                                onMouseEnter={
+                                    onBarHover
+                                        ? () => onBarHover(featureSlotKey(f))
+                                        : onSelectBar
                                         ? e =>
                                               (e.currentTarget.style.opacity =
                                                   '1')
                                         : undefined
                                 }
-                                onMouseOut={
-                                    onSelectBar
+                                onMouseLeave={
+                                    onBarHover
+                                        ? () => onBarHover(undefined)
+                                        : onSelectBar
                                         ? e =>
                                               (e.currentTarget.style.opacity =
                                                   '0.85')

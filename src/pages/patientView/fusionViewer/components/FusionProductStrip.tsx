@@ -54,6 +54,10 @@ export interface ExonHoverInfo {
 }
 
 export interface FusionProductStripProps {
+    /** Row opacity (linked-hover dimming); defaults to 1. */
+    opacity?: number;
+    /** Fired on mouse enter/leave of the whole strip. */
+    onHoverChange?: (hovered: boolean) => void;
     sampleId: string;
     label: string;
     transcript5p?: TranscriptData;
@@ -115,6 +119,8 @@ const FRAME_COLORS: Record<FrameStatus, string> = {
 // ---------------------------------------------------------------------------
 
 const FusionProductStrip: React.FC<FusionProductStripProps> = ({
+    opacity,
+    onHoverChange,
     label,
     transcript5p,
     leftNote,
@@ -267,8 +273,15 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
             data-testid="product-strip"
             style={{ cursor: onClick ? 'pointer' : 'default' }}
             onClick={onClick}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
+            opacity={opacity ?? 1}
+            onMouseEnter={() => {
+                setHovered(true);
+                onHoverChange && onHoverChange(true);
+            }}
+            onMouseLeave={() => {
+                setHovered(false);
+                onHoverChange && onHoverChange(false);
+            }}
         >
             {compact && (
                 <title>

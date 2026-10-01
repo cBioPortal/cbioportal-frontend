@@ -432,3 +432,54 @@ describe('AnchorGeneTrackRuler (legacy genomic-mode DOM)', () => {
         );
     });
 });
+
+describe('AnchorGeneTrackRuler linked hover', () => {
+    it('reports feature slot keys on bar hover and applies barOpacity', () => {
+        const seen: (string | undefined)[] = [];
+        const w = mount(
+            <svg>
+                <AnchorGeneTrackRuler
+                    transcript={plusTx}
+                    symbol="PLUS"
+                    breakpoints={[1050]}
+                    drawX={0}
+                    drawW={400}
+                    labelX={0}
+                    labelAnchor="end"
+                    onBarHover={k => seen.push(k)}
+                    barOpacity={() => 0.2}
+                />
+            </svg>
+        );
+        const bar = w.find('rect[data-testid="feature-bar"]').first();
+        assert.equal(Number(bar.prop('opacity')), 0.2);
+        bar.simulate('mouseenter');
+        bar.simulate('mouseleave');
+        assert.match(seen[0]!, /^exon:/);
+        assert.isUndefined(seen[1]);
+    });
+
+    it('reports bin slot keys in genomic mode', () => {
+        const seen: (string | undefined)[] = [];
+        const w = mount(
+            <svg>
+                <AnchorGeneTrackRuler
+                    mode="genomic"
+                    transcript={tx}
+                    symbol="TMPRSS2"
+                    breakpoints={[100, 500]}
+                    drawX={0}
+                    drawW={400}
+                    labelX={0}
+                    labelAnchor="end"
+                    onBarHover={k => seen.push(k)}
+                    barOpacity={() => 0.2}
+                />
+            </svg>
+        );
+        const bin = w.find('rect[data-testid="breakpoint-bin"]').first();
+        assert.equal(Number(bin.prop('opacity')), 0.2);
+        bin.simulate('mouseenter');
+        assert.match(seen[0]!, /^bin:\d+$/);
+    });
+});

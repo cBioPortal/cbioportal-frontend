@@ -351,3 +351,58 @@ describe('FusionStripList partnerless rows with a 3′ anchor (D33)', () => {
         );
     });
 });
+
+describe('FusionStripList linked hover', () => {
+    const alkTx = {
+        transcriptId: 'ALK',
+        displayName: 'ALK',
+        gene: 'ALK',
+        biotype: 'protein_coding',
+        strand: '+',
+        txStart: 0,
+        txEnd: 1000,
+        exons: [
+            { number: 1, start: 0, end: 100 },
+            { number: 2, start: 400, end: 500 },
+        ],
+        isForteSelected: true,
+        isCallerSelected: true,
+        isCanonical: true,
+        genomeBuild: 'GRCh38',
+        domains: [],
+        utrs: [],
+    } as any;
+    const lone = {
+        event: { totalReadSupport: 3 },
+        sampleId: 'S9',
+        fivePrimeSymbol: 'ALK',
+        threePrimeSymbol: null,
+        anchorBreakpoint: 300,
+        partnerBreakpoint: null,
+        frame: 'unknown',
+    } as any;
+
+    it('applies rowOpacity, reports hover, and clears hover on scroll', () => {
+        const calls: any[] = [];
+        const w = mount(
+            <FusionStripList
+                rows={[lone]}
+                transcriptForRow={() => alkTx}
+                width={1000}
+                pxPerBp5p={0.2}
+                pxPerBp3p={0.2}
+                alignment="junction"
+                rowOpacity={() => 0.2}
+                onRowHover={(r: any) => calls.push(r)}
+            />
+        );
+        const strip = () => w.find('g[data-testid="product-strip"]').first();
+        assert.equal(Number(strip().prop('opacity')), 0.2);
+        strip().simulate('mouseenter');
+        assert.strictEqual(calls[calls.length - 1], lone);
+        w.find('[data-testid="strip-scroll"]').simulate('scroll', {
+            target: { scrollTop: 10 },
+        });
+        assert.isUndefined(calls[calls.length - 1]);
+    });
+});
