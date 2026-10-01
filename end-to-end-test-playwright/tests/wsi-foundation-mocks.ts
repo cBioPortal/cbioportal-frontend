@@ -6,6 +6,9 @@ export const IMAGE_ID = 'wsi-foundation-smoke-slide';
 // Deliberately contains characters that must be percent-encoded in a URL.
 export const SECOND_IMAGE_ID = 'wsi foundation/smoke #2';
 export const RESOURCE_ID = 'WSI_SLIDE';
+export const SAMPLE_ID = 'wsi-foundation-smoke-sample';
+/** A sample attribute value the sidebar's Clinical section shows. */
+export const CLINICAL_CANCER_TYPE = 'Lung Adenocarcinoma';
 
 const RESOURCE_DATA_IDS: Record<string, string> = {
     [IMAGE_ID]: '101',
@@ -181,6 +184,7 @@ export async function installFoundationMocks(
             });
         }
     );
+    await installClinicalMocks(page);
     await page.route('**/wsi/tiles/**', route =>
         route.fulfill({ status: 200, contentType: 'image/png', body: pixel })
     );
@@ -188,4 +192,109 @@ export async function installFoundationMocks(
         route.fulfill({ status: 200, contentType: 'image/png', body: pixel })
     );
     return enrichmentRequests;
+}
+
+function json(body: unknown) {
+    return {
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(body),
+    };
+}
+
+/**
+ * The study and patient clinical data read by the viewer's Clinical section:
+ * one default patient attribute, one default sample attribute and one
+ * hidden (priority 0) attribute.
+ */
+async function installClinicalMocks(page: Page): Promise<void> {
+    const attribute = (
+        clinicalAttributeId: string,
+        displayName: string,
+        priority: string,
+        patientAttribute: boolean
+    ) => ({
+        clinicalAttributeId,
+        displayName,
+        description: displayName,
+        datatype: 'STRING',
+        priority,
+        patientAttribute,
+        studyId: STUDY_ID,
+    });
+    const datum = (
+        clinicalAttributeId: string,
+        value: string,
+        sampleId?: string
+    ) => ({
+        clinicalAttributeId,
+        value,
+        patientId: PATIENT_ID,
+        studyId: STUDY_ID,
+        ...(sampleId ? { sampleId } : {}),
+    });
+
+    await page.route(
+        new RegExp(`/api/studies/${STUDY_ID}/clinical-attributes(\\?.*)?$`),
+        route =>
+            route.fulfill(
+                json([
+                    attribute(
+                        'CANCER_TYPE_DETAILED',
+                        'Cancer Type Detailed',
+                        '2000',
+                        false
+                    ),
+                    attribute('SAMPLE_COUNT', 'Number of Samples', '1', true),
+                    attribute(
+                        'PATH_SLIDE_EXISTS',
+                        'Slide Available',
+                        '0',
+                        false
+                    ),
+                ])
+            )
+    );
+    await page.route(new RegExp(`/api/studies/${STUDY_ID}(\\?.*)?$`), route =>
+        route.fulfill(
+            json({ studyId: STUDY_ID, name: STUDY_ID, allSampleCount: 1 })
+        )
+    );
+    await page.route('**/api/clinical-attributes/counts/fetch**', route =>
+        route.fulfill(
+            json([
+                { clinicalAttributeId: 'CANCER_TYPE_DETAILED', count: 1 },
+                { clinicalAttributeId: 'SAMPLE_COUNT', count: 1 },
+                { clinicalAttributeId: 'PATH_SLIDE_EXISTS', count: 1 },
+            ])
+        )
+    );
+    await page.route(
+        new RegExp(
+            `/api/studies/${STUDY_ID}/patients/${PATIENT_ID}/clinical-data(\\?.*)?$`
+        ),
+        route => route.fulfill(json([datum('SAMPLE_COUNT', '1')]))
+    );
+    await page.route(
+        new RegExp(
+            `/api/studies/${STUDY_ID}/patients/${PATIENT_ID}/samples(\\?.*)?$`
+        ),
+        route =>
+            route.fulfill(
+                json([
+                    {
+                        sampleId: SAMPLE_ID,
+                        patientId: PATIENT_ID,
+                        studyId: STUDY_ID,
+                    },
+                ])
+            )
+    );
+    await page.route('**/api/clinical-data/fetch**', route =>
+        route.fulfill(
+            json([
+                datum('CANCER_TYPE_DETAILED', CLINICAL_CANCER_TYPE, SAMPLE_ID),
+            ])
+        )
+    );
 }

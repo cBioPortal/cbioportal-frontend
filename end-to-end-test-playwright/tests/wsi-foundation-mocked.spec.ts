@@ -5,6 +5,7 @@ import {
     PATIENT_ID,
     IMAGE_ID,
     SECOND_IMAGE_ID,
+    CLINICAL_CANCER_TYPE,
 } from './wsi-foundation-mocks';
 
 /** "{study}/{patient}/{imageId}" of a slide access request. */
@@ -84,6 +85,11 @@ if (process.env.PW_SUITE === 'wsi' && process.env.WSI_CHILD_CONTRACT !== '1') {
             await expect.poll(() => tileResponses.length).toBeGreaterThan(0);
             expect(tileResponses.every(status => status === 200)).toBe(true);
             expect(new URL(page.url()).hash).toContain(`slide=${IMAGE_ID}`);
+            const clinical = page.getByTestId('wsi-sidebar-section-clinical');
+            await expect(clinical).toContainText('Cancer Type Detailed');
+            await expect(clinical).toContainText(CLINICAL_CANCER_TYPE);
+            await expect(clinical).toContainText('Number of Samples');
+            await expect(clinical).not.toContainText('Slide Available');
             expect(enrichmentRequests).toEqual([]);
             expect(pageErrors).toEqual([]);
             expect(consoleErrors).toEqual([]);
