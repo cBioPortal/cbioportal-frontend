@@ -33,6 +33,7 @@ import {
 } from './data/collapseRows';
 import FusionRecurrenceTable from './FusionRecurrenceTable';
 import { FusionDiagramSVG } from './FusionDiagramSVG';
+import { txKey } from './data/transcriptKeys';
 import { TranscriptData, COLOR_5PRIME, COLOR_3PRIME } from './data/types';
 import WindowStore from 'shared/components/window/WindowStore';
 import {
@@ -40,10 +41,7 @@ import {
     sharedPxPerBp,
 } from './components/comparisonFrame';
 import { JUNCTION_GAP } from './components/fusionProductHelpers';
-import {
-    fetchTranscriptsForGeneWithFallback,
-    GenomeBuild,
-} from './data/genomeNexusTranscriptService';
+import { fetchTranscriptsForGeneWithFallback } from './data/genomeNexusTranscriptService';
 import { frameStatusStyle } from './components/frameStatusStyle';
 import { sampleFusionViewerHref } from './data/cohortLinks';
 
@@ -60,26 +58,6 @@ const STRIP_VERTICAL_CHROME = 240;
 const MIN_STRIP_VIEWPORT = 600;
 // Seam gap between the 5′ and 3′ gene tracks at the junction.
 const PARTNER_TRACK_GAP = 8;
-
-// Transcript cache key: a gene may be fetched as its canonical isoform (empty
-// id) AND as one or more caller-selected isoforms. Keyed on genome build too:
-// `store.genomeBuild` is set asynchronously from the study, so a fetch before
-// the build is known must not shadow the correct-build transcript. After a
-// build change, lookups miss under the new key and refetch (stale entries are
-// simply unused).
-const txKey = (build: string, symbol: string, transcriptId?: string) =>
-    `${build}|${symbol}|${transcriptId || ''}`;
-
-// The build a single row's coordinates are on. The row outranks the cohort:
-// a mixed-build export (GRCh37 DNA SVs alongside GRCh38 RNA fusions) has no
-// single correct cohort build, so each row resolves its own transcripts.
-const buildForRow = (
-    row: ComparisonRow,
-    fallback: GenomeBuild
-): GenomeBuild => {
-    const b = row.event.ncbiBuild;
-    return b === 'GRCh37' || b === 'GRCh38' ? b : fallback;
-};
 
 const exonLen = (e: { start: number; end: number }) =>
     Math.max(1, e.end - e.start);
@@ -114,18 +92,20 @@ export const FUSION_BREAKPOINT_FILTER_KEY = 'FUSION_BREAKPOINT_BAR';
 export default class FusionComparisonView extends React.Component<
     FusionComparisonViewProps
 > {
-    // Keyed by `${symbol}|${transcriptId}` — canonical (empty id) plus each
-    // caller-selected isoform. Deduped so N samples sharing an isoform store
-    // (and, via Genome Nexus per-gene caching, fetch) once.
-    @observable.ref transcriptsByKey: Map<string, TranscriptData> = new Map();
-
-    // Full transcript list per gene (feature 1 histogram picker), keyed by
-    // `${build}|${symbol}`. Populated from the canonical fetch, which returns
-    // every transcript for the gene. Only the histogram picker reads this.
-    @observable.ref transcriptOptionsByGene: Map<
-        string,
-        TranscriptData[]
-    > = new Map();
+    // The cache lives in the store (D13) so it survives remounts; these
+    // accessors keep the view's call sites and specs unchanged.
+    get transcriptsByKey(): Map<string, TranscriptData> {
+        return this.props.store.transcriptsByKey;
+    }
+    set transcriptsByKey(m: Map<string, TranscriptData>) {
+        this.props.store.setTranscriptsByKey(m);
+    }
+    get transcriptOptionsByGene(): Map<string, TranscriptData[]> {
+        return this.props.store.transcriptOptionsByGene;
+    }
+    set transcriptOptionsByGene(m: Map<string, TranscriptData[]>) {
+        this.props.store.setTranscriptOptionsByGene(m);
+    }
     @observable expandedSampleId: string | undefined = undefined;
 
     constructor(props: FusionComparisonViewProps) {
@@ -140,53 +120,6 @@ export default class FusionComparisonView extends React.Component<
                 e.frameCallMethod !== 'NA' &&
                 e.frameCallMethod !== ''
         );
-    }
-
-    // Deduped (symbol, transcriptId, build) requests. resolvedRows resolves
-    // EVERY row's strand through transcriptForGene, which reads the
-    // bare-symbol key at the COHORT build -- so every row's genes need that
-    // one key, not just the anchor pair. Each row's caller-selected isoform
-    // and its row-build canonical isoform are needed only at that row's own
-    // build (transcriptForRow never looks them up at the cohort build).
-    @computed get transcriptRequests(): {
-        symbol: string;
-        transcriptId: string;
-        build: GenomeBuild;
-    }[] {
-        const cohortBuild = this.props.store.genomeBuild;
-        const map = new Map<
-            string,
-            { symbol: string; transcriptId: string; build: GenomeBuild }
-        >();
-        const add = (
-            symbol: string,
-            transcriptId: string,
-            build: GenomeBuild
-        ) => {
-            if (!symbol) return;
-            const k = txKey(build, symbol, transcriptId);
-            if (!map.has(k)) map.set(k, { symbol, transcriptId, build });
-        };
-        this.props.store.comparisonRows.forEach(r => {
-            const e = r.event;
-            const rowBuild = buildForRow(r, cohortBuild);
-            add(e.gene1.symbol, '', rowBuild);
-            add(e.gene1.symbol, e.gene1.selectedTranscriptId || '', rowBuild);
-            if (e.gene2) {
-                add(e.gene2.symbol, '', rowBuild);
-                add(
-                    e.gene2.symbol,
-                    e.gene2.selectedTranscriptId || '',
-                    rowBuild
-                );
-            }
-            // Bare-symbol key at the cohort build: see the doc comment above.
-            add(e.gene1.symbol, '', cohortBuild);
-            if (e.gene2) {
-                add(e.gene2.symbol, '', cohortBuild);
-            }
-        });
-        return Array.from(map.values());
     }
 
     // One segment of the histogram-mode toggle, styled like cBioPortal's
@@ -280,7 +213,7 @@ export default class FusionComparisonView extends React.Component<
                 const s = this.props.store;
                 const needsDefaultAnchor =
                     !s.anchor && s.pairSummaries.length > 0;
-                const outstanding = this.outstandingTranscriptRequests()
+                const outstanding = this.props.store.outstandingTranscriptRequests
                     .map(r => `${r.build}|${r.symbol}|${r.transcriptId}`)
                     .join(',');
                 return `${needsDefaultAnchor}|${s.genomeBuild}|${outstanding}`;
@@ -304,21 +237,8 @@ export default class FusionComparisonView extends React.Component<
     // into the current map, so overlapping fetches are safe regardless.
     private inFlightTxKeys = new Set<string>();
 
-    private outstandingTranscriptRequests(): {
-        symbol: string;
-        transcriptId: string;
-        build: GenomeBuild;
-    }[] {
-        return this.transcriptRequests.filter(
-            req =>
-                !this.transcriptsByKey.has(
-                    txKey(req.build, req.symbol, req.transcriptId)
-                )
-        );
-    }
-
     async fetchTranscripts() {
-        const missing = this.outstandingTranscriptRequests().filter(
+        const missing = this.props.store.outstandingTranscriptRequests.filter(
             req =>
                 !this.inFlightTxKeys.has(
                     txKey(req.build, req.symbol, req.transcriptId)
@@ -333,6 +253,7 @@ export default class FusionComparisonView extends React.Component<
 
         const fetched: [string, TranscriptData][] = [];
         const fetchedOptions: [string, TranscriptData[]][] = [];
+        const failed: string[] = [];
         for (const { symbol, transcriptId, build } of missing) {
             const k = txKey(build, symbol, transcriptId);
             this.inFlightTxKeys.add(k);
@@ -344,13 +265,12 @@ export default class FusionComparisonView extends React.Component<
                 );
                 const chosen = list.find(t => t.isForteSelected) || list[0];
                 if (chosen) fetched.push([k, chosen]);
+                else failed.push(k);
                 if (transcriptId === '' && list.length > 0) {
                     fetchedOptions.push([`${build}|${symbol}`, list]);
                 }
             } catch {
-                // Swallow: an unresolved gene simply stays missing and is
-                // retried when the reaction next fires. It must not wedge the
-                // other requests.
+                failed.push(k);
             } finally {
                 // Always release the key so a later firing can retry it — no
                 // permanent blacklist, no shared flag that could stick.
@@ -358,24 +278,11 @@ export default class FusionComparisonView extends React.Component<
             }
         }
 
-        // Merge newly-resolved transcripts into the CURRENT map (not a stale
-        // snapshot), and only when the build hasn't flipped mid-fetch, so a
-        // concurrent commit or an anchor/build change is never clobbered.
-        if (
-            (fetched.length > 0 || fetchedOptions.length > 0) &&
-            this.props.store.genomeBuild === cohortBuildAtStart
-        ) {
+        if (this.props.store.genomeBuild === cohortBuildAtStart) {
             runInAction(() => {
-                if (fetched.length > 0) {
-                    const merged = new Map(this.transcriptsByKey);
-                    fetched.forEach(([k, v]) => merged.set(k, v));
-                    this.transcriptsByKey = merged;
-                }
-                if (fetchedOptions.length > 0) {
-                    const mergedOpts = new Map(this.transcriptOptionsByGene);
-                    fetchedOptions.forEach(([g, l]) => mergedOpts.set(g, l));
-                    this.transcriptOptionsByGene = mergedOpts;
-                }
+                this.props.store.mergeTranscripts(fetched);
+                this.props.store.mergeTranscriptOptions(fetchedOptions);
+                this.props.store.markTranscriptsFailed(failed);
             });
         }
     }
@@ -383,43 +290,16 @@ export default class FusionComparisonView extends React.Component<
     // Canonical isoform of a gene — used by the anchor track (one shared
     // coordinate system) and as the per-row fallback.
     transcriptForGene = (gene: string): TranscriptData | undefined =>
-        this.transcriptsByKey.get(
-            txKey(this.props.store.genomeBuild, gene, '')
-        );
+        this.props.store.transcriptForGene(gene);
 
-    // The isoform the fusion caller selected for one side of a row, falling
-    // back to the gene's canonical isoform when the id is missing/unresolved.
     transcriptForRow = (
         row: ComparisonRow,
         is5p: boolean
-    ): TranscriptData | undefined => {
-        const symbol = is5p ? row.fivePrimeSymbol : row.threePrimeSymbol;
-        if (!symbol) return undefined;
-        const e = row.event;
-        const gene =
-            e.gene1.symbol === symbol
-                ? e.gene1
-                : e.gene2 && e.gene2.symbol === symbol
-                ? e.gene2
-                : undefined;
-        const id = gene?.selectedTranscriptId || '';
-        const build = buildForRow(row, this.props.store.genomeBuild);
-        return (
-            this.transcriptsByKey.get(txKey(build, symbol, id)) ||
-            this.transcriptsByKey.get(txKey(build, symbol, ''))
-        );
-    };
+    ): TranscriptData | undefined =>
+        this.props.store.transcriptForRow(row, is5p);
 
-    // The user-chosen histogram transcript for a gene, if set and loaded.
-    // Returns undefined when no override is set (caller falls back to canonical).
-    histogramTranscriptForGene = (gene: string): TranscriptData | undefined => {
-        const id = this.props.store.histogramTranscriptIdByGene.get(gene);
-        if (!id) return undefined;
-        const opts = this.transcriptOptionsByGene.get(
-            `${this.props.store.genomeBuild}|${gene}`
-        );
-        return opts?.find(t => t.transcriptId === id);
-    };
+    histogramTranscriptForGene = (gene: string): TranscriptData | undefined =>
+        this.props.store.histogramTranscriptForGene(gene);
 
     // Per-gene histogram transcript picker. Lists every Genome Nexus transcript
     // for the gene; the MSK-canonical isoform is the default. Hidden when the
