@@ -40,7 +40,12 @@ import AnchorModeBar from './components/AnchorModeBar';
 import FusionRecurrenceTable from './FusionRecurrenceTable';
 import { FusionDiagramSVG } from './FusionDiagramSVG';
 import { txKey } from './data/transcriptKeys';
-import { TranscriptData, COLOR_5PRIME, COLOR_3PRIME } from './data/types';
+import {
+    TranscriptData,
+    COLOR_5PRIME,
+    COLOR_3PRIME,
+    FrameStatus,
+} from './data/types';
 import WindowStore from 'shared/components/window/WindowStore';
 import {
     computeComparisonFrame,
@@ -58,6 +63,7 @@ import {
 import {
     buildLinkGroups,
     buildLollipopSticks,
+    slotLabel,
     LinkGroup,
     LinkMatcher,
     litBarKeys,
@@ -69,7 +75,6 @@ import AnchorLollipopTrack from './components/AnchorLollipopTrack';
 import { colorFor, rankedColorMap } from './data/partnerPalette';
 import BreakpointLinkArcs, {
     ARC_BAND_HEIGHT,
-    FRAME_LINK_COLORS,
 } from './components/BreakpointLinkArcs';
 
 // Horizontal chrome (page padding + patient-view rails) subtracted from the
@@ -744,21 +749,52 @@ export default class FusionComparisonView extends React.Component<
     @computed get lollipopColorOf(): (c: string) => string {
         const { store } = this.props;
         if (store.lollipopColorBy === 'frame') {
-            return c =>
-                FRAME_LINK_COLORS[c as keyof typeof FRAME_LINK_COLORS] ??
-                '#999999';
+            return c => {
+                const st = frameStatusStyle(c as FrameStatus);
+                return st.hollow ? '#ced4da' : st.fill;
+            };
         }
         if (store.lollipopColorBy === 'svType') {
-            const counts = _.countBy(
-                this.orientedRows,
-                r => r.event.callMethod || 'unknown'
-            );
+            const bySamples = new Map<string, Set<string>>();
+            store.sideRows.kept.forEach(r => {
+                const c = r.event.callMethod || 'unknown';
+                bySamples.set(
+                    c,
+                    (bySamples.get(c) ?? new Set<string>()).add(r.sampleId)
+                );
+            });
             const m = rankedColorMap(
-                Object.keys(counts).sort((a, b) => counts[b] - counts[a])
+                Array.from(bySamples.keys()).sort(
+                    (a, b) =>
+                        bySamples.get(b)!.size - bySamples.get(a)!.size ||
+                        a.localeCompare(b)
+                )
             );
             return c => colorFor(m, c);
         }
         return c => colorFor(store.partnerColorMap, c);
+    }
+
+    @computed get lollipopCategoryLabel(): (c: string) => string {
+        return this.props.store.lollipopColorBy === 'frame'
+            ? c => frameStatusStyle(c as FrameStatus).label
+            : c => c;
+    }
+
+    /** Gene mode + Lollipop track selected (gates the track, select, legend). */
+    @computed get lollipopOn(): boolean {
+        return this.isGeneMode && this.props.store.trackMode === 'lollipop';
+    }
+
+    /** Frame / SV-type categories present, with their swatch colours. */
+    @computed get lollipopLegend(): { label: string; color: string }[] {
+        const { store } = this.props;
+        if (store.lollipopColorBy === 'partner') return [];
+        const cats = _.uniq(store.sideRows.kept.map(this.lollipopCategoryOf));
+        return cats.sort().map(c => ({
+            label: this.lollipopCategoryLabel(c),
+            color: this.lollipopColorOf(c),
+        }));
     }
 
     handleSelectSamples = (sampleIds: string[], label: string): void => {
@@ -918,13 +954,16 @@ export default class FusionComparisonView extends React.Component<
                                 'One stick per exon/intron: height = samples, head split by partner'
                             )}
                     </ButtonGroup>
-                    {store.trackMode === 'lollipop' && (
+                    {this.lollipopOn && (
                         <select
                             data-testid="lollipop-colorby"
                             aria-label="Colour lollipop by"
                             value={store.lollipopColorBy}
                             onChange={e =>
-                                store.setLollipopColorBy(e.target.value as any)
+                                store.setLollipopColorBy(
+                                    e.target
+                                        .value as typeof store.lollipopColorBy
+                                )
                             }
                             style={{ fontSize: 11 }}
                         >
@@ -932,6 +971,29 @@ export default class FusionComparisonView extends React.Component<
                             <option value="frame">Colour: frame</option>
                             <option value="svType">Colour: SV type</option>
                         </select>
+                    )}
+                    {this.lollipopOn && this.lollipopLegend.length > 0 && (
+                        <span
+                            data-testid="lollipop-legend"
+                            style={{ fontSize: 11, color: '#495057' }}
+                        >
+                            {this.lollipopLegend.map(l => (
+                                <span key={l.label} style={{ marginRight: 8 }}>
+                                    <span
+                                        style={{
+                                            display: 'inline-block',
+                                            width: 9,
+                                            height: 9,
+                                            borderRadius: '50%',
+                                            background: l.color,
+                                            border: '1px solid #999',
+                                            marginRight: 3,
+                                        }}
+                                    />
+                                    {l.label}
+                                </span>
+                            ))}
+                        </span>
                     )}
                     {!this.isGeneMode && (
                         <ButtonGroup>
@@ -1203,7 +1265,7 @@ export default class FusionComparisonView extends React.Component<
                                         ? 'feature'
                                         : store.trackMode
                                 }
-                                hideHistogram={store.trackMode === 'lollipop'}
+                                hideHistogram={this.lollipopOn}
                                 barOpacity={
                                     linksOn
                                         ? this.barOpacityFrom(lit, '5p')
@@ -1225,8 +1287,7 @@ export default class FusionComparisonView extends React.Component<
                                         : undefined
                                 }
                             />
-                            {store.trackMode === 'lollipop' &&
-                                this.isGeneMode &&
+                            {this.lollipopOn &&
                                 (histogramAnchorTranscript ||
                                     anchorTranscript) && (
                                     <AnchorLollipopTrack
@@ -1242,12 +1303,17 @@ export default class FusionComparisonView extends React.Component<
                                             this.lollipopCategoryOf
                                         )}
                                         colorOf={this.lollipopColorOf}
+                                        categoryLabel={
+                                            this.lollipopCategoryLabel
+                                        }
                                         onSelect={
                                             this.props.onFilterCohortBySamples
                                                 ? s =>
                                                       this.handleSelectSamples(
                                                           s.sampleIds,
-                                                          `${anchorGene} breakpoint: ${s.key}`
+                                                          `${anchorGene} breakpoint: ${slotLabel(
+                                                              s.key
+                                                          )}`
                                                       )
                                                 : undefined
                                         }
