@@ -22,10 +22,36 @@ import {
 export const WSI_CLINICAL_MIN_FREQUENCY = 0.5;
 
 /**
+ * Attributes left out of the Clinical section although the study shows them
+ * by default: sequencing QC and administrative fields that say nothing about
+ * the patient or the tissue on the slide.
+ */
+export const WSI_CLINICAL_EXCLUDED_ATTRIBUTE_IDS: ReadonlySet<string> = new Set(
+    [
+        'GENE_PANEL',
+        'INSTITUTE',
+        'OTHER_PATIENT_ID',
+        'SAMPLE_COVERAGE',
+        'SOMATIC_STATUS',
+    ]
+);
+
+/** Consent flags, e.g. PARTA_CONSENTED_12_245. */
+const CONSENT_ATTRIBUTE = /CONSENTED/i;
+
+function isExcludedClinicalAttribute(attributeId: string): boolean {
+    return (
+        WSI_CLINICAL_EXCLUDED_ATTRIBUTE_IDS.has(attributeId) ||
+        CONSENT_ATTRIBUTE.test(attributeId)
+    );
+}
+
+/**
  * The study's default clinical attributes, as the study view picks its
  * default charts and Clinical Data columns: priority above 0 (with the
  * frontend priority overrides), highest priority first, at most
- * `studyview_clinical_attribute_chart_count`. When attribute counts are
+ * `studyview_clinical_attribute_chart_count`, without the
+ * WSI_CLINICAL_EXCLUDED_ATTRIBUTE_IDS and consent flags. When counts are
  * known, attributes populated for fewer than WSI_CLINICAL_MIN_FREQUENCY of
  * the study's samples are left out.
  */
@@ -44,6 +70,10 @@ export function selectWsiClinicalAttributes(
             priority: getPriorityByClinicalAttribute(attribute).toString(),
         }))
         .filter(attribute => (parseInt(attribute.priority) || 0) > 0)
+        .filter(
+            attribute =>
+                !isExcludedClinicalAttribute(attribute.clinicalAttributeId)
+        )
         .filter(
             attribute =>
                 !countById ||

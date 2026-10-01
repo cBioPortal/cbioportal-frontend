@@ -137,23 +137,29 @@ describe('buildPathRows', () => {
         );
     });
 
-    it('shows the long-form study name while retaining the study link', () => {
-        const rows = buildPathRows(
+    it('leaves patient, study and cancer type to the page and Clinical section', () => {
+        const labels = buildPathRows(
             slide,
-            sample,
+            {
+                ...sample,
+                cancer_type: 'Melanoma',
+                cancer_type_detailed: 'Cutaneous Melanoma',
+                oncotree_code: 'SKCM',
+                primary_site: 'Skin',
+            },
             'P-1',
-            'study_underscore_id',
-            association('BLOCK'),
-            'Long Form Study Name'
-        );
+            'study-1',
+            association('BLOCK')
+        ).map(row => row.label);
 
-        expect(rows).toContainEqual(
-            expect.objectContaining({
-                label: 'Study',
-                value: 'Long Form Study Name',
-                href: '/study/summary?id=study_underscore_id',
-            })
-        );
+        [
+            'Patient',
+            'Study',
+            'Cancer type',
+            'OncoTree',
+            'Primary site',
+        ].forEach(label => expect(labels).not.toContain(label));
+        expect(labels).toContain('Sample');
     });
 
     it('hides Path Dx when it duplicates the anatomical site text', () => {
@@ -179,7 +185,7 @@ describe('buildPathRows', () => {
     });
 });
 
-describe('buildPathRows sample timeline rows', () => {
+describe('buildPathRows timeline row', () => {
     const procedureSlide: Slide = {
         ...slide,
         image_id: 'slide-timeline',
@@ -187,125 +193,100 @@ describe('buildPathRows sample timeline rows', () => {
         slide_timepoint_source: 'Procedure date',
     };
 
-    function rowValues(rows: ReturnType<typeof buildPathRows>) {
-        return rows.map(row => [row.label, row.value]);
+    function timeline(rows: ReturnType<typeof buildPathRows>) {
+        return rows.find(row => row.label === 'Timeline')?.value;
     }
 
-    it('shows procedure, acquisition and sequencing days for a matched sample', () => {
-        const rows = rowValues(
-            buildPathRows(
-                { ...procedureSlide },
-                sample,
-                'P-1',
-                undefined,
-                undefined,
-                undefined,
-                { acquisitionDays: -242, sequencingDays: 7 }
-            )
-        );
-
-        expect(rows).toEqual(
-            expect.arrayContaining([
-                ['Procedure', 'd-242'],
-                ['Acquired', 'd-242'],
-                ['Sequenced', 'd+7 (249 d later)'],
-            ])
-        );
-        expect(rows.map(([label]) => label)).not.toContain('Timepoint');
-        const labels = rows.map(([label]) => label);
-        expect(labels.indexOf('Procedure')).toBeLessThan(
-            labels.indexOf('Acquired')
-        );
-        expect(labels.indexOf('Acquired')).toBeLessThan(
-            labels.indexOf('Sequenced')
-        );
-    });
-
-    it('omits acquisition and sequencing rows when unknown', () => {
-        const labels = buildPathRows({ ...procedureSlide }, sample, 'P-1').map(
-            row => row.label
-        );
-
-        expect(labels).toContain('Procedure');
-        expect(labels).not.toContain('Acquired');
-        expect(labels).not.toContain('Sequenced');
-    });
-
-    it('shows sequencing without an offset for an undated slide', () => {
-        const rows = rowValues(
-            buildPathRows(
-                { ...slide },
-                sample,
-                'P-1',
-                undefined,
-                undefined,
-                undefined,
-                {
-                    sequencingDays: 7,
-                }
-            )
-        );
-
-        expect(rows).toContainEqual(['Sequenced', 'd+7']);
-        expect(rows.map(([label]) => label)).not.toContain('Procedure');
-    });
-
-    it('keeps the timepoint row for unmatched slides', () => {
-        const rows = rowValues(
-            buildPathRows(
-                { ...procedureSlide },
-                { ...sample, sample_id: 'UNMATCHED' },
-                'P-1',
-                undefined,
-                undefined,
-                undefined,
-                { acquisitionDays: 1, sequencingDays: 7 }
-            )
-        );
-
-        expect(rows).toContainEqual(['Timepoint', 'Proc d-242']);
-        const labels = rows.map(([label]) => label);
-        expect(labels).not.toContain('Acquired');
-        expect(labels).not.toContain('Sequenced');
-    });
-
-    it('adds the sequencing row when timeline data is given', () => {
-        const before = buildPathRows(procedureSlide, sample, 'P-1');
-        const after = buildPathRows(
-            procedureSlide,
+    it('shows procedure, acquisition and sequencing days in one row', () => {
+        const rows = buildPathRows(
+            { ...procedureSlide },
             sample,
             'P-1',
             undefined,
             undefined,
-            undefined,
-            { sequencingDays: 7 }
+            { acquisitionDays: -242, sequencingDays: 7 }
         );
 
-        expect(before.map(row => row.label)).not.toContain('Sequenced');
-        expect(after.map(row => row.label)).toContain('Sequenced');
+        expect(timeline(rows)).toBe(
+            'Procedure d-242 · acquired d-242 · sequenced d+7 (249 d later)'
+        );
+        const labels = rows.map(row => row.label);
+        ['Procedure', 'Timepoint', 'Acquired', 'Sequenced'].forEach(label =>
+            expect(labels).not.toContain(label)
+        );
+    });
+
+    it('shows only the procedure day when the sample timeline is unknown', () => {
+        expect(
+            timeline(buildPathRows({ ...procedureSlide }, sample, 'P-1'))
+        ).toBe('Procedure d-242');
+    });
+
+    it('shows sequencing without an offset for an undated slide', () => {
+        expect(
+            timeline(
+                buildPathRows(
+                    { ...slide },
+                    sample,
+                    'P-1',
+                    undefined,
+                    undefined,
+                    {
+                        sequencingDays: 7,
+                    }
+                )
+            )
+        ).toBe('sequenced d+7');
+    });
+
+    it('falls back to the sequencing report date', () => {
+        expect(
+            timeline(
+                buildPathRows(
+                    { ...slide },
+                    { ...sample, sequencing_date: '2021-03-04' },
+                    'P-1'
+                )
+            )
+        ).toBe('sequenced 2021-03-04');
+    });
+
+    it('keeps only the procedure day for unmatched slides', () => {
+        expect(
+            timeline(
+                buildPathRows(
+                    { ...procedureSlide },
+                    { ...sample, sample_id: 'UNMATCHED' },
+                    'P-1',
+                    undefined,
+                    undefined,
+                    { acquisitionDays: 1, sequencingDays: 7 }
+                )
+            )
+        ).toBe('Procedure d-242');
+    });
+
+    it('has no timeline row without any timing', () => {
+        expect(timeline(buildPathRows({ ...slide }, sample, 'P-1'))).toBe(
+            undefined
+        );
     });
 });
 
 describe('buildWsiRows', () => {
-    it('shows the available image and scanner properties as visible rows', () => {
+    it('shows dimensions, magnification and scanner', () => {
         expect(buildWsiRows(slide, metadata)).toEqual([
             {
                 label: 'Dimensions',
                 labelTip: 'Width × height at full resolution',
                 value: '1,000 × 2,000 px',
-                valueTip: 'About 0.3 × 0.5 mm of glass at 0.2500 µm per pixel',
+                valueTip: 'About 0.3 × 0.5 mm of glass\nFile size 95.4 MB',
             },
             {
                 label: 'Magnification',
-                labelTip: 'Scanner magnification or objective power',
-                value: '20x',
-                valueTip:
-                    'Optical magnification of the scan: 40× is about 0.25 µm per pixel, 20× about 0.5 µm per pixel',
-            },
-            {
-                label: 'MPP',
-                labelTip: 'Microns per pixel at full resolution',
-                value: '0.2500 µm/px',
+                labelTip:
+                    'Scanner magnification and microns per pixel at full resolution',
+                value: '20x · 0.2500 µm/px',
                 valueTip:
                     'Each pixel spans 0.2500 µm; 1 mm is about 4,000 pixels',
             },
@@ -313,26 +294,6 @@ describe('buildWsiRows', () => {
                 label: 'Scanner vendor',
                 labelTip: 'Scanner manufacturer recorded in the slide file',
                 value: 'aperio',
-            },
-            {
-                label: 'Zoom levels',
-                labelTip: 'Number of resolution tiers available to the viewer',
-                value: '5',
-                valueTip:
-                    '5 levels, from a whole-slide overview down to full resolution',
-            },
-            {
-                label: 'Tile size',
-                labelTip: 'Tile dimensions streamed to the viewer',
-                value: '256 px',
-                valueTip:
-                    'The image is loaded as 256 × 256 px tiles as you pan and zoom',
-            },
-            {
-                label: 'File size',
-                labelTip: 'Size of the original scanned slide file',
-                value: '95.4 MB',
-                valueTip: '100,000,000 bytes',
             },
         ]);
     });
@@ -351,9 +312,8 @@ describe('buildWsiRows', () => {
         expect(rows.map(row => [row.label, row.value])).toEqual([
             ['Dimensions', '1,000 × 2,000 px'],
             ['Magnification', '40×'],
-            ['Zoom levels', '5'],
-            ['Tile size', '256 px'],
         ]);
+        expect(rows[0].valueTip).toBeUndefined();
     });
 
     it('returns frozen rows', () => {

@@ -34,14 +34,6 @@ function normalizeSidebarTextValue(value: string | null | undefined): string {
         .toLowerCase();
 }
 
-function getStudyDisplayName(
-    studyName: string | undefined,
-    studyId: string | undefined
-): string | undefined {
-    const normalizedName = studyName?.trim();
-    return normalizedName || studyId;
-}
-
 export function getPatientId(sampleId: string, patientId?: string): string {
     if (patientId) {
         return patientId;
@@ -109,38 +101,42 @@ export function buildWsiRows(
     const magnification =
         slide?.magnification?.trim() || (objNum ? `${objNum}×` : '');
 
+    const dimensionTips = [
+        mpp
+            ? `About ${((w * mpp) / 1000).toFixed(1)} × ${(
+                  (h * mpp) /
+                  1000
+              ).toFixed(1)} mm of glass`
+            : null,
+        slide?.file_size_bytes
+            ? `File size ${fmtMB(slide.file_size_bytes)}`
+            : null,
+    ].filter(Boolean);
     const rows: MetaRow[] = [
         {
             label: 'Dimensions',
             labelTip: 'Width × height at full resolution',
             value: `${w.toLocaleString()} × ${h.toLocaleString()} px`,
-            valueTip: mpp
-                ? `About ${((w * mpp) / 1000).toFixed(1)} × ${(
-                      (h * mpp) /
-                      1000
-                  ).toFixed(1)} mm of glass at ${mpp.toFixed(4)} µm per pixel`
+            valueTip: dimensionTips.length
+                ? dimensionTips.join('\n')
                 : undefined,
         },
     ];
-    if (magnification) {
+    if (magnification || mpp) {
         rows.push({
             label: 'Magnification',
-            labelTip: 'Scanner magnification or objective power',
-            value: magnification,
-            valueTip:
-                'Optical magnification of the scan: 40× is about 0.25 µm per pixel, 20× about 0.5 µm per pixel',
-        });
-    }
-    if (mpp) {
-        rows.push({
-            label: 'MPP',
-            labelTip: 'Microns per pixel at full resolution',
-            value: `${mpp.toFixed(4)} µm/px`,
-            valueTip: `Each pixel spans ${mpp.toFixed(
-                4
-            )} µm; 1 mm is about ${Math.round(
-                1000 / mpp
-            ).toLocaleString()} pixels`,
+            labelTip:
+                'Scanner magnification and microns per pixel at full resolution',
+            value: [magnification, mpp ? `${mpp.toFixed(4)} µm/px` : null]
+                .filter(Boolean)
+                .join(' · '),
+            valueTip: mpp
+                ? `Each pixel spans ${mpp.toFixed(
+                      4
+                  )} µm; 1 mm is about ${Math.round(
+                      1000 / mpp
+                  ).toLocaleString()} pixels`
+                : 'Optical magnification of the scan: 40× is about 0.25 µm per pixel, 20× about 0.5 µm per pixel',
         });
     }
     if (meta.vendor?.trim()) {
@@ -148,29 +144,6 @@ export function buildWsiRows(
             label: 'Scanner vendor',
             labelTip: 'Scanner manufacturer recorded in the slide file',
             value: meta.vendor.trim(),
-        });
-    }
-    rows.push(
-        {
-            label: 'Zoom levels',
-            labelTip: 'Number of resolution tiers available to the viewer',
-            value: String(meta.max_zoom + 1),
-            valueTip: `${meta.max_zoom +
-                1} levels, from a whole-slide overview down to full resolution`,
-        },
-        {
-            label: 'Tile size',
-            labelTip: 'Tile dimensions streamed to the viewer',
-            value: `${meta.tile_size} px`,
-            valueTip: `The image is loaded as ${meta.tile_size} × ${meta.tile_size} px tiles as you pan and zoom`,
-        }
-    );
-    if (slide?.file_size_bytes) {
-        rows.push({
-            label: 'File size',
-            labelTip: 'Size of the original scanned slide file',
-            value: fmtMB(slide.file_size_bytes),
-            valueTip: `${Number(slide.file_size_bytes).toLocaleString()} bytes`,
         });
     }
 
@@ -202,40 +175,24 @@ function specimenTooltip(association: {
         .join(' of ')}`;
 }
 
+/**
+ * Pathology rows for the selected slide. Patient and study context is left
+ * to the host page and the Clinical section; these rows describe the slide
+ * and the specimen it was cut from.
+ */
 export function buildPathRows(
     slide: Slide,
     sample: Sample,
     patientId?: string,
     studyId?: string,
     association?: SlideAssociation,
-    studyName?: string,
     sampleTimeline?: WsiSampleTimeline
 ): MetaRow[] {
     const isUnmatchedSample = sample.sample_id === 'UNMATCHED';
     const stainBadge = getStainBadge(slide);
-    const oncotreeUrl = sample.oncotree_code
-        ? 'https://oncotree.mskcc.org/'
-        : undefined;
-    const patientUrl =
-        studyId && sample.sample_id && !isUnmatchedSample
-            ? buildPatientUrl(studyId, sample.sample_id, patientId)
-            : undefined;
     const sampleUrl =
         studyId && sample.sample_id && !isUnmatchedSample
             ? buildSampleUrl(studyId, sample.sample_id, patientId)
-            : undefined;
-    const studyUrl = studyId
-        ? `/study/summary?id=${encodeURIComponent(studyId)}`
-        : undefined;
-    const cancerTypeUrl =
-        studyId && (sample.cancer_type_detailed || sample.cancer_type)
-            ? `/results?cancer_study_list=${encodeURIComponent(
-                  studyId
-              )}&cancer_type=${encodeURIComponent(
-                  (sample.cancer_type_detailed || sample.cancer_type || '')
-                      .toLowerCase()
-                      .replace(/\s+/g, '_')
-              )}`
             : undefined;
     const accession = barcodeAccession(slide.barcode);
     const blockLbl = normalizeBlockLabel(slide.block_label, slide.block_number);
@@ -260,7 +217,6 @@ export function buildPathRows(
     const hasDistinctPathDx =
         normalizeSidebarTextValue(pathDxTitle) !==
         normalizeSidebarTextValue(partDesc);
-    const timepoint = procedureSlideTimepointText(slide);
     const hasSpecimenDetails = !!(
         association?.part_number ||
         association?.part_description ||
@@ -282,13 +238,6 @@ export function buildPathRows(
                 : undefined,
         },
         {
-            label: 'Patient',
-            labelTip: 'Click to open cBioPortal patient page',
-            value:
-                patientId || getPatientId(sample.sample_id, patientId) || '—',
-            href: patientUrl,
-        },
-        {
             label: 'Sample',
             labelTip: sampleTip
                 ? 'Click for cBioPortal sample view — hover for accession/block info'
@@ -300,91 +249,13 @@ export function buildPathRows(
             valueTip: sampleTip,
         },
     ];
-    if (studyId) {
-        rows.push({
-            label: 'Study',
-            labelTip: 'Click to open cBioPortal study summary',
-            value: getStudyDisplayName(studyName, studyId),
-            href: studyUrl,
-        });
-    }
-    if (sample.cancer_type_detailed || sample.cancer_type) {
-        rows.push({
-            label: 'Cancer type',
-            labelTip:
-                'Cancer type of the sequenced sample from cBioPortal clinical data',
-            value: sample.cancer_type_detailed || sample.cancer_type || '',
-            href: cancerTypeUrl,
-        });
-    }
-    if (sample.oncotree_code) {
-        rows.push({
-            label: 'OncoTree',
-            labelTip:
-                'OncoTree cancer classification code — click to view on oncotree.mskcc.org',
-            value: sample.oncotree_code,
-            href: oncotreeUrl,
-        });
-    }
-    if (sample.primary_site) {
-        rows.push({
-            label: 'Primary site',
-            labelTip: 'Primary tumor site recorded for the sequenced sample',
-            value: sample.primary_site,
-        });
-    }
-    if (sample.sequencing_date) {
-        rows.push({
-            label: 'Sequencing date',
-            labelTip: 'DATE_SEQUENCING_REPORT from cBioPortal clinical data',
-            value: sample.sequencing_date,
-        });
-    }
-    const procedureDays = timepoint ? getSlideTimepointDays(slide) : undefined;
-    const acquisitionDays = isUnmatchedSample
-        ? undefined
-        : sampleTimeline?.acquisitionDays;
-    const sequencingDays = isUnmatchedSample
-        ? undefined
-        : sampleTimeline?.sequencingDays;
-    if (timepoint && procedureDays != null && !isUnmatchedSample) {
-        rows.push({
-            label: 'Procedure',
-            labelTip: 'Pathology procedure day for this slide',
-            value: formatDaysSinceDiagnosis(procedureDays),
-            valueTip: slide.slide_timepoint_source
-                ? `${slide.slide_timepoint_source}. ${DAY_ZERO_TOOLTIP}`
-                : DAY_ZERO_TOOLTIP,
-        });
-    } else if (timepoint) {
-        rows.push({
-            label: 'Timepoint',
-            labelTip: 'Slide timing anchored to tumor sequencing',
-            value: timepoint,
-            valueTip: slide.slide_timepoint_source
-                ? `${slide.slide_timepoint_source}. ${DAY_ZERO_TOOLTIP}`
-                : DAY_ZERO_TOOLTIP,
-        });
-    }
-    if (acquisitionDays != null) {
-        rows.push({
-            label: 'Acquired',
-            labelTip: 'Sample acquisition day from the patient timeline',
-            value: formatDaysSinceDiagnosis(acquisitionDays),
-            valueTip: DAY_ZERO_TOOLTIP,
-        });
-    }
-    if (sequencingDays != null) {
-        rows.push({
-            label: 'Sequenced',
-            labelTip:
-                'Sample sequencing day from the patient timeline, relative to the procedure',
-            value: sequencedRelativeToProcedureText(
-                sequencingDays,
-                procedureDays
-            ),
-            valueTip: DAY_ZERO_TOOLTIP,
-        });
+    const timeline = buildTimelineRow(
+        slide,
+        sample,
+        isUnmatchedSample ? undefined : sampleTimeline
+    );
+    if (timeline) {
+        rows.push(timeline);
     }
     if (association && hasSpecimenDetails) {
         rows.push({
@@ -429,4 +300,54 @@ export function buildPathRows(
     }
 
     return freezeMetaRows(rows);
+}
+
+/**
+ * One row for the slide's timing: the procedure day (or other recorded
+ * timepoint), then the sample's acquisition and sequencing days when the
+ * patient timeline has them. Days count from the patient's first tumor
+ * sequencing.
+ */
+function buildTimelineRow(
+    slide: Slide,
+    sample: Sample,
+    sampleTimeline: WsiSampleTimeline | undefined
+): MetaRow | undefined {
+    const timepoint = procedureSlideTimepointText(slide);
+    const procedureDays = timepoint ? getSlideTimepointDays(slide) : undefined;
+    const parts: string[] = [];
+    if (procedureDays != null) {
+        parts.push(`Procedure ${formatDaysSinceDiagnosis(procedureDays)}`);
+    } else if (timepoint) {
+        parts.push(timepoint);
+    }
+    if (sampleTimeline?.acquisitionDays != null) {
+        parts.push(
+            `acquired ${formatDaysSinceDiagnosis(
+                sampleTimeline.acquisitionDays
+            )}`
+        );
+    }
+    if (sampleTimeline?.sequencingDays != null) {
+        parts.push(
+            `sequenced ${sequencedRelativeToProcedureText(
+                sampleTimeline.sequencingDays,
+                procedureDays
+            )}`
+        );
+    } else if (sample.sequencing_date) {
+        parts.push(`sequenced ${sample.sequencing_date}`);
+    }
+    if (parts.length === 0) {
+        return undefined;
+    }
+    return {
+        label: 'Timeline',
+        labelTip:
+            'Procedure, sample acquisition and sequencing days for this slide',
+        value: parts.join(' · '),
+        valueTip: slide.slide_timepoint_source
+            ? `${slide.slide_timepoint_source}. ${DAY_ZERO_TOOLTIP}`
+            : DAY_ZERO_TOOLTIP,
+    };
 }

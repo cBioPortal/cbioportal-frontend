@@ -261,10 +261,9 @@ describe('WSIViewer foundation behavior', () => {
                     'data-testid': 'wsi-metadata-sidebar',
                 })
             );
-            expect(sidebar).toContain('Procedure');
-            expect(sidebar).toContain('Acquired');
-            expect(sidebar).toContain('d+7 (249 d later)');
-            expect(sidebar).not.toContain('Timepoint');
+            expect(sidebar).toContain(
+                'Timeline Procedure d-242 · acquired d-242 · sequenced d+7 (249 d later)'
+            );
 
             expect(
                 textOf(
@@ -289,8 +288,8 @@ describe('WSIViewer foundation behavior', () => {
                     'data-testid': 'wsi-metadata-sidebar',
                 })
             );
-            expect(sidebar).toContain('Procedure');
-            expect(sidebar).not.toContain('Sequenced');
+            expect(sidebar).toContain('Timeline Procedure d-242');
+            expect(sidebar).not.toContain('sequenced');
             expect(
                 textOf(
                     rendered.root.findByProps({

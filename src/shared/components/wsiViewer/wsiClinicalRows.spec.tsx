@@ -120,6 +120,26 @@ describe('selectWsiClinicalAttributes', () => {
         expect(selected.map(a => a.clinicalAttributeId)).toEqual(['TMB']);
     });
 
+    it('leaves out sequencing QC, administrative and consent attributes', () => {
+        const selected = selectWsiClinicalAttributes(
+            [
+                attribute('CANCER_TYPE', 3000),
+                attribute('GENE_PANEL', 1),
+                attribute('INSTITUTE', 1),
+                attribute('SAMPLE_COVERAGE', 1),
+                attribute('SOMATIC_STATUS', 1),
+                attribute('PARTC_CONSENTED_12_245', 1, true),
+                attribute('SAMPLE_COUNT', 1, true),
+            ],
+            undefined,
+            undefined
+        );
+        expect(selected.map(a => a.clinicalAttributeId)).toEqual([
+            'CANCER_TYPE',
+            'SAMPLE_COUNT',
+        ]);
+    });
+
     it('caps the attributes at the study view chart count', () => {
         const selected = selectWsiClinicalAttributes(
             [attribute('A', 3), attribute('B', 2), attribute('C', 1)],

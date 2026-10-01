@@ -23,7 +23,6 @@ export interface WsiViewerProps {
     studyId: string;
     tileServerUrl: string;
     height: number;
-    studyName?: string;
     initialStainFilter?: WsiStainFilter;
     initialMatchFilter?: PathologySlideMatchFilter;
     initialTimepointDays?: WsiTimepointSelection;
