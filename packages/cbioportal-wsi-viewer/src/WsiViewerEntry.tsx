@@ -39,6 +39,12 @@ export interface WsiViewerProps {
      * read from them to relate each slide's procedure to its sample.
      */
     clinicalEvents?: ClinicalEvent[];
+    /** Hides the slide list; unset keeps the user's stored choice. */
+    navCollapsed?: boolean;
+    onNavCollapsedChange?: (collapsed: boolean) => void;
+    /** Hides the image details sidebar; unset keeps the user's stored choice. */
+    metadataCollapsed?: boolean;
+    onMetadataCollapsedChange?: (collapsed: boolean) => void;
 }
 
 /**

@@ -49,15 +49,13 @@ import {
     WsiThumbnailFetchError,
 } from './wsiThumbnailFetchCache';
 
-type WsiTheme = {
-    blue: string;
-    blueLight: string;
-    orange: string;
-    text: string;
-    muted: string;
-    border: string;
-    navBg: string;
-};
+import { WsiTheme as WsiFullTheme } from './wsiTheme';
+
+type WsiTheme = Pick<
+    WsiFullTheme,
+    'blue' | 'blueLight' | 'orange' | 'text' | 'muted' | 'border' | 'navBg'
+>;
+import { WsiPanelHideButton } from './wsiPanelChrome';
 
 export interface WsiNavPanelProps {
     hierarchy: PatientHierarchy;
@@ -83,6 +81,8 @@ export interface WsiNavPanelProps {
     theme: WsiTheme;
     navWidth: number;
     sectionTitleStyle: React.CSSProperties;
+    /** Shows a header button that hides the panel. */
+    onHide?: () => void;
 }
 
 const INITIAL_VISIBLE_SAMPLE_LIMIT = 6;
@@ -260,6 +260,7 @@ function WsiNavPanelComponent({
     theme,
     navWidth,
     sectionTitleStyle,
+    onHide,
 }: WsiNavPanelProps) {
     const associationsByImageId = React.useMemo(
         () =>
@@ -554,7 +555,23 @@ function WsiNavPanelComponent({
                     flexShrink: 0,
                 }}
             >
-                <div style={sectionTitleStyle}>Slides</div>
+                <div
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                    }}
+                >
+                    <div style={sectionTitleStyle}>Slides</div>
+                    {onHide && (
+                        <WsiPanelHideButton
+                            side="left"
+                            label="Hide slide list"
+                            onClick={onHide}
+                            testId="wsi-nav-hide"
+                        />
+                    )}
+                </div>
                 <div
                     data-testid="wsi-stain-filter-row"
                     className="btn-group btn-group-xs"

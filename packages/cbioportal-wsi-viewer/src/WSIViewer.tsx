@@ -40,34 +40,33 @@ import { clearPatientHierarchyCache } from './wsiHierarchyFetchCache';
 import { clearWsiSlideAccess } from './wsiAuth';
 import { clearWsiThumbnailFetchCache } from './wsiThumbnailFetchCache';
 import { clearSlideMetadataCache } from './wsiMetadataFetchCache';
+import {
+    WSI_NAV_WIDTH,
+    WSI_FONT_FAMILY,
+    WSI_SECTION_TITLE_STYLE,
+    WSI_SIDEBAR_MAX_WIDTH,
+    WSI_SIDEBAR_MIN_WIDTH,
+    WSI_SIDEBAR_WIDTH,
+    WSI_THEME,
+} from './wsiTheme';
+import {
+    readWsiPanelFlag,
+    WsiCollapsedRail,
+    writeWsiPanelFlag,
+} from './wsiPanelChrome';
 
-// ---- design tokens (matches iframe viewer) ----
-const C = {
-    blue: '#2986e2',
-    blueDark: '#1a6cc4',
-    blueLight: '#e8f1fb',
-    orange: '#f5a623',
-    text: '#333',
-    muted: '#737373',
-    border: '#ddd',
-    navBg: '#fafafa',
-    sidebarBg: '#f5f5f5',
-} as const;
-
-const NAV_W = 328;
-const SIDEBAR_W = 320;
-const SIDEBAR_MIN_W = 220;
-const SIDEBAR_MAX_W = 520;
+const C = WSI_THEME;
+const NAV_W = WSI_NAV_WIDTH;
+const SIDEBAR_W = WSI_SIDEBAR_WIDTH;
+const SIDEBAR_MIN_W = WSI_SIDEBAR_MIN_WIDTH;
+const SIDEBAR_MAX_W = WSI_SIDEBAR_MAX_WIDTH;
 const SIDEBAR_HANDLE_W = 8;
 const SLIDE_SELECTION_DEBOUNCE_MS = 120;
+const sectionTitleStyle = WSI_SECTION_TITLE_STYLE;
 
-const sectionTitleStyle: React.CSSProperties = {
-    fontSize: 10,
-    fontWeight: 700,
-    color: C.muted,
-    textTransform: 'uppercase',
-    letterSpacing: '.8px',
-};
+/** Browser-stored hidden state of the slide list and the details sidebar. */
+export const WSI_NAV_COLLAPSED_KEY = 'wsi.viewer.navCollapsed';
+export const WSI_METADATA_COLLAPSED_KEY = 'wsi.viewer.metadataCollapsed';
 
 interface Props {
     /** Tile-server base URL (never a patient-scoped or resource URL). */
@@ -103,6 +102,18 @@ interface Props {
     showDownload?: boolean;
     /** Indicator shown while the hierarchy loads. */
     renderLoading?: () => React.ReactNode;
+    /**
+     * Hides the slide list. Unset, the viewer keeps the user's choice in
+     * browser storage.
+     */
+    navCollapsed?: boolean;
+    onNavCollapsedChange?: (collapsed: boolean) => void;
+    /**
+     * Hides the image details sidebar. Unset, the viewer keeps the user's
+     * choice in browser storage.
+     */
+    metadataCollapsed?: boolean;
+    onMetadataCollapsedChange?: (collapsed: boolean) => void;
 }
 
 function DefaultLoadingIndicator() {
@@ -175,6 +186,12 @@ export default class WSIViewer extends React.Component<Props, {}> {
     @observable private timepointDays: WsiTimepointSelection | undefined;
     @observable private linkoutScopeActive = false;
     @observable private sidebarWidth = SIDEBAR_W;
+    @observable private storedNavCollapsed = readWsiPanelFlag(
+        WSI_NAV_COLLAPSED_KEY
+    );
+    @observable private storedMetadataCollapsed = readWsiPanelFlag(
+        WSI_METADATA_COLLAPSED_KEY
+    );
     /** Coordinate bar — input field values */
     @observable coordInputX = '';
     @observable coordInputY = '';
@@ -311,6 +328,48 @@ export default class WSIViewer extends React.Component<Props, {}> {
             this.createControllerHost(),
             loadOpenSeadragon
         );
+    }
+
+    @computed private get navCollapsed(): boolean {
+        return this.props.navCollapsed ?? this.storedNavCollapsed;
+    }
+
+    @computed private get metadataCollapsed(): boolean {
+        return this.props.metadataCollapsed ?? this.storedMetadataCollapsed;
+    }
+
+    @action.bound
+    private setNavCollapsed(collapsed: boolean) {
+        if (this.props.navCollapsed === undefined) {
+            this.storedNavCollapsed = collapsed;
+            writeWsiPanelFlag(WSI_NAV_COLLAPSED_KEY, collapsed);
+        }
+        this.props.onNavCollapsedChange?.(collapsed);
+        this.resizeAfterLayout();
+    }
+
+    @action.bound
+    private setMetadataCollapsed(collapsed: boolean) {
+        if (this.props.metadataCollapsed === undefined) {
+            this.storedMetadataCollapsed = collapsed;
+            writeWsiPanelFlag(WSI_METADATA_COLLAPSED_KEY, collapsed);
+        }
+        this.props.onMetadataCollapsedChange?.(collapsed);
+        this.resizeAfterLayout();
+    }
+
+    private readonly hideNav = () => this.setNavCollapsed(true);
+    private readonly showNav = () => this.setNavCollapsed(false);
+    private readonly hideMetadata = () => this.setMetadataCollapsed(true);
+    private readonly showMetadata = () => this.setMetadataCollapsed(false);
+
+    /** Lets OpenSeadragon pick up the viewer's new size after a panel toggles. */
+    private resizeAfterLayout() {
+        if (typeof window.requestAnimationFrame === 'function') {
+            window.requestAnimationFrame(() => this.controller.forceResize());
+        } else {
+            this.controller.forceResize();
+        }
     }
 
     @action.bound
@@ -980,38 +1039,50 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     display: 'flex',
                     height,
                     overflow: 'hidden',
-                    fontFamily: '"Helvetica Neue",Helvetica,Arial,sans-serif',
+                    fontFamily: WSI_FONT_FAMILY,
                     fontSize: 13,
                     color: C.text,
                 }}
             >
                 {/* Left nav panel */}
-                <WsiNavPanel
-                    hierarchy={hierarchy}
-                    selectedSlide={selectedSlide}
-                    slideIdFilter={getPathologyPreferredImageIds(
-                        hierarchy,
-                        this.activePathologyFilter
-                    )}
-                    linkoutScopeActive={this.linkoutScopeActive}
-                    stainFilter={stainFilter}
-                    matchFilter={matchFilter}
-                    timepointDays={timepointDays}
-                    showClearFilters={showClearFilters}
-                    deferOffscreenSamples={!this.tilesReady}
-                    onFilterChange={this.handleFilterChange}
-                    onMatchFilterChange={this.handleMatchFilterChange}
-                    onTimepointChange={this.handleTimepointChange}
-                    onClearFilters={this.handleClearFilters}
-                    onSelectSlide={this.handleSelectSlide}
-                    tileServerBase={this.tileServerBase}
-                    studyId={this.props.studyId}
-                    authScope={this.controllerProps.authScope}
-                    sampleTimelines={this.props.sampleTimelines}
-                    theme={C}
-                    navWidth={NAV_W}
-                    sectionTitleStyle={sectionTitleStyle}
-                />
+                {this.navCollapsed ? (
+                    <WsiCollapsedRail
+                        side="left"
+                        title="Slides"
+                        showLabel="Show slide list"
+                        onExpand={this.showNav}
+                        background={C.navBg}
+                        testId="wsi-nav-rail"
+                    />
+                ) : (
+                    <WsiNavPanel
+                        hierarchy={hierarchy}
+                        selectedSlide={selectedSlide}
+                        slideIdFilter={getPathologyPreferredImageIds(
+                            hierarchy,
+                            this.activePathologyFilter
+                        )}
+                        linkoutScopeActive={this.linkoutScopeActive}
+                        stainFilter={stainFilter}
+                        matchFilter={matchFilter}
+                        timepointDays={timepointDays}
+                        showClearFilters={showClearFilters}
+                        deferOffscreenSamples={!this.tilesReady}
+                        onFilterChange={this.handleFilterChange}
+                        onMatchFilterChange={this.handleMatchFilterChange}
+                        onTimepointChange={this.handleTimepointChange}
+                        onClearFilters={this.handleClearFilters}
+                        onSelectSlide={this.handleSelectSlide}
+                        tileServerBase={this.tileServerBase}
+                        studyId={this.props.studyId}
+                        authScope={this.controllerProps.authScope}
+                        sampleTimelines={this.props.sampleTimelines}
+                        theme={C}
+                        navWidth={NAV_W}
+                        sectionTitleStyle={sectionTitleStyle}
+                        onHide={this.hideNav}
+                    />
+                )}
 
                 {/* OSD viewer */}
                 <div
@@ -1219,44 +1290,59 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     )}
                 </div>
 
-                <div
-                    role="separator"
-                    aria-orientation="vertical"
-                    aria-label="Resize metadata sidebar"
-                    data-testid="wsi-metadata-resize-handle"
-                    onMouseDown={this.beginSidebarResize}
-                    style={{
-                        width: SIDEBAR_HANDLE_W,
-                        cursor: 'col-resize',
-                        flexShrink: 0,
-                        background: '#f0f0f0',
-                        borderRight: `1px solid ${C.border}`,
-                        position: 'relative',
-                    }}
-                >
-                    <div
-                        style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            width: 2,
-                            height: 36,
-                            borderRadius: 2,
-                            background: '#c3c3c3',
-                            boxShadow: '4px 0 0 #c3c3c3, -4px 0 0 #c3c3c3',
-                        }}
+                {this.metadataCollapsed ? (
+                    <WsiCollapsedRail
+                        side="right"
+                        title="Details"
+                        showLabel="Show image details"
+                        onExpand={this.showMetadata}
+                        background={C.sidebarBg}
+                        testId="wsi-metadata-rail"
                     />
-                </div>
+                ) : (
+                    <>
+                        <div
+                            role="separator"
+                            aria-orientation="vertical"
+                            aria-label="Resize metadata sidebar"
+                            data-testid="wsi-metadata-resize-handle"
+                            onMouseDown={this.beginSidebarResize}
+                            style={{
+                                width: SIDEBAR_HANDLE_W,
+                                cursor: 'col-resize',
+                                flexShrink: 0,
+                                background: '#f0f0f0',
+                                borderRight: `1px solid ${C.border}`,
+                                position: 'relative',
+                            }}
+                        >
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    width: 2,
+                                    height: 36,
+                                    borderRadius: 2,
+                                    background: '#c3c3c3',
+                                    boxShadow:
+                                        '4px 0 0 #c3c3c3, -4px 0 0 #c3c3c3',
+                                }}
+                            />
+                        </div>
 
-                {/* Right metadata sidebar */}
-                <WsiMetaSidebar
-                    width={this.sidebarWidth}
-                    showImageProperties={!!this.selectedMeta}
-                    wsiRows={this.selectedWsiRows}
-                    showPathology={!!(selectedSlide && selectedSample)}
-                    pathRows={this.selectedPathRows}
-                />
+                        {/* Right metadata sidebar */}
+                        <WsiMetaSidebar
+                            width={this.sidebarWidth}
+                            showImageProperties={!!this.selectedMeta}
+                            wsiRows={this.selectedWsiRows}
+                            showPathology={!!(selectedSlide && selectedSample)}
+                            pathRows={this.selectedPathRows}
+                            onHide={this.hideMetadata}
+                        />
+                    </>
+                )}
             </div>
         );
     }
