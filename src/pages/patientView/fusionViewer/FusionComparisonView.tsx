@@ -57,6 +57,7 @@ import {
 } from './data/trackGeometry';
 import {
     buildLinkGroups,
+    buildLollipopSticks,
     LinkGroup,
     LinkMatcher,
     litBarKeys,
@@ -64,8 +65,11 @@ import {
     matchLinkIds,
 } from './data/linkAggregation';
 import { LinkHover } from './components/LinkHover';
+import AnchorLollipopTrack from './components/AnchorLollipopTrack';
+import { colorFor, rankedColorMap } from './data/partnerPalette';
 import BreakpointLinkArcs, {
     ARC_BAND_HEIGHT,
+    FRAME_LINK_COLORS,
 } from './components/BreakpointLinkArcs';
 
 // Horizontal chrome (page padding + patient-view rails) subtracted from the
@@ -148,7 +152,7 @@ export default class FusionComparisonView extends React.Component<
     // One segment of the histogram-mode toggle, styled like cBioPortal's
     // axis-scale switch (active = filled grey, inactive = outline).
     trackModeButton(
-        mode: 'feature' | 'genomic',
+        mode: 'feature' | 'genomic' | 'lollipop',
         label: string,
         tooltip: string
     ): JSX.Element {
@@ -732,6 +736,44 @@ export default class FusionComparisonView extends React.Component<
 
     // Filter the cohort to a collapsed group's samples, reusing the same
     // materialized-identifier path as the histogram-bar click.
+    @computed get lollipopCategoryOf(): (r: ComparisonRow) => string {
+        const by = this.props.store.lollipopColorBy;
+        if (by === 'frame') return r => r.frame;
+        if (by === 'svType') return r => r.event.callMethod || 'unknown';
+        return r => partnerCategory(r, this.anchorGene, this.anchorSide);
+    }
+
+    @computed get lollipopColorOf(): (c: string) => string {
+        const { store } = this.props;
+        if (store.lollipopColorBy === 'frame') {
+            return c =>
+                FRAME_LINK_COLORS[c as keyof typeof FRAME_LINK_COLORS] ??
+                '#999999';
+        }
+        if (store.lollipopColorBy === 'svType') {
+            const counts = _.countBy(
+                this.orientedRows,
+                r => r.event.callMethod || 'unknown'
+            );
+            const m = rankedColorMap(
+                Object.keys(counts).sort((a, b) => counts[b] - counts[a])
+            );
+            return c => colorFor(m, c);
+        }
+        return c => colorFor(store.partnerColorMap, c);
+    }
+
+    handleSelectSamples = (sampleIds: string[], label: string): void => {
+        const { onFilterCohortBySamples } = this.props;
+        if (!onFilterCohortBySamples) return;
+        const samples = Array.from(new Set(sampleIds)).map(sampleId => ({
+            studyId: this.studyIdBySampleId.get(sampleId) || '',
+            sampleId,
+        }));
+        if (samples.length === 0) return;
+        onFilterCohortBySamples(FUSION_BREAKPOINT_FILTER_KEY, label, samples);
+    };
+
     handleSelectGroup = (group: CollapsedGroup): void => {
         const { onFilterCohortBySamples } = this.props;
         if (!onFilterCohortBySamples) return;
@@ -885,7 +927,28 @@ export default class FusionComparisonView extends React.Component<
                             'Genomic',
                             'Bin breakpoints by fixed genomic width (drawn to scale)'
                         )}
+                        {this.isGeneMode &&
+                            this.trackModeButton(
+                                'lollipop',
+                                'Lollipop',
+                                'One stick per exon/intron: height = samples, head split by partner'
+                            )}
                     </ButtonGroup>
+                    {store.trackMode === 'lollipop' && (
+                        <select
+                            data-testid="lollipop-colorby"
+                            aria-label="Colour lollipop by"
+                            value={store.lollipopColorBy}
+                            onChange={e =>
+                                store.setLollipopColorBy(e.target.value as any)
+                            }
+                            style={{ fontSize: 11 }}
+                        >
+                            <option value="partner">Colour: partner</option>
+                            <option value="frame">Colour: frame</option>
+                            <option value="svType">Colour: SV type</option>
+                        </select>
+                    )}
                     {!this.isGeneMode && (
                         <ButtonGroup>
                             {this.segmentButton(
@@ -1151,7 +1214,12 @@ export default class FusionComparisonView extends React.Component<
                                 labelX={anchorHalf.labelX}
                                 labelAnchor={anchorHalf.labelAnchor}
                                 fill={anchorHalf.fill}
-                                mode={store.trackMode}
+                                mode={
+                                    store.trackMode === 'lollipop'
+                                        ? 'feature'
+                                        : store.trackMode
+                                }
+                                hideHistogram={store.trackMode === 'lollipop'}
                                 barOpacity={
                                     linksOn
                                         ? this.barOpacityFrom(lit, '5p')
@@ -1173,6 +1241,34 @@ export default class FusionComparisonView extends React.Component<
                                         : undefined
                                 }
                             />
+                            {store.trackMode === 'lollipop' &&
+                                this.isGeneMode &&
+                                (histogramAnchorTranscript ||
+                                    anchorTranscript) && (
+                                    <AnchorLollipopTrack
+                                        sticks={buildLollipopSticks(
+                                            rows,
+                                            featureSlotLayout(
+                                                (histogramAnchorTranscript ||
+                                                    anchorTranscript)!,
+                                                anchorHalf.drawX,
+                                                anchorHalf.drawW
+                                            ),
+                                            side,
+                                            this.lollipopCategoryOf
+                                        )}
+                                        colorOf={this.lollipopColorOf}
+                                        onSelect={
+                                            this.props.onFilterCohortBySamples
+                                                ? s =>
+                                                      this.handleSelectSamples(
+                                                          s.sampleIds,
+                                                          `${anchorGene} breakpoint: ${s.key}`
+                                                      )
+                                                : undefined
+                                        }
+                                    />
+                                )}
                             {/* 3′ partner gene — right half, its own breakpoint
                                 density, label in the right gutter */}
                             {partnerTranscript && (
@@ -1198,7 +1294,11 @@ export default class FusionComparisonView extends React.Component<
                                     labelX={frame.rightX + 10}
                                     labelAnchor="start"
                                     fill={COLOR_3PRIME}
-                                    mode={store.trackMode}
+                                    mode={
+                                        store.trackMode === 'lollipop'
+                                            ? 'feature'
+                                            : store.trackMode
+                                    }
                                     barOpacity={
                                         linksOn
                                             ? this.barOpacityFrom(lit, '3p')

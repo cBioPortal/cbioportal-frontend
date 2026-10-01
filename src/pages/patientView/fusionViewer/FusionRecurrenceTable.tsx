@@ -5,6 +5,7 @@ import LazyMobXTable, {
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import { FusionCohortStore } from './FusionCohortStore';
 import { FusionPairSummary } from './data/types';
+import { colorFor } from './data/partnerPalette';
 import { PartnerSummary } from './data/anchorSummaries';
 import { frameStatusStyle } from './components/frameStatusStyle';
 
@@ -68,6 +69,25 @@ export class FusionRecurrenceTable extends React.Component<
                         checked.has(d.category) ? 1 : 0,
                     download: (d: PartnerSummary) =>
                         `${checked.has(d.category)}`,
+                },
+                {
+                    name: '',
+                    render: (d: PartnerSummary) => (
+                        <span
+                            data-test={`partner-swatch-${d.category}`}
+                            style={{
+                                display: 'inline-block',
+                                width: 10,
+                                height: 10,
+                                borderRadius: 5,
+                                background: colorFor(
+                                    store.partnerColorMap,
+                                    d.category
+                                ),
+                            }}
+                        />
+                    ),
+                    download: () => '',
                 },
                 {
                     name: `${anchor.gene} partner`,
