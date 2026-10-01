@@ -1,6 +1,6 @@
 import { AnchorSide, anchorEndpoint, ComparisonRow } from './comparisonRows';
 import { FrameStatus } from './types';
-import { TrackLayout } from './trackGeometry';
+import { TrackLayout, TrackSlot } from './trackGeometry';
 
 export interface LinkRef {
     key5: string;
@@ -115,6 +115,10 @@ export function slotLabel(key: string): string {
 export interface LollipopStick {
     key: string;
     x: number;
+    /** Slot width (px); bounds the head radius. */
+    width: number;
+    /** Genomic span of the slot (feature slots only). */
+    span?: { gStart: number; gEnd: number };
     sampleIds: string[];
     /** Unique samples with >=1 anchor-side breakpoint in this slot. */
     sampleCount: number;
@@ -134,13 +138,21 @@ export function buildLollipopSticks(
     );
     const acc = new Map<
         string,
-        { x: number; samples: Set<string>; byCat: Map<string, Set<string>> }
+        {
+            x: number;
+            width: number;
+            span?: TrackSlot['span'];
+            samples: Set<string>;
+            byCat: Map<string, Set<string>>;
+        }
     >();
     rows.forEach((row, i) => {
         const slot = slots[i];
         if (!slot) return;
         const a = acc.get(slot.key) ?? {
             x: slot.x,
+            width: slot.width,
+            span: slot.span,
             samples: new Set<string>(),
             byCat: new Map<string, Set<string>>(),
         };
@@ -155,6 +167,8 @@ export function buildLollipopSticks(
         .map(([key, a]) => ({
             key,
             x: a.x,
+            width: a.width,
+            span: a.span,
             sampleIds: Array.from(a.samples),
             sampleCount: a.samples.size,
             byCategory: Array.from(a.byCat.entries())

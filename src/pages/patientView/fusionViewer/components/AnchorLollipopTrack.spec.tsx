@@ -11,6 +11,8 @@ const stick = (
 ): LollipopStick => ({
     key,
     x,
+    width: 20,
+    span: { gStart: 1000, gEnd: 2000 },
     sampleIds: [],
     sampleCount: Math.max(...cats.map(c => c[1])),
     byCategory: cats.map(([category, sampleCount]) => ({
@@ -65,5 +67,39 @@ describe('AnchorLollipopTrack', () => {
         );
         w.find('g[data-key="exon:E20"]').simulate('click');
         assert.equal(picked, 'exon:E20');
+    });
+
+    it('tooltip shows slot label, genomic span, total and category counts', () => {
+        const w = mount(
+            <svg>
+                <AnchorLollipopTrack
+                    sticks={sticks}
+                    colorOf={() => '#000'}
+                    categoryLabel={c => c.toLowerCase()}
+                />
+            </svg>
+        );
+        const t = w.find('g[data-key="intron:19-20"] title').text();
+        assert.include(t, 'intron 19-20');
+        assert.notInclude(t, 'intron:19-20');
+        assert.include(
+            t,
+            `${(1000).toLocaleString()}–${(2000).toLocaleString()}`
+        );
+        assert.include(t, '15 samples');
+        assert.include(t, 'eml4 15');
+        assert.include(t, 'kif5b 3');
+    });
+
+    it('head radius is bounded by the slot width and heads are outlined', () => {
+        const narrow = { ...stick('exon:E1', 50, [['EML4', 100]]), width: 10 };
+        const w = mount(
+            <svg>
+                <AnchorLollipopTrack sticks={[narrow]} colorOf={() => '#eee'} />
+            </svg>
+        );
+        const head = w.find('circle[data-testid="lollipop-head"]');
+        assert.equal(head.prop('r'), 6);
+        assert.equal(head.prop('stroke'), '#999');
     });
 });
