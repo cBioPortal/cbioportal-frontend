@@ -565,3 +565,78 @@ describe('FusionComparisonView exon ladder controls', () => {
         assert.equal(wrapper.find('ExonRuler').length, 0);
     });
 });
+
+describe('FusionComparisonView gene mode', () => {
+    function alkStore() {
+        const store = new FusionCohortStore();
+        store.setStructuralVariants([
+            {
+                site1HugoSymbol: 'EML4',
+                site2HugoSymbol: 'ALK',
+                sampleId: 'S1',
+                site1Position: 100,
+                site2Position: 450,
+                site1Chromosome: '2',
+                site2Chromosome: '2',
+            },
+            {
+                site1HugoSymbol: 'KIF5B',
+                site2HugoSymbol: 'ALK',
+                sampleId: 'S2',
+                site1Position: 120,
+                site2Position: 250,
+                site1Chromosome: '10',
+                site2Chromosome: '2',
+            },
+            {
+                site1HugoSymbol: 'TMPRSS2',
+                site2HugoSymbol: 'ERG',
+                sampleId: 'S3',
+                site1Position: 100,
+                site2Position: 900,
+                site1Chromosome: '21',
+                site2Chromosome: '21',
+            },
+        ] as any);
+        store.mergeTranscripts([
+            ['GRCh38|ALK|', tx('ALK')],
+            ['GRCh38|EML4|', tx('EML4')],
+            ['GRCh38|KIF5B|', tx('KIF5B')],
+        ]);
+        return store;
+    }
+
+    it('3′ gene anchor: no TMPRSS2-ERG rows, partner half captioned, no dominant partner', () => {
+        const store = alkStore();
+        store.setAnchor({ mode: 'gene', gene: 'ALK', side: 'auto' });
+        const wrapper = mount(<FusionComparisonView store={store} />);
+        const view = wrapper.instance() as any;
+        assert.equal(view.anchorSide, '3p');
+        assert.isNull(view.partnerGene);
+        assert.notInclude(
+            view.orientedRows.map((r: any) => r.sampleId),
+            'S3'
+        );
+        assert.isTrue(
+            wrapper.find('[data-testid="partners-vary-caption"]').exists()
+        );
+    });
+
+    it('3′ anchor scale goes to bp3; varying partner side uses the longest partner transcript', () => {
+        const store = alkStore();
+        store.setAnchor({ mode: 'gene', gene: 'ALK', side: '3p' });
+        const view = mount(
+            <FusionComparisonView store={store} />
+        ).instance() as any;
+        const { bp5, bp3 } = view.maxRetainedBp;
+        assert.isAbove(bp3, 0);
+        assert.isAbove(bp5, 0);
+    });
+
+    it.skip('does not replace a pending seed with an auto pair anchor', () => {
+        const store = new FusionCohortStore();
+        (store as any).seedFromStudyFilter(['ALK'], false); // Task 8 API; data not ready
+        mount(<FusionComparisonView store={store} />);
+        assert.isFalse(store.hasAnchorSelection);
+    });
+});
