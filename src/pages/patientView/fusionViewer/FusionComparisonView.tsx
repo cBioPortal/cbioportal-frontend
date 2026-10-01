@@ -1126,6 +1126,7 @@ export default class FusionComparisonView extends React.Component<
                             />
                         )}
                     <FusionStripList
+                        anchorSide={side}
                         rows={rows}
                         transcriptForRow={this.transcriptForRow}
                         width={contentWidth}
