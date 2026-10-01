@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 import {
     buildLinkGroups,
+    buildLollipopSticks,
     litBarKeys,
     matchBar,
     matchLinkIds,
@@ -107,5 +108,39 @@ describe('slotLabel', () => {
         assert.equal(slotLabel('downstream:▸'), 'downstream');
         assert.equal(slotLabel('bin:37'), 'genomic bin');
         assert.equal(slotLabel('weird'), 'weird');
+    });
+});
+
+describe('buildLollipopSticks', () => {
+    const row = (sample: string, bp3: number, partner: string): ComparisonRow =>
+        ({
+            sampleId: sample,
+            fivePrimeSymbol: partner,
+            threePrimeSymbol: 'ALK',
+            anchorBreakpoint: 5,
+            partnerBreakpoint: bp3,
+            frame: 'inFrame',
+            event: {},
+        } as any);
+    const layout = fake('I', 0);
+
+    it('unique samples per stick; each category counts the sample', () => {
+        const sticks = buildLollipopSticks(
+            [
+                row('S1', 150, 'EML4'),
+                row('S1', 160, 'KIF5B'),
+                row('S2', 150, 'EML4'),
+                row('S3', 5000, 'EML4'),
+            ],
+            layout,
+            '3p',
+            r => r.fivePrimeSymbol
+        );
+        assert.lengthOf(sticks, 1);
+        assert.equal(sticks[0].sampleCount, 2);
+        assert.deepEqual(sticks[0].byCategory, [
+            { category: 'EML4', sampleCount: 2 },
+            { category: 'KIF5B', sampleCount: 1 },
+        ]);
     });
 });
