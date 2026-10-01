@@ -903,5 +903,127 @@ describe('FusionCohortStore pair facet', () => {
             assert.isFalse(fresh.seedPending);
             assert.equal((fresh.anchor as any).gene, 'ALK');
         });
+
+        describe('arriving transcripts (spec 5)', () => {
+            const plusTx = (gene: string) =>
+                ({
+                    transcriptId: gene,
+                    gene,
+                    genomeBuild: 'GRCh38',
+                    exons: [],
+                    strand: '+',
+                    txStart: 0,
+                    txEnd: 1000,
+                } as any);
+            // gene1/gene2 symbol and position are given explicitly. Both genes on
+            // the + strand with connectionType 3to5: the LOWER position is 5'.
+            const ev = (
+                sample: string,
+                g1: [string, number],
+                g2: [string, number]
+            ) =>
+                makeEvent({
+                    id: `${sample}-${g1[0]}-${g2[0]}`,
+                    tumorId: sample,
+                    connectionType: '3to5',
+                    gene1: {
+                        ...makeEvent().gene1,
+                        symbol: g1[0],
+                        position: g1[1],
+                    },
+                    gene2: {
+                        ...makeEvent().gene2!,
+                        symbol: g2[0],
+                        position: g2[1],
+                    },
+                });
+            // S1-S3: ALK is gene1 at 5000, partner at 100 => raw says ALK 5',
+            // resolver says ALK is 3'. S4: ALK gene1 at 100 => ALK 5' either way.
+            const flipStore = (side: 'auto' | '5p') => {
+                const fresh = new FusionCohortStore();
+                fresh.setStructuralVariants([
+                    ev('S1', ['ALK', 5000], ['EML4', 100]),
+                    ev('S2', ['ALK', 5000], ['KIF5B', 100]),
+                    ev('S3', ['ALK', 5000], ['EML4', 100]),
+                    ev('S4', ['ALK', 100], ['PTPN3', 5000]),
+                ] as any);
+                fresh.setAnchor({ mode: 'gene', gene: 'ALK', side });
+                return fresh;
+            };
+            const land = (fresh: FusionCohortStore) =>
+                fresh.mergeTranscripts(
+                    ['ALK', 'EML4', 'KIF5B', 'PTPN3'].map(g => [
+                        `GRCh38|${g}|`,
+                        plusTx(g),
+                    ]) as any
+                );
+            const ids = (rows: { sampleId: string }[]) =>
+                rows.map(r => r.sampleId).sort();
+
+            it('auto side flips from the raw 5\u2032 call to the resolved 3\u2032 call', () => {
+                const fresh = flipStore('auto');
+                assert.isFalse(fresh.transcriptsReady);
+                assert.equal((fresh.anchor as any).side, '5p');
+                assert.deepEqual(ids(fresh.sideRows.kept), [
+                    'S1',
+                    'S2',
+                    'S3',
+                    'S4',
+                ]);
+                assert.equal(fresh.sideRows.oppositeCount, 0);
+
+                land(fresh);
+                assert.isTrue(fresh.transcriptsReady);
+                assert.equal((fresh.anchor as any).side, '3p');
+                assert.deepEqual(ids(fresh.anchorRows), ['S1', 'S2', 'S3']);
+                assert.equal(fresh.sideRows.oppositeCount, 1);
+                fresh.anchorRows.forEach(r =>
+                    assert.equal(r.threePrimeSymbol, 'ALK')
+                );
+            });
+
+            it('an explicit side does not change when transcripts land', () => {
+                const fresh = flipStore('5p');
+                assert.equal((fresh.anchor as any).side, '5p');
+                assert.lengthOf(fresh.anchorRows, 4);
+                land(fresh);
+                assert.equal((fresh.anchor as any).side, '5p');
+                // Rows are re-filtered by the resolved call; the side is not.
+                assert.deepEqual(ids(fresh.anchorRows), ['S4']);
+                assert.equal(fresh.sideRows.oppositeCount, 3);
+            });
+
+            it('requests transcripts for opposite-side rows too', () => {
+                store.setAnchor({ mode: 'gene', gene: 'ALK', side: '3p' });
+                // S3 (ALK 5', PTPN3 3') is opposite-side for a 3' anchor.
+                assert.equal(store.sideRows.oppositeCount, 1);
+                const symbols = store.transcriptRequests.map(r => r.symbol);
+                assert.include(symbols, 'PTPN3');
+                assert.include(symbols, 'ALK');
+            });
+
+            it('an orphaned selection requests its fallback gene and waits for it', () => {
+                store.setStructuralVariants([
+                    alk('S1', 'EML4', 'ALK'),
+                    alk('S6', 'EML4', 'RET'),
+                    alk('S7', 'KIF5B', 'RET'),
+                ] as any);
+                store.setAnchor({ mode: 'gene', gene: 'ALK', side: '3p' });
+                store.setGenePartnerFilter(['RET']); // ALK is orphaned
+                assert.equal((store.anchor as any).gene, 'RET');
+                const symbols = store.transcriptRequests.map(r => r.symbol);
+                assert.include(symbols, 'RET');
+                assert.notInclude(symbols, 'ALK');
+                assert.isFalse(store.transcriptsReady);
+                store.mergeTranscripts([['GRCh38|RET|', plusTx('RET')]]);
+                assert.isFalse(store.transcriptsReady); // partners outstanding
+                store.markTranscriptsFailed(
+                    store.outstandingTranscriptRequests.map(
+                        r => `${r.build}|${r.symbol}|${r.transcriptId}`
+                    )
+                );
+                assert.isTrue(store.transcriptsReady);
+            });
+        });
     });
 });
