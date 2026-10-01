@@ -257,3 +257,78 @@ describe('FusionStripList', () => {
         );
     });
 });
+
+describe('FusionStripList partnerless rows with a 3′ anchor (D33)', () => {
+    const alkTx = {
+        transcriptId: 'ALK',
+        displayName: 'ALK',
+        gene: 'ALK',
+        biotype: 'protein_coding',
+        strand: '+',
+        txStart: 0,
+        txEnd: 1000,
+        exons: [
+            { number: 1, start: 0, end: 100 },
+            { number: 2, start: 400, end: 500 },
+            { number: 3, start: 800, end: 900 },
+        ],
+        isForteSelected: true,
+        isCallerSelected: true,
+        isCanonical: true,
+        genomeBuild: 'GRCh38',
+        domains: [],
+        utrs: [],
+    } as any;
+    const lone = {
+        event: { totalReadSupport: 3 },
+        sampleId: 'S9',
+        fivePrimeSymbol: 'ALK',
+        threePrimeSymbol: null,
+        anchorBreakpoint: 300, // intron 1-2 → exons 2..3 retained as a 3′ side
+        partnerBreakpoint: null,
+        frame: 'unknown',
+    } as any;
+
+    it('draws only right-of-junction exons and a "no partner" note', () => {
+        const wrapper = mount(
+            <FusionStripList
+                rows={[lone]}
+                transcriptForRow={() => alkTx}
+                width={1000}
+                pxPerBp5p={0.2}
+                pxPerBp3p={0.2}
+                alignment="junction"
+                anchorSide="3p"
+            />
+        );
+        const note = wrapper.find('[data-testid="strip-left-note"]');
+        assert.isTrue(note.exists());
+        assert.equal(note.text(), 'no partner');
+        // Every exon rect sits right of the junction (frame junctionX = 170 + (880-170)/2 = 525).
+        const rects = wrapper.find('rect[data-testid="strip-exon"]');
+        assert.isAbove(rects.length, 0);
+        rects.forEach(r => {
+            assert.isAbove(Number(r.prop('x')), 525);
+        });
+    });
+
+    it('side 5p keeps today’s behaviour (left of junction, no note)', () => {
+        const wrapper = mount(
+            <FusionStripList
+                rows={[lone]}
+                transcriptForRow={() => alkTx}
+                width={1000}
+                pxPerBp5p={0.2}
+                pxPerBp3p={0.2}
+                alignment="junction"
+                anchorSide="5p"
+            />
+        );
+        assert.isFalse(
+            wrapper.find('[data-testid="strip-left-note"]').exists()
+        );
+        const rects = wrapper.find('rect[data-testid="strip-exon"]');
+        assert.isAbove(rects.length, 0);
+        rects.forEach(r => assert.isBelow(Number(r.prop('x')), 525));
+    });
+});

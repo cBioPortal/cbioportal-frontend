@@ -56,7 +56,9 @@ export interface ExonHoverInfo {
 export interface FusionProductStripProps {
     sampleId: string;
     label: string;
-    transcript5p: TranscriptData;
+    transcript5p?: TranscriptData;
+    /** Text drawn just left of the junction (e.g. "no partner"). */
+    leftNote?: string;
     transcript3p?: TranscriptData;
     breakpoint5p: number;
     breakpoint3p?: number;
@@ -115,6 +117,7 @@ const FRAME_COLORS: Record<FrameStatus, string> = {
 const FusionProductStrip: React.FC<FusionProductStripProps> = ({
     label,
     transcript5p,
+    leftNote,
     transcript3p,
     breakpoint5p,
     breakpoint3p,
@@ -138,22 +141,28 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
     const [hovered, setHovered] = React.useState(false);
     const full = exonMode === 'full';
     const has3p = !!transcript3p && breakpoint3p !== undefined;
-    const exons5p = full
-        ? exonsInOrder(transcript5p)
-        : retainedExonsInOrder(transcript5p, breakpoint5p, true);
+    const has5p = !!transcript5p;
+    const exons5p = !has5p
+        ? []
+        : full
+        ? exonsInOrder(transcript5p!)
+        : retainedExonsInOrder(transcript5p!, breakpoint5p, true);
     const exons3p = has3p
         ? full
             ? exonsInOrder(transcript3p!)
             : retainedExonsInOrder(transcript3p!, breakpoint3p!, false)
         : [];
-    const flags5p = full
-        ? exonRetentionFlags(transcript5p, breakpoint5p, true)
-        : exons5p.map(() => true);
+    const flags5p =
+        has5p && full
+            ? exonRetentionFlags(transcript5p!, breakpoint5p, true)
+            : exons5p.map(() => true);
     const flags3p =
         has3p && full
             ? exonRetentionFlags(transcript3p!, breakpoint3p!, false)
             : exons3p.map(() => true);
-    const nums5p = exonDisplayNumbers(transcript5p);
+    const nums5p = has5p
+        ? exonDisplayNumbers(transcript5p!)
+        : new Map<string, number>();
     const nums3p = transcript3p ? exonDisplayNumbers(transcript3p) : undefined;
     const layout = computeJunctionAlignedLayout(
         exons5p,
@@ -174,7 +183,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                   exons5p,
                   layout.xs5p,
                   layout.widths5p,
-                  transcript5p.strand
+                  transcript5p!.strand
               )
             : undefined;
     const tick3X =
@@ -227,7 +236,9 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
     // Junction labels describe the fusion seam, independent of exonMode — even
     // in full-ladder mode the label is about the retained/retained boundary,
     // not the complete transcript.
-    const retained5p = retainedExonsInOrder(transcript5p, breakpoint5p, true);
+    const retained5p = has5p
+        ? retainedExonsInOrder(transcript5p!, breakpoint5p, true)
+        : [];
     const retained3p = has3p
         ? retainedExonsInOrder(transcript3p!, breakpoint3p!, false)
         : [];
@@ -297,8 +308,21 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                     {countLabel ?? label}
                 </text>
             )}
+            {leftNote && !compact && (
+                <text
+                    data-testid="strip-left-note"
+                    x={junctionX - 10}
+                    y={textBaseline}
+                    textAnchor="end"
+                    fontSize={10}
+                    fontStyle="italic"
+                    fill="#999"
+                >
+                    {leftNote}
+                </text>
+            )}
             {exons5p.map((exon, i) => {
-                const isAllUtr = stripExonIsAllUtr(exon, transcript5p.utrs);
+                const isAllUtr = stripExonIsAllUtr(exon, transcript5p!.utrs);
                 const h = isAllUtr ? ph / 2 : ph;
                 const yRect = isAllUtr ? yEx + ph / 4 : yEx;
                 const retained = flags5p[i];
@@ -324,7 +348,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                                 rx={2}
                                 fill={COLOR_5PRIME}
                                 {...hoverProps(
-                                    transcript5p.gene,
+                                    transcript5p!.gene,
                                     exon,
                                     n,
                                     retained
@@ -340,7 +364,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                                 rx={2}
                                 fill={COLOR_EXON_LOST}
                                 {...hoverProps(
-                                    transcript5p.gene,
+                                    transcript5p!.gene,
                                     exon,
                                     n,
                                     retained
@@ -360,7 +384,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                         height={h}
                         rx={2}
                         fill={retained ? COLOR_5PRIME : COLOR_EXON_LOST}
-                        {...hoverProps(transcript5p.gene, exon, n, retained)}
+                        {...hoverProps(transcript5p!.gene, exon, n, retained)}
                     />
                 );
             })}

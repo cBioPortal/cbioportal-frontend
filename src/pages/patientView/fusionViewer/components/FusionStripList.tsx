@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ComparisonRow } from '../data/comparisonRows';
+import { ComparisonRow, AnchorSide } from '../data/comparisonRows';
 import { TranscriptData, JunctionLabelMode } from '../data/types';
 import { CollapsedGroup } from '../data/collapseRows';
 import FusionProductStrip, { ExonHoverInfo } from './FusionProductStrip';
@@ -89,6 +89,8 @@ export interface FusionStripListProps {
     referenceTranscript3p?: TranscriptData;
     // Junction exon label placement, forwarded to each strip (feature 2).
     junctionLabelMode?: JunctionLabelMode;
+    // Which gene the rows are anchored on. Defaults to '5p'.
+    anchorSide?: AnchorSide;
 }
 
 const FusionStripList: React.FC<FusionStripListProps> = ({
@@ -109,6 +111,7 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
     referenceTranscript5p,
     referenceTranscript3p,
     junctionLabelMode,
+    anchorSide = '5p',
 }) => {
     const rowHeight =
         rowHeightProp ?? (mode === 'dense' ? DENSE_ROW_HEIGHT : 50);
@@ -158,17 +161,26 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
                         const idx = start + i;
                         const useReference =
                             exonMode === 'full' && ladderMode === 'reference';
-                        const t5 = ladderTranscript(
-                            transcriptForRow(row, true),
-                            referenceTranscript5p,
-                            useReference
-                        );
+                        // D33: a partnerless row in a 3′-anchored view draws its
+                        // lone segment in the anchor (right) column, as a 3′
+                        // partner would, with the left half empty.
+                        const lone3p =
+                            anchorSide === '3p' &&
+                            row.threePrimeSymbol === null;
+                        const t5 = lone3p
+                            ? undefined
+                            : ladderTranscript(
+                                  transcriptForRow(row, true),
+                                  referenceTranscript5p,
+                                  useReference
+                              );
                         const t3 = ladderTranscript(
-                            transcriptForRow(row, false),
+                            // lone3p: the anchor gene sits in the 5′ field (partnerless).
+                            transcriptForRow(row, lone3p),
                             referenceTranscript3p,
                             useReference
                         );
-                        if (!t5) return null;
+                        if (lone3p ? !t3 : !t5) return null;
                         return (
                             <FusionProductStrip
                                 key={group ? group.key : row.sampleId}
@@ -176,10 +188,13 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
                                 label={row.sampleId}
                                 transcript5p={t5}
                                 transcript3p={t3}
-                                breakpoint5p={row.anchorBreakpoint}
+                                breakpoint5p={lone3p ? 0 : row.anchorBreakpoint}
                                 breakpoint3p={
-                                    row.partnerBreakpoint ?? undefined
+                                    lone3p
+                                        ? row.anchorBreakpoint
+                                        : row.partnerBreakpoint ?? undefined
                                 }
+                                leftNote={lone3p ? 'no partner' : undefined}
                                 frame={row.frame}
                                 reads={row.event.totalReadSupport}
                                 y={idx * rowHeight}
