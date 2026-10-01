@@ -1,4 +1,4 @@
-import { ComparisonRow } from './comparisonRows';
+import { AnchorSide, anchorEndpoint, ComparisonRow } from './comparisonRows';
 import { FrameStatus } from './types';
 import { TrackLayout } from './trackGeometry';
 
@@ -110,4 +110,60 @@ export function slotLabel(key: string): string {
         default:
             return key;
     }
+}
+
+export interface LollipopStick {
+    key: string;
+    x: number;
+    sampleIds: string[];
+    /** Unique samples with >=1 anchor-side breakpoint in this slot. */
+    sampleCount: number;
+    /** Unique samples per category; may sum to more than sampleCount. */
+    byCategory: { category: string; sampleCount: number }[];
+}
+
+/** Gene-mode lollipop: one stick per occupied anchor slot (spec 3.8). */
+export function buildLollipopSticks(
+    rows: ComparisonRow[],
+    layout: TrackLayout,
+    side: AnchorSide,
+    categoryOf: (row: ComparisonRow) => string
+): LollipopStick[] {
+    const slots = layout.assign(
+        rows.map(r => anchorEndpoint(r, side).breakpoint)
+    );
+    const acc = new Map<
+        string,
+        { x: number; samples: Set<string>; byCat: Map<string, Set<string>> }
+    >();
+    rows.forEach((row, i) => {
+        const slot = slots[i];
+        if (!slot) return;
+        const a = acc.get(slot.key) ?? {
+            x: slot.x,
+            samples: new Set<string>(),
+            byCat: new Map<string, Set<string>>(),
+        };
+        a.samples.add(row.sampleId);
+        const cat = categoryOf(row);
+        const set = a.byCat.get(cat) ?? new Set<string>();
+        set.add(row.sampleId);
+        a.byCat.set(cat, set);
+        acc.set(slot.key, a);
+    });
+    return Array.from(acc.entries())
+        .map(([key, a]) => ({
+            key,
+            x: a.x,
+            sampleIds: Array.from(a.samples),
+            sampleCount: a.samples.size,
+            byCategory: Array.from(a.byCat.entries())
+                .map(([category, s]) => ({ category, sampleCount: s.size }))
+                .sort(
+                    (p, q) =>
+                        q.sampleCount - p.sampleCount ||
+                        p.category.localeCompare(q.category)
+                ),
+        }))
+        .sort((p, q) => p.x - q.x);
 }
