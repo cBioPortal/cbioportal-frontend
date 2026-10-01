@@ -734,8 +734,6 @@ export default class FusionComparisonView extends React.Component<
         return `${this.anchorGene}→${this.partnerGene || ''} ${pretty}`;
     }
 
-    // Filter the cohort to a collapsed group's samples, reusing the same
-    // materialized-identifier path as the histogram-bar click.
     @computed get lollipopCategoryOf(): (r: ComparisonRow) => string {
         const by = this.props.store.lollipopColorBy;
         if (by === 'frame') return r => r.frame;
@@ -766,34 +764,20 @@ export default class FusionComparisonView extends React.Component<
     handleSelectSamples = (sampleIds: string[], label: string): void => {
         const { onFilterCohortBySamples } = this.props;
         if (!onFilterCohortBySamples) return;
-        const samples = Array.from(new Set(sampleIds)).map(sampleId => ({
-            studyId: this.studyIdBySampleId.get(sampleId) || '',
-            sampleId,
-        }));
+        const samples = Array.from(new Set(sampleIds.filter(Boolean))).map(
+            sampleId => ({
+                studyId: this.studyIdBySampleId.get(sampleId) || '',
+                sampleId,
+            })
+        );
         if (samples.length === 0) return;
         onFilterCohortBySamples(FUSION_BREAKPOINT_FILTER_KEY, label, samples);
     };
 
-    handleSelectGroup = (group: CollapsedGroup): void => {
-        const { onFilterCohortBySamples } = this.props;
-        if (!onFilterCohortBySamples) return;
-        const seen = new Set<string>();
-        const samples: CohortSampleIdentifier[] = [];
-        group.sampleIds.forEach(sampleId => {
-            if (!sampleId || seen.has(sampleId)) return;
-            seen.add(sampleId);
-            samples.push({
-                studyId: this.studyIdBySampleId.get(sampleId) || '',
-                sampleId,
-            });
-        });
-        if (samples.length === 0) return;
-        onFilterCohortBySamples(
-            FUSION_BREAKPOINT_FILTER_KEY,
-            this.groupLabel(group),
-            samples
-        );
-    };
+    // Filter the cohort to a collapsed group's samples, reusing the same
+    // materialized-identifier path as the histogram-bar click.
+    handleSelectGroup = (group: CollapsedGroup): void =>
+        this.handleSelectSamples(group.sampleIds, this.groupLabel(group));
 
     // Turn a clicked bar's member row-indices into distinct SampleIdentifiers
     // and hand them to the studyView cohort filter. `rows` is the same oriented

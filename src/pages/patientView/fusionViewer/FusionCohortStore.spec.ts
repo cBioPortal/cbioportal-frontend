@@ -716,6 +716,7 @@ describe('FusionCohortStore pair facet', () => {
             store.setAnchor({ mode: 'gene', gene: 'ALK', side: '3p' });
             const m = store.partnerColorMap;
             assert.isTrue(m.has('EML4'));
+            assert.isTrue(m.has('(no partner)'));
         });
 
         it('gene mode shows only events involving the gene, on the auto side', () => {
