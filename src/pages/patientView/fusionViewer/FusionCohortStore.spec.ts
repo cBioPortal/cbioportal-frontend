@@ -840,5 +840,58 @@ describe('FusionCohortStore pair facet', () => {
             dispose();
             spy.mockRestore();
         });
+
+        it('seeds exactly one gene once data is ready; idempotent per applied gene', () => {
+            const fresh = new FusionCohortStore();
+            fresh.seedFromStudyFilter(['ALK'], false);
+            assert.isTrue(fresh.seedPending);
+            assert.isFalse(fresh.hasAnchorSelection);
+            fresh.setStructuralVariants([alk('S1', 'EML4', 'ALK')] as any);
+            fresh.seedFromStudyFilter(['ALK'], true);
+            assert.isFalse(fresh.seedPending);
+            assert.deepEqual(fresh.anchor, {
+                mode: 'gene',
+                gene: 'ALK',
+                side: '3p',
+            });
+            fresh.setAnchor(
+                { mode: 'pair', key: 'ALK::EML4' },
+                { source: 'auto' }
+            );
+            fresh.seedFromStudyFilter(['ALK'], true); // same gene: no-op
+            assert.equal(fresh.anchor!.mode, 'pair');
+        });
+
+        it('0 or ≥2 genes do not seed', () => {
+            store.seedFromStudyFilter([], true);
+            store.seedFromStudyFilter(['ALK', 'RET'], true);
+            assert.isFalse(store.hasAnchorSelection);
+        });
+
+        it('user pick blocks later seeds', () => {
+            store.setAnchor({ mode: 'pair', key: 'ALK::EML4' });
+            store.seedFromStudyFilter(['ALK'], true);
+            assert.equal(store.anchor!.mode, 'pair');
+        });
+
+        it('auto pick does not block seeding', () => {
+            store.setAnchor(
+                { mode: 'pair', key: 'ALK::EML4' },
+                { source: 'auto' }
+            );
+            store.seedFromStudyFilter(['ALK'], true);
+            assert.equal(store.anchor!.mode, 'gene');
+        });
+
+        it('seed A → B (pending) → A clears the stale pending B', () => {
+            const fresh = new FusionCohortStore();
+            fresh.setStructuralVariants([alk('S1', 'EML4', 'ALK')] as any);
+            fresh.seedFromStudyFilter(['ALK'], true);
+            fresh.seedFromStudyFilter(['RET'], false);
+            assert.isTrue(fresh.seedPending);
+            fresh.seedFromStudyFilter(['ALK'], true);
+            assert.isFalse(fresh.seedPending);
+            assert.equal((fresh.anchor as any).gene, 'ALK');
+        });
     });
 });

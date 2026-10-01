@@ -751,9 +751,9 @@ describe('FusionComparisonView gene mode', () => {
         assert.lengthOf(same.view.collapsedGroups, 1);
     });
 
-    it.skip('does not replace a pending seed with an auto pair anchor', () => {
+    it('does not replace a pending seed with an auto pair anchor', () => {
         const store = new FusionCohortStore();
-        (store as any).seedFromStudyFilter(['ALK'], false); // Task 8 API; data not ready
+        store.seedFromStudyFilter(['ALK'], false); // Task 8 API; data not ready
         mount(<FusionComparisonView store={store} />);
         assert.isFalse(store.hasAnchorSelection);
     });

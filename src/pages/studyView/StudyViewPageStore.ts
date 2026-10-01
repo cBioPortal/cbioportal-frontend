@@ -4632,6 +4632,28 @@ export class StudyViewPageStore
         return toJS(filters);
     }
 
+    /**
+     * Distinct genes selected in STRUCTURAL_VARIANT_GENES_TABLE charts. The SV
+     * genes table writes gene filters (addGeneFilters), not struct-var filters.
+     * Read by the fusion cohort store to seed its Gene anchor.
+     */
+    @computed
+    public get svGenesTableFilterGenes(): string[] {
+        const genes = new Set<string>();
+        this._geneFilterSet.forEach((queries, uniqueKey) => {
+            if (
+                this.chartsType.get(uniqueKey) !==
+                ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
+            ) {
+                return;
+            }
+            queries.forEach(group =>
+                group.forEach(q => genes.add(q.hugoGeneSymbol))
+            );
+        });
+        return Array.from(genes);
+    }
+
     public getStructVarFiltersByUniqueKey(uniqueKey: string): string[][] {
         const filters = _.map(
             this._structVarFilterSet.get(uniqueKey),

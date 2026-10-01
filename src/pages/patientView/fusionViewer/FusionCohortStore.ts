@@ -502,6 +502,33 @@ export class FusionCohortStore {
         }
     }
 
+    /**
+     * Seed Gene mode from the summary tab's SV genes table (spec 3.5). Called
+     * from StudyViewPage's data autorun on every cohort change.
+     */
+    @action
+    public seedFromStudyFilter(genes: string[], dataReady: boolean): void {
+        if (this.anchorPickedByUser || genes.length !== 1) {
+            this.pendingSeedGene = undefined;
+            return;
+        }
+        const gene = genes[0];
+        if (gene === this.lastSeededGene) {
+            // A pending seed for another gene must not linger (D32).
+            this.pendingSeedGene = undefined;
+            return;
+        }
+        this.pendingSeedGene = gene;
+        if (dataReady && this.allEvents.length > 0) {
+            this.setAnchor(
+                { mode: 'gene', gene, side: 'auto' },
+                { source: 'seed' }
+            );
+            this.lastSeededGene = gene;
+            this.pendingSeedGene = undefined;
+        }
+    }
+
     /** Pair/Gene toggle. Gene defaults to the busiest gene of the current pair. */
     @action
     public setAnchorMode(mode: 'pair' | 'gene'): void {

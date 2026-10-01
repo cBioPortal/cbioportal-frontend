@@ -256,6 +256,12 @@ export default class StudyViewPage extends React.Component<
             this._fusionCohortStore.updateStructuralVariants(
                 this.store.cohortStructuralVariants.result || []
             );
+            // Seed the Comparison tab's Gene anchor from the SV genes table
+            // (exactly one gene). Pending until the cohort SVs load.
+            this._fusionCohortStore.seedFromStudyFilter(
+                this.store.svGenesTableFilterGenes,
+                this.store.cohortStructuralVariants.isComplete
+            );
             // Transcripts must be fetched in the cohort's coordinate build, or
             // breakpoints won't align with the gene track.
             if (this.store.displayedStudies.isComplete) {
