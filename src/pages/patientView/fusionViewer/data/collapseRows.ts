@@ -22,6 +22,8 @@ export interface CollapsedGroup {
     sampleIds: string[];
     /** Frame tally across the members (a group can mix frame calls). */
     frames: Record<FrameStatus, number>;
+    /** Every member row (encounter order) — used for linked-hover unions. */
+    members: ComparisonRow[];
 }
 
 /**
@@ -66,11 +68,13 @@ export function groupRows(
                 count: 0,
                 sampleIds: [],
                 frames: { inFrame: 0, outOfFrame: 0, unknown: 0 },
+                members: [],
             };
             map.set(key, g);
         }
         g.count += 1;
         g.sampleIds.push(row.sampleId);
+        g.members.push(row);
         g.frames[row.frame] += 1;
     });
     return Array.from(map.values()).sort((a, b) => b.count - a.count);

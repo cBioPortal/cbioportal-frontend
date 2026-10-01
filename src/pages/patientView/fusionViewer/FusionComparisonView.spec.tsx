@@ -298,6 +298,7 @@ describe('FusionComparisonView', () => {
             count: 2,
             sampleIds: ['S1', 'S1'],
             representative: {} as any,
+            members: [],
             frames: { inFrame: 2, outOfFrame: 0, unknown: 0 },
         });
         assert.equal(spy.mock.calls.length, 1);

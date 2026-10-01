@@ -112,3 +112,14 @@ describe('groupRows', () => {
         assert.equal(groups[0].count, 2);
     });
 });
+
+describe('groupRows members', () => {
+    it('keeps every member row in encounter order', () => {
+        const rows = [
+            { sampleId: 'a', frame: 'inFrame' },
+            { sampleId: 'b', frame: 'unknown' },
+        ] as any[];
+        const [g] = groupRows(rows, () => 'k');
+        assert.deepEqual(g.members, rows);
+    });
+});
