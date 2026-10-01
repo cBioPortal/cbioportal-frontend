@@ -1,5 +1,9 @@
 import { assert } from 'chai';
-import { buildGeneSummaries, buildPartnerSummaries } from './anchorSummaries';
+import {
+    buildGeneSummaries,
+    buildPartnerSummaries,
+    groupPartnerLabel,
+} from './anchorSummaries';
 import { ComparisonRow, NO_PARTNER, INTRAGENIC } from './comparisonRows';
 import { FusionEvent } from './types';
 
@@ -71,5 +75,21 @@ describe('buildPartnerSummaries', () => {
             s.map(p => p.category),
             ['EML4', NO_PARTNER, INTRAGENIC]
         );
+    });
+});
+
+describe('groupPartnerLabel', () => {
+    it('single category passes through, sentinels included', () => {
+        assert.equal(groupPartnerLabel(['ERG', 'ERG']), 'ERG');
+        assert.equal(groupPartnerLabel([NO_PARTNER]), NO_PARTNER);
+        assert.equal(groupPartnerLabel([INTRAGENIC, INTRAGENIC]), INTRAGENIC);
+    });
+
+    it('mixed: most common first plus +distinct-1', () => {
+        assert.equal(
+            groupPartnerLabel(['ERG', 'EML4', 'EML4', NO_PARTNER]),
+            'EML4 +2'
+        );
+        assert.equal(groupPartnerLabel(['ERG', 'ETV1']), 'ERG +1');
     });
 });

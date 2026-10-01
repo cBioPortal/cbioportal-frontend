@@ -69,3 +69,17 @@ export function buildPartnerSummaries(
         }))
         .sort(bySamplesThenName<PartnerSummary>(p => p.category));
 }
+
+/**
+ * Partner-column label for a collapsed group: the shared category, or
+ * "<most common> +<other distinct count>" when members disagree.
+ */
+export function groupPartnerLabel(categories: string[]): string {
+    const counts = new Map<string, number>();
+    categories.forEach(c => counts.set(c, (counts.get(c) ?? 0) + 1));
+    const ranked = Array.from(counts.keys()).sort(
+        (a, b) => counts.get(b)! - counts.get(a)! || a.localeCompare(b)
+    );
+    if (ranked.length <= 1) return ranked[0] ?? '';
+    return `${ranked[0]} +${ranked.length - 1}`;
+}

@@ -50,7 +50,10 @@ import WindowStore from 'shared/components/window/WindowStore';
 import {
     computeComparisonFrame,
     sharedPxPerBp,
+    RIGHT_GUTTER,
+    PARTNER_RIGHT_GUTTER,
 } from './components/comparisonFrame';
+import { groupPartnerLabel } from './data/anchorSummaries';
 import { JUNCTION_GAP } from './components/fusionProductHelpers';
 import { fetchTranscriptsForGeneWithFallback } from './data/genomeNexusTranscriptService';
 import { frameStatusStyle } from './components/frameStatusStyle';
@@ -537,8 +540,37 @@ export default class FusionComparisonView extends React.Component<
         );
     }
 
+    /** Gene mode widens the right gutter to fit the Partner column. */
+    @computed get rightGutter(): number {
+        return this.isGeneMode ? PARTNER_RIGHT_GUTTER : RIGHT_GUTTER;
+    }
+
+    /** Partner column label per strip; Gene mode only. */
+    @computed get partnerLabelFor():
+        | ((
+              row: ComparisonRow,
+              group?: CollapsedGroup
+          ) => { text: string; color: string } | undefined)
+        | undefined {
+        if (!this.isGeneMode) return undefined;
+        const gene = this.anchorGene;
+        const side = this.anchorSide;
+        const map = this.props.store.partnerColorMap;
+        return (row, group) => {
+            const cats = (group ? group.members : [row]).map(r =>
+                partnerCategory(r, gene, side)
+            );
+            const text = groupPartnerLabel(cats);
+            // "EML4 +2" is coloured by its leading (most common) category.
+            return {
+                text,
+                color: colorFor(map, text.replace(/ \+\d+$/, '')),
+            };
+        };
+    }
+
     @computed get frame() {
-        return computeComparisonFrame(this.contentWidth);
+        return computeComparisonFrame(this.contentWidth, this.rightGutter);
     }
 
     private layoutFor(
@@ -1471,6 +1503,17 @@ export default class FusionComparisonView extends React.Component<
                                     : 'Frame · reads'}
                             </span>
                         </DefaultTooltip>
+                        {this.isGeneMode && (
+                            <span
+                                data-testid="partner-header"
+                                style={{
+                                    position: 'absolute',
+                                    left: frame.rightX + 8 + 112,
+                                }}
+                            >
+                                Partner
+                            </span>
+                        )}
                     </div>
                     {store.exonMode === 'full' &&
                         store.ladderMode === 'reference' &&
@@ -1493,6 +1536,8 @@ export default class FusionComparisonView extends React.Component<
                         }
                         onRowHover={this.linkData ? this.onRowHover : undefined}
                         anchorSide={side}
+                        rightGutter={this.rightGutter}
+                        partnerLabelFor={this.partnerLabelFor}
                         rows={rows}
                         transcriptForRow={this.transcriptForRow}
                         width={contentWidth}
