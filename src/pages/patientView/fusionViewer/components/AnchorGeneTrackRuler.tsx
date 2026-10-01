@@ -1,11 +1,23 @@
 import * as React from 'react';
-import {
-    genomicToSvgX,
-    computeGeneTrackRange,
-    applyUpstreamExtension,
-} from './GeneTrack';
 import { ComparisonRow } from '../data/comparisonRows';
 import { TranscriptData, COLOR_5PRIME } from '../data/types';
+import {
+    assignBreakpointsToFeatures,
+    Feature,
+    genomicProjection,
+    TRACK_Y,
+    EXON_H,
+    HIST_BASELINE,
+    HIST_MAX_H,
+    BIN_PX,
+} from '../data/trackGeometry';
+
+export {
+    assignBreakpointsToFeatures,
+    Feature,
+    FeatureKind,
+    FeatureAssignment,
+} from '../data/trackGeometry';
 
 export interface AnchorGeneTrackRulerProps {
     transcript: TranscriptData;
@@ -46,225 +58,6 @@ export interface BreakpointBin {
     members: number[];
 }
 
-// ---------------------------------------------------------------------------
-// Feature-binned model (STEP 1)
-// ---------------------------------------------------------------------------
-
-export type FeatureKind = 'promoter' | 'exon' | 'intron' | 'downstream';
-
-export interface Feature {
-    kind: FeatureKind;
-    /** Short display label, e.g. 'E13', 'P', or an intron label. */
-    label: string;
-    /** Exon number, present only on exon features. */
-    number?: number;
-    /** Number of breakpoints assigned to this feature. */
-    count: number;
-    /** Indices (into the input breakpoints array) assigned to this feature. */
-    members: number[];
-    /** Genomic span (inclusive lower/upper coords, regardless of strand). */
-    gStart: number;
-    gEnd: number;
-}
-
-export interface FeatureAssignment {
-    /** Features in transcription (5′→3′) order. */
-    features: Feature[];
-    /** Breakpoints farther than `slop` outside the transcript span. */
-    offTranscript: number;
-}
-
-/**
- * Build the reference transcript's biological features (promoter, each exon,
- * each intron, a 3′ downstream bucket) in transcription (5′→3′) order and
- * assign each genomic breakpoint to the feature it falls in.
- *
- * Binning GENOMIC breakpoint coordinates into one reference's feature intervals
- * is deliberate: per-sample isoform differences are irrelevant, because every
- * breakpoint is measured against the same MSK/forte-selected transcript.
- *
- * Strand handling: for the '+' strand 5′ is the lower coordinate; for '-' it is
- * the higher coordinate. Features are emitted in transcription order, which for
- * '-' strand is descending genomic coordinate.
- *
- * A breakpoint p is assigned to:
- *  - the exon whose [start,end] contains p;
- *  - the intron strictly between two consecutive exons;
- *  - the promoter if it is 5′-of the first exon but within `slop`;
- *  - downstream if it is 3′-of the last exon but within `slop`;
- *  - otherwise counted in `offTranscript` (not placed) if farther than `slop`
- *    outside [txStart-slop, txEnd+slop] — preserving the build-mismatch signal.
- *
- * NOTE: for the 3′ partner gene the 'promoter' bucket is biologically weaker
- * (a 3′ partner does not contribute its own promoter to the fusion), but the
- * geometry is generic: it is simply the within-slop region 5′ of the first
- * exon. Callers may relabel or ignore it; here it stays uniform across tracks.
- */
-export function assignBreakpointsToFeatures(
-    transcript: TranscriptData,
-    breakpoints: number[],
-    slop = 20000
-): FeatureAssignment {
-    const { strand, exons, txStart, txEnd } = transcript;
-
-    // Exons in transcription order (same strand logic as retainedExonsInOrder).
-    const ordered = [...exons].sort((a, b) =>
-        strand === '-' ? b.start - a.start : a.start - b.start
-    );
-
-    const features: Feature[] = [];
-
-    // Genomic 5′/3′ ends of the transcript span.
-    const fivePrimeEnd = strand === '+' ? txStart : txEnd;
-    const threePrimeEnd = strand === '+' ? txEnd : txStart;
-
-    // Promoter: within-slop region 5′ of the transcript's 5′ end.
-    const promoter: Feature =
-        strand === '+'
-            ? {
-                  kind: 'promoter',
-                  label: 'P',
-                  count: 0,
-                  members: [],
-                  gStart: fivePrimeEnd - slop,
-                  gEnd: fivePrimeEnd,
-              }
-            : {
-                  kind: 'promoter',
-                  label: 'P',
-                  count: 0,
-                  members: [],
-                  gStart: fivePrimeEnd,
-                  gEnd: fivePrimeEnd + slop,
-              };
-    features.push(promoter);
-
-    // Exons interleaved with introns, in transcription order.
-    const exonFeatures: Feature[] = [];
-    ordered.forEach((e, i) => {
-        const exonFeature: Feature = {
-            kind: 'exon',
-            label: `E${e.number}`,
-            number: e.number,
-            count: 0,
-            members: [],
-            gStart: Math.min(e.start, e.end),
-            gEnd: Math.max(e.start, e.end),
-        };
-        exonFeatures.push(exonFeature);
-        features.push(exonFeature);
-
-        // Intron between this exon and the next (genomic gap), if any.
-        if (i < ordered.length - 1) {
-            const next = ordered[i + 1];
-            const lo = Math.min(e.start, e.end, next.start, next.end);
-            const hi = Math.max(e.start, e.end, next.start, next.end);
-            // The intron gap sits strictly between the two exon bodies.
-            const gapLo = Math.max(
-                Math.min(e.start, e.end),
-                Math.min(next.start, next.end)
-            );
-            const gapHi = Math.min(
-                Math.max(e.start, e.end),
-                Math.max(next.start, next.end)
-            );
-            features.push({
-                kind: 'intron',
-                label: `${e.number}-${next.number}`,
-                count: 0,
-                members: [],
-                gStart: Math.min(gapLo, gapHi),
-                gEnd: Math.max(gapLo, gapHi),
-            });
-            // lo/hi retained for readability; not used further.
-            void lo;
-            void hi;
-        }
-    });
-
-    // Downstream: within-slop region 3′ of the transcript's 3′ end.
-    const downstream: Feature =
-        strand === '+'
-            ? {
-                  kind: 'downstream',
-                  label: '▸',
-                  count: 0,
-                  members: [],
-                  gStart: threePrimeEnd,
-                  gEnd: threePrimeEnd + slop,
-              }
-            : {
-                  kind: 'downstream',
-                  label: '▸',
-                  count: 0,
-                  members: [],
-                  gStart: threePrimeEnd - slop,
-                  gEnd: threePrimeEnd,
-              };
-    features.push(downstream);
-
-    const spanLo = Math.min(txStart, txEnd);
-    const spanHi = Math.max(txStart, txEnd);
-
-    let offTranscript = 0;
-    // Record breakpoint index `i` as a member of `feature` (for click→sample
-    // mapping) and bump its count.
-    const hit = (feature: Feature, i: number) => {
-        feature.count += 1;
-        feature.members.push(i);
-    };
-    breakpoints.forEach((p, i) => {
-        if (p === null || p === undefined || Number.isNaN(p)) return;
-
-        // Far outside the transcript span (with slop) → build-mismatch signal.
-        if (p < spanLo - slop || p > spanHi + slop) {
-            offTranscript += 1;
-            return;
-        }
-
-        // Inside an exon?
-        const hitExon = exonFeatures.find(f => p >= f.gStart && p <= f.gEnd);
-        if (hitExon) {
-            hit(hitExon, i);
-            return;
-        }
-
-        // Inside the transcript body (between exons) → the containing intron.
-        const hitIntron = features.find(
-            f => f.kind === 'intron' && p >= f.gStart && p <= f.gEnd
-        );
-        if (hitIntron) {
-            hit(hitIntron, i);
-            return;
-        }
-
-        // 5′-of the first exon but within slop → promoter.
-        // 3′-of the last exon but within slop → downstream.
-        if (p >= promoter.gStart && p <= promoter.gEnd) {
-            hit(promoter, i);
-            return;
-        }
-        if (p >= downstream.gStart && p <= downstream.gEnd) {
-            hit(downstream, i);
-            return;
-        }
-
-        // Within the span+slop but not inside any feature interval (e.g. a gap
-        // between txStart/txEnd and the first/last exon that is not covered by
-        // promoter/downstream because it lies inside the span). Attribute to the
-        // nearest flanking bucket rather than dropping it.
-        const distToFivePrime = Math.abs(p - fivePrimeEnd);
-        const distToThreePrime = Math.abs(p - threePrimeEnd);
-        if (distToFivePrime <= distToThreePrime) {
-            hit(promoter, i);
-        } else {
-            hit(downstream, i);
-        }
-    });
-
-    return { features, offTranscript };
-}
-
 /**
  * Bin breakpoint x-positions (already mapped to pixel space) into fixed-width
  * columns across [drawX, drawX+drawW]. One bar per occupied column, so ~800
@@ -296,11 +89,6 @@ export function binBreakpointsByPixel(
         .sort((a, b) => a.x - b.x);
 }
 
-const EXON_H = 12;
-const TRACK_Y = 124;
-const HIST_BASELINE = TRACK_Y - 8;
-const HIST_MAX_H = 96;
-const BIN_PX = 6;
 // Exon-number labels are drawn just below the gene body. At genomic scale most
 // exons are only 1–2px wide, so we label by horizontal SPACING between exon
 // centers (skipping crowded ones) rather than by exon width.
@@ -456,24 +244,12 @@ const GenomicBody: React.FC<AnchorGeneTrackRulerProps> = ({
     onSelectBar,
 }) => {
     const { strand, exons } = transcript;
-    const refPos =
-        (transcript.txStart + transcript.txEnd) / 2 ||
-        (exons.length ? exons[0].start : transcript.txStart);
-    const base = computeGeneTrackRange(exons, refPos);
-
     const offTranscript = breakpoints.filter(
         p =>
             p < transcript.txStart - OFF_TRANSCRIPT_SLOP ||
             p > transcript.txEnd + OFF_TRANSCRIPT_SLOP
     ).length;
-    const { gMin, gMax } = applyUpstreamExtension(
-        base.gMin,
-        base.gMax,
-        strand,
-        exons
-    );
-    const toX = (g: number) =>
-        genomicToSvgX(g, gMin, gMax, drawX, drawW, strand);
+    const toX = genomicProjection(transcript, drawX, drawW);
 
     const bins = binBreakpointsByPixel(
         breakpoints.map(toX),
