@@ -159,13 +159,21 @@ export default class StudyList extends QueryStoreComponent<
         );
     };
 
+    isStudyUnavailable(study: CancerStudy) {
+        return (
+            getServerConfig().study_availability_enabled &&
+            study.status !== undefined &&
+            study.status !== 1
+        );
+    }
+
     renderCancerStudy = (study: CancerStudy, arrayIndex: number) => {
         let liClassName = classNames(
             styles.Study
             // this.logic.isHighlighted(study) && styles.highlighted
         );
 
-        const isUnavailable = study.status !== undefined && study.status !== 1;
+        const isUnavailable = this.isStudyUnavailable(study);
 
         const isOverlap = study.studyId in this.store.getOverlappingStudiesMap;
         const overlapWarning = isOverlap ? (
@@ -436,7 +444,7 @@ export default class StudyList extends QueryStoreComponent<
                         return content;
                     })}
                     {study.studyId &&
-                        (study.status === undefined || study.status === 1) &&
+                        !this.isStudyUnavailable(study) &&
                         (study.readPermission === true ||
                             study.readPermission === undefined) && (
                             <DefaultTooltip
