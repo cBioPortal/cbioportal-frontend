@@ -757,6 +757,23 @@ describe('FusionCohortStore pair facet', () => {
             assert.deepEqual(store.effectiveAnchorPartners, ['EML4']);
         });
 
+        it('a side change keeps the facet while the anchor is on a fallback gene', () => {
+            store.setStructuralVariants([
+                alk('S1', 'EML4', 'ALK'),
+                alk('S6', 'EML4', 'RET'),
+                alk('S7', 'KIF5B', 'RET'),
+            ] as any);
+            store.setAnchor({ mode: 'gene', gene: 'ALK', side: 'auto' });
+            store.setGenePartnerFilter(['RET']); // ALK orphaned -> RET effective
+            assert.equal((store.anchor as any).gene, 'RET');
+            store.togglePartnerFacet('EML4');
+            store.setAnchorSide('3p');
+            assert.deepEqual(store.filter.anchorPartners, {
+                gene: 'RET',
+                partners: ['EML4'],
+            });
+        });
+
         it('a fallback gene does not inherit another gene\u2019s partner selection (D30)', () => {
             store.setStructuralVariants([
                 alk('S1', 'EML4', 'ALK'),
@@ -801,10 +818,24 @@ describe('FusionCohortStore pair facet', () => {
             spy.mockClear();
             // Unobserved computeds recompute on every read, so observe them
             // the way the view does; each pipeline step then runs once.
+            const errors: any[] = [];
             const dispose = autorun(() => {
-                store.anchorRows;
-                store.anchor;
+                try {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+                    store.anchorRows;
+                    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+                    store.anchor;
+                } catch (e) {
+                    // MobX logs and swallows reaction errors (e.g. a cycle).
+                    errors.push(e);
+                }
             });
+            // Reads outside the reaction would throw a cycle error directly.
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+            store.anchorRows;
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+            store.anchor;
+            assert.deepEqual(errors, []);
             assert.isAtMost(spy.mock.calls.length, 1);
             dispose();
             spy.mockRestore();

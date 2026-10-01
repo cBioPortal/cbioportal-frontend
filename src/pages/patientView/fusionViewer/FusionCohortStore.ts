@@ -475,7 +475,9 @@ export class FusionCohortStore {
         a: ComparisonAnchor,
         opts: { source: AnchorSource } = { source: 'user' }
     ): void {
-        const prev = this.anchorSelection;
+        // Transitions reflect what the user saw (the effective anchor), not a
+        // raw selection that a filter may have orphaned.
+        const prev = this.effectiveAnchorIdentity ?? this.anchorSelection;
         let next = this.filter;
         const enteringGene = a.mode === 'gene' && prev?.mode !== 'gene';
         const leavingGene = a.mode === 'pair' && prev?.mode === 'gene';
