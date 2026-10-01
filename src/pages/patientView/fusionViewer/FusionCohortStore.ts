@@ -101,6 +101,14 @@ export class FusionCohortStore {
     /** Alignment mode for the comparison track ruler. */
     @observable public alignment: 'junction' | 'coordinate' = 'junction';
 
+    /** Pair-mode link arcs (D10): on by default. */
+    @observable public showLinks = true;
+
+    @action
+    public setShowLinks(v: boolean): void {
+        this.showLinks = v;
+    }
+
     /**
      * Anchor-track histogram mode: 'feature' bins breakpoints by the reference
      * transcript's exons/introns/promoter; 'genomic' bins by fixed genomic width.
