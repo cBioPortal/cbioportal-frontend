@@ -20,10 +20,15 @@ import AnchorGeneTrackRuler, {
 import FusionStripList from './components/FusionStripList';
 import ExonRuler from './components/ExonRuler';
 import {
-    resolveComparisonRows,
     orientComparisonRowsTo5p,
     snapBreakpointsToAnchorGene,
     ComparisonRow,
+    AnchorSide,
+    anchorEndpoint,
+    partnerCategory,
+    snapBreakpointsToGeneSide,
+    NO_PARTNER,
+    INTRAGENIC,
 } from './data/comparisonRows';
 import {
     CollapseKind,
@@ -191,11 +196,15 @@ export default class FusionComparisonView extends React.Component<
     // as soon as the tab opens, without requiring the user to first click a row.
     @action.bound ensureDefaultAnchor() {
         const { store } = this.props;
-        if (!store.anchor && store.pairSummaries.length > 0) {
-            store.setAnchor({
-                mode: 'pair',
-                key: store.pairSummaries[0].key,
-            });
+        if (
+            !store.hasAnchorSelection &&
+            !store.seedPending &&
+            store.pairSummaries.length > 0
+        ) {
+            store.setAnchor(
+                { mode: 'pair', key: store.pairSummaries[0].key },
+                { source: 'auto' }
+            );
         }
     }
 
@@ -212,7 +221,9 @@ export default class FusionComparisonView extends React.Component<
             () => {
                 const s = this.props.store;
                 const needsDefaultAnchor =
-                    !s.anchor && s.pairSummaries.length > 0;
+                    !s.hasAnchorSelection &&
+                    !s.seedPending &&
+                    s.pairSummaries.length > 0;
                 const outstanding = this.props.store.outstandingTranscriptRequests
                     .map(r => `${r.build}|${r.symbol}|${r.transcriptId}`)
                     .join(',');
@@ -349,52 +360,63 @@ export default class FusionComparisonView extends React.Component<
     // Correct each row's 5′/3′ using strand + connectionType, the same resolver
     // the single-sample diagram uses. Falls back to the curated ordering for
     // rows whose transcripts haven't loaded yet.
+    // Resolution now happens in the store (D13); these are the rendered rows.
     @computed get resolvedRows(): ComparisonRow[] {
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        this.transcriptsByKey; // observe: re-resolve when transcripts load
-        return resolveComparisonRows(this.props.store.anchorRows, gene => {
-            const t = this.transcriptForGene(gene);
-            return t ? [t] : [];
-        });
+        return this.props.store.anchorRows;
     }
 
-    // Consensus 5′ gene for the pair = the majority resolved 5′ symbol.
+    @computed get isGeneMode(): boolean {
+        return this.props.store.anchor?.mode === 'gene';
+    }
+
+    /** Which half holds the shared anchor ladder. Pair mode: always 5′. */
+    @computed get anchorSide(): AnchorSide {
+        const a = this.props.store.anchor;
+        return a && a.mode === 'gene' ? a.side : '5p';
+    }
+
+    // Gene mode: the chosen gene. Pair mode: the majority resolved 5′ symbol.
     @computed get anchorGene(): string {
-        const { store } = this.props;
-        if (store.anchor && store.anchor.mode === 'gene') {
-            return store.anchor.gene;
-        }
+        const a = this.props.store.anchor;
+        if (a && a.mode === 'gene') return a.gene;
         const resolved = this.resolvedRows;
         if (resolved.length === 0) return '';
         const geneCounts = _.countBy(resolved, r => r.fivePrimeSymbol);
-        return Object.entries(geneCounts).sort((a, b) => b[1] - a[1])[0][0];
+        return Object.entries(geneCounts).sort((x, y) => y[1] - x[1])[0][0];
     }
 
     @computed get anchorTranscript(): TranscriptData | undefined {
         return this.transcriptForGene(this.anchorGene);
     }
 
-    // Orient EVERY row onto that one 5′ gene, then snap breakpoints to the
-    // anchor locus (pattern-B correction) so the anchor track and the strips
-    // share a single coordinate system.
+    // Pair mode: orient every row onto one 5′ gene, then snap (pattern B).
+    // Gene mode: rows are already resolved 5′→3′ and side-filtered; only snap
+    // the anchor-side position into the anchor gene (D20).
     @computed get orientedRows(): ComparisonRow[] {
+        const t = this.anchorTranscript;
+        if (this.isGeneMode) {
+            return t
+                ? snapBreakpointsToGeneSide(
+                      this.resolvedRows,
+                      t.txStart,
+                      t.txEnd,
+                      this.anchorSide
+                  )
+                : this.resolvedRows;
+        }
         const oriented = orientComparisonRowsTo5p(
             this.resolvedRows,
             this.anchorGene
         );
-        const anchorTranscript = this.anchorTranscript;
-        return anchorTranscript
-            ? snapBreakpointsToAnchorGene(
-                  oriented,
-                  anchorTranscript.txStart,
-                  anchorTranscript.txEnd
-              )
+        return t
+            ? snapBreakpointsToAnchorGene(oriented, t.txStart, t.txEnd)
             : oriented;
     }
 
     // The dominant 3′ partner of the resolved anchor — used for the directional
     // 5′→3′ caption over the tracks.
     @computed get partnerGene(): string | null {
+        if (this.isGeneMode) return null;
         const anchorGene = this.anchorGene;
         const partners = this.orientedRows
             .filter(r => r.fivePrimeSymbol === anchorGene && r.threePrimeSymbol)
@@ -437,12 +459,31 @@ export default class FusionComparisonView extends React.Component<
     // proportionally smaller. (Per-sample isoforms longer than the canonical
     // reference simply overflow and get clamped by computeJunctionAlignedLayout.)
     @computed get maxRetainedBp(): { bp5: number; bp3: number } {
-        return {
-            bp5: this.anchorTranscript ? sumBp(this.anchorTranscript.exons) : 0,
-            bp3: this.partnerTranscript
-                ? sumBp(this.partnerTranscript.exons)
-                : 0,
-        };
+        const anchorBp = this.anchorTranscript
+            ? sumBp(this.anchorTranscript.exons)
+            : 0;
+        if (!this.isGeneMode) {
+            return {
+                bp5: anchorBp,
+                bp3: this.partnerTranscript
+                    ? sumBp(this.partnerTranscript.exons)
+                    : 0,
+            };
+        }
+        // Varying partner side: the longest loaded partner transcript, so every
+        // partner fits its half. Partnerless/intragenic rows have no partner.
+        const side = this.anchorSide;
+        const partnerIs5p = side === '3p';
+        let partnerBp = 0;
+        this.orientedRows.forEach(r => {
+            const c = partnerCategory(r, this.anchorGene, side);
+            if (c === NO_PARTNER || c === INTRAGENIC) return;
+            const t = this.transcriptForRow(r, partnerIs5p);
+            if (t) partnerBp = Math.max(partnerBp, sumBp(t.exons));
+        });
+        return side === '5p'
+            ? { bp5: anchorBp, bp3: partnerBp }
+            : { bp5: partnerBp, bp3: anchorBp };
     }
 
     // Map sampleId → studyId from the raw SVs. ComparisonRow only carries
@@ -477,12 +518,21 @@ export default class FusionComparisonView extends React.Component<
             return groupRows(rows, row => {
                 const t5 = this.transcriptForRow(row, true);
                 if (!t5) return `raw:${row.sampleId}`;
-                return exonStructureKey(
+                const key = exonStructureKey(
                     t5,
                     row.anchorBreakpoint,
                     this.transcriptForRow(row, false),
                     row.partnerBreakpoint
                 );
+                // exonStructureKey holds exon numbers only, so different
+                // partners with the same numbers would merge in Gene mode.
+                return this.isGeneMode
+                    ? `${partnerCategory(
+                          row,
+                          this.anchorGene,
+                          this.anchorSide
+                      )}|${key}`
+                    : key;
             });
         }
         // breakpointFeature: one pass over the anchor transcript's features so
@@ -494,7 +544,7 @@ export default class FusionComparisonView extends React.Component<
         const labelByIndex = rows.map(() => 'off-transcript');
         const { features } = assignBreakpointsToFeatures(
             anchorTranscript,
-            rows.map(r => r.anchorBreakpoint)
+            rows.map(r => anchorEndpoint(r, this.anchorSide).breakpoint)
         );
         features.forEach(f =>
             f.members.forEach(m => {
@@ -585,6 +635,7 @@ export default class FusionComparisonView extends React.Component<
         const rows = this.orientedRows;
         const partnerGene = this.partnerGene;
         const partnerTranscript = this.partnerTranscript;
+        const side = this.anchorSide;
         const histogramAnchorTranscript = this.histogramAnchorTranscript;
         const histogramPartnerTranscript = this.histogramPartnerTranscript;
         const anchorPicker = this.renderTranscriptPicker(anchorGene);
@@ -617,6 +668,26 @@ export default class FusionComparisonView extends React.Component<
         const { bp5, bp3 } = this.maxRetainedBp;
         const pxPerBp5p = sharedPxPerBp(bp5, region5W);
         const pxPerBp3p = sharedPxPerBp(bp3, region3W);
+
+        const anchorHalf =
+            side === '5p'
+                ? {
+                      drawX: frame.leftX,
+                      drawW: frame.junctionX - frame.leftX,
+                      labelX: frame.leftX - 10,
+                      labelAnchor: 'end' as const,
+                      fill: COLOR_5PRIME,
+                  }
+                : {
+                      drawX: frame.junctionX + PARTNER_TRACK_GAP,
+                      drawW: frame.rightX - frame.junctionX - PARTNER_TRACK_GAP,
+                      labelX: frame.rightX + 10,
+                      labelAnchor: 'start' as const,
+                      fill: COLOR_3PRIME,
+                  };
+        const anchorBreakpoints = rows.map(
+            r => anchorEndpoint(r, side).breakpoint
+        );
 
         return (
             <div>
@@ -801,7 +872,25 @@ export default class FusionComparisonView extends React.Component<
                         </>
                     )}
                 </div>
-                {anchorTranscript && partnerGene && (
+                {anchorTranscript && this.isGeneMode && (
+                    <div
+                        data-testid="gene-anchor-label"
+                        style={{ fontWeight: 600, margin: '8px 0 4px' }}
+                    >
+                        {anchorGene}{' '}
+                        <span
+                            style={{
+                                color: '#888',
+                                fontWeight: 400,
+                                fontSize: '0.85em',
+                            }}
+                        >
+                            (as {side === '5p' ? '5′' : '3′'} partner — all
+                            partners)
+                        </span>
+                    </div>
+                )}
+                {anchorTranscript && !this.isGeneMode && partnerGene && (
                     <div
                         data-testid="fusion-direction-label"
                         style={{ fontWeight: 600, margin: '8px 0 4px' }}
@@ -877,12 +966,12 @@ export default class FusionComparisonView extends React.Component<
                                     anchorTranscript
                                 }
                                 symbol={anchorGene}
-                                breakpoints={rows.map(r => r.anchorBreakpoint)}
-                                drawX={frame.leftX}
-                                drawW={frame.junctionX - frame.leftX}
-                                labelX={frame.leftX - 10}
-                                labelAnchor="end"
-                                fill={COLOR_5PRIME}
+                                breakpoints={anchorBreakpoints}
+                                drawX={anchorHalf.drawX}
+                                drawW={anchorHalf.drawW}
+                                labelX={anchorHalf.labelX}
+                                labelAnchor={anchorHalf.labelAnchor}
+                                fill={anchorHalf.fill}
                                 mode={store.trackMode}
                                 onSelectBar={
                                     this.props.onFilterCohortBySamples
@@ -938,6 +1027,25 @@ export default class FusionComparisonView extends React.Component<
                                             : undefined
                                     }
                                 />
+                            )}
+                            {this.isGeneMode && (
+                                <text
+                                    data-testid="partners-vary-caption"
+                                    x={
+                                        side === '5p'
+                                            ? (frame.junctionX + frame.rightX) /
+                                              2
+                                            : (frame.leftX + frame.junctionX) /
+                                              2
+                                    }
+                                    y={60}
+                                    textAnchor="middle"
+                                    fontSize={11}
+                                    fontStyle="italic"
+                                    fill="#999"
+                                >
+                                    partners vary — see table
+                                </text>
                             )}
                         </svg>
                     )}
@@ -1004,6 +1112,7 @@ export default class FusionComparisonView extends React.Component<
                     </div>
                     {store.exonMode === 'full' &&
                         store.ladderMode === 'reference' &&
+                        side === '5p' &&
                         anchorTranscript && (
                             <ExonRuler
                                 transcript5p={anchorTranscript}
@@ -1043,8 +1152,16 @@ export default class FusionComparisonView extends React.Component<
                         }
                         exonMode={store.exonMode}
                         ladderMode={store.ladderMode}
-                        referenceTranscript5p={anchorTranscript}
-                        referenceTranscript3p={this.partnerTranscript}
+                        referenceTranscript5p={
+                            side === '5p'
+                                ? anchorTranscript
+                                : this.partnerTranscript
+                        }
+                        referenceTranscript3p={
+                            side === '3p'
+                                ? anchorTranscript
+                                : this.partnerTranscript
+                        }
                     />
                 </div>
                 {expandedRow && (
