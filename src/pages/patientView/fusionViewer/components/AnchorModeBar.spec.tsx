@@ -1,7 +1,8 @@
 import { assert } from 'chai';
 import { mount } from 'enzyme';
 import * as React from 'react';
-import AnchorModeBar from './AnchorModeBar';
+import ReactSelect from 'react-select';
+import AnchorModeBar, { geneOptionFilter } from './AnchorModeBar';
 import { FusionCohortStore } from '../FusionCohortStore';
 
 jest.mock('../data/structuralVariantAdapter', () => ({
@@ -58,5 +59,30 @@ describe('AnchorModeBar', () => {
         const w = mount(<AnchorModeBar store={st} />);
         w.find('[data-testid="anchor-opposite-note"]').simulate('click');
         assert.equal((st.anchor as any).side, '5p');
+    });
+
+    it('geneOptionFilter matches the symbol prefix only, case-insensitively', () => {
+        const alk = { value: 'ALK', label: 'ALK (1088 samples)' };
+        const eml4 = { value: 'EML4', label: 'EML4 (3 samples)' };
+        assert.isTrue(geneOptionFilter(alk, 'al'));
+        assert.isFalse(geneOptionFilter(eml4, 'al'));
+        assert.isFalse(geneOptionFilter(alk, '1'));
+        assert.isFalse(geneOptionFilter(eml4, 'ml'));
+        assert.isTrue(geneOptionFilter(alk, ''));
+        assert.isTrue(geneOptionFilter(eml4, ''));
+    });
+
+    it('selecting an option in the gene picker sets the anchor gene', () => {
+        const st = store();
+        st.setAnchor({ mode: 'gene', gene: 'ALK', side: '3p' });
+        const w = mount(<AnchorModeBar store={st} />);
+        const sel = w.find(ReactSelect);
+        assert.equal((sel.prop('value') as any).value, 'ALK');
+        assert.deepEqual(
+            (sel.prop('options') as any[]).map(o => o.value).sort(),
+            ['ALK', 'EML4', 'KIF5B', 'PTPN3']
+        );
+        (sel.prop('onChange') as any)({ value: 'EML4', label: 'EML4' });
+        assert.equal((st.anchor as any).gene, 'EML4');
     });
 });

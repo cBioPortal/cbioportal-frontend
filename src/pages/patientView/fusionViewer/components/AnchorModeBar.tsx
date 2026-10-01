@@ -2,6 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { ButtonGroup } from 'react-bootstrap';
 import classNames from 'classnames';
+import ReactSelect from 'react-select';
 import { FusionCohortStore } from '../FusionCohortStore';
 
 const segStyle = (active: boolean): React.CSSProperties => ({
@@ -32,6 +33,21 @@ const Seg: React.FC<{
     </button>
 );
 
+/** Type-ahead rule: case-insensitive startsWith on the gene symbol only. */
+export const geneOptionFilter = (
+    option: { value: string },
+    input: string
+): boolean => option.value.toLowerCase().startsWith(input.toLowerCase());
+
+const pickerStyles = {
+    control: (s: any) => ({ ...s, minHeight: 24, fontSize: 11 }),
+    valueContainer: (s: any) => ({ ...s, padding: '0 6px' }),
+    input: (s: any) => ({ ...s, margin: 0, padding: 0 }),
+    dropdownIndicator: (s: any) => ({ ...s, padding: 2 }),
+    option: (s: any) => ({ ...s, fontSize: 11, padding: '4px 8px' }),
+    menu: (s: any) => ({ ...s, zIndex: 10 }),
+};
+
 const label = (text: string) => (
     <span style={{ fontSize: 11, color: '#6c757d', marginLeft: 12 }}>
         {text}
@@ -43,6 +59,10 @@ const AnchorModeBar: React.FC<{ store: FusionCohortStore }> = observer(
     ({ store }) => {
         const a = store.anchor;
         const gene = a && a.mode === 'gene' ? a : undefined;
+        const options = store.geneSummaries.map(g => ({
+            value: g.gene,
+            label: `${g.gene} (${g.sampleCount} samples)`,
+        }));
         const opposite = store.sideRows.oppositeCount;
         return (
             <div
@@ -73,19 +93,24 @@ const AnchorModeBar: React.FC<{ store: FusionCohortStore }> = observer(
                 {gene && (
                     <>
                         {label('Gene')}
-                        <select
+                        <div
                             data-testid="anchor-gene-select"
-                            aria-label="Anchor gene"
-                            value={gene.gene}
-                            onChange={e => store.setAnchorGene(e.target.value)}
-                            style={{ fontSize: 11 }}
+                            style={{ display: 'inline-block', width: 220 }}
                         >
-                            {store.geneSummaries.map(g => (
-                                <option key={g.gene} value={g.gene}>
-                                    {g.gene} ({g.sampleCount} samples)
-                                </option>
-                            ))}
-                        </select>
+                            <ReactSelect
+                                name="anchor-gene-select"
+                                aria-label="Anchor gene"
+                                options={options}
+                                value={options.find(o => o.value === gene.gene)}
+                                isSearchable
+                                isClearable={false}
+                                filterOption={geneOptionFilter}
+                                onChange={(o: any) =>
+                                    o && store.setAnchorGene(o.value)
+                                }
+                                styles={pickerStyles}
+                            />
+                        </div>
                         {label('Side')}
                         <ButtonGroup>
                             <Seg
