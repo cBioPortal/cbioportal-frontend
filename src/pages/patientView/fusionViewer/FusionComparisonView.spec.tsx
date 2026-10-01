@@ -865,14 +865,97 @@ describe('FusionComparisonView link arcs', () => {
 
     it.skip('width change clears hover (WindowStore.size not assignable in tests)', () => {});
 
-    it('hovering an off-track strip leaves everything at rest', () => {
+    function offTrackStore() {
         const store = pairStore();
-        const w = mount(<FusionComparisonView store={store} />);
+        store.setStructuralVariants([
+            ...(store.structuralVariants as any[]),
+            {
+                site1HugoSymbol: 'TMPRSS2',
+                site2HugoSymbol: 'ERG',
+                sampleId: 'S3',
+                site1Position: 50,
+                site2Position: 90_000_000,
+                site1Chromosome: '21',
+                site2Chromosome: '21',
+            },
+        ] as any);
+        store.setAnchor({ mode: 'pair', key: 'ERG::TMPRSS2' });
+        return store;
+    }
+
+    const rowOf = (view: any, id: string) =>
+        view.orientedRows.find((r: any) => r.sampleId === id);
+
+    it('hovering a genuinely off-track strip leaves everything at rest', () => {
+        const w = mount(<FusionComparisonView store={offTrackStore()} />);
         const view = w.instance() as any;
-        view.onRowHover({
-            ...view.orientedRows[0],
-            partnerBreakpoint: 99_999_999,
-        });
+        const row = rowOf(view, 'S3');
+        assert.isDefined(row);
+        assert.isFalse(view.linkData.idByRow.has(row));
+        view.onRowHover(row);
         assert.isUndefined(view.linkHover.matcher);
+    });
+
+    it('strip hover lights its link and bars, dims others', () => {
+        const w = mount(<FusionComparisonView store={pairStore()} />);
+        const view = w.instance() as any;
+        const r1 = rowOf(view, 'S1');
+        const r2 = rowOf(view, 'S2');
+        const g1 = view.linkData.groups.find(
+            (g: any) => g.id === view.linkData.idByRow.get(r1)
+        );
+        const g2 = view.linkData.groups.find(
+            (g: any) => g.id === view.linkData.idByRow.get(r2)
+        );
+        assert.notEqual(g1.id, g2.id);
+        view.onRowHover(r1);
+        assert.isTrue(view.linkHover.matcher(g1));
+        assert.isFalse(view.linkHover.matcher(g2));
+        assert.equal(view.rowOpacity(r1), 1);
+        assert.equal(view.rowOpacity(r2), 0.2);
+        assert.equal(view.barOpacity('5p')(g1.key5), 1);
+        assert.equal(view.barOpacity('5p')(g2.key5), 0.2);
+        view.onRowHover(undefined);
+        assert.isUndefined(view.barOpacity('5p')(g1.key5));
+    });
+
+    it('collapsed-group hover lights the union of member links (D22)', () => {
+        const w = mount(<FusionComparisonView store={pairStore()} />);
+        const view = w.instance() as any;
+        const r1 = rowOf(view, 'S1');
+        const r2 = rowOf(view, 'S2');
+        const ids = [r1, r2].map(r => view.linkData.idByRow.get(r));
+        const group = { representative: r1, members: [r1, r2] } as any;
+        view.onRowHover(r1, group);
+        view.linkData.groups.forEach((g: any) =>
+            assert.isTrue(view.linkHover.matcher(g), g.id)
+        );
+        assert.equal(view.rowOpacity(r2, group), 1);
+        assert.notEqual(ids[0], ids[1]);
+        // single-row hover must NOT light the second link
+        view.onRowHover(r1);
+        assert.isFalse(
+            view.linkHover.matcher(
+                view.linkData.groups.find((g: any) => g.id === ids[1])
+            )
+        );
+    });
+
+    it('Gene mode keeps strip-mode controls; Pair mode has both, links group isolated', () => {
+        const gene = pairStore();
+        gene.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
+        const wg = mount(<FusionComparisonView store={gene} />);
+        assert.isTrue(
+            wg.find('button[data-testid="stripmode-dense"]').exists()
+        );
+        assert.isFalse(wg.find('button[data-testid="links-toggle"]').exists());
+        const wp = mount(<FusionComparisonView store={pairStore()} />);
+        assert.isTrue(
+            wp.find('button[data-testid="stripmode-dense"]').exists()
+        );
+        const links = wp.find('button[data-testid="links-toggle"]');
+        assert.lengthOf(links, 1);
+        const grp = links.closest('.btn-group');
+        assert.lengthOf(grp.find('button'), 1);
     });
 });

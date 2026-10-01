@@ -867,49 +867,49 @@ export default class FusionComparisonView extends React.Component<
                                 'Show arcs joining each 5′ breakpoint location to the 3′ location it fused with',
                                 () => store.setShowLinks(!store.showLinks)
                             )}
-                            <span
-                                style={{
-                                    fontSize: 11,
-                                    color: '#6c757d',
-                                    marginLeft: 12,
-                                }}
-                            >
-                                Rows
-                            </span>
-                            <ButtonGroup>
-                                {this.segmentButton(
-                                    store.stripMode === 'sample',
-                                    'stripmode-sample',
-                                    'Per sample',
-                                    'One labeled row per sample',
-                                    () => store.setStripMode('sample')
-                                )}
-                                {this.segmentButton(
-                                    store.stripMode === 'dense',
-                                    'stripmode-dense',
-                                    'Dense',
-                                    'One thin row per sample — hover for the sample, click to expand',
-                                    () => store.setStripMode('dense')
-                                )}
-                                {this.segmentButton(
-                                    store.stripMode === 'collapsed',
-                                    'stripmode-collapsed',
-                                    'Collapsed',
-                                    'Group structurally-identical products, ranked ×N; click a group to filter the cohort',
-                                    () => store.setStripMode('collapsed')
-                                )}
-                            </ButtonGroup>
-                            <span
-                                style={{
-                                    fontSize: 11,
-                                    color: '#6c757d',
-                                    marginLeft: 12,
-                                }}
-                            >
-                                Exons
-                            </span>
                         </ButtonGroup>
                     )}
+                    <span
+                        style={{
+                            fontSize: 11,
+                            color: '#6c757d',
+                            marginLeft: 12,
+                        }}
+                    >
+                        Rows
+                    </span>
+                    <ButtonGroup>
+                        {this.segmentButton(
+                            store.stripMode === 'sample',
+                            'stripmode-sample',
+                            'Per sample',
+                            'One labeled row per sample',
+                            () => store.setStripMode('sample')
+                        )}
+                        {this.segmentButton(
+                            store.stripMode === 'dense',
+                            'stripmode-dense',
+                            'Dense',
+                            'One thin row per sample — hover for the sample, click to expand',
+                            () => store.setStripMode('dense')
+                        )}
+                        {this.segmentButton(
+                            store.stripMode === 'collapsed',
+                            'stripmode-collapsed',
+                            'Collapsed',
+                            'Group structurally-identical products, ranked ×N; click a group to filter the cohort',
+                            () => store.setStripMode('collapsed')
+                        )}
+                    </ButtonGroup>
+                    <span
+                        style={{
+                            fontSize: 11,
+                            color: '#6c757d',
+                            marginLeft: 12,
+                        }}
+                    >
+                        Exons
+                    </span>
                     <ButtonGroup>
                         {this.segmentButton(
                             store.exonMode === 'retained',
