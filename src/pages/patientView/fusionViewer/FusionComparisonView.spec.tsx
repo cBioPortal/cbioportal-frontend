@@ -128,7 +128,7 @@ describe('FusionComparisonView', () => {
         const instance = wrapper.instance() as any;
 
         // Rows for this pair anchor, in the same order the ruler bins them.
-        const rows = store.comparisonRows;
+        const rows = store.anchorRows;
         const sampleIds = rows.map(r => r.sampleId);
         // Click a bar whose members are row indices 0 and 1.
         instance.handleSelectBar(

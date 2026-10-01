@@ -1,4 +1,5 @@
 import { assert } from 'chai';
+import { autorun } from 'mobx';
 import { FusionCohortStore } from './FusionCohortStore';
 import { FusionEvent } from './data/types';
 import { ComparisonAnchor } from './data/comparisonRows';
@@ -313,7 +314,7 @@ describe('FusionCohortStore', () => {
                 }) as any,
             ]);
             store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
-            const rows = store.comparisonRows;
+            const rows = store.anchorRows;
             assert.equal(rows.length, 2);
             assert.equal(rows[0].anchorBreakpoint, 100);
         });
@@ -592,15 +593,17 @@ describe('FusionCohortStore pair facet', () => {
             mode: 'pair',
             key: 'ERG::TMPRSS2',
         });
-        assert.equal(store.comparisonRows.length, 2);
+        assert.equal(store.anchorRows.length, 2);
     });
 
-    it('re-anchors an orphaned driver anchor too', () => {
+    it('re-anchors an orphaned gene anchor too', () => {
         store.setAnchor({ mode: 'gene', gene: 'CCDC6', side: '5p' });
         store.selectOnlyFusionPairKey('ERG::TMPRSS2');
+        // Gene mode falls back to the most recurrent surviving GENE (side auto).
         assert.deepEqual(store.anchor, {
-            mode: 'pair',
-            key: 'ERG::TMPRSS2',
+            mode: 'gene',
+            gene: 'ERG',
+            side: '3p',
         });
     });
 
@@ -668,6 +671,143 @@ describe('FusionCohortStore pair facet', () => {
                 store.histogramTranscriptForGene('GENE_A')!.transcriptId,
                 'GENE_A2'
             );
+        });
+    });
+
+    describe('gene anchor pipeline', () => {
+        const alk = (sample: string, five: string, three: string | null) =>
+            makeEvent({
+                id: `${sample}-${five}-${three}`,
+                tumorId: sample,
+                gene1: { ...makeEvent().gene1, symbol: five },
+                gene2: three ? { ...makeEvent().gene2!, symbol: three } : null,
+            });
+
+        beforeEach(() => {
+            store.setStructuralVariants([
+                alk('S1', 'EML4', 'ALK'),
+                alk('S2', 'KIF5B', 'ALK'),
+                alk('S3', 'ALK', 'PTPN3'),
+                alk('S4', 'ALK', null),
+                alk('S5', 'TMPRSS2', 'ERG'),
+            ] as any);
+        });
+
+        it('gene mode shows only events involving the gene, on the auto side', () => {
+            store.setAnchor({ mode: 'gene', gene: 'ALK', side: 'auto' });
+            assert.deepEqual(store.anchor, {
+                mode: 'gene',
+                gene: 'ALK',
+                side: '3p',
+            });
+            assert.sameMembers(
+                store.anchorRows.map(r => r.sampleId),
+                ['S1', 'S2', 'S4']
+            );
+            assert.equal(store.sideRows.oppositeCount, 1);
+            assert.notInclude(
+                store.anchorRows.map(r => r.sampleId),
+                'S5'
+            );
+        });
+
+        it('opposite-only gene stays selected (D14)', () => {
+            store.setAnchor({ mode: 'gene', gene: 'PTPN3', side: '5p' });
+            assert.deepEqual(store.anchor, {
+                mode: 'gene',
+                gene: 'PTPN3',
+                side: '5p',
+            });
+            assert.lengthOf(store.anchorRows, 0);
+            assert.equal(store.sideRows.oppositeCount, 1);
+        });
+
+        it('partner summaries ignore the partner facet; facet narrows rows', () => {
+            store.setAnchor({ mode: 'gene', gene: 'ALK', side: '3p' });
+            store.togglePartnerFacet('EML4');
+            assert.deepEqual(
+                store.anchorRows.map(r => r.sampleId),
+                ['S1']
+            );
+            assert.sameMembers(
+                store.partnerSummaries.map(p => p.category),
+                ['EML4', 'KIF5B', '(no partner)']
+            );
+        });
+
+        it('entering gene mode clears pair keys; gene change clears partner facet', () => {
+            store.selectOnlyFusionPairKey('ALK::EML4');
+            store.setAnchor({ mode: 'gene', gene: 'ALK', side: 'auto' });
+            assert.deepEqual(store.filter.fusionPairKeys, []);
+            store.togglePartnerFacet('KIF5B');
+            store.setAnchorGene('ERG');
+            assert.isUndefined(store.filter.anchorPartners);
+        });
+
+        it('side change keeps the facet; absent entries are ignored, not deleted', () => {
+            store.setAnchor({ mode: 'gene', gene: 'ALK', side: '3p' });
+            store.togglePartnerFacet('EML4');
+            store.setAnchorSide('5p');
+            assert.deepEqual(store.effectiveAnchorPartners, []);
+            assert.deepEqual(store.filter.anchorPartners, {
+                gene: 'ALK',
+                partners: ['EML4'],
+            });
+            store.setAnchorSide('3p');
+            assert.deepEqual(store.effectiveAnchorPartners, ['EML4']);
+        });
+
+        it('a fallback gene does not inherit another gene\u2019s partner selection (D30)', () => {
+            store.setStructuralVariants([
+                alk('S1', 'EML4', 'ALK'),
+                alk('S6', 'EML4', 'RET'),
+                alk('S7', 'KIF5B', 'RET'),
+            ] as any);
+            store.setAnchor({ mode: 'gene', gene: 'ALK', side: '3p' });
+            store.togglePartnerFacet('EML4');
+            store.setGenePartnerFilter(['RET']); // removes every ALK event
+            // Fallback = most recurrent surviving gene: RET (2 samples), which
+            // also has an EML4 partner -- the ALK-scoped selection must not apply.
+            assert.equal((store.anchor as any).gene, 'RET');
+            assert.deepEqual(store.effectiveAnchorPartners, []);
+            assert.lengthOf(store.anchorRows, 2);
+        });
+
+        it('round trip Pair \u2192 Gene \u2192 Pair returns to an unfiltered pair table', () => {
+            store.selectOnlyFusionPairKey('ALK::EML4');
+            store.setAnchorMode('gene');
+            store.setAnchorMode('pair');
+            assert.deepEqual(store.filter.fusionPairKeys, []);
+            assert.equal(store.anchor!.mode, 'pair');
+            assert.isAbove(store.pairSummariesForFacet.length, 1);
+        });
+
+        it('only user picks set anchorPickedByUser', () => {
+            store.setAnchor(
+                { mode: 'pair', key: 'ALK::EML4' },
+                { source: 'auto' }
+            );
+            assert.isFalse((store as any).anchorPickedByUser);
+            store.setAnchor({ mode: 'pair', key: 'ALK::EML4' });
+            assert.isTrue((store as any).anchorPickedByUser);
+        });
+
+        it('identity is decided once per change (acyclic)', () => {
+            const spy = jest.spyOn(
+                require('./data/comparisonRows'),
+                'buildComparisonRows'
+            );
+            store.setAnchor({ mode: 'gene', gene: 'ALK', side: '3p' });
+            spy.mockClear();
+            // Unobserved computeds recompute on every read, so observe them
+            // the way the view does; each pipeline step then runs once.
+            const dispose = autorun(() => {
+                store.anchorRows;
+                store.anchor;
+            });
+            assert.isAtMost(spy.mock.calls.length, 1);
+            dispose();
+            spy.mockRestore();
         });
     });
 });

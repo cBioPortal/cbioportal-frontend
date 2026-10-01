@@ -153,7 +153,7 @@ describe('FusionRecurrenceTable', () => {
             mode: 'pair',
             key: 'ERG::TMPRSS2',
         });
-        assert.isAbove(store.comparisonRows.length, 0);
+        assert.isAbove(store.anchorRows.length, 0);
     });
     it('shows only the first page of pairs when the cohort has more', () => {
         const store = storeWithManyPairs(35);
