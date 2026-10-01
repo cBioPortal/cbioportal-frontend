@@ -8,6 +8,10 @@ import FusionComparisonView, {
 import { sampleFusionViewerHref } from './data/cohortLinks';
 import { FusionCohortStore } from './FusionCohortStore';
 import { TranscriptData } from './data/types';
+import AnchorGeneTrackRuler from './components/AnchorGeneTrackRuler';
+import FusionStripList from './components/FusionStripList';
+import { computeComparisonFrame } from './components/comparisonFrame';
+import WindowStore from 'shared/components/window/WindowStore';
 import { fetchTranscriptsForGeneWithFallback } from './data/genomeNexusTranscriptService';
 
 jest.mock('./data/genomeNexusTranscriptService', () => ({
@@ -622,15 +626,129 @@ describe('FusionComparisonView gene mode', () => {
         );
     });
 
-    it('3′ anchor scale goes to bp3; varying partner side uses the longest partner transcript', () => {
+    const exonSum = (t: TranscriptData) =>
+        t.exons.reduce((n, e) => n + Math.max(1, e.end - e.start), 0);
+    const withExons = (
+        gene: string,
+        exons: [number, number][]
+    ): TranscriptData => ({
+        ...tx(gene),
+        exons: exons.map(([start, end], i) => ({
+            number: i + 1,
+            start,
+            end,
+        })),
+    });
+    const alk3pStore = () => {
         const store = alkStore();
+        store.mergeTranscripts([
+            [
+                'GRCh38|KIF5B|',
+                withExons('KIF5B', [
+                    [0, 300],
+                    [400, 900],
+                ]),
+            ],
+            ['GRCh38|EML4|', withExons('EML4', [[0, 150]])],
+            [
+                'GRCh38|ALK|',
+                withExons('ALK', [
+                    [0, 70],
+                    [200, 300],
+                    [400, 500],
+                ]),
+            ],
+        ]);
         store.setAnchor({ mode: 'gene', gene: 'ALK', side: '3p' });
+        return store;
+    };
+
+    it('3′ anchor scale goes to bp3; 5′ scale is the longest partner transcript', () => {
+        const store = alk3pStore();
         const view = mount(
             <FusionComparisonView store={store} />
         ).instance() as any;
         const { bp5, bp3 } = view.maxRetainedBp;
-        assert.isAbove(bp3, 0);
-        assert.isAbove(bp5, 0);
+        assert.equal(bp3, exonSum(store.transcriptForGene('ALK')!));
+        assert.equal(bp5, exonSum(store.transcriptForGene('KIF5B')!));
+        assert.notEqual(bp3, bp5);
+    });
+
+    it('3′ anchor ruler sits in the right half with 3′ breakpoints', () => {
+        const store = alk3pStore();
+        const wrapper = mount(<FusionComparisonView store={store} />);
+        const view = wrapper.instance() as any;
+        const width = Math.max(900, WindowStore.size.width - 90);
+        const frame = computeComparisonFrame(width);
+        const ruler = wrapper
+            .find(AnchorGeneTrackRuler)
+            .filterWhere(n => n.prop('symbol') === 'ALK');
+        assert.lengthOf(ruler, 1);
+        assert.equal(ruler.prop('drawX'), frame.junctionX + 8);
+        assert.equal(ruler.prop('labelAnchor'), 'start');
+        const expected = view.orientedRows.map((r: any) => r.partnerBreakpoint);
+        assert.sameMembers(expected, [450, 250]);
+        assert.deepEqual(ruler.prop('breakpoints'), expected);
+    });
+
+    it('strip list gets the anchor transcript in the 3′ reference slot only', () => {
+        const store = alk3pStore();
+        const wrapper = mount(<FusionComparisonView store={store} />);
+        const strips = wrapper.find(FusionStripList);
+        assert.equal(
+            strips.prop('referenceTranscript3p'),
+            store.transcriptForGene('ALK')
+        );
+        assert.isUndefined(strips.prop('referenceTranscript5p'));
+    });
+
+    function collapseView(alkPositions: [number, number]) {
+        const store = new FusionCohortStore();
+        store.setStructuralVariants(
+            [
+                ['EML4', 'S1', alkPositions[0]],
+                ['KIF5B', 'S2', alkPositions[1]],
+            ].map(([g, id, pos]) => ({
+                site1HugoSymbol: g,
+                site2HugoSymbol: 'ALK',
+                sampleId: id,
+                site1Position: 50,
+                site2Position: pos,
+                site1Chromosome: '2',
+                site2Chromosome: '2',
+            })) as any
+        );
+        store.mergeTranscripts([
+            ['GRCh38|ALK|', tx('ALK')],
+            ['GRCh38|EML4|', tx('EML4')],
+            ['GRCh38|KIF5B|', tx('KIF5B')],
+        ]);
+        store.setAnchor({ mode: 'gene', gene: 'ALK', side: '3p' });
+        return {
+            store,
+            view: mount(
+                <FusionComparisonView store={store} />
+            ).instance() as any,
+        };
+    }
+
+    it('exon-structure collapse keeps different partners apart in Gene mode', () => {
+        const { store, view } = collapseView([450, 450]);
+        store.setCollapseKindOverride('exonStructure');
+        const keys = view.collapsedGroups.map((g: any) => g.key).sort();
+        assert.lengthOf(keys, 2);
+        assert.match(keys[0], /^EML4\|/);
+        assert.match(keys[1], /^KIF5B\|/);
+    });
+
+    it('breakpoint-feature collapse groups by the ALK (3′) breakpoint', () => {
+        const { store, view } = collapseView([450, 250]);
+        store.setCollapseKindOverride('breakpointFeature');
+        // Partner breakpoints are identical (50); only the ALK side differs.
+        assert.lengthOf(view.collapsedGroups, 2);
+        const same = collapseView([450, 450]);
+        same.store.setCollapseKindOverride('breakpointFeature');
+        assert.lengthOf(same.view.collapsedGroups, 1);
     });
 
     it.skip('does not replace a pending seed with an auto pair anchor', () => {
