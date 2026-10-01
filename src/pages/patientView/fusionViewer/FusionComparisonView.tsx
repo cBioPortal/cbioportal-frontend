@@ -58,6 +58,7 @@ import {
 import {
     buildLinkGroups,
     LinkGroup,
+    LinkMatcher,
     litBarKeys,
     matchBar,
     matchLinkIds,
@@ -547,12 +548,23 @@ export default class FusionComparisonView extends React.Component<
               groups: LinkGroup[];
               rowLinkIds: (string | undefined)[];
               idByRow: Map<ComparisonRow, string>;
+              groupById: Map<string, LinkGroup>;
           }
         | undefined {
         const { store } = this.props;
         const t5 = this.histogramAnchorTranscript;
         const t3 = this.histogramPartnerTranscript;
-        if (this.isGeneMode || !store.showLinks || !t5 || !t3) return undefined;
+        if (
+            this.isGeneMode ||
+            !store.showLinks ||
+            !t5 ||
+            !t3 ||
+            // each ruler (and so each arc end) renders only with its canonical
+            // transcript; histogram overrides alone must not draw arcs
+            !this.anchorTranscript ||
+            !this.partnerTranscript
+        )
+            return undefined;
         const f = this.frame;
         const layout5 = this.layoutFor(t5, f.leftX, f.junctionX - f.leftX);
         const layout3 = this.layoutFor(
@@ -567,7 +579,8 @@ export default class FusionComparisonView extends React.Component<
             const id = rowLinkIds[i];
             if (id) idByRow.set(r, id);
         });
-        return { groups, rowLinkIds, idByRow };
+        const groupById = new Map(groups.map(g => [g.id, g]));
+        return { groups, rowLinkIds, idByRow, groupById };
     }
 
     @computed get litBars():
@@ -578,14 +591,20 @@ export default class FusionComparisonView extends React.Component<
         return m && d ? litBarKeys(d.groups, m) : undefined;
     }
 
-    barOpacity = (side: '5p' | '3p') => (key: string): number | undefined => {
-        const lit = this.litBars;
+    private barOpacityFrom = (
+        lit: { lit5: Set<string>; lit3: Set<string> } | undefined,
+        side: '5p' | '3p'
+    ) => (key: string): number | undefined => {
         if (!lit) return undefined;
         return (side === '5p' ? lit.lit5 : lit.lit3).has(key) ? 1 : 0.2;
     };
 
+    barOpacity = (side: '5p' | '3p') => this.barOpacityFrom(this.litBars, side);
+
     onBarHover = (side: '5p' | '3p') => (key: string | undefined): void => {
-        this.linkHover.set(key ? matchBar(side, key) : undefined);
+        const m = key ? matchBar(side, key) : undefined;
+        // a bar with no links must not start a hover (it would dim everything)
+        this.linkHover.set(m && this.linkData?.groups.some(m) ? m : undefined);
     };
 
     private idsFor(row: ComparisonRow, group?: CollapsedGroup): string[] {
@@ -602,17 +621,21 @@ export default class FusionComparisonView extends React.Component<
         this.linkHover.set(ids.length ? matchLinkIds(ids) : undefined);
     };
 
-    rowOpacity = (row: ComparisonRow, group?: CollapsedGroup): number => {
-        const m = this.linkHover.matcher;
+    private rowOpacityFrom = (m: LinkMatcher | undefined) => (
+        row: ComparisonRow,
+        group?: CollapsedGroup
+    ): number => {
         const d = this.linkData;
         if (!m || !d) return 1;
-        const byId = new Map(d.groups.map(g => [g.id, g]));
         const hit = this.idsFor(row, group).some(id => {
-            const g = byId.get(id);
+            const g = d.groupById.get(id);
             return !!g && m(g);
         });
         return hit ? 1 : 0.2;
     };
+
+    rowOpacity = (row: ComparisonRow, group?: CollapsedGroup): number =>
+        this.rowOpacityFrom(this.linkHover.matcher)(row, group);
 
     // Map sampleId → studyId from the raw SVs. ComparisonRow only carries
     // sampleId (via FusionEvent.tumorId), but the studyView sample-identifier
@@ -792,6 +815,11 @@ export default class FusionComparisonView extends React.Component<
         // @observer render makes the layout reflow on window resize with no
         // extra wiring.
         const contentWidth = this.contentWidth;
+        // Read hover state once here: these reads make the view re-render on
+        // hover, and the children's opacity callbacks close over them.
+        const lit = this.litBars;
+        const matcher = this.linkHover.matcher;
+        const linksOn = !!this.linkData;
         // Responsive strip-list height: fill most of the window so more samples
         // are visible at once (was a fixed 500px).
         const stripViewportHeight = Math.max(
@@ -1125,8 +1153,8 @@ export default class FusionComparisonView extends React.Component<
                                 fill={anchorHalf.fill}
                                 mode={store.trackMode}
                                 barOpacity={
-                                    this.linkData
-                                        ? this.barOpacity('5p')
+                                    linksOn
+                                        ? this.barOpacityFrom(lit, '5p')
                                         : undefined
                                 }
                                 onBarHover={
@@ -1172,8 +1200,8 @@ export default class FusionComparisonView extends React.Component<
                                     fill={COLOR_3PRIME}
                                     mode={store.trackMode}
                                     barOpacity={
-                                        this.linkData
-                                            ? this.barOpacity('3p')
+                                        linksOn
+                                            ? this.barOpacityFrom(lit, '3p')
                                             : undefined
                                     }
                                     onBarHover={
@@ -1225,7 +1253,7 @@ export default class FusionComparisonView extends React.Component<
                             groups={this.linkData.groups}
                             width={contentWidth}
                             height={ARC_BAND_HEIGHT}
-                            matcher={this.linkHover.matcher}
+                            matcher={matcher}
                             onHover={g =>
                                 this.linkHover.set(
                                     g ? matchLinkIds([g.id]) : undefined
@@ -1310,7 +1338,9 @@ export default class FusionComparisonView extends React.Component<
                             />
                         )}
                     <FusionStripList
-                        rowOpacity={this.linkData ? this.rowOpacity : undefined}
+                        rowOpacity={
+                            linksOn ? this.rowOpacityFrom(matcher) : undefined
+                        }
                         onRowHover={this.linkData ? this.onRowHover : undefined}
                         anchorSide={side}
                         rows={rows}

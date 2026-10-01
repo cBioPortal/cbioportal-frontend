@@ -863,8 +863,6 @@ describe('FusionComparisonView link arcs', () => {
         assert.isUndefined(view.linkHover.matcher);
     });
 
-    it.skip('width change clears hover (WindowStore.size not assignable in tests)', () => {});
-
     function offTrackStore() {
         const store = pairStore();
         store.setStructuralVariants([
@@ -957,5 +955,50 @@ describe('FusionComparisonView link arcs', () => {
         assert.lengthOf(links, 1);
         const grp = links.closest('.btn-group');
         assert.lengthOf(grp.find('button'), 1);
+    });
+
+    it('hovering a bar with no links leaves everything at rest', () => {
+        const store = pairStore();
+        store.setStructuralVariants([
+            ...(store.structuralVariants as any[]),
+            {
+                site1HugoSymbol: 'TMPRSS2',
+                site2HugoSymbol: 'ERG',
+                sampleId: 'S4',
+                site1Position: 450,
+                site2Position: 90_000_000,
+                site1Chromosome: '21',
+                site2Chromosome: '21',
+            },
+        ] as any);
+        store.setAnchor({ mode: 'pair', key: 'ERG::TMPRSS2' });
+        const w = mount(<FusionComparisonView store={store} />);
+        const view = w.instance() as any;
+        assert.isFalse(
+            view.linkData.groups.some((g: any) => g.key5 === 'exon:E3')
+        );
+        view.onBarHover('5p')('exon:E3');
+        assert.isUndefined(view.linkHover.matcher);
+        assert.isUndefined(view.barOpacity('5p')('exon:E1'));
+        // a bar that does have links still sets a matcher
+        view.onBarHover('5p')('exon:E1');
+        assert.isDefined(view.linkHover.matcher);
+    });
+
+    it('no arcs when only the histogram override (not the canonical) partner transcript exists', () => {
+        const store = pairStore();
+        store.setTranscriptsByKey(
+            new Map([['GRCh38|TMPRSS2|', tx('TMPRSS2')]])
+        );
+        store.setTranscriptOptionsByGene(
+            new Map([[`${store.genomeBuild}|ERG`, [tx('ERG')]]])
+        );
+        store.setHistogramTranscript('ERG', 'ERG');
+        const w = mount(<FusionComparisonView store={store} />);
+        const view = w.instance() as any;
+        assert.isDefined(view.histogramPartnerTranscript);
+        assert.isUndefined(view.partnerTranscript);
+        assert.isFalse(w.find('[data-testid="link-arcs"]').exists());
+        assert.isUndefined(view.linkData);
     });
 });

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { FrameStatus } from '../data/types';
-import { LinkGroup, LinkMatcher } from '../data/linkAggregation';
+import { LinkGroup, LinkMatcher, slotLabel } from '../data/linkAggregation';
 
 export const ARC_BAND_HEIGHT = 120;
 export const FRAME_LINK_COLORS: Record<FrameStatus, string> = {
@@ -63,7 +63,8 @@ const BreakpointLinkArcs: React.FC<BreakpointLinkArcsProps> = ({
                         onMouseLeave={() => onHover(undefined)}
                     >
                         <title>
-                            {g.key5} → {g.key3} · {g.sampleCount} sample
+                            {slotLabel(g.key5)} → {slotLabel(g.key3)} ·{' '}
+                            {g.sampleCount} sample
                             {g.sampleCount === 1 ? '' : 's'} · {g.frame}
                         </title>
                     </path>

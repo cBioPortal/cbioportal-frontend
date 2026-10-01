@@ -405,4 +405,29 @@ describe('FusionStripList linked hover', () => {
         });
         assert.isUndefined(calls[calls.length - 1]);
     });
+
+    it('clears hover when mode or exonMode changes', () => {
+        const calls: any[] = [];
+        const w = mount(
+            <FusionStripList
+                rows={[lone]}
+                transcriptForRow={() => alkTx}
+                width={1000}
+                pxPerBp5p={0.2}
+                pxPerBp3p={0.2}
+                alignment="junction"
+                mode="sample"
+                onRowHover={(r: any) => calls.push(r)}
+            />
+        );
+        const strip = () => w.find('g[data-testid="product-strip"]').first();
+        strip().simulate('mouseenter');
+        assert.strictEqual(calls[calls.length - 1], lone);
+        w.setProps({ mode: 'dense' });
+        assert.isUndefined(calls[calls.length - 1]);
+        strip().simulate('mouseenter');
+        assert.strictEqual(calls[calls.length - 1], lone);
+        w.setProps({ exonMode: 'full' });
+        assert.isUndefined(calls[calls.length - 1]);
+    });
 });

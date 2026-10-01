@@ -89,3 +89,25 @@ export function litBarKeys(
     });
     return { lit5, lit3 };
 }
+
+/** Human label for a slot key (feature `kind:label` or `bin:<idx>`). */
+export function slotLabel(key: string): string {
+    const i = key.indexOf(':');
+    if (i < 0) return key;
+    const kind = key.slice(0, i);
+    const label = key.slice(i + 1);
+    switch (kind) {
+        case 'exon':
+            return label;
+        case 'intron':
+            return `intron ${label}`;
+        case 'promoter':
+            return 'promoter';
+        case 'downstream':
+            return 'downstream';
+        case 'bin':
+            return 'genomic bin';
+        default:
+            return key;
+    }
+}
