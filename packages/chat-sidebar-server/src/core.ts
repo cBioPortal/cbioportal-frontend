@@ -36,10 +36,10 @@ const bedrock = createAmazonBedrock({
 
 const BEDROCK_MODEL_ID = process.env.BEDROCK_MODEL_ID;
 
-// Starters always run on this small Bedrock model, whatever the user picked
-// for the chat itself.
-const STARTERS_MODEL_ID =
-    process.env.STARTERS_MODEL_ID ||
+// Suggestions (welcome starters and follow-ups) always run on this small
+// Bedrock model, whatever the user picked for the chat itself.
+const SUGGESTIONS_MODEL_ID =
+    process.env.SUGGESTIONS_MODEL_ID ||
     'us.anthropic.claude-haiku-4-5-20251001-v1:0';
 
 // Direct Anthropic and Vertex access currently use Sonnet 5.
@@ -87,6 +87,16 @@ const LOCAL_REPORT_PROMPT_TEXT = readFileSync(
 );
 const LOCAL_STARTERS_PROMPT_TEXT = readFileSync(
     join(__dirname, 'startersPrompt.md'),
+    'utf-8'
+);
+const LOCAL_FOLLOWUPS_PROMPT_TEXT = readFileSync(
+    join(__dirname, 'followupsPrompt.md'),
+    'utf-8'
+);
+// What the assistant can and can't do, shared by the starters and follow-ups
+// prompts so both suggest only what it can deliver.
+const CAPABILITIES_PROMPT_TEXT = readFileSync(
+    join(__dirname, 'capabilitiesPrompt.md'),
     'utf-8'
 );
 
@@ -387,13 +397,22 @@ export async function runTitle(text: string, model?: string): Promise<string> {
     return title.trim().slice(0, MAX_TITLE_CHARS);
 }
 
+const SuggestionSchema = z.object({ title: z.string(), prompt: z.string() });
+
 const StartersSchema = z.object({
-    suggestions: z
-        .array(z.object({ title: z.string(), prompt: z.string() }))
-        .length(3),
+    suggestions: z.array(SuggestionSchema).length(3),
 });
 
-export type Starter = z.infer<typeof StartersSchema>['suggestions'][number];
+export type Suggestion = z.infer<typeof SuggestionSchema>;
+
+// The page the user is on, appended to a suggestions system prompt.
+function formatPageSection(href: string, details: unknown): string {
+    return `## Current page\n\nURL: ${href}\n\nDetails (JSON):\n${JSON.stringify(
+        details,
+        null,
+        2
+    )}`;
+}
 
 // Welcome-screen starters for the page the user is on. The page snapshot rides
 // in the system prompt; the user turn only asks for them. No tools, no
@@ -401,14 +420,13 @@ export type Starter = z.infer<typeof StartersSchema>['suggestions'][number];
 export async function runStarters(
     href: string,
     details: unknown
-): Promise<{ suggestions: Starter[] }> {
-    const system = `${LOCAL_STARTERS_PROMPT_TEXT}\n\n## Current page\n\nURL: ${href}\n\nDetails (JSON):\n${JSON.stringify(
-        details,
-        null,
-        2
+): Promise<{ suggestions: Suggestion[] }> {
+    const system = `${LOCAL_STARTERS_PROMPT_TEXT}\n\n${CAPABILITIES_PROMPT_TEXT}\n\n${formatPageSection(
+        href,
+        details
     )}`;
     const { output } = await generateText({
-        model: bedrock(STARTERS_MODEL_ID),
+        model: bedrock(SUGGESTIONS_MODEL_ID),
         system,
         messages: [
             { role: 'user', content: 'Suggest starters for this page.' },
@@ -416,4 +434,49 @@ export async function runStarters(
         output: Output.object({ schema: StartersSchema }),
     });
     return { suggestions: output.suggestions };
+}
+
+const FOLLOWUP_COUNT = 3;
+
+export interface FollowupsInput {
+    question: string;
+    answer: string;
+    href: string;
+    details: unknown;
+}
+
+// Follow-ups for the latest exchange on the page the user is on, yielded one
+// at a time as each is complete. Lean like the starters call: no tools, no
+// reasoning, and only the exchange the client sends.
+export async function* runFollowups(
+    { question, answer, href, details }: FollowupsInput,
+    abortSignal: AbortSignal
+): AsyncGenerator<Suggestion> {
+    const system = `${LOCAL_FOLLOWUPS_PROMPT_TEXT}\n\n${CAPABILITIES_PROMPT_TEXT}\n\n${formatPageSection(
+        href,
+        details
+    )}`;
+    // streamText reports failures here rather than throwing.
+    let error: unknown;
+    const result = streamText({
+        model: bedrock(SUGGESTIONS_MODEL_ID),
+        system,
+        messages: [
+            {
+                role: 'user',
+                content: `## Latest exchange\n\nUser:\n${question}\n\nAssistant:\n${answer}\n\nSuggest follow-ups.`,
+            },
+        ],
+        output: Output.array({ element: SuggestionSchema }),
+        abortSignal,
+        onError: event => {
+            error = event.error;
+        },
+    });
+    let count = 0;
+    for await (const suggestion of result.elementStream) {
+        yield suggestion;
+        if (++count === FOLLOWUP_COUNT) return;
+    }
+    if (error !== undefined) throw error;
 }

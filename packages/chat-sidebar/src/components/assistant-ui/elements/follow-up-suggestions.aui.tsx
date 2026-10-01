@@ -3,15 +3,18 @@
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-    getPendingFollowups,
-    subscribeToPendingFollowups,
+    Followup,
+    getFollowupsState,
+    setFollowupsTarget,
+    subscribeToFollowups,
 } from '@/lib/followups';
+import { latestExchange } from '@/lib/followupsInput';
 import { cn } from '@/lib/utils';
 import {
     AuiIf,
+    useAui,
     useAuiState,
     ThreadPrimitive,
-    ThreadSuggestion,
 } from '@assistant-ui/react';
 import { SparklesIcon } from 'lucide-react';
 import {
@@ -23,8 +26,17 @@ import {
     FC,
 } from 'react';
 
-const FollowupSuggestionsRow: FC<{ onSelect: () => void }> = ({ onSelect }) => {
-    const suggestions = useAuiState(s => s.thread.suggestions);
+// Widths vary so the placeholders read as pills of different lengths.
+const SKELETON_WIDTHS = ['w-40', 'w-48', 'w-36'];
+
+// While loading, the pills received so far are followed by placeholders for
+// the rest, in the same row so an arriving pill takes a placeholder's place
+// without the others moving or remounting.
+const FollowupSuggestionsRow: FC<{
+    suggestions: readonly Followup[];
+    loading: boolean;
+    onSelect: () => void;
+}> = ({ suggestions, loading, onSelect }) => {
     const scrollRef = useRef<HTMLDivElement>(null);
     const rtlRef = useRef<boolean | null>(null);
     const [fades, setFades] = useState({ left: false, right: false });
@@ -81,6 +93,16 @@ const FollowupSuggestionsRow: FC<{ onSelect: () => void }> = ({ onSelect }) => {
                         onSelect={onSelect}
                     />
                 ))}
+                {loading &&
+                    SKELETON_WIDTHS.slice(suggestions.length).map(width => (
+                        <Skeleton
+                            key={width}
+                            className={cn(
+                                'h-8.5 rounded-full motion-reduce:animate-none',
+                                width
+                            )}
+                        />
+                    ))}
             </div>
         </div>
     );
@@ -90,7 +112,7 @@ const FollowupSuggestionsRow: FC<{ onSelect: () => void }> = ({ onSelect }) => {
 // prompt, for the user to edit or send, and is highlighted while the composer
 // holds its prompt unedited.
 const FollowupSuggestionItem: FC<{
-    suggestion: ThreadSuggestion;
+    suggestion: Followup;
     index: number;
     onSelect: () => void;
 }> = ({ suggestion, index, onSelect }) => {
@@ -124,50 +146,35 @@ const FollowupSuggestionItem: FC<{
                 )}
                 aria-hidden
             />
-            <span className="text-foreground text-sm">
-                {suggestion.title ?? suggestion.prompt}
-            </span>
+            <span className="text-foreground text-sm">{suggestion.title}</span>
         </ThreadPrimitive.Suggestion>
     );
 };
 
-// Widths vary so the placeholders read as pills of different lengths.
-const SKELETON_WIDTHS = ['w-40', 'w-48', 'w-36'];
-const LOADING_MASK =
-    'linear-gradient(to right, black calc(100% - 2rem), transparent)';
-
-// A heading like the welcome starters' over the same row as the pills,
-// clipped rather than scrollable. h-8.5 matches a pill's height.
-const FollowupSuggestionsLoading: FC = () => (
+// The "Thinking…" heading, like the welcome starters', stays over the row
+// until the last suggestion arrives.
+const FollowupSuggestions: FC<{
+    suggestions: readonly Followup[];
+    loading: boolean;
+    onSelect: () => void;
+}> = ({ suggestions, loading, onSelect }) => (
     <div
-        role="status"
-        className="aui-thread-followup-suggestions-loading flex w-full flex-col items-start gap-1.5"
+        role={loading ? 'status' : undefined}
+        className="aui-thread-followup-suggestions-root flex w-full flex-col items-start gap-1.5"
     >
-        <p className="text-muted-foreground flex items-center gap-1.5 px-2 pt-0.5 text-xs font-medium">
-            <SparklesIcon className="size-3.5 shrink-0" aria-hidden />
-            <span className="shimmer motion-reduce:animate-none">
-                Thinking…
-            </span>
-        </p>
-        <div
-            className="w-full overflow-hidden"
-            style={{
-                maskImage: LOADING_MASK,
-                WebkitMaskImage: LOADING_MASK,
-            }}
-        >
-            <div className="flex min-h-8 w-max items-center gap-2 px-0.5">
-                {SKELETON_WIDTHS.map(width => (
-                    <Skeleton
-                        key={width}
-                        className={cn(
-                            'h-8.5 rounded-full motion-reduce:animate-none',
-                            width
-                        )}
-                    />
-                ))}
-            </div>
-        </div>
+        {loading && (
+            <p className="text-muted-foreground flex items-center gap-1.5 px-2 pt-0.5 text-xs font-medium">
+                <SparklesIcon className="size-3.5 shrink-0" aria-hidden />
+                <span className="shimmer motion-reduce:animate-none">
+                    Thinking…
+                </span>
+            </p>
+        )}
+        <FollowupSuggestionsRow
+            suggestions={suggestions}
+            loading={loading}
+            onSelect={onSelect}
+        />
     </div>
 );
 
@@ -176,27 +183,41 @@ const FollowupSuggestionsLoading: FC = () => (
 export const ThreadFollowupSuggestions: FC<{ onSelect: () => void }> = ({
     onSelect,
 }) => {
-    const pending = useSyncExternalStore(
-        subscribeToPendingFollowups,
-        getPendingFollowups,
-        getPendingFollowups
-    );
+    const aui = useAui();
+    const isRunning = useAuiState(s => s.thread.isRunning);
     const lastMessageId = useAuiState(s => s.thread.messages.at(-1)?.id);
-    const loading = lastMessageId != null && pending.has(lastMessageId);
+    const lastStatus = useAuiState(s => s.thread.messages.at(-1)?.status?.type);
+
+    // Tells the store which exchange the pills are for. Keyed on the last
+    // message's id and status rather than the messages themselves, which
+    // change on every streamed token.
+    useEffect(() => {
+        setFollowupsTarget(
+            isRunning
+                ? null
+                : latestExchange(aui.thread.getState().messages) ?? null
+        );
+    }, [aui, isRunning, lastMessageId, lastStatus]);
+    useEffect(() => () => setFollowupsTarget(null), []);
+
+    const followups = useSyncExternalStore(
+        subscribeToFollowups,
+        getFollowupsState,
+        getFollowupsState
+    );
+    if (followups.status !== 'loading' && followups.status !== 'ready') {
+        return null;
+    }
 
     return (
         <AuiIf condition={s => !s.thread.isEmpty && !s.thread.isRunning}>
-            {loading ? (
-                <div className="mb-3">
-                    <FollowupSuggestionsLoading />
-                </div>
-            ) : (
-                <AuiIf condition={s => s.thread.suggestions.length > 0}>
-                    <div className="mb-3">
-                        <FollowupSuggestionsRow onSelect={onSelect} />
-                    </div>
-                </AuiIf>
-            )}
+            <div className="mb-3">
+                <FollowupSuggestions
+                    suggestions={followups.suggestions}
+                    loading={followups.status === 'loading'}
+                    onSelect={onSelect}
+                />
+            </div>
         </AuiIf>
     );
 };

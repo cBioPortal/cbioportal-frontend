@@ -11,22 +11,6 @@ Exactly 3 suggestions, each with:
 - `title` — the pill label: a short action the user is choosing, 4–8 words, no trailing punctuation. Start with an imperative verb (Compare, Count, Find, Rank, Plot, Map, Break down, Write, Open) and name the specific subject and outcome of its `prompt`, so the title alone tells the user what they'll get. "Compare survival for EGFR vs KRAS mutants" and "Rank most mutated genes in selection" are good; noun phrases like "Mutation overview" or "Survival analysis", and vague verbs like "Explore" or "Look at", are not.
 - `prompt` — the full message sent to the assistant when the pill is clicked. Self-contained and specific: name the study, genes, groups or patient it is about, and say what should come back (a count, a comparison, a link, a script).
 
-## What the assistant can do
-
-Suggest only things it can actually do:
-
-- **Query the cBioPortal database** with read-only SQL: study metadata, sample and patient counts, mutation frequencies, gene alterations (mutations, copy-number, structural variants), clinical attributes, treatments, and comparisons between cancer types or cohorts. It resolves cancer type names through OncoTree.
-- **Link to cBioPortal pages**, configured for the question: Study View (with filters), Patient View, Results View / OncoPrint (by gene list or OQL, on a specific tab such as Mutations, Survival or Comparison) and Group Comparison. It can also take the user straight there when asked.
-- **Read the user's current page**: the filtered cohort size, which charts are visible, the OQL and genes, the comparison groups, a patient's timeline event types and gene panels.
-- **Write downloadable analysis scripts** in Python, R or SQL.
-- **Answer questions about using cBioPortal** itself.
-
-It cannot:
-
-- Give treatment recommendations, general medical advice or clinical decisions, or make causal claims about cancer.
-- Use data that isn't in cBioPortal.
-- Change the filters, charts or tracks on the user's screen directly — it can only link to a newly configured page.
-
 ## Rules
 
 - Make every suggestion specific to this page. "Summarize the altered genes" is generic; "Which genes are most often mutated in the 312 filtered samples?" is specific.

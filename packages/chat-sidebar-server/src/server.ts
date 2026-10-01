@@ -6,6 +6,7 @@ import {
     MODEL,
     AVAILABLE_MODELS,
     runChat,
+    runFollowups,
     runReport,
     runStarters,
     runTitle,
@@ -95,6 +96,53 @@ app.post('/api/chat/starters', async (req, res) => {
     } catch (err) {
         console.error('starters generation failed:', err);
         const message = err instanceof Error ? err.message : 'starters failed';
+        res.status(500).json({ error: message });
+    }
+});
+
+// Streamed as NDJSON, one { title, prompt } per line, so each pill can show as
+// soon as it is complete.
+app.post('/api/chat/followups', async (req, res) => {
+    const { question, answer, href, details } = req.body ?? {};
+    if (typeof question !== 'string' || typeof answer !== 'string') {
+        res.status(400).json({
+            error: 'question and answer (strings) required',
+        });
+        return;
+    }
+    // Also fires once the response ends normally, when nothing is left to stop.
+    const controller = new AbortController();
+    res.on('close', () => controller.abort());
+    try {
+        const followups = runFollowups(
+            {
+                question,
+                answer,
+                href: typeof href === 'string' ? href : '',
+                details: details ?? { available: false },
+            },
+            controller.signal
+        );
+        for await (const followup of followups) {
+            if (!res.headersSent) {
+                res.writeHead(200, {
+                    'Content-Type': 'application/x-ndjson',
+                    'Cache-Control': 'no-cache',
+                    'X-Accel-Buffering': 'no',
+                });
+            }
+            res.write(`${JSON.stringify(followup)}\n`);
+        }
+        res.end();
+    } catch (err) {
+        if (controller.signal.aborted) return;
+        console.error('follow-ups generation failed:', err);
+        if (res.headersSent) {
+            res.end();
+            return;
+        }
+        const message =
+            err instanceof Error ? err.message : 'follow-ups failed';
         res.status(500).json({ error: message });
     }
 });
