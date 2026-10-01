@@ -50,6 +50,22 @@ import { JUNCTION_GAP } from './components/fusionProductHelpers';
 import { fetchTranscriptsForGeneWithFallback } from './data/genomeNexusTranscriptService';
 import { frameStatusStyle } from './components/frameStatusStyle';
 import { sampleFusionViewerHref } from './data/cohortLinks';
+import {
+    featureSlotLayout,
+    pixelBinLayout,
+    TrackLayout,
+} from './data/trackGeometry';
+import {
+    buildLinkGroups,
+    LinkGroup,
+    litBarKeys,
+    matchBar,
+    matchLinkIds,
+} from './data/linkAggregation';
+import { LinkHover } from './components/LinkHover';
+import BreakpointLinkArcs, {
+    ARC_BAND_HEIGHT,
+} from './components/BreakpointLinkArcs';
 
 // Horizontal chrome (page padding + patient-view rails) subtracted from the
 // window width to get the drawable content width. Floored so the view stays
@@ -216,6 +232,7 @@ export default class FusionComparisonView extends React.Component<
     // run for a newly-selected pair. The reaction tracks the outstanding request
     // set (+ default-anchor need) directly and refires deterministically.
     private fetchReactionDisposer?: () => void;
+    private hoverResetDisposer?: () => void;
 
     componentDidMount() {
         this.fetchReactionDisposer = reaction(
@@ -236,10 +253,23 @@ export default class FusionComparisonView extends React.Component<
             },
             { fireImmediately: true }
         );
+        this.hoverResetDisposer = reaction(
+            () => [
+                this.props.store.anchor,
+                this.props.store.trackMode,
+                this.orientedRows,
+                this.histogramAnchorTranscript,
+                this.histogramPartnerTranscript,
+                this.contentWidth,
+            ],
+            () => this.linkHover.clear()
+        );
     }
 
     componentWillUnmount() {
         this.fetchReactionDisposer?.();
+        this.hoverResetDisposer?.();
+        this.linkHover.clear();
     }
 
     // Transcript keys currently being fetched, so overlapping reaction firings
@@ -486,6 +516,104 @@ export default class FusionComparisonView extends React.Component<
             : { bp5: partnerBp, bp3: anchorBp };
     }
 
+    readonly linkHover = new LinkHover();
+
+    // Width-dependent geometry as computeds so hover re-renders don't rebuild
+    // link groups (render reads the same values).
+    @computed get contentWidth(): number {
+        return Math.max(
+            MIN_CONTENT_WIDTH,
+            WindowStore.size.width - HORIZONTAL_CHROME
+        );
+    }
+
+    @computed get frame() {
+        return computeComparisonFrame(this.contentWidth);
+    }
+
+    private layoutFor(
+        t: TranscriptData,
+        drawX: number,
+        drawW: number
+    ): TrackLayout {
+        return this.props.store.trackMode === 'genomic'
+            ? pixelBinLayout(t, drawX, drawW)
+            : featureSlotLayout(t, drawX, drawW);
+    }
+
+    /** Pair-mode links; undefined when arcs are off or a side has no transcript. */
+    @computed get linkData():
+        | {
+              groups: LinkGroup[];
+              rowLinkIds: (string | undefined)[];
+              idByRow: Map<ComparisonRow, string>;
+          }
+        | undefined {
+        const { store } = this.props;
+        const t5 = this.histogramAnchorTranscript;
+        const t3 = this.histogramPartnerTranscript;
+        if (this.isGeneMode || !store.showLinks || !t5 || !t3) return undefined;
+        const f = this.frame;
+        const layout5 = this.layoutFor(t5, f.leftX, f.junctionX - f.leftX);
+        const layout3 = this.layoutFor(
+            t3,
+            f.junctionX + PARTNER_TRACK_GAP,
+            f.rightX - f.junctionX - PARTNER_TRACK_GAP
+        );
+        const rows = this.orientedRows;
+        const { groups, rowLinkIds } = buildLinkGroups(rows, layout5, layout3);
+        const idByRow = new Map<ComparisonRow, string>();
+        rows.forEach((r, i) => {
+            const id = rowLinkIds[i];
+            if (id) idByRow.set(r, id);
+        });
+        return { groups, rowLinkIds, idByRow };
+    }
+
+    @computed get litBars():
+        | { lit5: Set<string>; lit3: Set<string> }
+        | undefined {
+        const m = this.linkHover.matcher;
+        const d = this.linkData;
+        return m && d ? litBarKeys(d.groups, m) : undefined;
+    }
+
+    barOpacity = (side: '5p' | '3p') => (key: string): number | undefined => {
+        const lit = this.litBars;
+        if (!lit) return undefined;
+        return (side === '5p' ? lit.lit5 : lit.lit3).has(key) ? 1 : 0.2;
+    };
+
+    onBarHover = (side: '5p' | '3p') => (key: string | undefined): void => {
+        this.linkHover.set(key ? matchBar(side, key) : undefined);
+    };
+
+    private idsFor(row: ComparisonRow, group?: CollapsedGroup): string[] {
+        const d = this.linkData;
+        if (!d) return [];
+        const members = group ? group.members : [row];
+        return members
+            .map(m => d.idByRow.get(m))
+            .filter((x): x is string => !!x);
+    }
+
+    onRowHover = (row?: ComparisonRow, group?: CollapsedGroup): void => {
+        const ids = row ? this.idsFor(row, group) : [];
+        this.linkHover.set(ids.length ? matchLinkIds(ids) : undefined);
+    };
+
+    rowOpacity = (row: ComparisonRow, group?: CollapsedGroup): number => {
+        const m = this.linkHover.matcher;
+        const d = this.linkData;
+        if (!m || !d) return 1;
+        const byId = new Map(d.groups.map(g => [g.id, g]));
+        const hit = this.idsFor(row, group).some(id => {
+            const g = byId.get(id);
+            return !!g && m(g);
+        });
+        return hit ? 1 : 0.2;
+    };
+
     // Map sampleId → studyId from the raw SVs. ComparisonRow only carries
     // sampleId (via FusionEvent.tumorId), but the studyView sample-identifier
     // filter needs {studyId, sampleId}. The raw SVs preserve studyId.
@@ -663,17 +791,14 @@ export default class FusionComparisonView extends React.Component<
         // Responsive: reading WindowStore.size (a MobX observable) inside this
         // @observer render makes the layout reflow on window resize with no
         // extra wiring.
-        const contentWidth = Math.max(
-            MIN_CONTENT_WIDTH,
-            WindowStore.size.width - HORIZONTAL_CHROME
-        );
+        const contentWidth = this.contentWidth;
         // Responsive strip-list height: fill most of the window so more samples
         // are visible at once (was a fixed 500px).
         const stripViewportHeight = Math.max(
             MIN_STRIP_VIEWPORT,
             WindowStore.size.height - STRIP_VERTICAL_CHROME
         );
-        const frame = computeComparisonFrame(contentWidth);
+        const frame = this.frame;
         // Cheap bp→px division (needs the width-dependent region widths); the
         // absolute per-side scale reference (maxRetainedBp) is a @computed above.
         // Reuses the region math previously inline in FusionStripList.
@@ -733,47 +858,58 @@ export default class FusionComparisonView extends React.Component<
                             'Bin breakpoints by fixed genomic width (drawn to scale)'
                         )}
                     </ButtonGroup>
-                    <span
-                        style={{
-                            fontSize: 11,
-                            color: '#6c757d',
-                            marginLeft: 12,
-                        }}
-                    >
-                        Rows
-                    </span>
-                    <ButtonGroup>
-                        {this.segmentButton(
-                            store.stripMode === 'sample',
-                            'stripmode-sample',
-                            'Per sample',
-                            'One labeled row per sample',
-                            () => store.setStripMode('sample')
-                        )}
-                        {this.segmentButton(
-                            store.stripMode === 'dense',
-                            'stripmode-dense',
-                            'Dense',
-                            'One thin row per sample — hover for the sample, click to expand',
-                            () => store.setStripMode('dense')
-                        )}
-                        {this.segmentButton(
-                            store.stripMode === 'collapsed',
-                            'stripmode-collapsed',
-                            'Collapsed',
-                            'Group structurally-identical products, ranked ×N; click a group to filter the cohort',
-                            () => store.setStripMode('collapsed')
-                        )}
-                    </ButtonGroup>
-                    <span
-                        style={{
-                            fontSize: 11,
-                            color: '#6c757d',
-                            marginLeft: 12,
-                        }}
-                    >
-                        Exons
-                    </span>
+                    {!this.isGeneMode && (
+                        <ButtonGroup>
+                            {this.segmentButton(
+                                store.showLinks,
+                                'links-toggle',
+                                'Links',
+                                'Show arcs joining each 5′ breakpoint location to the 3′ location it fused with',
+                                () => store.setShowLinks(!store.showLinks)
+                            )}
+                            <span
+                                style={{
+                                    fontSize: 11,
+                                    color: '#6c757d',
+                                    marginLeft: 12,
+                                }}
+                            >
+                                Rows
+                            </span>
+                            <ButtonGroup>
+                                {this.segmentButton(
+                                    store.stripMode === 'sample',
+                                    'stripmode-sample',
+                                    'Per sample',
+                                    'One labeled row per sample',
+                                    () => store.setStripMode('sample')
+                                )}
+                                {this.segmentButton(
+                                    store.stripMode === 'dense',
+                                    'stripmode-dense',
+                                    'Dense',
+                                    'One thin row per sample — hover for the sample, click to expand',
+                                    () => store.setStripMode('dense')
+                                )}
+                                {this.segmentButton(
+                                    store.stripMode === 'collapsed',
+                                    'stripmode-collapsed',
+                                    'Collapsed',
+                                    'Group structurally-identical products, ranked ×N; click a group to filter the cohort',
+                                    () => store.setStripMode('collapsed')
+                                )}
+                            </ButtonGroup>
+                            <span
+                                style={{
+                                    fontSize: 11,
+                                    color: '#6c757d',
+                                    marginLeft: 12,
+                                }}
+                            >
+                                Exons
+                            </span>
+                        </ButtonGroup>
+                    )}
                     <ButtonGroup>
                         {this.segmentButton(
                             store.exonMode === 'retained',
@@ -988,6 +1124,16 @@ export default class FusionComparisonView extends React.Component<
                                 labelAnchor={anchorHalf.labelAnchor}
                                 fill={anchorHalf.fill}
                                 mode={store.trackMode}
+                                barOpacity={
+                                    this.linkData
+                                        ? this.barOpacity('5p')
+                                        : undefined
+                                }
+                                onBarHover={
+                                    this.linkData
+                                        ? this.onBarHover('5p')
+                                        : undefined
+                                }
                                 onSelectBar={
                                     this.props.onFilterCohortBySamples
                                         ? sel =>
@@ -1025,6 +1171,16 @@ export default class FusionComparisonView extends React.Component<
                                     labelAnchor="start"
                                     fill={COLOR_3PRIME}
                                     mode={store.trackMode}
+                                    barOpacity={
+                                        this.linkData
+                                            ? this.barOpacity('3p')
+                                            : undefined
+                                    }
+                                    onBarHover={
+                                        this.linkData
+                                            ? this.onBarHover('3p')
+                                            : undefined
+                                    }
                                     onSelectBar={
                                         this.props.onFilterCohortBySamples
                                             ? sel =>
@@ -1063,6 +1219,19 @@ export default class FusionComparisonView extends React.Component<
                                 </text>
                             )}
                         </svg>
+                    )}
+                    {this.linkData && (
+                        <BreakpointLinkArcs
+                            groups={this.linkData.groups}
+                            width={contentWidth}
+                            height={ARC_BAND_HEIGHT}
+                            matcher={this.linkHover.matcher}
+                            onHover={g =>
+                                this.linkHover.set(
+                                    g ? matchLinkIds([g.id]) : undefined
+                                )
+                            }
+                        />
                     )}
                     {/* Column legend for the per-sample strips below. Columns
                         align to the strip geometry: sample IDs are right-aligned
@@ -1141,6 +1310,8 @@ export default class FusionComparisonView extends React.Component<
                             />
                         )}
                     <FusionStripList
+                        rowOpacity={this.linkData ? this.rowOpacity : undefined}
+                        onRowHover={this.linkData ? this.onRowHover : undefined}
                         anchorSide={side}
                         rows={rows}
                         transcriptForRow={this.transcriptForRow}

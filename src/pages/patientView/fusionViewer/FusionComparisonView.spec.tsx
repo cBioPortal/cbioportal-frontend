@@ -787,3 +787,92 @@ describe('FusionComparisonView gene mode', () => {
         assert.isFalse(store.hasAnchorSelection);
     });
 });
+
+describe('FusionComparisonView link arcs', () => {
+    function pairStore() {
+        const store = new FusionCohortStore();
+        store.setStructuralVariants([
+            {
+                site1HugoSymbol: 'TMPRSS2',
+                site2HugoSymbol: 'ERG',
+                sampleId: 'S1',
+                site1Position: 50,
+                site2Position: 450,
+                site1Chromosome: '21',
+                site2Chromosome: '21',
+            },
+            {
+                site1HugoSymbol: 'TMPRSS2',
+                site2HugoSymbol: 'ERG',
+                sampleId: 'S2',
+                site1Position: 250,
+                site2Position: 450,
+                site1Chromosome: '21',
+                site2Chromosome: '21',
+            },
+        ] as any);
+        store.mergeTranscripts([
+            ['GRCh38|TMPRSS2|', tx('TMPRSS2')],
+            ['GRCh38|ERG|', tx('ERG')],
+        ]);
+        store.setAnchor({ mode: 'pair', key: 'ERG::TMPRSS2' });
+        return store;
+    }
+
+    it('draws arcs in Pair mode and hides them with the Links toggle', () => {
+        const store = pairStore();
+        const w = mount(<FusionComparisonView store={store} />);
+        assert.isAbove(w.find('path[data-testid="link-arc"]').length, 0);
+        w.find('button[data-testid="links-toggle"]').simulate('click');
+        w.update();
+        assert.lengthOf(w.find('path[data-testid="link-arc"]'), 0);
+    });
+
+    it('no arcs in Gene mode', () => {
+        const store = pairStore();
+        store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
+        const w = mount(<FusionComparisonView store={store} />);
+        assert.lengthOf(w.find('path[data-testid="link-arc"]'), 0);
+    });
+
+    it('no partner transcript, no arcs', () => {
+        const store = pairStore();
+        store.setTranscriptsByKey(
+            new Map([['GRCh38|TMPRSS2|', tx('TMPRSS2')]])
+        );
+        const w = mount(<FusionComparisonView store={store} />);
+        assert.isFalse(w.find('[data-testid="link-arcs"]').exists());
+    });
+
+    it('hovering a bar lights its arcs; axis change and unmount clear hover', () => {
+        const store = pairStore();
+        const w = mount(<FusionComparisonView store={store} />);
+        const view = w.instance() as any;
+        w.find('rect[data-testid="feature-bar"]')
+            .first()
+            .simulate('mouseenter');
+        assert.isDefined(view.linkHover.matcher);
+        runInAction(() => store.setTrackMode('genomic'));
+        assert.isUndefined(view.linkHover.matcher);
+        w.update();
+        w.find('rect[data-testid="breakpoint-bin"]')
+            .first()
+            .simulate('mouseenter');
+        assert.isDefined(view.linkHover.matcher);
+        w.unmount();
+        assert.isUndefined(view.linkHover.matcher);
+    });
+
+    it.skip('width change clears hover (WindowStore.size not assignable in tests)', () => {});
+
+    it('hovering an off-track strip leaves everything at rest', () => {
+        const store = pairStore();
+        const w = mount(<FusionComparisonView store={store} />);
+        const view = w.instance() as any;
+        view.onRowHover({
+            ...view.orientedRows[0],
+            partnerBreakpoint: 99_999_999,
+        });
+        assert.isUndefined(view.linkHover.matcher);
+    });
+});
