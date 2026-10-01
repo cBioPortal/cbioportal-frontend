@@ -483,3 +483,24 @@ describe('AnchorGeneTrackRuler linked hover', () => {
         assert.match(seen[0]!, /^bin:\d+$/);
     });
 });
+
+describe('AnchorGeneTrackRuler hideHistogram', () => {
+    it('hideHistogram drops the bars but keeps the gene body', () => {
+        const w = mount(
+            <svg>
+                <AnchorGeneTrackRuler
+                    transcript={plusTx}
+                    symbol="G"
+                    breakpoints={[1050]}
+                    drawX={0}
+                    drawW={400}
+                    labelX={0}
+                    labelAnchor="end"
+                    hideHistogram
+                />
+            </svg>
+        );
+        assert.lengthOf(w.find('rect[data-testid="feature-bar"]'), 0);
+        assert.isAbove(w.find('rect[data-testid="feature-exon"]').length, 0);
+    });
+});
