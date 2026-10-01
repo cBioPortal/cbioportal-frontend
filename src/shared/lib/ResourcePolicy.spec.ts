@@ -35,16 +35,19 @@ describe('legacy H&E resource policy', () => {
         assert.isFalse(shouldHideLegacyHeResourceTab('OTHER'));
     });
 
-    it('hides legacy H&E resources by id or display name', () => {
+    it('hides legacy H&E resources by id only', () => {
         assert.isTrue(shouldHideLegacyHeResource({ resourceId: 'MSK_HNE' }));
         assert.isTrue(
             shouldHideLegacyHeResource({
-                resourceDefinition: { displayName: 'H&E Slides' } as any,
+                resourceDefinition: { resourceId: 'HE' } as any,
             })
         );
         assert.isFalse(
             shouldHideLegacyHeResource({
-                resourceDefinition: { displayName: 'Other resource' } as any,
+                resourceDefinition: {
+                    resourceId: 'OTHER',
+                    displayName: 'H&E Slides',
+                } as any,
             })
         );
     });
