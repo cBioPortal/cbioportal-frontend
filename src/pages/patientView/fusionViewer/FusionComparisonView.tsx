@@ -36,6 +36,7 @@ import {
     exonStructureKey,
     groupRows,
 } from './data/collapseRows';
+import AnchorModeBar from './components/AnchorModeBar';
 import FusionRecurrenceTable from './FusionRecurrenceTable';
 import { FusionDiagramSVG } from './FusionDiagramSVG';
 import { txKey } from './data/transcriptKeys';
@@ -691,6 +692,7 @@ export default class FusionComparisonView extends React.Component<
 
         return (
             <div>
+                <AnchorModeBar store={store} />
                 <FusionRecurrenceTable
                     store={store}
                     hasFusionAnnotation={this.hasFusionAnnotation}
