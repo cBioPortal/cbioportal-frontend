@@ -4,6 +4,7 @@ import {
     litBarKeys,
     matchBar,
     matchLinkIds,
+    slotLabel,
 } from './linkAggregation';
 import { TrackLayout } from './trackGeometry';
 import { ComparisonRow } from './comparisonRows';
@@ -95,5 +96,16 @@ describe('hover predicates', () => {
         assert.isTrue(m({ key5: 'A2', key3: 'B3', frame: 'inFrame' }));
         assert.isTrue(m({ key5: 'A2', key3: 'B4', frame: 'unknown' }));
         assert.isFalse(m({ key5: 'A1', key3: 'B3', frame: 'inFrame' }));
+    });
+});
+
+describe('slotLabel', () => {
+    it('humanises feature and bin keys', () => {
+        assert.equal(slotLabel('exon:E4'), 'E4');
+        assert.equal(slotLabel('intron:3-4'), 'intron 3-4');
+        assert.equal(slotLabel('promoter:P'), 'promoter');
+        assert.equal(slotLabel('downstream:▸'), 'downstream');
+        assert.equal(slotLabel('bin:37'), 'genomic bin');
+        assert.equal(slotLabel('weird'), 'weird');
     });
 });

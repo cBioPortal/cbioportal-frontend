@@ -4,7 +4,10 @@ import {
     featureSlotLayout,
     featureSlotKey,
     pixelBinLayout,
+    genomicProjection,
+    BIN_PX,
 } from './trackGeometry';
+import { binBreakpointsByPixel } from '../components/AnchorGeneTrackRuler';
 import { TranscriptData } from './types';
 
 const minusTx: TranscriptData = {
@@ -66,5 +69,24 @@ describe('trackGeometry', () => {
         assert.match(inRange!.key, /^bin:\d+$/);
         assert.isUndefined(outRange);
         assert.isUndefined(layout.assign([null])[0]);
+    });
+
+    it('pixel-bin keys match binBreakpointsByPixel indices (D25 parity, fractional drawX)', () => {
+        const drawX = 100.37;
+        const drawW = 413.6;
+        const bps = [4999, 4700, 4500, 3500, 3000, 2999, 1200, 1001, 1000];
+        const layout = pixelBinLayout(minusTx, drawX, drawW);
+        const slots = layout.assign(bps);
+        const xs = bps.map(genomicProjection(minusTx, drawX, drawW));
+        const bins = binBreakpointsByPixel(xs, drawX, drawW, BIN_PX);
+        const expected = new Map<number, string>();
+        bins.forEach(b => {
+            const idx = Math.round((b.x - drawX) / BIN_PX);
+            b.members.forEach(m => expected.set(m, `bin:${idx}`));
+        });
+        assert.isAbove(expected.size, 0);
+        bps.forEach((_bp, i) =>
+            assert.equal(slots[i]?.key, expected.get(i), `bp #${i}`)
+        );
     });
 });
