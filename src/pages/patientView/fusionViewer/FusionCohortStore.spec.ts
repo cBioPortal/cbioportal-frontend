@@ -619,4 +619,55 @@ describe('FusionCohortStore pair facet', () => {
         assert.equal(store.filteredEvents.length, 0);
         assert.isUndefined(store.anchor);
     });
+    describe('transcript cache (moved from the view)', () => {
+        const tx = (gene: string) =>
+            ({
+                transcriptId: gene,
+                gene,
+                genomeBuild: 'GRCh38',
+                exons: [],
+                strand: '+',
+                txStart: 0,
+                txEnd: 10,
+            } as any);
+
+        it('looks up canonical by cohort build and row isoform with canonical fallback', () => {
+            store.setStructuralVariants([makeEvent()] as any);
+            store.mergeTranscripts([
+                ['GRCh38|GENE_A|', tx('GENE_A')],
+                ['GRCh38|GENE_B|', tx('GENE_B')],
+            ]);
+            assert.equal(store.transcriptForGene('GENE_A')!.gene, 'GENE_A');
+            const r = {
+                event: makeEvent(),
+                fivePrimeSymbol: 'GENE_A',
+                threePrimeSymbol: 'GENE_B',
+            } as any;
+            assert.equal(store.transcriptForRow(r, false)!.gene, 'GENE_B');
+        });
+
+        it('failed fetch completes readiness without a transcript', () => {
+            store.setStructuralVariants([makeEvent()] as any);
+            store.setAnchor({ mode: 'pair', key: 'GENE_A::GENE_B' });
+            assert.isFalse(store.transcriptsReady);
+            store.markTranscriptsFailed(
+                store.outstandingTranscriptRequests.map(
+                    r => `${r.build}|${r.symbol}|${r.transcriptId}`
+                )
+            );
+            assert.isTrue(store.transcriptsReady);
+            assert.lengthOf(store.outstandingTranscriptRequests, 0);
+        });
+
+        it('picker options survive a view remount because they live in the store', () => {
+            store.mergeTranscriptOptions([
+                ['GRCh38|GENE_A', [tx('GENE_A'), tx('GENE_A2')]],
+            ]);
+            store.setHistogramTranscript('GENE_A', 'GENE_A2');
+            assert.equal(
+                store.histogramTranscriptForGene('GENE_A')!.transcriptId,
+                'GENE_A2'
+            );
+        });
+    });
 });

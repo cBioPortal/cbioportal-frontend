@@ -12,6 +12,7 @@ import {
     FusionPairSummary,
     SampleFusionRow,
     JunctionLabelMode,
+    TranscriptData,
 } from './data/types';
 import { convertStructuralVariantsToFusionEvents } from './data/structuralVariantAdapter';
 import {
@@ -29,6 +30,12 @@ import {
     ComparisonAnchor,
     ComparisonRow,
 } from './data/comparisonRows';
+import {
+    txKey,
+    buildForRow,
+    TranscriptRequest,
+    transcriptRequestsForRows,
+} from './data/transcriptKeys';
 import { CollapseKind } from './data/collapseRows';
 import { GenomeBuild } from './data/genomeNexusTranscriptService';
 import { GENOME_ID_TO_GENOME_BUILD } from 'shared/lib/referenceGenomeUtils';
@@ -140,6 +147,24 @@ export class FusionCohortStore {
     // Build declared by the STUDY. Only a fallback -- see the genomeBuild
     // computed below.
     @observable public studyGenomeBuild: GenomeBuild = 'GRCh38';
+
+    /** Transcript cache (moved from FusionComparisonView). Key: txKey(). */
+    @observable.ref public transcriptsByKey: Map<
+        string,
+        TranscriptData
+    > = new Map();
+
+    /** Every transcript per gene for the histogram picker. Key: `${build}|${symbol}`. */
+    @observable.ref public transcriptOptionsByGene: Map<
+        string,
+        TranscriptData[]
+    > = new Map();
+
+    /**
+     * txKeys whose fetch errored or returned nothing. Not retried within the
+     * session (a reload retries); lets `transcriptsReady` complete.
+     */
+    @observable.ref public failedTranscriptKeys: Set<string> = new Set();
 
     constructor() {
         makeObservable(this);
@@ -494,6 +519,100 @@ export class FusionCohortStore {
         transcriptId: string
     ): void {
         this.histogramTranscriptIdByGene.set(geneSymbol, transcriptId);
+    }
+
+    @action
+    public mergeTranscripts(entries: [string, TranscriptData][]): void {
+        if (entries.length === 0) return;
+        const next = new Map(this.transcriptsByKey);
+        entries.forEach(([k, v]) => next.set(k, v));
+        this.transcriptsByKey = next;
+    }
+
+    @action
+    public mergeTranscriptOptions(entries: [string, TranscriptData[]][]): void {
+        if (entries.length === 0) return;
+        const next = new Map(this.transcriptOptionsByGene);
+        entries.forEach(([k, v]) => next.set(k, v));
+        this.transcriptOptionsByGene = next;
+    }
+
+    @action
+    public markTranscriptsFailed(keys: string[]): void {
+        if (keys.length === 0) return;
+        const next = new Set(this.failedTranscriptKeys);
+        keys.forEach(k => next.add(k));
+        this.failedTranscriptKeys = next;
+    }
+
+    @action
+    public setTranscriptsByKey(m: Map<string, TranscriptData>): void {
+        this.transcriptsByKey = m;
+    }
+
+    @action
+    public setTranscriptOptionsByGene(m: Map<string, TranscriptData[]>): void {
+        this.transcriptOptionsByGene = m;
+    }
+
+    /** Canonical isoform at the cohort build (anchor track, resolution). */
+    public transcriptForGene(symbol: string): TranscriptData | undefined {
+        return this.transcriptsByKey.get(txKey(this.genomeBuild, symbol, ''));
+    }
+
+    /** Caller-selected isoform for one side of a row, canonical fallback. */
+    public transcriptForRow(
+        row: ComparisonRow,
+        is5p: boolean
+    ): TranscriptData | undefined {
+        const symbol = is5p ? row.fivePrimeSymbol : row.threePrimeSymbol;
+        if (!symbol) return undefined;
+        const e = row.event;
+        const gene =
+            e.gene1.symbol === symbol
+                ? e.gene1
+                : e.gene2 && e.gene2.symbol === symbol
+                ? e.gene2
+                : undefined;
+        const id = gene?.selectedTranscriptId || '';
+        const build = buildForRow(row, this.genomeBuild);
+        return (
+            this.transcriptsByKey.get(txKey(build, symbol, id)) ||
+            this.transcriptsByKey.get(txKey(build, symbol, ''))
+        );
+    }
+
+    /** User-chosen histogram transcript, if set and loaded. */
+    public histogramTranscriptForGene(
+        gene: string
+    ): TranscriptData | undefined {
+        const id = this.histogramTranscriptIdByGene.get(gene);
+        if (!id) return undefined;
+        return this.transcriptOptionsByGene
+            .get(`${this.genomeBuild}|${gene}`)
+            ?.find(t => t.transcriptId === id);
+    }
+
+    @computed
+    public get transcriptRequests(): TranscriptRequest[] {
+        // Task 4 switches this source to `candidateRows`.
+        return transcriptRequestsForRows(this.comparisonRows, this.genomeBuild);
+    }
+
+    @computed
+    public get outstandingTranscriptRequests(): TranscriptRequest[] {
+        return this.transcriptRequests.filter(r => {
+            const k = txKey(r.build, r.symbol, r.transcriptId);
+            return (
+                !this.transcriptsByKey.has(k) &&
+                !this.failedTranscriptKeys.has(k)
+            );
+        });
+    }
+
+    @computed
+    public get transcriptsReady(): boolean {
+        return this.outstandingTranscriptRequests.length === 0;
     }
 
     @computed
