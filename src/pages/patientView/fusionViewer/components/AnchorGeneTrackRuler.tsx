@@ -52,6 +52,8 @@ export interface AnchorGeneTrackRulerProps {
     barOpacity?: (slotKey: string) => number | undefined;
     /** Fired with the hovered bar's slot key on enter, undefined on leave. When set, replaces the old hover highlight. */
     onBarHover?: (slotKey: string | undefined) => void;
+    /** Lollipop mode: draw the gene body and labels only. */
+    hideHistogram?: boolean;
 }
 
 export interface BreakpointBin {
@@ -408,6 +410,7 @@ const FeatureBody: React.FC<AnchorGeneTrackRulerProps> = ({
     onSelectBar,
     barOpacity,
     onBarHover,
+    hideHistogram,
 }) => {
     const { strand } = transcript;
     const { features, offTranscript } = assignBreakpointsToFeatures(
@@ -428,14 +431,16 @@ const FeatureBody: React.FC<AnchorGeneTrackRulerProps> = ({
     return (
         <g data-testid="anchor-track">
             {/* histogram y-axis */}
-            <HistogramYAxis
-                maxCount={maxCount}
-                symbol={symbol}
-                drawX={drawX}
-                drawW={drawW}
-                labelX={labelX}
-                labelAnchor={labelAnchor}
-            />
+            {!hideHistogram && (
+                <HistogramYAxis
+                    maxCount={maxCount}
+                    symbol={symbol}
+                    drawX={drawX}
+                    drawW={drawW}
+                    labelX={labelX}
+                    labelAnchor={labelAnchor}
+                />
+            )}
             <line
                 x1={drawX}
                 y1={HIST_BASELINE}
@@ -451,7 +456,7 @@ const FeatureBody: React.FC<AnchorGeneTrackRulerProps> = ({
                 return (
                     <g key={`${f.kind}-${f.label}-${i}`}>
                         {/* bar (only when this feature holds ≥1 breakpoint) */}
-                        {f.count > 0 && (
+                        {!hideHistogram && f.count > 0 && (
                             <rect
                                 data-testid="feature-bar"
                                 x={slotX + barPad}
