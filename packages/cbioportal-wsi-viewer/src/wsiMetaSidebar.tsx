@@ -106,7 +106,10 @@ function SbSection({
                 </button>
                 {action}
             </div>
-            {!collapsed && <div id={contentId}>{children}</div>}
+            {/* Collapsed content stays mounted so panels keep their state. */}
+            <div id={contentId} hidden={collapsed}>
+                {children}
+            </div>
         </div>
     );
 }

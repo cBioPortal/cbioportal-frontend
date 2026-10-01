@@ -62,6 +62,11 @@ describe('WsiMetaSidebar collapsible sections', () => {
         );
     }
 
+    function isHidden(renderer: TestRenderer.ReactTestRenderer, id: string) {
+        return renderer.root.findByProps({ id: `wsi-sidebar-section-${id}` })
+            .props.hidden;
+    }
+
     function toggle(renderer: TestRenderer.ReactTestRenderer, id: string) {
         return renderer.root.findByProps({
             'data-testid': `wsi-sidebar-section-${id}-toggle`,
@@ -76,11 +81,7 @@ describe('WsiMetaSidebar collapsible sections', () => {
 
             act(() => toggle(renderer, id).props.onClick());
             expect(toggle(renderer, id).props['aria-expanded']).toBe(false);
-            expect(
-                renderer.root.findAllByProps({
-                    id: `wsi-sidebar-section-${id}`,
-                })
-            ).toHaveLength(0);
+            expect(isHidden(renderer, id)).toBe(true);
             expect(
                 window.localStorage.getItem(wsiSidebarSectionCollapsedKey(id))
             ).toBe('1');
@@ -97,10 +98,15 @@ describe('WsiMetaSidebar collapsible sections', () => {
         const renderer = renderSidebar();
         act(() => toggle(renderer, 'pathology').props.onClick());
 
-        const json = JSON.stringify(renderer.toJSON());
-        expect(json).toContain('"Female"');
-        expect(json).toContain('"100 x 100"');
-        expect(json).not.toContain('"H&E"');
+        expect(isHidden(renderer, 'pathology')).toBe(true);
+        expect(isHidden(renderer, 'imageProperties')).toBe(false);
+        expect(isHidden(renderer, 'clinical')).toBe(false);
+    });
+
+    it('keeps collapsed content mounted', () => {
+        const renderer = renderSidebar();
+        act(() => toggle(renderer, 'clinical').props.onClick());
+        expect(JSON.stringify(renderer.toJSON())).toContain('"Female"');
     });
 
     it('restores the stored collapsed state', () => {
@@ -110,6 +116,6 @@ describe('WsiMetaSidebar collapsible sections', () => {
         );
         const renderer = renderSidebar();
         expect(toggle(renderer, 'clinical').props['aria-expanded']).toBe(false);
-        expect(JSON.stringify(renderer.toJSON())).not.toContain('"Female"');
+        expect(isHidden(renderer, 'clinical')).toBe(true);
     });
 });
