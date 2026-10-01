@@ -190,3 +190,10 @@ export interface WsiSlideAccess {
     expiresIn: number;
     expiresAt?: number;
 }
+
+/** A label/value row for the sidebar's Clinical section, built by the host. */
+export interface WsiClinicalRow {
+    label: string;
+    value: string;
+    labelTip?: string;
+}

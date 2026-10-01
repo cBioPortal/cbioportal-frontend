@@ -9,6 +9,7 @@ import {
     Sample,
     PatientHierarchy,
     TileMetadata,
+    WsiClinicalRow,
     WsiStainFilter,
     WsiTimepointSelection,
 } from './wsiViewerTypes';
@@ -98,6 +99,8 @@ interface Props {
     requestedImageId?: string;
     /** Sample acquisition/sequencing days from the patient timeline. */
     sampleTimelines?: WsiSampleTimelineMap;
+    /** Patient clinical rows for the sidebar; unset hides the section. */
+    clinicalRows?: ReadonlyArray<WsiClinicalRow>;
     /** Shows the "download view" control. */
     showDownload?: boolean;
     /** Indicator shown while the hierarchy loads. */
@@ -1339,6 +1342,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                             wsiRows={this.selectedWsiRows}
                             showPathology={!!(selectedSlide && selectedSample)}
                             pathRows={this.selectedPathRows}
+                            clinicalRows={this.props.clinicalRows}
                             onHide={this.hideMetadata}
                         />
                     </>

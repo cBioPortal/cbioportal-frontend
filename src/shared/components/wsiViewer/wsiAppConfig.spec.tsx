@@ -22,6 +22,10 @@ jest.mock('shared/api/urls', () => ({
         `https://portal.example/beta/${path}`,
 }));
 
+jest.mock('./wsiClinicalRows', () => ({
+    useWsiClinicalRows: () => [{ label: 'Sex', value: 'Female' }],
+}));
+
 jest.mock('cbioportal-wsi-viewer/viewer', () => ({
     __esModule: true,
     default: (props: Record<string, unknown>) => mockWsiViewer(props),
@@ -123,6 +127,7 @@ describe('AppWsiViewer', () => {
                 authScope: 'user-a',
                 showDownload: true,
                 renderLoading: expect.any(Function),
+                clinicalRows: [{ label: 'Sex', value: 'Female' }],
             })
         );
     });

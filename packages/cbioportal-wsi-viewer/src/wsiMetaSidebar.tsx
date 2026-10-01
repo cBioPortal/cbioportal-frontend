@@ -88,7 +88,7 @@ function renderMetaValue(row: MetaRow) {
     );
 }
 
-function MetaTable({ rows }: { rows: MetaRow[] }) {
+function MetaTable({ rows }: { rows: ReadonlyArray<MetaRow> }) {
     return (
         <table
             style={{ width: '100%', borderCollapse: 'collapse', marginTop: 6 }}
@@ -142,6 +142,7 @@ function WsiMetaSidebarComponent({
     wsiRows,
     showPathology,
     pathRows,
+    clinicalRows,
     onHide,
 }: {
     width: number;
@@ -149,6 +150,8 @@ function WsiMetaSidebarComponent({
     wsiRows: MetaRow[];
     showPathology: boolean;
     pathRows: MetaRow[];
+    /** Patient clinical rows; unset (e.g. still loading) hides the section. */
+    clinicalRows?: ReadonlyArray<MetaRow>;
     /** Shows a header button that hides the sidebar. */
     onHide?: () => void;
 }) {
@@ -188,6 +191,16 @@ function WsiMetaSidebarComponent({
             <SbSection title="Pathology">
                 {showPathology ? <MetaTable rows={pathRows} /> : <EmptyState />}
             </SbSection>
+
+            {clinicalRows && (
+                <SbSection title="Clinical">
+                    {clinicalRows.length > 0 ? (
+                        <MetaTable rows={clinicalRows} />
+                    ) : (
+                        <EmptyState />
+                    )}
+                </SbSection>
+            )}
         </div>
     );
 }
