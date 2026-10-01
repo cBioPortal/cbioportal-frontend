@@ -1,11 +1,15 @@
 import * as React from 'react';
-import { LollipopStick } from '../data/linkAggregation';
+import { LollipopStick, slotLabel } from '../data/linkAggregation';
 import { HIST_BASELINE, HIST_MAX_H } from '../data/trackGeometry';
 
 export interface AnchorLollipopTrackProps {
     sticks: LollipopStick[];
     colorOf: (category: string) => string;
     onSelect?: (stick: LollipopStick) => void;
+    /** Display text for a category in the tooltip (default: the raw value). */
+    categoryLabel?: (category: string) => string;
+    /** Anchor chromosome, prefixed to the tooltip's genomic span. */
+    chromosome?: string;
 }
 
 const MIN_STEM = 14;
@@ -28,6 +32,8 @@ const AnchorLollipopTrack: React.FC<AnchorLollipopTrackProps> = ({
     sticks,
     colorOf,
     onSelect,
+    categoryLabel = c => c,
+    chromosome,
 }) => {
     const max = sticks.reduce((m, s) => Math.max(m, s.sampleCount), 1);
     return (
@@ -37,7 +43,14 @@ const AnchorLollipopTrack: React.FC<AnchorLollipopTrackProps> = ({
                     MIN_STEM +
                     (s.sampleCount / max) * (HIST_MAX_H - MIN_STEM - MAX_R);
                 const top = HIST_BASELINE - stem;
-                const r = Math.min(MAX_R, 3 + 1.6 * Math.sqrt(s.sampleCount));
+                const r = Math.max(
+                    3,
+                    Math.min(
+                        MAX_R,
+                        3 + 1.6 * Math.sqrt(s.sampleCount),
+                        s.width * 0.6
+                    )
+                );
                 const total = s.byCategory.reduce(
                     (t, c) => t + c.sampleCount,
                     0
@@ -52,10 +65,22 @@ const AnchorLollipopTrack: React.FC<AnchorLollipopTrackProps> = ({
                         onClick={onSelect ? () => onSelect(s) : undefined}
                     >
                         <title>
-                            {s.key} · {s.sampleCount} sample
-                            {s.sampleCount === 1 ? '' : 's'} ·{' '}
+                            {slotLabel(s.key)}
+                            {s.span
+                                ? ` · ${
+                                      chromosome ? `${chromosome}:` : ''
+                                  }${s.span.gStart.toLocaleString()}–${s.span.gEnd.toLocaleString()}`
+                                : ''}
+                            {` · ${s.sampleCount} sample${
+                                s.sampleCount === 1 ? '' : 's'
+                            } · `}
                             {s.byCategory
-                                .map(c => `${c.category} ${c.sampleCount}`)
+                                .map(
+                                    c =>
+                                        `${categoryLabel(c.category)} ${
+                                            c.sampleCount
+                                        }`
+                                )
                                 .join(', ')}
                         </title>
                         <line
@@ -73,7 +98,8 @@ const AnchorLollipopTrack: React.FC<AnchorLollipopTrackProps> = ({
                                 cy={top}
                                 r={r}
                                 fill={colorOf(s.byCategory[0].category)}
-                                stroke="#fff"
+                                stroke="#999"
+                                strokeWidth={0.5}
                             />
                         ) : (
                             s.byCategory.map(c => {
@@ -87,7 +113,7 @@ const AnchorLollipopTrack: React.FC<AnchorLollipopTrackProps> = ({
                                         data-testid="lollipop-slice"
                                         d={d}
                                         fill={colorOf(c.category)}
-                                        stroke="#fff"
+                                        stroke="#999"
                                         strokeWidth={0.5}
                                     />
                                 );

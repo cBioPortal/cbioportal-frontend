@@ -209,6 +209,7 @@ export interface TrackSlot {
     /** Slot centre (px). */
     x: number;
     width: number;
+    span?: { gStart: number; gEnd: number };
 }
 
 export interface TrackLayout {
@@ -249,13 +250,12 @@ export function featureSlotLayout(
         key: featureSlotKey(f),
         x: drawX + i * slotW + slotW / 2,
         width: slotW,
+        span: { gStart: f.gStart, gEnd: f.gEnd },
     }));
     return {
         slots,
         assign: breakpoints => {
-            const out: (TrackSlot | undefined)[] = breakpoints.map(
-                () => undefined
-            );
+            const out = breakpoints.map<TrackSlot | undefined>(() => undefined);
             const { features: hit } = assignBreakpointsToFeatures(
                 transcript,
                 breakpoints.map(b => (b === null ? NaN : b))
