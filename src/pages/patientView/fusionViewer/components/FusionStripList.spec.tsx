@@ -331,4 +331,23 @@ describe('FusionStripList partnerless rows with a 3′ anchor (D33)', () => {
         assert.isAbove(rects.length, 0);
         rects.forEach(r => assert.isBelow(Number(r.prop('x')), 525));
     });
+
+    it('treats a row with a partner symbol but no partner breakpoint as lone', () => {
+        const noBp = { ...lone, threePrimeSymbol: 'EML4' };
+        const wrapper = mount(
+            <FusionStripList
+                rows={[noBp]}
+                transcriptForRow={() => alkTx}
+                width={1000}
+                pxPerBp5p={0.2}
+                pxPerBp3p={0.2}
+                alignment="junction"
+                anchorSide="3p"
+            />
+        );
+        assert.equal(
+            wrapper.find('[data-testid="strip-left-note"]').text(),
+            'no partner'
+        );
+    });
 });

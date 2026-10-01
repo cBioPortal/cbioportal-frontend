@@ -863,14 +863,24 @@ describe('FusionCohortStore pair facet', () => {
         });
 
         it('0 or ≥2 genes do not seed', () => {
+            store.seedFromStudyFilter(['ALK'], false);
+            assert.isTrue(store.seedPending);
             store.seedFromStudyFilter([], true);
+            assert.isFalse(store.seedPending);
+            store.seedFromStudyFilter(['ALK'], false);
+            assert.isTrue(store.seedPending);
             store.seedFromStudyFilter(['ALK', 'RET'], true);
+            assert.isFalse(store.seedPending);
             assert.isFalse(store.hasAnchorSelection);
         });
 
         it('user pick blocks later seeds', () => {
+            store.seedFromStudyFilter(['ALK'], false);
+            assert.isTrue(store.seedPending);
             store.setAnchor({ mode: 'pair', key: 'ALK::EML4' });
+            assert.isFalse(store.seedPending);
             store.seedFromStudyFilter(['ALK'], true);
+            assert.isFalse(store.seedPending);
             assert.equal(store.anchor!.mode, 'pair');
         });
 

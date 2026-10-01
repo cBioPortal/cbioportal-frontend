@@ -244,9 +244,10 @@ export default class FusionComparisonView extends React.Component<
 
     // Transcript keys currently being fetched, so overlapping reaction firings
     // don't launch duplicate requests for the same gene. Tracked PER KEY (not a
-    // single boolean) and cleared as each request settles — a hung or failed
-    // request can therefore never permanently wedge the fetcher. Commits MERGE
-    // into the current map, so overlapping fetches are safe regardless.
+    // single boolean) and released as each request settles, so one hung request
+    // cannot block other keys. Failed/empty fetches are recorded in the store's
+    // failedTranscriptKeys (markTranscriptsFailed) and not retried this session.
+    // Commits MERGE into the current map, so overlapping fetches are safe.
     private inFlightTxKeys = new Set<string>();
 
     async fetchTranscripts() {
@@ -284,8 +285,8 @@ export default class FusionComparisonView extends React.Component<
             } catch {
                 failed.push(k);
             } finally {
-                // Always release the key so a later firing can retry it — no
-                // permanent blacklist, no shared flag that could stick.
+                // Release the in-flight marker; whether the key may be fetched
+                // again is decided by the store (failedTranscriptKeys).
                 this.inFlightTxKeys.delete(k);
             }
         }
@@ -358,10 +359,8 @@ export default class FusionComparisonView extends React.Component<
     // Each getter reads this.transcriptsByKey (via transcriptForGene) so MobX
     // re-runs it when transcripts load.
 
-    // Correct each row's 5′/3′ using strand + connectionType, the same resolver
-    // the single-sample diagram uses. Falls back to the curated ordering for
-    // rows whose transcripts haven't loaded yet.
-    // Resolution now happens in the store (D13); these are the rendered rows.
+    // 5′/3′ resolution (strand + connectionType) happens in the store (D13);
+    // these are the rendered rows.
     @computed get resolvedRows(): ComparisonRow[] {
         return this.props.store.anchorRows;
     }
@@ -563,6 +562,20 @@ export default class FusionComparisonView extends React.Component<
         const pretty = group.key
             .replace('5p:', '5′E')
             .replace('|3p:', ' · 3′E');
+        if (this.isGeneMode) {
+            // Gene-mode keys are `<category>|5p:…|3p:…` and partnerGene is null.
+            const sep = pretty.indexOf('|');
+            const gene = this.anchorGene;
+            if (sep < 0) return `${gene} ${pretty}`;
+            const cat = pretty.slice(0, sep);
+            const rest = pretty.slice(sep + 1);
+            if (cat === NO_PARTNER || cat === INTRAGENIC) {
+                return `${gene} ${cat} ${rest}`;
+            }
+            return this.anchorSide === '5p'
+                ? `${gene}→${cat} ${rest}`
+                : `${cat}→${gene} ${rest}`;
+        }
         return `${this.anchorGene}→${this.partnerGene || ''} ${pretty}`;
     }
 

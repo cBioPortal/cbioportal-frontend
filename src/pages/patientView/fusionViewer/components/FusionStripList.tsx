@@ -1,5 +1,9 @@
 import * as React from 'react';
-import { ComparisonRow, AnchorSide } from '../data/comparisonRows';
+import {
+    ComparisonRow,
+    AnchorSide,
+    isPartnerless,
+} from '../data/comparisonRows';
 import { TranscriptData, JunctionLabelMode } from '../data/types';
 import { CollapsedGroup } from '../data/collapseRows';
 import FusionProductStrip, { ExonHoverInfo } from './FusionProductStrip';
@@ -165,8 +169,7 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
                         // lone segment in the anchor (right) column, as a 3′
                         // partner would, with the left half empty.
                         const lone3p =
-                            anchorSide === '3p' &&
-                            row.threePrimeSymbol === null;
+                            anchorSide === '3p' && isPartnerless(row);
                         const t5 = lone3p
                             ? undefined
                             : ladderTranscript(

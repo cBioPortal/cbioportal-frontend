@@ -181,7 +181,7 @@ export function sortComparisonRows(rows: ComparisonRow[]): ComparisonRow[] {
     return [...rows].sort((a, b) => a.anchorBreakpoint - b.anchorBreakpoint);
 }
 
-const isPartnerless = (row: ComparisonRow): boolean =>
+export const isPartnerless = (row: ComparisonRow): boolean =>
     row.threePrimeSymbol === null || row.partnerBreakpoint === null;
 
 /**

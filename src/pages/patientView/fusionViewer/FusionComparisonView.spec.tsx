@@ -751,9 +751,37 @@ describe('FusionComparisonView gene mode', () => {
         assert.lengthOf(same.view.collapsedGroups, 1);
     });
 
+    describe('groupLabel', () => {
+        const label = (side: '5p' | '3p', key: string) => {
+            const store = alkStore();
+            store.setAnchor({ mode: 'gene', gene: 'ALK', side });
+            store.setCollapseKindOverride('exonStructure');
+            const view = mount(
+                <FusionComparisonView store={store} />
+            ).instance() as any;
+            return view.groupLabel({ key });
+        };
+        it('5′ anchor reads ALK→partner', () => {
+            assert.equal(label('5p', 'EML4|5p:1|3p:2'), 'ALK→EML4 5′E1 · 3′E2');
+        });
+        it('3′ anchor reads partner→ALK', () => {
+            assert.equal(label('3p', 'EML4|5p:1|3p:2'), 'EML4→ALK 5′E1 · 3′E2');
+        });
+        it('no partner reads gene plus category', () => {
+            assert.equal(
+                label('3p', '(no partner)|5p:1|3p:2'),
+                'ALK (no partner) 5′E1 · 3′E2'
+            );
+        });
+    });
+
     it('does not replace a pending seed with an auto pair anchor', () => {
-        const store = new FusionCohortStore();
-        store.seedFromStudyFilter(['ALK'], false); // Task 8 API; data not ready
+        // Events WITH a pair, so only the seedPending guard can block the
+        // auto pair anchor (an empty store would be blocked by pairSummaries).
+        const store = alkStore();
+        store.seedFromStudyFilter(['ALK'], false); // data not ready: stays pending
+        assert.isAbove(store.pairSummaries.length, 0);
+        assert.isTrue(store.seedPending);
         mount(<FusionComparisonView store={store} />);
         assert.isFalse(store.hasAnchorSelection);
     });
