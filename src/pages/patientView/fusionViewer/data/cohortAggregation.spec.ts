@@ -702,3 +702,22 @@ describe('extractSvTypeOptions', () => {
         assert.deepEqual(options.sort(), ['DELETION', 'FUSION']);
     });
 });
+
+describe('anchorPartners facet', () => {
+    it('defaults to undefined and is ignored by eventMatchesFilter', () => {
+        const f = defaultCohortFilter();
+        assert.isUndefined(f.anchorPartners);
+        const e = {
+            gene1: { symbol: 'EML4', chromosome: '2', position: 1 },
+            gene2: { symbol: 'ALK', chromosome: '2', position: 2 },
+            callMethod: 'FUSION',
+            frameCallMethod: 'in_frame',
+        } as any;
+        assert.isTrue(
+            eventMatchesFilter(e, {
+                ...f,
+                anchorPartners: { gene: 'ALK', partners: ['KIF5B'] },
+            })
+        );
+    });
+});

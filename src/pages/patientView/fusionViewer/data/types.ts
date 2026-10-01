@@ -221,6 +221,12 @@ export interface FusionCohortFilter {
         start: number;
         end: number;
     };
+    /**
+     * Gene-mode partner facet, scoped to the gene it was set for (D30).
+     * Applied post-resolution by FusionCohortStore only; eventMatchesFilter
+     * ignores it because it runs on unresolved events.
+     */
+    anchorPartners?: { gene: string; partners: string[] };
 }
 
 /**

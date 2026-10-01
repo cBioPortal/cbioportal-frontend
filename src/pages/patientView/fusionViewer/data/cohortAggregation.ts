@@ -330,5 +330,6 @@ export function defaultCohortFilter(): FusionCohortFilter {
         svTypes: [],
         inFrame: 'any',
         breakpointRegion: undefined,
+        anchorPartners: undefined,
     };
 }
