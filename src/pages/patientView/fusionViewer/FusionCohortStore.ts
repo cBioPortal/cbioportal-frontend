@@ -29,7 +29,23 @@ import {
     sortComparisonRows,
     ComparisonAnchor,
     ComparisonRow,
+    EffectiveAnchor,
+    AnchorSide,
+    filterRowsToAnchorSide,
+    resolveComparisonRows,
+    sortRowsByAnchorSide,
+    partnerCategory,
 } from './data/comparisonRows';
+import {
+    buildGeneSummaries,
+    buildPartnerSummaries,
+    GeneSummary,
+    PartnerSummary,
+} from './data/anchorSummaries';
+import {
+    resolveAnchorIdentity,
+    resolveEffectiveSide,
+} from './data/anchorPipeline';
 import {
     txKey,
     buildForRow,
@@ -39,6 +55,8 @@ import {
 import { CollapseKind } from './data/collapseRows';
 import { GenomeBuild } from './data/genomeNexusTranscriptService';
 import { GENOME_ID_TO_GENOME_BUILD } from 'shared/lib/referenceGenomeUtils';
+
+export type AnchorSource = 'user' | 'auto' | 'seed';
 
 /**
  * Maximum number of pair rows to show in the cohort matrix.
@@ -72,6 +90,13 @@ export class FusionCohortStore {
     @observable private anchorSelection:
         | ComparisonAnchor
         | undefined = undefined;
+
+    /** True once the user explicitly picked an anchor; blocks study seeding. */
+    @observable private anchorPickedByUser = false;
+    /** Study-filter gene waiting for cohort data before it can be applied. */
+    @observable private pendingSeedGene: string | undefined = undefined;
+    /** Last study-filter gene actually applied (idempotence guard). */
+    @observable private lastSeededGene: string | undefined = undefined;
 
     /** Alignment mode for the comparison track ruler. */
     @observable public alignment: 'junction' | 'coordinate' = 'junction';
@@ -446,36 +471,193 @@ export class FusionCohortStore {
     }
 
     @action
-    public setAnchor(a: ComparisonAnchor): void {
+    public setAnchor(
+        a: ComparisonAnchor,
+        opts: { source: AnchorSource } = { source: 'user' }
+    ): void {
+        const prev = this.anchorSelection;
+        let next = this.filter;
+        const enteringGene = a.mode === 'gene' && prev?.mode !== 'gene';
+        const leavingGene = a.mode === 'pair' && prev?.mode === 'gene';
+        const geneChanged =
+            a.mode === 'gene' && prev?.mode === 'gene' && prev.gene !== a.gene;
+        if (enteringGene) next = { ...next, fusionPairKeys: [] };
+        if (leavingGene || geneChanged) {
+            next = { ...next, anchorPartners: undefined };
+        }
+        // An explicit pick beats an older pair filter (904a83001).
+        if (
+            a.mode === 'pair' &&
+            buildComparisonRows(this.filteredEvents, a).length === 0
+        ) {
+            next = { ...next, fusionPairKeys: [] };
+        }
+        this.filter = next;
         this.anchorSelection = a;
-        // An explicit pick beats an older pair filter. Without this the
-        // repairing getter below sees a pick the filter excludes, treats it as
-        // orphaned, and silently substitutes the filtered pair -- so clicking
-        // a row while a different pair is checked did nothing at all.
-        if (buildComparisonRows(this.filteredEvents, a).length === 0) {
-            this.applyFilter({ ...this.filter, fusionPairKeys: [] });
+        if (opts.source === 'user') {
+            this.anchorPickedByUser = true;
+            this.pendingSeedGene = undefined;
         }
     }
 
-    /**
-     * The anchor actually used by the comparison views.
-     *
-     * A filter change can orphan the user's pick -- e.g. checking a pair in the
-     * recurrence table filters out the pair the anchor points at. Nothing
-     * repaired that: FusionComparisonView's bootstrap only fires when the
-     * anchor is unset, so a set-but-orphaned anchor left `comparisonRows` empty
-     * and the strips/track/histogram blank with no explanation. Fall back to
-     * the most recurrent surviving pair, or nothing when nothing survives.
-     */
-    @computed
-    public get anchor(): ComparisonAnchor | undefined {
-        const selected = this.anchorSelection;
-        if (!selected) return undefined;
-        if (buildComparisonRows(this.filteredEvents, selected).length > 0) {
-            return selected;
+    /** Pair/Gene toggle. Gene defaults to the busiest gene of the current pair. */
+    @action
+    public setAnchorMode(mode: 'pair' | 'gene'): void {
+        const current = this.anchor;
+        if (mode === 'pair') {
+            if (current?.mode === 'pair') return;
+            const top = this.pairSummaries[0];
+            if (top) this.setAnchor({ mode: 'pair', key: top.key });
+            return;
         }
-        const survivor = this.pairSummaries[0];
-        return survivor ? { mode: 'pair', key: survivor.key } : undefined;
+        if (current?.mode === 'gene') return;
+        const pairGenes =
+            current?.mode === 'pair' ? current.key.split('::') : [];
+        const pick =
+            this.geneSummaries.find(g => pairGenes.includes(g.gene)) ||
+            this.geneSummaries[0];
+        if (pick) {
+            this.setAnchor({ mode: 'gene', gene: pick.gene, side: 'auto' });
+        }
+    }
+
+    @action
+    public setAnchorGene(gene: string): void {
+        this.setAnchor({ mode: 'gene', gene, side: 'auto' });
+    }
+
+    @action
+    public setAnchorSide(side: AnchorSide): void {
+        const a = this.anchor;
+        if (!a || a.mode !== 'gene') return;
+        this.setAnchor({ mode: 'gene', gene: a.gene, side });
+    }
+
+    @action
+    public togglePartnerFacet(category: string): void {
+        const a = this.anchor;
+        if (!a || a.mode !== 'gene') return;
+        const current =
+            this.filter.anchorPartners?.gene === a.gene
+                ? this.filter.anchorPartners.partners
+                : [];
+        const partners = current.includes(category)
+            ? current.filter(c => c !== category)
+            : [...current, category];
+        this.filter = {
+            ...this.filter,
+            anchorPartners: partners.length
+                ? { gene: a.gene, partners }
+                : undefined,
+        };
+    }
+
+    public get hasAnchorSelection(): boolean {
+        return this.anchorSelection !== undefined;
+    }
+
+    public get seedPending(): boolean {
+        return this.pendingSeedGene !== undefined;
+    }
+
+    // ---- Acyclic pipeline (spec 3.1). Strictly 1 -> 7; nothing reads back. ----
+
+    @computed
+    public get geneSummaries(): GeneSummary[] {
+        return buildGeneSummaries(this.filteredEvents);
+    }
+
+    /** 1. Which pair/gene is shown -- from event presence only. */
+    @computed
+    public get effectiveAnchorIdentity(): ComparisonAnchor | undefined {
+        return resolveAnchorIdentity({
+            selection: this.anchorSelection,
+            events: this.filteredEvents,
+            pairSummaries: this.pairSummaries,
+            geneSummaries: this.geneSummaries,
+            seedPending: this.seedPending,
+        });
+    }
+
+    /** 2. Unfiltered rows for the identity: drives transcript requests. */
+    @computed
+    public get candidateRows(): ComparisonRow[] {
+        const id = this.effectiveAnchorIdentity;
+        return id ? buildComparisonRows(this.filteredEvents, id) : [];
+    }
+
+    /** 3. Strand-aware 5'/3' (canonical isoform at the cohort build). */
+    @computed
+    public get resolvedRows(): ComparisonRow[] {
+        return resolveComparisonRows(this.candidateRows, gene => {
+            const t = this.transcriptForGene(gene);
+            return t ? [t] : [];
+        });
+    }
+
+    /** 4. Concrete side for a gene anchor. */
+    @computed
+    public get effectiveSide(): AnchorSide | undefined {
+        return resolveEffectiveSide(
+            this.effectiveAnchorIdentity,
+            this.resolvedRows,
+            this.candidateRows,
+            this.transcriptsReady
+        );
+    }
+
+    /** The anchor the views render (side always concrete). */
+    @computed
+    public get anchor(): EffectiveAnchor | undefined {
+        const id = this.effectiveAnchorIdentity;
+        if (!id) return undefined;
+        if (id.mode === 'pair') return id;
+        return { mode: 'gene', gene: id.gene, side: this.effectiveSide! };
+    }
+
+    /** 5. Side filter (Gene mode); pass-through in Pair mode. */
+    @computed
+    public get sideRows(): { kept: ComparisonRow[]; oppositeCount: number } {
+        const a = this.anchor;
+        if (!a || a.mode !== 'gene') {
+            return { kept: this.resolvedRows, oppositeCount: 0 };
+        }
+        return filterRowsToAnchorSide(this.resolvedRows, a.gene, a.side);
+    }
+
+    /** 6. Partner table rows, before the partner facet. */
+    @computed
+    public get partnerSummaries(): PartnerSummary[] {
+        const a = this.anchor;
+        if (!a || a.mode !== 'gene') return [];
+        return buildPartnerSummaries(this.sideRows.kept, a.gene, a.side);
+    }
+
+    /** Stored facet intersected with current categories, for its own gene only. */
+    @computed
+    public get effectiveAnchorPartners(): string[] {
+        const a = this.anchor;
+        const stored = this.filter.anchorPartners;
+        if (!a || a.mode !== 'gene' || !stored || stored.gene !== a.gene) {
+            return [];
+        }
+        const present = new Set(this.partnerSummaries.map(p => p.category));
+        return stored.partners.filter(p => present.has(p));
+    }
+
+    /** 7. What the view renders. */
+    @computed
+    public get anchorRows(): ComparisonRow[] {
+        const a = this.anchor;
+        if (!a) return [];
+        if (a.mode === 'pair') return sortComparisonRows(this.sideRows.kept);
+        const facet = this.effectiveAnchorPartners;
+        const rows = facet.length
+            ? this.sideRows.kept.filter(r =>
+                  facet.includes(partnerCategory(r, a.gene, a.side))
+              )
+            : this.sideRows.kept;
+        return sortRowsByAnchorSide(rows, a.side);
     }
 
     @action
@@ -595,8 +777,7 @@ export class FusionCohortStore {
 
     @computed
     public get transcriptRequests(): TranscriptRequest[] {
-        // Task 4 switches this source to `candidateRows`.
-        return transcriptRequestsForRows(this.comparisonRows, this.genomeBuild);
+        return transcriptRequestsForRows(this.candidateRows, this.genomeBuild);
     }
 
     @computed
@@ -613,12 +794,5 @@ export class FusionCohortStore {
     @computed
     public get transcriptsReady(): boolean {
         return this.outstandingTranscriptRequests.length === 0;
-    }
-
-    @computed
-    public get comparisonRows(): ComparisonRow[] {
-        if (!this.anchor) return [];
-        const rows = buildComparisonRows(this.filteredEvents, this.anchor);
-        return sortComparisonRows(rows);
     }
 }

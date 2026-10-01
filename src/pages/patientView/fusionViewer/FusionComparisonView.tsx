@@ -341,7 +341,7 @@ export default class FusionComparisonView extends React.Component<
 
     // ── Row derivation pipeline ──────────────────────────────────────────
     // Split into @computed getters keyed only on data observables
-    // (store.comparisonRows, this.transcriptsByKey) so it recomputes when rows
+    // (store.anchorRows, this.transcriptsByKey) so it recomputes when rows
     // or transcripts change — NOT on window resize or expandedSampleId toggles.
     // Each getter reads this.transcriptsByKey (via transcriptForGene) so MobX
     // re-runs it when transcripts load.
@@ -352,7 +352,7 @@ export default class FusionComparisonView extends React.Component<
     @computed get resolvedRows(): ComparisonRow[] {
         // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         this.transcriptsByKey; // observe: re-resolve when transcripts load
-        return resolveComparisonRows(this.props.store.comparisonRows, gene => {
+        return resolveComparisonRows(this.props.store.anchorRows, gene => {
             const t = this.transcriptForGene(gene);
             return t ? [t] : [];
         });
