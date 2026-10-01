@@ -6,6 +6,7 @@ import {
     ObservableMap,
 } from 'mobx';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
+import { rankedColorMap } from './data/partnerPalette';
 import {
     FusionCohortFilter,
     FusionEvent,
@@ -113,7 +114,17 @@ export class FusionCohortStore {
      * Anchor-track histogram mode: 'feature' bins breakpoints by the reference
      * transcript's exons/introns/promoter; 'genomic' bins by fixed genomic width.
      */
-    @observable public trackMode: 'feature' | 'genomic' = 'feature';
+    @observable public trackMode: 'feature' | 'genomic' | 'lollipop' =
+        'feature';
+
+    /** Lollipop head colouring (Gene mode). */
+    @observable public lollipopColorBy: 'partner' | 'frame' | 'svType' =
+        'partner';
+
+    @action
+    public setLollipopColorBy(v: 'partner' | 'frame' | 'svType'): void {
+        this.lollipopColorBy = v;
+    }
 
     /**
      * Row-display mode for the per-sample fusion-product strips, independent of
@@ -504,6 +515,10 @@ export class FusionCohortStore {
         }
         this.filter = next;
         this.anchorSelection = a;
+        if (enteringGene) this.trackMode = 'lollipop';
+        if (leavingGene && this.trackMode === 'lollipop') {
+            this.trackMode = 'feature';
+        }
         if (opts.source === 'user') {
             this.anchorPickedByUser = true;
             this.pendingSeedGene = undefined;
@@ -670,6 +685,12 @@ export class FusionCohortStore {
         return buildPartnerSummaries(this.sideRows.kept, a.gene, a.side);
     }
 
+    /** Partner colours shared by the lollipop and the partner table. */
+    @computed
+    public get partnerColorMap(): Map<string, string> {
+        return rankedColorMap(this.partnerSummaries.map(p => p.category));
+    }
+
     /** Stored facet intersected with current categories, for its own gene only. */
     @computed
     public get effectiveAnchorPartners(): string[] {
@@ -703,7 +724,9 @@ export class FusionCohortStore {
     }
 
     @action
-    public setTrackMode(m: 'feature' | 'genomic'): void {
+    public setTrackMode(m: 'feature' | 'genomic' | 'lollipop'): void {
+        // Lollipop exists only for a single-gene anchor (D7).
+        if (m === 'lollipop' && this.anchor?.mode !== 'gene') return;
         this.trackMode = m;
     }
 

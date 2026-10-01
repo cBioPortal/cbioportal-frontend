@@ -66,7 +66,8 @@ describe('FusionComparisonView', () => {
         const store = new FusionCohortStore();
         store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
         const wrapper = mount(<FusionComparisonView store={store} />);
-        assert.equal(store.trackMode, 'feature');
+        // Entering Gene mode selects Lollipop (Phase 3).
+        assert.equal(store.trackMode, 'lollipop');
         wrapper
             .find('[data-testid="trackmode-genomic"]')
             .hostNodes()
@@ -610,6 +611,31 @@ describe('FusionComparisonView gene mode', () => {
         ]);
         return store;
     }
+
+    it('renders lollipop sticks instead of histogram bars in Gene mode', () => {
+        const store = alkStore();
+        store.setAnchor({ mode: 'gene', gene: 'ALK', side: '3p' });
+        const w = mount(<FusionComparisonView store={store} />);
+        assert.isAbove(w.find('g[data-testid="lollipop-stick"]').length, 0);
+        assert.lengthOf(w.find('rect[data-testid="feature-bar"]'), 0);
+        assert.isTrue(
+            w.find('select[data-testid="lollipop-colorby"]').exists()
+        );
+    });
+
+    it('Genomic axis hides the lollipop; Pair mode has no Lollipop button', () => {
+        const store = alkStore();
+        store.setAnchor({ mode: 'gene', gene: 'ALK', side: '3p' });
+        const w = mount(<FusionComparisonView store={store} />);
+        runInAction(() => store.setTrackMode('genomic'));
+        w.update();
+        assert.lengthOf(w.find('g[data-testid="lollipop-stick"]'), 0);
+        runInAction(() => store.setAnchorMode('pair'));
+        w.update();
+        assert.isFalse(
+            w.find('button[data-testid="trackmode-lollipop"]').exists()
+        );
+    });
 
     it('3′ gene anchor: no TMPRSS2-ERG rows, partner half captioned, no dominant partner', () => {
         const store = alkStore();

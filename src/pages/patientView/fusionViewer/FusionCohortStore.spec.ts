@@ -699,6 +699,25 @@ describe('FusionCohortStore pair facet', () => {
             ] as any);
         });
 
+        it('entering Gene mode selects Lollipop; leaving falls back to feature', () => {
+            store.setAnchor({ mode: 'gene', gene: 'ALK', side: 'auto' });
+            assert.equal(store.trackMode, 'lollipop');
+            store.setTrackMode('genomic');
+            assert.equal(store.trackMode, 'genomic');
+            store.setTrackMode('lollipop');
+            assert.equal(store.trackMode, 'lollipop');
+            store.setAnchorMode('pair');
+            assert.equal(store.trackMode, 'feature');
+            store.setTrackMode('lollipop'); // not allowed in Pair mode
+            assert.equal(store.trackMode, 'feature');
+        });
+
+        it('partnerColorMap follows partner ranking', () => {
+            store.setAnchor({ mode: 'gene', gene: 'ALK', side: '3p' });
+            const m = store.partnerColorMap;
+            assert.isTrue(m.has('EML4'));
+        });
+
         it('gene mode shows only events involving the gene, on the auto side', () => {
             store.setAnchor({ mode: 'gene', gene: 'ALK', side: 'auto' });
             assert.deepEqual(store.anchor, {
