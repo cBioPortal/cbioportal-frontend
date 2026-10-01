@@ -2,8 +2,11 @@
  * @jest-environment jsdom
  */
 import * as React from 'react';
-import TestRenderer from 'react-test-renderer';
-import { WsiMetaSidebar } from './wsiMetaSidebar';
+import TestRenderer, { act } from 'react-test-renderer';
+import {
+    WsiMetaSidebar,
+    wsiSidebarSectionCollapsedKey,
+} from './wsiMetaSidebar';
 import { WsiClinicalRow } from './wsiViewerTypes';
 
 function renderSidebarJson(clinicalRows?: WsiClinicalRow[]): string {
@@ -40,5 +43,73 @@ describe('WsiMetaSidebar clinical section', () => {
         const json = renderSidebarJson([]);
         expect(json).toContain('"Clinical"');
         expect(json).toContain('—');
+    });
+});
+
+describe('WsiMetaSidebar collapsible sections', () => {
+    beforeEach(() => window.localStorage.clear());
+
+    function renderSidebar() {
+        return TestRenderer.create(
+            <WsiMetaSidebar
+                width={300}
+                showImageProperties={true}
+                wsiRows={[{ label: 'Dimensions', value: '100 x 100' }]}
+                showPathology={true}
+                pathRows={[{ label: 'Stain', value: 'H&E' }]}
+                clinicalRows={[{ label: 'Sex', value: 'Female' }]}
+            />
+        );
+    }
+
+    function toggle(renderer: TestRenderer.ReactTestRenderer, id: string) {
+        return renderer.root.findByProps({
+            'data-testid': `wsi-sidebar-section-${id}-toggle`,
+        });
+    }
+
+    it.each(['imageProperties', 'pathology', 'clinical'])(
+        'collapses and expands the %s section',
+        id => {
+            const renderer = renderSidebar();
+            expect(toggle(renderer, id).props['aria-expanded']).toBe(true);
+
+            act(() => toggle(renderer, id).props.onClick());
+            expect(toggle(renderer, id).props['aria-expanded']).toBe(false);
+            expect(
+                renderer.root.findAllByProps({
+                    id: `wsi-sidebar-section-${id}`,
+                })
+            ).toHaveLength(0);
+            expect(
+                window.localStorage.getItem(wsiSidebarSectionCollapsedKey(id))
+            ).toBe('1');
+
+            act(() => toggle(renderer, id).props.onClick());
+            expect(toggle(renderer, id).props['aria-expanded']).toBe(true);
+            expect(
+                window.localStorage.getItem(wsiSidebarSectionCollapsedKey(id))
+            ).toBeNull();
+        }
+    );
+
+    it('collapses one section without touching the others', () => {
+        const renderer = renderSidebar();
+        act(() => toggle(renderer, 'pathology').props.onClick());
+
+        const json = JSON.stringify(renderer.toJSON());
+        expect(json).toContain('"Female"');
+        expect(json).toContain('"100 x 100"');
+        expect(json).not.toContain('"H&E"');
+    });
+
+    it('restores the stored collapsed state', () => {
+        window.localStorage.setItem(
+            wsiSidebarSectionCollapsedKey('clinical'),
+            '1'
+        );
+        const renderer = renderSidebar();
+        expect(toggle(renderer, 'clinical').props['aria-expanded']).toBe(false);
+        expect(JSON.stringify(renderer.toJSON())).not.toContain('"Female"');
     });
 });
