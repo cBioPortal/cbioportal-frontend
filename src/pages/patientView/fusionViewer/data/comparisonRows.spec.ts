@@ -7,6 +7,15 @@ import {
     snapBreakpointsToAnchorGene,
     ComparisonAnchor,
     ComparisonRow,
+    anchorEndpoint,
+    partnerEndpoint,
+    partnerCategory,
+    filterRowsToAnchorSide,
+    majoritySide,
+    snapBreakpointsToGeneSide,
+    sortRowsByAnchorSide,
+    NO_PARTNER,
+    INTRAGENIC,
 } from './comparisonRows';
 import { FusionEvent, TranscriptData } from './types';
 
@@ -97,7 +106,11 @@ describe('buildComparisonRows', () => {
     });
 
     it('driver mode keeps every event touching the driver gene', () => {
-        const anchor: ComparisonAnchor = { mode: 'driver', key: 'TMPRSS2' };
+        const anchor: ComparisonAnchor = {
+            mode: 'gene',
+            gene: 'TMPRSS2',
+            side: '5p',
+        };
         const rows = buildComparisonRows(
             [ev({ id: 'a' }), ev({ id: 'b', tumorId: 'S2' })],
             anchor
@@ -115,8 +128,9 @@ describe('buildComparisonRows', () => {
 
     it('carries the 3′ partner breakpoint', () => {
         const rows = buildComparisonRows([ev({})], {
-            mode: 'driver',
-            key: 'TMPRSS2',
+            mode: 'gene',
+            gene: 'TMPRSS2',
+            side: '5p',
         });
         assert.equal(rows[0].partnerBreakpoint, 900);
     });
@@ -150,7 +164,7 @@ describe('resolveComparisonRows', () => {
                 },
             }),
         ],
-        { mode: 'driver', key: 'ERG' }
+        { mode: 'gene', gene: 'ERG', side: '5p' }
     );
 
     it('flips TMPRSS2-ERG so TMPRSS2 becomes the 5′ anchor', () => {
@@ -334,5 +348,172 @@ describe('snapBreakpointsToAnchorGene', () => {
         const out = snapBreakpointsToAnchorGene([intragenic], TX_START, TX_END);
         assert.equal(out[0].anchorBreakpoint, TX_START - 5_000_000);
         assert.equal(out[0].partnerBreakpoint, TX_END + 5000);
+    });
+});
+
+function row(
+    five: string,
+    three: string | null,
+    bp5 = 100,
+    bp3: number | null = 900,
+    sampleId = 'S1'
+): ComparisonRow {
+    return {
+        event: ev({
+            tumorId: sampleId,
+            gene1: {
+                symbol: five,
+                chromosome: '1',
+                position: bp5,
+                selectedTranscriptId: '',
+                siteDescription: '',
+            },
+            gene2: three
+                ? {
+                      symbol: three,
+                      chromosome: '1',
+                      position: bp3 as number,
+                      selectedTranscriptId: '',
+                      siteDescription: '',
+                  }
+                : null,
+        }),
+        sampleId,
+        fivePrimeSymbol: five,
+        threePrimeSymbol: three,
+        anchorBreakpoint: bp5,
+        partnerBreakpoint: three ? bp3 : null,
+        frame: 'inFrame',
+    };
+}
+
+describe('gene anchor side helpers', () => {
+    it('buildComparisonRows gene mode matches the gene on either site', () => {
+        const events = [
+            ev({}),
+            ev({
+                gene1: { ...ev({}).gene1, symbol: 'EML4' },
+                gene2: { ...ev({}).gene2!, symbol: 'ALK' },
+            }),
+        ];
+        const rows = buildComparisonRows(events, {
+            mode: 'gene',
+            gene: 'ALK',
+            side: 'auto',
+        });
+        assert.equal(rows.length, 1);
+        assert.equal(rows[0].threePrimeSymbol, 'ALK');
+    });
+
+    it('anchorEndpoint reads the chosen side; partnerless always reads 5′', () => {
+        const r = row('EML4', 'ALK', 10, 20);
+        assert.deepEqual(anchorEndpoint(r, '3p'), {
+            symbol: 'ALK',
+            breakpoint: 20,
+        });
+        assert.deepEqual(anchorEndpoint(r, '5p'), {
+            symbol: 'EML4',
+            breakpoint: 10,
+        });
+        const lone = row('ALK', null, 30, null);
+        assert.deepEqual(anchorEndpoint(lone, '3p'), {
+            symbol: 'ALK',
+            breakpoint: 30,
+        });
+    });
+
+    it('partnerEndpoint is the other side, null when partnerless', () => {
+        const r = row('EML4', 'ALK', 10, 20);
+        assert.deepEqual(partnerEndpoint(r, '3p'), {
+            symbol: 'EML4',
+            breakpoint: 10,
+        });
+        assert.deepEqual(partnerEndpoint(row('ALK', null, 1, null), '5p'), {
+            symbol: null,
+            breakpoint: null,
+        });
+    });
+
+    it('partnerCategory names partner, (no partner) and (intragenic)', () => {
+        assert.equal(partnerCategory(row('EML4', 'ALK'), 'ALK', '3p'), 'EML4');
+        assert.equal(
+            partnerCategory(row('ALK', null, 1, null), 'ALK', '3p'),
+            NO_PARTNER
+        );
+        assert.equal(
+            partnerCategory(row('ALK', 'ALK'), 'ALK', '5p'),
+            INTRAGENIC
+        );
+    });
+
+    it('filterRowsToAnchorSide keeps chosen side, counts opposite, keeps partnerless and intragenic on both sides', () => {
+        const rows = [
+            row('EML4', 'ALK'),
+            row('KIF5B', 'ALK'),
+            row('ALK', 'PTPN3'),
+            row('ALK', null, 1, null),
+            row('ALK', 'ALK'),
+        ];
+        const r3 = filterRowsToAnchorSide(rows, 'ALK', '3p');
+        assert.equal(r3.kept.length, 4);
+        assert.equal(r3.oppositeCount, 1);
+        const r5 = filterRowsToAnchorSide(rows, 'ALK', '5p');
+        assert.equal(r5.kept.length, 3);
+        assert.equal(r5.oppositeCount, 2);
+    });
+
+    it('gate kill: unresolved rows with flipped site order put the gene on the wrong side', () => {
+        // Raw site order says ALK is 5′ although biologically it is the 3′
+        // partner. If the store ever skipped resolution, this is what the side
+        // filter would see -- the test proves the filter is not vacuous.
+        const unresolved = [row('ALK', 'EML4'), row('ALK', 'KIF5B')];
+        const r = filterRowsToAnchorSide(unresolved, 'ALK', '3p');
+        assert.equal(r.kept.length, 0);
+        assert.equal(r.oppositeCount, 2);
+    });
+
+    it('majoritySide ignores partnerless/intragenic rows; ties go to 5p', () => {
+        assert.equal(
+            majoritySide(
+                [row('EML4', 'ALK'), row('KIF5B', 'ALK'), row('ALK', 'X')],
+                'ALK'
+            ),
+            '3p'
+        );
+        assert.equal(
+            majoritySide(
+                [
+                    row('ALK', null, 1, null),
+                    row('ALK', null, 1, null),
+                    row('EML4', 'ALK'),
+                    row('ALK', 'X'),
+                ],
+                'ALK'
+            ),
+            '5p'
+        );
+    });
+
+    it('snapBreakpointsToGeneSide("3p") snaps the 3′ field into the gene', () => {
+        // ALK locus 1000-2000. Row has ALK's position desynced into the 5′ field.
+        const r = row('EML4', 'ALK', 1500, 50_000_000);
+        const [snapped] = snapBreakpointsToGeneSide([r], 1000, 2000, '3p');
+        assert.equal(snapped.partnerBreakpoint, 1500);
+        assert.equal(snapped.anchorBreakpoint, 50_000_000);
+        const [untouched] = snapBreakpointsToGeneSide(
+            [row('EML4', 'ALK', 50_000_000, 1500)],
+            1000,
+            2000,
+            '3p'
+        );
+        assert.equal(untouched.partnerBreakpoint, 1500);
+    });
+
+    it('sortRowsByAnchorSide sorts by the anchor-side breakpoint', () => {
+        const rows = [row('A', 'ALK', 1, 30), row('B', 'ALK', 2, 10)];
+        assert.deepEqual(
+            sortRowsByAnchorSide(rows, '3p').map(r => r.partnerBreakpoint),
+            [10, 30]
+        );
     });
 });

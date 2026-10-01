@@ -312,7 +312,7 @@ describe('FusionCohortStore', () => {
                     },
                 }) as any,
             ]);
-            store.setAnchor({ mode: 'driver', key: 'TMPRSS2' });
+            store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
             const rows = store.comparisonRows;
             assert.equal(rows.length, 2);
             assert.equal(rows[0].anchorBreakpoint, 100);
@@ -596,7 +596,7 @@ describe('FusionCohortStore pair facet', () => {
     });
 
     it('re-anchors an orphaned driver anchor too', () => {
-        store.setAnchor({ mode: 'driver', key: 'CCDC6' });
+        store.setAnchor({ mode: 'gene', gene: 'CCDC6', side: '5p' });
         store.selectOnlyFusionPairKey('ERG::TMPRSS2');
         assert.deepEqual(store.anchor, {
             mode: 'pair',

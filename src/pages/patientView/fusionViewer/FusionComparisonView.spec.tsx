@@ -50,7 +50,7 @@ describe('FusionComparisonView', () => {
                 site1Position: 100,
             } as any,
         ]);
-        store.setAnchor({ mode: 'driver', key: 'TMPRSS2' });
+        store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
         const wrapper = mount(<FusionComparisonView store={store} />);
         assert.lengthOf(
             wrapper.find('[data-testid="trackmode-feature"]').hostNodes(),
@@ -60,7 +60,7 @@ describe('FusionComparisonView', () => {
 
     it('the histogram mode toggle switches the store between feature and genomic', () => {
         const store = new FusionCohortStore();
-        store.setAnchor({ mode: 'driver', key: 'TMPRSS2' });
+        store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
         const wrapper = mount(<FusionComparisonView store={store} />);
         assert.equal(store.trackMode, 'feature');
         wrapper
@@ -209,7 +209,7 @@ describe('FusionComparisonView', () => {
 
     it('the strip-mode toggle switches store.stripMode (default collapsed)', () => {
         const store = new FusionCohortStore();
-        store.setAnchor({ mode: 'driver', key: 'TMPRSS2' });
+        store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
         const wrapper = mount(<FusionComparisonView store={store} />);
         assert.equal(store.stripMode, 'collapsed');
         wrapper
@@ -228,7 +228,7 @@ describe('FusionComparisonView', () => {
 
     it('junction-mode buttons update store.junctionLabelMode', () => {
         const store = new FusionCohortStore();
-        store.setAnchor({ mode: 'driver', key: 'TMPRSS2' });
+        store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
         const wrapper = mount(<FusionComparisonView store={store} />);
         wrapper
             .find('[data-testid="junctionmode-gutter"]')
@@ -394,7 +394,7 @@ describe('FusionComparisonView', () => {
                 site2Position: 250,
             } as any,
         ]);
-        store.setAnchor({ mode: 'driver', key: 'TMPRSS2' });
+        store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
         const wrapper = mount(<FusionComparisonView store={store} />);
         const instance = wrapper.instance() as any;
         // Canonical transcripts loaded (so anchorTranscript is truthy and the
@@ -460,7 +460,7 @@ describe('FusionComparisonView', () => {
                 site1Position: 100,
             } as any,
         ]);
-        store.setAnchor({ mode: 'driver', key: 'TMPRSS2' });
+        store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
         const wrapper = mount(<FusionComparisonView store={store} />);
         const view = wrapper.instance() as any;
         runInAction(() => {
@@ -511,7 +511,7 @@ function mountView() {
             site2Position: 250,
         } as any,
     ]);
-    store.setAnchor({ mode: 'driver', key: 'TMPRSS2' });
+    store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
     const wrapper = mount(<FusionComparisonView store={store} />);
     const instance = wrapper.instance() as any;
     runInAction(() => {

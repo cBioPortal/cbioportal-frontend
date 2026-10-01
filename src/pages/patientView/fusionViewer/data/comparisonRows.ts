@@ -2,12 +2,20 @@ import { FusionEvent, FrameStatus, TranscriptData } from './types';
 import { classifyFrame, buildPairKey } from './cohortAggregation';
 import { resolveFusionPartners } from './partnerResolution';
 
-export type AnchorMode = 'pair' | 'driver';
+export type AnchorSide = '5p' | '3p';
 
-export interface ComparisonAnchor {
-    mode: AnchorMode;
-    key: string;
-}
+/** What the user (or auto/seed logic) picked. `'auto'` side is resolved later. */
+export type ComparisonAnchor =
+    | { mode: 'pair'; key: string }
+    | { mode: 'gene'; gene: string; side: AnchorSide | 'auto' };
+
+/** The anchor the views render: a gene anchor's side is always concrete. */
+export type EffectiveAnchor =
+    | { mode: 'pair'; key: string }
+    | { mode: 'gene'; gene: string; side: AnchorSide };
+
+export const NO_PARTNER = '(no partner)';
+export const INTRAGENIC = '(intragenic)';
 
 export interface ComparisonRow {
     event: FusionEvent;
@@ -34,8 +42,8 @@ export function buildComparisonRows(
             );
         }
         return (
-            e.gene1.symbol === anchor.key ||
-            (!!e.gene2 && e.gene2.symbol === anchor.key)
+            e.gene1.symbol === anchor.gene ||
+            (!!e.gene2 && e.gene2.symbol === anchor.gene)
         );
     };
 
@@ -171,4 +179,131 @@ export function snapBreakpointsToAnchorGene(
 
 export function sortComparisonRows(rows: ComparisonRow[]): ComparisonRow[] {
     return [...rows].sort((a, b) => a.anchorBreakpoint - b.anchorBreakpoint);
+}
+
+const isPartnerless = (row: ComparisonRow): boolean =>
+    row.threePrimeSymbol === null || row.partnerBreakpoint === null;
+
+/**
+ * The anchor gene's endpoint on the chosen side. Partnerless rows have no
+ * fused side: the resolver leaves the gene in the 5′ field, so read that.
+ */
+export function anchorEndpoint(
+    row: ComparisonRow,
+    side: AnchorSide
+): { symbol: string; breakpoint: number } {
+    if (side === '5p' || isPartnerless(row)) {
+        return {
+            symbol: row.fivePrimeSymbol,
+            breakpoint: row.anchorBreakpoint,
+        };
+    }
+    return {
+        symbol: row.threePrimeSymbol as string,
+        breakpoint: row.partnerBreakpoint as number,
+    };
+}
+
+/** The endpoint opposite the anchor; null for partnerless rows. */
+export function partnerEndpoint(
+    row: ComparisonRow,
+    side: AnchorSide
+): { symbol: string | null; breakpoint: number | null } {
+    if (isPartnerless(row)) return { symbol: null, breakpoint: null };
+    return side === '5p'
+        ? { symbol: row.threePrimeSymbol, breakpoint: row.partnerBreakpoint }
+        : { symbol: row.fivePrimeSymbol, breakpoint: row.anchorBreakpoint };
+}
+
+/** Partner bucket for the Gene-mode table, facet and lollipop colours. */
+export function partnerCategory(
+    row: ComparisonRow,
+    gene: string,
+    side: AnchorSide
+): string {
+    if (isPartnerless(row)) return NO_PARTNER;
+    if (row.fivePrimeSymbol === gene && row.threePrimeSymbol === gene) {
+        return INTRAGENIC;
+    }
+    return partnerEndpoint(row, side).symbol as string;
+}
+
+/**
+ * Keep rows whose anchor gene sits on `side`. Partnerless and intragenic rows
+ * have no fused side (or the gene on both) and are always kept (D19). Must run
+ * on RESOLVED rows -- raw site order is not a reliable 5′/3′ call.
+ */
+export function filterRowsToAnchorSide(
+    rows: ComparisonRow[],
+    gene: string,
+    side: AnchorSide
+): { kept: ComparisonRow[]; oppositeCount: number } {
+    const kept: ComparisonRow[] = [];
+    let oppositeCount = 0;
+    rows.forEach(row => {
+        const category = partnerCategory(row, gene, side);
+        if (category === NO_PARTNER || category === INTRAGENIC) {
+            kept.push(row);
+            return;
+        }
+        const onSide =
+            side === '5p'
+                ? row.fivePrimeSymbol === gene
+                : row.threePrimeSymbol === gene;
+        if (onSide) kept.push(row);
+        else oppositeCount += 1;
+    });
+    return { kept, oppositeCount };
+}
+
+/** Side the gene occupies in most partnered, non-intragenic rows; ties → 5p. */
+export function majoritySide(rows: ComparisonRow[], gene: string): AnchorSide {
+    let five = 0;
+    let three = 0;
+    rows.forEach(row => {
+        if (isPartnerless(row)) return;
+        if (row.fivePrimeSymbol === row.threePrimeSymbol) return;
+        if (row.fivePrimeSymbol === gene) five += 1;
+        else if (row.threePrimeSymbol === gene) three += 1;
+    });
+    return three > five ? '3p' : '5p';
+}
+
+const swapPositions = (row: ComparisonRow): ComparisonRow =>
+    row.partnerBreakpoint === null
+        ? row
+        : {
+              ...row,
+              anchorBreakpoint: row.partnerBreakpoint,
+              partnerBreakpoint: row.anchorBreakpoint,
+          };
+
+/**
+ * Side-aware pattern-B snap: make the anchor-side position sit inside the
+ * anchor gene. For '3p' the positions are swapped, snapped with the 5′ logic,
+ * and swapped back, so symbols never move.
+ */
+export function snapBreakpointsToGeneSide(
+    rows: ComparisonRow[],
+    txStart: number,
+    txEnd: number,
+    side: AnchorSide
+): ComparisonRow[] {
+    if (side === '5p') return snapBreakpointsToAnchorGene(rows, txStart, txEnd);
+    return snapBreakpointsToAnchorGene(
+        rows.map(swapPositions),
+        txStart,
+        txEnd
+    ).map(swapPositions);
+}
+
+export function sortRowsByAnchorSide(
+    rows: ComparisonRow[],
+    side: AnchorSide
+): ComparisonRow[] {
+    return [...rows].sort(
+        (a, b) =>
+            anchorEndpoint(a, side).breakpoint -
+            anchorEndpoint(b, side).breakpoint
+    );
 }
