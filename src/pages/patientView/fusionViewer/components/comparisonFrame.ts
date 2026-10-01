@@ -13,6 +13,7 @@
 
 export const LABEL_GUTTER = 170; // left gutter for sample-ID labels
 export const RIGHT_GUTTER = 120; // right gutter for frame-status / read counts
+export const PARTNER_RIGHT_GUTTER = 220; // Gene mode: room for the Partner column
 export const JUNCTION_FRAC = 0.5; // seam position within the drawable region
 
 export interface ComparisonFrame {
@@ -25,9 +26,12 @@ export interface ComparisonFrame {
  * Derive the shared frame x-coordinates from a measured content width.
  * `rightX` is floored so the drawable region never collapses on narrow widths.
  */
-export function computeComparisonFrame(width: number): ComparisonFrame {
+export function computeComparisonFrame(
+    width: number,
+    rightGutter: number = RIGHT_GUTTER
+): ComparisonFrame {
     const leftX = LABEL_GUTTER;
-    const rightX = Math.max(leftX + 120, width - RIGHT_GUTTER);
+    const rightX = Math.max(leftX + 120, width - rightGutter);
     const junctionX = leftX + (rightX - leftX) * JUNCTION_FRAC;
     return { leftX, junctionX, rightX };
 }

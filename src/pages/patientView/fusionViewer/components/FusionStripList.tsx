@@ -6,7 +6,10 @@ import {
 } from '../data/comparisonRows';
 import { TranscriptData, JunctionLabelMode } from '../data/types';
 import { CollapsedGroup } from '../data/collapseRows';
-import FusionProductStrip, { ExonHoverInfo } from './FusionProductStrip';
+import FusionProductStrip, {
+    ExonHoverInfo,
+    PartnerLabel,
+} from './FusionProductStrip';
 import { computeComparisonFrame } from './comparisonFrame';
 
 const OVERSCAN = 2;
@@ -95,6 +98,13 @@ export interface FusionStripListProps {
     junctionLabelMode?: JunctionLabelMode;
     // Which gene the rows are anchored on. Defaults to '5p'.
     anchorSide?: AnchorSide;
+    // Right gutter width; must match the parent's frame. Defaults to RIGHT_GUTTER.
+    rightGutter?: number;
+    // Gene mode Partner column label per row (or collapsed group).
+    partnerLabelFor?: (
+        row: ComparisonRow,
+        group?: CollapsedGroup
+    ) => PartnerLabel | undefined;
     // Linked-hover dimming per row (or collapsed group).
     rowOpacity?: (row: ComparisonRow, group?: CollapsedGroup) => number;
     // Fired with the hovered row (+ group in collapsed mode); undefined on
@@ -124,6 +134,8 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
     referenceTranscript3p,
     junctionLabelMode,
     anchorSide = '5p',
+    rightGutter,
+    partnerLabelFor,
     rowOpacity,
     onRowHover,
 }) => {
@@ -158,7 +170,10 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
     // Frame is width-dependent, so it stays here. The bp→px scale
     // (pxPerBp5p/pxPerBp3p) is computed once in the parent @computed and passed
     // in, so scrolling no longer re-runs the O(rows) retained-length loop.
-    const { leftX, junctionX, rightX } = computeComparisonFrame(width);
+    const { leftX, junctionX, rightX } = computeComparisonFrame(
+        width,
+        rightGutter
+    );
 
     return (
         <>
@@ -219,6 +234,11 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
                                     group ? `×${group.count}` : undefined
                                 }
                                 frameSummary={group ? group.frames : undefined}
+                                partnerLabel={
+                                    partnerLabelFor
+                                        ? partnerLabelFor(row, group)
+                                        : undefined
+                                }
                                 leftX={leftX}
                                 junctionX={junctionX}
                                 rightX={rightX}

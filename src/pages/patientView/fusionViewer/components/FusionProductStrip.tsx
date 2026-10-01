@@ -98,7 +98,21 @@ export interface FusionProductStripProps {
     onExonHover?: (info: ExonHoverInfo | null) => void;
     // Junction exon label placement (feature 2). Defaults to 'inline-tooltip'.
     junctionLabelMode?: JunctionLabelMode;
+    // Gene mode Partner column: drawn right of the frame/reads text. In
+    // compact mode only the hover <title> carries it.
+    partnerLabel?: PartnerLabel;
 }
+
+export interface PartnerLabel {
+    text: string;
+    color: string;
+    title?: string;
+}
+
+const PARTNER_X_OFFSET = 112; // from rightX; clears "Out-of-frame · 1234r"
+const PARTNER_MAX_CHARS = 14;
+const truncate = (s: string) =>
+    s.length > PARTNER_MAX_CHARS ? `${s.slice(0, PARTNER_MAX_CHARS - 1)}…` : s;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -143,6 +157,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
     exonMode = 'retained',
     onExonHover,
     junctionLabelMode = 'inline-tooltip',
+    partnerLabel,
 }) => {
     const [hovered, setHovered] = React.useState(false);
     const full = exonMode === 'full';
@@ -290,6 +305,9 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                         ? ` · ${junctionArrow}`
                         : ''}{' '}
                     · {style.label} · {reads}r
+                    {partnerLabel
+                        ? ` · ${partnerLabel.title ?? partnerLabel.text}`
+                        : ''}
                 </title>
             )}
             <rect
@@ -543,6 +561,27 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                           {style.label} · {reads}r
                       </text>
                   )}
+            {partnerLabel && !compact && (
+                <g>
+                    <title>{partnerLabel.title ?? partnerLabel.text}</title>
+                    <circle
+                        data-testid="partner-dot"
+                        cx={rightX + PARTNER_X_OFFSET + 4}
+                        cy={textBaseline - 5}
+                        r={4}
+                        fill={partnerLabel.color}
+                    />
+                    <text
+                        data-testid="partner-label"
+                        x={rightX + PARTNER_X_OFFSET + 12}
+                        y={textBaseline - 2}
+                        fontSize={9.5}
+                        fill="#495057"
+                    >
+                        {truncate(partnerLabel.text)}
+                    </text>
+                </g>
+            )}
         </g>
     );
 };

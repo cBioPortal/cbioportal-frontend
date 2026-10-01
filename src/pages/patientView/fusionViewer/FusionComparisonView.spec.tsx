@@ -11,7 +11,10 @@ import { TranscriptData } from './data/types';
 import { frameStatusStyle } from './components/frameStatusStyle';
 import AnchorGeneTrackRuler from './components/AnchorGeneTrackRuler';
 import FusionStripList from './components/FusionStripList';
-import { computeComparisonFrame } from './components/comparisonFrame';
+import {
+    computeComparisonFrame,
+    PARTNER_RIGHT_GUTTER,
+} from './components/comparisonFrame';
 import WindowStore from 'shared/components/window/WindowStore';
 import { fetchTranscriptsForGeneWithFallback } from './data/genomeNexusTranscriptService';
 
@@ -856,7 +859,7 @@ describe('FusionComparisonView gene mode', () => {
         const wrapper = mount(<FusionComparisonView store={store} />);
         const view = wrapper.instance() as any;
         const width = Math.max(900, WindowStore.size.width - 90);
-        const frame = computeComparisonFrame(width);
+        const frame = computeComparisonFrame(width, PARTNER_RIGHT_GUTTER);
         const ruler = wrapper
             .find(AnchorGeneTrackRuler)
             .filterWhere(n => n.prop('symbol') === 'ALK');
@@ -1176,5 +1179,115 @@ describe('FusionComparisonView link arcs', () => {
         assert.isUndefined(view.partnerTranscript);
         assert.isFalse(w.find('[data-testid="link-arcs"]').exists());
         assert.isUndefined(view.linkData);
+    });
+});
+
+describe('FusionComparisonView partner column', () => {
+    function partnerStore() {
+        const store = new FusionCohortStore();
+        store.setStructuralVariants([
+            {
+                site1HugoSymbol: 'TMPRSS2',
+                site2HugoSymbol: 'ERG',
+                sampleId: 'S1',
+                site1Position: 100,
+                site2Position: 450,
+                site1Chromosome: '21',
+                site2Chromosome: '21',
+            },
+            {
+                site1HugoSymbol: 'TMPRSS2',
+                site2HugoSymbol: 'ETV1',
+                sampleId: 'S2',
+                site1Position: 120,
+                site2Position: 250,
+                site1Chromosome: '21',
+                site2Chromosome: '7',
+            },
+        ] as any);
+        store.mergeTranscripts([
+            ['GRCh38|TMPRSS2|', tx('TMPRSS2')],
+            ['GRCh38|ERG|', tx('ERG')],
+            ['GRCh38|ETV1|', tx('ETV1')],
+        ]);
+        return store;
+    }
+
+    it('Gene mode: header plus a coloured partner label per sample strip', () => {
+        const store = partnerStore();
+        store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
+        runInAction(() => store.setStripMode('sample'));
+        const w = mount(<FusionComparisonView store={store} />);
+        assert.isTrue(w.find('[data-testid="partner-header"]').exists());
+        const labels = w.find('text[data-testid="partner-label"]');
+        assert.sameMembers(
+            labels.map(l => l.text()),
+            ['ERG', 'ETV1']
+        );
+        const dots = w.find('circle[data-testid="partner-dot"]');
+        assert.lengthOf(dots, labels.length);
+        labels.forEach((l, k) => {
+            assert.equal(
+                dots.at(k).prop('fill'),
+                store.partnerColorMap.get(l.text())
+            );
+        });
+    });
+
+    it('Gene mode: strips use the same widened right gutter as the view frame', () => {
+        const store = partnerStore();
+        store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
+        runInAction(() => store.setStripMode('sample'));
+        const w = mount(<FusionComparisonView store={store} />);
+        const view = w.instance() as any;
+        const strips = w.find('FusionProductStrip');
+        assert.isAbove(strips.length, 0);
+        strips.forEach(s => assert.equal(s.prop('rightX'), view.frame.rightX));
+        assert.isBelow(
+            view.frame.rightX,
+            computeComparisonFrame(view.contentWidth).rightX
+        );
+    });
+
+    it('collapsed mode shows the group category', () => {
+        const store = partnerStore();
+        store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
+        runInAction(() => store.setStripMode('collapsed'));
+        const w = mount(<FusionComparisonView store={store} />);
+        const t = w
+            .find('text[data-testid="partner-label"]')
+            .map(l => l.text());
+        assert.isAbove(t.length, 0);
+        t.forEach(x => assert.match(x, /^(ERG|ETV1)( \+1)?$/));
+    });
+
+    it('dense mode: no partner text, partner in the strip title', () => {
+        const store = partnerStore();
+        store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
+        runInAction(() => store.setStripMode('dense'));
+        const w = mount(<FusionComparisonView store={store} />);
+        assert.lengthOf(w.find('text[data-testid="partner-label"]'), 0);
+        const titles = w.find('FusionProductStrip').map(s =>
+            s
+                .find('title')
+                .first()
+                .text()
+        );
+        assert.isTrue(titles.some(t => t.includes('· ERG')));
+        assert.isTrue(titles.some(t => t.includes('· ETV1')));
+    });
+
+    it('Pair mode has no Partner header or text', () => {
+        const store = partnerStore();
+        store.setAnchor({ mode: 'pair', key: 'ERG::TMPRSS2' });
+        runInAction(() => store.setStripMode('sample'));
+        const w = mount(<FusionComparisonView store={store} />);
+        assert.isFalse(w.find('[data-testid="partner-header"]').exists());
+        assert.lengthOf(w.find('text[data-testid="partner-label"]'), 0);
+        const view = w.instance() as any;
+        assert.equal(
+            view.frame.rightX,
+            computeComparisonFrame(view.contentWidth).rightX
+        );
     });
 });
