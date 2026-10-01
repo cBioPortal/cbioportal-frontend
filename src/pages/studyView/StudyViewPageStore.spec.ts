@@ -101,3 +101,24 @@ describe('StudyViewPageStore SV gene pair filters', () => {
         assert.deepEqual(store.svGenePairSampleFilters, []);
     });
 });
+
+describe('StudyViewPageStore svGenesTableFilterGenes', () => {
+    it('lists genes filtered in SV genes table charts only', () => {
+        const store = new StudyViewPageStore(
+            {} as any,
+            false,
+            {} as any,
+            {} as any
+        );
+        const SV_KEY = 'sv-profile_STRUCTURAL_VARIANT_GENES_TABLE';
+        const MUT_KEY = 'mut-profile_MUTATED_GENES_TABLE';
+        store.chartsType.set(
+            SV_KEY,
+            ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
+        );
+        store.chartsType.set(MUT_KEY, ChartTypeEnum.MUTATED_GENES_TABLE);
+        store.addGeneFilters({ uniqueKey: SV_KEY } as any, [['ALK']]);
+        store.addGeneFilters({ uniqueKey: MUT_KEY } as any, [['TP53']]);
+        assert.deepEqual(store.svGenesTableFilterGenes, ['ALK']);
+    });
+});
