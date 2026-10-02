@@ -224,24 +224,6 @@ export enum MutationTableColumnType {
 
 export type ExtendedMutationTableColumnType = MutationTableColumnType | string;
 
-// orders mutations with equal values in the sort column by gene, protein
-// position, protein change and sample, so the order does not depend on the
-// order in which the mutations were loaded
-export function mutationSortTieBreaker(
-    d: Mutation[]
-): (string | number | null)[] {
-    const mutation = d[0];
-    if (!mutation) {
-        return [];
-    }
-    return [
-        mutation.gene ? mutation.gene.hugoGeneSymbol : null,
-        mutation.proteinPosStart ?? null,
-        mutation.proteinChange ?? null,
-        mutation.sampleId ?? null,
-    ];
-}
-
 export type MutationTableColumn = Column<Mutation[]> & {
     order?: number;
     shouldExclude?: () => boolean;
@@ -1429,7 +1411,6 @@ export default class MutationTable<
                 initialItemsPerPage={this.props.initialItemsPerPage}
                 initialSortColumn={this.props.initialSortColumn}
                 initialSortDirection={this.props.initialSortDirection}
-                sortTieBreaker={mutationSortTieBreaker}
                 itemsLabel={this.props.itemsLabel}
                 itemsLabelPlural={this.props.itemsLabelPlural}
                 paginationProps={this.props.paginationProps}

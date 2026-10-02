@@ -541,3 +541,19 @@ export function isPutativeDriver(m: AnnotatedMutation) {
             !!m.oncoKbOncogenic)
     );
 }
+
+/**
+ * Orders mutation table rows by gene, protein position, protein change and
+ * sample. The table sort is stable, so rows with equal values in the sort
+ * column keep this order instead of the order the API returned them in.
+ */
+export function sortMutationsDeterministically(
+    data: Mutation[][]
+): Mutation[][] {
+    return _.sortBy(data, [
+        d => d[0]?.gene?.hugoGeneSymbol,
+        d => d[0]?.proteinPosStart,
+        d => d[0]?.proteinChange,
+        d => d[0]?.sampleId,
+    ]);
+}
