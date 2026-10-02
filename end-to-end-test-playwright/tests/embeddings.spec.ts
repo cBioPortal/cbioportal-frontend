@@ -1,18 +1,11 @@
 import { test, expect, Page } from '../fixtures';
 
 /**
- * Port of end-to-end-test/local/specs/core/embeddings.spec.js.
- *
  * Functional (non-screenshot) coverage of the Similarity Maps tab: legend
  * toggling, sample counts, toolbar controls, selection/filtering, and URL
  * parameter handling. Lives in the remote lane for the same reason as
  * embeddings-screenshot.spec.ts: the embedding data and the
  * `msk_impact_50k_2026` cohort only exist against the public backend.
- *
- * The original wdio `coloring menu interactions` test targeted a
- * `[data-test="embeddings-coloring-menu"]` selector that does not exist in
- * the component and was guarded by `isExisting()`, so it never asserted
- * anything — it is intentionally not ported.
  */
 
 const STUDY = 'msk_impact_50k_2026';

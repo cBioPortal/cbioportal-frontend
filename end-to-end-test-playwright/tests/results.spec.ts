@@ -3,8 +3,6 @@ import { expectElementScreenshot, setInputText } from './helpers/common';
 import { waitForOncoprint } from './helpers/oncoprint';
 
 /**
- * Port of end-to-end-test/remote/specs/core/results.spec.js.
- *
  * Three groups of tests on the results page:
  *   1. Cancer Type Summary Bar Chart — defaults across study/gene combos
  *      and the customization controls (sub-bar grouping, axis selectors,
@@ -186,7 +184,7 @@ test.describe('Cancer Type Summary Bar Chart', () => {
                 '[data-test="cancerTypeSummaryWrapper"]',
                 'results-cancer-type-summary-alteration-threshold.png'
             );
-            // Reset for the next test (matches the wdio cleanup).
+            // Reset for the next test.
             await setInputText(
                 page,
                 "[data-test='alterationThresholdInput']",
@@ -241,7 +239,7 @@ test.describe('Mutations Tab', () => {
 
         // The same data-test handle renders both as the visible header
         // and inside each PDB-chain table row; scope to the first match
-        // (the header) to mirror the wdio assertion.
+        // (the header).
         const pdbInfo = page.locator('[data-test="pdbChainInfoText"]').first();
         await expect(pdbInfo).not.toHaveText('LOADING', { timeout: 10000 });
         const text = (await pdbInfo.textContent())?.trim() ?? '';

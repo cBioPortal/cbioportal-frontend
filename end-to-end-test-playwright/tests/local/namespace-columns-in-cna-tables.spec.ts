@@ -1,4 +1,3 @@
-// Source: end-to-end-test/local/specs/namespace-columns-in-cna-tables.spec.js
 import { test, expect } from '../../fixtures';
 import { Locator, Page } from '@playwright/test';
 import { goToUrlAndSetLocalStorageWithProperty } from './helpers';

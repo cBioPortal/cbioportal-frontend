@@ -2,8 +2,6 @@ import { test, expect, Page } from '../fixtures';
 import { byTestHandle, setInputText, setDropdownOpen } from './helpers/common';
 
 /**
- * Port of end-to-end-test/remote/specs/core/groupComparisonLollipop.spec.js.
- *
  * Exercises the group comparison mutations tab:
  *  - too-many-groups / not-enough-groups alerts
  *  - lollipop tooltip display + axis-scale toggle

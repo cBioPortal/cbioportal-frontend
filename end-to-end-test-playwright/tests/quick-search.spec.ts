@@ -1,8 +1,6 @@
 import { test, expect, Page } from '../fixtures';
 
 /**
- * Port of end-to-end-test/remote/specs/core/quickSearch.spec.js.
- *
  * Exercises the homepage "Quick Search" tab — typing a short query
  * should surface grouped results (studies, genes, patients, samples)
  * and clicking any result navigates to the matching page. "Ad" is

@@ -8,8 +8,6 @@ import {
 } from './helpers/oncoprint';
 
 /**
- * Port of end-to-end-test/remote/specs/core/home.spec.js.
- *
  * Covers:
  *  - homepage study list, filter, case-set selection when a single study
  *    is picked, and multi-study OQL rules (EXP/PROT).

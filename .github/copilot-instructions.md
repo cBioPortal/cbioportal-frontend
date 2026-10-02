@@ -69,7 +69,7 @@ This repository contains the frontend code for cBioPortal, a comprehensive cance
 - Type check with `pnpm run typecheck` (CI runs it separately from the unit tests)
 
 ### End-to-End Testing
-CI runs the Playwright suite in `end-to-end-test-playwright/`. The older WebdriverIO suite in `end-to-end-test/` is no longer run by any CI workflow, so add new e2e tests to the Playwright suite. See `end-to-end-test-playwright/README.md` for details.
+End-to-end tests are written with Playwright and live in `end-to-end-test-playwright/`, which CI runs on every PR. See `end-to-end-test-playwright/README.md` for details.
 
 There are two lanes:
 - **Remote** (`tests/*.spec.ts`): runs against the public site (www.cbioportal.org, or rc.cbioportal.org for PRs targeting `rc`). It loads the locally built frontend bundle from `https://localhost:3000` (`LOCALDEV=1`, the default).

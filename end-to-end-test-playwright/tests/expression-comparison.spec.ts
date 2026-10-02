@@ -7,8 +7,6 @@ import {
 } from './helpers/common';
 
 /**
- * Port of end-to-end-test/remote/specs/core/expressionComparison.spec.js.
- *
  * Covers the `enable_cross_study_expression` config rule across four
  * contexts:
  *  - Plots tab Y-axis profile dropdown (mRNA option presence)
@@ -126,9 +124,8 @@ test.describe('plots tab expression data WITHOUT rule', () => {
         await page.goto(PLOTS_URL('acc_tcga_pan_can_atlas_2018%2Cchol_tcga'));
         await waitForNetworkQuiet(page);
 
-        // Mirror the wdio spec: defensively clear the store rule too,
-        // since localStorage overrides race with the store boot in some
-        // reloads.
+        // Defensively clear the store rule too, since localStorage
+        // overrides race with the store boot in some reloads.
         await page.evaluate(() => {
             (window as any).globalStores.appStore.serverConfig.enable_cross_study_expression = undefined;
         });
