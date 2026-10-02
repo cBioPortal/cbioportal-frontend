@@ -57,6 +57,12 @@ async function gotoEmbeddings(page: Page, query = '') {
     await expect(page.locator(LEGEND)).toBeVisible({ timeout: 60000 });
 }
 
+// Every test here cold-loads the 50k-sample msk_impact_50k_2026 study and
+// renders its embedding in software WebGL. On a CI shard running three
+// workers that takes 60-160s for a single test, well past the config's 120s
+// default, so give the whole file the same generous budget.
+test.describe.configure({ timeout: 240000 });
+
 test.describe('embeddings tab interactions', () => {
     test.describe('legend interactions', () => {
         test('offers Select and Hide on a legend row, swapping them in for the count on hover', async ({
@@ -82,12 +88,6 @@ test.describe('embeddings tab interactions', () => {
         test('hiding a category removes it from the plot; selecting one offers Unselect', async ({
             page,
         }) => {
-            // This chains several hover/click round-trips on top of loading
-            // the 50k-sample embedding data, which can outrun the config's
-            // default timeout on a loaded CI runner - see the same
-            // reasoning in embeddings-performance.spec.ts.
-            test.setTimeout(180000);
-
             await gotoEmbeddings(page);
             const firstItem = page.locator(LEGEND_ITEM).first();
             await expect(firstItem).toBeVisible();
@@ -326,9 +326,6 @@ test.describe('embeddings tab interactions', () => {
         test('hides the per-embedding status sentence once Lock Map is disabled with multiple panels open', async ({
             page,
         }) => {
-            // Renders the full 50k-sample map twice (one per panel); measured ~66s in a clean run.
-            test.setTimeout(240000);
-
             // Single panel: the status bar reports this one panel's map and
             // its sample counts.
             await gotoEmbeddings(page);
@@ -365,9 +362,6 @@ test.describe('embeddings tab interactions', () => {
         test('a cross-panel selection filter is reflected in every open panel', async ({
             page,
         }) => {
-            // Renders the full 50k-sample map twice, same as the Lock Map test above.
-            test.setTimeout(240000);
-
             // Load directly into 2-panel mode via URL params, avoiding a race with the panel-count button.
             await page.goto(
                 `/study/embeddings?id=${STUDY}&featureFlags=EMBEDDINGS&embeddings_panel2_map=msk_mosaic_2026_he`

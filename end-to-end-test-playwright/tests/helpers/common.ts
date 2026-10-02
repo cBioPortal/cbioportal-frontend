@@ -43,6 +43,9 @@ export async function expectElementScreenshot(
         // tooltip disappears within its 50 ms leave-delay before the
         // screenshot is taken if the mouse is moved away.
         keepMouse?: boolean;
+        // How long toHaveScreenshot may keep retaking the capture until two
+        // consecutive ones match.
+        timeout?: number;
     } = {}
 ) {
     const target = page.locator(selector);
@@ -64,7 +67,7 @@ export async function expectElementScreenshot(
     const mask = (opts.masks ?? ['.qtip']).map(s => page.locator(s));
     await expect(target).toHaveScreenshot(snapshotName, {
         mask,
-        timeout: 30000,
+        timeout: opts.timeout ?? 30000,
     });
 }
 

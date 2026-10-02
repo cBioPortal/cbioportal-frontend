@@ -52,12 +52,17 @@ const SELECTION_BUDGET_MS = 20000;
 const RAF_SAMPLE_MS = 2000;
 const RAF_LOCK_ALLOWANCE = 60;
 
-function studyUrl(tab = 'summary'): string {
-    return `/study/${tab}?id=${STUDY}&featureFlags=EMBEDDINGS`;
+// Giving panel 2 a map makes the embeddings tab open straight into split
+// view, the same as the panel-count button, without first rendering a single
+// panel and then waiting on the click.
+const SPLIT_VIEW_QUERY = '&embeddings_panel2_map=msk_mosaic_2026_he';
+
+function studyUrl(tab = 'summary', query = ''): string {
+    return `/study/${tab}?id=${STUDY}&featureFlags=EMBEDDINGS${query}`;
 }
 
-async function openSummary(page: Page) {
-    await page.goto(studyUrl());
+async function openSummary(page: Page, query = '') {
+    await page.goto(studyUrl('summary', query));
     await expect(page.locator(SUMMARY_CONTENT)).toBeVisible({
         timeout: 60000,
     });
@@ -80,7 +85,7 @@ async function openEmbeddingsTab(page: Page) {
         }
     }
     await embeddingsTab.click({ timeout: 30000 });
-    await expect(page.locator(VIZ)).toBeVisible({ timeout: 60000 });
+    await expect(page.locator(VIZ).first()).toBeVisible({ timeout: 60000 });
 }
 
 async function backToSummary(page: Page) {
@@ -105,15 +110,16 @@ async function backToSummary(page: Page) {
     await waitForStudyView(page, 60000);
 }
 
+// Every test here cold-loads the 50k-sample msk_impact_50k_2026 study and
+// renders its embedding in software WebGL. On a CI shard running three
+// workers that takes 60-160s for a single test, well past the config's 120s
+// default, so give the whole file the same generous budget.
+test.describe.configure({ timeout: 240000 });
+
 test.describe('study view is unaffected by the embeddings tab', () => {
     test('the summary tab never fetches the embedding data', async ({
         page,
     }) => {
-        // Same budget as the others in this file: opening the study view and
-        // then the embeddings tab for a 50k-sample study can outrun the
-        // config's default timeout on its own.
-        test.setTimeout(180000);
-
         const embeddingRequests: string[] = [];
         page.on('request', request => {
             if (EMBEDDING_ASSET.test(request.url())) {
@@ -133,8 +139,6 @@ test.describe('study view is unaffected by the embeddings tab', () => {
     test('the embedding stops rendering once you leave the tab', async ({
         page,
     }) => {
-        test.setTimeout(180000);
-
         await openSummary(page);
         await openEmbeddingsTab(page);
         await backToSummary(page);
@@ -148,8 +152,6 @@ test.describe('study view is unaffected by the embeddings tab', () => {
     test('the viewport lock stops polling once you leave the tab', async ({
         page,
     }) => {
-        test.setTimeout(180000);
-
         // Count frames scheduled over a fixed window. The page's own charts
         // schedule some, so this is only meaningful as a before/after delta.
         const countFrames = (ms: number) =>
@@ -165,20 +167,14 @@ test.describe('study view is unaffected by the embeddings tab', () => {
                 return count;
             }, ms);
 
-        await openSummary(page);
+        // Two panels: this is what switches the shared viewport lock on, and
+        // the lock is what starts the rAF loop. The split view params only
+        // take effect once the embeddings tab is opened, so the baseline is
+        // still taken before it ever mounts.
+        await openSummary(page, SPLIT_VIEW_QUERY);
         const baseline = await countFrames(RAF_SAMPLE_MS);
 
         await openEmbeddingsTab(page);
-
-        // Two panels: this is what switches the shared viewport lock on, and
-        // the lock is what starts the rAF loop. The button itself reports
-        // visible/enabled/stable right away, but the click can still sit
-        // waiting to be processed for a while - the 50k-point layer's
-        // initial WebGL upload keeps the main thread busy well past the
-        // point the container is considered "visible".
-        await page
-            .locator('[data-test="embeddings-panel-count-2"]')
-            .click({ timeout: 60000 });
         await expect(page.locator(VIZ)).toHaveCount(2, { timeout: 60000 });
 
         await backToSummary(page);
@@ -193,8 +189,6 @@ test.describe('study view is unaffected by the embeddings tab', () => {
     test('a summary selection still updates promptly after the embeddings tab has been opened', async ({
         page,
     }) => {
-        test.setTimeout(180000);
-
         await openSummary(page);
         await openEmbeddingsTab(page);
         await backToSummary(page);

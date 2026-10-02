@@ -96,21 +96,35 @@ async function waitForEmbeddingRender(
     await page.waitForTimeout(2000);
 }
 
+// Each capture of the WebGL canvas waits for the main thread, which the
+// 50k-point layer keeps busy on a loaded CI runner, so allow longer than the
+// helper's default for toHaveScreenshot to get two matching captures.
+const SCREENSHOT_TIMEOUT = 60000;
+
 async function snapViz(page: Page, name: string, legendText?: RegExp) {
     await waitForEmbeddingRender(page, legendText);
     await expectElementScreenshot(page, VIZ, name, {
         hide: ['.dropdown-menu'],
+        timeout: SCREENSHOT_TIMEOUT,
     });
 }
 
 async function snapLegend(page: Page, name: string, legendText?: RegExp) {
     await waitForEmbeddingRender(page, legendText);
-    await expectElementScreenshot(page, LEGEND, name);
+    await expectElementScreenshot(page, LEGEND, name, {
+        timeout: SCREENSHOT_TIMEOUT,
+    });
 }
 
 function embeddingsUrl(query = ''): string {
     return `/study/embeddings?id=${STUDY}&featureFlags=EMBEDDINGS${query}`;
 }
+
+// Every test here cold-loads the 50k-sample msk_impact_50k_2026 study and
+// renders its embedding in software WebGL. On a CI shard running three
+// workers that takes 60-160s for a single test, well past the config's 120s
+// default, so give the whole file the same generous budget.
+test.describe.configure({ timeout: 240000 });
 
 test.describe('embeddings tab screenshots', () => {
     test.describe('basic embedding visualization', () => {
