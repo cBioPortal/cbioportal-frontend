@@ -1,5 +1,7 @@
 import _ from 'lodash';
 import { isWsiResourceId } from 'shared/lib/ResourcePolicy';
+import { fetchWsiPatientHierarchy } from 'cbioportal-wsi-viewer';
+import { wsiAuthScope } from 'shared/components/wsiViewer/wsiAppConfig';
 import {
     CBioPortalAPIInternal,
     ClinicalData,
@@ -41,7 +43,6 @@ import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
 import request from 'superagent';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import {
-    buildCBioPortalAPIUrl,
     getDarwinUrl,
     getDigitalSlideArchiveMetaUrl,
     getGenomeNexusHgvsgUrl,
@@ -1795,7 +1796,8 @@ export class PatientViewPageStore {
     /**
      * Whether the patient has pathology slides, from the WSI hierarchy that
      * the backend builds from resource_data. False when slides aren't served
-     * or the hierarchy can't be read.
+     * or the hierarchy can't be read. The request goes through the viewer's
+     * hierarchy cache, so opening the Pathology Slides tab reuses it.
      */
     readonly hasPathologySlides = remoteData<boolean>({
         invoke: async () => {
@@ -1803,22 +1805,12 @@ export class PatientViewPageStore {
                 return false;
             }
             try {
-                const response = await fetch(
-                    buildCBioPortalAPIUrl(
-                        `api/wsi/v2/hierarchy/${encodeURIComponent(
-                            this.studyId
-                        )}/${encodeURIComponent(this.patientId)}`
-                    ),
-                    { credentials: 'same-origin' }
+                const hierarchy = await fetchWsiPatientHierarchy(
+                    this.studyId,
+                    this.patientId,
+                    wsiAuthScope(this.appStore.userName)
                 );
-                if (!response.ok) {
-                    return false;
-                }
-                const hierarchy = await response.json();
-                return (
-                    Array.isArray(hierarchy?.sampleGroups) &&
-                    hierarchy.sampleGroups.length > 0
-                );
+                return hierarchy.samples.length > 0;
             } catch (e) {
                 return false;
             }

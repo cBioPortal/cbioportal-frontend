@@ -11,6 +11,7 @@ import {
 } from './wsiAuth';
 import { getWsiViewerRuntime } from './wsiViewerConfig';
 import { deleteExpiredEntries, withAbort } from './wsiCacheUtils';
+import { buildWsiHierarchyApiUrl } from './wsiUrls';
 
 const HIERARCHY_CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -275,10 +276,7 @@ function getOrCreateHierarchyRequest(
     const expiresAt = now + HIERARCHY_CACHE_TTL_MS;
 
     const promise: Promise<PatientHierarchy> = getWsiViewerRuntime()
-        .fetchImpl(url, {
-            cache: 'no-store',
-            credentials: 'include',
-        })
+        .fetchImpl(url, { credentials: 'include' })
         .then(async response => {
             if (!response.ok) {
                 throw new Error(`Server returned ${response.status}`);
@@ -325,6 +323,30 @@ export async function fetchPatientHierarchyReadOnly(
     return withAbort(
         getOrCreateHierarchyRequest(url, authScope, studyId, patientId),
         signal
+    );
+}
+
+/**
+ * Loads one patient's hierarchy from the portal through the cache the viewer
+ * reads, so a viewer opened later for the same patient and `authScope` reuses
+ * this request.
+ */
+export function fetchWsiPatientHierarchy(
+    studyId: string,
+    patientId: string,
+    authScope?: string,
+    signal?: AbortSignal
+): Promise<PatientHierarchy> {
+    return fetchPatientHierarchyReadOnly(
+        buildWsiHierarchyApiUrl(
+            getWsiViewerRuntime().buildApiUrl,
+            studyId,
+            patientId
+        ),
+        signal,
+        authScope,
+        studyId,
+        patientId
     );
 }
 

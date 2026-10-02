@@ -4,8 +4,10 @@
 import {
     clearPatientHierarchyCache,
     fetchPatientHierarchyReadOnly,
+    fetchWsiPatientHierarchy,
     hasCachedPatientHierarchy,
 } from './wsiHierarchyFetchCache';
+import { buildWsiHierarchyApiUrl } from './wsiUrls';
 import {
     clearWsiResourceAccessTargets,
     clearWsiSlideAccess,
@@ -62,6 +64,38 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
 
         expect(fetchMock).toHaveBeenCalledTimes(1);
         expect(second).toBe(first);
+    });
+
+    it('shares one request between the host gate and the viewer', async () => {
+        const fetchMock = jest.fn().mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve(makeHierarchy()),
+        });
+        (global as any).fetch = fetchMock;
+
+        const gated = await fetchWsiPatientHierarchy('study', 'P 1', 'user-a');
+        const viewerUrl = buildWsiHierarchyApiUrl(
+            path => `/${path}`,
+            'study',
+            'P 1'
+        );
+        expect(hasCachedPatientHierarchy(viewerUrl, 'user-a')).toBe(true);
+        const viewed = await fetchPatientHierarchyReadOnly(
+            viewerUrl,
+            undefined,
+            'user-a',
+            'study',
+            'P 1'
+        );
+
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        expect(
+            fetchMock
+        ).toHaveBeenCalledWith('/api/wsi/v2/hierarchy/study/P%201', {
+            credentials: 'include',
+        });
+        expect(viewed).toBe(gated);
+        expect(gated.patient_id).toBe('P 1');
     });
 
     it('isolates cached hierarchy data by authenticated subject', async () => {
