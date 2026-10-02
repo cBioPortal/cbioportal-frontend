@@ -435,7 +435,12 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 return;
             }
 
-            // Use deck.gl's built-in picking to get objects in bounding box
+            // Use deck.gl's built-in picking to get objects in bounding box.
+            // Only one of these two layer ids is actually rendered at a
+            // time (see getLayers()/layerUtils.ts), depending on
+            // shapeByEnabled - listing both means picking still works
+            // whichever one is currently active.
+            const activeLayerIds = ['embedding-scatter', 'embedding-icons'];
             let pickedObjects: any[] = [];
 
             if (typeof deck.pickObjects === 'function') {
@@ -444,7 +449,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                     y: minY,
                     width,
                     height,
-                    layerIds: ['embedding-scatter'],
+                    layerIds: activeLayerIds,
                 });
             } else if (typeof deck.pickMultipleObjects === 'function') {
                 pickedObjects = deck.pickMultipleObjects({
@@ -452,7 +457,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                     y: minY,
                     width,
                     height,
-                    layerIds: ['embedding-scatter'],
+                    layerIds: activeLayerIds,
                 });
             } else {
                 // Fallback: sample multiple points within the bounding box
@@ -464,7 +469,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                             const picked = deck.pickObject({
                                 x,
                                 y,
-                                layerIds: ['embedding-scatter'],
+                                layerIds: activeLayerIds,
                             });
                             if (picked && picked.object) {
                                 samplePoints.push(picked);
