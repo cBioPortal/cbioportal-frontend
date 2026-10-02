@@ -21,6 +21,7 @@ export interface IDoubleHandleSliderState {
 const WIDTH = '135px';
 const PRECISION = 10;
 const POWER = 10 ** PRECISION;
+let nextSliderId = 0;
 export default class DoubleHandleSlider extends React.Component<
     IDoubleHandleSliderProps,
     IDoubleHandleSliderState
@@ -37,8 +38,11 @@ export default class DoubleHandleSlider extends React.Component<
     }
 
     @computed get id() {
-        return this.props.id.replace(/\s+/, '_');
+        return `filter-slider-${this.instanceId}`;
     }
+
+    private readonly instanceId = ++nextSliderId;
+    private readonly root = React.createRef<HTMLDivElement>();
 
     // this is used to prevent unintended changes to the handle positions
     // which may occur once a handle is released, e.g. due to table resizing
@@ -50,8 +54,8 @@ export default class DoubleHandleSlider extends React.Component<
 
         this.justReleasedHandle = false;
         this.state = {
-            lowerValue: this.props.lowerValue || this.min,
-            upperValue: this.props.upperValue || this.max,
+            lowerValue: this.props.lowerValue ?? this.min,
+            upperValue: this.props.upperValue ?? this.max,
         };
     }
 
@@ -62,8 +66,8 @@ export default class DoubleHandleSlider extends React.Component<
     componentDidUpdate(prevProps: IDoubleHandleSliderProps) {
         if (prevProps !== this.props) {
             this.setState({
-                lowerValue: this.props.lowerValue || this.min,
-                upperValue: this.props.upperValue || this.max,
+                lowerValue: this.props.lowerValue ?? this.min,
+                upperValue: this.props.upperValue ?? this.max,
             });
         } else {
             this.syncValues(true);
@@ -87,26 +91,27 @@ export default class DoubleHandleSlider extends React.Component<
         return this.id + '-middleTrack';
     }
     get LH() {
-        return document.getElementById(this.LHId) as HTMLInputElement;
+        return this.root.current!.querySelector(
+            '[data-slider-part="lower-handle"]'
+        ) as HTMLInputElement;
     }
     get UH() {
-        return document.getElementById(this.UHId) as HTMLInputElement;
+        return this.root.current!.querySelector(
+            '[data-slider-part="upper-handle"]'
+        ) as HTMLInputElement;
     }
     get LB() {
-        return document.getElementById(this.LBId) as HTMLInputElement;
+        return this.root.current!.querySelector(
+            '[data-slider-part="lower-box"]'
+        ) as HTMLInputElement;
     }
     get UB() {
-        return document.getElementById(this.UBId) as HTMLInputElement;
+        return this.root.current!.querySelector(
+            '[data-slider-part="upper-box"]'
+        ) as HTMLInputElement;
     }
     get MID() {
-        const middleTracks = document.getElementsByClassName('middleTrack');
-        for (let i = 0; i < middleTracks.length; i++) {
-            if (middleTracks[i].id === this.MIDId) {
-                return middleTracks[i] as HTMLElement;
-            }
-        }
-        // should never reach here
-        return middleTracks[0] as HTMLElement;
+        return this.root.current!.querySelector('.middleTrack') as HTMLElement;
     }
 
     @computed get defaultStepSize() {
@@ -130,7 +135,7 @@ export default class DoubleHandleSlider extends React.Component<
             this.LB.value = '' + this.state.lowerValue;
 
             const percentLeft =
-                (this.state.lowerValue - this.min) / (this.max - this.min);
+                (this.state.lowerValue - this.min) / (this.max - this.min || 1);
             this.MID.style.left = 100 * percentLeft + '%';
 
             if (includeCallback) {
@@ -141,7 +146,7 @@ export default class DoubleHandleSlider extends React.Component<
             this.UB.value = '' + this.state.upperValue;
 
             const percentRight =
-                (this.max - this.state.upperValue) / (this.max - this.min);
+                (this.max - this.state.upperValue) / (this.max - this.min || 1);
             this.MID.style.right = 100 * percentRight + '%';
 
             if (includeCallback) {
@@ -208,6 +213,7 @@ export default class DoubleHandleSlider extends React.Component<
     render() {
         return (
             <div
+                ref={this.root}
                 style={{
                     width: WIDTH,
                     margin: 'auto',
@@ -221,6 +227,7 @@ export default class DoubleHandleSlider extends React.Component<
                     <input
                         type="range"
                         id={this.LHId}
+                        data-slider-part="lower-handle"
                         className="handle"
                         min={this.min}
                         max={this.max}
@@ -244,6 +251,7 @@ export default class DoubleHandleSlider extends React.Component<
                     <input
                         type="range"
                         id={this.UHId}
+                        data-slider-part="upper-handle"
                         className="handle"
                         min={this.min}
                         max={this.max}
@@ -269,6 +277,7 @@ export default class DoubleHandleSlider extends React.Component<
                 <div style={{ marginTop: '13px' }}>
                     <input
                         id={this.LBId}
+                        data-slider-part="lower-box"
                         className="form-control input-sm"
                         style={{ float: 'left', maxWidth: WIDTH }}
                         defaultValue={'' + this.state.lowerValue}
@@ -287,6 +296,7 @@ export default class DoubleHandleSlider extends React.Component<
                     />
                     <input
                         id={this.UBId}
+                        data-slider-part="upper-box"
                         className="form-control input-sm"
                         style={{ float: 'right', maxWidth: WIDTH }}
                         defaultValue={'' + this.state.upperValue}

@@ -19,16 +19,65 @@
  **/
 
 import * as _ from 'lodash';
-import { computed, makeObservable } from 'mobx';
-import { SimpleLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
+import { action, computed, makeObservable, observable } from 'mobx';
+import {
+    getSortedFilteredData,
+    SimpleLazyMobXTableApplicationDataStore,
+} from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
+import {
+    matchesColumnFilter,
+    structuralVariantColumnValue,
+    StructuralVariantColumnFilter,
+    StructuralVariantFilterContext,
+} from './StructuralVariantFilters';
+import { FusionTableColumnType } from 'shared/components/structuralVariantTable/StructuralVariantTable';
 
 export default class ResultsViewStructuralVariantMapperDataStore extends SimpleLazyMobXTableApplicationDataStore<
     StructuralVariant[]
 > {
+    @observable.ref public columnFilters: Partial<
+        Record<FusionTableColumnType, StructuralVariantColumnFilter>
+    > = {};
+    @observable.ref public filterContext: StructuralVariantFilterContext = {};
+
     constructor(data: StructuralVariant[][]) {
         super(data);
         makeObservable(this);
+        this.getSortedFilteredData = () =>
+            getSortedFilteredData(
+                this.sortedData,
+                this.filterString,
+                this.getFilter()
+            ).filter(row =>
+                Object.entries(this.columnFilters).every(([column, filter]) =>
+                    matchesColumnFilter(
+                        structuralVariantColumnValue(
+                            row,
+                            column as FusionTableColumnType,
+                            this.filterContext
+                        ),
+                        filter
+                    )
+                )
+            );
+    }
+
+    @action.bound
+    public setColumnFilter(
+        column: FusionTableColumnType,
+        filter?: StructuralVariantColumnFilter
+    ) {
+        const filters = { ...this.columnFilters };
+        if (filter) filters[column] = filter;
+        else delete filters[column];
+        this.columnFilters = filters;
+        this.page = 0;
+    }
+
+    @action.bound
+    public setFilterContext(context: StructuralVariantFilterContext) {
+        this.filterContext = context;
     }
 
     @computed

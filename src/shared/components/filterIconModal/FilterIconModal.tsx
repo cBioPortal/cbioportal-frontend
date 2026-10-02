@@ -1,14 +1,16 @@
 import * as React from 'react';
 import _ from 'lodash';
 import classNames from 'classnames';
-import { RootCloseWrapper } from 'react-overlays';
+import RootCloseWrapper from 'react-overlays/lib/RootCloseWrapper';
 import { Dropdown } from 'react-bootstrap';
 import { observer } from 'mobx-react';
 import { action, observable, makeObservable } from 'mobx';
 import { ICON_FILTER_OFF } from 'shared/lib/Colors';
+import './styles.scss';
 
 export interface IFilterIconModalProps {
     id: string;
+    label?: string;
     filterIsActive: boolean;
     deactivateFilter: () => void;
     setupFilter: () => void;
@@ -18,33 +20,33 @@ export interface IFilterIconModalProps {
 class FilterIcon extends React.Component<any, {}> {
     render() {
         return (
-            <span
+            <button
+                type="button"
+                className="filterIconModalToggle"
+                aria-label={`Filter ${this.props.label || this.props.id}`}
+                aria-expanded={this.props.isOpen}
                 onClick={this.props.onClickFilter}
                 style={{
                     color: this.props.isActive ? '#0000ff' : ICON_FILTER_OFF,
-                    display: 'inline-block',
-                    cursor: 'pointer',
-                    visibility: 'hidden',
-                    marginLeft: 5,
-                    marginTop: -1,
                 }}
             >
                 <i className="fa fa-filter"></i>
-            </span>
+            </button>
         );
     }
 }
 
-class FilterMenu extends React.Component<any, {}> {
-    @observable private pullRight: boolean = false;
+class FilterMenu extends React.Component<any, { pullRight: boolean }> {
+    state = { pullRight: false };
+    private menu = React.createRef<HTMLDivElement>();
 
     componentDidUpdate() {
-        const rect = document
-            .getElementById(this.props.id)!
-            .getBoundingClientRect();
+        if (!this.props.isOpen || !this.menu.current) return;
+        const rect = this.menu.current.getBoundingClientRect();
 
-        if (rect.right > window.innerWidth) {
-            this.pullRight = true;
+        if (rect.right > window.innerWidth && !this.state.pullRight) {
+            this.setState({ pullRight: true });
+            return;
         }
 
         let yOffset = 0;
@@ -58,20 +60,20 @@ class FilterMenu extends React.Component<any, {}> {
     render() {
         return (
             <div
-                id={this.props.id}
+                ref={this.menu}
                 className={classNames(
                     'dropdown-menu',
-                    this.pullRight ? 'pull-right' : 'pull-left'
+                    this.state.pullRight ? 'pull-right' : 'pull-left'
                 )}
                 style={{
-                    transform: this.pullRight
+                    transform: this.state.pullRight
                         ? 'translateX(10px)'
                         : 'translateX(-5px)',
                     visibility: this.props.isOpen ? 'visible' : 'hidden',
                 }}
             >
                 <div style={{ margin: '6px', marginBottom: '0px' }}>
-                    {this.props.id}
+                    {this.props.label || this.props.id}
 
                     <div style={{ marginTop: '10px' }}>
                         {this.props.menuComponent}
@@ -128,15 +130,23 @@ export default class FilterIconModal extends React.Component<
                 <Dropdown
                     id={this.props.id + ' filterIconModal'}
                     open={this.isOpen}
+                    className={classNames('filterIconModal', {
+                        'is-active': this.props.filterIsActive,
+                        'is-open': this.isOpen,
+                    })}
                 >
                     <FilterIcon
                         bsRole="toggle"
+                        id={this.props.id}
+                        label={this.props.label}
+                        isOpen={this.isOpen}
                         isActive={this.props.filterIsActive}
                         onClickFilter={this.onClickFilter}
                     />
                     <FilterMenu
                         bsRole="menu"
                         id={this.props.id}
+                        label={this.props.label}
                         isOpen={this.isOpen}
                         isActive={this.props.filterIsActive}
                         onClickRemove={this.onClickRemove}
