@@ -268,3 +268,93 @@ describe('WsiViewerController viewer lifecycle', () => {
         controller.dispose();
     });
 });
+
+describe('WsiViewerController token refresh', () => {
+    let rafSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+        jest.useFakeTimers();
+        rafSpy = jest
+            .spyOn(window, 'requestAnimationFrame')
+            .mockImplementation((cb: FrameRequestCallback) => {
+                cb(0);
+                return 0;
+            });
+        getWsiSlideAccessMock.mockImplementation(
+            (_study: string, imageId: string, forceRefresh: boolean) =>
+                Promise.resolve({
+                    ...makeAccess(
+                        imageId,
+                        forceRefresh ? 'token-new' : 'token-old'
+                    ),
+                    // Due for refresh 10 s from now.
+                    expiresAt: Date.now() + 40_000,
+                })
+        );
+    });
+
+    afterEach(() => {
+        rafSpy.mockRestore();
+        getWsiSlideAccessMock.mockReset();
+        jest.useRealTimers();
+    });
+
+    async function flushPromises() {
+        for (let i = 0; i < 5; i++) await Promise.resolve();
+    }
+
+    function refreshCalls() {
+        return getWsiSlideAccessMock.mock.calls.filter(call => call[2]);
+    }
+
+    it('refreshes the token before it expires', async () => {
+        const { controller, viewers } = makeHarness();
+        await controller.selectSlide(makeSlide('slide-a'), sample);
+
+        jest.advanceTimersByTime(10_000);
+        await flushPromises();
+
+        expect(refreshCalls()).toHaveLength(1);
+        expect(viewers[0].setAjaxHeaders).toHaveBeenLastCalledWith(
+            expect.objectContaining({ Authorization: 'Bearer token-new' }),
+            true
+        );
+        controller.dispose();
+    });
+
+    it('pauses refresh while hidden and refreshes a due token when shown', async () => {
+        const { controller, viewers } = makeHarness();
+        await controller.selectSlide(makeSlide('slide-a'), sample);
+
+        controller.setVisible(false);
+        jest.advanceTimersByTime(60_000);
+        await flushPromises();
+        expect(refreshCalls()).toHaveLength(0);
+
+        controller.setVisible(true);
+        await flushPromises();
+
+        expect(refreshCalls()).toHaveLength(1);
+        expect(viewers[0].setAjaxHeaders).toHaveBeenLastCalledWith(
+            expect.objectContaining({ Authorization: 'Bearer token-new' }),
+            true
+        );
+        controller.dispose();
+    });
+
+    it('resumes the refresh schedule when shown before the token is due', async () => {
+        const { controller } = makeHarness();
+        await controller.selectSlide(makeSlide('slide-a'), sample);
+
+        controller.setVisible(false);
+        jest.advanceTimersByTime(5_000);
+        controller.setVisible(true);
+        await flushPromises();
+        expect(refreshCalls()).toHaveLength(0);
+
+        jest.advanceTimersByTime(5_000);
+        await flushPromises();
+        expect(refreshCalls()).toHaveLength(1);
+        controller.dispose();
+    });
+});

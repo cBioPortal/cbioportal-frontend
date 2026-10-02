@@ -637,6 +637,10 @@ export function tabs(
                     tileServerUrl={tileServerUrl}
                     userName={pageComponent.props.appStore.userName}
                     height={WindowStore.size.height - 220}
+                    hidden={
+                        urlWrapper.activeTabId !==
+                        PatientViewPageTabs.WSIHESlides
+                    }
                     clinicalData={wsiPatientClinicalData(
                         pageComponent.patientViewPageStore
                     )}

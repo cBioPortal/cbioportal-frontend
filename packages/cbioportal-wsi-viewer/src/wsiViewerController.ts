@@ -148,6 +148,14 @@ export class WsiViewerController {
     private osdOpenTimer: ReturnType<typeof setTimeout> | null = null;
     private selectionTimeoutTimer: ReturnType<typeof setTimeout> | null = null;
     private wsiTokenRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+    /** The next access-token refresh, kept while the viewer is hidden. */
+    private wsiTokenRefresh: {
+        studyId: string;
+        imageId: string;
+        seq: number;
+        refreshAt: number;
+    } | null = null;
+    private viewerVisible = true;
     private activeWsiSourceUrl: string | null = null;
     private tileFailureCount = 0;
     private terminalTileFailures = new Set<string>();
@@ -659,11 +667,16 @@ export class WsiViewerController {
         this.closeViewerSlide();
     }
 
-    private cancelWsiTokenRefresh(): void {
+    private clearWsiTokenRefreshTimer(): void {
         if (this.wsiTokenRefreshTimer !== null) {
             clearTimeout(this.wsiTokenRefreshTimer);
             this.wsiTokenRefreshTimer = null;
         }
+    }
+
+    private cancelWsiTokenRefresh(): void {
+        this.clearWsiTokenRefreshTimer();
+        this.wsiTokenRefresh = null;
     }
 
     private scheduleWsiTokenRefresh(
@@ -672,12 +685,59 @@ export class WsiViewerController {
         seq: number,
         expiresAt: number
     ): void {
+        this.setWsiTokenRefresh(studyId, imageId, seq, expiresAt - 30_000);
+    }
+
+    private setWsiTokenRefresh(
+        studyId: string,
+        imageId: string,
+        seq: number,
+        refreshAt: number
+    ): void {
         this.cancelWsiTokenRefresh();
-        const delay = Math.max(1000, expiresAt - Date.now() - 30_000);
+        this.wsiTokenRefresh = { studyId, imageId, seq, refreshAt };
+        this.startWsiTokenRefreshTimer();
+    }
+
+    // Hidden viewers load no tiles, so their token is refreshed when shown.
+    private startWsiTokenRefreshTimer(): void {
+        const refresh = this.wsiTokenRefresh;
+        if (!refresh || !this.viewerVisible) return;
+        this.clearWsiTokenRefreshTimer();
+        const delay = Math.max(1000, refresh.refreshAt - Date.now());
         this.wsiTokenRefreshTimer = setTimeout(() => {
             this.wsiTokenRefreshTimer = null;
-            void this.refreshWsiToken(studyId, imageId, seq);
+            this.wsiTokenRefresh = null;
+            void this.refreshWsiToken(
+                refresh.studyId,
+                refresh.imageId,
+                refresh.seq
+            );
         }, delay);
+    }
+
+    /**
+     * Whether the viewer is on screen. Token refresh pauses while it is
+     * hidden and, once shown, runs at once if the refresh is due.
+     */
+    setVisible(visible: boolean): void {
+        if (visible === this.viewerVisible) return;
+        this.viewerVisible = visible;
+        if (!visible) {
+            this.clearWsiTokenRefreshTimer();
+            return;
+        }
+        const refresh = this.wsiTokenRefresh;
+        if (refresh && refresh.refreshAt <= Date.now()) {
+            this.wsiTokenRefresh = null;
+            void this.refreshWsiToken(
+                refresh.studyId,
+                refresh.imageId,
+                refresh.seq
+            );
+            return;
+        }
+        this.startWsiTokenRefreshTimer();
     }
 
     private async refreshWsiToken(
@@ -708,10 +768,7 @@ export class WsiViewerController {
             );
         } catch (_) {
             if (seq !== this.mountSeq) return;
-            this.wsiTokenRefreshTimer = setTimeout(() => {
-                this.wsiTokenRefreshTimer = null;
-                void this.refreshWsiToken(studyId, imageId, seq);
-            }, 10_000);
+            this.setWsiTokenRefresh(studyId, imageId, seq, Date.now() + 10_000);
         }
     }
 
