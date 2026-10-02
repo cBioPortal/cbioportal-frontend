@@ -2,8 +2,6 @@ import { test, expect, Page } from '../fixtures';
 import { setServerConfiguration } from './helpers/common';
 
 /**
- * Port of end-to-end-test/remote/specs/config.spec.js.
- *
  * Verifies that the homepage honors several skin/auth config values.
  * The portal reads `frontendConfig` out of localStorage at boot, so
  * each test writes an override, reloads, and then asserts DOM state.
@@ -29,9 +27,9 @@ test.describe('homepage config overrides', () => {
 
     test('login UI observes authenticationMethod', async ({ page }) => {
         // With authenticationMethod explicitly nulled out, the Login button
-        // in the header should not render. (The wdio spec only asserted the
-        // *after* state — public cbioportal's default config is already
-        // unauthenticated, so the before-state assertion would be trivial.)
+        // in the header should not render. Only the *after* state is
+        // asserted: public cbioportal's default config is already
+        // unauthenticated, so a before-state assertion would be trivial.
         await setServerConfiguration(page, { authenticationMethod: null });
         await page.goto('/');
         await expect(page.locator('#rightHeaderContent')).toBeAttached();

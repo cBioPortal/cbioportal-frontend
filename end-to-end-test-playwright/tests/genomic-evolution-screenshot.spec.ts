@@ -6,8 +6,6 @@ import {
 } from './helpers/common';
 
 /**
- * Port of end-to-end-test/remote/specs/core/genomicEvolution.screenshot.spec.js.
- *
  * Screenshot coverage of the Patient View → Genomic Evolution tab:
  *  - VAF line-chart view (default, with timeline, with selections, in
  *    sequential/log/data-range modes).
@@ -108,8 +106,7 @@ test.describe.serial('Patient View Genomic Evolution screenshot tests', () => {
     });
 
     test('line chart with data-range y axis', async () => {
-        // The wdio spec used jsApiClick here — element was obscured by a
-        // sibling. Playwright's `force: true` has the same effect.
+        // The checkbox is obscured by a sibling, so force the click.
         await page
             .locator('input[data-test="VAFDataRange"]')
             .click({ force: true });

@@ -22,7 +22,7 @@ import {
 /**
  * General-flow portion of the group-comparison screenshot suite —
  * one shared page walks through overlap/survival/clinical/enrichment
- * tabs in a fixed order, matching the original wdio spec's sequence.
+ * tabs in a fixed order.
  */
 
 test.describe.serial('group comparison general screenshots', () => {

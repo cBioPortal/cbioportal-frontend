@@ -9,8 +9,7 @@ import {
 import { setSettingsMenuOpen, waitForOncoprint } from './oncoprint';
 
 /**
- * Shared results-view screenshot suite, ported from
- * end-to-end-test/remote/specs/core/screenshot.spec.js.
+ * Shared results-view screenshot suite.
  *
  * Extracted into a helper so each URL config (no-session, session,
  * excluding-unprofiled) can live in its own spec file. Tests within a

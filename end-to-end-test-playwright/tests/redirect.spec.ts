@@ -2,8 +2,6 @@ import { test } from '../fixtures';
 import { waitForOncoprint } from './helpers/oncoprint';
 
 /**
- * Port of end-to-end-test/remote/specs/core/redirect.spec.js.
- *
  * /encodedRedirect accepts a base64-encoded target URL and redirects to
  * it — used to work around URL-length limits in email/chat sharing.
  * The assertion is simply that the redirected oncoprint results page

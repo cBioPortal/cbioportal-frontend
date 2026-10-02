@@ -11,8 +11,6 @@ import {
 import { getTextInOncoprintLegend } from './helpers/oncoprint';
 
 /**
- * Port of end-to-end-test/remote/specs/core/studyview.spec.js.
- *
  * Exercises the /study view across many studies:
  *  - laml_tcga summary/clinical tabs, add-chart flows, custom selection
  *  - charts not shown on irrelevant tabs (brca_tcga_pub)
@@ -172,8 +170,7 @@ test.describe('studyview tests', () => {
                 timeout: WAIT_FOR_VISIBLE_TIMEOUT,
             });
             await waitForNetworkQuiet(page);
-            // original wdio spec had the screenshot assertion commented out
-            // because of tooltip flakiness, so the port preserves DOM-only.
+            // DOM-only: a screenshot here is flaky because of tooltips.
         });
 
         test('study view laml_tcga clinical data clicked', async () => {

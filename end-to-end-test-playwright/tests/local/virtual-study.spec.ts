@@ -1,4 +1,3 @@
-// Source: end-to-end-test/local/specs/virtual-study.spec.js
 import { test, expect, Page } from '../../fixtures';
 import { goToUrlAndSetLocalStorage } from './helpers';
 

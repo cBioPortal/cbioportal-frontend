@@ -7,8 +7,6 @@ import {
 } from './helpers/oncoprint';
 
 /**
- * Port of end-to-end-test/remote/specs/core/oncoprinterColorConfig.spec.js.
- *
  * Exercises the per-track color configuration modal on the standalone
  * Oncoprinter tool:
  *  - Opening the modal and picking three new colors updates the swatch
@@ -140,9 +138,8 @@ test.describe.serial('oncoprinter color configuration', () => {
 
     test('"Reset Colors" button is hidden when defaults are used', async () => {
         await openColorEditor();
-        // wdio's waitForDisplayed({reverse: true}) polls up to ~30s; the
-        // "non-default colors" flag can take a moment to clear after reset
-        // + modal close/reopen, so give it a generous window.
+        // The "non-default colors" flag can take a moment to clear after
+        // reset + modal close/reopen, so give it a generous window.
         await expect(byTestHandle(page, 'resetColors')).toBeHidden({
             timeout: 15000,
         });

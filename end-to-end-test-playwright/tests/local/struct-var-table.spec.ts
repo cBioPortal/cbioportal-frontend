@@ -1,4 +1,3 @@
-// Source: end-to-end-test/local/specs/struct-var-table.spec.js
 import { test, expect, Page } from '../../fixtures';
 import { goToUrlAndSetLocalStorageWithProperty } from './helpers';
 import { waitForStudyView } from '../helpers/common';

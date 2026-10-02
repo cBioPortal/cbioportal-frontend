@@ -1,4 +1,3 @@
-// Source: end-to-end-test/local/specs/core/querypage.spec.js
 import { expect } from '@playwright/test';
 import { test } from '../../fixtures';
 import { goToUrlAndSetLocalStorage } from './helpers';
@@ -17,10 +16,9 @@ test.describe('study select page', () => {
         const hg38StudyEntry = '//span[text()="Study HG38"]';
         const hg38Checkbox = '#input-hg38';
 
-        // Mirrors the wdio describe.serial: tests in this block share the
-        // study-list state (the hg38 filter from the previous test
-        // persists into the next). Use a single page across all tests in
-        // this describe and serialize.
+        // Tests in this block share the study-list state (the hg38 filter
+        // from the previous test persists into the next). Use a single
+        // page across all tests in this describe and serialize.
         test.describe.configure({ mode: 'serial' });
 
         let sharedPage: import('@playwright/test').Page;

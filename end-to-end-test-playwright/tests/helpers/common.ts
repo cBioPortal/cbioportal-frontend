@@ -2,12 +2,9 @@ import * as path from 'path';
 import { expect, Locator, Page, Route } from '@playwright/test';
 
 /**
- * Shared Playwright helpers ported from
- * end-to-end-test/shared/specUtils_Async.js.
- *
- * Only the subset of wdio helpers that actually translates to
- * meaningful Playwright code lives here — Playwright's auto-waiting
- * locators collapse most of the wdio `waitFor*` ceremony.
+ * Shared Playwright helpers. Kept thin: Playwright's auto-waiting
+ * locators and web-first assertions handle most waiting, so only helpers
+ * that add real behavior live here.
  */
 
 /** cbioportal exposes `window.ajaxQuiet` while any XHR is in-flight. */
@@ -24,9 +21,8 @@ export function byTestHandle(page: Page, handle: string): Locator {
 
 /**
  * Screenshot `selector` with the mouse parked in the corner and hover
- * effects cleared — mirrors the wdio `checkElementWithMouseDisabled`
- * helper. Accepts an optional list of selectors to mask or hide so
- * tooltips / floating UI don't leak into the snapshot.
+ * effects cleared. Accepts an optional list of selectors to mask or hide
+ * so tooltips / floating UI don't leak into the snapshot.
  */
 export async function expectElementScreenshot(
     page: Page,
@@ -69,9 +65,9 @@ export async function expectElementScreenshot(
 }
 
 /**
- * Full-page screenshot variant: wdio's checkElementWithMouseDisabled with
- * selector='body'. Uses a fixed viewport so pages that render tall can
- * still produce deterministic captures.
+ * Full-page screenshot variant of expectElementScreenshot. Uses a fixed
+ * viewport so pages that render tall can still produce deterministic
+ * captures.
  */
 export async function expectPageScreenshot(
     page: Page,
@@ -101,8 +97,7 @@ export async function expectPageScreenshot(
 }
 
 /**
- * Clear and type into an input — the wdio setInputText sequence without
- * the `.clearValue()` race-condition workaround (Playwright's fill handles it).
+ * Clear and type into an input.
  */
 export async function setInputText(page: Page, selector: string, text: string) {
     const el = page.locator(selector);
@@ -183,7 +178,7 @@ export async function setServerConfiguration(
 
 /**
  * Set a checkbox to the desired state, clicking only if its current
- * state doesn't match. Mirrors the wdio `setCheckboxChecked` helper.
+ * state doesn't match.
  */
 export async function setCheckboxChecked(
     page: Page,

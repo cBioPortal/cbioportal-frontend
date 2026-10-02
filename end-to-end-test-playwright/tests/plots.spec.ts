@@ -2,8 +2,6 @@ import { test, expect } from '../fixtures';
 import { byTestHandle } from './helpers/common';
 
 /**
- * Port of end-to-end-test/remote/specs/core/plots.spec.js.
- *
  * DOM/logic tests for the results-view Plots tab: availability-alert
  * tooltip with correct sample counts across multiple studies, logscale
  * checkbox visibility per data type, and the default generic-assay
@@ -88,9 +86,10 @@ test.describe('plots tab', () => {
         await expect(page.locator('div.axisBlock').first()).toBeVisible({
             timeout: 20000,
         });
-        await expect(page.locator(METHYLATION_OPTION_SELECTION_BOX)).toHaveText(
-            "TP53;WRAP53 (cg06587969): TSS1500;5'UTR;1stExon",
-            { timeout: 20000 }
-        );
+        await expect(
+            page.locator(METHYLATION_OPTION_SELECTION_BOX)
+        ).toHaveText("TP53;WRAP53 (cg06587969): TSS1500;5'UTR;1stExon", {
+            timeout: 20000,
+        });
     });
 });

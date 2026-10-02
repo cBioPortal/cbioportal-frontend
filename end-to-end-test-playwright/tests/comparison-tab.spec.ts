@@ -6,8 +6,6 @@ import {
 } from './helpers/common';
 
 /**
- * Port of end-to-end-test/remote/specs/core/comparisonTab.spec.js.
- *
  * Same create-group UX as group-comparison.spec.ts but driven from
  * the results-view comparison tab rather than a standalone
  * /comparison session. The URLs query coadread_tcga_pub so the groups

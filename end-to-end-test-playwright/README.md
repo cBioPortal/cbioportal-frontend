@@ -104,7 +104,7 @@ All test entry points route through `scripts/with-env.sh`, which resolves
 
 In CI, this means a PR targeting `rc` automatically runs against
 `rc.cbioportal.org`; a PR targeting `master` runs against
-`www.cbioportal.org`; etc. — matching the legacy WebdriverIO behavior.
+`www.cbioportal.org`; etc.
 
 ## Updating references when a real visual change lands
 

@@ -1,4 +1,3 @@
-// Source: end-to-end-test/local/specs/core/patientview.spec.js
 import { test, expect, Page } from '../../fixtures';
 import { goToUrlAndSetLocalStorage } from './helpers';
 import { setCheckboxChecked, setDropdownOpen } from '../helpers/common';
@@ -43,7 +42,7 @@ async function testSampleIcon(
     const geneCell = page
         .locator(`div[data-test=${tableTag}] table`)
         .locator(`span:text-is("${geneSymbol}")`);
-    // wdio: geneCell -> .. -> .. -> div[data-test=samples-cell] ul
+    // geneCell -> .. -> .. -> div[data-test=samples-cell] ul
     const samplesCell = geneCell
         .locator('xpath=../..')
         .locator('div[data-test=samples-cell] ul');

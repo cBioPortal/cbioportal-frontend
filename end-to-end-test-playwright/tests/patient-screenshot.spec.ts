@@ -2,13 +2,9 @@ import { test } from '../fixtures';
 import { expectPageScreenshot, waitForNetworkQuiet } from './helpers/common';
 
 /**
- * Port of end-to-end-test/remote/specs/core/patient.screenshot.spec.js.
- *
- * The wdio suite had two describe blocks — the second targeted
- * `msk_impact_50k_2026`, a study not yet on the public portal, so it
- * was skip-effectively (TMB-H biomarker). We port only the cohort
- * navigation test here; the TMB-H one can be re-added when the data is
- * public.
+ * Patient view cohort navigation screenshots. A TMB-H biomarker
+ * screenshot can be added once its study, `msk_impact_50k_2026`, is on
+ * the public portal.
  */
 
 test.describe('Patient cohort view screenshot tests', () => {

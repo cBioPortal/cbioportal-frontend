@@ -1,4 +1,3 @@
-// Source: end-to-end-test/local/specs/core/studyview.screenshot.spec.js
 // Split out from study-view-screenshot.spec.ts so Playwright's --shard
 // has more files to balance across parallel runners.
 import { test, expect } from '../../fixtures';

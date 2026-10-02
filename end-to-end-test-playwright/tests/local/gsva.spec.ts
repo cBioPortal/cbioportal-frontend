@@ -1,4 +1,3 @@
-// Source: end-to-end-test/local/specs/gsva.spec.js
 import { test, expect, Locator, Page } from '../../fixtures';
 import {
     goToUrlAndSetLocalStorage,

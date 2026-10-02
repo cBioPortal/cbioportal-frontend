@@ -3,9 +3,9 @@ import { expectElementScreenshot, waitForNetworkQuiet } from './helpers/common';
 
 /**
  * Standalone screenshot tests that each cold-load their own URL —
- * download/patient/enrichments/pathways views from the original
- * screenshot.spec. These were split out of screenshot.spec.ts so the
- * three results-page configs can run on separate workers.
+ * download/patient/enrichments/pathways views. They're kept apart from
+ * the shared results-view screenshot suite (helpers/results-screenshots.ts)
+ * so the three results-page configs can run on separate workers.
  */
 
 async function snapshot(

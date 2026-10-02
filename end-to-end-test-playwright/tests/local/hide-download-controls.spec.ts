@@ -1,4 +1,3 @@
-// Source: end-to-end-test/local/specs/hide-download-controls.spec.js
 import { test, expect, Page } from '../../fixtures';
 import { goToUrlAndSetLocalStorage } from './helpers';
 import {
@@ -754,8 +753,8 @@ test.describe('hide download controls feature', () => {
 
         test.beforeAll(async ({ browser }) => {
             const studyPage = await browser.newPage();
-            // wdio used the 'show' setting first to allow openGroupComparison
-            // to find the chart hamburger menus, then 'hide' afterwards.
+            // Use the 'show' setting first so openGroupComparison can find
+            // the chart hamburger menus, then 'hide' afterwards.
             await openAndSetProperty(studyPage, CBIOPORTAL_URL, {
                 skin_hide_download_controls: 'show',
             });
