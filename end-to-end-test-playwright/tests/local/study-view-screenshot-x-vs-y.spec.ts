@@ -178,7 +178,13 @@ test.describe.serial('study view editable breadcrumbs', () => {
         await goToUrlAndSetLocalStorage(page, studyUrl, true);
         await userSettingsLoaded;
         await waitForNetworkQuiet(page);
-        await page.locator(ADD_CHART_BUTTON).click();
+        // The add chart button ignores clicks while its tabs are loading
+        const addChartButton = page.locator(ADD_CHART_BUTTON);
+        await expect(addChartButton).not.toHaveClass(/disabled/, {
+            timeout: 30000,
+        });
+        await addChartButton.click();
+        await expect(addChartButton).toHaveAttribute('aria-pressed', 'true');
         // "Reset charts" only shows when the layout differs from the default
         const resetVisible = await page
             .locator('button:text-is("Reset charts")')
