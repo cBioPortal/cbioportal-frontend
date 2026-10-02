@@ -162,6 +162,38 @@ describe('treatment feature', function() {
             assert.equal(options.length, 9);
         });
 
+        it('keeps previously selected treatments after clearing a search', async () => {
+            await goToTreatmentTab();
+            await clickElement(GENERIC_ASSAY_ENTITY_SELECTOR);
+            await setInputText(
+                '[data-test="GenericAssayEntitySelection"] input',
+                'AZD'
+            );
+            let options = await (
+                await getElement(GENERIC_ASSAY_ENTITY_SELECTOR)
+            ).$$('div[class$="option"]');
+            await options[1].click();
+
+            let selectedOptions = await (
+                await getElement(GENERIC_ASSAY_ENTITY_SELECTOR)
+            ).$$('div[class$="multiValue"]');
+            assert.equal(selectedOptions.length, 1);
+
+            await setInputText(
+                '[data-test="GenericAssayEntitySelection"] input',
+                ''
+            );
+            options = await (
+                await getElement(GENERIC_ASSAY_ENTITY_SELECTOR)
+            ).$$('div[class$="option"]');
+            await options[0].click();
+
+            selectedOptions = await (
+                await getElement(GENERIC_ASSAY_ENTITY_SELECTOR)
+            ).$$('div[class$="multiValue"]');
+            assert.equal(selectedOptions.length, 2);
+        });
+
         it('initializes from `generic_assay_groups` URL parameter', async () => {
             await goToUrlAndSetLocalStorage(
                 oncoprintTabUrl.concat(
@@ -185,6 +217,35 @@ describe('treatment feature', function() {
                 await selectedOptions[0].getText(),
                 'Name of 17-AAG (17-AAG): Desc of 17-AAG'
             );
+        });
+
+        it('only shows url-selected treatments for the matching profile', async () => {
+            await goToUrlAndSetLocalStorage(
+                oncoprintTabUrl.concat(
+                    '&generic_assay_groups=study_es_0_treatment_ic50,17-AAG'
+                ),
+                true
+            );
+            await waitForOncoprint();
+            await goToTreatmentTab();
+
+            let selectedOptions = await (
+                await getElement(GENERIC_ASSAY_ENTITY_SELECTOR)
+            ).$$('div[class$="multiValue"]');
+            assert.equal(selectedOptions.length, 1);
+
+            await clickElement(GENERIC_ASSAY_PROFILE_SELECTOR);
+            await (
+                await selectElementByText(TREATMENT_EC50_PROFILE_NAME)
+            ).waitForExist();
+            await (
+                await selectElementByText(TREATMENT_EC50_PROFILE_NAME)
+            ).click();
+
+            selectedOptions = await (
+                await getElement(GENERIC_ASSAY_ENTITY_SELECTOR)
+            ).$$('div[class$="multiValue"]');
+            assert.equal(selectedOptions.length, 0);
         });
 
         it('sets `generic_assay_groups` URL parameter', async () => {
