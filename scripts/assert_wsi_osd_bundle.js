@@ -1,6 +1,15 @@
 const fs = require('fs');
 const path = require('path');
 
+// A message string of OpenSeadragon's own code, kept by minification. The
+// library name alone is not enough: the webpack runtime in an initial bundle
+// names the wsi-openseadragon chunk.
+const OPENSEADRAGON_MARKER = '[Viewer.addTiledImage]';
+
+function containsOpenSeadragon(bundle) {
+    return bundle.includes(OPENSEADRAGON_MARKER);
+}
+
 function getInitialBundlePaths(distDir, indexHtml) {
     const initialBundleMatches = [
         ...indexHtml.matchAll(/src="\/(reactapp\/[^"]+\.js)"/g),
@@ -37,30 +46,29 @@ function assertWsiOsdBundle(options = {}) {
         };
     });
 
+    const initialOsdBundle = bundleEntries.find(({ bundle }) =>
+        containsOpenSeadragon(bundle)
+    );
+    if (initialOsdBundle) {
+        throw new Error(
+            `OpenSeadragon must only load in the asynchronous wsi-openseadragon chunk, but it is in the initial bundle ${initialOsdBundle.bundlePath}`
+        );
+    }
+
     const osdChunkNames = fs
         .readdirSync(reactAppDir)
         .filter(name => /^wsi-openseadragon(?:\.|-).*\.js$/.test(name));
 
-    if (osdChunkNames.length > 1) {
+    if (osdChunkNames.length !== 1) {
         throw new Error(
-            `Expected at most one asynchronous wsi-openseadragon chunk in ${reactAppDir}, found ${osdChunkNames.length}`
+            `Expected one asynchronous wsi-openseadragon chunk in ${reactAppDir}, found ${osdChunkNames.length}`
         );
     }
 
-    // The annotation adapter can share OpenSeadragon with the initial common
-    // bundle. In that configuration there is no standalone chunk, but the
-    // viewer remains functional. Keep the assertion focused on ensuring the
-    // dependency is present in the emitted bundles.
-    const osdBundlePath =
-        osdChunkNames.length === 1
-            ? path.join(reactAppDir, osdChunkNames[0])
-            : bundleEntries.find(({ bundle }) =>
-                  bundle.includes('openseadragon')
-              )?.bundlePath;
-
-    if (!osdBundlePath) {
+    const osdBundlePath = path.join(reactAppDir, osdChunkNames[0]);
+    if (!containsOpenSeadragon(fs.readFileSync(osdBundlePath, 'utf8'))) {
         throw new Error(
-            `Expected OpenSeadragon in an emitted bundle, but no reference was found in ${reactAppDir}`
+            `Expected OpenSeadragon in the wsi-openseadragon chunk ${osdBundlePath}`
         );
     }
 
@@ -83,5 +91,6 @@ if (require.main === module) {
 
 module.exports = {
     assertWsiOsdBundle,
+    OPENSEADRAGON_MARKER,
     getInitialBundlePaths,
 };
