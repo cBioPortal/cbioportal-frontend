@@ -5,6 +5,7 @@ import {
     clickQueryByGeneButton,
     waitForNumberOfStudyCheckboxes,
     waitForOncoprint,
+    searchStudies,
 } from './helpers/oncoprint';
 
 /**
@@ -153,8 +154,7 @@ test.describe('select all/deselect all functionality in study selector', () => {
         ).toHaveCount(0);
 
         await page.waitForTimeout(500);
-        await setInputText(page, SEARCH_INPUT, 'ovarian nature 2011');
-        await waitForNumberOfStudyCheckboxes(page, 1);
+        await searchStudies(page, SEARCH_INPUT, 'ovarian nature 2011', 1);
         await page
             .locator(STUDY_SELECT_INPUT)
             .first()
@@ -183,8 +183,7 @@ test.describe('case set selection in front page query form', () => {
         await expect(page.locator(SEARCH_INPUT)).toBeVisible({
             timeout: 20000,
         });
-        await setInputText(page, SEARCH_INPUT, 'ovarian nature 2011');
-        await waitForNumberOfStudyCheckboxes(page, 1);
+        await searchStudies(page, SEARCH_INPUT, 'ovarian nature 2011', 1);
         await page
             .locator(STUDY_SELECT_INPUT)
             .first()
@@ -411,8 +410,7 @@ test.describe.serial(
             await expect(page.locator(SEARCH_INPUT)).toBeVisible({
                 timeout: 20000,
             });
-            await setInputText(page, SEARCH_INPUT, 'ovarian nature 2011');
-            await waitForNumberOfStudyCheckboxes(page, 1);
+            await searchStudies(page, SEARCH_INPUT, 'ovarian nature 2011', 1);
             await page
                 .locator(STUDY_SELECT_INPUT)
                 .first()
@@ -448,8 +446,7 @@ test.describe.serial(
             await expect(page.locator(SEARCH_INPUT)).toBeVisible({
                 timeout: 10000,
             });
-            await setInputText(page, SEARCH_INPUT, 'ampullary baylor');
-            await waitForNumberOfStudyCheckboxes(page, 1);
+            await searchStudies(page, SEARCH_INPUT, 'ampullary baylor', 1);
             await expect(
                 page.locator('.studyItem_ampca_bcm_2016').first()
             ).toBeVisible();

@@ -14,6 +14,7 @@ import {
     setSettingsMenuOpen,
     waitForNumberOfStudyCheckboxes,
     waitForOncoprint,
+    searchStudies,
 } from './helpers/oncoprint';
 
 /**
@@ -468,8 +469,7 @@ test.describe('custom case list sorting', () => {
         // Build the query: two studies, custom case list, gene panel.
         await page.goto('/');
         const search = 'div[data-test=study-search] input[type="text"]';
-        await setInputText(page, search, 'colorectal tcga nature');
-        await waitForNumberOfStudyCheckboxes(page, 1);
+        await searchStudies(page, search, 'colorectal tcga nature', 1);
         await page.locator('[data-test="StudySelect"] input').click();
 
         await setInputText(

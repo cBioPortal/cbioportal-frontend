@@ -172,6 +172,25 @@ export async function setInputText(page: Page, selector: string, text: string) {
     await el.fill(text);
 }
 
+/**
+ * Type into the study search box and wait until the study list shows `n`
+ * studies. The study list can re-render and clear the box right after it
+ * appears, so type again until the filter takes effect.
+ */
+export async function searchStudies(
+    page: Page,
+    selector: string,
+    text: string,
+    n: number
+) {
+    await expect(async () => {
+        await setInputText(page, selector, text);
+        await expect(
+            page.locator('[data-test="StudySelect"] input[type="checkbox"]')
+        ).toHaveCount(n, { timeout: 5000 });
+    }).toPass({ timeout: 30000 });
+}
+
 /** Evaluate an expression against `window.frontendOnc` inside the page. */
 export async function evalFrontendOnc<T>(
     page: Page,
