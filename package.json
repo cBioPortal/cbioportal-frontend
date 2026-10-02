@@ -48,7 +48,7 @@
     "updateHotspotGenes": "./scripts/get_hotspot_genes.sh > src/shared/static-data/hotspotGenes.json",
     "compileOqlParser": "cd src/shared/lib/oql && pegjs oql-parser.pegjs",
     "serveDist": "./scripts/serve_dist.sh",
-    "serveDistLocalDb": "./end-to-end-test/local/runtime-config/serve_dist.sh",
+    "serveDistLocalDb": "./end-to-end-test-playwright/scripts/localdb/serve_dist.sh",
     "testTime": "start_time=`date +%s` && karma start karma.conf.js && echo run time is $(expr `date +%s` - $start_time) s",
     "test": "pnpm run testMain",
     "typecheck": "tsc --noEmit -p tsconfig.json",
@@ -65,12 +65,7 @@
     "prettierCheckCircleCI": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && git remote add cbio-repo https://github.com/cBioPortal/cbioportal-frontend.git 2>/dev/null || true && git fetch cbio-repo $(echo $BRANCH_ENV) && CHANGED_FILES=$(git diff cbio-repo/$(echo $BRANCH_ENV)...HEAD --name-only --diff-filter=d) && [ ! -z \"$CHANGED_FILES\" ] && pnpm exec prettier -c $(echo $CHANGED_FILES) && git remote remove cbio-repo 2>/dev/null || true",
     "prettierFixLocal": "CHANGED_FILES=$(git diff $(echo $BRANCH_ENV) --name-only --diff-filter=d) && ([ ! -z \"$CHANGED_FILES\" ] && pnpm exec prettier --write $(echo $CHANGED_FILES) || echo \"Nothing to prettify\")",
     "prettierAll": "pnpm exec prettier --write $(git ls-files | grep '\\(.js\\|.ts\\|.scss\\|.css\\)')",
-    "checkIncorrectImportStatements": "./scripts/check_incorrect_import_statements.sh",
-    "e2e:spinup": "./scripts/e2e.sh",
-    "e2e:local": "export RETRIES=0 && export CBIOPORTAL_URL=http://localhost:8080 && export && export SCREENSHOT_DIRECTORY=/local/screenshots/ && cd end-to-end-test && pnpm run test-webdriver-manager-local",
-    "e2e:remote": "export RETRIES=0 && export CBIOPORTAL_URL=https://www.cbioportal.org && export SCREENSHOT_DIRECTORY=/remote/screenshots/ && rm -r -f end-to-end-test/shared/results && cd end-to-end-test && pnpm run test-webdriver-manager-remote",
-    "e2e:report": "npx http-server end-to-end-test -o /shared/imageCompare.html -p 8089",
-    "localChromeDriver": "chromedriver"
+    "checkIncorrectImportStatements": "./scripts/check_incorrect_import_statements.sh"
   },
   "engines": {
     "node": "22.18.0"

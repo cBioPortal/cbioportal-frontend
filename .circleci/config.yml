@@ -5,18 +5,6 @@
 version: 2.1
 
 parameters:
-  remote_spec_pattern:
-    type: string
-    default: "./remote/specs/**/*.spec.js"
-  localdb_spec_pattern:
-    type: string
-    default: "./local/specs/**/*.spec.js"
-  enable_remote_e2e:
-    type: boolean
-    default: true
-  enable_localdb_e2e:
-    type: boolean
-    default: true
   manual_trigger_branch_env:
     type: string
     default: "master"
@@ -27,126 +15,6 @@ defaults: &defaults
     # specify the version you desire here
     - image: cimg/node:22.18.0-browsers
 
-run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
-
-  steps:
-    - checkout
-
-    # Install Node.js 22.18.0
-    - run:
-        name: Install Node.js 22.18.0
-        command: |
-          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-          nvm install 22.18.0
-          nvm use 22.18.0
-          nvm alias default 22.18.0
-          node -v
-          npm -v
-
-    # Install Google Chrome
-    - run:
-        name: Install Google Chrome
-        command: |
-          CHROME_VERSION="139.0.7258.154"
-          wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}-1_amd64.deb
-          sudo apt-get update
-          sudo apt-get install -y ./google-chrome-stable_${CHROME_VERSION}-1_amd64.deb
-          google-chrome --version
-
-    # Install ChromeDriver
-    - run:
-        name: Install ChromeDriver
-        command: |
-          CHROME_VERSION=139.0.7258.154
-          wget -q "https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip"
-          unzip -q chromedriver-linux64.zip
-          sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
-          sudo chmod +x /usr/local/bin/chromedriver
-          rm -rf chromedriver-linux64.zip chromedriver-linux64
-
-    - when:
-        condition: << pipeline.parameters.enable_remote_e2e >>
-        steps:
-          - attach_workspace:
-              at: /tmp/repo
-          - restore_cache:
-              keys:
-                - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
-          - run:
-              name: Install root dependencies
-              command: |
-                export NVM_DIR="$HOME/.nvm"
-                [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-                nvm use 22.18.0
-                cd /tmp/repo/cbioportal-frontend
-                corepack enable
-                pnpm install --frozen-lockfile
-#          - run:
-#              name: Install linux dependencies
-#              command: |
-#                sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev || true
-          - run:
-              name: Check remote cbioportal connection
-              command: |
-                cd cbioportal-test
-                sh ./utils/check-connection.sh --url=$CBIOPORTAL_URL
-          - run:
-              name: Run end-to-end tests
-              environment:
-                FRONTEND_TEST_USE_LOCAL_DIST: true
-                WEBPACK_PARALLEL: false
-              command: |
-                export NVM_DIR="$HOME/.nvm"
-                [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-                nvm install 22.18.0
-                nvm use 22.18.0
-                cd /tmp/repo/cbioportal-frontend
-                corepack enable
-                pnpm run serveDist &
-                cd /tmp/repo/cbioportal-test
-                sh ./utils/check-connection.sh --url=https://localhost:3000 --insecure='true'
-                cd /tmp/repo/cbioportal-frontend/end-to-end-test
-                pnpm install --frozen-lockfile --ignore-workspace
-                ../scripts/env_vars.sh
-                eval "$(../scripts/env_vars.sh)"
-                pnpm run test-webdriver-manager-remote
-          - run:
-              name: Make sure all screenshots are tracked (otherwise the test will always be successful)
-              command: |
-                cd cbioportal-frontend
-                for f in end-to-end-test/remote/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0
-          -  store_artifacts:
-               path: /tmp/repo/cbioportal-frontend/end-to-end-test/remote/screenshots
-               destination: /screenshots
-          -  store_artifacts:
-               path: /tmp/repo/cbioportal-frontend/end-to-end-test/shared/image-compare
-               destination: /image-compare
-          -  store_artifacts:
-               path: /tmp/repo/cbioportal-frontend/end-to-end-test/remote/error
-               destination: /errorShots
-          - store_test_results:
-              path: /tmp/repo/cbioportal-frontend/end-to-end-test/remote/junit
-          - store_artifacts:
-              path: /tmp/repo/cbioportal-frontend/end-to-end-test/remote/junit
-          - store_artifacts:
-              path: /tmp/repo/cbioportal-frontend/end-to-end-test/shared/imageCompare.html
-              destination: /imageCompare.html
-          - store_artifacts:
-              path: /tmp/repo/cbioportal-frontend/end-to-end-test/remote/junit/completeResults.json
-              destination: /completeResults.json
-          - store_artifacts:
-              path: /tmp/repo/cbioportal-frontend/end-to-end-test/remote/junit/errors
-              destination: /errors
-    - unless:
-        condition: << pipeline.parameters.enable_remote_e2e >>
-        steps:
-          - run: echo "Job Ignored via enable_remote_e2e"
-          - run: exit 1
-
-orbs:
-  browser-tools: circleci/browser-tools@2.3.1
 jobs:
   api_sync_cbioportal:
     <<: *defaults
@@ -287,7 +155,7 @@ jobs:
           name: "Check forgotten `.only` statements"
           command: |
             cd cbioportal-frontend
-            ! grep '\\.only' $(find ./src ./end-to-end-test -type f -name '*spec*' | grep -v node_modules) | grep -v 'doTest.only = function' | grep -v expectedParsedResult
+            ! grep '\\.only' $(find ./src ./end-to-end-test-playwright -type f -name '*spec*' | grep -v node_modules) | grep -v 'doTest.only = function' | grep -v expectedParsedResult
 
   check_incorrect_import_statements:
     <<: *defaults
@@ -302,31 +170,6 @@ jobs:
             corepack enable
             pnpm run checkIncorrectImportStatements
 
-  e2e_tests:
-    machine:
-      image: ubuntu-2204:2024.08.1
-    resource_class: large
-    working_directory: /tmp/repo
-    environment:
-      MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
-      SPEC_FILE_PATTERN: << pipeline.parameters.remote_spec_pattern >>
-      JUNIT_REPORT_PATH: ./remote/junit/
-      SCREENSHOT_DIRECTORY: ./remote/screenshots
-      CBIOPORTAL_URL: https://www.cbioportal.org
-      CHROMEDRIVER_CUSTOM_PATH: /usr/local/bin/chromedriver
-      HEADLESS_CHROME: true
-    <<: *run_e2e_and_save_artifacts
-
-  e2e_tests_against_master:
-    <<: *defaults
-    environment:
-      SPEC_FILE_PATTERN: ./remote/specs/**/*.spec.js
-      JUNIT_REPORT_PATH: ./remote/junit/
-      SCREENSHOT_DIRECTORY: ./remote/screenshots
-      CBIOPORTAL_URL: https://master.cbioportal.org
-      CHROMEDRIVER_CUSTOM_PATH: /usr/local/bin/chromedriver
-    <<: *run_e2e_and_save_artifacts
-
   # The matrix half of the Playwright e2e workflow. Each shard exits with
   # Playwright's real exit code so individual failed parallel runs show as
   # red and CircleCI's "Rerun failed only" can target the actual failed
@@ -335,10 +178,10 @@ jobs:
   # status of all parallel runs and then merges, so the merged HTML is
   # produced even on red runs.
   #
-  # Mirrors the legacy `e2e_tests` flow: attach the workspace built by
-  # `build_frontend`, start `pnpm run serveDist` on localhost:3000, then run
-  # the Playwright suite in LOCALDEV mode so it loads the locally-built
-  # bundle into the public cbioportal origin via ?localdist=true.
+  # Attaches the workspace built by `build_frontend`, starts
+  # `pnpm run serveDist` on localhost:3000, then runs the Playwright suite
+  # in LOCALDEV mode so it loads the locally-built bundle into the public
+  # cbioportal origin via ?localdist=true.
   remote_e2e_shards:
     docker:
       # Custom image pre-bakes jq, pnpm (via corepack), and http-server@0.11.1
@@ -843,7 +686,6 @@ jobs:
               find . -maxdepth 4 -name 'package.json' \
                 -not -path './node_modules/*' \
                 -not -path './packages/*/node_modules/*' \
-                -not -path './end-to-end-test/node_modules/*' \
                 | LC_ALL=C sort | xargs cat; } \
               | sha256sum | cut -c1-16 > /tmp/manifests-hash
             cat /tmp/manifests-hash
@@ -934,12 +776,6 @@ jobs:
             corepack enable
             pnpm run build
       - run:
-          name: Build frontend tests
-          command: |
-            cd cbioportal-frontend/end-to-end-test
-            corepack enable
-            pnpm install --frozen-lockfile --ignore-workspace
-      - run:
           name: Trim node_modules from workspace before persist
           command: |
             cd cbioportal-frontend
@@ -949,122 +785,6 @@ jobs:
           root: /tmp/repo
           paths:
             - cbioportal-frontend
-
-  e2e_localdb_tests:
-    machine:
-      image: ubuntu-2204:2024.08.1
-    resource_class: large
-    working_directory: /tmp/repo
-    environment:
-      BACKEND_PORT: 8080
-      FRONTEND_PORT: 3000
-      DOCKER_IMAGE_MYSQL: cbioportal/mysql:8.0-database-test
-      DOCKER_IMAGE_CBIOPORTAL: cbioportal/cbioportal:master
-      DOCKER_COMPOSE_REF: master
-      APP_CBIOPORTAL_CORE_BRANCH: main
-    steps:
-      - attach_workspace:
-          at: /tmp/repo
-      - run:
-          name: Install Node.js 22.18.0
-          command: |
-            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm install 22.18.0
-            nvm use 22.18.0
-            nvm alias default 22.18.0
-            node -v
-            npm -v
-      - restore_cache:
-          keys:
-            - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
-      - run:
-          name: Install root dependencies
-          command: |
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-            nvm use 22.18.0
-            cd cbioportal-frontend
-            corepack enable
-            pnpm install --frozen-lockfile
-      - run:
-          name: Generate keycloak config
-          environment:
-            STUDIES: 'ascn_test_study study_hg38 teststudy_genepanels study_es_0 lgg_ucsf_2014_test_generic_assay'
-          command: |
-            git clone https://github.com/cbioportal/cbioportal-docker-compose.git
-            cd cbioportal-test
-            ./utils/gen-keycloak-config.sh --studies="$STUDIES" --template='/tmp/repo/cbioportal-docker-compose/dev/keycloak/keycloak-config.json' --out='/tmp/repo/keycloak-config-generated.json'
-      - run:
-          name: Start backend server with keycloak
-          environment:
-            KEYCLOAK_CONFIG_PATH: '/tmp/repo/keycloak-config-generated.json'
-            APPLICATION_PROPERTIES_PATH: '/tmp/repo/cbioportal-frontend/end-to-end-test/local/runtime-config/portal.properties'
-          command: |
-            cd cbioportal-test
-            nohup ./scripts/docker-compose.sh --portal_type='keycloak' --compose_extensions='-f addon/clickhouse/docker-compose.remote.clickhouse.yml'  >> /tmp/repo/docker-compose-logs.txt 2>&1 &
-      - run:
-          name: Check keycloak connection at localhost
-          command: |
-            cd cbioportal-test
-            ./utils/check-connection.sh --url=localhost:8081 --max_retries=50
-      - run:
-          name: Check backend connection at localhost
-          command: |
-            cd cbioportal-test
-            ./utils/check-connection.sh --url=localhost:${BACKEND_PORT} --max_retries=250
-      - run:
-          name: Run e2e localdb tests
-          environment:
-            SPEC_FILE_PATTERN: << pipeline.parameters.localdb_spec_pattern >>
-            CBIOPORTAL_URL: http://localhost:8080
-            JUNIT_REPORT_PATH: ./local/junit/
-            SCREENSHOT_DIRECTORY: ./local/screenshots
-            PORTAL_SOURCE_DIR: /tmp/repo/cbioportal-frontend
-            TEST_HOME: /tmp/repo/cbioportal-frontend/end-to-end-test/local
-            CHROMEDRIVER_CUSTOM_PATH: /usr/local/bin/chromedriver
-          command: |
-            cd $PORTAL_SOURCE_DIR
-            $TEST_HOME/docker_compose/test.sh
-      - run:
-          environment:
-            TEST_HOME: /tmp/repo/cbioportal-frontend/end-to-end-test/local
-          name: Make sure all screenshots are tracked (otherwise the test will always be successful)
-          command: |
-            cd cbioportal-frontend
-            for f in end-to-end-test/local/screenshots/reference/*.png; do
-              git ls-files --error-unmatch $f > /dev/null 2> /dev/null ||
-              (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked);
-            done;
-            ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0
-      - store_artifacts:
-          path: /tmp/repo/docker-compose-logs.txt
-      - store_artifacts:
-          path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots/diff
-          destination: /screenshots/diff
-      - store_artifacts:
-          path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots/screen
-          destination: /screenshots/screen
-      - store_artifacts:
-          path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots/errors
-          destination: /screenshots/errors
-      - store_artifacts:
-          path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots/reference
-          destination: /screenshots/reference
-      - store_artifacts:
-          path: /tmp/repo/cbioportal-frontend/end-to-end-test/shared/image-compare
-          destination: /image-compare
-      - store_test_results:
-          path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/junit
-      - store_artifacts:
-          path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/junit
-      - store_artifacts:
-          path: /tmp/repo/cbioportal-frontend/end-to-end-test/shared/imageCompare.html
-          destination: /imageCompare.html
-      - store_artifacts:
-          path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/junit/completeResults.json
-          destination: /completeResults.json
 
   # The matrix half of the Playwright localdb e2e workflow. Mirrors
   # remote_e2e_shards: each parallel runner boots its own dockerized
@@ -1132,7 +852,6 @@ jobs:
               find . -maxdepth 4 -name 'package.json' \
                 -not -path './node_modules/*' \
                 -not -path './packages/*/node_modules/*' \
-                -not -path './end-to-end-test/node_modules/*' \
                 | LC_ALL=C sort | xargs cat; } \
               | sha256sum | cut -c1-16 > /tmp/manifests-hash
             cat /tmp/manifests-hash
@@ -1182,7 +901,7 @@ jobs:
           # boot rather than running serially after it (Phase 2 saving).
           environment:
             KEYCLOAK_CONFIG_PATH: '/tmp/repo/keycloak-config-generated.json'
-            APPLICATION_PROPERTIES_PATH: '/tmp/repo/cbioportal-frontend/end-to-end-test/local/runtime-config/portal.properties'
+            APPLICATION_PROPERTIES_PATH: '/tmp/repo/cbioportal-frontend/end-to-end-test-playwright/scripts/localdb/portal.properties'
           command: |
             cd cbioportal-test
             nohup ./scripts/docker-compose.sh --portal_type='keycloak' --compose_extensions='-f addon/clickhouse/docker-compose.remote.clickhouse.yml'  >> /tmp/repo/docker-compose-logs.txt 2>&1 &
@@ -1586,16 +1305,6 @@ workflows:
       - build_frontend:
           requires:
             - checkout
-      # The legacy WDIO `e2e_tests` (remote) job and the WDIO
-      # `e2e_localdb_tests` job are both disabled — the Playwright suite
-      # below is the candidate replacement for both. The Playwright
-      # localdb jobs (e2e_localdb_shards + e2e_localdb_merge) are the
-      # local-db successor; flip the WDIO job back on if you need to
-      # compare.
-      # - e2e_localdb_tests:
-      #     requires:
-      #       - pull_cbioportal_test_codebase
-      #       - build_frontend
       - e2e_localdb_shards:
           requires:
             - pull_cbioportal_test_codebase
@@ -1658,11 +1367,6 @@ workflows:
       - build_frontend:
           requires:
             - checkout
-      # WDIO localdb is disabled in favor of e2e_localdb_shards + merge.
-      # - e2e_localdb_tests:
-      #     requires:
-      #       - pull_cbioportal_test_codebase
-      #       - build_frontend
       - e2e_localdb_shards:
           requires:
             - pull_cbioportal_test_codebase
@@ -1670,10 +1374,9 @@ workflows:
       # See `tests` workflow comment: merge polls the API rather than
       # depending on shards, so the merged HTML is produced even on red.
       - e2e_localdb_merge
-      # Playwright remote e2e replaces the legacy WDIO `e2e_tests` job in
-      # the nightly workflow. `remote_e2e` polls the CircleCI API for the
-      # shards' terminal state and merges the report, so it intentionally
-      # does NOT `require` remote_e2e_shards.
+      # `remote_e2e` polls the CircleCI API for the shards' terminal state
+      # and merges the report, so it intentionally does NOT `require`
+      # remote_e2e_shards.
       - remote_e2e_shards:
           requires:
             - build_frontend
@@ -1687,10 +1390,6 @@ workflows:
           # when remote_e2e is red, which is exactly the case where
           # surfacing flakes is most useful.
           context: claude-flake-analyzer
-      # - e2e_tests_against_master:
-      #     requires:
-      #       - pull_cbioportal_test_codebase
-      #       - build_frontend
       - api_sync_cbioportal:
           requires:
             - build_frontend

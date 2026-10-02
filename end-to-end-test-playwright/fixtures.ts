@@ -15,11 +15,8 @@ import {
 // loads and any local changes go untested. The sibling `?localdev=true`
 // param is for the live webpack/rspack dev server and only swaps a
 // subset of assets (notably it leaves styles.css alone), so it can't be
-// used here. Opt out with LOCALDEV=0 to test the deployed bundle. The
-// legacy WDIO suite handles this in end-to-end-test/shared/specUtils.js
-// (getUrl/goToUrlAndSetLocalStorage, which picks `localdist` vs
-// `localdev` via useLocalDist); this fixture is the Playwright
-// equivalent and pins to `localdist` because CI's serveDist needs it.
+// used here. Opt out with LOCALDEV=0 to test the deployed bundle. This
+// fixture pins to `localdist` because CI's serveDist needs it.
 //
 // Test files should import { test, expect } from this module instead of
 // from '@playwright/test' so the override applies uniformly. Tests that
