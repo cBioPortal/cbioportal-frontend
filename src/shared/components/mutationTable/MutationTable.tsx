@@ -72,6 +72,7 @@ import autobind from 'autobind-decorator';
 import DbsnpColumnFormatter from './column/DbsnpColumnFormatter';
 import SignalColumnFormatter from './column/SignalColumnFormatter';
 import { getDefaultASCNCopyNumberColumnDefinition } from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberColumnFormatter';
+import { getDefaultMutantTotalCopyNumberColumnDefinition } from 'shared/components/mutationTable/column/mutantTotalCopyNumber/MutantTotalCopyNumberColumnFormatter';
 import { getDefaultASCNMethodColumnDefinition } from 'shared/components/mutationTable/column/ascnMethod/ASCNMethodColumnFormatter';
 import { getDefaultCancerCellFractionColumnDefinition } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionColumnFormatter';
 import { getDefaultClonalColumnDefinition } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
@@ -204,6 +205,7 @@ export enum MutationTableColumnType {
     HGVSG = 'HGVSg',
     COPY_NUM = 'Copy #',
     ASCN_COPY_NUM = 'Total Integer Copy #',
+    MUTANT_TOTAL_COPY_NUM = 'Mutant / Total Copy #',
     ASCN_METHOD = 'ASCN Method',
     MRNA_EXPR = 'mRNA Expr.',
     COHORT = 'Cohort',
@@ -1023,6 +1025,13 @@ export default class MutationTable<
         this._columns[
             MutationTableColumnType.ASCN_COPY_NUM
         ] = getDefaultASCNCopyNumberColumnDefinition(
+            undefined,
+            this.props.sampleIdToClinicalDataMap
+        );
+
+        this._columns[
+            MutationTableColumnType.MUTANT_TOTAL_COPY_NUM
+        ] = getDefaultMutantTotalCopyNumberColumnDefinition(
             undefined,
             this.props.sampleIdToClinicalDataMap
         );

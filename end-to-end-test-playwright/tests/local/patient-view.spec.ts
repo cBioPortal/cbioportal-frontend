@@ -666,6 +666,18 @@ test.describe('patient view page', () => {
                 .waitFor({ state: 'attached' });
         });
 
+        test('displays mutant / total copy number column tooltip on mouseover element', async () => {
+            await page
+                .locator('span[data-test=mutant-total-copy-number-cell] svg')
+                .first()
+                .dispatchEvent('mouseover');
+            await page
+                .locator(
+                    'div[role=tooltip] div[data-test=mutant-total-copy-number-tooltip]'
+                )
+                .waitFor({ state: 'attached' });
+        });
+
         test('displays ccf column tooltip on mouseover element', async () => {
             await page
                 .locator('span[data-test=ccf-cell] span')
