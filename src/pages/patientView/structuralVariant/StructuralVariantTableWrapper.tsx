@@ -31,6 +31,7 @@ import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/Namesp
 import { createNamespaceColumns } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 import CustomDriverTierColumnFormatter from './column/CustomDriverTierColumnFormatter';
 import CustomDriverColumnFormatter from './column/CustomDriverColumnFormatter';
+import { IColumnVisibilityControlsProps } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
 
 export interface IStructuralVariantTableWrapperProps {
     store: PatientViewPageStore;
@@ -40,6 +41,8 @@ export interface IStructuralVariantTableWrapperProps {
     enableOncoKb: boolean;
     onOncoKbIconToggle: (mergeIcons: boolean) => void;
     namespaceColumns?: NamespaceColumnConfig;
+    columnVisibility?: { [columnId: string]: boolean };
+    columnVisibilityProps?: IColumnVisibilityControlsProps;
     customDriverName?: string;
     customDriverDescription?: string;
     customDriverTiersName?: string;
@@ -607,6 +610,10 @@ export default class StructuralVariantTableWrapper extends React.Component<
                                 getServerConfig()
                                     .skin_hide_download_controls ===
                                 DownloadControlOption.SHOW_ALL
+                            }
+                            columnVisibility={this.props.columnVisibility}
+                            columnVisibilityProps={
+                                this.props.columnVisibilityProps
                             }
                         />
                     )}

@@ -348,6 +348,13 @@ export function tabs(
                     pageComponent.patientViewPageStore.namespaceColumnConfig
                         .structVar
                 }
+                columnVisibility={
+                    pageComponent.structuralVariantTableColumnVisibility
+                }
+                columnVisibilityProps={{
+                    onColumnToggled:
+                        pageComponent.onStructuralVariantTableColumnVisibilityToggled,
+                }}
                 customDriverName={
                     getServerConfig()
                         .oncoprint_custom_driver_annotation_binary_menu_label!
