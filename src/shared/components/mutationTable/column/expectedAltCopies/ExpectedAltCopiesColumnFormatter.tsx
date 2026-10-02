@@ -6,6 +6,7 @@ import { MutationTableColumnType } from '../../MutationTable';
 import ExpectedAltCopiesElement from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesElement';
 import { RESPONSE_VALUE_NA } from 'shared/constants';
 import ColumnLegend from 'shared/components/mutationTable/ColumnLegend';
+import styles from 'shared/components/mutationTable/column/ascnCopyNumber/ascnCopyNumber.module.scss';
 
 /**
  * @author Avery Wang
@@ -96,11 +97,11 @@ export default class ExpectedAltCopiesColumnFormatter {
 
         return (
             <span data-test="eac-cell">
-                {sampleIds.map((sampleId: string, index: number) => {
+                {sampleIds.map((sampleId: string) => {
                     return (
                         <span
                             key={sampleId}
-                            style={index === 0 ? undefined : { marginLeft: 5 }}
+                            className={styles.mutantCopiesSlot}
                         >
                             <ExpectedAltCopiesElement
                                 sampleId={sampleId}

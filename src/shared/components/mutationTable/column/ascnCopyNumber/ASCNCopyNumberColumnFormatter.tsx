@@ -12,6 +12,7 @@ import {
 } from 'shared/constants';
 import { MobxPromise } from 'cbioportal-frontend-commons';
 import { errorIcon, loaderIcon } from 'oncokb-frontend-commons';
+import styles from 'shared/components/mutationTable/column/ascnCopyNumber/ascnCopyNumber.module.scss';
 
 /**
  * @author Avery Wang
@@ -143,13 +144,11 @@ export default class ASCNCopyNumberColumnFormatter {
         } else if (sampleIdToClinicalDataMap.isComplete) {
             return (
                 <span data-test="ascn-copy-number-cell">
-                    {sampleIds.map((sampleId: string, index: number) => {
+                    {sampleIds.map((sampleId: string) => {
                         return (
                             <span
                                 key={sampleId}
-                                style={
-                                    index === 0 ? undefined : { marginLeft: 5 }
-                                }
+                                className={styles.totalCopyNumberSlot}
                             >
                                 <ASCNCopyNumberElement
                                     sampleId={sampleId}

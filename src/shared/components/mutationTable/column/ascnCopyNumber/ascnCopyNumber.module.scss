@@ -14,3 +14,20 @@
     font-weight: bold;
     vertical-align: middle;
 }
+
+/* one fixed-width slot per sample, so the values of a patient's samples line
+   up across rows even when some samples have no value */
+.mutantCopiesSlot,
+.totalCopyNumberSlot {
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.mutantCopiesSlot {
+    width: 20px;
+}
+
+/* room for the number and the WGD tag */
+.totalCopyNumberSlot {
+    width: 42px;
+}
