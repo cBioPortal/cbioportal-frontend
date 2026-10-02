@@ -124,6 +124,14 @@ A test that fails at random blocks every PR, and people learn to ignore red CI. 
 - **Expect live data to change.** Remote-lane tests use public data and annotations (OncoKB, Genome Nexus, hotspots) that change over time. Assert on what the test is about, not on incidental counts or values, and use the local-DB lane when exact data matters.
 - **Check new tests repeatedly before opening the PR.** Run new or changed e2e tests several times in Docker under CI-like load: `./scripts/docker-test.sh tests/my.spec.ts --repeat-each=5 --workers=3`.
 
+### Describing Tests in Pull Requests
+When a PR adds or changes e2e tests, say in the PR description:
+- **How many tests** it adds, changes or removes, and in which spec files
+- **How long each new test takes** in the CI Docker image (`docker-test.sh` prints each test's duration), and how many times you ran it (e.g. `--repeat-each=5`)
+- **How much time it adds to CI**, if it's noticeable: the e2e jobs are split into shards, so one slow test can make its shard, and the whole run, take longer
+
+This lets reviewers weigh the coverage against the CI time and flakiness risk. Unit tests don't need this unless they're unusually slow.
+
 ### Code Quality
 - Pre-commit hooks automatically format code with Prettier
 - CircleCI runs prettier checks on pull requests
