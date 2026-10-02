@@ -1,4 +1,3 @@
-// Source: end-to-end-test/local/specs/treatment.spec.js
 import { test, expect, Locator, Page } from '../../fixtures';
 import { goToUrlAndSetLocalStorage } from './helpers';
 import { setInputText } from '../helpers/common';
@@ -727,9 +726,9 @@ test.describe('treatment feature', () => {
                     .locator('div:text-is("Genes")')
             ).toBeVisible();
 
-            // Mirror the wdio traversal: find the "Genes" label, step up to
-            // its parent, take the second descendant div (the gene list
-            // container), then assert the text of each gene entry div.
+            // Find the "Genes" label, step up to its parent, take the second
+            // descendant div (the gene list container), then assert the text
+            // of each gene entry div.
             // Using locators (not page.evaluate) gives built-in retries so
             // entries that haven't finished rendering are waited for.
             const genesLabelParent = page

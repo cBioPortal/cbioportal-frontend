@@ -2,13 +2,9 @@ import { test, expect, Page } from '../fixtures';
 import { setServerConfiguration } from './helpers/common';
 
 /**
- * Port of end-to-end-test/remote/specs/core/customTabs.spec.js.
- *
  * Custom tabs are configured via `frontendConfig.serverConfig.custom_tabs`
- * in localStorage. The wdio spec ran a suite per host page
- * (ResultsView / StudyView / PatientView / ComparisonPage) — we do the
- * same here via a parameterized factory. The `Sync/async hide/show`
- * test in the original was `it.skip`; we don't port it. Remount
+ * in localStorage. A parameterized factory runs a suite per host page
+ * (ResultsView / StudyView / PatientView / ComparisonPage). Remount
  * behaviour on url-param change is covered only for results-view;
  * patient-view gets its own dedicated describe below that exercises
  * Next/Prev page navigation.
@@ -30,9 +26,8 @@ const patientUrl =
 const comparisonUrl = '/comparison?comparisonId=61845a6ff8f71021ce56e22b';
 
 /**
- * Wdio's `goToUrlWithCustomTabConfig`: navigate to /blank, stash
- * serverConfig in localStorage, then navigate to the real URL so the
- * app boots reading the override.
+ * Navigate to /blank, stash serverConfig in localStorage, then navigate
+ * to the real URL so the app boots reading the override.
  */
 async function gotoWithCustomTabs(
     page: Page,

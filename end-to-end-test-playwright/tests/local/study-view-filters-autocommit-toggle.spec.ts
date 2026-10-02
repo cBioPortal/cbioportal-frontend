@@ -1,4 +1,3 @@
-// Source: end-to-end-test/local/specs/study-view-filters-autocommit-toggle.spec.js
 import { test, expect, Page } from '../../fixtures';
 import { Locator } from '@playwright/test';
 import { goToUrlAndSetLocalStorage } from './helpers';

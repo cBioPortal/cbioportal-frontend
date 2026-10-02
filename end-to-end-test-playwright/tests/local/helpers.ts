@@ -5,10 +5,6 @@ import { Page } from '@playwright/test';
  * cbioportal backend, locally-served frontend dist). The remote suite
  * runs against the public unauthenticated origin and doesn't need any
  * of this.
- *
- * Mirrors the wdio helpers in end-to-end-test/shared/specUtils_Async.js
- * (keycloakLogin, goToUrlAndSetLocalStorage, ...) but uses Playwright
- * locators / auto-waiting instead of waitForExist/isDisplayed dances.
  */
 
 const KEYCLOAK_USERNAME = process.env.KEYCLOAK_USERNAME ?? 'testuser';
@@ -78,8 +74,7 @@ export async function keycloakLogin(page: Page, timeoutMs = 30000) {
  * Navigate to `url`, log in via Keycloak when the SAML flow lands on
  * the realm login form, then write a frontendConfig.serverConfig
  * override into localStorage and reload so the override applies on the
- * next render. Mirrors the wdio
- * `goToUrlAndSetLocalStorageWithProperty`.
+ * next render.
  */
 export async function goToUrlAndSetLocalStorageWithProperty(
     page: Page,

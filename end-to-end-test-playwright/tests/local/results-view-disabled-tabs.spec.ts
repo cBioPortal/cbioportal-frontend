@@ -1,4 +1,3 @@
-// Source: end-to-end-test/local/specs/core/resultsviewDisabledTabs.spec.js
 import { test, expect } from '../../fixtures';
 import { Page } from '@playwright/test';
 import {

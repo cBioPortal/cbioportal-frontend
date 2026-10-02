@@ -1,4 +1,3 @@
-// Source: end-to-end-test/local/specs/init-columns-in-cna-tables.spec.js
 import { Page, expect } from '@playwright/test';
 import { test } from '../../fixtures';
 import { goToUrlAndSetLocalStorageWithProperty } from './helpers';

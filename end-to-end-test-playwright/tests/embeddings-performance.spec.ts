@@ -28,9 +28,8 @@ const VIZ = '[data-test="embeddings-visualization"]';
 // not which chart or cohort it produces. CANCER_TYPE specifically can't be
 // used for this: STUDY_VIEW_CONFIG.tableAttrs forces it to a table (no svg
 // at all) regardless of category count. Scoping to `.studyViewPieChartGroup
-// path` (PieChart.tsx's own slice class, already used the same way in
-// end-to-end-test/local/specs/core/group-color-chooser.spec.js) finds a
-// slice in whichever chart actually rendered as a pie for this study.
+// path` (PieChart.tsx's own slice class) finds a slice in whichever chart
+// actually rendered as a pie for this study.
 const PIE_SLICE =
     '[data-test^="chart-container-"] .studyViewPieChartGroup path';
 

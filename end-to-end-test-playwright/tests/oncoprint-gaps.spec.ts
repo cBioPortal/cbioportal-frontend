@@ -7,8 +7,7 @@ import {
 } from './helpers/oncoprint';
 
 /**
- * Oncoprint gap rendering — port of
- * end-to-end-test/remote/specs/core/oncoprint.gaps.spec.js.
+ * Oncoprint gap rendering.
  *
  * A "gap" is a visual break the oncoprint inserts between samples/patients
  * that belong to different subgroups of a given track. Enabling gaps on a

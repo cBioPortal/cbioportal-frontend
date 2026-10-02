@@ -2,15 +2,12 @@ import { test, expect, Page } from '../fixtures';
 import { byTestHandle } from './helpers/common';
 
 /**
- * Port of end-to-end-test/remote/specs/core/mutationMapperTool.spec.js.
- *
  * Standalone /mutation_mapper tool: feed example inputs (genomic /
  * protein / both) and assert the Genome Nexus annotation pipeline
  * produces the expected per-gene mutation counts, surfaces all
  * transcript ids, warns on unannotatable rows, and still works when
  * the GRCh38 reference toggle is flipped.
  *
- * Tests that were it.skip in the original are not ported.
  * The "Mutations" heading lives inside a text node; we match it
  * loosely with `text=N Mutations` to stay tolerant of Showing X-Y of N
  * framing.

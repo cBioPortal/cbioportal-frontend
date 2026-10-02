@@ -1,4 +1,3 @@
-// Source: end-to-end-test/local/specs/study-view-custom-bins.screenshot.spec.js
 import { Page, expect } from '@playwright/test';
 import { test } from '../../fixtures';
 import { goToUrlAndSetLocalStorage } from './helpers';

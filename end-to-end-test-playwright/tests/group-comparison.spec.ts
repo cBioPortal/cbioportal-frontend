@@ -6,8 +6,6 @@ import {
 } from './helpers/common';
 
 /**
- * Port of end-to-end-test/remote/specs/core/groupComparison.spec.js.
- *
  * Drives the Overlap tab "Create Group" flow across two session types:
  *  - Venn diagram session (≤3 groups): click a venn region, create-group.
  *  - UpSet diagram session (>3 groups): click a bar, create-group.
@@ -18,9 +16,8 @@ import {
  *  - Duplicate group names trigger the error + keep submit disabled.
  *  - A fresh name enables submit.
  *
- * wdio used `jsApiClick` to dispatch synthetic click events — the venn
- * regions are SVG <rect>s that ignore ordinary click handlers. Playwright
- * gets the same effect via `dispatchEvent('click')`.
+ * The venn regions are SVG <rect>s that ignore ordinary click handlers,
+ * so they're clicked with `dispatchEvent('click')`.
  */
 
 const SampleCreateGroupButton =

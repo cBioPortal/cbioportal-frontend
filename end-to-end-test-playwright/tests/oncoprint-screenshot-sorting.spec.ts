@@ -98,8 +98,7 @@ test.describe.serial('sorting flow', () => {
      * Reset to a fresh gbm_tcga_pub URL with clinical tracks pinned.
      * Depending on whether a Profiled-in track exists at position 5, we
      * either remove it (so subsequent tests' track indices are stable)
-     * or close the menu. This mirrors the branching logic in the wdio
-     * original.
+     * or close the menu.
      */
     test('initial patient order (clinical tracks sorted flow)', async () => {
         await page.goto(

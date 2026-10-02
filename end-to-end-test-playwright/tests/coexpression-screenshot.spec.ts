@@ -2,8 +2,6 @@ import { test, expect, Page } from '../fixtures';
 import { expectElementScreenshot } from './helpers/common';
 
 /**
- * Port of end-to-end-test/remote/specs/core/coexpression.screenshot.spec.js.
- *
  * Each test toggles one control on the Co-Expression tab (log scale,
  * regression line, mutation visibility, gene/profile selection) and
  * asserts the rendered scatter matches a committed reference.

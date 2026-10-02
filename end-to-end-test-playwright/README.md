@@ -1,9 +1,8 @@
 # end-to-end-test-playwright
 
-Playwright spike running alongside the existing `end-to-end-test/` wdio
-suite. See the top-level branch `e2e-playwright-spike` for the migration
-motivation; short version: wdio's awaits are painful, screenshot tests
-can't be developed locally, and intent is hard to read.
+The cBioPortal frontend's end-to-end test suite, run by CircleCI in the
+`remote_e2e_shards` (public backend) and `e2e_localdb_shards` (local
+dockerized backend) jobs.
 
 ## Two snapshot lanes
 
@@ -105,7 +104,7 @@ All test entry points route through `scripts/with-env.sh`, which resolves
 
 In CI, this means a PR targeting `rc` automatically runs against
 `rc.cbioportal.org`; a PR targeting `master` runs against
-`www.cbioportal.org`; etc. — matching the legacy WebdriverIO behavior.
+`www.cbioportal.org`; etc.
 
 ## Updating references when a real visual change lands
 

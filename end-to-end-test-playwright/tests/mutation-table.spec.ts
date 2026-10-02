@@ -6,8 +6,6 @@ import {
 } from './helpers/common';
 
 /**
- * Port of end-to-end-test/remote/specs/core/mutationTable.spec.js.
- *
  * Exercises the results-view mutation table:
  *  - Search-box filtering shrinks row count.
  *  - Column-picker toggles that demand async data from Genome Nexus
@@ -59,8 +57,7 @@ async function waitForTable(page: Page, timeout = 60000) {
 /**
  * The Columns picker renders inside a react-virtualized grid, so the
  * target checkbox may be virtualized out of the DOM until scrolled
- * into view. Scrolling past the end is a no-op; this is the same trick
- * the wdio spec used.
+ * into view. Scrolling past the end is a no-op.
  */
 async function scrollColumnPickerToBottom(page: Page) {
     await page.evaluate(() => {

@@ -5,8 +5,6 @@ import {
 } from './helpers/oncoprint';
 
 /**
- * Port of end-to-end-test/remote/specs/core/oncoprinter.spec.js.
- *
  * Oncoprinter is the standalone oncoprint tool that accepts pasted
  * genomic data. These tests verify that the mutation annotation
  * controls correctly adapt to whether the input data includes custom

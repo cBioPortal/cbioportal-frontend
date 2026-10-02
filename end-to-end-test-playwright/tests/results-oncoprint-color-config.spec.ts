@@ -8,8 +8,6 @@ import {
 } from './helpers/oncoprint';
 
 /**
- * Port of end-to-end-test/remote/specs/core/resultsOncoprintColorConfig.spec.js.
- *
  * Two serial groups against /results/oncoprint:
  *  - Clinical track color modal: add a "Mutation Spectrum" track, open
  *    its Edit-Colors modal, override three colors, verify the oncoprint

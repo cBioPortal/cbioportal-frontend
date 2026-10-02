@@ -1,4 +1,3 @@
-// Source: end-to-end-test/local/specs/group-color-chooser.spec.js
 import { test, expect, Page, Locator } from '../../fixtures';
 import { goToUrlAndSetLocalStorage } from './helpers';
 import {
