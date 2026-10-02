@@ -225,6 +225,23 @@ export async function stubUcscHg19Fetches(page: Page): Promise<void> {
 }
 
 /**
+ * Serve a fixed ~2,500-point subset (every 20th point) of the Similarity
+ * Maps embedding instead of the full 50k-point file. Rendering 50k points in
+ * software WebGL keeps a CI runner's main thread busy for tens of seconds
+ * per test; the subset exercises the same code paths, and as a committed
+ * fixture it doesn't change when the hosted file does.
+ * Must be called before the embeddings tab loads its data.
+ */
+export async function stubEmbeddingData(page: Page): Promise<void> {
+    await page.route('**/embeddings/msk_mosaic_2026/umap_he_50k.json', route =>
+        route.fulfill({
+            path: path.join(__dirname, 'fixtures', 'umap_he_subset.json'),
+            contentType: 'application/json',
+        })
+    );
+}
+
+/**
  * Wait until the IGV column container has rendered and stabilized.
  * Polls until the LoadingIndicator is gone and the `.igv-column-container`
  * reports a non-zero height that hasn't changed between two consecutive
