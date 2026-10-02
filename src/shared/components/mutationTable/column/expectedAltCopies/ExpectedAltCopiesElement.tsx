@@ -40,9 +40,11 @@ const MutantIntegerCopyNumberValue: React.FunctionComponent<{
     }
     return (
         <span className={styles.value} data-test="eac-value">
-            {props.expectedAltCopiesValue === 'INDETERMINATE'
-                ? '-'
-                : props.expectedAltCopiesValue}
+            <span className={styles.number}>
+                {props.expectedAltCopiesValue === 'INDETERMINATE'
+                    ? '-'
+                    : props.expectedAltCopiesValue}
+            </span>
         </span>
     );
 };

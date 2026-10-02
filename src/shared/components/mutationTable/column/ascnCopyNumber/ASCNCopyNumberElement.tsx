@@ -138,9 +138,11 @@ const ASCNCopyNumberValue: React.FunctionComponent<{
     totalCopyNumberValue: string;
 }> = props => (
     <span className={styles.value} data-test="ascn-copy-number-value">
-        {props.totalCopyNumberValue === 'INDETERMINATE'
-            ? '-'
-            : props.totalCopyNumberValue}
+        <span className={styles.number}>
+            {props.totalCopyNumberValue === 'INDETERMINATE'
+                ? '-'
+                : props.totalCopyNumberValue}
+        </span>
         {props.wgdValue === ASCNCopyNumberValueEnum.WGD && (
             <span className={styles.wgd}>WGD</span>
         )}

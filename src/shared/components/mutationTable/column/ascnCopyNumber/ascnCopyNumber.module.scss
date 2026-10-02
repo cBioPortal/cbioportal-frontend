@@ -33,9 +33,12 @@
     width: 20px;
 }
 
-/* centered, so a '-' lines up with the digits above and below it */
-.mutantCopiesSlot {
-    text-align: center;
+/* a two digit wide, right-aligned box, so 1, 12 and '-' line up on their
+   last digit */
+.number {
+    display: inline-block;
+    width: 2ch;
+    text-align: right;
 }
 
 /* WGD is a property of the sample, so all of a sample's slots have the tag */
