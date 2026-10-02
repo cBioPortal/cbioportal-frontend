@@ -8,7 +8,7 @@ The package holds the viewer only. It never imports cBioPortal app code: the hos
 
 | Import | Contents | Load |
 | --- | --- | --- |
-| `cbioportal-wsi-viewer` | Types, `configureWsiViewerRuntime`, sample-timeline helpers, `#wsi:` URL-state helpers, the theme (`WSI_THEME`, widths, section-title and list styles) and the panel chrome (`WsiPanelHideButton`, `WsiCollapsedRail`, stored panel flags) | Static, and small |
+| `cbioportal-wsi-viewer` | Types, `configureWsiViewerRuntime`, `fetchWsiPatientHierarchy` (loads a patient's hierarchy through the viewer's cache, e.g. to decide whether to show a slides tab), sample-timeline helpers, `#wsi:` URL-state helpers, the theme (`WSI_THEME`, widths, section-title and list styles) and the panel chrome (`WsiPanelHideButton`, `WsiCollapsedRail`, stored panel flags) | Static, and small |
 | `cbioportal-wsi-viewer/viewer` | The React viewer (default export, also `WsiViewer`) | Lazily, e.g. with `React.lazy` |
 
 OpenSeadragon is not in either entry. The viewer loads it on the first slide open as its own async chunk (`wsi-openseadragon`), so pages without slides never download it. In the app, `scripts/assert_wsi_osd_bundle.js` checks this after a production build.
@@ -62,6 +62,7 @@ The cBioPortal app does both in `src/shared/components/wsiViewer/wsiAppConfig.ts
 | `clinicalRows` | Rows for the sidebar's Clinical section, in display order. A row with a `sampleId` shows only for that sample's slides. Unset hides the section |
 | `navCollapsed` / `metadataCollapsed` (+ change callbacks) | Control the hideable slide list and details sidebar. Unset, the viewer remembers the user's choice in `localStorage` |
 | `showDownload`, `renderLoading` | Show the download-view control; a custom loading indicator |
+| `hidden` | The host hides the viewer without unmounting it, e.g. in an inactive tab. Token refresh pauses meanwhile |
 
 ## Portal contract
 
