@@ -23,6 +23,13 @@ test.describe('results view mutation table', () => {
                 'table[class="simple-table table table-striped table-border-top"]'
             )
             .waitFor({ state: 'attached' });
+        // the Copy # column fills in once the CNA data loads
+        await page
+            .locator(
+                'table[class="simple-table table table-striped table-border-top"] >> text=ShallowDel'
+            )
+            .first()
+            .waitFor();
         await expectElementScreenshot(
             page,
             'table[class="simple-table table table-striped table-border-top"]',

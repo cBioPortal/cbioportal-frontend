@@ -5,6 +5,7 @@ import _ from 'lodash';
 import PatientViewUrlWrapper from '../PatientViewUrlWrapper';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
+import { sortMutationsDeterministically } from 'shared/lib/MutationUtils';
 
 function mutationMatch(d: Mutation[], id: Mutation) {
     return (
@@ -117,7 +118,7 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
         getData: () => Mutation[][],
         private urlWrapper: PatientViewUrlWrapper
     ) {
-        super(getData);
+        super(() => sortMutationsDeterministically(getData()));
 
         makeObservable(this);
 

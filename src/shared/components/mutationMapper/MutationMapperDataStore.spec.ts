@@ -11,9 +11,19 @@ describe('MutationMapperDataStore', () => {
     let pos10Mutation: Mutation;
     let pos20Mutation: Mutation;
     beforeAll(() => {
-        pos10Mutation = { proteinPosStart: 10 } as Mutation;
-        pos5Mutation = { proteinPosStart: 5 } as Mutation;
-        pos20Mutation = { proteinPosStart: 20 } as Mutation;
+        // genes in input order, so the store's default gene-first order keeps it
+        pos10Mutation = {
+            gene: { hugoGeneSymbol: 'A' },
+            proteinPosStart: 10,
+        } as Mutation;
+        pos5Mutation = {
+            gene: { hugoGeneSymbol: 'B' },
+            proteinPosStart: 5,
+        } as Mutation;
+        pos20Mutation = {
+            gene: { hugoGeneSymbol: 'C' },
+            proteinPosStart: 20,
+        } as Mutation;
         mutations = [pos10Mutation, pos5Mutation, pos20Mutation];
         mergedMutations = mutations.map(m => [m]);
     });
