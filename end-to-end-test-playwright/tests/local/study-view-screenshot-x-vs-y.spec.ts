@@ -235,13 +235,10 @@ test.describe.serial('study view editable breadcrumbs', () => {
         await page.keyboard.type('13');
         await page.keyboard.press('Enter');
 
-        await waitForNetworkQuiet(page);
-        await page.waitForTimeout(1000);
-
-        await expectElementScreenshot(
-            page,
-            '#mainColumn',
-            'study-view-editable-breadcrumbs.png'
+        // Checked through the DOM rather than a screenshot of the study view,
+        // whose chart layout depends on the test user's saved settings
+        await expect(page.locator('.userSelections')).toContainText(
+            /13\s*<\s*x\s*≤\s*45/
         );
     });
 });
