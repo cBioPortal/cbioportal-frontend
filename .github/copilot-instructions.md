@@ -87,6 +87,10 @@ pnpm install --ignore-workspace          # this suite is not a workspace member
 
 # Test-only changes can run against the deployed frontend instead
 LOCALDEV=0 ./scripts/docker-test.sh tests/mutation-table.spec.ts
+
+# Local-DB lane: start the backend on http://localhost:8080 first
+# (./scripts/localdb/start-backend.sh). Tests in tests/local only run with PW_LOCAL=1.
+PW_LOCAL=1 CBIOPORTAL_URL=http://localhost:8080 ./scripts/docker-test.sh tests/local/my.spec.ts
 ```
 Anything after `docker-test.sh` is passed to `playwright test` (`-g`, `--repeat-each`, `--workers`, `--trace on`, ...).
 
@@ -120,9 +124,11 @@ A test that fails at random blocks every PR, and people learn to ignore red CI. 
 - **Don't depend on incidental order.** API responses and unsorted data come back in arbitrary order. If a test needs a particular row, search or filter for it instead of assuming it's on the first page, and make UI that lists data order it deterministically.
 - **Scope locators.** `page.locator('text=T790M')` also matches labels in charts and tooltips. Scope to the element under test (`getByRole('cell', { name: 'T790M', exact: true })`, a `data-test` attribute) and add `data-test` attributes to new UI elements tests need.
 - **Set state through the URL where you can.** Loading a view with URL parameters (`?tab=...`, filters, panel settings) is faster and more reliable than clicking through the UI to get there.
-- **Budget for CI being slower than your machine.** Each CI shard runs 3 Playwright workers on 4 vCPUs, so heavy pages (large studies, WebGL plots, oncoprints) take several times longer than locally. The default test timeout is 120s. When a test is legitimately slow, raise its timeout with a comment saying why, rather than letting it run close to the limit. Timing assertions should only catch large regressions, with generous budgets.
+- **Budget for CI being slower than your machine.** Each remote-lane CI shard runs 3 Playwright workers on 4 vCPUs. Local-DB shards run 2 workers on the same size machine, which they share with the MySQL, cBioPortal, Keycloak and ClickHouse containers. Either way, heavy pages (large studies, WebGL plots, oncoprints) take several times longer than locally. The default test timeout is 120s. When a test is legitimately slow, raise its timeout with a comment saying why, rather than letting it run close to the limit. Timing assertions should only catch large regressions, with generous budgets.
 - **Expect live data to change.** Remote-lane tests use public data and annotations (OncoKB, Genome Nexus, hotspots) that change over time. Assert on what the test is about, not on incidental counts or values, and use the local-DB lane when exact data matters.
-- **Check new tests repeatedly before opening the PR.** Run new or changed e2e tests several times in Docker under CI-like load: `./scripts/docker-test.sh tests/my.spec.ts --repeat-each=5 --workers=3`.
+- **Check new tests repeatedly before opening the PR.** Run new or changed e2e tests several times in Docker, with the same number of workers as their CI lane:
+  - Remote: `./scripts/docker-test.sh tests/my.spec.ts --repeat-each=5 --workers=3`
+  - Local DB: `PW_LOCAL=1 CBIOPORTAL_URL=http://localhost:8080 ./scripts/docker-test.sh tests/local/my.spec.ts --repeat-each=5 --workers=2`
 
 ### Describing Tests in Pull Requests
 When a PR adds or changes e2e tests, say in the PR description:
