@@ -23,10 +23,12 @@ test.describe('results view mutation table', () => {
                 'table[class="simple-table table table-striped table-border-top"]'
             )
             .waitFor({ state: 'attached' });
-        // the Copy # column fills in once the CNA data loads
+        // the WGD tags in Total Integer Copy # fill in once the sample
+        // clinical data loads
         await page
             .locator(
-                'table[class="simple-table table table-striped table-border-top"] >> text=ShallowDel'
+                'table[class="simple-table table table-striped table-border-top"] [data-test="ascn-copy-number-value"]',
+                { hasText: 'WGD' }
             )
             .first()
             .waitFor();
