@@ -9,25 +9,18 @@ import {
     clearWsiClinicalRowsCache,
     selectWsiClinicalAttributes,
     useWsiClinicalRows,
+    WsiPatientClinicalData,
 } from './wsiClinicalRows';
 
 const mockClient = {
     getAllClinicalAttributesInStudyUsingGET: jest.fn(),
-    getStudyUsingGET: jest.fn(),
     getAllClinicalDataOfPatientInStudyUsingGET: jest.fn(),
     getAllSamplesOfPatientInStudyUsingGET: jest.fn(),
     fetchClinicalDataUsingPOST: jest.fn(),
 };
-const mockInternalClient = {
-    getClinicalAttributeCountsUsingPOST: jest.fn(),
-};
 
 jest.mock('shared/api/cbioportalClientInstance', () => ({
     getClient: () => mockClient,
-}));
-
-jest.mock('shared/api/cbioportalInternalClientInstance', () => ({
-    getInternalClient: () => mockInternalClient,
 }));
 
 jest.mock('config/config', () => ({
@@ -68,19 +61,46 @@ function datum(
 }
 
 // @testing-library/react 12 has no renderHook.
-function renderClinicalRows(initialPatientId: string) {
+function renderClinicalRows(
+    initialPatientId: string,
+    initialClinicalData?: WsiPatientClinicalData | null
+) {
     const result: { current?: ReturnType<typeof useWsiClinicalRows> } = {};
-    function Probe({ patientId }: { patientId: string }) {
-        result.current = useWsiClinicalRows('study', patientId);
+    function Probe({
+        patientId,
+        clinicalData,
+    }: {
+        patientId: string;
+        clinicalData?: WsiPatientClinicalData | null;
+    }) {
+        result.current = useWsiClinicalRows('study', patientId, clinicalData);
         return null;
     }
-    const view = render(<Probe patientId={initialPatientId} />);
+    const view = render(
+        <Probe
+            patientId={initialPatientId}
+            clinicalData={initialClinicalData}
+        />
+    );
     return {
         result,
-        rerender: (patientId: string) =>
-            view.rerender(<Probe patientId={patientId} />),
+        rerender: (
+            patientId: string,
+            clinicalData:
+                | WsiPatientClinicalData
+                | null
+                | undefined = initialClinicalData
+        ) =>
+            view.rerender(
+                <Probe patientId={patientId} clinicalData={clinicalData} />
+            ),
         unmount: view.unmount,
     };
+}
+
+// Sample data with a value for every listed attribute.
+function sampleValues(...ids: string[]): ClinicalData[] {
+    return ids.map(id => datum(id, 'value', 'S-1'));
 }
 
 describe('selectWsiClinicalAttributes', () => {
@@ -94,8 +114,14 @@ describe('selectWsiClinicalAttributes', () => {
                 // Priority 1 is the default; the frontend config raises it.
                 attribute('CANCER_TYPE', 1),
             ],
-            undefined,
-            undefined
+            [],
+            sampleValues(
+                'TUMOR_PURITY',
+                'PRIMARY_SITE',
+                'HIDDEN',
+                'SAMPLE_TYPE',
+                'CANCER_TYPE'
+            )
         );
         expect(selected.map(a => a.clinicalAttributeId)).toEqual([
             'CANCER_TYPE',
@@ -104,20 +130,27 @@ describe('selectWsiClinicalAttributes', () => {
         ]);
     });
 
-    it('leaves out attributes populated for under half of the samples', () => {
+    it('leaves out attributes without a value for the patient', () => {
         const selected = selectWsiClinicalAttributes(
             [
                 attribute('TMB', 1),
-                attribute('SPARSE', 1),
-                attribute('UNCOUNTED', 1),
+                attribute('MISSING', 1),
+                attribute('NOT_AVAILABLE', 1),
+                attribute('OS_STATUS', 1, true),
+                attribute('AGE', 1, true),
             ],
+            [datum('OS_STATUS', '0:LIVING')],
             [
-                { clinicalAttributeId: 'TMB', count: 98 },
-                { clinicalAttributeId: 'SPARSE', count: 30 },
-            ],
-            100
+                datum('TMB', '4.2', 'S-2'),
+                datum('NOT_AVAILABLE', 'Not Available', 'S-1'),
+                // A sample value does not stand in for a patient attribute.
+                datum('AGE', '60', 'S-1'),
+            ]
         );
-        expect(selected.map(a => a.clinicalAttributeId)).toEqual(['TMB']);
+        expect(selected.map(a => a.clinicalAttributeId)).toEqual([
+            'OS_STATUS',
+            'TMB',
+        ]);
     });
 
     it('leaves out sequencing QC, administrative and consent attributes', () => {
@@ -131,8 +164,17 @@ describe('selectWsiClinicalAttributes', () => {
                 attribute('PARTC_CONSENTED_12_245', 1, true),
                 attribute('SAMPLE_COUNT', 1, true),
             ],
-            undefined,
-            undefined
+            [
+                datum('PARTC_CONSENTED_12_245', 'YES'),
+                datum('SAMPLE_COUNT', '1'),
+            ],
+            sampleValues(
+                'CANCER_TYPE',
+                'GENE_PANEL',
+                'INSTITUTE',
+                'SAMPLE_COVERAGE',
+                'SOMATIC_STATUS'
+            )
         );
         expect(selected.map(a => a.clinicalAttributeId)).toEqual([
             'CANCER_TYPE',
@@ -140,11 +182,16 @@ describe('selectWsiClinicalAttributes', () => {
         ]);
     });
 
-    it('caps the attributes at the study view chart count', () => {
+    it('caps the populated attributes at the study view chart count', () => {
         const selected = selectWsiClinicalAttributes(
-            [attribute('A', 3), attribute('B', 2), attribute('C', 1)],
-            undefined,
-            undefined,
+            [
+                attribute('A', 4),
+                attribute('EMPTY', 3),
+                attribute('B', 2),
+                attribute('C', 1),
+            ],
+            [],
+            sampleValues('A', 'B', 'C'),
             2
         );
         expect(selected.map(a => a.clinicalAttributeId)).toEqual(['A', 'B']);
@@ -198,19 +245,11 @@ describe('useWsiClinicalRows', () => {
     beforeEach(() => {
         clearWsiClinicalRowsCache();
         Object.values(mockClient).forEach(fn => fn.mockReset());
-        mockInternalClient.getClinicalAttributeCountsUsingPOST.mockReset();
         mockClient.getAllClinicalAttributesInStudyUsingGET.mockResolvedValue([
             attribute('CANCER_TYPE', 3000, false, 'Cancer Type'),
             attribute('SPARSE', 1),
             attribute('PRIMARY_SITE', 0),
         ]);
-        mockClient.getStudyUsingGET.mockResolvedValue({ allSampleCount: 10 });
-        mockInternalClient.getClinicalAttributeCountsUsingPOST.mockResolvedValue(
-            [
-                { clinicalAttributeId: 'CANCER_TYPE', count: 10 },
-                { clinicalAttributeId: 'SPARSE', count: 1 },
-            ]
-        );
         mockClient.getAllClinicalDataOfPatientInStudyUsingGET.mockResolvedValue(
             []
         );
@@ -219,6 +258,7 @@ describe('useWsiClinicalRows', () => {
         ]);
         mockClient.fetchClinicalDataUsingPOST.mockResolvedValue([
             datum('CANCER_TYPE', 'Melanoma', 'S-1'),
+            datum('PRIMARY_SITE', 'Skin', 'S-1'),
         ]);
     });
 
@@ -230,15 +270,9 @@ describe('useWsiClinicalRows', () => {
         expect(result.current).toEqual([
             { label: 'Cancer Type', value: 'Melanoma', sampleId: 'S-1' },
         ]);
-        expect(
-            mockInternalClient.getClinicalAttributeCountsUsingPOST
-        ).toHaveBeenCalledWith({
-            clinicalAttributeCountFilter: { sampleListId: 'study_all' },
-        });
         expect(mockClient.fetchClinicalDataUsingPOST).toHaveBeenCalledWith({
             clinicalDataType: 'SAMPLE',
             clinicalDataMultiStudyFilter: {
-                attributeIds: ['CANCER_TYPE'],
                 identifiers: [{ studyId: 'study', entityId: 'S-1' }],
             },
         });
@@ -249,10 +283,7 @@ describe('useWsiClinicalRows', () => {
         ).toHaveBeenCalledTimes(1);
     });
 
-    it('keeps every default attribute when counts are unavailable', async () => {
-        mockInternalClient.getClinicalAttributeCountsUsingPOST.mockRejectedValue(
-            new Error('no sample list')
-        );
+    it('shows a sparse default attribute the patient has a value for', async () => {
         mockClient.fetchClinicalDataUsingPOST.mockResolvedValue([
             datum('CANCER_TYPE', 'Melanoma', 'S-1'),
             datum('SPARSE', 'yes', 'S-1'),
@@ -264,6 +295,30 @@ describe('useWsiClinicalRows', () => {
             'Cancer Type',
             'SPARSE',
         ]);
+    });
+
+    it('builds the rows from the page data without fetching', async () => {
+        const clinicalData: WsiPatientClinicalData = {
+            attributes: [
+                attribute('CANCER_TYPE', 3000, false, 'Cancer Type'),
+                attribute('OS_STATUS', 1, true, 'Overall Survival Status'),
+            ],
+            patientData: [datum('OS_STATUS', '0:LIVING')],
+            sampleData: [datum('CANCER_TYPE', 'Melanoma', 'S-1')],
+        };
+        const { result, rerender } = renderClinicalRows('P-1', null);
+        expect(result.current).toBeUndefined();
+
+        rerender('P-1', clinicalData);
+        await act(async () => {});
+
+        expect(result.current).toEqual([
+            { label: 'Cancer Type', value: 'Melanoma', sampleId: 'S-1' },
+            { label: 'Overall Survival Status', value: 'LIVING' },
+        ]);
+        Object.values(mockClient).forEach(fn =>
+            expect(fn).not.toHaveBeenCalled()
+        );
     });
 
     it('does not show the previous patient while the next one loads', async () => {

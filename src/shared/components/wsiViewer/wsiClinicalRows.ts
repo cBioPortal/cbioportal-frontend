@@ -1,25 +1,26 @@
 import * as React from 'react';
 import {
     ClinicalAttribute,
-    ClinicalAttributeCount,
-    ClinicalAttributeCountFilter,
     ClinicalData,
+    ClinicalDataMultiStudyFilter,
 } from 'cbioportal-ts-api-client';
 import { WsiClinicalRow } from 'cbioportal-wsi-viewer';
 import { getServerConfig } from 'config/config';
 import { getClient } from 'shared/api/cbioportalClientInstance';
-import { getInternalClient } from 'shared/api/cbioportalInternalClientInstance';
 import { clean } from 'pages/patientView/clinicalInformation/lib/clinicalAttributesUtil.js';
 import {
     clinicalAttributeComparator,
     getPriorityByClinicalAttribute,
 } from 'pages/studyView/StudyViewUtils';
 
-/**
- * Smallest share of the study's samples with a value for an attribute to be
- * shown: sparsely populated attributes are mostly empty in the sidebar.
- */
-export const WSI_CLINICAL_MIN_FREQUENCY = 0.5;
+/** A patient's clinical data, as the patient view has already loaded it. */
+export interface WsiPatientClinicalData {
+    /** The study's clinical attributes. */
+    attributes: ReadonlyArray<ClinicalAttribute>;
+    patientData: ReadonlyArray<ClinicalData>;
+    /** Data of every sample of the patient. */
+    sampleData: ReadonlyArray<ClinicalData>;
+}
 
 /**
  * Attributes left out of the Clinical section although the study shows them
@@ -46,46 +47,6 @@ function isExcludedClinicalAttribute(attributeId: string): boolean {
     );
 }
 
-/**
- * The study's default clinical attributes, as the study view picks its
- * default charts and Clinical Data columns: priority above 0 (with the
- * frontend priority overrides), highest priority first, at most
- * `studyview_clinical_attribute_chart_count`, without the
- * WSI_CLINICAL_EXCLUDED_ATTRIBUTE_IDS and consent flags. When counts are
- * known, attributes populated for fewer than WSI_CLINICAL_MIN_FREQUENCY of
- * the study's samples are left out.
- */
-export function selectWsiClinicalAttributes(
-    attributes: ReadonlyArray<ClinicalAttribute>,
-    counts: ReadonlyArray<ClinicalAttributeCount> | undefined,
-    sampleCount: number | undefined,
-    limit: number = getServerConfig().studyview_clinical_attribute_chart_count
-): ClinicalAttribute[] {
-    const countById = counts
-        ? new Map(counts.map(c => [c.clinicalAttributeId, c.count]))
-        : undefined;
-    return attributes
-        .map(attribute => ({
-            ...attribute,
-            priority: getPriorityByClinicalAttribute(attribute).toString(),
-        }))
-        .filter(attribute => (parseInt(attribute.priority) || 0) > 0)
-        .filter(
-            attribute =>
-                !isExcludedClinicalAttribute(attribute.clinicalAttributeId)
-        )
-        .filter(
-            attribute =>
-                !countById ||
-                !sampleCount ||
-                (countById.get(attribute.clinicalAttributeId) || 0) /
-                    sampleCount >=
-                    WSI_CLINICAL_MIN_FREQUENCY
-        )
-        .sort(clinicalAttributeComparator)
-        .slice(0, limit);
-}
-
 function cleanedValuesByEntity(
     clinicalData: ReadonlyArray<ClinicalData>,
     entityId: (datum: ClinicalData) => string
@@ -105,6 +66,55 @@ function cleanedValuesByEntity(
     return cleaned;
 }
 
+function cleanedPatientValues(
+    patientData: ReadonlyArray<ClinicalData>
+): Record<string, string> {
+    return cleanedValuesByEntity(patientData, () => '').get('') || {};
+}
+
+function cleanedSampleValues(
+    sampleData: ReadonlyArray<ClinicalData>
+): Map<string, Record<string, string>> {
+    return cleanedValuesByEntity(sampleData, datum => datum.sampleId);
+}
+
+/**
+ * The study's default clinical attributes that have a value for this
+ * patient, as the study view picks its default charts and Clinical Data
+ * columns: priority above 0 (with the frontend priority overrides), highest
+ * priority first, at most `studyview_clinical_attribute_chart_count`,
+ * without the WSI_CLINICAL_EXCLUDED_ATTRIBUTE_IDS and consent flags.
+ * Null-like values ("Not Available", "unknown", ...) count as missing.
+ */
+export function selectWsiClinicalAttributes(
+    attributes: ReadonlyArray<ClinicalAttribute>,
+    patientData: ReadonlyArray<ClinicalData>,
+    sampleData: ReadonlyArray<ClinicalData>,
+    limit: number = getServerConfig().studyview_clinical_attribute_chart_count
+): ClinicalAttribute[] {
+    const patientValues = cleanedPatientValues(patientData);
+    const sampleValues = Array.from(cleanedSampleValues(sampleData).values());
+    const hasValue = (attribute: ClinicalAttribute) => {
+        const id = attribute.clinicalAttributeId;
+        return attribute.patientAttribute
+            ? patientValues[id] !== undefined
+            : sampleValues.some(values => values[id] !== undefined);
+    };
+    return attributes
+        .map(attribute => ({
+            ...attribute,
+            priority: getPriorityByClinicalAttribute(attribute).toString(),
+        }))
+        .filter(attribute => (parseInt(attribute.priority) || 0) > 0)
+        .filter(
+            attribute =>
+                !isExcludedClinicalAttribute(attribute.clinicalAttributeId)
+        )
+        .filter(hasValue)
+        .sort(clinicalAttributeComparator)
+        .slice(0, limit);
+}
+
 /**
  * Sidebar rows for the selected attributes, in their order. Patient
  * attributes give one row; sample attributes one row per sample with a
@@ -116,12 +126,8 @@ export function buildWsiClinicalRows(
     patientData: ReadonlyArray<ClinicalData>,
     sampleData: ReadonlyArray<ClinicalData>
 ): WsiClinicalRow[] {
-    const patientValues =
-        cleanedValuesByEntity(patientData, () => '').get('') || {};
-    const sampleValues = cleanedValuesByEntity(
-        sampleData,
-        datum => datum.sampleId
-    );
+    const patientValues = cleanedPatientValues(patientData);
+    const sampleValues = cleanedSampleValues(sampleData);
 
     const rows: WsiClinicalRow[] = [];
     for (const attribute of attributes) {
@@ -152,7 +158,19 @@ export function buildWsiClinicalRows(
     return rows;
 }
 
-const studyAttributeRequests = new Map<string, Promise<ClinicalAttribute[]>>();
+/** Sidebar rows for the patient's default, populated attributes. */
+export function buildWsiPatientClinicalRows({
+    attributes,
+    patientData,
+    sampleData,
+}: WsiPatientClinicalData): WsiClinicalRow[] {
+    return buildWsiClinicalRows(
+        selectWsiClinicalAttributes(attributes, patientData, sampleData),
+        patientData,
+        sampleData
+    );
+}
+
 const clinicalRowsRequests = new Map<string, Promise<WsiClinicalRow[]>>();
 
 function cached<T>(
@@ -170,31 +188,6 @@ function cached<T>(
     return request;
 }
 
-function fetchStudyClinicalAttributes(
-    studyId: string
-): Promise<ClinicalAttribute[]> {
-    return cached(studyAttributeRequests, studyId, async () => {
-        const [attributes, study, counts] = await Promise.all([
-            getClient().getAllClinicalAttributesInStudyUsingGET({ studyId }),
-            getClient().getStudyUsingGET({ studyId }),
-            // Frequencies are optional: without an "all" sample list every
-            // default attribute is kept.
-            getInternalClient()
-                .getClinicalAttributeCountsUsingPOST({
-                    clinicalAttributeCountFilter: {
-                        sampleListId: `${studyId}_all`,
-                    } as ClinicalAttributeCountFilter,
-                })
-                .catch(() => undefined),
-        ]);
-        return selectWsiClinicalAttributes(
-            attributes,
-            counts,
-            study.allSampleCount
-        );
-    });
-}
-
 function fetchWsiClinicalRows(
     studyId: string,
     patientId: string
@@ -204,7 +197,9 @@ function fetchWsiClinicalRows(
         `${studyId}\u0000${patientId}`,
         async () => {
             const [attributes, patientData, samples] = await Promise.all([
-                fetchStudyClinicalAttributes(studyId),
+                getClient().getAllClinicalAttributesInStudyUsingGET({
+                    studyId,
+                }),
                 getClient().getAllClinicalDataOfPatientInStudyUsingGET({
                     studyId,
                     patientId,
@@ -214,48 +209,62 @@ function fetchWsiClinicalRows(
                     patientId,
                 }),
             ]);
-            const sampleAttributeIds = attributes
-                .filter(attribute => !attribute.patientAttribute)
-                .map(attribute => attribute.clinicalAttributeId);
             const sampleData =
-                samples.length > 0 && sampleAttributeIds.length > 0
+                samples.length > 0
                     ? await getClient().fetchClinicalDataUsingPOST({
                           clinicalDataType: 'SAMPLE',
                           clinicalDataMultiStudyFilter: {
-                              attributeIds: sampleAttributeIds,
                               identifiers: samples.map(sample => ({
                                   studyId,
                                   entityId: sample.sampleId,
                               })),
-                          },
+                          } as ClinicalDataMultiStudyFilter,
                       })
                     : [];
-            return buildWsiClinicalRows(attributes, patientData, sampleData);
+            return buildWsiPatientClinicalRows({
+                attributes,
+                patientData,
+                sampleData,
+            });
         }
     );
 }
 
 export function clearWsiClinicalRowsCache(): void {
-    studyAttributeRequests.clear();
     clinicalRowsRequests.clear();
 }
 
 /**
  * The patient's Clinical rows; undefined while loading or after a failed
- * request, which hides the section.
+ * request, which hides the section. Rows come from `clinicalData` when the
+ * host has loaded it (`null` while it is still loading); when it is unset
+ * the patient's data is fetched here.
  */
 export function useWsiClinicalRows(
     studyId: string,
-    patientId: string
+    patientId: string,
+    clinicalData?: WsiPatientClinicalData | null
 ): WsiClinicalRow[] | undefined {
     const [state, setState] = React.useState<{
         key: string;
         rows: WsiClinicalRow[];
     }>();
     const key = `${studyId}\u0000${patientId}`;
+    const hostLoads = clinicalData !== undefined;
+    const hostRows = React.useMemo(
+        () =>
+            clinicalData
+                ? buildWsiPatientClinicalRows(clinicalData)
+                : undefined,
+        [
+            clinicalData?.attributes,
+            clinicalData?.patientData,
+            clinicalData?.sampleData,
+        ]
+    );
 
     React.useEffect(() => {
-        if (!studyId || !patientId) return;
+        if (hostLoads || !studyId || !patientId) return;
         let cancelled = false;
         fetchWsiClinicalRows(studyId, patientId).then(
             rows => {
@@ -271,7 +280,8 @@ export function useWsiClinicalRows(
         return () => {
             cancelled = true;
         };
-    }, [key]);
+    }, [key, hostLoads]);
 
+    if (hostLoads) return hostRows;
     return state?.key === key ? state.rows : undefined;
 }

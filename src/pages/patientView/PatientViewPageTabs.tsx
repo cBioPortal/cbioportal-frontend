@@ -41,6 +41,8 @@ import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
 import { AppWsiViewer } from 'shared/components/wsiViewer/wsiAppConfig';
+import { WsiPatientClinicalData } from 'shared/components/wsiViewer/wsiClinicalRows';
+import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -71,6 +73,41 @@ export function extractResourceIdFromTabId(tabId: string) {
     } else {
         return undefined;
     }
+}
+
+/**
+ * The page's clinical data for the slide viewer sidebar: `null` while it
+ * loads, unset when the page does not hold every sample of the patient
+ * (sample view) or a request failed, so the viewer fetches it.
+ */
+export function wsiPatientClinicalData(
+    store: PatientViewPageStore
+): WsiPatientClinicalData | null | undefined {
+    const {
+        clinicalAttributes,
+        clinicalDataPatient,
+        clinicalDataForSamples,
+    } = store;
+    if (
+        store.pageMode !== 'patient' ||
+        clinicalAttributes.isError ||
+        clinicalDataPatient.isError ||
+        clinicalDataForSamples.isError
+    ) {
+        return undefined;
+    }
+    if (
+        !clinicalAttributes.isComplete ||
+        !clinicalDataPatient.isComplete ||
+        !clinicalDataForSamples.isComplete
+    ) {
+        return null;
+    }
+    return {
+        attributes: clinicalAttributes.result,
+        patientData: clinicalDataPatient.result,
+        sampleData: clinicalDataForSamples.result,
+    };
 }
 
 export function patientViewTabs(
@@ -600,6 +637,9 @@ export function tabs(
                     tileServerUrl={tileServerUrl}
                     userName={pageComponent.props.appStore.userName}
                     height={WindowStore.size.height - 220}
+                    clinicalData={wsiPatientClinicalData(
+                        pageComponent.patientViewPageStore
+                    )}
                 />
             </MSKTab>
         );
@@ -748,8 +788,7 @@ export function tabs(
                 id={PatientViewPageTabs.MRNA}
                 linkText={
                     <span>
-                        mRNA{' '}
-                        <strong className={'beta-text'}>Beta!</strong>
+                        mRNA <strong className={'beta-text'}>Beta!</strong>
                     </span>
                 }
             >
@@ -765,8 +804,7 @@ export function tabs(
                 id={PatientViewPageTabs.Plots}
                 linkText={
                     <span>
-                        Plots{' '}
-                        <strong className={'beta-text'}>Beta!</strong>
+                        Plots <strong className={'beta-text'}>Beta!</strong>
                     </span>
                 }
             >
@@ -774,8 +812,8 @@ export function tabs(
                     .isComplete &&
                 pageComponent.patientViewPageStore.highlightedCancerTypes
                     .isComplete &&
-                pageComponent.patientViewPageStore.highlightedDetailedCancerTypes
-                    .isComplete ? (
+                pageComponent.patientViewPageStore
+                    .highlightedDetailedCancerTypes.isComplete ? (
                     <PatientViewPlotsTabWrapper
                         store={pageComponent.patientViewPageStore}
                         urlWrapper={urlWrapper}
