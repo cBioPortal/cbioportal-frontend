@@ -77,6 +77,40 @@ export function buildOsdOptions({
     };
 }
 
+/**
+ * Opens another slide in an existing viewer: the slide's request headers go
+ * to the viewer and its navigator first, so every new tile carries them, and
+ * tile loading restarts at the cold-open concurrency.
+ */
+export function reopenOsdViewer({
+    osdViewer,
+    meta,
+    baseUrl,
+    accessToken,
+    sourceUrl,
+}: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    osdViewer: any;
+    meta: TileMetadata;
+    baseUrl: string;
+    accessToken?: string;
+    sourceUrl: string;
+}): void {
+    const loadTilesWithAjax = Boolean(accessToken || sourceUrl);
+    osdViewer.loadTilesWithAjax = loadTilesWithAjax;
+    if (osdViewer.navigator) {
+        osdViewer.navigator.loadTilesWithAjax = loadTilesWithAjax;
+    }
+    osdViewer.setAjaxHeaders(
+        buildWsiRequestHeaders(sourceUrl, accessToken),
+        true
+    );
+    if (osdViewer.imageLoader) {
+        osdViewer.imageLoader.jobLimit = OSD_INITIAL_IMAGE_LOADER_LIMIT;
+    }
+    osdViewer.open(buildOsdTileSource(meta, baseUrl));
+}
+
 // OpenSeadragon starts with one tile request so that the server can finish the
 // expensive cold open before the viewport fans out to steady-state concurrency.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -271,25 +305,6 @@ export function scheduleOsdSpinnerFallback({
         clearTimeout(existingTimer);
     }
     return setTimeout(hideSpinner, fallbackMs);
-}
-
-export function registerOsdLifecycleHandlers({
-    osdViewer,
-    onOpen,
-    onOpenFailed,
-    onTileLoadFailed,
-}: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    osdViewer: any;
-    onOpen: () => void;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onOpenFailed: (event: any) => void;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onTileLoadFailed: (event: any) => void;
-}): void {
-    osdViewer.addOnceHandler('open', onOpen);
-    osdViewer.addOnceHandler('open-failed', onOpenFailed);
-    osdViewer.addHandler('tile-load-failed', onTileLoadFailed);
 }
 
 export function createOsdMouseTracker({
