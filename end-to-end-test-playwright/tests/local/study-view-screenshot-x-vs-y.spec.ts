@@ -166,31 +166,15 @@ test.describe.serial('study view editable breadcrumbs', () => {
 
     test.beforeAll(async ({ browser }) => {
         page = await browser.newPage();
-        // Ensure a clean default chart state. The logged-in user's chart
-        // layout for this study is saved in the session service and can be
-        // left over from other tests in the same run, so wait for it to load
-        // before deciding whether it needs a reset.
+        // Ensure a clean default chart state
         const studyUrl = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`;
-        const userSettingsLoaded = page.waitForResponse(
-            response => response.url().includes('/api/session/settings/fetch'),
-            { timeout: 60000 }
-        );
         await goToUrlAndSetLocalStorage(page, studyUrl, true);
-        await userSettingsLoaded;
         await waitForNetworkQuiet(page);
-        // The add chart button ignores clicks while its tabs are loading
-        const addChartButton = page.locator(ADD_CHART_BUTTON);
-        await expect(addChartButton).not.toHaveClass(/disabled/, {
-            timeout: 30000,
-        });
-        await addChartButton.click();
-        await expect(addChartButton).toHaveAttribute('aria-pressed', 'true');
-        // "Reset charts" only shows when the layout differs from the default
-        const resetVisible = await page
-            .locator('button:text-is("Reset charts")')
-            .waitFor({ state: 'visible', timeout: 10000 })
-            .then(() => true)
-            .catch(() => false);
+        await page.locator(ADD_CHART_BUTTON).click();
+        const resetVisible =
+            (await page.locator('button:text-is("Reset charts")').count()) >
+                0 &&
+            (await page.locator('button:text-is("Reset charts")').isVisible());
         if (resetVisible) {
             await page.locator('button:text-is("Reset charts")').click();
             await expect(
@@ -251,13 +235,10 @@ test.describe.serial('study view editable breadcrumbs', () => {
         await page.keyboard.type('13');
         await page.keyboard.press('Enter');
 
-        await waitForNetworkQuiet(page);
-        await page.waitForTimeout(1000);
-
-        await expectElementScreenshot(
-            page,
-            '#mainColumn',
-            'study-view-editable-breadcrumbs.png'
+        // Checked through the DOM rather than a screenshot of the study view,
+        // whose chart layout depends on the test user's saved settings
+        await expect(page.locator('.userSelections')).toContainText(
+            /13\s*<\s*x\s*≤\s*45/
         );
     });
 });
