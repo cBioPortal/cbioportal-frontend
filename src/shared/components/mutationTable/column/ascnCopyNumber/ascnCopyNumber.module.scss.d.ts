@@ -1,6 +1,8 @@
 declare const styles: {
   readonly "mutantCopiesSlot": string;
+  readonly "slots": string;
   readonly "totalCopyNumberSlot": string;
+  readonly "totalCopyNumberSlotWithWgd": string;
   readonly "value": string;
   readonly "wgd": string;
 };

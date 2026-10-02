@@ -96,7 +96,7 @@ export default class ExpectedAltCopiesColumnFormatter {
         }
 
         return (
-            <span data-test="eac-cell">
+            <span data-test="eac-cell" className={styles.slots}>
                 {sampleIds.map((sampleId: string) => {
                     return (
                         <span

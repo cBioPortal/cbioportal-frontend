@@ -15,19 +15,25 @@
     vertical-align: middle;
 }
 
-/* one fixed-width slot per sample, so the values of a patient's samples line
-   up across rows even when some samples have no value */
+/* a patient's samples each get a fixed-width slot, also when they have no
+   value, so their values line up across rows */
+.slots {
+    white-space: nowrap;
+}
+
 .mutantCopiesSlot,
-.totalCopyNumberSlot {
+.totalCopyNumberSlot,
+.totalCopyNumberSlotWithWgd {
     display: inline-block;
     white-space: nowrap;
 }
 
-.mutantCopiesSlot {
+.mutantCopiesSlot,
+.totalCopyNumberSlot {
     width: 20px;
 }
 
-/* room for the number and the WGD tag */
-.totalCopyNumberSlot {
+/* WGD is a property of the sample, so all of a sample's slots have the tag */
+.totalCopyNumberSlotWithWgd {
     width: 42px;
 }

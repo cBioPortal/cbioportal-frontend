@@ -143,19 +143,27 @@ export default class ASCNCopyNumberColumnFormatter {
             return errorIcon('Error fetching data');
         } else if (sampleIdToClinicalDataMap.isComplete) {
             return (
-                <span data-test="ascn-copy-number-cell">
+                <span
+                    data-test="ascn-copy-number-cell"
+                    className={styles.slots}
+                >
                     {sampleIds.map((sampleId: string) => {
+                        const wgdValue = getWGD(
+                            sampleIdToClinicalDataMap.result,
+                            sampleId
+                        );
                         return (
                             <span
                                 key={sampleId}
-                                className={styles.totalCopyNumberSlot}
+                                className={
+                                    wgdValue === ASCNCopyNumberValueEnum.WGD
+                                        ? styles.totalCopyNumberSlotWithWgd
+                                        : styles.totalCopyNumberSlot
+                                }
                             >
                                 <ASCNCopyNumberElement
                                     sampleId={sampleId}
-                                    wgdValue={getWGD(
-                                        sampleIdToClinicalDataMap.result,
-                                        sampleId
-                                    )}
+                                    wgdValue={wgdValue}
                                     totalCopyNumberValue={
                                         sampleToTotalCopyNumber[sampleId]
                                             ? sampleToTotalCopyNumber[sampleId]
