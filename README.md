@@ -157,89 +157,15 @@ javascript:(function()%7Bvar pr %3D prompt("Please enter PR%23")%3Bif (pr %26%26
 
 ## Run e2e-tests
 
-End-to-end tests can be run against public cbioportal instances or against a local dockerized backend. These two e2e-tests types are referred to as `remote` and `local` types of e2e-tests.
+End-to-end tests are written with [Playwright](https://playwright.dev) and live in [`end-to-end-test-playwright/`](./end-to-end-test-playwright). They run in two lanes:
 
-## Run of `remote e2e-tests`
+- **remote**: tests in `end-to-end-test-playwright/tests/` run against a public cBioPortal instance (www.cbioportal.org, or rc.cbioportal.org for PRs targeting `rc`), with the locally built frontend loaded into it.
+- **localdb**: tests in `end-to-end-test-playwright/tests/local/` run against a local dockerized backend loaded with test studies from [cbioportal-test](https://github.com/cBioPortal/cbioportal-test), for features whose data isn't on the public instances.
 
-Follow instructions to boot up frontend dev server. This is the frontend that will be under test in the e2e tests (running against production backend/api)
-
-```
-cd end-to-end-test
-
-// install deps
-pnpm install
-
-cd ..
-```
-
-```
-pnpm run e2e:remote --grep=some.spec* 
-```
+CircleCI runs both lanes on every PR. See the [Playwright suite's README](./end-to-end-test-playwright/README.md) for how to run them locally, including in the same Docker image CI uses, and how to update reference screenshots.
 
 ### Mount of frontend onto HTTPS backend
 A custom frontend can be tested against any backend in the web browser using a local node server (command `pnpm run start`) and the `localdev` flag passed to the browser (see section 'Check in cBioPortal context'). For remote backends served over HTTPS (e.g. cbioportal.org or rc.cbioportal.org), the frontend has to be served over SSL as well. In this case run `pnpm run startSSL` instead of `pnpm run start`.
-
-## Run of `localdb` e2e-tests
-To enable e2e-tests on for features that depend on data that are not included in studies served by the public cBioPortal instance, cbioportal-frontend provides the `e2e local database` (refered to as _e2e-localdb_ or _local e2e_ in this text) facility that allows developers to load custom studies in any backend version used for e2e-tests. CircleCI runs the `e2e-localdb` tests as a separate job.
-
-The script that can be used to run e2e-localdb tests is located at [./scripts/e2e.sh](./scripts/e2e.sh).
-
-### Running `localdb` e2e-tests for development
-
-1. You need to have Docker installed and running.
-
-2. You need to have the [jq](https://stedolan.github.io/jq/) package installed on your system. E.g. using brew:
-   ```brew install jq```
-
-3. You need to have a global version of Maven installed.
-
-In a terminal, run the following commands from root directory.
-```shell
-# Start backend and frontend servers
-pnpm run e2e:spinup
-
-# Run tests
-pnpm run e2e:local
-```
-
-### Writing e2e tests
-Some random remarks on e2e-test development
-- Screenshot tests and DOM-based tests are contained in files that end with *.screenshot.spec.js or *.spec.js, respectively.
-- Screenshot tests should only be used to test components that cannot be accessed via the DOM.
-- Screenshots should cover as little of the page possible to test behavior. Larger screenshots will make it more likely the screenshot will need to be updated when an unrelated feature is modified. 
-- For DOM selection webdriverio selectors are used. Although overlapping with jQuery selectors and both using the '$' notation these methods are not equivalent. See [this link](https://blog.kevinlamping.com/selecting-elements-in-webdriverio/) for more information on webdriverio selectors.
-- At the moment of this writing webdriverio v4 is used. Selectors for this version are not fully compatible with webdriverio v5. For instance, selecting of a element with id _test_ `$('id=test')` does not work; this should be `$([id=test])`. I was not able to find documentation of v4 selectors.
-- e2e tests use the node.js _assert_ library for assertions. It has an API that is different API from _chai_ assertion library used in unit tests of cbioportal-frontend! See the [assert documentation](https://nodejs.org/api/assert.html) for information on _assert_ API.
-- Screenshots for failing tests are placed in the `screenshots/diff` and `screenshots/error` folders. These are a valuable asset to debug tests on when developing in _Local_ context.
-- A great tool for test development is the ability of webdriverio to pause execution with `browser.debug()`. When placing this command in the test code and using the `run_local_screenshot_test.sh` facility, a prompt becomes available on the command line that allows testing of DOM selectors in the webbrowser. In addition, the browser window is available on screen; opening of DevTools allows to explore the DOM and observe the effects of webdriverio commands on the command line.
-- Although webdriverio takes asynchronous behavor of webbrosers into account it does not defend against asynchronous behavior of specific web components (e.g., database access). Not taking this asynchronicity into account will result in `flaky` tests. Typically, flaky test run well on the local system used for development (that has plenty of free resources at moment of test), but fail often on a CI system. Often this is the result of longer times needed page/component update causing tests to fail because the test evaluates a condition before it is loaded. In webdriverio the `waitForExist()`, `waitForVisible()` and `waitFor()` method should be used to pause test execution until the page has been updated. Sometimes it is needed to wait for the appearance of a DOM element which presence is tested.
-```javascript
-browser.waitForExist('id=button');
-assert($('id=button'));
-```
-- Reference screenshosts that are created on host system directly (not in dockerized process) differ from screenshots produced by the dockerized setup (e.g., on CircleCI) and cannot be used as references
-
-#### Create new e2e-test
-Making e2e-tests follows the current procedure for the e2e-tests:
-1. Create junit test file and place in the `./end-to-end-test/local/specs` or `./end-to-end-test/remote/specs` directory.
-2. [Optional] Add a folder with an uncompressed custom study in the `./end-to-end-test/local/studies` directory.
-
-#### Random notes
-* Study_es_0 is imported by default.
-* Gene panel and gene set matrix data of custom studies must comply with gene panel/sets imported as part of study_es_0.
-* Imports of custom seed data for gene panels and gene sets are not implemented at the moment of this writing.
-* In order to minimize time of local database e2e-tests the size of custom studies should be kept as small as possible.
-* When developing in _Local_ context port 8080 can be used to access the cbioportal instance ('http://localhost:8080').
-
-#### Debugging help
-Here are some errors that have been encountered and are hard to debug.
-
-##### "boundingRects.reduce is not a function"
-This error occurs when an e2e test tries to take a screenshot of an element that doesn't exist.
-
-##### "There are some read requests waitng on finished stream"
-This error occurs in CircleCI when the reference screenshot file is somehow corrupted. It can be fixed by deleting and updating the reference screenshot.
-
 
 ## Workspaces
 
