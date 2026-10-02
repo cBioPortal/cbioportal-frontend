@@ -43,9 +43,6 @@ export async function expectElementScreenshot(
         // tooltip disappears within its 50 ms leave-delay before the
         // screenshot is taken if the mouse is moved away.
         keepMouse?: boolean;
-        // How long toHaveScreenshot may keep retaking the capture until two
-        // consecutive ones match.
-        timeout?: number;
     } = {}
 ) {
     const target = page.locator(selector);
@@ -67,7 +64,7 @@ export async function expectElementScreenshot(
     const mask = (opts.masks ?? ['.qtip']).map(s => page.locator(s));
     await expect(target).toHaveScreenshot(snapshotName, {
         mask,
-        timeout: opts.timeout ?? 30000,
+        timeout: 30000,
     });
 }
 
@@ -223,6 +220,23 @@ export async function stubUcscHg19Fetches(page: Page): Promise<void> {
         route.fulfill({
             path: path.join(__dirname, 'fixtures', 'ncbiRefSeq.hg19.txt.gz'),
             contentType: 'application/x-gzip',
+        })
+    );
+}
+
+/**
+ * Serve a fixed ~2,500-point subset (every 20th point) of the Similarity
+ * Maps embedding instead of the full 50k-point file. Rendering 50k points in
+ * software WebGL keeps a CI runner's main thread busy for tens of seconds
+ * per test; the subset exercises the same code paths, and as a committed
+ * fixture it doesn't change when the hosted file does.
+ * Must be called before the embeddings tab loads its data.
+ */
+export async function stubEmbeddingData(page: Page): Promise<void> {
+    await page.route('**/embeddings/msk_mosaic_2026/umap_he_50k.json', route =>
+        route.fulfill({
+            path: path.join(__dirname, 'fixtures', 'umap_he_subset.json'),
+            contentType: 'application/json',
         })
     );
 }

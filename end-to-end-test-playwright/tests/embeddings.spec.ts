@@ -1,4 +1,5 @@
 import { test, expect, Page } from '../fixtures';
+import { stubEmbeddingData } from './helpers/common';
 
 /**
  * Port of end-to-end-test/local/specs/core/embeddings.spec.js.
@@ -57,13 +58,11 @@ async function gotoEmbeddings(page: Page, query = '') {
     await expect(page.locator(LEGEND)).toBeVisible({ timeout: 60000 });
 }
 
-// Every test here cold-loads the 50k-sample msk_impact_50k_2026 study and
-// renders its embedding in software WebGL. On a CI shard running three
-// workers that takes 60-160s for a single test, well past the config's 120s
-// default, so give the whole file the same generous budget.
-test.describe.configure({ timeout: 240000 });
-
 test.describe('embeddings tab interactions', () => {
+    test.beforeEach(async ({ page }) => {
+        await stubEmbeddingData(page);
+    });
+
     test.describe('legend interactions', () => {
         test('offers Select and Hide on a legend row, swapping them in for the count on hover', async ({
             page,

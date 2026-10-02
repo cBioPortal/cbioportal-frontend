@@ -1,5 +1,5 @@
 import { test, expect, Page } from '../fixtures';
-import { waitForStudyView } from './helpers/common';
+import { stubEmbeddingData, waitForStudyView } from './helpers/common';
 
 /**
  * Guards the study view against the Similarity Maps tab doing work while
@@ -110,16 +110,11 @@ async function backToSummary(page: Page) {
     await waitForStudyView(page, 60000);
 }
 
-// Every test here cold-loads the 50k-sample msk_impact_50k_2026 study and
-// renders its embedding in software WebGL. On a CI shard running three
-// workers that takes 60-160s for a single test, well past the config's 120s
-// default, so give the whole file the same generous budget.
-test.describe.configure({ timeout: 240000 });
-
 test.describe('study view is unaffected by the embeddings tab', () => {
     test('the summary tab never fetches the embedding data', async ({
         page,
     }) => {
+        await stubEmbeddingData(page);
         const embeddingRequests: string[] = [];
         page.on('request', request => {
             if (EMBEDDING_ASSET.test(request.url())) {
@@ -139,6 +134,7 @@ test.describe('study view is unaffected by the embeddings tab', () => {
     test('the embedding stops rendering once you leave the tab', async ({
         page,
     }) => {
+        await stubEmbeddingData(page);
         await openSummary(page);
         await openEmbeddingsTab(page);
         await backToSummary(page);
@@ -152,6 +148,8 @@ test.describe('study view is unaffected by the embeddings tab', () => {
     test('the viewport lock stops polling once you leave the tab', async ({
         page,
     }) => {
+        await stubEmbeddingData(page);
+
         // Count frames scheduled over a fixed window. The page's own charts
         // schedule some, so this is only meaningful as a before/after delta.
         const countFrames = (ms: number) =>
@@ -189,6 +187,13 @@ test.describe('study view is unaffected by the embeddings tab', () => {
     test('a summary selection still updates promptly after the embeddings tab has been opened', async ({
         page,
     }) => {
+        // Uses the full 50k-point embedding, not stubEmbeddingData's subset:
+        // the regression this guards against is the hidden tab recomputing
+        // the whole pipeline on every selection, which only costs enough to
+        // notice at full size. Rendering it in software WebGL takes over the
+        // config's 120s default on a loaded CI runner.
+        test.setTimeout(240000);
+
         await openSummary(page);
         await openEmbeddingsTab(page);
         await backToSummary(page);
