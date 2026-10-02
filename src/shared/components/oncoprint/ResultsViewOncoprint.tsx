@@ -2497,6 +2497,10 @@ export default class ResultsViewOncoprint extends React.Component<
                         getSelectedClinicalTrackDefaultColorForValue={
                             this.getSelectedClinicalTrackDefaultColorForValue
                         }
+                        allClinicalTracks={this.clinicalTracks.result || []}
+                        applyPaletteColors={
+                            this.props.store.setUserSelectedClinicalTrackColors
+                        }
                     />
                 )}
 
