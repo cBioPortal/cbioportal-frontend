@@ -33,6 +33,11 @@
     width: 20px;
 }
 
+/* centered, so a '-' lines up with the digits above and below it */
+.mutantCopiesSlot {
+    text-align: center;
+}
+
 /* WGD is a property of the sample, so all of a sample's slots have the tag */
 .totalCopyNumberSlotWithWgd {
     width: 42px;
