@@ -172,7 +172,10 @@ describe('QueryStore', () => {
         });
 
         it('leaves out unavailable studies even when unauthorized studies are shown', async () => {
-            setServerConfig({ skin_home_page_show_unauthorized_studies: true });
+            setServerConfig({
+                skin_home_page_show_unauthorized_studies: true,
+                study_availability_enabled: true,
+            });
             try {
                 const store = new QueryStore();
                 (store as any).cancerStudies = {
@@ -203,8 +206,25 @@ describe('QueryStore', () => {
             } finally {
                 setServerConfig({
                     skin_home_page_show_unauthorized_studies: false,
+                    study_availability_enabled: false,
                 });
             }
+        });
+
+        it('requests every study when study availability is disabled', async () => {
+            const store = new QueryStore();
+            (store as any).cancerStudies = {
+                result: [
+                    { studyId: 'readable', status: 1, readPermission: true },
+                    { studyId: 'unavailable', status: 0, readPermission: true },
+                ],
+            };
+            await (store.resourceDefinitions as any).invoke();
+            assert.isTrue(
+                fetchResourceDefinitionsStub.calledWith({
+                    studyIds: ['readable', 'unavailable'],
+                })
+            );
         });
     });
 });

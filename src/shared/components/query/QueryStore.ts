@@ -1625,15 +1625,16 @@ export class QueryStore {
         ],
         invoke: () => {
             // Skip unavailable studies: the backend rejects the whole batch with 423 if it names one.
-            const studyIds = this.cancerStudies.result
-                .filter(
-                    s =>
-                        (s.status === undefined || s.status === 1) &&
-                        (getServerConfig()
-                            .skin_home_page_show_unauthorized_studies ||
-                            s.readPermission !== false)
-                )
-                .map(s => s.studyId);
+            const studies = getServerConfig().study_availability_enabled
+                ? this.cancerStudies.result.filter(
+                      s =>
+                          (s.status === undefined || s.status === 1) &&
+                          (getServerConfig()
+                              .skin_home_page_show_unauthorized_studies ||
+                              s.readPermission !== false)
+                  )
+                : this.cancerStudies.result;
+            const studyIds = studies.map(s => s.studyId);
             if (studyIds.length === 0) {
                 return Promise.resolve([]);
             }
