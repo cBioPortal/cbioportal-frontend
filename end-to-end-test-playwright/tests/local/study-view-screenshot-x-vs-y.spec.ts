@@ -166,15 +166,25 @@ test.describe.serial('study view editable breadcrumbs', () => {
 
     test.beforeAll(async ({ browser }) => {
         page = await browser.newPage();
-        // Ensure a clean default chart state
+        // Ensure a clean default chart state. The logged-in user's chart
+        // layout for this study is saved in the session service and can be
+        // left over from other tests in the same run, so wait for it to load
+        // before deciding whether it needs a reset.
         const studyUrl = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`;
+        const userSettingsLoaded = page.waitForResponse(
+            response => response.url().includes('/api/session/settings/fetch'),
+            { timeout: 60000 }
+        );
         await goToUrlAndSetLocalStorage(page, studyUrl, true);
+        await userSettingsLoaded;
         await waitForNetworkQuiet(page);
         await page.locator(ADD_CHART_BUTTON).click();
-        const resetVisible =
-            (await page.locator('button:text-is("Reset charts")').count()) >
-                0 &&
-            (await page.locator('button:text-is("Reset charts")').isVisible());
+        // "Reset charts" only shows when the layout differs from the default
+        const resetVisible = await page
+            .locator('button:text-is("Reset charts")')
+            .waitFor({ state: 'visible', timeout: 10000 })
+            .then(() => true)
+            .catch(() => false);
         if (resetVisible) {
             await page.locator('button:text-is("Reset charts")').click();
             await expect(
