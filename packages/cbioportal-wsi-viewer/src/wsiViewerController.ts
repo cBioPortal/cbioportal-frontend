@@ -19,6 +19,8 @@ import {
     offsetNavigatorElement,
     OSD_SPINNER_FALLBACK_MS,
     OSD_TILE_RETRY_MAX,
+    isOsdViewerIdle,
+    isStaleOsdTileEvent,
     promoteOsdImageLoaderLimit,
     reopenOsdViewer,
     restoreOrHomeViewport,
@@ -495,12 +497,15 @@ export class WsiViewerController {
     ): void {
         const viewer = this.osdViewer;
         if (!viewer) return;
-        const registered = once
-            ? (event: unknown) => {
-                  this.removeSlideHandler(eventName, registered);
-                  handler(event);
-              }
-            : handler;
+        const tileEvent = eventName.startsWith('tile-');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const registered = (event: any) => {
+            // Ignore tiles of an image this viewer no longer shows; a
+            // one-time handler stays bound for the current slide's tile.
+            if (tileEvent && isStaleOsdTileEvent(viewer, event)) return;
+            if (once) this.removeSlideHandler(eventName, registered);
+            handler(event);
+        };
         if (viewer.addHandler(eventName, registered) === false) return;
         this.osdSlideHandlers.push({ eventName, handler: registered });
     }
@@ -1618,8 +1623,14 @@ export class WsiViewerController {
             const access = await accessPromise;
             if (seq !== this.mountSeq) return;
             this.activeWsiSourceUrl = access.sourceUrl;
+            // Reuse needs an idle viewer: tile requests of the previous slide
+            // still in flight would hold loader slots ahead of this slide's
+            // cold open. A busy viewer is rebuilt, as before.
             const reusableViewer =
-                this.osdViewer?.element === containerEl ? this.osdViewer : null;
+                this.osdViewer?.element === containerEl &&
+                isOsdViewerIdle(this.osdViewer)
+                    ? this.osdViewer
+                    : null;
             if (reusableViewer) {
                 reopenSlide = () =>
                     reopenOsdViewer({

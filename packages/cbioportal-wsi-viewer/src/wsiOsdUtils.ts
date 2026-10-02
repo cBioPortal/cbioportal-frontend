@@ -78,6 +78,41 @@ export function buildOsdOptions({
 }
 
 /**
+ * Whether a viewer and its navigator have no tile request in flight, queued
+ * or waiting to retry. OpenSeadragon's `close` only drops queued requests:
+ * in-flight ones still finish into the viewer, raising tile events and
+ * holding image-loader slots, so a viewer is only reused for another slide
+ * once it is idle. A viewer whose loader can't be inspected counts as busy.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isOsdViewerIdle(osdViewer: any): boolean {
+    return [osdViewer, osdViewer?.navigator]
+        .filter(Boolean)
+        .every(viewer => {
+            const loader = viewer.imageLoader;
+            return (
+                loader != null &&
+                loader.jobsInProgress === 0 &&
+                (loader.jobQueue?.length ?? 0) === 0 &&
+                (loader.failedTiles?.length ?? 0) === 0
+            );
+        });
+}
+
+/**
+ * Whether a tile event belongs to an image no longer in the viewer, e.g. a
+ * request for the previous slide that finished after it was closed.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isStaleOsdTileEvent(osdViewer: any, event: any): boolean {
+    const tiledImage = event?.tiledImage;
+    if (!tiledImage || typeof osdViewer?.world?.getIndexOfItem !== 'function') {
+        return false;
+    }
+    return osdViewer.world.getIndexOfItem(tiledImage) === -1;
+}
+
+/**
  * Opens another slide in an existing viewer: the slide's request headers go
  * to the viewer and its navigator first, so every new tile carries them, and
  * tile loading restarts at the cold-open concurrency.

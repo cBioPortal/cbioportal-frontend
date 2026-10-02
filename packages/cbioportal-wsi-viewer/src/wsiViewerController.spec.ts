@@ -46,7 +46,16 @@ class FakeViewer {
     ajaxHeaders: Record<string, string>;
     element: HTMLElement;
     loadTilesWithAjax: boolean;
-    imageLoader = { jobLimit: 1 };
+    imageLoader = {
+        jobLimit: 1,
+        jobsInProgress: 0,
+        jobQueue: [] as unknown[],
+        failedTiles: [] as unknown[],
+    };
+    items: unknown[] = [];
+    world = {
+        getIndexOfItem: (item: unknown) => this.items.indexOf(item),
+    };
     drawer = { getType: () => 'canvas' };
     viewport = { goHome: jest.fn() };
     navigator: any = null;
@@ -234,6 +243,42 @@ describe('WsiViewerController viewer lifecycle', () => {
 
         controller.dispose();
         expect(viewer.destroy).toHaveBeenCalledTimes(1);
+    });
+
+    it('rebuilds the viewer while the previous slide still has tile requests', async () => {
+        const { controller, openSeadragon, viewers } = makeHarness();
+
+        await controller.selectSlide(makeSlide('slide-a'), sample);
+        viewers[0].imageLoader.jobsInProgress = 2;
+        await controller.selectSlide(makeSlide('slide-b'), sample);
+
+        expect(openSeadragon).toHaveBeenCalledTimes(2);
+        expect(viewers[0].destroy).toHaveBeenCalledTimes(1);
+        expect(viewers[0].open).not.toHaveBeenCalled();
+        expect(viewers[1].options.ajaxHeaders.Authorization).toBe(
+            'Bearer token-slide-b'
+        );
+        controller.dispose();
+    });
+
+    it("ignores a closed slide's tile events on the reused viewer", async () => {
+        const { controller, viewers } = makeHarness();
+
+        await controller.selectSlide(makeSlide('slide-a'), sample);
+        const viewer = viewers[0];
+        await controller.selectSlide(makeSlide('slide-b'), sample);
+        const imageB = {};
+        viewer.items = [imageB];
+        viewer.raise('open');
+        expect(viewer.handlerCount('tile-loaded')).toBe(1);
+
+        // A request for slide A finishing late does not count for slide B.
+        viewer.raise('tile-loaded', { tiledImage: {} });
+        expect(viewer.handlerCount('tile-loaded')).toBe(1);
+
+        viewer.raise('tile-loaded', { tiledImage: imageB });
+        expect(viewer.handlerCount('tile-loaded')).toBe(0);
+        controller.dispose();
     });
 
     it('rebuilds the viewer when its container was replaced', async () => {
