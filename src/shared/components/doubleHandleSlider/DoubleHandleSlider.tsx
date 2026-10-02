@@ -11,6 +11,11 @@ export interface IDoubleHandleSliderProps {
     upperValue?: number;
     callbackLowerValue: (lowerValue: number) => void;
     callbackUpperValue: (upperValue: number) => void;
+    // Overall widget width. Defaults to DEFAULT_WIDTH, which comfortably fits the
+    // small integers the mutation table uses; callers whose values run longer
+    // (e.g. server-computed metadata ranges) can widen it so both input boxes fit
+    // side by side instead of the upper one wrapping below the lower one.
+    width?: string;
 }
 
 export interface IDoubleHandleSliderState {
@@ -18,7 +23,11 @@ export interface IDoubleHandleSliderState {
     upperValue: number;
 }
 
-const WIDTH = '135px';
+const DEFAULT_WIDTH = '135px';
+// Horizontal chrome of a Bootstrap 3 `.form-control.input-sm`: 10px padding and a
+// 1px border on each side. The value itself is measured in `ch` units (the advance
+// width of "0"), which is exact for the digit strings these boxes hold.
+const INPUT_BOX_CHROME_PX = 22;
 const PRECISION = 10;
 const POWER = 10 ** PRECISION;
 export default class DoubleHandleSlider extends React.Component<
@@ -34,6 +43,10 @@ export default class DoubleHandleSlider extends React.Component<
     @computed get max() {
         const tmp = +(+this.props.max).toFixed(PRECISION + 1);
         return Math.ceil(POWER * tmp) / POWER;
+    }
+
+    @computed get width() {
+        return this.props.width || DEFAULT_WIDTH;
     }
 
     @computed get id() {
@@ -124,6 +137,25 @@ export default class DoubleHandleSlider extends React.Component<
         }
     }
 
+    // Number of decimals implied by defaultStepSize. A fractional step of e.g.
+    // (max - min) / 100 otherwise produces raw binary-float values such as
+    // 8.503000000000002, which overflow the input box and read as truncated.
+    @computed get stepDecimals() {
+        const step = this.defaultStepSize;
+        if (!isFinite(step) || step <= 0 || Number.isInteger(step)) {
+            return 0;
+        }
+        return Math.min(
+            PRECISION,
+            Math.max(0, Math.ceil(-Math.log10(step)) + 1)
+        );
+    }
+
+    private roundToStep(value: number) {
+        const factor = 10 ** this.stepDecimals;
+        return Math.round(value * factor) / factor;
+    }
+
     private syncValues(isLower: boolean, includeCallback?: boolean) {
         if (isLower) {
             this.LH.value = '' + this.state.lowerValue;
@@ -153,11 +185,9 @@ export default class DoubleHandleSlider extends React.Component<
     }
 
     private updateInputBoxWidth(isLower: boolean) {
-        if (isLower) {
-            this.LB.style.width = (this.LB.value.length + 3) * 7 + 'px';
-        } else {
-            this.UB.style.width = (this.UB.value.length + 3) * 7 + 'px';
-        }
+        const box = isLower ? this.LB : this.UB;
+        const characters = Math.max(box.value.length, 1);
+        box.style.width = `calc(${characters}ch + ${INPUT_BOX_CHROME_PX}px)`;
     }
 
     @action
@@ -199,7 +229,7 @@ export default class DoubleHandleSlider extends React.Component<
                     : this.state.lowerValue;
                 const newValue = wouldCrossHandles(+e.target.value)
                     ? otherHandle
-                    : +e.target.value;
+                    : this.roundToStep(+e.target.value);
                 updateState(newValue);
             }
         };
@@ -209,7 +239,7 @@ export default class DoubleHandleSlider extends React.Component<
         return (
             <div
                 style={{
-                    width: WIDTH,
+                    width: this.width,
                     margin: 'auto',
                     display: 'flex',
                     flexDirection: 'column',
@@ -228,8 +258,13 @@ export default class DoubleHandleSlider extends React.Component<
                         defaultValue={'' + this.state.lowerValue}
                         onMouseUp={(e: any) => {
                             this.justReleasedHandle = true;
-                            this.setState({ lowerValue: +e.target.value }, () =>
-                                this.syncValues(true, true)
+                            this.setState(
+                                {
+                                    lowerValue: this.roundToStep(
+                                        +e.target.value
+                                    ),
+                                },
+                                () => this.syncValues(true, true)
                             );
                         }}
                         onChange={this.onChangeSlider(
@@ -251,8 +286,13 @@ export default class DoubleHandleSlider extends React.Component<
                         defaultValue={'' + this.state.upperValue}
                         onMouseUp={(e: any) => {
                             this.justReleasedHandle = true;
-                            this.setState({ upperValue: +e.target.value }, () =>
-                                this.syncValues(false, true)
+                            this.setState(
+                                {
+                                    upperValue: this.roundToStep(
+                                        +e.target.value
+                                    ),
+                                },
+                                () => this.syncValues(false, true)
                             );
                         }}
                         onChange={this.onChangeSlider(
@@ -270,7 +310,7 @@ export default class DoubleHandleSlider extends React.Component<
                     <input
                         id={this.LBId}
                         className="form-control input-sm"
-                        style={{ float: 'left', maxWidth: WIDTH }}
+                        style={{ float: 'left', maxWidth: 'calc(50% - 3px)' }}
                         defaultValue={'' + this.state.lowerValue}
                         onChange={this.onChangeInputBox(
                             this.min,
@@ -288,7 +328,7 @@ export default class DoubleHandleSlider extends React.Component<
                     <input
                         id={this.UBId}
                         className="form-control input-sm"
-                        style={{ float: 'right', maxWidth: WIDTH }}
+                        style={{ float: 'right', maxWidth: 'calc(50% - 3px)' }}
                         defaultValue={'' + this.state.upperValue}
                         onChange={this.onChangeInputBox(
                             this.max,
