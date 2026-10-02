@@ -78,18 +78,30 @@ export function extractResourceIdFromTabId(tabId: string) {
 /**
  * The page's clinical data for the slide viewer sidebar: `null` while it
  * loads, unset when the page does not hold every sample of the patient
- * (sample view) or a request failed, so the viewer fetches it.
+ * (sample view), its attributes span other studies or a request failed, so
+ * the viewer fetches it.
  */
 export function wsiPatientClinicalData(
     store: PatientViewPageStore
 ): WsiPatientClinicalData | null | undefined {
     const {
+        cohortStudyIds,
         clinicalAttributes,
         clinicalDataPatient,
         clinicalDataForSamples,
     } = store;
+    if (!cohortStudyIds.isComplete) {
+        return cohortStudyIds.isError ? undefined : null;
+    }
+    // The page's attributes are merged across the cohort's studies, keeping
+    // the first study's definition of each; only a cohort of the patient's
+    // own study is guaranteed to hold that study's priorities and names.
+    const ownStudyOnly = cohortStudyIds.result.every(
+        studyId => studyId === store.studyId
+    );
     if (
         store.pageMode !== 'patient' ||
+        !ownStudyOnly ||
         clinicalAttributes.isError ||
         clinicalDataPatient.isError ||
         clinicalDataForSamples.isError
