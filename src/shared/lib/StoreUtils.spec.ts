@@ -3,6 +3,7 @@ import {
     fetchGermlineConsentedSamples,
     fetchOncoKbData,
     fetchSamplesWithoutCancerTypeClinicalData,
+    fetchStructuralVariantOncoKbData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
     filterAndAnnotateMolecularData,
     filterAndAnnotateMutations,
@@ -30,9 +31,11 @@ import {
     Gene,
     Mutation,
     Sample,
+    StructuralVariant,
 } from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
 import {
+    generateQueryStructuralVariantId,
     IndicatorQueryResp,
     OtherBiomarkersQueryType,
 } from 'oncokb-frontend-commons';
@@ -333,6 +336,158 @@ describe('StoreUtils', () => {
                 });
                 done();
             });
+        });
+    });
+
+    describe('fetchStructuralVariantOncoKbData', () => {
+        // OncoKB has no germline structural variant curation and its SV
+        // endpoint answers with somatic content, so germline variants must
+        // never reach it; they get a gene-level indicator instead. This is the
+        // patient view / oncoprint path; the mutations tab goes through
+        // DefaultMutationMapperDataFetcher.
+        function brca1Intragenic(svStatus: string) {
+            return {
+                uniqueSampleKey: 'sample_key',
+                site1EntrezGeneId: 672,
+                site1HugoSymbol: 'BRCA1',
+                site2HugoSymbol: '',
+                variantClass: 'DELETION',
+                svStatus,
+            } as StructuralVariant;
+        }
+
+        function structuralVariantData(
+            result: StructuralVariant[]
+        ): MobxPromise<StructuralVariant[]> {
+            return {
+                result,
+                status: 'complete' as 'complete',
+                peekStatus: 'complete',
+                isPending: false,
+                isError: false,
+                isComplete: true,
+                error: undefined,
+            };
+        }
+
+        // A gene is curated once per setting, and the endpoint returns both
+        // entries for a symbol.
+        function curatedGenesStub() {
+            const utilsAllCuratedGenesGetUsingGET_1 = sinon.stub();
+            utilsAllCuratedGenesGetUsingGET_1.returns(
+                Promise.resolve([
+                    {
+                        hugoSymbol: 'BRCA1',
+                        entrezGeneId: 672,
+                        setting: 'Somatic',
+                        summary: 'BRCA1 somatic gene summary',
+                        background: 'BRCA1 somatic gene background',
+                    },
+                    {
+                        hugoSymbol: 'BRCA1',
+                        entrezGeneId: 672,
+                        setting: 'Germline',
+                        summary: 'BRCA1 germline gene summary',
+                        background: 'BRCA1 germline gene background',
+                    },
+                ])
+            );
+            return utilsAllCuratedGenesGetUsingGET_1;
+        }
+
+        it('does not send germline structural variants to OncoKB', async () => {
+            const annotateStructuralVariantsPostUsingPOST_1 = sinon.stub();
+            annotateStructuralVariantsPostUsingPOST_1.returns(
+                Promise.resolve([])
+            );
+
+            await fetchStructuralVariantOncoKbData(
+                { sample_key: 'Breast Invasive Ductal Carcinoma' },
+                { 672: true },
+                structuralVariantData([brca1Intragenic('GERMLINE')]),
+                {
+                    annotateStructuralVariantsPostUsingPOST_1,
+                    utilsAllCuratedGenesGetUsingGET_1: curatedGenesStub(),
+                } as any
+            );
+
+            assert.isTrue(
+                annotateStructuralVariantsPostUsingPOST_1.notCalled,
+                'no OncoKB request should be issued for a germline-only set'
+            );
+        });
+
+        it('falls back to the curated gene for germline structural variants', async () => {
+            const annotateStructuralVariantsPostUsingPOST_1 = sinon.stub();
+            annotateStructuralVariantsPostUsingPOST_1.returns(
+                Promise.resolve([])
+            );
+            const utilsAllCuratedGenesGetUsingGET_1 = curatedGenesStub();
+
+            const oncoKbData = await fetchStructuralVariantOncoKbData(
+                { sample_key: 'Breast Invasive Ductal Carcinoma' },
+                { 672: true },
+                structuralVariantData([brca1Intragenic('GERMLINE')]),
+                {
+                    annotateStructuralVariantsPostUsingPOST_1,
+                    utilsAllCuratedGenesGetUsingGET_1,
+                } as any
+            );
+
+            const curatedGeneParams = utilsAllCuratedGenesGetUsingGET_1.getCall(
+                0
+            ).args[0];
+            assert.deepEqual(
+                curatedGeneParams,
+                { hugoSymbol: 'BRCA1', includeEvidence: true },
+                'the curated gene is looked up by symbol on the latest data version'
+            );
+
+            const indicator = oncoKbData.indicatorMap![
+                generateQueryStructuralVariantId(
+                    672,
+                    undefined,
+                    'Breast Invasive Ductal Carcinoma',
+                    'DELETION',
+                    true
+                )
+            ] as any;
+
+            assert.isDefined(indicator);
+            assert.isTrue(indicator.query.germline);
+            assert.equal(
+                indicator.geneSummary,
+                'BRCA1 germline gene summary',
+                'the germline curation is used, not the somatic one'
+            );
+            assert.equal(indicator.pathogenic, 'Unknown');
+            assert.equal(indicator.mutationEffect.knownEffect, 'Unknown');
+        });
+
+        it('still sends somatic structural variants to OncoKB', async () => {
+            const annotateStructuralVariantsPostUsingPOST_1 = sinon.stub();
+            annotateStructuralVariantsPostUsingPOST_1.returns(
+                Promise.resolve([])
+            );
+
+            await fetchStructuralVariantOncoKbData(
+                { sample_key: 'Breast Invasive Ductal Carcinoma' },
+                { 672: true },
+                structuralVariantData([
+                    brca1Intragenic('GERMLINE'),
+                    brca1Intragenic('SOMATIC'),
+                ]),
+                {
+                    annotateStructuralVariantsPostUsingPOST_1,
+                    utilsAllCuratedGenesGetUsingGET_1: curatedGenesStub(),
+                } as any
+            );
+
+            const body = annotateStructuralVariantsPostUsingPOST_1.getCall(0)
+                .args[0].body;
+
+            assert.lengthOf(body, 1, 'only the somatic variant is queried');
+            assert.isFalse(body[0].germline);
         });
     });
 

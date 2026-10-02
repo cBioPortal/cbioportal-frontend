@@ -110,13 +110,15 @@ export type SomaticIndicatorQueryResp = {
 
         'diagnosticSummary': string
 
+        'errors': Array < ValidationError >
+
         'exon': string
 
         'geneExist': boolean
 
         'geneSummary': string
 
-        'highestDiagnosticImplicationLevel': "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3."
+        'highestDiagnosticImplicationLevel': "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
 
         'highestFdaLevel': "LEVEL_Fda1" | "LEVEL_Fda2" | "LEVEL_Fda3"
 
@@ -168,7 +170,7 @@ export type GermlineIndicatorQueryResp = {
 
         'genomicIndicators': Array < GenomicIndicator >
 
-        'highestDiagnosticImplicationLevel': "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3."
+        'highestDiagnosticImplicationLevel': "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
 
         'highestPrognosticImplicationLevel': "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3"
 
@@ -249,6 +251,12 @@ export type AnnotateStructuralVariantQuery = {
         'tumorType': string
 
 };
+export type ValidationError = {
+    'message': string
+
+        'type': "REFERENCE_ALLELE_MISMATCH" | "POSITION_OUT_OF_RANGE" | "REVERSED_POSITION_RANGE" | "MALFORMED_ALTERATION"
+
+};
 export type ArticleAbstract = {
     'abstract': string
 
@@ -283,6 +291,8 @@ export type AnnotateMutationByHGVScQuery = {
         'hgvsc': string
 
         'id': string
+
+        'inheritanceMechanisms': Array < "AUTOSOMAL_DOMINANT" | "AUTOSOMAL_RECESSIVE" | "X_LINKED_RECESSIVE" | "CARRIER" >
 
         'referenceGenome': "GRCh37" | "GRCh38"
 
@@ -941,6 +951,7 @@ export default class OncoKbAPI {
         'hgvsc': string,
         'referenceGenome' ? : string,
         'tumorType' ? : string,
+        'inheritanceMechanisms' ? : "AUTOSOMAL_DOMINANT" | "AUTOSOMAL_RECESSIVE" | "X_LINKED_RECESSIVE" | "CARRIER",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -955,6 +966,10 @@ export default class OncoKbAPI {
 
         if (parameters['tumorType'] !== undefined) {
             queryParameters['tumorType'] = parameters['tumorType'];
+        }
+
+        if (parameters['inheritanceMechanisms'] !== undefined) {
+            queryParameters['inheritanceMechanisms'] = parameters['inheritanceMechanisms'];
         }
 
         if (parameters.$queryParameters) {
@@ -974,11 +989,13 @@ export default class OncoKbAPI {
      * @param {string} hgvsc - HGVS cDNA format following HGVS nomenclature. Example: EGFR:c.2369C>T
      * @param {string} referenceGenome - Reference genome, either GRCh37 or GRCh38. The default is GRCh37
      * @param {string} tumorType - OncoTree(http://oncotree.info) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
+     * @param {array} inheritanceMechanisms - List of inheritance mechanisms used to filter the returned genomic indicators. The special value CARRIER is matched against the genomic indicator name rather than the inheritance mechanism. Example: AUTOSOMAL_DOMINANT,CARRIER
      */
     annotateMutationsByHGVScGetUsingGET_3WithHttpInfo(parameters: {
         'hgvsc': string,
         'referenceGenome' ? : string,
         'tumorType' ? : string,
+        'inheritanceMechanisms' ? : "AUTOSOMAL_DOMINANT" | "AUTOSOMAL_RECESSIVE" | "X_LINKED_RECESSIVE" | "CARRIER",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1011,6 +1028,10 @@ export default class OncoKbAPI {
                 queryParameters['tumorType'] = parameters['tumorType'];
             }
 
+            if (parameters['inheritanceMechanisms'] !== undefined) {
+                queryParameters['inheritanceMechanisms'] = parameters['inheritanceMechanisms'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -1030,11 +1051,13 @@ export default class OncoKbAPI {
      * @param {string} hgvsc - HGVS cDNA format following HGVS nomenclature. Example: EGFR:c.2369C>T
      * @param {string} referenceGenome - Reference genome, either GRCh37 or GRCh38. The default is GRCh37
      * @param {string} tumorType - OncoTree(http://oncotree.info) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
+     * @param {array} inheritanceMechanisms - List of inheritance mechanisms used to filter the returned genomic indicators. The special value CARRIER is matched against the genomic indicator name rather than the inheritance mechanism. Example: AUTOSOMAL_DOMINANT,CARRIER
      */
     annotateMutationsByHGVScGetUsingGET_3(parameters: {
         'hgvsc': string,
         'referenceGenome' ? : string,
         'tumorType' ? : string,
+        'inheritanceMechanisms' ? : "AUTOSOMAL_DOMINANT" | "AUTOSOMAL_RECESSIVE" | "X_LINKED_RECESSIVE" | "CARRIER",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < GermlineIndicatorQueryResp > {
@@ -2586,6 +2609,7 @@ export default class OncoKbAPI {
     utilsAllCuratedGenesGetUsingGET_1URL(parameters: {
         'version' ? : string,
         'includeEvidence' ? : boolean,
+        'hugoSymbol' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -2596,6 +2620,10 @@ export default class OncoKbAPI {
 
         if (parameters['includeEvidence'] !== undefined) {
             queryParameters['includeEvidence'] = parameters['includeEvidence'];
+        }
+
+        if (parameters['hugoSymbol'] !== undefined) {
+            queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
         }
 
         if (parameters.$queryParameters) {
@@ -2614,10 +2642,12 @@ export default class OncoKbAPI {
      * @name OncoKbAPI#utilsAllCuratedGenesGetUsingGET_1
      * @param {string} version - The data version
      * @param {boolean} includeEvidence - Include gene summary and background
+     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation. Gene aliases are accepted. The symbol is case-sensitive. When specified, only the curated gene matching this symbol is returned. Only supported for the latest data version, so it may be combined with version only when that version is the latest. Example: BRAF
      */
     utilsAllCuratedGenesGetUsingGET_1WithHttpInfo(parameters: {
         'version' ? : string,
         'includeEvidence' ? : boolean,
+        'hugoSymbol' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -2641,6 +2671,10 @@ export default class OncoKbAPI {
                 queryParameters['includeEvidence'] = parameters['includeEvidence'];
             }
 
+            if (parameters['hugoSymbol'] !== undefined) {
+                queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -2659,10 +2693,12 @@ export default class OncoKbAPI {
      * @name OncoKbAPI#utilsAllCuratedGenesGetUsingGET_1
      * @param {string} version - The data version
      * @param {boolean} includeEvidence - Include gene summary and background
+     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation. Gene aliases are accepted. The symbol is case-sensitive. When specified, only the curated gene matching this symbol is returned. Only supported for the latest data version, so it may be combined with version only when that version is the latest. Example: BRAF
      */
     utilsAllCuratedGenesGetUsingGET_1(parameters: {
             'version' ? : string,
             'includeEvidence' ? : boolean,
+            'hugoSymbol' ? : string,
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < CuratedGene >

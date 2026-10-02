@@ -5,6 +5,7 @@ import { OTHER_BIOMARKER_HUGO_SYMBOL } from './constants';
 
 type OncoKbCardDefaultTitleProps = {
     isGermline?: boolean;
+    isStructuralVariant?: boolean;
     hugoSymbol: string;
     cDnaChange?: string;
     tumorType: string;
@@ -12,14 +13,31 @@ type OncoKbCardDefaultTitleProps = {
     displayCancerTypeInTitle?: boolean;
 };
 
-function getProteinChangeForDisplay(proteinChange: string | undefined) {
-    if (!proteinChange) {
-        return undefined;
+// A structural variant's alteration is already a complete label
+// ("BRCA1-SORCS2 Fusion", "BRCA1 intragenic") rather than a protein change, so
+// it takes no "p." prefix and does not repeat the gene symbol it already names.
+function getProteinChangeForDisplay(
+    proteinChange: string | undefined,
+    isStructuralVariant: boolean
+) {
+    if (!proteinChange || isStructuralVariant) {
+        return proteinChange;
     }
     if (!proteinChange.startsWith('p.') && /\d/.test(proteinChange)) {
         return `p.${proteinChange}`;
     }
     return proteinChange;
+}
+
+function alterationNamesGene(
+    alteration: string | undefined,
+    hugoSymbol: string
+) {
+    return (
+        !!alteration &&
+        !!hugoSymbol &&
+        alteration.toUpperCase().includes(hugoSymbol.toUpperCase())
+    );
 }
 
 function getCdnaChangeForDisplay(cDnaChange: string | undefined) {
@@ -36,14 +54,21 @@ function getDisplayTumorType(tumorType: string) {
 export const OncoKbCardTitle: React.FunctionComponent<OncoKbCardDefaultTitleProps> = (
     props: OncoKbCardDefaultTitleProps
 ) => {
-    const titleClassName = `${mainStyles['title']} ${
-        mainStyles['oncokb-variant-title']
-    }`;
+    const titleClassName = `${mainStyles['title']} ${mainStyles['oncokb-variant-title']}`;
     const cDnaChange = getCdnaChangeForDisplay(props.cDnaChange);
-    const proteinChange = getProteinChangeForDisplay(props.proteinChange);
+    const isStructuralVariant = !!props.isStructuralVariant;
+    const proteinChange = getProteinChangeForDisplay(
+        props.proteinChange,
+        isStructuralVariant
+    );
     const displayTumorType = getDisplayTumorType(props.tumorType);
     const showHugoSymbol =
-        props.hugoSymbol && props.hugoSymbol !== OTHER_BIOMARKER_HUGO_SYMBOL;
+        props.hugoSymbol &&
+        props.hugoSymbol !== OTHER_BIOMARKER_HUGO_SYMBOL &&
+        !(
+            isStructuralVariant &&
+            alterationNamesGene(proteinChange, props.hugoSymbol)
+        );
 
     return (
         <div className={titleClassName} data-test="oncokb-card-title">
@@ -61,19 +86,15 @@ export const OncoKbCardTitle: React.FunctionComponent<OncoKbCardDefaultTitleProp
                             {(showHugoSymbol ||
                                 (props.isGermline && cDnaChange)) &&
                                 ' '}
-                            {props.isGermline && cDnaChange && (
-                                <>
-                                    &middot;{' '}
-                                </>
-                            )}
+                            {props.isGermline && cDnaChange && <>&middot; </>}
                             <span
                                 className={
-                                    props.isGermline
+                                    props.isGermline && !isStructuralVariant
                                         ? mainStyles['title-protein-change']
                                         : undefined
                                 }
                             >
-                                {props.isGermline
+                                {props.isGermline && !isStructuralVariant
                                     ? `(${proteinChange})`
                                     : proteinChange}
                             </span>
