@@ -1652,13 +1652,14 @@ export function transitionHeatmapTrack(
         ) {
             oncoprint.setTrackMovable(trackId, nextSpec.movable);
         }
-        // Rule set when white background flag changes for mutation (VAF) heatmap tracks
+        // Rebuild mutation heatmap rules when their rendering options change.
         if (
             nextSpec.molecularAlterationType ===
                 AlterationTypeConstants.MUTATION_EXTENDED &&
-            nextProps.isWhiteBackgroundForGlyphsEnabled !==
+            (nextProps.isWhiteBackgroundForGlyphsEnabled !==
                 (prevProps as Partial<IOncoprintProps>)
-                    .isWhiteBackgroundForGlyphsEnabled
+                    .isWhiteBackgroundForGlyphsEnabled ||
+                nextSpec.conditionalOverlays !== prevSpec.conditionalOverlays)
         ) {
             if (
                 trackIdForRuleSetSharing.mutation !== undefined &&
