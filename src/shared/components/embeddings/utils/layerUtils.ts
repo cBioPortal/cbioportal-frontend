@@ -1,6 +1,7 @@
-import { ScatterplotLayer } from '@deck.gl/layers';
+import { ScatterplotLayer, IconLayer } from '@deck.gl/layers';
 import { EmbeddingPoint } from '../EmbeddingTypes';
 import { colorToRgb } from './coordinateUtils';
+import { SHAPE_ICON_ATLAS, SHAPE_ICON_MAPPING } from './shapeIconAtlas';
 
 /**
  * Create the scatterplot layer for the embedding visualization
@@ -125,6 +126,88 @@ export function createScatterplotLayer(
             getLineColor: [data, selectedPoints, selectedPatientIds],
             getLineWidth: [data, selectedPoints, selectedPatientIds],
             getRadius: [selectedPoints, selectedPatientIds],
+        },
+    } as any);
+}
+
+/**
+ * Create the icon layer for shape-encoded embedding visualization (e.g.
+ * driver-vs-VUS status, via EmbeddingPoint.shape). getColor is intentionally
+ * identical to createScatterplotLayer's getFillColor above - shape adds a
+ * second, independent visual dimension without changing what color-by
+ * already shows or how selection/deemphasis dim points.
+ */
+export function createIconLayer(
+    data: EmbeddingPoint[],
+    selectedPoints: EmbeddingPoint[],
+    selectedPatientIds: string[] = [],
+    onHover: (info: any) => void,
+    onClick: (info: any) => void
+) {
+    const localSelectedSet = new Set(selectedPoints.map(p => p.patientId));
+    const externalSelectedSet = new Set(selectedPatientIds);
+    const hasAnySelection =
+        selectedPoints.length > 0 || selectedPatientIds.length > 0;
+
+    return new IconLayer({
+        id: 'embedding-icons',
+        data,
+        iconAtlas: SHAPE_ICON_ATLAS,
+        iconMapping: SHAPE_ICON_MAPPING,
+        getPosition: (d: EmbeddingPoint) => [d.x, d.y],
+        // No shape computed for this point (no shape-by attribute selected,
+        // or no value for this point) -> fall back to the circle icon.
+        getIcon: (d: EmbeddingPoint) => d.shape || 'circle',
+        // Same coordinate space as ScatterplotLayer's default radiusUnits,
+        // so icons and circles are visually comparable in size.
+        sizeUnits: 'common',
+        getSize: (d: EmbeddingPoint) => {
+            // Mirrors getRadius above, roughly doubled since getSize reads
+            // closer to a diameter than a radius.
+            if (d.isInCohort === false) {
+                return 0.006;
+            }
+
+            if (d.isDeemphasized) {
+                return 0.036;
+            }
+
+            const isSelected =
+                (d.patientId && localSelectedSet.has(d.patientId)) ||
+                (d.patientId && externalSelectedSet.has(d.patientId));
+            return isSelected ? 0.1 : 0.06;
+        },
+        getColor: (d: EmbeddingPoint) => {
+            if (d.isInCohort === false) {
+                const color = d.color || '#666666';
+                const rgb = colorToRgb(color);
+                return [rgb[0], rgb[1], rgb[2], 255];
+            }
+
+            const color = d.color || '#CCCCCC';
+            const rgb = colorToRgb(color);
+
+            if (d.isDeemphasized) {
+                return [rgb[0], rgb[1], rgb[2], 110];
+            }
+
+            const isSelected =
+                (d.patientId && localSelectedSet.has(d.patientId)) ||
+                (d.patientId && externalSelectedSet.has(d.patientId));
+
+            if (hasAnySelection && !isSelected) {
+                return [200, 200, 200, 255];
+            }
+
+            return [rgb[0], rgb[1], rgb[2], 255];
+        },
+        pickable: true,
+        onHover,
+        onClick,
+        updateTriggers: {
+            getIcon: [data],
+            getColor: [data, selectedPoints, selectedPatientIds],
+            getSize: [selectedPoints, selectedPatientIds],
         },
     } as any);
 }

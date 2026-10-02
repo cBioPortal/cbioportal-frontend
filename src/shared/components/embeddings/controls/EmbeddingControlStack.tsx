@@ -6,7 +6,9 @@ import {
     ColoringMenuOmnibarGroup,
 } from 'shared/components/plots/PlotsTabTypes';
 import { Gene, ClinicalAttribute } from 'cbioportal-ts-api-client';
+import { ShapeMenuOption } from 'shared/components/embeddings/EmbeddingTypes';
 import { TooltipDropdown } from 'shared/components/embeddings/controls/TooltipDropdown';
+import InfoIcon from 'shared/components/InfoIcon';
 
 export interface EmbeddingControlStackProps {
     // Map
@@ -20,6 +22,11 @@ export interface EmbeddingControlStackProps {
     // False when EmbeddingsTab renders the Map dropdown itself instead
     // (single-panel, or multi-panel with Lock Map on). Defaults to true.
     showMapInControlStack?: boolean;
+
+    // Shape by
+    shapeOptions: ShapeMenuOption[];
+    selectedShapeOption: ShapeMenuOption | undefined;
+    onShapeSelectionChange: (option: ShapeMenuOption | null) => void;
 
     // Color by
     genes: Gene[];
@@ -93,6 +100,9 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
     onMapChange,
     showMapColorTooltipControls,
     showMapInControlStack = true,
+    shapeOptions,
+    selectedShapeOption,
+    onShapeSelectionChange,
     genes,
     clinicalAttributes,
     additionalGroups,
@@ -171,6 +181,32 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
                         onStructuralVariantToggle={onStructuralVariantToggle}
                         hideLabel
                         selectStyles={SELECT_STYLES}
+                    />
+                </div>
+            )}
+
+            {showMapColorTooltipControls && shapeOptions.length > 0 && (
+                <div style={{ width: '190px' }}>
+                    <span style={ROW_LABEL_STYLE}>Shape by</span>
+                    <InfoIcon
+                        tooltip={
+                            <span>
+                                Only clinical attributes with exactly two
+                                categories can be used for shape.
+                            </span>
+                        }
+                        style={{ fontSize: '11px', marginLeft: '4px' }}
+                    />
+                    <Select
+                        name="embedding-shape-select"
+                        value={selectedShapeOption}
+                        onChange={(option: any) =>
+                            onShapeSelectionChange(option)
+                        }
+                        options={shapeOptions}
+                        isClearable
+                        isSearchable={false}
+                        styles={SELECT_STYLES}
                     />
                 </div>
             )}

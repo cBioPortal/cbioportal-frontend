@@ -75,6 +75,20 @@ function rgbaArrayToHex(rgba: number[]): string {
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
+//utility function to decide shape for clinical attrubyte category
+export function getShapeSlot(
+    value: string | undefined,
+    distinctValues: string[]
+): string | undefined {
+    if (value === undefined) {
+        return undefined; // no data for this point -> falls back to 'circle'
+    }
+    const index = distinctValues.indexOf(value);
+    if (index === 0) return 'triangle';
+    if (index === 1) return 'diamond';
+    return undefined;
+}
+
 const MIXED_COLOR_HEX = rgbaArrayToHex(DEFAULT_MIXED_COLOR);
 
 // Prefix for synthetic clinical attributes derived from embedding JSON data fields
@@ -321,6 +335,7 @@ export function makeEmbeddingScatterPlotData(
     embeddingData: EmbeddingData,
     store: StudyViewPageStore,
     coloringOption?: ColoringMenuOmnibarOption,
+    shapeOption?: ClinicalAttribute,
     mutationTypeEnabled: boolean = true,
     copyNumberEnabled: boolean = true,
     structuralVariantEnabled: boolean = true,
@@ -331,6 +346,7 @@ export function makeEmbeddingScatterPlotData(
             embeddingData as SampleEmbeddingData,
             store,
             coloringOption,
+            shapeOption,
             mutationTypeEnabled,
             copyNumberEnabled,
             structuralVariantEnabled,
@@ -341,6 +357,7 @@ export function makeEmbeddingScatterPlotData(
             embeddingData as PatientEmbeddingData,
             store,
             coloringOption,
+            shapeOption,
             mutationTypeEnabled,
             copyNumberEnabled,
             structuralVariantEnabled,
@@ -356,6 +373,7 @@ function transformPatientEmbedding(
     embeddingData: PatientEmbeddingData,
     store: StudyViewPageStore,
     coloringOption?: ColoringMenuOmnibarOption,
+    shapeOption?: ClinicalAttribute,
     mutationTypeEnabled: boolean = true,
     copyNumberEnabled: boolean = true,
     structuralVariantEnabled: boolean = true,
@@ -453,6 +471,35 @@ function transformPatientEmbedding(
         }
     }
 
+    // Pre-compute shape-by value map - same clinical data cache as color,
+    // but for a possibly different attribute (shape and color can show two
+    // different attributes at once).
+    let shapeValueMap: Map<string, string> | undefined;
+    let shapeDistinctValues: string[] = [];
+
+    if (shapeOption) {
+        const shapeDataCacheEntry = store.clinicalDataCache.unfilteredClinicalDataCache.get(
+            shapeOption
+        );
+
+        if (shapeDataCacheEntry.isComplete && shapeDataCacheEntry.result) {
+            const isShapePatientAttribute = shapeOption.patientAttribute || false;
+
+            const shapeMaps = preComputeClinicalDataMaps(
+                shapeDataCacheEntry.result.data,
+                undefined, // no color needed, just the raw values
+                undefined,
+                isShapePatientAttribute
+            );
+            shapeValueMap = shapeMaps.patientValueMap;
+
+            // The actual categories, e.g. ["Female", "Male"]
+            shapeDistinctValues = Array.from(
+                new Set(shapeValueMap.values())
+            ).sort();
+        }
+    }
+
     // Pre-compute patient molecular data map
     let patientMolecularDataMap = new Map<string, any>();
     if (
@@ -500,6 +547,8 @@ function transformPatientEmbedding(
         let color = DEFAULT_UNKNOWN_COLOR;
         let strokeColor = DEFAULT_UNKNOWN_COLOR;
         let displayLabel = 'No data';
+        // Undefined -> IconLayer falls back to the default circle icon.
+        let shape: string | undefined;
 
         if (
             coloringOption?.info?.entrezGeneId &&
@@ -663,6 +712,11 @@ function transformPatientEmbedding(
             strokeColor = color;
         }
 
+        if (shapeOption) {
+            const rawValue = shapeValueMap?.get(coord.patientId);
+            shape = getShapeSlot(rawValue, shapeDistinctValues);
+        }
+
         return {
             x: coord.x,
             y: coord.y,
@@ -671,6 +725,7 @@ function transformPatientEmbedding(
             color,
             strokeColor,
             displayLabel,
+            shape,
             isInCohort: true,
         };
     });
@@ -683,6 +738,7 @@ function transformSampleEmbedding(
     embeddingData: SampleEmbeddingData,
     store: StudyViewPageStore,
     coloringOption?: ColoringMenuOmnibarOption,
+    shapeOption?: ClinicalAttribute,
     mutationTypeEnabled: boolean = true,
     copyNumberEnabled: boolean = true,
     structuralVariantEnabled: boolean = true,
@@ -784,6 +840,42 @@ function transformSampleEmbedding(
         }
     }
 
+    // Pre-compute shape-by value map - same clinical data cache as color,
+    // but for a possibly different attribute. Patient- vs sample-level
+    // attributes need different maps, same as the coloring block above.
+    let shapePatientValueMap: Map<string, string> | undefined;
+    let shapeSampleValueMap: Map<string, string> | undefined;
+    let shapeDistinctValues: string[] = [];
+
+    if (shapeOption) {
+        const shapeDataCacheEntry = store.clinicalDataCache.unfilteredClinicalDataCache.get(
+            shapeOption
+        );
+
+        if (shapeDataCacheEntry.isComplete && shapeDataCacheEntry.result) {
+            const isShapePatientAttribute = shapeOption.patientAttribute || false;
+
+            const shapeMaps = preComputeClinicalDataMaps(
+                shapeDataCacheEntry.result.data,
+                undefined, // no color needed, just the raw values
+                undefined,
+                isShapePatientAttribute
+            );
+            shapePatientValueMap = shapeMaps.patientValueMap;
+            shapeSampleValueMap = shapeMaps.valueMap;
+
+            // The actual categories, e.g. ["Female", "Male"] - read from
+            // whichever map matches this attribute's level.
+            const shapeSourceMap = isShapePatientAttribute
+                ? shapePatientValueMap
+                : shapeSampleValueMap;
+            shapeDistinctValues = Array.from(
+                new Set(shapeSourceMap.values())
+            ).sort();
+        }
+    }
+    
+
     // Pre-compute molecular data maps
     let sampleMolecularDataMap = new Map<string, any>();
     if (
@@ -872,6 +964,8 @@ function transformSampleEmbedding(
         let color = DEFAULT_UNKNOWN_COLOR;
         let strokeColor = DEFAULT_UNKNOWN_COLOR;
         let displayLabel = 'No data';
+        // Undefined -> IconLayer falls back to the default circle icon.
+        let shape: string | undefined;
 
         if (
             coloringOption?.info?.entrezGeneId &&
@@ -1082,6 +1176,16 @@ function transformSampleEmbedding(
             strokeColor = color;
         }
 
+        if (shapeOption) {
+            const isShapePatientAttribute = shapeOption.patientAttribute || false;
+            const rawValue = isShapePatientAttribute
+                ? shapePatientValueMap?.get(patientId)
+                : shapeSampleValueMap?.get(
+                      `${sample.studyId}:${sample.sampleId}`
+                  );
+            shape = getShapeSlot(rawValue, shapeDistinctValues);
+        }
+
         return {
             x: coord.x,
             y: coord.y,
@@ -1091,6 +1195,7 @@ function transformSampleEmbedding(
             color,
             strokeColor,
             displayLabel,
+            shape,
             isInCohort: true,
         };
     });
