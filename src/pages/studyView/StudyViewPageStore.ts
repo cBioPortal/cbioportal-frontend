@@ -11011,28 +11011,6 @@ export class StudyViewPageStore
         default: {},
     });
 
-    readonly clinicalAttributeProduct = remoteData({
-        await: () => [this.clinicalAttributes, this.selectedSamples],
-        invoke: async () => {
-            return (
-                this.clinicalAttributes.result.length *
-                this.selectedSamples.result.length
-            );
-        },
-        default: 0,
-    });
-
-    readonly maxSamplesForClinicalTab = remoteData({
-        await: () => [this.clinicalAttributes],
-        invoke: async () => {
-            return Math.floor(
-                getServerConfig().clinical_attribute_product_limit /
-                    this.clinicalAttributes.result.length
-            );
-        },
-        default: 0,
-    });
-
     readonly molecularProfileForGeneCharts = remoteData({
         await: () => [
             this.molecularProfiles,

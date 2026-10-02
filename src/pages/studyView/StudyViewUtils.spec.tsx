@@ -50,6 +50,7 @@ import {
     getGenericAssayFrequencyTableSelectedRowKeyGroups,
     getGenericAssayFrequencyTableSelectedRowKeys,
     getGroupedClinicalDataByBins,
+    getAllClinicalDataByStudyViewFilter,
     getNonZeroUniqueBins,
     getPatientIdentifiers,
     getPositionXByUniqueKey,
@@ -4492,6 +4493,48 @@ describe('StudyViewUtils', () => {
                 initialVisibleAttributesPromise
             );
             assert.equal(promises.length, 0);
+        });
+    });
+
+    describe('getAllClinicalDataByStudyViewFilter', () => {
+        let fetchStub: sinon.SinonStub;
+
+        beforeEach(() => {
+            fetchStub = sinon.stub(
+                internalClient,
+                'fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo'
+            );
+            fetchStub.returns(
+                Promise.resolve({
+                    body: { byUniqueSampleKey: {} },
+                    header: { 'total-count': '501' },
+                })
+            );
+        });
+
+        afterEach(() => {
+            fetchStub.restore();
+        });
+
+        it('forwards the requested page size and page number exactly', async () => {
+            const result = await getAllClinicalDataByStudyViewFilter(
+                emptyStudyViewFilter,
+                'search-term',
+                'AGE',
+                'desc',
+                20,
+                25
+            );
+
+            assert.deepEqual(fetchStub.firstCall.args[0], {
+                studyViewFilter: emptyStudyViewFilter,
+                pageSize: 20,
+                pageNumber: 25,
+                searchTerm: 'search-term',
+                sortBy: 'AGE',
+                direction: 'DESC',
+            });
+            assert.equal(result.totalItems, 501);
         });
     });
 
