@@ -123,7 +123,7 @@ export interface WsiViewerControllerHost {
 
 export class WsiViewerController {
     private static readonly METADATA_PREFETCH_CONCURRENCY = 3;
-    private static readonly METADATA_PREFETCH_LIMIT = 12;
+    private static readonly METADATA_PREFETCH_LIMIT = 3;
     private static readonly METADATA_PREFETCH_BATCH_DELAY_MS = 150;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private osdViewer: any = null;

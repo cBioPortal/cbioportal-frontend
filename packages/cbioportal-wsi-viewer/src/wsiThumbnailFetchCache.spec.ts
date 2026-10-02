@@ -99,6 +99,25 @@ describe('wsiThumbnailFetchCache', () => {
         expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 
+    it('keeps a cached thumbnail when the access token is refreshed', async () => {
+        const blob = await fetchWsiThumbnailBlob(
+            'https://tiles.example.com',
+            'study-1',
+            'slide-1',
+            makeAccess()
+        );
+
+        await expect(
+            fetchWsiThumbnailBlob(
+                'https://tiles.example.com',
+                'study-1',
+                'slide-1',
+                makeAccess({ accessToken: 'token-2' })
+            )
+        ).resolves.toBe(blob);
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
     it('does not cancel the shared request when one caller aborts', async () => {
         let resolveResponse!: (response: Response) => void;
         let requestSignal!: AbortSignal;

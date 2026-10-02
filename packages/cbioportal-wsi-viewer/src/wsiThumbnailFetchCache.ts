@@ -49,6 +49,8 @@ export class WsiThumbnailFetchError extends Error {
 const thumbnailCache = new Map<string, CachedThumbnail>();
 const pendingThumbnailRequests = new Map<string, PendingThumbnail>();
 
+// The access token is left out so a refreshed token keeps the cached
+// thumbnail; entries still expire with the access they were fetched with.
 function cacheKey(
     tileServerBase: string,
     studyId: string,
@@ -62,7 +64,6 @@ function cacheKey(
         studyId,
         imageId,
         access.thumbnail.sourceUrl,
-        access.accessToken,
     ].join('::');
 }
 

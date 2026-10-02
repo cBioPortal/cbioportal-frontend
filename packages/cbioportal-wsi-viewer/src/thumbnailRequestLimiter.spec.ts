@@ -38,4 +38,26 @@ describe('scheduleThumbnailRequest', () => {
         });
         expect(task).not.toHaveBeenCalled();
     });
+
+    it('drops a queued request as soon as it is cancelled', async () => {
+        const release: Array<() => void> = [];
+        const running = Array.from(
+            { length: THUMBNAIL_REQUEST_CONCURRENCY },
+            () =>
+                scheduleThumbnailRequest(
+                    () => new Promise<void>(resolve => release.push(resolve)),
+                    new AbortController().signal
+                )
+        );
+        const controller = new AbortController();
+        const task = jest.fn(async () => 'thumbnail');
+        const queued = scheduleThumbnailRequest(task, controller.signal);
+
+        controller.abort();
+        await expect(queued).rejects.toMatchObject({ name: 'AbortError' });
+
+        release.forEach(resolve => resolve());
+        await Promise.all(running);
+        expect(task).not.toHaveBeenCalled();
+    });
 });
