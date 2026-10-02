@@ -2414,6 +2414,37 @@ describe('LazyMobXTable', () => {
         });
     });
     describe('pagination', () => {
+        it('places sticky bottom pagination outside the scrolling table body', () => {
+            let table = mount(
+                <Table
+                    columns={simpleColumns}
+                    data={simpleData}
+                    stickyPagination={true}
+                    tableMaxHeight="100px"
+                />
+            );
+            const container = table.find('.lazy-mobx-table-sticky-container');
+
+            assert.equal(container.length, 1, 'has a sticky table container');
+            assert.equal(
+                container.find('.lazy-mobx-table-scroll').length,
+                1,
+                'has a dedicated scrolling table body'
+            );
+            assert.equal(
+                container.find(PaginationControls).length,
+                1,
+                'has one pagination footer'
+            );
+            assert.equal(
+                container
+                    .find('.lazy-mobx-table-scroll')
+                    .find(PaginationControls).length,
+                0,
+                'pagination is outside the scrolling body'
+            );
+        });
+
         it('starts with 50 items per page', () => {
             let table = mount(
                 <Table
