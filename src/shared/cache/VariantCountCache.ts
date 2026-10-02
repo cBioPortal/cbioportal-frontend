@@ -1,38 +1,41 @@
-import LazyMobXCache from 'shared/lib/LazyMobXCache';
 import client from 'shared/api/cbioportalInternalClientInstance';
 import { VariantCount, VariantCountIdentifier } from 'cbioportal-ts-api-client';
+import {
+    batchify,
+    memoize,
+    reactive,
+    ReactiveCache,
+} from 'shared/lib/batchedFetch';
 
-function getKey<T extends { entrezGeneId: number; keyword?: string }>(
-    obj: T
-): string {
-    if (obj.keyword) {
-        return obj.entrezGeneId + '~' + obj.keyword;
-    } else {
-        return obj.entrezGeneId + '';
-    }
-}
+export type VariantCountCache = ReactiveCache<
+    VariantCountIdentifier,
+    VariantCount
+>;
 
-function fetch(
-    queries: VariantCountIdentifier[],
-    mutationMolecularProfileId: string | undefined
-): Promise<VariantCount[]> {
-    if (!mutationMolecularProfileId) {
-        return Promise.reject('No mutation molecular profile id given');
-    } else if (queries.length > 0) {
-        return client.fetchVariantCountsUsingPOST({
-            molecularProfileId: mutationMolecularProfileId,
-            variantCountIdentifiers: queries,
-        });
-    } else {
-        return Promise.resolve([]);
-    }
-}
+const keyOf = (x: { entrezGeneId: number; keyword?: string }) =>
+    x.keyword ? `${x.entrezGeneId}~${x.keyword}` : `${x.entrezGeneId}`;
 
-export default class VariantCountCache extends LazyMobXCache<
-    VariantCount,
-    VariantCountIdentifier
-> {
-    constructor(mutationMolecularProfileId: string | undefined) {
-        super(getKey, getKey, fetch, mutationMolecularProfileId);
-    }
+export function createVariantCountCache(
+    mutationMolecularProfileId: string | undefined,
+): VariantCountCache {
+    const fetchOne = memoize<VariantCountIdentifier, VariantCount | null>(
+        batchify<VariantCountIdentifier, VariantCount>(
+            qs => {
+                if (!mutationMolecularProfileId) {
+                    return Promise.reject(
+                        new Error('No mutation molecular profile id given'),
+                    );
+                }
+                if (qs.length === 0) return Promise.resolve([]);
+                return client.fetchVariantCountsUsingPOST({
+                    molecularProfileId: mutationMolecularProfileId,
+                    variantCountIdentifiers: qs,
+                });
+            },
+            keyOf,
+            keyOf,
+        ),
+        keyOf,
+    );
+    return reactive(fetchOne, keyOf);
 }
