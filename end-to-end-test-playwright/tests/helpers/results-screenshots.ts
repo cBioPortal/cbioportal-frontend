@@ -2,7 +2,7 @@ import { Page } from '@playwright/test';
 import { test, expect } from '../../fixtures';
 import {
     expectElementScreenshot,
-    stubUcscHg19Fetches,
+    stubHg19GenomeFetches,
     waitForIgvRendered,
     waitForNetworkQuiet,
 } from './common';
@@ -129,7 +129,7 @@ export function runResultsTestSuite(
         });
 
         test('igv tab', async ({ page }) => {
-            await stubUcscHg19Fetches(page);
+            await stubHg19GenomeFetches(page);
             await page.locator('a.tabAnchor_cnSegments').click();
             await waitForIgvRendered(page);
             await waitForNetworkQuiet(page);
