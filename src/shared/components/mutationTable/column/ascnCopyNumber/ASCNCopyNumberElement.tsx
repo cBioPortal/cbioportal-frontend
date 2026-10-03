@@ -1,12 +1,7 @@
 import * as React from 'react';
 import SampleManager from 'pages/patientView/SampleManager';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import { ASCN_BLACK } from 'shared/lib/Colors';
-import {
-    getASCNCopyNumberColor,
-    getASCNCopyNumberStrokeColor,
-    getASCNCopyNumberTextColor,
-} from 'shared/lib/ASCNUtils';
+import styles from './ascnCopyNumber.module.scss';
 
 export enum ASCNCopyNumberValueEnum {
     WGD = 'WGD',
@@ -80,27 +75,6 @@ const ASCNCallTable: { [key: string]: string } = {
     'WGD,6,3': ASCNCopyNumberValueEnum.AMP,
 };
 
-enum ASCNCopyNumberOpacityEnum {
-    TRANSPARENT = 0,
-    OPAQUE = 100,
-}
-
-function getASCNCopyNumberOpacity(
-    ASCNCopyNumberValueEnum: string
-): ASCNCopyNumberOpacityEnum {
-    switch (ASCNCopyNumberValueEnum) {
-        case '2':
-        case '1':
-        case '0':
-        case '-1':
-        case '-2':
-        case 'INDETERMINATE':
-            return ASCNCopyNumberOpacityEnum.OPAQUE;
-        default:
-            return ASCNCopyNumberOpacityEnum.TRANSPARENT;
-    }
-}
-
 function getASCNCopyNumberCall(
     wgdValue: string,
     totalCopyNumberValue: string,
@@ -157,66 +131,26 @@ export const ASCNCopyNumberElementTooltip: React.FunctionComponent<{
     );
 };
 
-const ASCNCopyNumberIcon: React.FunctionComponent<{
+// the total copy number as plain text, followed by a WGD tag for samples with
+// whole genome doubling
+const ASCNCopyNumberValue: React.FunctionComponent<{
     wgdValue: string;
     totalCopyNumberValue: string;
-    ascnCopyNumberValue: string;
-}> = props => {
-    return (
-        <svg width="18" height="20" className="case-label-header">
-            {props.wgdValue === ASCNCopyNumberValueEnum.WGD ? (
-                <svg>
-                    <text
-                        x="9"
-                        y="5"
-                        dominantBaseline="middle"
-                        fontWeight="bold"
-                        textAnchor="middle"
-                        fontSize="7"
-                        fill="black"
-                    >
-                        WGD
-                    </text>
-                </svg>
-            ) : null}
-            <g transform="translate(3,8)">
-                <rect
-                    width="11"
-                    height="11"
-                    rx="15%"
-                    ry="15%"
-                    stroke={getASCNCopyNumberStrokeColor(
-                        props.ascnCopyNumberValue
-                    )}
-                    stroke-width="1"
-                    fill={getASCNCopyNumberColor(props.ascnCopyNumberValue)}
-                    opacity={getASCNCopyNumberOpacity(
-                        props.ascnCopyNumberValue
-                    )}
-                />
-                <svg>
-                    <text
-                        x="5.5"
-                        y="6"
-                        dominantBaseline="middle"
-                        textAnchor="middle"
-                        fontSize={9}
-                        fill={getASCNCopyNumberTextColor(
-                            props.ascnCopyNumberValue
-                        )}
-                    >
-                        {props.totalCopyNumberValue === 'INDETERMINATE'
-                            ? '-'
-                            : props.totalCopyNumberValue}
-                    </text>
-                </svg>
-            </g>
-        </svg>
-    );
-};
+}> = props => (
+    <span className={styles.value} data-test="ascn-copy-number-value">
+        <span className={styles.number}>
+            {props.totalCopyNumberValue === 'INDETERMINATE'
+                ? '-'
+                : props.totalCopyNumberValue}
+        </span>
+        {props.wgdValue === ASCNCopyNumberValueEnum.WGD && (
+            <span className={styles.wgd}>WGD</span>
+        )}
+    </span>
+);
 
-// this will return an icon as long as ascnCopyNumberValue(icon color), wgdValue(wgd label), totalCopyNumber(icon number) are not "NA"
-// this does not enforce an limits on possible numerical values (e.g bad data such as tcn=99 would show up as 99 in the portal)
+// shows the total copy number as long as it and the WGD status are not "NA"
+// this does not enforce any limits on possible numerical values (e.g bad data such as tcn=99 would show up as 99 in the portal)
 const ASCNCopyNumberElement: React.FunctionComponent<{
     sampleId: string;
     wgdValue: string;
@@ -236,24 +170,15 @@ const ASCNCopyNumberElement: React.FunctionComponent<{
                 placement="left"
             >
                 <span>
-                    <ASCNCopyNumberIcon
+                    <ASCNCopyNumberValue
                         wgdValue={props.wgdValue}
                         totalCopyNumberValue={props.totalCopyNumberValue}
-                        ascnCopyNumberValue={props.ascnCopyNumberValue}
                     />
                 </span>
             </DefaultTooltip>
         );
     } else {
-        return (
-            <span>
-                <ASCNCopyNumberIcon
-                    wgdValue={ASCNCopyNumberValueEnum.NA}
-                    totalCopyNumberValue=""
-                    ascnCopyNumberValue={ASCNCopyNumberValueEnum.NA}
-                />
-            </span>
-        );
+        return null;
     }
 };
 

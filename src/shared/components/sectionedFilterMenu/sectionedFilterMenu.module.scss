@@ -1,0 +1,61 @@
+.menu {
+    width: 380px;
+}
+
+.match {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    /* bootstrap positions inline radios absolutely next to the label padding;
+       keep them in the flex row so they center with their labels */
+    :global(.radio-inline) {
+        display: inline-flex;
+        align-items: center;
+        margin: 0;
+        padding: 0;
+    }
+
+    input[type='radio'] {
+        position: static !important;
+        margin: 0 4px 0 0 !important;
+    }
+}
+
+.matchLabel {
+    color: #666;
+}
+
+.hint {
+    margin-top: 2px;
+    color: #666;
+    font-size: 11px;
+}
+
+.sectionTitle {
+    color: #333;
+    font-weight: bold;
+}
+
+.icon {
+    display: inline-flex;
+    justify-content: center;
+    width: 20px;
+    margin-right: 4px;
+
+    img {
+        margin-left: 0 !important;
+    }
+}
+
+/* the label fills the row up to the count, so the whole row is clickable;
+   long labels wrap instead of running into the counts */
+.checkbox {
+    flex: 1 1 auto !important;
+    white-space: normal;
+    margin-right: 6px !important;
+
+    label {
+        width: 100%;
+    }
+}

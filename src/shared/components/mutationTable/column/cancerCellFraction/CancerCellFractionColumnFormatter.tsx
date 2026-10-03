@@ -8,6 +8,7 @@ import {
     getClonalValue,
     ClonalValue,
 } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
+import ColumnLegend from 'shared/components/mutationTable/ColumnLegend';
 
 /**
  * @author Avery Wang
@@ -25,7 +26,18 @@ export const getDefaultCancerCellFractionColumnDefinition = (
 ) => {
     return {
         name: MutationTableColumnType.CANCER_CELL_FRACTION,
-        tooltip: <span>Cancer Cell Fraction</span>,
+        tooltip: (
+            <ColumnLegend
+                description={
+                    <span>
+                        Cancer Cell Fraction (CCF): the estimated fraction of
+                        cancer cells that carry the mutation (0 to 1), based on
+                        the expected number of mutant copies from
+                        allele-specific copy number analysis.
+                    </span>
+                }
+            />
+        ),
         render: (d: Mutation[]) =>
             CancerCellFractionColumnFormatter.renderFunction(
                 d,

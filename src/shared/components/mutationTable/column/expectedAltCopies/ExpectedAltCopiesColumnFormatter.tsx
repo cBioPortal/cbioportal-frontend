@@ -5,41 +5,12 @@ import SampleManager from 'pages/patientView/SampleManager';
 import { MutationTableColumnType } from '../../MutationTable';
 import ExpectedAltCopiesElement from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesElement';
 import { RESPONSE_VALUE_NA } from 'shared/constants';
+import ColumnLegend from 'shared/components/mutationTable/ColumnLegend';
+import styles from 'shared/components/mutationTable/column/ascnCopyNumber/ascnCopyNumber.module.scss';
 
 /**
  * @author Avery Wang
  */
-
-function getSampleIdToExpectedAltCopiesMap(
-    data: Mutation[]
-): { [key: string]: string } {
-    const sampleToValue: { [key: string]: string } = {};
-    for (const mutation of data) {
-        const value: string = getExpectedAltCopiesValue(mutation);
-        if (value.length > 0) {
-            sampleToValue[mutation.sampleId] = value;
-        }
-    }
-    return sampleToValue;
-}
-
-export function getDisplayValueAsString(
-    data: Mutation[],
-    sampleIds: string[]
-): string {
-    const displayValuesBySample: {
-        [key: string]: string;
-    } = getSampleIdToExpectedAltCopiesMap(data);
-    const sampleIdsWithValues = sampleIds.filter(
-        sampleId => displayValuesBySample[sampleId]
-    );
-    const displayValuesAsString = sampleIdsWithValues.map(
-        (sampleId: string) => {
-            return displayValuesBySample[sampleId];
-        }
-    );
-    return displayValuesAsString.join('; ');
-}
 
 export function getExpectedAltCopiesValue(mutation: Mutation): string {
     return hasASCNProperty(mutation, 'totalCopyNumber') &&
@@ -50,24 +21,39 @@ export function getExpectedAltCopiesValue(mutation: Mutation): string {
         : '';
 }
 
+// number of mutant copies, the value shown in the cell
+export function getExpectedAltCopies(mutation: Mutation): number | null {
+    return hasASCNProperty(mutation, 'expectedAltCopies')
+        ? mutation.alleleSpecificCopyNumber.expectedAltCopies
+        : null;
+}
+
 export const getDefaultExpectedAltCopiesColumnDefinition = (
     sampleIds?: string[],
     sampleManager?: SampleManager | null
 ) => {
     return {
         name: MutationTableColumnType.EXPECTED_ALT_COPIES,
-        tooltip: <span>Best Guess for Mutant Integer Cop #</span>,
+        tooltip: (
+            <ColumnLegend
+                description={
+                    <span>
+                        Best guess for the integer number of copies of the
+                        mutant allele, from allele-specific copy number
+                        analysis. Hover over a value for the total copy number
+                        at the locus, which is also shown in the Total Integer
+                        Copy # column.
+                    </span>
+                }
+            />
+        ),
         render: (d: Mutation[]) =>
             ExpectedAltCopiesColumnFormatter.renderFunction(
                 d,
                 sampleIds ? sampleIds : d.length > 0 ? [d[0].sampleId] : [],
                 sampleManager
             ),
-        sortBy: (d: Mutation[]) =>
-            getDisplayValueAsString(
-                d,
-                sampleIds ? sampleIds : d.length > 0 ? [d[0].sampleId] : []
-            ),
+        sortBy: (d: Mutation[]) => d.map(getExpectedAltCopies),
         download: (d: Mutation[]) =>
             ExpectedAltCopiesColumnFormatter.getExpectedAltCopiesDownload(d),
         visible: false,
@@ -110,12 +96,12 @@ export default class ExpectedAltCopiesColumnFormatter {
         }
 
         return (
-            <span data-test="eac-cell">
-                {sampleIds.map((sampleId: string, index: number) => {
+            <span data-test="eac-cell" className={styles.slots}>
+                {sampleIds.map((sampleId: string) => {
                     return (
                         <span
                             key={sampleId}
-                            style={index === 0 ? undefined : { marginLeft: 5 }}
+                            className={styles.mutantCopiesSlot}
                         >
                             <ExpectedAltCopiesElement
                                 sampleId={sampleId}

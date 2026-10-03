@@ -1,0 +1,120 @@
+.menu {
+    display: flex;
+    flex-direction: column;
+    width: 340px;
+    font-weight: normal;
+}
+
+.searchRow {
+    display: flex;
+    gap: 4px;
+}
+
+.condition {
+    flex: 0 0 150px;
+}
+
+.search {
+    flex: 1 1 auto;
+}
+
+.selectionControls {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.selectedCount {
+    color: #666;
+    margin-right: auto;
+}
+
+.countsHeader {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding: 0 42px 2px 4px;
+    border-bottom: 1px solid #ddd;
+    color: #666;
+    font-size: 11px;
+}
+
+.options {
+    max-height: 250px;
+    overflow-y: auto;
+    white-space: nowrap;
+}
+
+.option {
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    border-radius: 3px;
+
+    &:hover {
+        background: #f3f6fa;
+    }
+}
+
+.checkbox {
+    flex: 0 1 auto;
+    min-width: 0;
+    margin: 3px 0 !important;
+
+    label {
+        display: flex;
+        align-items: center;
+        min-height: 0;
+        padding-left: 0 !important;
+        font-weight: normal;
+        cursor: pointer;
+    }
+
+    /* bootstrap positions the checkbox absolutely next to the label padding;
+       keep it in the flex row so it centers with the value and the count */
+    input[type='checkbox'] {
+        cursor: pointer;
+        position: static !important;
+        flex: 0 0 auto;
+        margin: 0 6px 0 0 !important;
+    }
+}
+
+.count {
+    flex: 0 0 auto;
+    min-width: 44px;
+    margin-left: auto;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.barCell {
+    flex: 0 0 36px;
+    margin-left: 6px;
+    height: 8px;
+}
+
+.bar {
+    display: block;
+    height: 8px;
+    min-width: 1px;
+    background: #3786c2;
+}
+
+.emptyOption {
+    color: #aaa;
+
+    .bar {
+        display: none;
+    }
+}
+
+/* bottom left, next to the "Remove filter" button of the filter menu */
+.compare {
+    position: absolute;
+    left: 6px;
+    bottom: 5px;
+    display: inline-flex;
+    align-items: center;
+}
