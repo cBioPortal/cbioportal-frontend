@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import { isWsiResourceId } from 'shared/lib/ResourcePolicy';
 import { getClient } from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
 import {
@@ -6847,12 +6848,18 @@ export class StudyViewPageStore
 
     readonly resourceDefinitions = remoteData({
         await: () => [this.queriedPhysicalStudies],
+        // Pathology slides are one resource row per slide, and have their own
+        // views; they are left out of Files & Links and the resource tabs.
         invoke: () => {
-            return this.internalClient.fetchResourceDefinitionsUsingPOST({
-                studyIds: this.queriedPhysicalStudies.result.map(
-                    study => study.studyId
-                ),
-            });
+            return this.internalClient
+                .fetchResourceDefinitionsUsingPOST({
+                    studyIds: this.queriedPhysicalStudies.result.map(
+                        study => study.studyId
+                    ),
+                })
+                .then(defs =>
+                    defs.filter(def => !isWsiResourceId(def.resourceId))
+                );
         },
         onResult: defs => {
             if (defs) {
