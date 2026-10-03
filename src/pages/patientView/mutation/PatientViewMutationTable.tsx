@@ -239,6 +239,13 @@ export default class PatientViewMutationTable extends MutationTable<
                 ]
             ),
         };
+        // the ASCN copy numbers are more precise than the putative copy number
+        // call, so hide the latter by default when they are shown
+        if (
+            this._columns[MutationTableColumnType.MUTANT_TOTAL_COPY_NUM].visible
+        ) {
+            this._columns[MutationTableColumnType.COPY_NUM].visible = false;
+        }
 
         // customization for allele count columns
 
