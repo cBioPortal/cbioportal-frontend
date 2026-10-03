@@ -38,12 +38,11 @@ describe('WSI access capability', () => {
         registerWsiResourceAccessTarget('study-1', 'slide-1', 'patient-1');
     });
 
-    it('requests and caches source-bound access for one slide', async () => {
+    it('requests and caches access for one slide', async () => {
         const response = {
             ok: true,
             json: async () => ({
-                imageId: 'slide-1',
-                sourceUrl: 's3://bucket/slide-1.svs',
+                slideKey: 'slide-1',
                 tileMetadata: {
                     dimensions: { width: 100, height: 80 },
                     levels: 1,
@@ -54,7 +53,6 @@ describe('WSI access capability', () => {
                     safe_min_level: 0,
                 },
                 thumbnail: {
-                    sourceUrl: 's3://bucket/thumbs/slide-1.jpg',
                     width: 128,
                     height: 96,
                     contentType: 'image/jpeg',
@@ -74,7 +72,7 @@ describe('WSI access capability', () => {
         );
         expect(global.fetch).toHaveBeenCalledTimes(1);
         expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain(
-            '/api/wsi/v2/resources/study-1/patient-1/access?imageId=slide-1'
+            '/api/wsi/v2/resources/study-1/patient-1/access?slideKey=slide-1'
         );
     });
 
@@ -83,8 +81,7 @@ describe('WSI access capability', () => {
             ({
                 ok: true,
                 json: async () => ({
-                    imageId: 'slide-1',
-                    sourceUrl: 's3://bucket/slide-1.svs',
+                    slideKey: 'slide-1',
                     tileMetadata: {
                         dimensions: { width: 100, height: 80 },
                         levels: 1,
@@ -95,7 +92,6 @@ describe('WSI access capability', () => {
                         safe_min_level: 0,
                     },
                     thumbnail: {
-                        sourceUrl: 's3://bucket/thumbs/slide-1.jpg',
                         width: 128,
                         height: 96,
                         contentType: 'image/jpeg',
@@ -123,8 +119,7 @@ describe('WSI access capability', () => {
         const response = {
             ok: true,
             json: async () => ({
-                imageId: 'slide-1',
-                sourceUrl: 's3://bucket/slide-1.svs',
+                slideKey: 'slide-1',
                 tileMetadata: {
                     dimensions: { width: 100, height: 80 },
                     levels: 1,
@@ -140,7 +135,6 @@ describe('WSI access capability', () => {
                     thumbnail_max_decode_pixels: 4194304,
                 },
                 thumbnail: {
-                    sourceUrl: 's3://bucket/thumbs/slide-1.jpg',
                     width: 128,
                     height: 96,
                     contentType: 'image/jpeg',
@@ -158,8 +152,7 @@ describe('WSI access capability', () => {
 
     describe('registered slides', () => {
         const validAccess = {
-            imageId: 'slide-1',
-            sourceUrl: 's3://bucket/slide-1.svs',
+            slideKey: 'slide-1',
             tileMetadata: {
                 dimensions: { width: 100, height: 80 },
                 levels: 1,
@@ -170,7 +163,6 @@ describe('WSI access capability', () => {
                 safe_min_level: 0,
             },
             thumbnail: {
-                sourceUrl: 's3://bucket/thumbs/slide-1.jpg',
                 width: 128,
                 height: 96,
                 contentType: 'image/jpeg',
@@ -186,7 +178,7 @@ describe('WSI access capability', () => {
                 json: async () => validAccess,
             } as Response);
 
-        function hierarchy(imageIds: string[]): any {
+        function hierarchy(slideKeys: string[]): any {
             return {
                 patient_id: 'patient-1',
                 samples: [
@@ -196,8 +188,8 @@ describe('WSI access capability', () => {
                             {
                                 blocks: [
                                     {
-                                        slides: imageIds.map(imageId => ({
-                                            image_id: imageId,
+                                        slides: slideKeys.map(slideKey => ({
+                                            slide_key: slideKey,
                                         })),
                                     },
                                 ],
@@ -222,7 +214,7 @@ describe('WSI access capability', () => {
             clearWsiResourceAccessTargets();
         });
 
-        it('rejects an unknown image before any request', async () => {
+        it('rejects an unknown slide before any request', async () => {
             registerWsiResourceAccess('study-1', hierarchy(['slide-1']));
 
             await expect(
@@ -247,22 +239,93 @@ describe('WSI access capability', () => {
                 getWsiSlideAccess('study-1', 'slide-2')
             ).rejects.toThrow('WSI resource selection is unavailable');
             expect(requestedUrls()).toEqual([
-                'study-1/patient-1/access?imageId=slide-1',
+                'study-1/patient-1/access?slideKey=slide-1',
             ]);
         });
 
-        it('names the slide by its encoded image ID', async () => {
-            registerWsiResourceAccess('study-1', hierarchy(['IMG 7/A&B']));
-            jest.spyOn(global, 'fetch').mockResolvedValue(response(200));
+        it('names the slide by its opaque slide key', async () => {
+            const key = '0123456789abcdef0123456789abcdef';
+            registerWsiResourceAccess('study-1', hierarchy([key]));
+            jest.spyOn(global, 'fetch').mockResolvedValue({
+                ok: true,
+                status: 200,
+                json: async () => ({ ...validAccess, slideKey: key }),
+            } as Response);
 
-            await getWsiSlideAccess('study-1', 'IMG 7/A&B');
+            await expect(getWsiSlideAccess('study-1', key)).resolves.toEqual(
+                expect.objectContaining({ slideKey: key })
+            );
 
             expect(requestedUrls()).toEqual([
-                'study-1/patient-1/access?imageId=IMG%207%2FA%26B',
+                `study-1/patient-1/access?slideKey=${key}`,
             ]);
+            const url = String((global.fetch as jest.Mock).mock.calls[0][0]);
+            expect(url).not.toMatch(/imageId|image_id/i);
         });
 
-        it('adds the image ID after the host builds the path', async () => {
+        it('rejects a response for a different slide key', async () => {
+            registerWsiResourceAccess('study-1', hierarchy(['slide-1']));
+            jest.spyOn(global, 'fetch').mockResolvedValue({
+                ok: true,
+                status: 200,
+                json: async () => ({ ...validAccess, slideKey: 'slide-2' }),
+            } as Response);
+
+            await expect(
+                getWsiSlideAccess('study-1', 'slide-1')
+            ).rejects.toThrow('Invalid WSI slide access response');
+        });
+
+        it('rejects a response without a slide key', async () => {
+            registerWsiResourceAccess('study-1', hierarchy(['slide-1']));
+            const { slideKey, ...withoutKey } = validAccess;
+            jest.spyOn(global, 'fetch').mockResolvedValue({
+                ok: true,
+                status: 200,
+                json: async () => withoutKey,
+            } as Response);
+
+            await expect(
+                getWsiSlideAccess('study-1', 'slide-1')
+            ).rejects.toThrow('Invalid WSI slide access response');
+        });
+
+        it('keeps only the contract fields of the response', async () => {
+            registerWsiResourceAccess('study-1', hierarchy(['slide-1']));
+            jest.spyOn(global, 'fetch').mockResolvedValue({
+                ok: true,
+                status: 200,
+                json: async () => ({
+                    ...validAccess,
+                    imageId: 'source-image',
+                    sourceUrl: 's3://bucket/source-image.svs',
+                    thumbnail: {
+                        ...validAccess.thumbnail,
+                        sourceUrl: 's3://bucket/source-image.jpg',
+                    },
+                }),
+            } as Response);
+
+            const access = await getWsiSlideAccess('study-1', 'slide-1');
+
+            expect(Object.keys(access).sort()).toEqual([
+                'accessToken',
+                'expiresAt',
+                'expiresIn',
+                'slideKey',
+                'thumbnail',
+                'tileMetadata',
+                'tokenType',
+            ]);
+            expect(Object.keys(access.thumbnail).sort()).toEqual([
+                'contentType',
+                'height',
+                'width',
+            ]);
+            expect(JSON.stringify(access)).not.toContain('source-image');
+        });
+
+        it('adds the slide key after the host builds the path', async () => {
             // The portal's URL builder encodes a "?" inside the path.
             configureWsiViewerRuntime({
                 buildApiUrl: (path: string) => `/${path.replace(/\?/g, '%3F')}`,
@@ -279,7 +342,7 @@ describe('WSI access capability', () => {
             expect(requested.pathname).toBe(
                 '/api/wsi/v2/resources/study-1/patient-1/access'
             );
-            expect(requested.searchParams.get('imageId')).toBe('slide-1');
+            expect(requested.searchParams.get('slideKey')).toBe('slide-1');
         });
 
         it('reports a 404 once, without a retry', async () => {

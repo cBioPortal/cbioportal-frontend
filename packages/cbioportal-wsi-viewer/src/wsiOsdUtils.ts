@@ -33,7 +33,6 @@ export function buildOsdOptions({
     meta,
     baseUrl,
     accessToken,
-    sourceUrl,
     prefixUrl,
 }: {
     element: HTMLElement;
@@ -41,7 +40,6 @@ export function buildOsdOptions({
     meta: TileMetadata;
     baseUrl: string;
     accessToken?: string;
-    sourceUrl: string;
     /** OpenSeadragon's image prefix; its own default when unset. */
     prefixUrl?: string;
 }) {
@@ -71,8 +69,8 @@ export function buildOsdOptions({
         imageLoaderLimit: OSD_INITIAL_IMAGE_LOADER_LIMIT,
         tileRetryMax: OSD_TILE_RETRY_MAX,
         tileRetryDelay: OSD_TILE_RETRY_DELAY_MS,
-        loadTilesWithAjax: Boolean(accessToken || sourceUrl),
-        ajaxHeaders: buildWsiRequestHeaders(sourceUrl, accessToken),
+        loadTilesWithAjax: Boolean(accessToken),
+        ajaxHeaders: buildWsiRequestHeaders(accessToken),
         tileSources: buildOsdTileSource(meta, baseUrl),
     };
 }
@@ -122,24 +120,19 @@ export function reopenOsdViewer({
     meta,
     baseUrl,
     accessToken,
-    sourceUrl,
 }: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     osdViewer: any;
     meta: TileMetadata;
     baseUrl: string;
     accessToken?: string;
-    sourceUrl: string;
 }): void {
-    const loadTilesWithAjax = Boolean(accessToken || sourceUrl);
+    const loadTilesWithAjax = Boolean(accessToken);
     osdViewer.loadTilesWithAjax = loadTilesWithAjax;
     if (osdViewer.navigator) {
         osdViewer.navigator.loadTilesWithAjax = loadTilesWithAjax;
     }
-    osdViewer.setAjaxHeaders(
-        buildWsiRequestHeaders(sourceUrl, accessToken),
-        true
-    );
+    osdViewer.setAjaxHeaders(buildWsiRequestHeaders(accessToken), true);
     if (osdViewer.imageLoader) {
         osdViewer.imageLoader.jobLimit = OSD_INITIAL_IMAGE_LOADER_LIMIT;
     }
@@ -162,7 +155,6 @@ export function ensureNavigator({
     meta,
     baseUrl,
     accessToken,
-    sourceUrl,
 }: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     osdViewer: any;
@@ -171,7 +163,6 @@ export function ensureNavigator({
     meta: TileMetadata;
     baseUrl: string;
     accessToken?: string;
-    sourceUrl: string;
 }) {
     if (!osdViewer || osdViewer.navigator) {
         return osdViewer?.navigator ?? null;
@@ -187,8 +178,8 @@ export function ensureNavigator({
         opacity: 0.8,
         borderColor: '#555',
         displayRegionColor: '#900',
-        ajaxHeaders: buildWsiRequestHeaders(sourceUrl, accessToken),
-        loadTilesWithAjax: Boolean(accessToken || sourceUrl),
+        ajaxHeaders: buildWsiRequestHeaders(accessToken),
+        loadTilesWithAjax: Boolean(accessToken),
         tileSources: buildOsdTileSource(meta, baseUrl),
     });
     offsetNavigatorElement(osdViewer);

@@ -1,5 +1,6 @@
 export interface Slide {
-    image_id: string;
+    /** Opaque 32-hex de-identified slide key (never the source image id). */
+    slide_key: string;
     stain_name: string;
     stain_group: string;
     is_hne: boolean;
@@ -7,7 +8,6 @@ export interface Slide {
     magnification: string;
     file_size_bytes: string;
     can_serve_tiles: boolean;
-    barcode: string;
     block_label: string;
     block_number: string;
     /** Anatomical site / part description propagated from the parent Part (e.g. "Lung, left") */
@@ -41,7 +41,7 @@ export type WsiTimepointSelection = number | 'undated';
 export type WsiStainFilter = 'all' | 'hne' | 'ihc' | 'other' | 'unknown';
 export type PathologySlideMatchFilter = 'all' | 'part' | 'block' | 'unmatched';
 export interface SlideAssociation {
-    image_id: string;
+    slide_key: string;
     sample_id: string | null;
     match_level: MatchLevel;
     specimen_key: string;
@@ -98,9 +98,8 @@ export interface PatientHierarchy {
 
 /** Wire format returned by the normalized WSI v2 hierarchy endpoint. */
 export interface WsiV2Slide {
-    imageId: string;
-    resourceId?: string;
-    resourceDataId?: string;
+    /** Opaque 32-hex de-identified slide key. */
+    slideKey: string;
     stainName: string;
     stainGroup: string;
     isHne: boolean;
@@ -108,7 +107,6 @@ export interface WsiV2Slide {
     magnification: string;
     fileSizeBytes: number | null;
     canServeTiles: boolean;
-    barcode: string;
     /** Nullable in older materialized WSI snapshots; derive from the flags. */
     slideType: string | null;
     sampleId: string | null;
@@ -176,11 +174,9 @@ export interface TileMetadata {
 }
 
 export interface WsiSlideAccess {
-    imageId: string;
-    sourceUrl: string;
+    slideKey: string;
     tileMetadata: TileMetadata;
     thumbnail: {
-        sourceUrl: string;
         width: number;
         height: number;
         contentType: string;

@@ -7,7 +7,7 @@ import {
 } from './wsiViewerTypes';
 
 const slide: Slide = {
-    image_id: 'slide-1',
+    slide_key: 'slide-1',
     stain_name: 'H&E',
     stain_group: 'Histology',
     is_hne: true,
@@ -15,7 +15,6 @@ const slide: Slide = {
     magnification: '20x',
     file_size_bytes: '100000000',
     can_serve_tiles: true,
-    barcode: 'S-1234567-T01-1-1-1-1',
     block_label: 'A1',
     block_number: '1',
 };
@@ -49,10 +48,10 @@ function association(
     specimen: Partial<SlideAssociation> = {}
 ): SlideAssociation {
     return {
-        image_id: slide.image_id,
+        slide_key: slide.slide_key,
         sample_id: 'S-1',
         match_level: matchLevel,
-        specimen_key: `${matchLevel}::${slide.image_id}`,
+        specimen_key: `${matchLevel}::${slide.slide_key}`,
         slide_type: 'H&E',
         can_serve_tiles: true,
         ...specimen,
@@ -103,6 +102,27 @@ describe('buildPathRows', () => {
         expect(rows.find(row => row.label === 'Specimen')?.valueTip).toBe(
             'Cut from block 1 of specimen part 6 (Specimen 6)'
         );
+    });
+
+    it('describes the sample by block and type only', () => {
+        const rows = buildPathRows(
+            slide,
+            sample,
+            'P-1',
+            'study-1',
+            association('BLOCK')
+        );
+
+        const sampleRow = rows.find(row => row.label === 'Sample');
+        expect(sampleRow?.labelTip).toBe(
+            'Click for cBioPortal sample view — hover for block/type info'
+        );
+        expect(sampleRow?.valueTip).toBe('Block: A1\nType: Primary');
+        rows.forEach(row => {
+            expect(`${row.labelTip} ${row.valueTip} ${row.value}`).not.toMatch(
+                /Accession|Barcode|Image ID|slide-1/
+            );
+        });
     });
 
     it('does not show a matching row for unmatched slides', () => {
@@ -188,7 +208,7 @@ describe('buildPathRows', () => {
 describe('buildPathRows timeline row', () => {
     const procedureSlide: Slide = {
         ...slide,
-        image_id: 'slide-timeline',
+        slide_key: 'slide-timeline',
         slide_timepoint_days: -242,
         slide_timepoint_source: 'Procedure date',
     };

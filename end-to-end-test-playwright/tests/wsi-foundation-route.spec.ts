@@ -4,7 +4,7 @@ import {
     installFoundationMocks,
     STUDY_ID as MOCK_STUDY_ID,
     PATIENT_ID as MOCK_PATIENT_ID,
-    IMAGE_ID as MOCK_IMAGE_ID,
+    SLIDE_KEY as MOCK_SLIDE_KEY,
 } from './wsi-foundation-mocks';
 
 const baseUrl = process.env.WSI_VIEWER_BASE_URL ?? '';
@@ -130,7 +130,7 @@ if (process.env.WSI_CHILD_CONTRACT === '1') {
         page.on('pageerror', error => pageErrors.push(error.message));
 
         await page.goto(
-            `/wsi/patient/${MOCK_PATIENT_ID}?studyId=${MOCK_STUDY_ID}#wsi:slide=${MOCK_IMAGE_ID}&x=256&y=256&z=0.75`
+            `/wsi/patient/${MOCK_PATIENT_ID}?studyId=${MOCK_STUDY_ID}#wsi:slide=${MOCK_SLIDE_KEY}&x=256&y=256&z=0.75`
         );
 
         await expect(page.getByTestId('wsi-route-unavailable')).toHaveCount(0);
@@ -138,13 +138,13 @@ if (process.env.WSI_CHILD_CONTRACT === '1') {
             page.getByTestId('wsi-filtered-slide-count')
         ).toHaveText('Showing 1 slide', { timeout: 30000 });
         await expect(
-            page.getByTestId(`wsi-slide-item-${MOCK_IMAGE_ID}`)
+            page.getByTestId(`wsi-slide-item-${MOCK_SLIDE_KEY}`)
         ).toBeVisible();
         await expect(page.getByTitle('Zoom in')).toBeVisible({
             timeout: 30000,
         });
         await expect(page.getByTitle('Fit to view')).toBeVisible();
-        expect(new URL(page.url()).hash).toContain(`slide=${MOCK_IMAGE_ID}`);
+        expect(new URL(page.url()).hash).toContain(`slide=${MOCK_SLIDE_KEY}`);
         expect(enrichmentRequests).toEqual([]);
         expect(pageErrors).toEqual([]);
     });

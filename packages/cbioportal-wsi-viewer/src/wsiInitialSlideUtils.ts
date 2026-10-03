@@ -10,8 +10,8 @@ export interface InitialSlideOptions {
     preferredSampleId?: string;
     /** Slide restored from the URL hash; takes precedence over all others. */
     preferredSlideId?: string;
-    /** Slide named by an `imageId` link; used when no hash slide matches. */
-    requestedImageId?: string;
+    /** Slide named by a `slideKey` link; used when no hash slide matches. */
+    requestedSlideKey?: string;
     stainFilter: WsiStainFilter;
 }
 
@@ -45,14 +45,14 @@ function chooseInitialServableSlideInternal(
 
         if (
             options.preferredSlideId &&
-            entry.slide.image_id === options.preferredSlideId
+            entry.slide.slide_key === options.preferredSlideId
         ) {
             return entry;
         }
 
         if (
-            options.requestedImageId &&
-            entry.slide.image_id === options.requestedImageId
+            options.requestedSlideKey &&
+            entry.slide.slide_key === options.requestedSlideKey
         ) {
             requested ??= entry;
         }

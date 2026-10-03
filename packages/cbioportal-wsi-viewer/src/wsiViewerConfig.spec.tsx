@@ -93,7 +93,7 @@ describe('WSI viewer runtime', () => {
         expect(
             fetchImpl
         ).toHaveBeenCalledWith(
-            'https://portal.example/beta/api/wsi/v2/resources/study-1/patient%201/access?imageId=slide-1',
+            'https://portal.example/beta/api/wsi/v2/resources/study-1/patient%201/access?slideKey=slide-1',
             { credentials: 'same-origin', cache: 'no-store' }
         );
     });

@@ -19,23 +19,23 @@ const metadataCache = new Map<string, CachedMetadataEntry>();
 
 function buildMetadataCacheKey(
     tileServerBase: string,
-    imageId: string,
+    slideKey: string,
     studyId?: string,
     authScope?: string
 ): string {
     return `${normalizeWsiAuthScope(authScope)}::${tileServerBase}::${studyId ||
-        ''}::${imageId}`;
+        ''}::${slideKey}`;
 }
 
 function getMetadataStorageKey(
     tileServerBase: string,
-    imageId: string,
+    slideKey: string,
     studyId?: string,
     authScope?: string
 ): string {
     return `${METADATA_STORAGE_KEY_PREFIX}${buildMetadataCacheKey(
         tileServerBase,
-        imageId,
+        slideKey,
         studyId,
         authScope
     )}`;
@@ -43,7 +43,7 @@ function getMetadataStorageKey(
 
 function readPersistedMetadata(
     tileServerBase: string,
-    imageId: string,
+    slideKey: string,
     studyId?: string,
     authScope?: string
 ): CachedMetadataEntry | undefined {
@@ -55,7 +55,7 @@ function readPersistedMetadata(
     try {
         const storageKey = getMetadataStorageKey(
             tileServerBase,
-            imageId,
+            slideKey,
             studyId,
             authScope
         );
@@ -96,7 +96,7 @@ function readPersistedMetadata(
 
 function persistMetadata(
     tileServerBase: string,
-    imageId: string,
+    slideKey: string,
     expiresAt: number,
     metadata: TileMetadata,
     studyId?: string,
@@ -110,7 +110,7 @@ function persistMetadata(
     try {
         const storageKey = getMetadataStorageKey(
             tileServerBase,
-            imageId,
+            slideKey,
             studyId,
             authScope
         );
@@ -128,13 +128,13 @@ function persistMetadata(
 
 function getOrCreateMetadataRequest(
     tileServerBase: string,
-    imageId: string,
+    slideKey: string,
     studyId?: string,
     authScope?: string
 ): Promise<TileMetadata> {
     const cacheKey = buildMetadataCacheKey(
         tileServerBase,
-        imageId,
+        slideKey,
         studyId,
         authScope
     );
@@ -146,7 +146,7 @@ function getOrCreateMetadataRequest(
 
     const persisted = readPersistedMetadata(
         tileServerBase,
-        imageId,
+        slideKey,
         studyId,
         authScope
     );
@@ -165,13 +165,13 @@ function getOrCreateMetadataRequest(
         metadataCache.set(cacheKey, { expiresAt, promise });
         return promise;
     }
-    const promise = getWsiSlideAccess(studyId, imageId, false, authScope)
+    const promise = getWsiSlideAccess(studyId, slideKey, false, authScope)
         .then(access => access.tileMetadata)
         .then(metadata => {
             validateWsiTileMetadata(metadata);
             persistMetadata(
                 tileServerBase,
-                imageId,
+                slideKey,
                 expiresAt,
                 metadata,
                 studyId,
@@ -196,44 +196,49 @@ function getOrCreateMetadataRequest(
 
 export async function fetchSlideMetadataCachedReadOnly(
     tileServerBase: string,
-    imageId: string,
+    slideKey: string,
     signal?: AbortSignal,
     studyId?: string,
     authScope?: string
 ): Promise<TileMetadata> {
     return withAbort(
-        getOrCreateMetadataRequest(tileServerBase, imageId, studyId, authScope),
+        getOrCreateMetadataRequest(
+            tileServerBase,
+            slideKey,
+            studyId,
+            authScope
+        ),
         signal
     );
 }
 
 export function hasCachedSlideMetadata(
     tileServerBase: string,
-    imageId: string,
+    slideKey: string,
     studyId?: string,
     authScope?: string
 ): boolean {
     const cacheKey = buildMetadataCacheKey(
         tileServerBase,
-        imageId,
+        slideKey,
         studyId,
         authScope
     );
     const cached = metadataCache.get(cacheKey);
     return (
         (!!cached && cached.expiresAt > Date.now()) ||
-        !!readPersistedMetadata(tileServerBase, imageId, studyId, authScope)
+        !!readPersistedMetadata(tileServerBase, slideKey, studyId, authScope)
     );
 }
 
 export function evictSlideMetadataCache(
     tileServerBase: string,
-    imageId: string,
+    slideKey: string,
     studyId?: string,
     authScope?: string
 ): void {
     metadataCache.delete(
-        buildMetadataCacheKey(tileServerBase, imageId, studyId, authScope)
+        buildMetadataCacheKey(tileServerBase, slideKey, studyId, authScope)
     );
 
     const storage = getWsiSessionStorage();
@@ -243,7 +248,7 @@ export function evictSlideMetadataCache(
 
     try {
         storage.removeItem(
-            getMetadataStorageKey(tileServerBase, imageId, studyId, authScope)
+            getMetadataStorageKey(tileServerBase, slideKey, studyId, authScope)
         );
     } catch (_) {
         // Ignore storage access failures.

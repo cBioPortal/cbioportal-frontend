@@ -12,7 +12,7 @@ import {
 import {
     countServableSlidesForSample,
     getOrderedServableSlidesForSampleReadOnly,
-    getServableSlideAssociationsByImageIdReadOnly,
+    getServableSlideAssociationsBySlideKeyReadOnly,
     getWsiTimepointOptions,
     matchesWsiStainFilter,
     matchesWsiTimepointFilter,
@@ -21,7 +21,6 @@ import {
 } from './wsiSlideUtils';
 import {
     abbreviatePartDesc,
-    barcodeSection,
     cleanStain,
     compareSamplesByTimepoint,
     decodeBlockCode,
@@ -195,7 +194,7 @@ function buildFilteredSampleEntry(
     sample: Sample,
     stainFilter: WsiStainFilter,
     matchFilter: PathologySlideMatchFilter,
-    associationsByImageId: Map<string, SlideAssociation>,
+    associationsBySlideKey: Map<string, SlideAssociation>,
     slideIdFilter?: Set<string>,
     timepointDays?: WsiTimepointSelection
 ): FilteredSampleEntry | null {
@@ -206,10 +205,10 @@ function buildFilteredSampleEntry(
     const filteredSlideIds = new Set<string>();
 
     getOrderedServableSlidesForSampleReadOnly(sample).forEach(entry => {
-        if (slideIdFilter && !slideIdFilter.has(entry.slide.image_id)) {
+        if (slideIdFilter && !slideIdFilter.has(entry.slide.slide_key)) {
             return;
         }
-        const association = associationsByImageId.get(entry.slide.image_id);
+        const association = associationsBySlideKey.get(entry.slide.slide_key);
         if (
             !matchesSlideFilters(
                 entry.slide,
@@ -223,7 +222,7 @@ function buildFilteredSampleEntry(
         }
 
         filteredSlides.push(entry);
-        filteredSlideIds.add(entry.slide.image_id);
+        filteredSlideIds.add(entry.slide.slide_key);
     });
 
     if (!filteredSlides.length) {
@@ -262,14 +261,14 @@ function WsiNavPanelComponent({
     sectionTitleStyle,
     onHide,
 }: WsiNavPanelProps) {
-    const associationsByImageId = React.useMemo(
+    const associationsBySlideKey = React.useMemo(
         () =>
-            getServableSlideAssociationsByImageIdReadOnly(
+            getServableSlideAssociationsBySlideKeyReadOnly(
                 hierarchy.slide_associations
             ),
         [hierarchy.slide_associations]
     );
-    const selectedSlideId = selectedSlide?.image_id;
+    const selectedSlideId = selectedSlide?.slide_key;
     const unscopedSampleEntries = React.useMemo(
         () =>
             hierarchy.samples.reduce<FilteredSampleEntry[]>(
@@ -282,7 +281,7 @@ function WsiNavPanelComponent({
                         sample,
                         'all',
                         'all',
-                        associationsByImageId
+                        associationsBySlideKey
                     );
 
                     if (entry) {
@@ -293,7 +292,7 @@ function WsiNavPanelComponent({
                 },
                 []
             ),
-        [associationsByImageId, hierarchy.samples]
+        [associationsBySlideKey, hierarchy.samples]
     );
     const allSampleEntries = React.useMemo(() => {
         if (!sampleIdFilter && !slideIdFilter) {
@@ -311,7 +310,7 @@ function WsiNavPanelComponent({
 
                 const filteredSlides = slideIdFilter
                     ? entry.filteredSlides.filter(({ slide }) =>
-                          slideIdFilter.has(slide.image_id)
+                          slideIdFilter.has(slide.slide_key)
                       )
                     : entry.filteredSlides;
                 if (!filteredSlides.length) {
@@ -322,7 +321,7 @@ function WsiNavPanelComponent({
                     sample: entry.sample,
                     filteredSlides,
                     filteredSlideIds: new Set(
-                        filteredSlides.map(({ slide }) => slide.image_id)
+                        filteredSlides.map(({ slide }) => slide.slide_key)
                     ),
                 });
                 return entries;
@@ -337,7 +336,7 @@ function WsiNavPanelComponent({
                     ({ slide }) =>
                         matchesSlideFilters(
                             slide,
-                            associationsByImageId.get(slide.image_id),
+                            associationsBySlideKey.get(slide.slide_key),
                             stainFilter,
                             matchFilter,
                             timepointDays
@@ -348,7 +347,7 @@ function WsiNavPanelComponent({
                         sample: entry.sample,
                         filteredSlides,
                         filteredSlideIds: new Set(
-                            filteredSlides.map(({ slide }) => slide.image_id)
+                            filteredSlides.map(({ slide }) => slide.slide_key)
                         ),
                     });
                 }
@@ -356,7 +355,7 @@ function WsiNavPanelComponent({
             }, []),
         [
             allSampleEntries,
-            associationsByImageId,
+            associationsBySlideKey,
             matchFilter,
             stainFilter,
             timepointDays,
@@ -427,20 +426,20 @@ function WsiNavPanelComponent({
             allSampleEntries.flatMap(entry =>
                 entry.filteredSlides.map(({ slide }) => ({
                     slide,
-                    association: associationsByImageId.get(slide.image_id),
+                    association: associationsBySlideKey.get(slide.slide_key),
                 }))
             ),
-        [allSampleEntries, associationsByImageId]
+        [allSampleEntries, associationsBySlideKey]
     );
     const facetSlideEntries = React.useMemo(
         () =>
             unscopedSampleEntries.flatMap(entry =>
                 entry.filteredSlides.map(({ slide }) => ({
                     slide,
-                    association: associationsByImageId.get(slide.image_id),
+                    association: associationsBySlideKey.get(slide.slide_key),
                 }))
             ),
-        [associationsByImageId, unscopedSampleEntries]
+        [associationsBySlideKey, unscopedSampleEntries]
     );
     const timepointOptions = React.useMemo(
         () => getWsiTimepointOptions(facetSlideEntries),
@@ -852,7 +851,7 @@ function WsiNavPanelComponent({
                             selectedSlide={selectedSlide}
                             stainFilter={stainFilter}
                             matchFilter={matchFilter}
-                            associationsByImageId={associationsByImageId}
+                            associationsBySlideKey={associationsBySlideKey}
                             sampleTimeline={
                                 sample.sample_id === 'UNMATCHED'
                                     ? undefined
@@ -893,7 +892,7 @@ function SampleNode({
     filteredSlides,
     stainFilter,
     matchFilter,
-    associationsByImageId,
+    associationsBySlideKey,
     sampleTimeline,
     onSelectSlide,
     tileServerBase,
@@ -908,7 +907,7 @@ function SampleNode({
     selectedSlide: Slide | null;
     stainFilter: WsiStainFilter;
     matchFilter: PathologySlideMatchFilter;
-    associationsByImageId: Map<string, SlideAssociation>;
+    associationsBySlideKey: Map<string, SlideAssociation>;
     sampleTimeline?: WsiSampleTimeline;
     onSelectSlide: (slide: Slide, sample: Sample) => void;
     tileServerBase?: string;
@@ -1101,17 +1100,17 @@ function SampleNode({
                 <div style={{ paddingBottom: 4 }}>
                     {servableSlides.map(({ slide, blockLabel }) => (
                         <SlideItem
-                            key={slide.image_id}
+                            key={slide.slide_key}
                             slide={slide}
                             sample={sample}
                             blockLabel={blockLabel}
-                            association={associationsByImageId.get(
-                                slide.image_id
+                            association={associationsBySlideKey.get(
+                                slide.slide_key
                             )}
                             multiPart={multiPart}
                             sequencingDays={sampleTimeline?.sequencingDays}
                             selected={
-                                selectedSlide?.image_id === slide.image_id
+                                selectedSlide?.slide_key === slide.slide_key
                             }
                             onSelectSlide={onSelectSlide}
                             tileServerBase={tileServerBase}
@@ -1134,7 +1133,7 @@ const MemoSampleNode = React.memo(SampleNode, (prev, next) => {
         prev.stainFilter !== next.stainFilter ||
         prev.matchFilter !== next.matchFilter ||
         prev.filteredSlides !== next.filteredSlides ||
-        prev.associationsByImageId !== next.associationsByImageId ||
+        prev.associationsBySlideKey !== next.associationsBySlideKey ||
         prev.sampleTimeline !== next.sampleTimeline ||
         prev.onSelectSlide !== next.onSelectSlide ||
         prev.tileServerBase !== next.tileServerBase ||
@@ -1147,7 +1146,7 @@ const MemoSampleNode = React.memo(SampleNode, (prev, next) => {
 
     if (
         next.containsSelectedSlide &&
-        prev.selectedSlide?.image_id !== next.selectedSlide?.image_id
+        prev.selectedSlide?.slide_key !== next.selectedSlide?.slide_key
     ) {
         return false;
     }
@@ -1187,17 +1186,15 @@ function SlideItem({
     const dotColor = getStainDotColor(slide, theme);
     const mag = slide.magnification || '';
     const sz = fmtMB(slide.file_size_bytes);
-    const section = barcodeSection(slide.barcode);
     const partDesc = multiPart
         ? abbreviatePartDesc(slide.part_description)
         : null;
     const blockMeaning = !partDesc ? decodeBlockCode(blockLabel) : null;
     const primaryLabel = isHE
-        ? blockLabel || section || cleanStain(slide.stain_name)
+        ? blockLabel || cleanStain(slide.stain_name)
         : cleanStain(slide.stain_name);
     const subTokens: string[] = [];
     if (!isHE && blockLabel) subTokens.push(blockLabel);
-    if (section) subTokens.push(section);
     const rawGroup = (slide.stain_group || '').toLowerCase();
     const rhsStain =
         isHE && (rawGroup === '' || rawGroup.startsWith('h&e'))
@@ -1222,16 +1219,13 @@ function SlideItem({
 
     const tooltipLines: string[] = [];
     if (!slide.can_serve_tiles) tooltipLines.push('⚠ Tiles not yet available');
-    if (slide.barcode) tooltipLines.push(`Barcode: ${slide.barcode}`);
     if (slide.stain_name) tooltipLines.push(`Stain: ${slide.stain_name}`);
     if (blockLabel) tooltipLines.push(`Block: ${blockLabel}`);
     if (slide.part_description) {
         tooltipLines.push(`Part: ${slide.part_description}`);
     }
-    if (section) tooltipLines.push(`Section: ${section}`);
     if (mag) tooltipLines.push(`Magnification: ${mag}`);
     if (sz !== '—') tooltipLines.push(`Size: ${sz}`);
-    tooltipLines.push(`Image ID: ${slide.image_id}`);
     if (timepointTooltip) tooltipLines.push(timepointTooltip);
 
     const bg = selected
@@ -1245,7 +1239,7 @@ function SlideItem({
 
     return (
         <div
-            data-testid={`wsi-slide-item-${slide.image_id}`}
+            data-testid={`wsi-slide-item-${slide.slide_key}`}
             onClick={() => {
                 if (!slide.can_serve_tiles || selected) {
                     return;
@@ -1268,7 +1262,7 @@ function SlideItem({
             aria-label={
                 tooltipLines.length > 0
                     ? tooltipLines.join(', ')
-                    : `Slide ${slide.image_id}`
+                    : primaryLabel || 'Slide'
             }
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
@@ -1289,7 +1283,7 @@ function SlideItem({
             {slide.can_serve_tiles && tileServerBase && (
                 <WsiSlideThumbnail
                     tileServerBase={tileServerBase}
-                    imageId={slide.image_id}
+                    slideKey={slide.slide_key}
                     studyId={studyId}
                     authScope={authScope}
                 />
@@ -1351,7 +1345,7 @@ function SlideItem({
                 )}
                 {timepoint && (
                     <div
-                        data-testid={`wsi-slide-timepoint-${slide.image_id}`}
+                        data-testid={`wsi-slide-timepoint-${slide.slide_key}`}
                         title={timepointTooltip}
                         style={{
                             fontSize: 10,
@@ -1366,7 +1360,7 @@ function SlideItem({
             <div style={{ flexShrink: 0, textAlign: 'right', lineHeight: 1.5 }}>
                 {matchBadge && (
                     <div
-                        data-testid={`wsi-slide-match-badge-${slide.image_id}`}
+                        data-testid={`wsi-slide-match-badge-${slide.slide_key}`}
                         title={`${matchBadge.label}-matched to this IMPACT sample`}
                         style={{
                             display: 'inline-block',
@@ -1407,12 +1401,12 @@ function SlideItem({
 
 function WsiSlideThumbnail({
     tileServerBase,
-    imageId,
+    slideKey,
     studyId,
     authScope,
 }: {
     tileServerBase: string;
-    imageId: string;
+    slideKey: string;
     studyId?: string;
     authScope?: string;
 }) {
@@ -1463,14 +1457,14 @@ function WsiSlideThumbnail({
             void scheduleThumbnailRequest(async () => {
                 const access = await getWsiSlideAccess(
                     studyId || '',
-                    imageId,
+                    slideKey,
                     false,
                     authScope
                 );
                 const blob = await fetchWsiThumbnailBlob(
                     tileServerBase,
                     studyId || '',
-                    imageId,
+                    slideKey,
                     access,
                     requestController.signal,
                     requestAttempt > 1 ? 'reload' : 'default',
@@ -1538,7 +1532,7 @@ function WsiSlideThumbnail({
             }
             revokeObjectUrl();
         };
-    }, [imageId, studyId, tileServerBase]);
+    }, [slideKey, studyId, tileServerBase]);
 
     if (hidden) {
         return null;
@@ -1547,7 +1541,7 @@ function WsiSlideThumbnail({
     return (
         <div
             ref={hostRef}
-            data-testid={`wsi-slide-thumbnail-${imageId}`}
+            data-testid={`wsi-slide-thumbnail-${slideKey}`}
             aria-hidden="true"
             style={{
                 width: THUMBNAIL_WIDTH,

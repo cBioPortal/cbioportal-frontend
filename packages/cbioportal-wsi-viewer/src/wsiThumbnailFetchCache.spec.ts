@@ -10,11 +10,9 @@ import { WsiSlideAccess } from './wsiViewerTypes';
 
 function makeAccess(overrides: Partial<WsiSlideAccess> = {}): WsiSlideAccess {
     return {
-        imageId: 'slide-1',
-        sourceUrl: 's3://slides/slide-1.svs',
+        slideKey: 'slide-1',
         tileMetadata: {} as WsiSlideAccess['tileMetadata'],
         thumbnail: {
-            sourceUrl: 's3://slides/slide-1.jpg',
             width: 128,
             height: 88,
             contentType: 'image/jpeg',
@@ -82,7 +80,6 @@ describe('wsiThumbnailFetchCache', () => {
                 cache: 'default',
                 headers: {
                     Authorization: 'Bearer token-1',
-                    'X-WSI-Source': 's3://slides/slide-1.jpg',
                 },
             })
         );

@@ -18,9 +18,7 @@ jest.mock('./wsiAuth', () => ({
     getWsiSlideAccess: jest.fn(() =>
         Promise.resolve({
             accessToken: 'test-token',
-            sourceUrl: 's3://slides/test.svs',
             thumbnail: {
-                sourceUrl: 's3://slides/test.jpg',
                 width: 128,
                 height: 96,
                 contentType: 'image/jpeg',
@@ -56,7 +54,7 @@ const sectionTitleStyle: React.CSSProperties = {};
 
 function makeSlide(overrides: Partial<Slide> = {}): Slide {
     return {
-        image_id: '1000',
+        slide_key: '1000',
         stain_name: 'H&E',
         stain_group: 'Histology',
         is_hne: true,
@@ -64,7 +62,6 @@ function makeSlide(overrides: Partial<Slide> = {}): Slide {
         magnification: '20x',
         file_size_bytes: '100000000',
         can_serve_tiles: true,
-        barcode: 'S-1234567-T01-1-1-1-1',
         block_label: 'A1',
         block_number: '1',
         ...overrides,
@@ -139,7 +136,6 @@ describe('WsiNavPanel', () => {
         mockGetWsiSlideAccess.mockReset();
         mockGetWsiSlideAccess.mockResolvedValue({
             accessToken: 'test-token',
-            sourceUrl: 's3://slides/test.svs',
             tileMetadata: {
                 dimensions: { width: 100, height: 80 },
                 levels: 1,
@@ -148,12 +144,11 @@ describe('WsiNavPanel', () => {
                 tile_size: 256,
             },
             thumbnail: {
-                sourceUrl: 's3://slides/test.jpg',
                 width: 128,
                 height: 96,
                 contentType: 'image/jpeg',
             },
-            imageId: '1000',
+            slideKey: '1000',
             tokenType: 'Bearer',
             expiresIn: 300,
         });
@@ -187,12 +182,44 @@ describe('WsiNavPanel', () => {
         jest.useRealTimers();
     });
 
+    it('never shows the slide key, a barcode or an image ID in a slide item', () => {
+        const key = '0123456789abcdef0123456789abcdef';
+        const sample = makeSample('S-1', [
+            makeSlide({ slide_key: key, block_label: '' }),
+        ]);
+
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([sample])}
+                selectedSlide={null}
+                stainFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                theme={theme}
+                navWidth={252}
+                sectionTitleStyle={sectionTitleStyle}
+            />
+        );
+
+        const item = renderer.root.findByProps({
+            'data-testid': `wsi-slide-item-${key}`,
+        });
+        const visible = [
+            item.props.title,
+            item.props['aria-label'],
+            flattenRenderedText(item.props.children),
+        ].join('\n');
+        expect(visible).not.toContain(key);
+        expect(visible).not.toMatch(/Barcode|Image ID|Section:|Accession/);
+        expect(item.props.title).toContain('Stain: H&E');
+    });
+
     it('derives ordered slides only once per sample render', () => {
         const getOrderedServableSlidesForSampleReadOnlySpy = jest.spyOn(
             wsiSlideUtils,
             'getOrderedServableSlidesForSampleReadOnly'
         );
-        const sample = makeSample('S-1', [makeSlide({ image_id: 'slide-1' })]);
+        const sample = makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })]);
 
         TestRenderer.create(
             <WsiNavPanel
@@ -217,8 +244,8 @@ describe('WsiNavPanel', () => {
             wsiSlideUtils,
             'getOrderedServableSlidesForSampleReadOnly'
         );
-        const slide1 = makeSlide({ image_id: 'slide-1' });
-        const slide2 = makeSlide({ image_id: 'slide-2' });
+        const slide1 = makeSlide({ slide_key: 'slide-1' });
+        const slide2 = makeSlide({ slide_key: 'slide-2' });
         const sample1 = makeSample('S-1', [slide1]);
         const sample2 = makeSample('S-2', [slide2]);
         const hierarchy = makeHierarchy([sample1, sample2]);
@@ -260,11 +287,11 @@ describe('WsiNavPanel', () => {
     });
 
     it('uses the read-only association lookup for navigation filtering', () => {
-        const getAssociationsByImageIdReadOnlySpy = jest.spyOn(
+        const getAssociationsBySlideKeyReadOnlySpy = jest.spyOn(
             wsiSlideUtils,
-            'getServableSlideAssociationsByImageIdReadOnly'
+            'getServableSlideAssociationsBySlideKeyReadOnly'
         );
-        const sample = makeSample('S-1', [makeSlide({ image_id: 'slide-1' })]);
+        const sample = makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })]);
 
         TestRenderer.create(
             <WsiNavPanel
@@ -272,7 +299,7 @@ describe('WsiNavPanel', () => {
                     [sample],
                     [
                         {
-                            image_id: 'slide-1',
+                            slide_key: 'slide-1',
                             sample_id: 'S-1',
                             match_level: 'BLOCK',
                             specimen_key: 'BLOCK::slide-1',
@@ -291,11 +318,11 @@ describe('WsiNavPanel', () => {
             />
         );
 
-        expect(getAssociationsByImageIdReadOnlySpy).toHaveBeenCalledTimes(1);
+        expect(getAssociationsBySlideKeyReadOnlySpy).toHaveBeenCalledTimes(1);
     });
 
     it('does not re-fire selection when clicking the already selected slide', () => {
-        const slide = makeSlide({ image_id: 'selected-slide' });
+        const slide = makeSlide({ slide_key: 'selected-slide' });
         const sample = makeSample('S-1', [slide]);
         const onSelectSlide = jest.fn();
         const renderer = TestRenderer.create(
@@ -323,7 +350,7 @@ describe('WsiNavPanel', () => {
     });
 
     it('supports keyboard activation for a viewable slide', () => {
-        const slide = makeSlide({ image_id: 'keyboard-slide' });
+        const slide = makeSlide({ slide_key: 'keyboard-slide' });
         const sample = makeSample('S-1', [slide]);
         const onSelectSlide = jest.fn();
         const renderer = TestRenderer.create(
@@ -361,7 +388,7 @@ describe('WsiNavPanel', () => {
 
     it('does not toggle a sample when Enter originates from a nested link', () => {
         const sample = makeSample('S-1', [
-            makeSlide({ image_id: 'nested-link-slide' }),
+            makeSlide({ slide_key: 'nested-link-slide' }),
         ]);
         const renderer = TestRenderer.create(
             <WsiNavPanel
@@ -396,7 +423,7 @@ describe('WsiNavPanel', () => {
     });
 
     it('does not re-fire the active stain filter callback', () => {
-        const sample = makeSample('S-1', [makeSlide({ image_id: 'slide-1' })]);
+        const sample = makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })]);
         const onFilterChange = jest.fn();
         const renderer = TestRenderer.create(
             <WsiNavPanel
@@ -423,7 +450,7 @@ describe('WsiNavPanel', () => {
     });
 
     it('does not re-fire the active match filter callback', () => {
-        const sample = makeSample('S-1', [makeSlide({ image_id: 'slide-1' })]);
+        const sample = makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })]);
         const onMatchFilterChange = jest.fn();
         const renderer = TestRenderer.create(
             <WsiNavPanel
@@ -451,18 +478,18 @@ describe('WsiNavPanel', () => {
 
     it('shows match badges only for block- and part-matched slides', () => {
         const sample = makeSample('S-1', [
-            makeSlide({ image_id: 'block-slide' }),
-            makeSlide({ image_id: 'part-slide' }),
-            makeSlide({ image_id: 'unmatched-slide' }),
+            makeSlide({ slide_key: 'block-slide' }),
+            makeSlide({ slide_key: 'part-slide' }),
+            makeSlide({ slide_key: 'unmatched-slide' }),
         ]);
         const association = (
-            imageId: string,
+            slideKey: string,
             matchLevel: SlideAssociation['match_level']
         ): SlideAssociation => ({
-            image_id: imageId,
+            slide_key: slideKey,
             sample_id: matchLevel === 'UNMATCHED' ? null : 'S-1',
             match_level: matchLevel,
-            specimen_key: `${matchLevel}::${imageId}`,
+            specimen_key: `${matchLevel}::${slideKey}`,
             slide_type: 'H&E',
             can_serve_tiles: true,
         });
@@ -507,10 +534,10 @@ describe('WsiNavPanel', () => {
         const renderer = TestRenderer.create(
             <WsiNavPanel
                 hierarchy={makeHierarchy([
-                    makeSample('S-1', [makeSlide({ image_id: 'slide-1' })]),
+                    makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })]),
                     makeSample('UNMATCHED', [
                         makeSlide({
-                            image_id: 'unmatched-slide',
+                            slide_key: 'unmatched-slide',
                             can_serve_tiles: false,
                         }),
                     ]),
@@ -530,18 +557,18 @@ describe('WsiNavPanel', () => {
 
     it('filters slides by their effective match level', () => {
         const sample = makeSample('S-1', [
-            makeSlide({ image_id: 'block-slide' }),
-            makeSlide({ image_id: 'part-slide' }),
-            makeSlide({ image_id: 'unmatched-slide' }),
+            makeSlide({ slide_key: 'block-slide' }),
+            makeSlide({ slide_key: 'part-slide' }),
+            makeSlide({ slide_key: 'unmatched-slide' }),
         ]);
         const association = (
-            imageId: string,
+            slideKey: string,
             matchLevel: SlideAssociation['match_level']
         ): SlideAssociation => ({
-            image_id: imageId,
+            slide_key: slideKey,
             sample_id: matchLevel === 'UNMATCHED' ? null : 'S-1',
             match_level: matchLevel,
-            specimen_key: `${matchLevel}::${imageId}`,
+            specimen_key: `${matchLevel}::${slideKey}`,
             slide_type: 'H&E',
             can_serve_tiles: true,
         });
@@ -576,7 +603,7 @@ describe('WsiNavPanel', () => {
 
     it('filters to unmatched slides when requested', () => {
         const sample = makeSample('UNMATCHED', [
-            makeSlide({ image_id: 'unmatched-slide' }),
+            makeSlide({ slide_key: 'unmatched-slide' }),
         ]);
         const renderer = TestRenderer.create(
             <WsiNavPanel
@@ -584,7 +611,7 @@ describe('WsiNavPanel', () => {
                     [sample],
                     [
                         {
-                            image_id: 'unmatched-slide',
+                            slide_key: 'unmatched-slide',
                             sample_id: null,
                             match_level: 'UNMATCHED',
                             specimen_key: 'UNMATCHED::unmatched-slide',
@@ -638,7 +665,7 @@ describe('WsiNavPanel', () => {
 
     it('says so when none of the patient slides can be viewed', () => {
         const sample = makeSample('S-1', [
-            makeSlide({ image_id: 'not-scanned', can_serve_tiles: false }),
+            makeSlide({ slide_key: 'not-scanned', can_serve_tiles: false }),
         ]);
         expect(
             emptyStateText(
@@ -646,7 +673,7 @@ describe('WsiNavPanel', () => {
                     [sample],
                     [
                         {
-                            image_id: 'not-scanned',
+                            slide_key: 'not-scanned',
                             sample_id: 'S-1',
                             match_level: 'PART',
                             specimen_key: 'PART::not-scanned',
@@ -660,14 +687,16 @@ describe('WsiNavPanel', () => {
     });
 
     it('explains when the selected filters have no matching slides', () => {
-        const sample = makeSample('S-1', [makeSlide({ image_id: 'part-hne' })]);
+        const sample = makeSample('S-1', [
+            makeSlide({ slide_key: 'part-hne' }),
+        ]);
         const renderer = TestRenderer.create(
             <WsiNavPanel
                 hierarchy={makeHierarchy(
                     [sample],
                     [
                         {
-                            image_id: 'part-hne',
+                            slide_key: 'part-hne',
                             sample_id: 'S-1',
                             match_level: 'PART',
                             specimen_key: 'PART::part-hne',
@@ -698,16 +727,16 @@ describe('WsiNavPanel', () => {
 
     it('updates match filter counts when the stain filter changes', () => {
         const sample = makeSample('S-1', [
-            makeSlide({ image_id: 'block-hne' }),
+            makeSlide({ slide_key: 'block-hne' }),
             makeSlide({
-                image_id: 'block-ihc',
+                slide_key: 'block-ihc',
                 stain_name: 'IHC',
                 stain_group: 'IHC',
                 is_hne: false,
                 is_ihc: true,
             }),
-            makeSlide({ image_id: 'part-hne' }),
-            makeSlide({ image_id: 'unmatched-hne' }),
+            makeSlide({ slide_key: 'part-hne' }),
+            makeSlide({ slide_key: 'unmatched-hne' }),
         ]);
         const renderer = TestRenderer.create(
             <WsiNavPanel
@@ -715,7 +744,7 @@ describe('WsiNavPanel', () => {
                     [sample],
                     [
                         {
-                            image_id: 'block-hne',
+                            slide_key: 'block-hne',
                             sample_id: 'S-1',
                             match_level: 'BLOCK',
                             specimen_key: 'BLOCK::block-hne',
@@ -723,7 +752,7 @@ describe('WsiNavPanel', () => {
                             can_serve_tiles: true,
                         },
                         {
-                            image_id: 'block-ihc',
+                            slide_key: 'block-ihc',
                             sample_id: 'S-1',
                             match_level: 'BLOCK',
                             specimen_key: 'BLOCK::block-ihc',
@@ -731,7 +760,7 @@ describe('WsiNavPanel', () => {
                             can_serve_tiles: true,
                         },
                         {
-                            image_id: 'part-hne',
+                            slide_key: 'part-hne',
                             sample_id: 'S-1',
                             match_level: 'PART',
                             specimen_key: 'PART::part-hne',
@@ -739,7 +768,7 @@ describe('WsiNavPanel', () => {
                             can_serve_tiles: true,
                         },
                         {
-                            image_id: 'unmatched-hne',
+                            slide_key: 'unmatched-hne',
                             sample_id: null,
                             match_level: 'UNMATCHED',
                             specimen_key: 'UNMATCHED::unmatched-hne',
@@ -778,15 +807,15 @@ describe('WsiNavPanel', () => {
 
     it('updates stain filter counts when the match filter changes', () => {
         const sample = makeSample('S-1', [
-            makeSlide({ image_id: 'block-hne' }),
+            makeSlide({ slide_key: 'block-hne' }),
             makeSlide({
-                image_id: 'block-ihc',
+                slide_key: 'block-ihc',
                 stain_name: 'IHC',
                 stain_group: 'IHC',
                 is_hne: false,
                 is_ihc: true,
             }),
-            makeSlide({ image_id: 'part-hne' }),
+            makeSlide({ slide_key: 'part-hne' }),
         ]);
         const renderer = TestRenderer.create(
             <WsiNavPanel
@@ -794,7 +823,7 @@ describe('WsiNavPanel', () => {
                     [sample],
                     [
                         {
-                            image_id: 'block-hne',
+                            slide_key: 'block-hne',
                             sample_id: 'S-1',
                             match_level: 'BLOCK',
                             specimen_key: 'BLOCK::block-hne',
@@ -802,7 +831,7 @@ describe('WsiNavPanel', () => {
                             can_serve_tiles: true,
                         },
                         {
-                            image_id: 'block-ihc',
+                            slide_key: 'block-ihc',
                             sample_id: 'S-1',
                             match_level: 'BLOCK',
                             specimen_key: 'BLOCK::block-ihc',
@@ -810,7 +839,7 @@ describe('WsiNavPanel', () => {
                             can_serve_tiles: true,
                         },
                         {
-                            image_id: 'part-hne',
+                            slide_key: 'part-hne',
                             sample_id: 'S-1',
                             match_level: 'PART',
                             specimen_key: 'PART::part-hne',
@@ -847,7 +876,7 @@ describe('WsiNavPanel', () => {
     it('does not count Other slides as IHC', () => {
         const sample = makeSample('S-1', [
             makeSlide({
-                image_id: 'other-slide',
+                slide_key: 'other-slide',
                 stain_name: 'Other',
                 stain_group: 'Other',
                 slide_type: 'Other',
@@ -861,7 +890,7 @@ describe('WsiNavPanel', () => {
                     [sample],
                     [
                         {
-                            image_id: 'other-slide',
+                            slide_key: 'other-slide',
                             sample_id: 'S-1',
                             match_level: 'PART',
                             specimen_key: 'PART::other-slide',
@@ -897,7 +926,7 @@ describe('WsiNavPanel', () => {
     it('classifies by the resolved stain flags, not the source stain group, for slides and facet counts', () => {
         const sample = makeSample('S-1', [
             makeSlide({
-                image_id: 'submitted-hne',
+                slide_key: 'submitted-hne',
                 stain_name: 'SLIDES SUBMITTED',
                 stain_group: 'Surgical Submitted',
                 slide_type: 'H&E',
@@ -905,7 +934,7 @@ describe('WsiNavPanel', () => {
                 is_ihc: false,
             }),
             makeSlide({
-                image_id: 'ihc-slide',
+                slide_key: 'ihc-slide',
                 stain_name: 'PD-L1',
                 stain_group: 'IHC',
                 is_hne: false,
@@ -918,7 +947,7 @@ describe('WsiNavPanel', () => {
                     [sample],
                     [
                         {
-                            image_id: 'submitted-hne',
+                            slide_key: 'submitted-hne',
                             sample_id: 'S-1',
                             match_level: 'PART',
                             specimen_key: 'PART::submitted-hne',
@@ -926,7 +955,7 @@ describe('WsiNavPanel', () => {
                             can_serve_tiles: true,
                         },
                         {
-                            image_id: 'ihc-slide',
+                            slide_key: 'ihc-slide',
                             sample_id: 'S-1',
                             match_level: 'BLOCK',
                             specimen_key: 'BLOCK::ihc-slide',
@@ -969,7 +998,7 @@ describe('WsiNavPanel', () => {
     it('does not count unknown associations as known Other', () => {
         const sample = makeSample('S-1', [
             makeSlide({
-                image_id: 'unknown-slide',
+                slide_key: 'unknown-slide',
                 is_hne: false,
                 is_ihc: false,
             }),
@@ -980,7 +1009,7 @@ describe('WsiNavPanel', () => {
                     [sample],
                     [
                         {
-                            image_id: 'unknown-slide',
+                            slide_key: 'unknown-slide',
                             sample_id: 'S-1',
                             match_level: 'PART',
                             specimen_key: 'PART::unknown-slide',
@@ -1009,8 +1038,12 @@ describe('WsiNavPanel', () => {
     });
 
     it('only expands the first sample by default', () => {
-        const sample1 = makeSample('S-1', [makeSlide({ image_id: 'slide-1' })]);
-        const sample2 = makeSample('S-2', [makeSlide({ image_id: 'slide-2' })]);
+        const sample1 = makeSample('S-1', [
+            makeSlide({ slide_key: 'slide-1' }),
+        ]);
+        const sample2 = makeSample('S-2', [
+            makeSlide({ slide_key: 'slide-2' }),
+        ]);
         const renderer = TestRenderer.create(
             <WsiNavPanel
                 hierarchy={makeHierarchy([sample1, sample2])}
@@ -1034,8 +1067,8 @@ describe('WsiNavPanel', () => {
     });
 
     it('auto-expands the sample containing the selected slide', () => {
-        const slide1 = makeSlide({ image_id: 'slide-1' });
-        const slide2 = makeSlide({ image_id: 'slide-2' });
+        const slide1 = makeSlide({ slide_key: 'slide-1' });
+        const slide2 = makeSlide({ slide_key: 'slide-2' });
         const sample1 = makeSample('S-1', [slide1]);
         const sample2 = makeSample('S-2', [slide2]);
         const renderer = TestRenderer.create(
@@ -1079,7 +1112,7 @@ describe('WsiNavPanel', () => {
     it('does not render a legacy sample-level timepoint', () => {
         const sample = makeSample('S-1', [
             makeSlide({
-                image_id: 'slide-1',
+                slide_key: 'slide-1',
                 slide_timepoint_days: -1744,
                 slide_timepoint_source: 'Sequencing',
             }),
@@ -1106,7 +1139,7 @@ describe('WsiNavPanel', () => {
                 hierarchy={makeHierarchy([
                     makeSample('S-1', [
                         makeSlide({
-                            image_id: 'slide-1',
+                            slide_key: 'slide-1',
                             slide_timepoint_days: -63,
                             slide_timepoint_source:
                                 'Procedure date relative to tumor sequencing',
@@ -1129,12 +1162,12 @@ describe('WsiNavPanel', () => {
     it('shows slide-level timepoints on individual slide rows', () => {
         const sample = makeSample('S-1', [
             makeSlide({
-                image_id: 'slide-1',
+                slide_key: 'slide-1',
                 slide_timepoint_days: -20,
                 slide_timepoint_source: 'Procedure date',
             }),
             makeSlide({
-                image_id: 'slide-2',
+                slide_key: 'slide-2',
                 slide_timepoint_days: -5,
                 slide_timepoint_source: 'Procedure date',
             }),
@@ -1180,9 +1213,9 @@ describe('WsiNavPanel', () => {
             );
         }
 
-        function procSlide(imageId: string, days: number): Slide {
+        function procSlide(slideKey: string, days: number): Slide {
             return makeSlide({
-                image_id: imageId,
+                slide_key: slideKey,
                 slide_timepoint_days: days,
                 slide_timepoint_source: 'Procedure date',
             });
@@ -1272,12 +1305,12 @@ describe('WsiNavPanel', () => {
     it('renders a discrete time slider and filters slides by the selected date', () => {
         const sample = makeSample('S-1', [
             makeSlide({
-                image_id: 'slide-early',
+                slide_key: 'slide-early',
                 slide_timepoint_days: -20,
                 slide_timepoint_source: 'Procedure date',
             }),
             makeSlide({
-                image_id: 'slide-late',
+                slide_key: 'slide-late',
                 slide_timepoint_days: -5,
                 slide_timepoint_source: 'Procedure date',
             }),
@@ -1352,11 +1385,11 @@ describe('WsiNavPanel', () => {
                 hierarchy={makeHierarchy([
                     makeSample('S-1', [
                         makeSlide({
-                            image_id: 'dated',
+                            slide_key: 'dated',
                             slide_timepoint_days: -20,
                             slide_timepoint_source: 'Procedure date',
                         }),
-                        makeSlide({ image_id: 'undated' }),
+                        makeSlide({ slide_key: 'undated' }),
                     ]),
                 ])}
                 selectedSlide={null}
@@ -1388,7 +1421,7 @@ describe('WsiNavPanel', () => {
                 hierarchy={makeHierarchy([
                     makeSample('S-1', [
                         makeSlide({
-                            image_id: 'dated',
+                            slide_key: 'dated',
                             slide_timepoint_days: -5,
                             slide_timepoint_source: 'Procedure date',
                         }),
@@ -1428,7 +1461,7 @@ describe('WsiNavPanel', () => {
         const renderer = TestRenderer.create(
             <WsiNavPanel
                 hierarchy={makeHierarchy([
-                    makeSample('S-1', [makeSlide({ image_id: 'slide-1' })]),
+                    makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })]),
                 ])}
                 selectedSlide={null}
                 stainFilter="all"
@@ -1457,12 +1490,12 @@ describe('WsiNavPanel', () => {
                 hierarchy={makeHierarchy([
                     makeSample('S-1', [
                         makeSlide({
-                            image_id: 'hne-slide',
+                            slide_key: 'hne-slide',
                             is_hne: true,
                             is_ihc: false,
                         }),
                         makeSlide({
-                            image_id: 'ihc-slide',
+                            slide_key: 'ihc-slide',
                             stain_name: 'IHC',
                             is_hne: false,
                             is_ihc: true,
@@ -1500,7 +1533,7 @@ describe('WsiNavPanel', () => {
     it('defers offscreen samples until the initial tiles are ready', () => {
         const samples = Array.from({ length: 8 }, (_, index) =>
             makeSample(`S-${index + 1}`, [
-                makeSlide({ image_id: `slide-${index + 1}` }),
+                makeSlide({ slide_key: `slide-${index + 1}` }),
             ])
         );
         const renderer = TestRenderer.create(
@@ -1538,7 +1571,7 @@ describe('WsiNavPanel', () => {
     it('keeps the selected sample visible while offscreen samples are deferred', () => {
         const samples = Array.from({ length: 8 }, (_, index) =>
             makeSample(`S-${index + 1}`, [
-                makeSlide({ image_id: `slide-${index + 1}` }),
+                makeSlide({ slide_key: `slide-${index + 1}` }),
             ])
         );
         const renderer = TestRenderer.create(

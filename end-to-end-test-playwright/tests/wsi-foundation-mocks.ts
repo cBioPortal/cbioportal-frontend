@@ -2,24 +2,20 @@ import { Page } from '../fixtures';
 
 export const STUDY_ID = 'wsi-foundation-smoke-study';
 export const PATIENT_ID = 'wsi-foundation-smoke-patient';
-export const IMAGE_ID = 'wsi-foundation-smoke-slide';
-// Deliberately contains characters that must be percent-encoded in a URL.
-export const SECOND_IMAGE_ID = 'wsi foundation/smoke #2';
-export const RESOURCE_ID = 'WSI_SLIDE';
+/** Opaque 32-hex slide keys, as the backend publishes them. */
+export const SLIDE_KEY = '0123456789abcdef0123456789abcdef';
+export const SECOND_SLIDE_KEY = 'fedcba9876543210fedcba9876543210';
 export const SAMPLE_ID = 'wsi-foundation-smoke-sample';
 /** A sample attribute value the sidebar's Clinical section shows. */
 export const CLINICAL_CANCER_TYPE = 'Lung Adenocarcinoma';
 
-const RESOURCE_DATA_IDS: Record<string, string> = {
-    [IMAGE_ID]: '101',
-    [SECOND_IMAGE_ID]: '102',
-};
-
 export interface FoundationMockOptions {
-    /** Adds a second servable slide with an ID that needs URL encoding. */
+    /** Adds a second servable slide. */
     includeSecondSlide?: boolean;
     /** Collects every slide access request URL. */
     accessRequests?: string[];
+    /** Collects the request headers of every tile and thumbnail request. */
+    tileRequestHeaders?: Array<Record<string, string>>;
 }
 
 const tileMetadata = {
@@ -37,11 +33,9 @@ const tileMetadata = {
     tile_size: 256,
 };
 
-function makeSlide(imageId: string, stainName: string, stainGroup: string) {
+function makeSlide(slideKey: string, stainName: string, stainGroup: string) {
     return {
-        imageId,
-        resourceId: RESOURCE_ID,
-        resourceDataId: RESOURCE_DATA_IDS[imageId],
+        slideKey,
         stainName,
         stainGroup,
         isHne: true,
@@ -49,7 +43,6 @@ function makeSlide(imageId: string, stainName: string, stainGroup: string) {
         magnification: '',
         fileSizeBytes: null,
         canServeTiles: true,
-        barcode: '',
         slideType: 'H&E',
         sampleId: 'wsi-foundation-smoke-sample',
         matchLevel: 'BLOCK',
@@ -65,9 +58,9 @@ function makeSlide(imageId: string, stainName: string, stainGroup: string) {
 }
 
 function makeHierarchy(includeSecondSlide: boolean) {
-    const slides = [makeSlide(IMAGE_ID, 'H&E initial', 'H&E (Initial)')];
+    const slides = [makeSlide(SLIDE_KEY, 'H&E initial', 'H&E (Initial)')];
     if (includeSecondSlide) {
-        slides.push(makeSlide(SECOND_IMAGE_ID, 'H&E recut', 'H&E (Recut)'));
+        slides.push(makeSlide(SECOND_SLIDE_KEY, 'H&E recut', 'H&E (Recut)'));
     }
     return {
         referenceSampleId: 'wsi-foundation-smoke-sample',
@@ -159,23 +152,31 @@ export async function installFoundationMocks(
             const patientId = decodeURIComponent(
                 url.pathname.split('/').slice(-2, -1)[0]
             );
-            const imageId = url.searchParams.get('imageId') || '';
-            const resourceDataId = RESOURCE_DATA_IDS[imageId];
-            if (patientId !== PATIENT_ID || !resourceDataId) {
+            const slideKey = url.searchParams.get('slideKey') || '';
+            const published = hierarchy.sampleGroups.some(group =>
+                group.parts.some(part =>
+                    part.blocks.some(block =>
+                        block.slides.some(slide => slide.slideKey === slideKey)
+                    )
+                )
+            );
+            // As the backend: 400 unless 32 hex, 404 for an unknown slide.
+            if (!/^[0-9a-f]{32}$/.test(slideKey)) {
+                return route.fulfill({ status: 400, body: '' });
+            }
+            if (patientId !== PATIENT_ID || !published) {
                 return route.fulfill({ status: 404, body: '' });
             }
             return route.fulfill({
                 status: 200,
                 contentType: 'application/json',
                 body: JSON.stringify({
-                    imageId,
-                    sourceUrl: `s3://wsi-foundation-smoke/${resourceDataId}.svs`,
+                    slideKey,
                     accessToken: 'wsi-foundation-smoke-token',
                     tokenType: 'Bearer',
                     expiresIn: 300,
                     tileMetadata,
                     thumbnail: {
-                        sourceUrl: `s3://wsi-foundation-smoke/${resourceDataId}.png`,
                         width: 1,
                         height: 1,
                         contentType: 'image/png',
@@ -185,12 +186,22 @@ export async function installFoundationMocks(
         }
     );
     await installClinicalMocks(page);
-    await page.route('**/wsi/tiles/**', route =>
-        route.fulfill({ status: 200, contentType: 'image/png', body: pixel })
-    );
-    await page.route('**/wsi/thumbnails**', route =>
-        route.fulfill({ status: 200, contentType: 'image/png', body: pixel })
-    );
+    await page.route('**/wsi/tiles/**', route => {
+        options.tileRequestHeaders?.push(route.request().headers());
+        return route.fulfill({
+            status: 200,
+            contentType: 'image/png',
+            body: pixel,
+        });
+    });
+    await page.route('**/wsi/thumbnails**', route => {
+        options.tileRequestHeaders?.push(route.request().headers());
+        return route.fulfill({
+            status: 200,
+            contentType: 'image/png',
+            body: pixel,
+        });
+    });
     return enrichmentRequests;
 }
 

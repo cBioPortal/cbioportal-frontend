@@ -36,7 +36,7 @@ function deriveSlideAssociations(
         sample.parts.flatMap(part =>
             part.blocks.flatMap(block =>
                 block.slides.map(slide => ({
-                    image_id: slide.image_id,
+                    slide_key: slide.slide_key,
                     sample_id:
                         slide.sample_id ??
                         (sample.sample_id === 'UNMATCHED'
@@ -167,7 +167,7 @@ function normalizeV2Hierarchy(
                     block_number: block.blockNumber,
                     block_label: block.blockLabel,
                     slides: block.slides.map(slide => ({
-                        image_id: slide.imageId,
+                        slide_key: slide.slideKey,
                         stain_name: slide.stainName,
                         stain_group: slide.stainGroup,
                         is_hne: slide.isHne,
@@ -178,7 +178,6 @@ function normalizeV2Hierarchy(
                                 ? ''
                                 : String(slide.fileSizeBytes),
                         can_serve_tiles: slide.canServeTiles,
-                        barcode: slide.barcode,
                         block_label: block.blockLabel,
                         block_number: block.blockNumber,
                         part_description: part.partDescription,

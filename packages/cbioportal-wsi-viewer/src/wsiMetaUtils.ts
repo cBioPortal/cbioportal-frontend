@@ -6,7 +6,6 @@ import {
     TileMetadata,
 } from './wsiViewerTypes';
 import {
-    barcodeAccession,
     cleanStain,
     fmtMB,
     formatDaysSinceDiagnosis,
@@ -194,14 +193,10 @@ export function buildPathRows(
         studyId && sample.sample_id && !isUnmatchedSample
             ? buildSampleUrl(studyId, sample.sample_id, patientId)
             : undefined;
-    const accession = barcodeAccession(slide.barcode);
     const blockLbl = normalizeBlockLabel(slide.block_label, slide.block_number);
     let sampleTip: string | undefined;
-    if (accession) {
-        sampleTip = `Accession: ${accession}`;
-    }
     if (blockLbl) {
-        sampleTip = `${sampleTip ? `${sampleTip}\n` : ''}Block: ${blockLbl}`;
+        sampleTip = `Block: ${blockLbl}`;
     }
     if (sample.sample_type) {
         sampleTip = `${sampleTip ? `${sampleTip}\n` : ''}Type: ${
@@ -240,7 +235,7 @@ export function buildPathRows(
         {
             label: 'Sample',
             labelTip: sampleTip
-                ? 'Click for cBioPortal sample view — hover for accession/block info'
+                ? 'Click for cBioPortal sample view — hover for block/type info'
                 : 'Tumor sample identifier',
             value: isUnmatchedSample
                 ? 'Unmatched pathology slides'

@@ -166,7 +166,7 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
                                             blockLabel: 'A1',
                                             slides: [
                                                 {
-                                                    imageId: 'slide-1',
+                                                    slideKey: 'slide-1',
                                                     stainName: 'H&E',
                                                     stainGroup: 'H&E',
                                                     isHne: true,
@@ -174,7 +174,6 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
                                                     magnification: '20x',
                                                     fileSizeBytes: null,
                                                     canServeTiles: false,
-                                                    barcode: '',
                                                     slideType: 'H&E',
                                                     sampleId: null,
                                                     matchLevel: 'UNMATCHED',
@@ -217,13 +216,18 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         expect(hierarchy.samples[0].sample_id).toBe('UNMATCHED');
         expect(hierarchy.slide_associations).toEqual([
             expect.objectContaining({
-                image_id: 'slide-1',
+                slide_key: 'slide-1',
                 sample_id: null,
                 match_level: 'UNMATCHED',
             }),
         ]);
         expect(Object.keys(hierarchy)).toContain('slide_associations');
         expect(JSON.stringify(hierarchy)).toContain('slide_associations');
+        const slide = hierarchy.samples[0].parts[0].blocks[0].slides[0];
+        expect(slide.slide_key).toBe('slide-1');
+        expect(JSON.stringify(hierarchy)).not.toMatch(
+            /image_?id|barcode|resource_?(data_?)?id/i
+        );
     });
 
     it('derives an IHC slide type from the authoritative flag when slideType is null', async () => {
@@ -249,7 +253,7 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
                                             blockLabel: 'A1',
                                             slides: [
                                                 {
-                                                    imageId: 'ihc-slide',
+                                                    slideKey: 'ihc-slide',
                                                     stainName: 'PD-L1',
                                                     stainGroup: 'IHC',
                                                     isHne: false,
@@ -257,7 +261,6 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
                                                     magnification: '',
                                                     fileSizeBytes: null,
                                                     canServeTiles: true,
-                                                    barcode: '',
                                                     slideType: null,
                                                     sampleId: 'S-1',
                                                     matchLevel: 'BLOCK',
@@ -315,7 +318,7 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
                                     blockLabel: 'A1',
                                     slides: [
                                         {
-                                            imageId: 'other-slide',
+                                            slideKey: 'other-slide',
                                             stainName: 'Other',
                                             stainGroup: 'Other',
                                             isHne: false,
@@ -323,7 +326,6 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
                                             magnification: '',
                                             fileSizeBytes: null,
                                             canServeTiles: true,
-                                            barcode: '',
                                             slideType: 'Other',
                                             sampleId: null,
                                             matchLevel: 'UNMATCHED',
@@ -492,11 +494,9 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
     let accessStatuses: number[];
     let fetchMock: jest.Mock;
 
-    function v2Slide(imageId: string, resourceDataId: string) {
+    function v2Slide(slideKey: string) {
         return {
-            imageId,
-            resourceId: 'WSI_SLIDE',
-            resourceDataId,
+            slideKey,
             stainName: 'H&E',
             stainGroup: 'H&E',
             isHne: true,
@@ -504,7 +504,6 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
             magnification: '20x',
             fileSizeBytes: null,
             canServeTiles: true,
-            barcode: '',
             slideType: 'H&E',
             sampleId: 'S-1',
             matchLevel: 'BLOCK',
@@ -520,7 +519,7 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
         };
     }
 
-    function v2Hierarchy(slides: Array<[string, string]>) {
+    function v2Hierarchy(slideKeys: string[]) {
         return {
             referenceSampleId: 'S-1',
             sampleGroups: [
@@ -538,9 +537,7 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
                                 {
                                     blockNumber: 'A',
                                     blockLabel: 'A1',
-                                    slides: slides.map(([imageId, rowId]) =>
-                                        v2Slide(imageId, rowId)
-                                    ),
+                                    slides: slideKeys.map(v2Slide),
                                 },
                             ],
                         },
@@ -551,8 +548,7 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
     }
 
     const accessPayload = {
-        imageId: 'slide',
-        sourceUrl: 's3://bucket/slide.svs',
+        slideKey: 'slide',
         tileMetadata: {
             dimensions: { width: 100, height: 80 },
             levels: 1,
@@ -563,7 +559,6 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
             safe_min_level: 0,
         },
         thumbnail: {
-            sourceUrl: 's3://bucket/thumb.jpg',
             width: 128,
             height: 96,
             contentType: 'image/jpeg',
@@ -599,10 +594,13 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
         fetchMock = jest.fn((url: string) => {
             if (String(url).includes('/access?')) {
                 const status = accessStatuses.shift() ?? 200;
+                const slideKey = new URL(String(url)).searchParams.get(
+                    'slideKey'
+                );
                 return Promise.resolve({
                     ok: status >= 200 && status < 300,
                     status,
-                    json: () => Promise.resolve(accessPayload),
+                    json: () => Promise.resolve({ ...accessPayload, slideKey }),
                 });
             }
             const queue = hierarchyResponses[url] || [];
@@ -622,7 +620,7 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
     });
 
     it('registers the slides of a network hierarchy', async () => {
-        hierarchyResponses[URL_P1] = [v2Hierarchy([['slide-1', '11']])];
+        hierarchyResponses[URL_P1] = [v2Hierarchy(['slide-1'])];
 
         await fetchPatientHierarchyReadOnly(
             URL_P1,
@@ -633,11 +631,11 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
         );
         await getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a');
 
-        expect(accessCalls()).toEqual(['study-1/P-1/access?imageId=slide-1']);
+        expect(accessCalls()).toEqual(['study-1/P-1/access?slideKey=slide-1']);
     });
 
     it('does not register slides without an explicit study', async () => {
-        hierarchyResponses[URL_P1] = [v2Hierarchy([['slide-1', '11']])];
+        hierarchyResponses[URL_P1] = [v2Hierarchy(['slide-1'])];
 
         await fetchPatientHierarchyReadOnly(URL_P1, undefined, 'user-a');
 
@@ -648,7 +646,7 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
     });
 
     it('re-registers the slides on a cache hit', async () => {
-        hierarchyResponses[URL_P1] = [v2Hierarchy([['slide-1', '11']])];
+        hierarchyResponses[URL_P1] = [v2Hierarchy(['slide-1'])];
         await fetchPatientHierarchyReadOnly(
             URL_P1,
             undefined,
@@ -668,11 +666,11 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
         await getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a');
 
         expect(hierarchyCalls(URL_P1)).toBe(1);
-        expect(accessCalls()).toEqual(['study-1/P-1/access?imageId=slide-1']);
+        expect(accessCalls()).toEqual(['study-1/P-1/access?slideKey=slide-1']);
     });
 
     it('surfaces a 404 without reloading the hierarchy', async () => {
-        hierarchyResponses[URL_P1] = [v2Hierarchy([['slide-1', '11']])];
+        hierarchyResponses[URL_P1] = [v2Hierarchy(['slide-1'])];
         await fetchPatientHierarchyReadOnly(
             URL_P1,
             undefined,
@@ -691,7 +689,7 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
     });
 
     it('forgets the slides with the whole hierarchy cache', async () => {
-        hierarchyResponses[URL_P1] = [v2Hierarchy([['slide-1', '11']])];
+        hierarchyResponses[URL_P1] = [v2Hierarchy(['slide-1'])];
         await fetchPatientHierarchyReadOnly(
             URL_P1,
             undefined,

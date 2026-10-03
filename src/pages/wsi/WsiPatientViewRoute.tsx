@@ -12,11 +12,12 @@ interface Props {
 export default function WsiPatientViewRoute({ match, location }: Props) {
     const query = parse(location.search || '');
     const studyId = typeof query.studyId === 'string' ? query.studyId : '';
-    // Viewer links name one slide: /wsi/patient/{patient}?studyId=..&imageId=..
+    // Viewer links name one slide by its opaque key:
+    // /wsi/patient/{patient}?studyId=..&slideKey=..
     // The router basename supplies any deployment context path.
-    const requestedImageId =
-        typeof query.imageId === 'string' && query.imageId
-            ? query.imageId
+    const requestedSlideKey =
+        typeof query.slideKey === 'string' && query.slideKey
+            ? query.slideKey
             : undefined;
     const tileServerUrl = getServerConfig().msk_wsi_tile_server_url;
 
@@ -39,7 +40,7 @@ export default function WsiPatientViewRoute({ match, location }: Props) {
             studyId={studyId}
             tileServerUrl={tileServerUrl}
             height={height}
-            requestedImageId={requestedImageId}
+            requestedSlideKey={requestedSlideKey}
         />
     );
 }

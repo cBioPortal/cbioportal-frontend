@@ -12,6 +12,8 @@ const tileUrl =
         ? `${baseUrl}/wsi`
         : process.env.TILE_SERVER_URL ?? baseUrl;
 const cbioUrl = process.env.CBIO_URL ?? 'http://localhost:8080';
+// Opaque 32-hex slide key; discovered from the slide list when unset.
+const liveSlideKey = process.env.WSI_LIVE_SLIDE_KEY ?? '';
 
 function viewerUrl(hash = '') {
     const resourceUrl = encodeURIComponent(
@@ -56,13 +58,32 @@ test.describe('WSI viewer navigation contract', () => {
     test('restores a shared slide and viewport after reload', async ({
         page,
     }) => {
-        await page.goto(viewerUrl('#wsi:slide=3020726&x=1200&y=1000&z=1.2'));
+        let slideKey = liveSlideKey;
+        if (!slideKey) {
+            await page.goto(viewerUrl());
+            await ready(page);
+            const slideKeys = await page
+                .locator('[data-testid^="wsi-slide-item-"]')
+                .evaluateAll((elements: Element[]) =>
+                    elements
+                        .map(el => el.getAttribute('data-testid') ?? '')
+                        .map(testId => testId.replace('wsi-slide-item-', ''))
+                        .filter(key => /^[0-9a-f]{32}$/.test(key))
+                );
+            slideKey = slideKeys[slideKeys.length - 1] ?? '';
+            // Leave the page so the hash below loads it afresh.
+            await page.goto('about:blank');
+        }
+        expect(slideKey).toMatch(/^[0-9a-f]{32}$/);
+        await page.goto(
+            viewerUrl(`#wsi:slide=${slideKey}&x=1200&y=1000&z=1.2`)
+        );
         await ready(page);
         await page.getByTestId('wsi-share-button').click();
         const beforeReload = parseWsiHash(
             await page.evaluate(() => window.location.hash)
         );
-        expect(beforeReload.slide).toBe('3020726');
+        expect(beforeReload.slide).toBe(slideKey);
         expect(Number.isFinite(beforeReload.x)).toBe(true);
         expect(Number.isFinite(beforeReload.y)).toBe(true);
         expect(Number.isFinite(beforeReload.z)).toBe(true);

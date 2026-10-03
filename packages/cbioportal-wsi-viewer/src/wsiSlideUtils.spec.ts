@@ -1,7 +1,7 @@
 import {
     countServableSlidesForSample,
     getOrderedServableSlidesForSampleReadOnly,
-    getServableSlideAssociationsByImageIdReadOnly,
+    getServableSlideAssociationsBySlideKeyReadOnly,
     getServableSlideEntriesForHierarchyReadOnly,
     getServableSlideIdsForPathologyFilterReadOnly,
     getServableSlidesForSampleReadOnly,
@@ -21,7 +21,7 @@ import {
 
 function makeSlide(overrides: Partial<Slide> = {}): Slide {
     return {
-        image_id: '1000',
+        slide_key: '1000',
         stain_name: 'H&E',
         stain_group: 'Histology',
         is_hne: true,
@@ -29,7 +29,6 @@ function makeSlide(overrides: Partial<Slide> = {}): Slide {
         magnification: '20x',
         file_size_bytes: '100000000',
         can_serve_tiles: true,
-        barcode: 'S-1234567-T01-1-1-1-1',
         block_label: 'A1',
         block_number: '1',
         ...overrides,
@@ -68,16 +67,16 @@ describe('wsiSlideUtils read-only slide derivation', () => {
     it('builds ordered unique timepoint options and keeps undated slides in All', () => {
         const slides = [
             makeSlide({
-                image_id: 'late',
+                slide_key: 'late',
                 slide_timepoint_days: 10,
                 slide_timepoint_source: 'Procedure date',
             }),
             makeSlide({
-                image_id: 'early',
+                slide_key: 'early',
                 slide_timepoint_days: -10,
                 slide_timepoint_source: 'Procedure date',
             }),
-            makeSlide({ image_id: 'undated' }),
+            makeSlide({ slide_key: 'undated' }),
         ];
         const options = getWsiTimepointOptions(
             slides.map(slide => ({ slide }))
@@ -98,9 +97,9 @@ describe('wsiSlideUtils read-only slide derivation', () => {
     });
 
     it('uses only the slide timing contract', () => {
-        const slide = makeSlide({ image_id: 'legacy' });
+        const slide = makeSlide({ slide_key: 'legacy' });
         const association: SlideAssociation = {
-            image_id: 'legacy',
+            slide_key: 'legacy',
             sample_id: 'S-1',
             match_level: 'BLOCK',
             specimen_key: 'block::1',
@@ -119,7 +118,7 @@ describe('wsiSlideUtils read-only slide derivation', () => {
     it('selects the preferred association for an image', () => {
         const associations: SlideAssociation[] = [
             {
-                image_id: 'slide-1',
+                slide_key: 'slide-1',
                 sample_id: 'S-1',
                 match_level: 'PART',
                 specimen_key: 'part::1',
@@ -127,7 +126,7 @@ describe('wsiSlideUtils read-only slide derivation', () => {
                 can_serve_tiles: true,
             },
             {
-                image_id: 'slide-1',
+                slide_key: 'slide-1',
                 sample_id: 'S-1',
                 match_level: 'BLOCK',
                 specimen_key: 'block::1::A1',
@@ -137,7 +136,7 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         ];
 
         expect(
-            getServableSlideAssociationsByImageIdReadOnly(associations).get(
+            getServableSlideAssociationsBySlideKeyReadOnly(associations).get(
                 'slide-1'
             )?.match_level
         ).toBe('BLOCK');
@@ -145,7 +144,7 @@ describe('wsiSlideUtils read-only slide derivation', () => {
 
     it('memoizes the preferred associations by array identity', () => {
         const association: SlideAssociation = {
-            image_id: 'slide-1',
+            slide_key: 'slide-1',
             sample_id: 'S-1',
             match_level: 'PART',
             specimen_key: 'part::1',
@@ -153,27 +152,27 @@ describe('wsiSlideUtils read-only slide derivation', () => {
             can_serve_tiles: true,
         };
         const associations = [association];
-        const first = getServableSlideAssociationsByImageIdReadOnly(
+        const first = getServableSlideAssociationsBySlideKeyReadOnly(
             associations
         );
 
         expect(
-            getServableSlideAssociationsByImageIdReadOnly(associations)
+            getServableSlideAssociationsBySlideKeyReadOnly(associations)
         ).toBe(first);
         expect(
-            getServableSlideAssociationsByImageIdReadOnly([association])
+            getServableSlideAssociationsBySlideKeyReadOnly([association])
         ).not.toBe(first);
     });
 
     it('memoizes servable slides by sample identity', () => {
-        const sample = makeSample('S-1', [makeSlide({ image_id: 'slide-1' })]);
+        const sample = makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })]);
         const first = getServableSlidesForSampleReadOnly(sample);
 
         expect(getServableSlidesForSampleReadOnly(sample)).toBe(first);
         expect(
             getServableSlidesForSampleReadOnly(
                 makeSample('S-1', [
-                    makeSlide({ image_id: 'slide-1', can_serve_tiles: false }),
+                    makeSlide({ slide_key: 'slide-1', can_serve_tiles: false }),
                 ])
             )
         ).toEqual([]);
@@ -181,15 +180,15 @@ describe('wsiSlideUtils read-only slide derivation', () => {
 
     it('derives stain counts from servable slides', () => {
         const sample = makeSample('S-1', [
-            makeSlide({ image_id: 'slide-hne', block_label: 'A1' }),
+            makeSlide({ slide_key: 'slide-hne', block_label: 'A1' }),
             makeSlide({
-                image_id: 'slide-ihc',
+                slide_key: 'slide-ihc',
                 is_hne: false,
                 is_ihc: true,
                 stain_name: 'IHC',
                 block_label: 'A1',
             }),
-            makeSlide({ image_id: 'slide-hne-2', block_label: 'B1' }),
+            makeSlide({ slide_key: 'slide-hne-2', block_label: 'B1' }),
         ]);
 
         expect(countServableSlidesForSample(sample, 'all')).toBe(3);
@@ -201,8 +200,8 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         const hierarchy: PatientHierarchy = {
             patient_id: 'P-1',
             samples: [
-                makeSample('S-1', [makeSlide({ image_id: 'slide-1' })]),
-                makeSample('S-2', [makeSlide({ image_id: 'slide-2' })]),
+                makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })]),
+                makeSample('S-2', [makeSlide({ slide_key: 'slide-2' })]),
             ],
         };
 
@@ -214,7 +213,7 @@ describe('wsiSlideUtils read-only slide derivation', () => {
     it('memoizes hierarchy entries by hierarchy identity', () => {
         const hierarchy: PatientHierarchy = {
             patient_id: 'P-1',
-            samples: [makeSample('S-1', [makeSlide({ image_id: 'slide-1' })])],
+            samples: [makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })])],
         };
         const first = getServableSlideEntriesForHierarchyReadOnly(hierarchy);
 
@@ -228,13 +227,13 @@ describe('wsiSlideUtils read-only slide derivation', () => {
 
     it('orders slides by slide-level timepoint', () => {
         const sample = makeSample('S-1', [
-            makeSlide({ image_id: 'late', slide_timepoint_days: 10 }),
-            makeSlide({ image_id: 'early', slide_timepoint_days: -10 }),
+            makeSlide({ slide_key: 'late', slide_timepoint_days: 10 }),
+            makeSlide({ slide_key: 'early', slide_timepoint_days: -10 }),
         ]);
 
         expect(
             getOrderedServableSlidesForSampleReadOnly(sample).map(
-                entry => entry.slide.image_id
+                entry => entry.slide.slide_key
             )
         ).toEqual(['early', 'late']);
     });
@@ -242,10 +241,10 @@ describe('wsiSlideUtils read-only slide derivation', () => {
     it('uses association metadata for pathology filtering', () => {
         const hierarchy: PatientHierarchy = {
             patient_id: 'P-1',
-            samples: [makeSample('S-1', [makeSlide({ image_id: 'slide-1' })])],
+            samples: [makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })])],
             slide_associations: [
                 {
-                    image_id: 'slide-1',
+                    slide_key: 'slide-1',
                     sample_id: 'S-1',
                     match_level: 'BLOCK',
                     specimen_key: 'block::1::A1',
@@ -253,7 +252,7 @@ describe('wsiSlideUtils read-only slide derivation', () => {
                     can_serve_tiles: true,
                 },
                 {
-                    image_id: 'slide-2',
+                    slide_key: 'slide-2',
                     sample_id: null,
                     match_level: 'UNMATCHED',
                     specimen_key: 'unmatched::1::B1',
@@ -276,12 +275,12 @@ describe('wsiSlideUtils read-only slide derivation', () => {
             patient_id: 'P-1',
             samples: [
                 makeSample('UNMATCHED', [
-                    makeSlide({ image_id: 'source-slide' }),
+                    makeSlide({ slide_key: 'source-slide' }),
                 ]),
             ],
             slide_associations: [
                 {
-                    image_id: 'source-slide',
+                    slide_key: 'source-slide',
                     sample_id: null,
                     match_level: 'BLOCK',
                     specimen_key: 'block::part:1::block:S16-1681/1-4TC',
@@ -309,7 +308,7 @@ describe('wsiSlideUtils read-only slide derivation', () => {
             samples: [],
             slide_associations: [
                 {
-                    image_id: 'slide-1',
+                    slide_key: 'slide-1',
                     sample_id: null,
                     match_level: 'PART',
                     specimen_key: 'part::1',
@@ -317,7 +316,7 @@ describe('wsiSlideUtils read-only slide derivation', () => {
                     can_serve_tiles: true,
                 },
                 {
-                    image_id: 'slide-2',
+                    slide_key: 'slide-2',
                     sample_id: null,
                     match_level: 'BLOCK',
                     specimen_key: 'block::1::A1',
@@ -349,8 +348,8 @@ describe('wsiSlideUtils read-only slide derivation', () => {
 
     it('keeps sample lookup helpers based on the same cached slide set', () => {
         const sample = makeSample('S-1', [
-            makeSlide({ image_id: 'slide-1', part_description: 'Colon' }),
-            makeSlide({ image_id: 'slide-2', part_description: 'Liver' }),
+            makeSlide({ slide_key: 'slide-1', part_description: 'Colon' }),
+            makeSlide({ slide_key: 'slide-2', part_description: 'Liver' }),
         ]);
 
         expect(sampleHasServableSlide(sample, 'slide-1')).toBe(true);
@@ -360,9 +359,9 @@ describe('wsiSlideUtils read-only slide derivation', () => {
 });
 
 describe('selectMetadataPrefetchSlides', () => {
-    const hne = (id: string) => makeSlide({ image_id: id });
+    const hne = (id: string) => makeSlide({ slide_key: id });
     const ihc = (id: string) =>
-        makeSlide({ image_id: id, is_hne: false, is_ihc: true });
+        makeSlide({ slide_key: id, is_hne: false, is_ihc: true });
 
     function entries(sample: Sample) {
         return sample.parts[0].blocks[0].slides.map(slide => ({
@@ -380,7 +379,11 @@ describe('selectMetadataPrefetchSlides', () => {
             { selectedSampleId: 'S1', stainFilter: 'hne', limit: 10 }
         );
 
-        expect(picked.map(slide => slide.image_id)).toEqual(['h1', 'h2', 'i1']);
+        expect(picked.map(slide => slide.slide_key)).toEqual([
+            'h1',
+            'h2',
+            'i1',
+        ]);
     });
 
     it('skips the given image, already-cached slides and duplicates', () => {
@@ -392,12 +395,12 @@ describe('selectMetadataPrefetchSlides', () => {
                 selectedSampleId: 'S1',
                 stainFilter: 'all',
                 limit: 10,
-                skipImageId: 'h1',
-                isCached: imageId => imageId === 'h3',
+                skipSlideKey: 'h1',
+                isCached: slideKey => slideKey === 'h3',
             }
         );
 
-        expect(picked.map(slide => slide.image_id)).toEqual(['h2']);
+        expect(picked.map(slide => slide.slide_key)).toEqual(['h2']);
     });
 
     it('stops at the limit', () => {

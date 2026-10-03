@@ -54,16 +54,14 @@ const pendingThumbnailRequests = new Map<string, PendingThumbnail>();
 function cacheKey(
     tileServerBase: string,
     studyId: string,
-    imageId: string,
-    access: WsiSlideAccess,
+    slideKey: string,
     authScope?: string
 ): string {
     return [
         normalizeWsiAuthScope(authScope),
         tileServerBase,
         studyId,
-        imageId,
-        access.thumbnail.sourceUrl,
+        slideKey,
     ].join('::');
 }
 
@@ -150,16 +148,12 @@ async function requestThumbnail(
     const url = buildWsiThumbnailUrl(
         tileServerBase,
         WSI_THUMBNAIL_WIDTH,
-        WSI_THUMBNAIL_HEIGHT,
-        access.thumbnail.sourceUrl
+        WSI_THUMBNAIL_HEIGHT
     );
     const response = await getWsiViewerRuntime().fetchImpl(url, {
         cache: cacheMode,
         signal,
-        headers: buildWsiRequestHeaders(
-            access.thumbnail.sourceUrl,
-            access.accessToken
-        ),
+        headers: buildWsiRequestHeaders(access.accessToken),
     });
     const reason = response.headers
         .get('X-Thumbnail-Reason')
@@ -219,12 +213,12 @@ async function requestThumbnail(
 function getOrCreateThumbnailRequest(
     tileServerBase: string,
     studyId: string,
-    imageId: string,
+    slideKey: string,
     access: WsiSlideAccess,
     cacheMode: RequestCache,
     authScope?: string
 ): PendingThumbnail {
-    const key = cacheKey(tileServerBase, studyId, imageId, access, authScope);
+    const key = cacheKey(tileServerBase, studyId, slideKey, authScope);
     const now = Date.now();
     evictExpiredAndOldest(now);
     const pending = pendingThumbnailRequests.get(key);
@@ -288,14 +282,14 @@ function getOrCreateThumbnailRequest(
 export function fetchWsiThumbnailBlob(
     tileServerBase: string,
     studyId: string,
-    imageId: string,
+    slideKey: string,
     access: WsiSlideAccess,
     signal?: AbortSignal,
     cacheMode: RequestCache = 'default',
     authScope?: string
 ): Promise<Blob> {
     if (signal?.aborted) return Promise.reject(abortError());
-    const key = cacheKey(tileServerBase, studyId, imageId, access, authScope);
+    const key = cacheKey(tileServerBase, studyId, slideKey, authScope);
     const now = Date.now();
     evictExpiredAndOldest(now);
     const cached = thumbnailCache.get(key);
@@ -308,7 +302,7 @@ export function fetchWsiThumbnailBlob(
     const entry = getOrCreateThumbnailRequest(
         tileServerBase,
         studyId,
-        imageId,
+        slideKey,
         access,
         cacheMode,
         authScope

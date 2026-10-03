@@ -73,7 +73,7 @@ function computeEarliestServableSlideTimepoint(
             for (const slide of block.slides) {
                 if (
                     !slide.can_serve_tiles ||
-                    !slide.image_id ||
+                    !slide.slide_key ||
                     (!slide.is_hne && !slide.is_ihc)
                 ) {
                     continue;
@@ -145,20 +145,6 @@ export function normalizeBlockLabel(
     number?: string | number | null
 ): string {
     return (label || '').trim() || (number != null ? String(number) : '');
-}
-
-export function barcodeSection(
-    barcode: string | null | undefined
-): string | null {
-    const m = barcode?.match(/-T\d+-[^-]+-(\d+)-(\d+)$/i);
-    return m ? `${m[1]}.${m[2]}` : null;
-}
-
-export function barcodeAccession(
-    barcode: string | null | undefined
-): string | null {
-    const m = barcode?.match(/^(S-\d+)/i);
-    return m ? m[1] : null;
 }
 
 export function abbreviatePartDesc(

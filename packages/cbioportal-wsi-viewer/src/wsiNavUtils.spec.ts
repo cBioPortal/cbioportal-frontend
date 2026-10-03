@@ -78,7 +78,7 @@ describe('wsiNavUtils', () => {
                                 block_label: 'A1',
                                 slides: [
                                     {
-                                        image_id: 'img-1',
+                                        slide_key: 'img-1',
                                         stain_name: 'H&E',
                                         stain_group: 'H&E (Initial)',
                                         is_hne: true,
@@ -86,7 +86,6 @@ describe('wsiNavUtils', () => {
                                         magnification: '',
                                         file_size_bytes: '',
                                         can_serve_tiles: true,
-                                        barcode: '',
                                         block_label: 'A1',
                                         block_number: '1',
                                         slide_timepoint_days: -25,
@@ -127,7 +126,7 @@ describe('wsiNavUtils', () => {
                                 block_label: 'A1',
                                 slides: [
                                     {
-                                        image_id: 'unmatched-slide',
+                                        slide_key: 'unmatched-slide',
                                         stain_name: 'H&E',
                                         stain_group: 'H&E (Initial)',
                                         is_hne: true,
@@ -135,7 +134,6 @@ describe('wsiNavUtils', () => {
                                         magnification: '',
                                         file_size_bytes: '',
                                         can_serve_tiles: true,
-                                        barcode: '',
                                         block_label: 'A1',
                                         block_number: '1',
                                         slide_timepoint_days: -100,
@@ -164,7 +162,7 @@ describe('wsiNavUtils', () => {
                                 block_label: 'A1',
                                 slides: [
                                     {
-                                        image_id: 'matched-slide',
+                                        slide_key: 'matched-slide',
                                         stain_name: 'H&E',
                                         stain_group: 'H&E (Initial)',
                                         is_hne: true,
@@ -172,7 +170,6 @@ describe('wsiNavUtils', () => {
                                         magnification: '',
                                         file_size_bytes: '',
                                         can_serve_tiles: true,
-                                        barcode: '',
                                         block_label: 'A1',
                                         block_number: '1',
                                         slide_timepoint_days: 10,
@@ -210,7 +207,7 @@ describe('wsiNavUtils', () => {
                                 block_label: 'A1',
                                 slides: [
                                     {
-                                        image_id: 'img-ns',
+                                        slide_key: 'img-ns',
                                         stain_name: 'H&E',
                                         stain_group: 'H&E (Initial)',
                                         is_hne: true,
@@ -218,7 +215,6 @@ describe('wsiNavUtils', () => {
                                         magnification: '',
                                         file_size_bytes: '',
                                         can_serve_tiles: false,
-                                        barcode: '',
                                         block_label: 'A1',
                                         block_number: '1',
                                         slide_timepoint_days: -30,
@@ -226,7 +222,7 @@ describe('wsiNavUtils', () => {
                                             'Procedure date',
                                     },
                                     {
-                                        image_id: 'img-other',
+                                        slide_key: 'img-other',
                                         stain_name: 'Slides submitted',
                                         stain_group: 'Slides submitted',
                                         is_hne: false,
@@ -234,7 +230,6 @@ describe('wsiNavUtils', () => {
                                         magnification: '',
                                         file_size_bytes: '',
                                         can_serve_tiles: true,
-                                        barcode: '',
                                         block_label: 'A2',
                                         block_number: '2',
                                         slide_timepoint_days: -40,
@@ -280,7 +275,7 @@ describe('wsiNavUtils', () => {
                                 block_label: 'A1',
                                 slides: [
                                     {
-                                        image_id: 'img-1',
+                                        slide_key: 'img-1',
                                         stain_name: 'H&E',
                                         stain_group: 'H&E (Initial)',
                                         is_hne: true,
@@ -288,7 +283,6 @@ describe('wsiNavUtils', () => {
                                         magnification: '',
                                         file_size_bytes: '',
                                         can_serve_tiles: true,
-                                        barcode: '',
                                         block_label: 'A1',
                                         block_number: '1',
                                         slide_timepoint_days: -20,

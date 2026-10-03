@@ -25,9 +25,9 @@ function makeInstance(
     });
 }
 
-function makeSlide(image_id: string, can_serve_tiles = true): any {
+function makeSlide(slide_key: string, can_serve_tiles = true): any {
     return {
-        image_id,
+        slide_key,
         stain_name: 'H&E',
         stain_group: 'Histology',
         is_hne: true,
@@ -35,7 +35,6 @@ function makeSlide(image_id: string, can_serve_tiles = true): any {
         magnification: '20x',
         file_size_bytes: '1000',
         can_serve_tiles,
-        barcode: `${image_id}-barcode`,
         block_label: 'A1',
         block_number: '1',
     };
@@ -99,7 +98,7 @@ describe('WSIViewer foundation behavior', () => {
         expect(makeInstance(url as string).tileServerBase).toBe(expected);
     });
 
-    it('flattens only servable slides and removes duplicate image IDs', () => {
+    it('flattens only servable slides and removes duplicate slide keys', () => {
         const instance = makeInstance();
         const slide = makeSlide('slide-a');
         instance.hierarchy = makeHierarchy([
@@ -109,7 +108,7 @@ describe('WSIViewer foundation behavior', () => {
         ]);
 
         expect(
-            instance.servableSlides.map((entry: any) => entry.slide.image_id)
+            instance.servableSlides.map((entry: any) => entry.slide.slide_key)
         ).toEqual(['slide-a']);
         expect(instance.servableSlides[0].sample.sample_id).toBe('S-1');
     });
@@ -156,15 +155,15 @@ describe('WSIViewer foundation behavior', () => {
         expect(readWsiHashState()).toEqual({ slideId: 'slide-a' });
     });
 
-    describe('requested imageId', () => {
+    describe('requested slideKey', () => {
         const slides = () => [
             makeSlide('slide-a'),
             makeSlide('slide id/b #2'),
             makeSlide('slide-c'),
         ];
 
-        function loadedInstance(requestedImageId?: string) {
-            const instance = makeInstance(undefined, { requestedImageId });
+        function loadedInstance(requestedSlideKey?: string) {
+            const instance = makeInstance(undefined, { requestedSlideKey });
             action(() => {
                 instance.hierarchy = makeHierarchy(slides());
                 instance.loading = false;
@@ -177,7 +176,7 @@ describe('WSIViewer foundation behavior', () => {
 
             expect(
                 instance.chooseInitialServableSlide(instance.servableSlides)
-                    .slide.image_id
+                    .slide.slide_key
             ).toBe('slide id/b #2');
             expect(instance.requestedSlideUnavailable).toBe(false);
         });
@@ -188,7 +187,7 @@ describe('WSIViewer foundation behavior', () => {
 
             expect(
                 instance.chooseInitialServableSlide(instance.servableSlides)
-                    .slide.image_id
+                    .slide.slide_key
             ).toBe('slide-c');
         });
 
@@ -197,7 +196,7 @@ describe('WSIViewer foundation behavior', () => {
 
             expect(
                 instance.chooseInitialServableSlide(instance.servableSlides)
-                    .slide.image_id
+                    .slide.slide_key
             ).toBe('slide-a');
             expect(instance.requestedSlideUnavailable).toBe(true);
             const rendered = TestRenderer.create(instance.render());
@@ -211,7 +210,7 @@ describe('WSIViewer foundation behavior', () => {
 
         it('treats a non-servable requested slide as unavailable', () => {
             const instance = makeInstance(undefined, {
-                requestedImageId: 'slide-x',
+                requestedSlideKey: 'slide-x',
             });
             action(() => {
                 instance.hierarchy = makeHierarchy([

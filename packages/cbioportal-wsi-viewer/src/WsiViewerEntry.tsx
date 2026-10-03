@@ -32,8 +32,8 @@ export interface WsiViewerProps {
     onClearFilters?: () => void;
     preferredSampleId?: string;
     pathologyFilter?: PathologySlideFilter;
-    /** Slide named by an `imageId` viewer link. */
-    requestedImageId?: string;
+    /** Slide named by a `slideKey` viewer link. */
+    requestedSlideKey?: string;
     /**
      * Patient clinical events; sample acquisition and sequencing days are
      * read from them to relate each slide's procedure to its sample.

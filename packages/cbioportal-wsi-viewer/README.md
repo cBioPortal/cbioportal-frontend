@@ -55,7 +55,7 @@ The cBioPortal app does both in `src/shared/components/wsiViewer/wsiAppConfig.ts
 | `tileServerUrl` | Tile-server base URL (e.g. the portal's `msk.wsi.tile_server.url`) |
 | `authScope` | Subject used to isolate protected in-memory caches, normally the user name |
 | `height` | Viewer height in pixels |
-| `requestedImageId` | Slide to open, as from an `imageId` viewer link. A `#wsi:` hash with a viewport takes precedence |
+| `requestedSlideKey` | Slide to open, as from a `slideKey` viewer link. A `#wsi:` hash with a viewport takes precedence |
 | `initialStainFilter`, `initialMatchFilter`, `initialTimepointDays`, `preferredSampleId`, `pathologyFilter` | Initial slide-list filters and selection, e.g. from a timeline or table link |
 | `on…Change`, `onClearFilters` | Report filter changes back to the host, e.g. to keep them in the page URL |
 | `clinicalEvents` | Patient clinical events, used to relate each slide's procedure day to its sample's acquisition and sequencing |
@@ -71,7 +71,7 @@ The viewer talks to the cBioPortal backend and tile server only:
 | Request | Use |
 | --- | --- |
 | `GET {api}/api/wsi/v2/hierarchy/{studyId}/{patientId}` | The patient's samples → parts → blocks → slides. An empty hierarchy means no slides; 404 means an unknown study or patient |
-| `GET {api}/api/wsi/v2/resources/{studyId}/{patientId}/access?imageId=…` | Short-lived access for one slide: a signed token, the source and the tile metadata |
+| `GET {api}/api/wsi/v2/resources/{studyId}/{patientId}/access?slideKey=…` | Short-lived access for one slide: a signed token and the tile metadata (no source location) |
 | `{tileServerUrl}/tiles/zxy/{level}/{x}/{y}`, `{tileServerUrl}/thumbnails` | Tiles and thumbnails, authorized with the access token |
 
 On the backend, slides are `resource_data` rows of the `WSI_SAMPLE`/`WSI_PATIENT` resources (`TYPE=WHOLE_SLIDE_IMAGE`). Their private serving metadata stays on the server, and the viewer sees only the hierarchy and per-slide access responses.

@@ -42,11 +42,9 @@ describe('wsiMetadataFetchCache', () => {
 
     function mockAccess(metadata = makeMetadata()) {
         mockGetWsiSlideAccess.mockResolvedValue({
-            imageId: 'A',
-            sourceUrl: 's3://bucket/A.svs',
+            slideKey: 'A',
             tileMetadata: metadata,
             thumbnail: {
-                sourceUrl: 's3://bucket/A.jpg',
                 width: 128,
                 height: 96,
                 contentType: 'image/jpeg',

@@ -30,7 +30,7 @@ const hierarchy = {
                             block_label: 'A1',
                             slides: [
                                 {
-                                    image_id: 'slide-a',
+                                    slide_key: 'slide-a',
                                     stain_name: 'H&E',
                                     stain_group: 'H&E',
                                     is_hne: true,

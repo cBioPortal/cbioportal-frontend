@@ -110,7 +110,7 @@ type SampleSlideData = {
     orderedSlides: OrderedServableSlideEntry[];
     slideCounts: ServableSlideCounts;
     partDescriptionCount: number;
-    slideImageIds: Set<string>;
+    slideKeys: Set<string>;
 };
 
 // A normalized hierarchy is never mutated, so everything derived from it is
@@ -120,11 +120,11 @@ const hierarchySlideEntriesCache = new WeakMap<
     PatientHierarchy,
     ServableSlideEntry[]
 >();
-const servableAssociationsByImageIdCache = new WeakMap<
+const servableAssociationsBySlideKeyCache = new WeakMap<
     SlideAssociation[],
     Map<string, SlideAssociation>
 >();
-const pathologyFilterImageIdsCache = new WeakMap<
+const pathologyFilterSlideKeysCache = new WeakMap<
     SlideAssociation[],
     Map<string, Set<string>>
 >();
@@ -165,14 +165,14 @@ function compareServableAssociationPreference(
     );
 }
 
-export function getServableSlideAssociationsByImageIdReadOnly(
+export function getServableSlideAssociationsBySlideKeyReadOnly(
     associations: SlideAssociation[] | undefined
 ): Map<string, SlideAssociation> {
     if (!associations) {
         return new Map<string, SlideAssociation>();
     }
 
-    const cached = servableAssociationsByImageIdCache.get(associations);
+    const cached = servableAssociationsBySlideKeyCache.get(associations);
     if (cached) {
         return cached;
     }
@@ -183,30 +183,30 @@ export function getServableSlideAssociationsByImageIdReadOnly(
             continue;
         }
 
-        const existing = result.get(association.image_id);
+        const existing = result.get(association.slide_key);
         if (
             !existing ||
             compareServableAssociationPreference(association, existing) > 0
         ) {
-            result.set(association.image_id, association);
+            result.set(association.slide_key, association);
         }
     }
 
-    servableAssociationsByImageIdCache.set(associations, result);
+    servableAssociationsBySlideKeyCache.set(associations, result);
     return result;
 }
 
 function uniqueSlideKey(
     sampleId: string,
-    slide: Pick<Slide, 'image_id'>
+    slide: Pick<Slide, 'slide_key'>
 ): string {
-    return `${sampleId}::${slide.image_id}`;
+    return `${sampleId}::${slide.slide_key}`;
 }
 
 export function isServableDiagnosticSlide(
-    slide: Pick<Slide, 'can_serve_tiles' | 'image_id' | 'is_hne' | 'is_ihc'>
+    slide: Pick<Slide, 'can_serve_tiles' | 'slide_key' | 'is_hne' | 'is_ihc'>
 ): boolean {
-    return !!(slide.can_serve_tiles && slide.image_id);
+    return !!(slide.can_serve_tiles && slide.slide_key);
 }
 
 /**
@@ -239,24 +239,24 @@ export function selectMetadataPrefetchSlides(
         selectedSampleId: string | undefined;
         stainFilter: WsiStainFilter;
         limit: number;
-        skipImageId?: string;
-        isCached?: (imageId: string) => boolean;
+        skipSlideKey?: string;
+        isCached?: (slideKey: string) => boolean;
     }
 ): Slide[] {
     const matching: Slide[] = [];
     const otherStain: Slide[] = [];
     const seen = new Set<string>();
     for (const { slide, sample } of entries) {
-        const imageId = slide.image_id;
+        const slideKey = slide.slide_key;
         if (
             sample.sample_id !== options.selectedSampleId ||
-            imageId === options.skipImageId ||
-            seen.has(imageId) ||
-            options.isCached?.(imageId)
+            slideKey === options.skipSlideKey ||
+            seen.has(slideKey) ||
+            options.isCached?.(slideKey)
         ) {
             continue;
         }
-        seen.add(imageId);
+        seen.add(slideKey);
         (matchesWsiStainFilter(slide, options.stainFilter)
             ? matching
             : otherStain
@@ -277,7 +277,7 @@ function buildSampleSlideData(sample: Sample): SampleSlideData {
         unknown: 0,
     };
     const partDescriptions = new Set<string>();
-    const slideImageIds = new Set<string>();
+    const slideKeys = new Set<string>();
     for (const part of sample.parts) {
         for (const block of part.blocks) {
             const normalizedBlockLabel = normalizeBlockLabel(
@@ -295,7 +295,7 @@ function buildSampleSlideData(sample: Sample): SampleSlideData {
                 deduped.push(slide);
                 orderedSlides.push({ slide, blockLabel });
                 slideCounts.all += 1;
-                slideImageIds.add(slide.image_id);
+                slideKeys.add(slide.slide_key);
                 if (slide.part_description) {
                     partDescriptions.add(slide.part_description);
                 }
@@ -350,7 +350,7 @@ function buildSampleSlideData(sample: Sample): SampleSlideData {
         orderedSlides,
         slideCounts,
         partDescriptionCount: partDescriptions.size,
-        slideImageIds,
+        slideKeys,
     };
 }
 
@@ -405,8 +405,7 @@ export function sampleHasServableSlide(
     slideId: string | null | undefined
 ): boolean {
     return (
-        !!slideId &&
-        getCachedServableSlideData(sample).slideImageIds.has(slideId)
+        !!slideId && getCachedServableSlideData(sample).slideKeys.has(slideId)
     );
 }
 
@@ -455,19 +454,19 @@ export function getServableSlideIdsForPathologyFilterReadOnly(
     if (!filterKey) {
         return undefined;
     }
-    let byFilterKey = pathologyFilterImageIdsCache.get(
+    let byFilterKey = pathologyFilterSlideKeysCache.get(
         hierarchy.slide_associations
     );
     if (!byFilterKey) {
         byFilterKey = new Map();
-        pathologyFilterImageIdsCache.set(
+        pathologyFilterSlideKeysCache.set(
             hierarchy.slide_associations,
             byFilterKey
         );
     }
-    const cachedImageIds = byFilterKey.get(filterKey);
-    if (cachedImageIds) {
-        return cachedImageIds;
+    const cachedSlideKeys = byFilterKey.get(filterKey);
+    if (cachedSlideKeys) {
+        return cachedSlideKeys;
     }
 
     const normalizedMatchLevel = normalizeMatchLevel(filter.matchLevel);
@@ -501,17 +500,17 @@ export function getServableSlideIdsForPathologyFilterReadOnly(
         return true;
     };
 
-    const matchingImageIds = new Set(
+    const matchingSlideKeys = new Set(
         hierarchy.slide_associations
             .filter(association => matchesFilter(association, true))
-            .map(association => association.image_id)
+            .map(association => association.slide_key)
     );
 
     // Older pathology linkouts can carry a source sample ID that is not a
     // portal sample. Keep the explicit specimen and match-level constraints,
     // but allow the hierarchy's unmatched group to satisfy that linkout.
     if (
-        matchingImageIds.size === 0 &&
+        matchingSlideKeys.size === 0 &&
         filter.sampleId &&
         filter.specimenKey &&
         !hierarchy.slide_associations.some(
@@ -520,9 +519,11 @@ export function getServableSlideIdsForPathologyFilterReadOnly(
     ) {
         hierarchy.slide_associations
             .filter(association => matchesFilter(association, false))
-            .forEach(association => matchingImageIds.add(association.image_id));
+            .forEach(association =>
+                matchingSlideKeys.add(association.slide_key)
+            );
     }
 
-    byFilterKey.set(filterKey, matchingImageIds);
-    return matchingImageIds;
+    byFilterKey.set(filterKey, matchingSlideKeys);
+    return matchingSlideKeys;
 }
