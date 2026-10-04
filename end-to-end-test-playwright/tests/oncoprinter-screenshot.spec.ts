@@ -7,8 +7,6 @@ import {
 import { setInputText } from './helpers/common';
 
 /**
- * Port of end-to-end-test/remote/specs/core/oncoprinter.screenshot.spec.js.
- *
  * Each test submits an Oncoprinter example-data combination (genetic,
  * clinical, heatmap, or all three) and screenshots the resulting
  * oncoprint. A few tests flip controls afterwards (annotate OncoKb,
@@ -18,9 +16,9 @@ import { setInputText } from './helpers/common';
  * Most tests start from a fresh `/oncoprinter` page — so per-test
  * browser workers (not a shared Page), and no test.describe.serial.
  *
- * The huge `SAMPLE_LIST` constant is the TCGA OV sample list the wdio
- * spec used; kept verbatim so the resulting sample ordering matches
- * the committed reference.
+ * The huge `SAMPLE_LIST` constant is a TCGA OV sample list, kept
+ * verbatim so the resulting sample ordering matches the committed
+ * reference.
  */
 
 const GENETIC = '.oncoprinterGeneticExampleData';

@@ -37,7 +37,6 @@ LICENSE
 *.maf
 *properties
 *.seg
-end-to-end-test/local/studies/**
 *.screenshottest
 *.jks
 *.cert

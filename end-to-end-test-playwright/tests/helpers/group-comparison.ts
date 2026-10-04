@@ -3,8 +3,8 @@ import { expectElementScreenshot, setDropdownOpen } from './common';
 
 /**
  * Shared selectors, URLs, and small helpers for the group-comparison
- * screenshot specs. Extracted so the original monolithic file can be
- * split into per-topic files that run on separate workers.
+ * screenshot specs, which are split into per-topic files so they can
+ * run on separate workers.
  */
 
 export const OVERLAP_DIV = 'div[data-test="ComparisonPageOverlapTabDiv"]';
@@ -22,7 +22,7 @@ export const METHYLATION_ENRICH_DIV =
 export const MUTATIONS_PLOT = '[data-test="ComparisonPageMutationsTabPlot"]';
 // Standalone group-comparison page wraps content in a single .msk-tab — but
 // the enrichments mini-box-plot opens a nested msk-tab, so :not(.hiddenByPosition)
-// can match 2 elements. Use nth=0 to match wdio's `document.querySelector`.
+// can match 2 elements. nth=0 picks the first one.
 export const MSK_TAB_ACTIVE = '.msk-tab:not(.hiddenByPosition) >> nth=0';
 
 export const GENERAL_URL = '/comparison?sessionId=5ce411c7e4b0ab4137874076';
@@ -53,9 +53,8 @@ export async function dispatchSvgClick(page: Page, selector: string) {
 }
 
 /**
- * Apply `disablePointerEvents` class to the target before snapshotting —
- * mirrors wdio's `checkElementWithTemporaryClass`, used to freeze hover
- * highlights on the venn diagrams.
+ * Apply `disablePointerEvents` class to the target before snapshotting,
+ * to freeze hover highlights on the venn diagrams.
  */
 export async function snapWithFrozenHover(
     page: Page,

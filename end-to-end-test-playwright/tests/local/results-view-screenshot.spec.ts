@@ -1,4 +1,3 @@
-// Source: end-to-end-test/local/specs/core/resultsview.screenshot.spec.js
 import { expect } from '@playwright/test';
 import { test } from '../../fixtures';
 import { goToUrlAndSetLocalStorage } from './helpers';

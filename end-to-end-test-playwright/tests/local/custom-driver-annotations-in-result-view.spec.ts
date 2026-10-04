@@ -1,4 +1,3 @@
-// Source: end-to-end-test/local/specs/custom-driver-annotations-in-result-view.spec.js
 import { test, expect, Page } from '../../fixtures';
 import { goToUrlAndSetLocalStorage } from './helpers';
 import { waitForOncoprint, setSettingsMenuOpen } from '../helpers/oncoprint';

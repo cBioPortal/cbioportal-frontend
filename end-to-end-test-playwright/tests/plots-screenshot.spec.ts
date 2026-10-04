@@ -2,18 +2,15 @@ import { test, expect, Page } from '../fixtures';
 import { expectElementScreenshot } from './helpers/common';
 
 /**
- * Port of end-to-end-test/remote/specs/core/plots.screenshot.spec.js.
- *
  * Plots-tab screenshot coverage: ~50 captures across the discrete-vs-
  * discrete plot type matrix (stacked bar, percentage stacked bar, table,
  * grouped bar, horizontal variants), continuous boxplots, scatter plots
  * with various coloring options, and a few special cases (multi-study,
  * structural-variant coloring, log-scale-zero, clonality).
  *
- * The wdio version is heavily order-sensitive: each test mutates a
- * shared MobX view-model (`resultsViewPlotsTab`) and snaps the result.
- * We preserve that with `describe.serial` + a shared `page` instance
- * per group.
+ * The suite is heavily order-sensitive: each test mutates a shared MobX
+ * view-model (`resultsViewPlotsTab`) and snaps the result, so each group
+ * uses `describe.serial` + a shared `page` instance.
  */
 
 const PLOT_DIV = 'div[data-test="PlotsTabPlotDiv"]';
@@ -33,8 +30,8 @@ async function snap(page: Page, name: string) {
 
 /**
  * Convenience: invoke a method on `window.resultsViewPlotsTab` from the
- * page context. The wdio suite drove the plots view-model directly via
- * `browser.execute` instead of clicking through the UI; we do the same.
+ * page context, to drive the plots view-model directly instead of
+ * clicking through the UI.
  */
 async function plotsExec<T>(
     page: Page,
@@ -485,9 +482,8 @@ test.describe.serial('plots tab screenshot tests', () => {
 
     // Skipped: the URL's default plot state regressed to "No data to
     // plot" somewhere upstream, and switching the horizontal axis to
-    // MUTATION_EXTENDED (the port's only interaction, matching the wdio
-    // spec exactly) is no longer enough to produce a plot against
-    // current msk_impact_2017 data. Every run in the post-AA-off
+    // MUTATION_EXTENDED (the test's only interaction) is no longer enough
+    // to produce a plot against current msk_impact_2017 data. Every run in the post-AA-off
     // stability batch failed on this, as did the regen itself. Needs
     // a product-side investigation into what initial axis state the
     // duplicates-mutation screenshot actually expects.

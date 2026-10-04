@@ -1,9 +1,9 @@
 #!/bin/sh
 # Spin up the localdb cBioPortal backend for the Playwright local e2e
-# suite. Mirrors the relevant pieces of scripts/e2e.sh but:
-#   - clones into a fixed working dir under /tmp/cbio-localdb so the
-#     keycloak-config volume and the backend itself stay alive across
-#     test runs (the upstream script wipes its temp dir at exit).
+# suite:
+#   - clones cbioportal-test and cbioportal-docker-compose into a fixed
+#     working dir under /tmp/cbio-localdb, so the keycloak-config volume
+#     and the backend itself stay alive across test runs.
 #   - leaves the containers detached and exits 0 once the backend reports
 #     healthy.
 #
@@ -19,7 +19,7 @@ TEST_REPO_REF="${TEST_REPO_REF:-main}"
 STUDIES="${STUDIES:-ascn_test_study study_hg38 teststudy_genepanels study_es_0 lgg_ucsf_2014_test_generic_assay}"
 
 ROOT_DIR=$(cd -- "$(dirname -- "$0")" && cd ../../.. && pwd)
-APPLICATION_PROPERTIES_PATH=$ROOT_DIR/end-to-end-test/local/runtime-config/portal.properties
+APPLICATION_PROPERTIES_PATH=$ROOT_DIR/end-to-end-test-playwright/scripts/localdb/portal.properties
 WORK_DIR=${CBIO_LOCALDB_WORKDIR:-/tmp/cbio-localdb}
 
 mkdir -p "$WORK_DIR"

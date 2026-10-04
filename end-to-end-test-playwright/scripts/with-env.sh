@@ -13,11 +13,9 @@
 #   3. Nothing set → fall through. playwright.config.ts's hardcoded default
 #      (https://www.cbioportal.org) kicks in.
 #
-# Why this exists: the old WebdriverIO e2e suite ran
-#   eval "$(../scripts/env_vars.sh)" && pnpm run test-webdriver-manager-remote
-# so the URL tracked the PR's target branch. The Playwright suite lost that
-# wiring during migration. This wrapper restores it while keeping the
-# "just set CBIOPORTAL_URL" path simple for one-off runs.
+# This keeps CI runs pointed at the backend matching the PR's target
+# branch, while keeping the "just set CBIOPORTAL_URL" path simple for
+# one-off runs.
 set -euo pipefail
 
 if [[ -z "${CBIOPORTAL_URL:-}" ]]; then

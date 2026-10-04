@@ -1,7 +1,7 @@
 import { test, expect, Page } from '../fixtures';
 
 /**
- * Clinical timeline — port of end-to-end-test/remote/specs/core/timeline.spec.js
+ * Clinical timeline.
  *
  * The clinical timeline is the horizontal widget on the patient summary page
  * that plots clinical events (treatments, lab results, status changes) against
@@ -42,11 +42,9 @@ test.describe('clinical timeline', () => {
      * Collapsing a row group via its caret should reduce the visible row
      * count, and re-expanding should restore it.
      *
-     * Marked `fixme` to mirror the `.skip` on the source wdio test. The
-     * original hardcoded 15 → 6 → 15 counts went stale as data upstream
-     * changed; porting preserves the intent so we can re-enable it with
-     * robust selectors (e.g. asserting a *decrease*, not a magic number)
-     * in a follow-up.
+     * Marked `fixme`: hardcoded 15 → 6 → 15 row counts go stale as
+     * upstream data changes. Re-enable it with robust assertions (e.g. a
+     * *decrease*, not a magic number).
      */
     test.fixme(
         'timeline rows collapse when caret clicked',
@@ -84,11 +82,6 @@ test.describe('clinical timeline', () => {
      * Dragging horizontally on the timeline axis zooms the viewport onto
      * the dragged range. We drag from the "year 0" label rightward and
      * confirm the view updates.
-     *
-     * The source wdio version of this test had no assertion at all (the
-     * screenshot result was never awaited or compared), so this is a
-     * correctness upgrade during the port, not a faithful copy. Kept here
-     * because the *intent* — verify drag-to-zoom works — is worth having.
      */
     test('timeline zooms in on drag and drop', async ({ page }) => {
         await expect(page.locator('.tl-timeline-svg')).toBeVisible();
@@ -123,9 +116,8 @@ test.describe('clinical timeline', () => {
 
 /**
  * Move the mouse to the top-left corner so no hover state leaks into the
- * screenshot (equivalent of the wdio `checkElementWithMouseDisabled`
- * overlay trick). Playwright's `toHaveScreenshot` already disables
- * animations and hides the caret; combined, this gives us stable pixels.
+ * screenshot. Playwright's `toHaveScreenshot` already disables animations
+ * and hides the caret; combined, this gives us stable pixels.
  */
 async function stabilizeForScreenshot(page: Page) {
     await page.mouse.move(0, 0);

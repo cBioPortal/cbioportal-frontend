@@ -1,4 +1,3 @@
-// Source: end-to-end-test/local/specs/core/version.spec.js
 import { test } from '../../fixtures';
 import { goToUrlAndSetLocalStorage } from './helpers';
 

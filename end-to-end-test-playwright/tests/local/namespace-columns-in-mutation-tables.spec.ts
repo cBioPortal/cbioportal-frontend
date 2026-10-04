@@ -1,4 +1,3 @@
-// Source: end-to-end-test/local/specs/namespace-columns-in-mutation-tables.spec.js
 import { test, expect, Page } from '../../fixtures';
 import { goToUrlAndSetLocalStorageWithProperty } from './helpers';
 import { setInputText } from '../helpers/common';

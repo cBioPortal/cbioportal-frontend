@@ -2,8 +2,6 @@ import { test, expect, Page } from '../fixtures';
 import { expectElementScreenshot, stubEmbeddingData } from './helpers/common';
 
 /**
- * Port of end-to-end-test/local/specs/core/embeddings.screenshot.spec.js.
- *
  * Similarity Maps (patient embeddings) screenshot coverage: the deck.gl
  * UMAP scatter and its legend under the various coloring modes (cancer
  * type, gene mutation, categorical + numeric clinical attribute) and the

@@ -2,11 +2,9 @@ import { test, expect } from '../fixtures';
 import { byTestHandle } from './helpers/common';
 
 /**
- * Port of end-to-end-test/remote/specs/core/patient.logic.spec.js.
- *
- * DOM assertions on the patient page. The TMB-H biomarker test from
- * the wdio version is skipped upstream (study `msk_impact_50k_2026`
- * isn't on public portal yet), so we skip it here too.
+ * DOM assertions on the patient page. There's no TMB-H biomarker test
+ * yet, because its study `msk_impact_50k_2026` isn't on the public
+ * portal.
  */
 
 test.describe('patient page', () => {

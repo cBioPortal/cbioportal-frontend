@@ -1,12 +1,9 @@
 import { expect, Locator, Page } from '@playwright/test';
 
 /**
- * Helpers ported from end-to-end-test/shared/specUtils_Async.js.
- * Scope: just what the oncoprint specs need. Not a full 1:1 port of the
- * wdio utility module — more helpers will be added as other specs get
- * ported. Kept deliberately thin: Playwright's auto-waiting locators
- * replace most of the wdio `waitFor*` dance, so the wdio helpers that
- * only existed to paper over wdio's lack of auto-retry collapse away.
+ * Oncoprint and results-view helpers shared across specs. Kept
+ * deliberately thin: Playwright's auto-waiting locators handle most
+ * waiting, so only helpers that add real behavior live here.
  */
 
 /** The oncoprint is ready when: loader is gone, legend SVG has painted, controls are mounted. */
@@ -21,9 +18,9 @@ export async function waitForOncoprint(page: Page, timeoutMs = 20000) {
         timeout: timeoutMs,
     });
     // Wait for the legend SVG to actually paint at least one <text> node
-    // rather than sleeping for a fixed 1s. The legend renders after the
-    // data grid; this is the deterministic signal that the wdio-era
-    // 1000ms `waitForTimeout` was approximating.
+    // rather than sleeping for a fixed time. The legend renders after the
+    // data grid, so this is a deterministic signal that the oncoprint is
+    // done.
     await expect(
         page.locator('#oncoprintDiv .oncoprint-legend-div svg text').first()
     ).toBeAttached({ timeout: timeoutMs });
@@ -49,9 +46,8 @@ export function getGroupHeaderOptionsSelectors(trackGroupIndex: number) {
 }
 
 /**
- * Toggle a dropdown to the desired open/closed state. Equivalent to the
- * wdio setDropdownOpen helper — click the button, retry if the dropdown
- * didn't reach the expected visibility state.
+ * Toggle a dropdown to the desired open/closed state: click the button,
+ * and retry if the dropdown didn't reach the expected visibility state.
  */
 export async function setDropdownOpen(
     page: Page,
@@ -110,8 +106,8 @@ export async function setSettingsMenuOpen(
 
 /**
  * Screenshot the oncoprint with hover effects and floating UI suppressed.
- * Wraps Playwright's toHaveScreenshot with the same hides/masks the wdio
- * checkOncoprintElement helper used. Callers pass the snapshot name.
+ * Wraps Playwright's toHaveScreenshot with the oncoprint's hides/masks.
+ * Callers pass the snapshot name.
  */
 export async function expectOncoprintScreenshot(
     page: Page,
@@ -121,7 +117,7 @@ export async function expectOncoprintScreenshot(
     const target = page.locator(opts.selector ?? '#oncoprintDiv');
 
     // If the view-dropdown ended up open from a prior interaction, close it
-    // so it doesn't leak into the screenshot (mirrors wdio behavior).
+    // so it doesn't leak into the screenshot.
     await page.evaluate(() => {
         const open = document.querySelector(
             '.oncoprint__controls .open #viewDropdownButton'
@@ -268,7 +264,7 @@ export async function clickQueryByGeneButton(page: Page) {
     await page.evaluate(() => window.scrollTo(0, 0));
 }
 
-/** Helper matching wdio `getElementByTestHandle`. */
+/** Convenience locator for elements tagged with a data-test attribute. */
 export function byTestHandle(page: Page, handle: string): Locator {
     return page.locator(`[data-test="${handle}"]`);
 }

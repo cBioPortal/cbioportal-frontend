@@ -8,17 +8,15 @@ import {
 } from './helpers/common';
 
 /**
- * Port of end-to-end-test/remote/specs/core/comparisonTab.screenshot.spec.js.
- *
  * Heavy screenshot spec exercising the results-view Comparison tab:
  *  - general flows (overlap, survival, clinical, enrichments variants)
  *  - delete-group-from-session
  *  - overlap venn diagrams (disjoint, with-overlap, complex A/B/C/D/E)
  *  - overlap upset diagram group selection
  *
- * wdio used `$(selector).addClass('disablePointerEvents')` before each
- * venn screenshot to suppress SVG hover highlights that randomized the
- * capture. The helper below applies the same class through page.evaluate.
+ * Each venn screenshot adds the `disablePointerEvents` class to its target
+ * first, to suppress SVG hover highlights that would randomize the capture
+ * (see snapWithFrozenHover).
  */
 
 const OVERLAP_DIV = 'div[data-test="ComparisonPageOverlapTabDiv"]';
@@ -32,8 +30,8 @@ const PROTEIN_ENRICH_DIV = '[data-test="GroupComparisonProteinEnrichments"]';
 const METHYLATION_ENRICH_DIV =
     'div[data-test="GroupComparisonMethylationEnrichments"]';
 // Comparison tab nests its own msk-tab sub-tabs inside the outer msk-tab, so
-// :not(.hiddenByPosition) matches 2 — select the first (outermost active tab)
-// to mirror the wdio selector.
+// :not(.hiddenByPosition) matches 2 — select the first (outermost active
+// tab).
 const MSK_TAB_ACTIVE = '.msk-tab:not(.hiddenByPosition) >> nth=0';
 
 const GENERAL_URL =
@@ -70,9 +68,8 @@ async function dispatchSvgClick(page: Page, selector: string) {
 }
 
 /**
- * Apply `disablePointerEvents` class to the target before snapshotting —
- * matches wdio's `checkElementWithTemporaryClass`, used to freeze hover
- * highlights on the venn diagrams.
+ * Apply `disablePointerEvents` class to the target before snapshotting,
+ * to freeze hover highlights on the venn diagrams.
  */
 async function snapWithFrozenHover(
     page: Page,
@@ -95,7 +92,7 @@ async function snapWithFrozenHover(
     }
 }
 
-/** Mirrors the wdio `selectClinicalTabPlotType` helper. */
+/** Pick a plot type in the clinical tab's plot type dropdown. */
 async function selectClinicalTabPlotType(page: Page, type: string) {
     await setDropdownOpen(
         page,

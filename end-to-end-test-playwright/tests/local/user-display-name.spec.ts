@@ -1,4 +1,3 @@
-// Source: end-to-end-test/local/specs/user-display-name.spec.js
 import { test, expect } from '../../fixtures';
 import { goToUrlAndSetLocalStorageWithProperty } from './helpers';
 

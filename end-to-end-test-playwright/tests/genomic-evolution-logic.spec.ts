@@ -2,8 +2,6 @@ import { test, expect, Page } from '../fixtures';
 import { byTestHandle, waitForNetworkQuiet } from './helpers/common';
 
 /**
- * Port of end-to-end-test/remote/specs/core/genomicEvolution.spec.js.
- *
  * DOM assertions for the patient-view Genomic Evolution tab:
  * - "Show only highlighted" checkbox filters the mutation table based
  *   on which rows are selected.

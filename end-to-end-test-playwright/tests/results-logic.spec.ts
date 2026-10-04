@@ -7,8 +7,6 @@ import {
 } from './helpers/oncoprint';
 
 /**
- * Port of end-to-end-test/remote/specs/core/results.logic.spec.js.
- *
  * Non-screenshot logic tests for the results view and the modify-query
  * form: invalid-query handling, tab hiding heuristics (coexpression,
  * cnSegments, survival, mutual-exclusivity), case-set & molecular-
@@ -407,9 +405,7 @@ test.describe('genetic profile selection in modify query form', () => {
             );
 
         // Initial state from URL: MUT/CNA/PROTEIN are URL-driven; MRNA
-        // is not requested. (The wdio version had no-op `isSelected()`
-        // calls without an enclosing `assert`, so it never noticed that
-        // MRNA was unchecked here.)
+        // is not requested.
         await expect(profSel('MUTATION_EXTENDED')).toBeChecked({
             timeout: 30000,
         });

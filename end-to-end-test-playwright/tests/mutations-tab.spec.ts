@@ -3,17 +3,15 @@ import { byTestHandle } from './helpers/common';
 import { setSettingsMenuOpen, waitForOncoprint } from './helpers/oncoprint';
 
 /**
- * Port of end-to-end-test/remote/specs/core/mutationsTab.spec.js.
- *
  * Two groups:
  *  - VUS/germline filtering via the global settings menu toggles the
  *    mutation-table row count.
  *  - Alteration badge filters (Missense, Splice) and the OncoKB driver
  *    annotation toggle each independently adjust the mutation count.
  *
- * Counts are asserted as literal strings matching the wdio spec. If the
- * upstream data changes the expected numbers will drift; update them
- * in-place rather than loosening the assertions.
+ * Counts are asserted as literal strings. If the upstream data changes
+ * the expected numbers will drift; update them in-place rather than
+ * loosening the assertions.
  */
 
 const VUS_URL =
@@ -90,9 +88,9 @@ test.describe('mutations tab — alteration badges', () => {
         const count = byTestHandle(page, 'LazyMobXTable_CountHeader');
         await expect(count).toContainText('98 Mutations');
 
-        // "strong=Missense" in wdio = exact text match. There are sibling
-        // <strong>Missense Mutations</strong> nodes in the lollipop legend,
-        // so scope to the badge filter with :text-is().
+        // There are sibling <strong>Missense Mutations</strong> nodes in
+        // the lollipop legend, so match the badge filter's exact text with
+        // :text-is().
         const missense = page.locator('strong:text-is("Missense")');
         const splice = page.locator('strong:text-is("Splice")');
 
