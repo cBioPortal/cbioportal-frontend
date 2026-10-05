@@ -67,7 +67,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
         'https://raw.githubusercontent.com/cBioPortal/cbioportal/master/docs/',
     skin_documentation_markdown: true,
     skin_email_contact: 'cbioportal at googlegroups dot com',
-    nl_oql_service_url: 'https://vps-870e202d.tailf02841.ts.net:8457',
+    nl_oql_service_url: 'https://oql-llm.vercel.app',
     skin_documentation_faq: 'user-guide/faq.md',
     skin_footer_show_dev: false,
     skin_login_saml_registration_html: 'Sign in with MSK',
