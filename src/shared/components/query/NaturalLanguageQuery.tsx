@@ -9,18 +9,19 @@ type Issue = { code: string; message: string; suggestion?: string };
 
 type TranslateResponse = {
     oql?: string;
-    explanation?: string[];
     warnings?: Issue[];
     error?: string;
     errors?: Issue[];
 };
 
 /**
- * Lets the user describe a query in plain language; the NL-to-OQL service translates it and the
- * result replaces the contents of the gene/OQL box.
+ * Collapsed by default to a small toggle above the gene/OQL box. When opened, the user describes
+ * a query in plain language; the NL-to-OQL service translates it and the result replaces the
+ * contents of the gene/OQL box.
  */
 @observer
 export default class NaturalLanguageQuery extends QueryStoreComponent<{}, {}> {
+    @observable open = false;
     @observable prompt = '';
     @observable busy = false;
     @observable result: TranslateResponse | null = null;
@@ -39,6 +40,11 @@ export default class NaturalLanguageQuery extends QueryStoreComponent<{}, {}> {
     get studyId(): string | undefined {
         const ids = this.store.physicalStudyIdsInSelection;
         return ids.length === 1 ? ids[0] : undefined;
+    }
+
+    @action.bound
+    toggle() {
+        this.open = !this.open;
     }
 
     @action.bound
@@ -87,15 +93,38 @@ export default class NaturalLanguageQuery extends QueryStoreComponent<{}, {}> {
 
     render() {
         if (!this.serviceUrl) return null;
+        if (!this.open) {
+            return (
+                <button
+                    type="button"
+                    className={`btn btn-link btn-xs ${styles.naturalLanguageQueryToggle}`}
+                    onClick={this.toggle}
+                    data-test="nlOqlToggle"
+                >
+                    <i className="fa fa-magic" /> Try AI-powered OQL wizard
+                </button>
+            );
+        }
         const r = this.result;
         return (
             <div
                 className={styles.naturalLanguageQuery}
                 data-test="naturalLanguageQuery"
             >
-                <label htmlFor="nlOqlPrompt">
-                    Or describe your query in plain language
-                </label>
+                <div className={styles.naturalLanguageQueryHeader}>
+                    <label htmlFor="nlOqlPrompt">
+                        Describe your query in plain language
+                    </label>
+                    <button
+                        type="button"
+                        className="btn btn-link btn-xs"
+                        onClick={this.toggle}
+                        title="Close the OQL wizard"
+                        data-test="nlOqlClose"
+                    >
+                        <i className="fa fa-times" />
+                    </button>
+                </div>
                 <textarea
                     id="nlOqlPrompt"
                     className="form-control"
@@ -104,12 +133,13 @@ export default class NaturalLanguageQuery extends QueryStoreComponent<{}, {}> {
                     placeholder="e.g. KRAS G12C or STK11 truncating mutations, and MYC amplification"
                     onChange={this.onChange}
                     onKeyDown={this.onKeyDown}
+                    autoFocus
                     data-test="nlOqlPrompt"
                 />
                 <div className={styles.naturalLanguageQueryActions}>
                     <button
                         type="button"
-                        className="btn btn-default btn-sm"
+                        className="btn btn-default btn-xs"
                         disabled={this.busy || !this.prompt.trim()}
                         onClick={this.translate}
                         data-test="nlOqlTranslate"
@@ -129,16 +159,6 @@ export default class NaturalLanguageQuery extends QueryStoreComponent<{}, {}> {
                         </span>
                     )}
                 </div>
-                {r && r.oql && (
-                    <ul
-                        className={styles.naturalLanguageQueryExplanation}
-                        data-test="nlOqlExplanation"
-                    >
-                        {(r.explanation || []).map((line, i) => (
-                            <li key={i}>{line}</li>
-                        ))}
-                    </ul>
-                )}
                 {r && !r.oql && (
                     <div className="text-danger" data-test="nlOqlError">
                         {r.error}

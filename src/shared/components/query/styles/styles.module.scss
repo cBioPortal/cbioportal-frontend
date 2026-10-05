@@ -353,18 +353,35 @@ div.SelectedStudiesWindow {
         margin-bottom: 8px;
     }
 
+    .naturalLanguageQueryToggle {
+        align-self: flex-start;
+        padding: 0;
+        margin-bottom: 4px;
+    }
+
     .naturalLanguageQuery {
         max-width: 555px;
-        margin: 4px 0 8px;
+        margin: 0 0 8px;
+        padding: 8px 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: #f9f9f9;
 
         label {
             font-weight: normal;
-            margin-bottom: 4px;
+            margin: 0;
         }
 
         textarea {
             resize: vertical;
         }
+    }
+
+    .naturalLanguageQueryHeader {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 4px;
     }
 
     .naturalLanguageQueryActions {
@@ -376,13 +393,6 @@ div.SelectedStudiesWindow {
 
     .naturalLanguageQueryHint {
         color: #777;
-        font-size: 12px;
-    }
-
-    .naturalLanguageQueryExplanation {
-        margin: 6px 0 0;
-        padding-left: 18px;
-        color: #555;
         font-size: 12px;
     }
 

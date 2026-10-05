@@ -133,6 +133,8 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
                         }
                     />
 
+                    <NaturalLanguageQuery />
+
                     <OQLTextArea
                         focus={this.store.geneQueryErrorDisplayStatus}
                         inputGeneQuery={this.store.geneQuery}
@@ -147,8 +149,6 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
                     >
                         {this.customError}
                     </OQLTextArea>
-
-                    <NaturalLanguageQuery />
 
                     <GenesetsValidator />
 

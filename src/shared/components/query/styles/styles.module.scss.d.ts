@@ -51,8 +51,9 @@ declare const styles: {
   readonly "multiChoiceLabel": string;
   readonly "naturalLanguageQuery": string;
   readonly "naturalLanguageQueryActions": string;
-  readonly "naturalLanguageQueryExplanation": string;
+  readonly "naturalLanguageQueryHeader": string;
   readonly "naturalLanguageQueryHint": string;
+  readonly "naturalLanguageQueryToggle": string;
   readonly "noChoiceLabel": string;
   readonly "noData": string;
   readonly "nonMatchingNodeText": string;
