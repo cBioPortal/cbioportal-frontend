@@ -182,12 +182,11 @@ describe('buildPathRows', () => {
         expect(labels).toContain('Sample');
     });
 
-    it('hides Path Dx when it duplicates the anatomical site text', () => {
+    it('shows the anatomical site and no diagnosis title', () => {
         const rows = buildPathRows(
             {
                 ...slide,
                 part_description: 'Colon adenocarcinoma',
-                path_dx_title: 'COLON ADENOCARCINOMA',
             },
             sample,
             'P-1',

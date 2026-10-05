@@ -22,13 +22,6 @@ function freezeMetaRows(rows: MetaRow[]): MetaRow[] {
     return Object.freeze(rows) as MetaRow[];
 }
 
-function normalizeSidebarTextValue(value: string | null | undefined): string {
-    return (value || '')
-        .trim()
-        .replace(/\s+/g, ' ')
-        .toLowerCase();
-}
-
 export function getPatientId(sampleId: string, patientId?: string): string {
     if (patientId) {
         return patientId;
@@ -199,14 +192,7 @@ export function buildPathRows(
         }`;
     }
 
-    const pathDxTitle = slide.path_dx_title
-        ? slide.path_dx_title.charAt(0).toUpperCase() +
-          slide.path_dx_title.slice(1).toLowerCase()
-        : null;
     const partDesc = slide.part_description || null;
-    const hasDistinctPathDx =
-        normalizeSidebarTextValue(pathDxTitle) !==
-        normalizeSidebarTextValue(partDesc);
     const hasSpecimenDetails = !!(
         association?.part_number ||
         association?.part_description ||
@@ -275,13 +261,6 @@ export function buildPathRows(
             labelTip:
                 'Pathology part description — which anatomical specimen this slide was cut from',
             value: partDesc,
-        });
-    }
-    if (pathDxTitle && hasDistinctPathDx) {
-        rows.push({
-            label: 'Path Dx',
-            labelTip: 'Pathological diagnosis title for this anatomical part',
-            value: pathDxTitle,
         });
     }
 

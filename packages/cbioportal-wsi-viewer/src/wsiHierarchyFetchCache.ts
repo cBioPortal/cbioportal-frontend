@@ -158,11 +158,9 @@ function normalizeV2Hierarchy(
             sample_type: '',
             parts: group.parts.map(part => ({
                 part_number: part.partNumber,
-                part_designator: part.partDesignator,
                 part_type: part.partType,
                 part_description: part.partDescription,
                 subspecialty: part.subspecialty,
-                path_dx_title: part.pathDxTitle,
                 blocks: part.blocks.map(block => ({
                     block_number: block.blockNumber,
                     block_label: block.blockLabel,
@@ -181,7 +179,6 @@ function normalizeV2Hierarchy(
                         block_label: block.blockLabel,
                         block_number: block.blockNumber,
                         part_description: part.partDescription,
-                        path_dx_title: part.pathDxTitle,
                         sample_id: slide.sampleId ?? group.sampleId,
                         match_level: slide.matchLevel,
                         specimen_key: slide.specimenKey,

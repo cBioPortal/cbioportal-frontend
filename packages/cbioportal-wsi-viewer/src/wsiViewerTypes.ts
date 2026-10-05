@@ -12,8 +12,6 @@ export interface Slide {
     block_number: string;
     /** Anatomical site / part description propagated from the parent Part (e.g. "Lung, left") */
     part_description?: string;
-    /** Pathological diagnosis title from the part (may differ from part_description) */
-    path_dx_title?: string;
     /** Preferred slide timepoint in days relative to tumor sequencing. */
     slide_timepoint_days?: number;
     /** Source of the preferred slide timepoint. */
@@ -69,11 +67,9 @@ export interface Block {
 
 export interface Part {
     part_number: string;
-    part_designator: string;
     part_type: string;
     part_description: string;
     subspecialty: string;
-    path_dx_title: string;
     blocks: Block[];
 }
 
@@ -129,11 +125,9 @@ export interface WsiV2Block {
 
 export interface WsiV2Part {
     partNumber: string;
-    partDesignator: string;
     partType: string;
     partDescription: string;
     subspecialty: string;
-    pathDxTitle: string;
     blocks: WsiV2Block[];
 }
 

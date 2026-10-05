@@ -79,11 +79,9 @@ function makeSample(sampleId: string, slides: Slide[]): Sample {
         parts: [
             {
                 part_number: '1',
-                part_designator: 'A',
                 part_type: 'Resection',
                 part_description: 'Test part',
                 subspecialty: 'GI',
-                path_dx_title: 'TEST',
                 blocks: [
                     {
                         block_number: '1',

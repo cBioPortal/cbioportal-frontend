@@ -54,11 +54,9 @@ function makeHierarchy(slides: any[]): any {
                 parts: [
                     {
                         part_number: '1',
-                        part_designator: 'A',
                         part_type: 'Resection',
                         part_description: 'Colon',
                         subspecialty: 'GI',
-                        path_dx_title: 'Adenocarcinoma',
                         blocks: [
                             {
                                 block_number: '1',

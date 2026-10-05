@@ -23,7 +23,6 @@ const hierarchy = {
             parts: [
                 {
                     part_number: '1',
-                    part_designator: 'A',
                     blocks: [
                         {
                             block_number: '1',

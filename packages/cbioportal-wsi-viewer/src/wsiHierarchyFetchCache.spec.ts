@@ -156,11 +156,9 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
                             parts: [
                                 {
                                     partNumber: '1',
-                                    partDesignator: '1',
                                     partType: 'SPECIMEN',
                                     partDescription: 'Unmatched specimen',
                                     subspecialty: '',
-                                    pathDxTitle: '',
                                     blocks: [
                                         {
                                             blockNumber: 'A',
@@ -243,11 +241,9 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
                             parts: [
                                 {
                                     partNumber: '1',
-                                    partDesignator: '1',
                                     partType: '',
                                     partDescription: '',
                                     subspecialty: '',
-                                    pathDxTitle: '',
                                     blocks: [
                                         {
                                             blockNumber: '1',
@@ -308,11 +304,9 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
                     parts: [
                         {
                             partNumber: '1',
-                            partDesignator: '',
                             partType: '',
                             partDescription: '',
                             subspecialty: '',
-                            pathDxTitle: '',
                             blocks: [
                                 {
                                     blockNumber: 'A',
@@ -529,11 +523,9 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
                     parts: [
                         {
                             partNumber: '1',
-                            partDesignator: '1',
                             partType: '',
                             partDescription: '',
                             subspecialty: '',
-                            pathDxTitle: '',
                             blocks: [
                                 {
                                     blockNumber: 'A',

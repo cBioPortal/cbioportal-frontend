@@ -69,11 +69,9 @@ describe('wsiNavUtils', () => {
                 parts: [
                     {
                         part_number: '1',
-                        part_designator: '1',
                         part_type: '',
                         part_description: '',
                         subspecialty: '',
-                        path_dx_title: '',
                         blocks: [
                             {
                                 block_number: '1',
@@ -117,11 +115,9 @@ describe('wsiNavUtils', () => {
                 parts: [
                     {
                         part_number: '1',
-                        part_designator: '1',
                         part_type: '',
                         part_description: '',
                         subspecialty: '',
-                        path_dx_title: '',
                         blocks: [
                             {
                                 block_number: '1',
@@ -153,11 +149,9 @@ describe('wsiNavUtils', () => {
                 parts: [
                     {
                         part_number: '1',
-                        part_designator: '1',
                         part_type: '',
                         part_description: '',
                         subspecialty: '',
-                        path_dx_title: '',
                         blocks: [
                             {
                                 block_number: '1',
@@ -198,11 +192,9 @@ describe('wsiNavUtils', () => {
                 parts: [
                     {
                         part_number: '1',
-                        part_designator: '1',
                         part_type: '',
                         part_description: '',
                         subspecialty: '',
-                        path_dx_title: '',
                         blocks: [
                             {
                                 block_number: '1',
@@ -266,11 +258,9 @@ describe('wsiNavUtils', () => {
                 parts: [
                     {
                         part_number: '1',
-                        part_designator: '1',
                         part_type: '',
                         part_description: '',
                         subspecialty: '',
-                        path_dx_title: '',
                         blocks: [
                             {
                                 block_number: '1',
