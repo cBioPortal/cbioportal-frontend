@@ -12,7 +12,6 @@ import {
     FusionEvent,
     FusionPairSummary,
     SampleFusionRow,
-    JunctionLabelMode,
     TranscriptData,
 } from './data/types';
 import { convertStructuralVariantsToFusionEvents } from './data/structuralVariantAdapter';
@@ -136,16 +135,6 @@ export class FusionCohortStore {
      */
     @observable public stripMode: 'sample' | 'dense' | 'collapsed' =
         'collapsed';
-
-    /**
-     * Placement strategy for junction exon labels on the strips (feature 2).
-     * Three options so the user can compare and choose:
-     *  - 'inline-tooltip' → text at the seam in sample/collapsed; dense folds it
-     *    into the hover <title>.
-     *  - 'inline-both'    → text at the seam in every mode (dense floats it above).
-     *  - 'gutter'         → a thin label in the right gutter in every mode.
-     */
-    @observable public junctionLabelMode: JunctionLabelMode = 'inline-tooltip';
 
     /**
      * User override for the collapse key. When undefined the key is chosen
@@ -733,11 +722,6 @@ export class FusionCohortStore {
     @action
     public setStripMode(m: 'sample' | 'dense' | 'collapsed'): void {
         this.stripMode = m;
-    }
-
-    @action
-    public setJunctionLabelMode(m: JunctionLabelMode): void {
-        this.junctionLabelMode = m;
     }
 
     @action

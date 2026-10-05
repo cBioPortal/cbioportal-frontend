@@ -3,6 +3,7 @@ import {
     buildGeneSummaries,
     buildPartnerSummaries,
     groupPartnerLabel,
+    groupPartnerBreakdown,
 } from './anchorSummaries';
 import { ComparisonRow, NO_PARTNER, INTRAGENIC } from './comparisonRows';
 import { FusionEvent } from './types';
@@ -85,11 +86,43 @@ describe('groupPartnerLabel', () => {
         assert.equal(groupPartnerLabel([INTRAGENIC, INTRAGENIC]), INTRAGENIC);
     });
 
-    it('mixed: most common first plus +distinct-1', () => {
+    it('mixed: partner count with the most common one named', () => {
         assert.equal(
             groupPartnerLabel(['ERG', 'EML4', 'EML4', NO_PARTNER]),
-            'EML4 +2'
+            '3 partners (top: EML4)'
         );
-        assert.equal(groupPartnerLabel(['ERG', 'ETV1']), 'ERG +1');
+        assert.equal(
+            groupPartnerLabel(['ERG', 'ETV1']),
+            '2 partners (top: ERG)'
+        );
+    });
+});
+
+describe('groupPartnerBreakdown', () => {
+    it('lists each partner with its event count, most common first', () => {
+        assert.equal(
+            groupPartnerBreakdown([
+                'ERG',
+                'EML4',
+                'EML4',
+                'ERG',
+                'EML4',
+                'ETV1',
+            ]),
+            '3 partners: EML4 ×3, ERG ×2, ETV1 ×1'
+        );
+    });
+
+    it('caps the list and says how many more', () => {
+        const cats = Array.from({ length: 12 }, (_, i) => `G${i + 10}`);
+        assert.equal(
+            groupPartnerBreakdown(cats),
+            '12 partners: G10 ×1, G11 ×1, G12 ×1, G13 ×1, G14 ×1, G15 ×1, ' +
+                'G16 ×1, G17 ×1, G18 ×1, G19 ×1, +2 more'
+        );
+    });
+
+    it('a single partner is just its name', () => {
+        assert.equal(groupPartnerBreakdown(['ERG', 'ERG']), 'ERG');
     });
 });

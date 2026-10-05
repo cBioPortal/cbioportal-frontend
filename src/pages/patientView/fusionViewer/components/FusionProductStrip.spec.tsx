@@ -141,8 +141,10 @@ describe('FusionProductStrip', () => {
                 />
             </svg>
         );
-        // no visible <text> in compact mode
-        assert.lengthOf(wrapper.find('text').hostNodes(), 0);
+        // compact mode's only visible <text> is the inline junction label
+        const texts = wrapper.find('text').hostNodes();
+        assert.lengthOf(texts, 1);
+        assert.equal(texts.first().prop('data-testid'), 'junction-label');
         // hover title carries sample · frame · reads
         assert.include(
             wrapper
@@ -472,7 +474,7 @@ describe('FusionProductStrip full exon mode', () => {
 });
 
 describe('junction exon labels', () => {
-    function renderStrip(junctionLabelMode: any, compact = false) {
+    function renderStrip(compact = false, extra: any = {}) {
         return mount(
             <svg>
                 <FusionProductStrip
@@ -491,88 +493,46 @@ describe('junction exon labels', () => {
                     pxPerBp5p={0.5}
                     pxPerBp3p={0.5}
                     compact={compact}
-                    junctionLabelMode={junctionLabelMode}
+                    {...extra}
                 />
             </svg>
         );
     }
 
-    it('inline-tooltip: draws an inline seam label in per-sample mode', () => {
-        const w = renderStrip('inline-tooltip', false);
-        const label = w.find('[data-testid="junction-label"]').hostNodes();
+    it('draws the inline seam label in per-sample mode', () => {
+        const label = renderStrip(false)
+            .find('[data-testid="junction-label"]')
+            .hostNodes();
         assert.equal(label.length, 1);
         assert.equal(label.text(), 'E2|E2');
     });
 
-    it('inline-tooltip: no inline label in dense mode (folds into title)', () => {
-        const w = renderStrip('inline-tooltip', true);
-        assert.equal(
-            w.find('[data-testid="junction-label"]').hostNodes().length,
-            0
-        );
-        assert.include(w.find('title').text(), 'E2→E2');
-    });
-
-    it('inline-both: draws the inline seam label even in dense mode', () => {
-        const w = renderStrip('inline-both', true);
+    it('draws the inline seam label in dense mode too', () => {
+        const w = renderStrip(true);
         assert.equal(
             w.find('[data-testid="junction-label"]').hostNodes().length,
             1
         );
+        assert.notInclude(w.find('title').text(), 'E2→E2');
     });
 
-    it('gutter: draws the label in the right gutter, not at the seam', () => {
-        const w = renderStrip('gutter', false);
-        assert.equal(
-            w.find('[data-testid="junction-gutter"]').hostNodes().length,
-            1
-        );
-        assert.equal(
-            w.find('[data-testid="junction-label"]').hostNodes().length,
+    it('never draws a gutter junction label, even beside a frame cell', () => {
+        const w = renderStrip(false, {
+            rowHeight: 50,
+            frameSummary: { inFrame: 3, outOfFrame: 0, unknown: 0 },
+        });
+        assert.lengthOf(
+            w.find('[data-testid="junction-gutter"]').hostNodes(),
             0
         );
-    });
-
-    it('gutter mode + collapsed frame cell coexist without colliding', () => {
-        // Collapsed mode passes frameSummary (frame cell in the right gutter).
-        // With junctionLabelMode="gutter" the junction label also lands in the
-        // right gutter — assert both render and the label sits below the frame
-        // cell (no vertical overlap).
-        const w = mount(
-            <svg>
-                <FusionProductStrip
-                    sampleId="S1"
-                    label="S1"
-                    transcript5p={tx('TMPRSS2')}
-                    transcript3p={tx('ERG')}
-                    breakpoint5p={250}
-                    breakpoint3p={250}
-                    frame="inFrame"
-                    reads={12}
-                    y={0}
-                    rowHeight={50}
-                    leftX={170}
-                    junctionX={400}
-                    rightX={700}
-                    pxPerBp5p={0.5}
-                    pxPerBp3p={0.5}
-                    junctionLabelMode="gutter"
-                    frameSummary={{ inFrame: 3, outOfFrame: 0, unknown: 0 }}
-                />
-            </svg>
+        assert.lengthOf(
+            w.find('[data-testid="junction-label"]').hostNodes(),
+            1
         );
-        const gutter = w.find('[data-testid="junction-gutter"]').hostNodes();
-        const frameRect = w
-            .find('[data-testid="frame-cell-inFrame"]')
-            .hostNodes();
-        // Both are present — neither suppresses the other.
-        assert.equal(gutter.length, 1);
-        assert.equal(frameRect.length, 1);
-        // Gutter label baseline sits below the frame cell's bottom edge.
-        const frameBottom =
-            (frameRect.prop('y') as number) +
-            (frameRect.prop('height') as number);
-        assert.isAbove(gutter.prop('y') as number, frameBottom);
+        assert.lengthOf(
+            w.find('[data-testid="frame-cell-inFrame"]').hostNodes(),
+            1
+        );
     });
 
     it('single-gene event shows only the 5′ exon', () => {
@@ -591,7 +551,6 @@ describe('junction exon labels', () => {
                     rightX={700}
                     pxPerBp5p={0.5}
                     pxPerBp3p={0.5}
-                    junctionLabelMode="inline-tooltip"
                 />
             </svg>
         );

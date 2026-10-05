@@ -74,12 +74,39 @@ export function buildPartnerSummaries(
  * Partner-column label for a collapsed group: the shared category, or
  * "<most common> +<other distinct count>" when members disagree.
  */
-export function groupPartnerLabel(categories: string[]): string {
+function rankPartners(categories: string[]): [string, number][] {
     const counts = new Map<string, number>();
     categories.forEach(c => counts.set(c, (counts.get(c) ?? 0) + 1));
-    const ranked = Array.from(counts.keys()).sort(
-        (a, b) => counts.get(b)! - counts.get(a)! || a.localeCompare(b)
+    return Array.from(counts.entries()).sort(
+        (a, b) => b[1] - a[1] || a[0].localeCompare(b[0])
     );
-    if (ranked.length <= 1) return ranked[0] ?? '';
-    return `${ranked[0]} +${ranked.length - 1}`;
+}
+
+/** The most common partner category of a group ('' when empty). */
+export function topPartner(categories: string[]): string {
+    const ranked = rankPartners(categories);
+    return ranked.length > 0 ? ranked[0][0] : '';
+}
+
+export function groupPartnerLabel(categories: string[]): string {
+    const ranked = rankPartners(categories);
+    if (ranked.length <= 1) return ranked[0]?.[0] ?? '';
+    return `${ranked.length} partners (top: ${ranked[0][0]})`;
+}
+
+const BREAKDOWN_MAX = 10;
+
+/** Hover text for a group: every partner with its event count. */
+export function groupPartnerBreakdown(categories: string[]): string {
+    const ranked = rankPartners(categories);
+    if (ranked.length <= 1) return ranked[0]?.[0] ?? '';
+    const shown = ranked
+        .slice(0, BREAKDOWN_MAX)
+        .map(([c, n]) => `${c} ×${n}`)
+        .join(', ');
+    const more =
+        ranked.length > BREAKDOWN_MAX
+            ? `, +${ranked.length - BREAKDOWN_MAX} more`
+            : '';
+    return `${ranked.length} partners: ${shown}${more}`;
 }

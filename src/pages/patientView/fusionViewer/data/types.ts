@@ -161,7 +161,6 @@ export const COLOR_EXON_LOST = '#dee2e6';
 export type FrameStatus = 'inFrame' | 'outOfFrame' | 'unknown';
 
 /** Placement strategy for the junction exon labels on fusion-product strips. */
-export type JunctionLabelMode = 'inline-tooltip' | 'inline-both' | 'gutter';
 
 /**
  * A recurrence-aggregated fusion pair across the cohort.

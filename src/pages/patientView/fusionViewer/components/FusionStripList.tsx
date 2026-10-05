@@ -4,7 +4,7 @@ import {
     AnchorSide,
     isPartnerless,
 } from '../data/comparisonRows';
-import { TranscriptData, JunctionLabelMode } from '../data/types';
+import { TranscriptData } from '../data/types';
 import { CollapsedGroup } from '../data/collapseRows';
 import FusionProductStrip, {
     ExonHoverInfo,
@@ -95,7 +95,6 @@ export interface FusionStripListProps {
     referenceTranscript5p?: TranscriptData;
     referenceTranscript3p?: TranscriptData;
     // Junction exon label placement, forwarded to each strip (feature 2).
-    junctionLabelMode?: JunctionLabelMode;
     // Which gene the rows are anchored on. Defaults to '5p'.
     anchorSide?: AnchorSide;
     // Right gutter width; must match the parent's frame. Defaults to RIGHT_GUTTER.
@@ -132,7 +131,6 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
     ladderMode = 'reference',
     referenceTranscript5p,
     referenceTranscript3p,
-    junctionLabelMode,
     anchorSide = '5p',
     rightGutter,
     partnerLabelFor,
@@ -245,7 +243,6 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
                                 pxPerBp5p={pxPerBp5p}
                                 pxPerBp3p={pxPerBp3p}
                                 exonMode={exonMode}
-                                junctionLabelMode={junctionLabelMode}
                                 onExonHover={
                                     exonMode === 'full' && mode !== 'dense'
                                         ? setHoveredExon

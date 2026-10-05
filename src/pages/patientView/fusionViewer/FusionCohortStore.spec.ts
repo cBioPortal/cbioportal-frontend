@@ -251,15 +251,6 @@ describe('FusionCohortStore', () => {
         });
     });
 
-    describe('junctionLabelMode', () => {
-        it('defaults to inline-tooltip and updates via setter', () => {
-            const store = new FusionCohortStore();
-            assert.equal(store.junctionLabelMode, 'inline-tooltip');
-            store.setJunctionLabelMode('gutter');
-            assert.equal(store.junctionLabelMode, 'gutter');
-        });
-    });
-
     describe('histogramTranscriptIdByGene', () => {
         it('is empty by default and records a per-gene override', () => {
             const store = new FusionCohortStore();

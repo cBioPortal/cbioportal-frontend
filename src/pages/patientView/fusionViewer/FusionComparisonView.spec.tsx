@@ -11,6 +11,7 @@ import { TranscriptData } from './data/types';
 import { frameStatusStyle } from './components/frameStatusStyle';
 import AnchorGeneTrackRuler from './components/AnchorGeneTrackRuler';
 import FusionStripList from './components/FusionStripList';
+import { PARTNER_TEXT_OFFSET } from './components/FusionProductStrip';
 import {
     computeComparisonFrame,
     PARTNER_RIGHT_GUTTER,
@@ -235,16 +236,15 @@ describe('FusionComparisonView', () => {
         assert.equal(store.stripMode, 'sample');
     });
 
-    it('junction-mode buttons update store.junctionLabelMode', () => {
+    it('has no junction-label toggle (labels are always inline)', () => {
         const store = new FusionCohortStore();
         store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
         const wrapper = mount(<FusionComparisonView store={store} />);
-        wrapper
-            .find('[data-testid="junctionmode-gutter"]')
-            .hostNodes()
-            .first()
-            .simulate('click');
-        assert.equal(store.junctionLabelMode, 'gutter');
+        assert.notInclude(wrapper.text(), 'Junction labels');
+        assert.lengthOf(
+            wrapper.find('[data-testid^="junctionmode-"]').hostNodes(),
+            0
+        );
     });
 
     it('collapsedGroups groups structurally-identical rows into one ×N group', () => {
@@ -510,6 +510,19 @@ describe('FusionComparisonView', () => {
 // Mounts with a resolved anchor transcript (injected synchronously, same
 // pattern as the 'collapsedGroups' test above) so `anchorTranscript` is
 // defined without waiting on the mocked async fetch.
+// The lollipop's styled tooltip only renders on hover; read its overlay.
+function lollipopTip(w: any, key: string): React.ReactElement {
+    return w
+        .find('DefaultTooltip')
+        .filterWhere((t: any) => t.find(`g[data-key="${key}"]`).exists())
+        .first()
+        .prop('overlay');
+}
+
+function lollipopTipText(w: any, key: string): string {
+    return mount(lollipopTip(w, key)).text();
+}
+
 function mountView() {
     const store = new FusionCohortStore();
     store.setStructuralVariants([
@@ -697,8 +710,8 @@ describe('FusionComparisonView gene mode', () => {
             />
         );
         const stick = w.find('g[data-key="exon:E3"]');
-        const t = stick.find('title').text();
-        assert.include(t, 'E3');
+        const t = lollipopTipText(w, 'exon:E3');
+        assert.include(t, 'ALK · E3');
         assert.notInclude(t, 'exon:');
         assert.include(
             t,
@@ -725,10 +738,12 @@ describe('FusionComparisonView gene mode', () => {
                 .prop('fill'),
             frameStatusStyle('inFrame').fill
         );
-        assert.include(
-            w.find('g[data-key="exon:E3"] title').text(),
-            'In-frame 1'
+        const rows = mount(lollipopTip(w, 'exon:E3')).find(
+            '[data-testid="lollipop-tip-row"]'
         );
+        assert.lengthOf(rows, 1);
+        assert.include(rows.text(), 'In-frame');
+        assert.include(rows.text(), '1');
     });
 
     it('legend appears for frame and SV-type colouring only', () => {
@@ -1258,7 +1273,60 @@ describe('FusionComparisonView partner column', () => {
             .find('text[data-testid="partner-label"]')
             .map(l => l.text());
         assert.isAbove(t.length, 0);
-        t.forEach(x => assert.match(x, /^(ERG|ETV1)( \+1)?$/));
+        t.forEach(x =>
+            assert.match(x, /^(ERG|ETV1|2 partners \(top: (ERG|ETV1)\))$/)
+        );
+    });
+
+    it('Gene mode defaults to Product grouping even without frame calls', () => {
+        const store = partnerStore();
+        store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
+        const w = mount(<FusionComparisonView store={store} />);
+        const view = w.instance() as any;
+        assert.isFalse(view.hasFusionAnnotation);
+        assert.equal(view.collapseKind, 'exonStructure');
+        store.setCollapseKindOverride('breakpointFeature');
+        assert.equal(view.collapseKind, 'breakpointFeature');
+    });
+
+    it('Pair mode keeps the data-driven grouping default', () => {
+        const store = partnerStore();
+        store.setAnchor({ mode: 'pair', key: 'ERG::TMPRSS2' });
+        const w = mount(<FusionComparisonView store={store} />);
+        const view = w.instance() as any;
+        assert.equal(view.collapseKind, 'breakpointFeature');
+    });
+
+    it('a mixed collapsed group names the partner count, top partner and breakdown', () => {
+        const store = partnerStore();
+        store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
+        const w = mount(<FusionComparisonView store={store} />);
+        const view = w.instance() as any;
+        const rows = view.orientedRows;
+        const label = view.partnerLabelFor(rows[0], {
+            members: rows,
+        } as any);
+        assert.match(label.text, /^2 partners \(top: (ERG|ETV1)\)$/);
+        assert.match(label.title, /^2 partners: (ERG|ETV1) ×1, (ERG|ETV1) ×1$/);
+        assert.equal(
+            label.color,
+            store.partnerColorMap.get(label.text.match(/top: (\w+)/)[1])
+        );
+    });
+
+    it('the Partner header lines up with the partner label text', () => {
+        const store = partnerStore();
+        store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
+        runInAction(() => store.setStripMode('sample'));
+        const w = mount(<FusionComparisonView store={store} />);
+        const view = w.instance() as any;
+        const header = w.find('[data-testid="partner-header"]').hostNodes();
+        const label = w.find('text[data-testid="partner-label"]').first();
+        assert.equal(header.prop('style')!.left, Number(label.prop('x')));
+        assert.equal(
+            header.prop('style')!.left,
+            view.frame.rightX + PARTNER_TEXT_OFFSET
+        );
     });
 
     it('dense mode: no partner text, partner in the strip title', () => {
@@ -1267,6 +1335,7 @@ describe('FusionComparisonView partner column', () => {
         runInAction(() => store.setStripMode('dense'));
         const w = mount(<FusionComparisonView store={store} />);
         assert.lengthOf(w.find('text[data-testid="partner-label"]'), 0);
+        assert.isFalse(w.find('[data-testid="partner-header"]').exists());
         const titles = w.find('FusionProductStrip').map(s =>
             s
                 .find('title')

@@ -55,7 +55,11 @@ import {
     RIGHT_GUTTER,
     PARTNER_RIGHT_GUTTER,
 } from './components/comparisonFrame';
-import { groupPartnerLabel } from './data/anchorSummaries';
+import {
+    groupPartnerBreakdown,
+    groupPartnerLabel,
+    topPartner,
+} from './data/anchorSummaries';
 import { JUNCTION_GAP } from './components/fusionProductHelpers';
 import { fetchTranscriptsForGeneWithFallback } from './data/genomeNexusTranscriptService';
 import { frameStatusStyle } from './components/frameStatusStyle';
@@ -77,6 +81,7 @@ import {
 } from './data/linkAggregation';
 import { LinkHover } from './components/LinkHover';
 import AnchorLollipopTrack from './components/AnchorLollipopTrack';
+import { PARTNER_TEXT_OFFSET } from './components/FusionProductStrip';
 import { colorFor, rankedColorMap } from './data/partnerPalette';
 import BreakpointLinkArcs, {
     ARC_BAND_HEIGHT,
@@ -430,6 +435,18 @@ export default class FusionComparisonView extends React.Component<
         return Object.entries(geneCounts).sort((x, y) => y[1] - x[1])[0][0];
     }
 
+    /** Chromosome of the anchor gene, read from the rows' matching site. */
+    @computed get anchorChromosome(): string | undefined {
+        const gene = this.anchorGene;
+        for (const r of this.resolvedRows) {
+            const site = [r.event.gene1, r.event.gene2].find(
+                g => g && g.symbol === gene
+            );
+            if (site && site.chromosome) return site.chromosome;
+        }
+        return undefined;
+    }
+
     @computed get anchorTranscript(): TranscriptData | undefined {
         return this.transcriptForGene(this.anchorGene);
     }
@@ -574,11 +591,12 @@ export default class FusionComparisonView extends React.Component<
             const cats = (group ? group.members : [row]).map(r =>
                 partnerCategory(r, gene, side)
             );
-            const text = groupPartnerLabel(cats);
-            // "EML4 +2" is coloured by its leading (most common) category.
+            // A mixed group is coloured by its most common partner, which the
+            // text names ("38 partners (top: ERG)"); hover lists them all.
             return {
-                text,
-                color: colorFor(map, text.replace(/ \+\d+$/, '')),
+                text: groupPartnerLabel(cats),
+                title: groupPartnerBreakdown(cats),
+                color: colorFor(map, topPartner(cats)),
             };
         };
     }
@@ -705,12 +723,15 @@ export default class FusionComparisonView extends React.Component<
         return map;
     }
 
-    // Effective collapse key: user override, else data-type-driven (fusion →
-    // exon structure, SV → breakpoint feature).
+    // Effective collapse key: user override, else Product (exon structure) in
+    // Gene mode, where breakpoint groups would mix many partners; Pair mode
+    // stays data-type-driven (fusion → exon structure, SV → breakpoint).
     @computed get collapseKind(): CollapseKind {
         return (
             this.props.store.collapseKindOverride ??
-            (this.hasFusionAnnotation ? 'exonStructure' : 'breakpointFeature')
+            (this.isGeneMode || this.hasFusionAnnotation
+                ? 'exonStructure'
+                : 'breakpointFeature')
         );
     }
 
@@ -1168,38 +1189,6 @@ export default class FusionComparisonView extends React.Component<
                             </ButtonGroup>
                         </>
                     )}
-                    <span
-                        style={{
-                            fontSize: 11,
-                            color: '#6c757d',
-                            marginLeft: 12,
-                        }}
-                    >
-                        Junction labels
-                    </span>
-                    <ButtonGroup>
-                        {this.segmentButton(
-                            store.junctionLabelMode === 'inline-tooltip',
-                            'junctionmode-inline-tooltip',
-                            'Inline + tip',
-                            'Exon label at the seam; dense mode shows it in the hover tooltip',
-                            () => store.setJunctionLabelMode('inline-tooltip')
-                        )}
-                        {this.segmentButton(
-                            store.junctionLabelMode === 'inline-both',
-                            'junctionmode-inline-both',
-                            'Inline',
-                            'Exon label at the seam in every row mode (dense floats it above)',
-                            () => store.setJunctionLabelMode('inline-both')
-                        )}
-                        {this.segmentButton(
-                            store.junctionLabelMode === 'gutter',
-                            'junctionmode-gutter',
-                            'Gutter',
-                            'Exon label in the right gutter in every row mode',
-                            () => store.setJunctionLabelMode('gutter')
-                        )}
-                    </ButtonGroup>
                     {store.stripMode === 'collapsed' && (
                         <>
                             <span
@@ -1383,6 +1372,8 @@ export default class FusionComparisonView extends React.Component<
                                         categoryLabel={
                                             this.lollipopCategoryLabel
                                         }
+                                        gene={anchorGene}
+                                        chromosome={this.anchorChromosome}
                                         onSelect={
                                             this.props.onFilterCohortBySamples
                                                 ? s =>
@@ -1548,12 +1539,12 @@ export default class FusionComparisonView extends React.Component<
                                     : 'Frame · reads'}
                             </span>
                         </DefaultTooltip>
-                        {this.isGeneMode && (
+                        {this.isGeneMode && store.stripMode !== 'dense' && (
                             <span
                                 data-testid="partner-header"
                                 style={{
                                     position: 'absolute',
-                                    left: frame.rightX + 8 + 112,
+                                    left: frame.rightX + PARTNER_TEXT_OFFSET,
                                 }}
                             >
                                 Partner
@@ -1591,7 +1582,6 @@ export default class FusionComparisonView extends React.Component<
                         pxPerBp3p={pxPerBp3p}
                         alignment={store.alignment}
                         mode={store.stripMode}
-                        junctionLabelMode={store.junctionLabelMode}
                         groups={
                             store.stripMode === 'collapsed'
                                 ? this.collapsedGroups

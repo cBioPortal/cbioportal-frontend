@@ -238,7 +238,7 @@ describe('FusionStripList', () => {
     const transcriptForRow = (row: ComparisonRow, is5p: boolean) =>
         is5p ? tx(row.fivePrimeSymbol) : tx(row.threePrimeSymbol || '');
 
-    it('forwards junctionLabelMode to the product strips', () => {
+    it('product strips draw inline junction labels', () => {
         const wrapper = mount(
             <FusionStripList
                 rows={rows}
@@ -248,11 +248,14 @@ describe('FusionStripList', () => {
                 pxPerBp3p={0.5}
                 alignment="junction"
                 mode="sample"
-                junctionLabelMode="gutter"
             />
         );
         assert.isAbove(
-            wrapper.find('[data-testid="junction-gutter"]').hostNodes().length,
+            wrapper.find('[data-testid="junction-label"]').hostNodes().length,
+            0
+        );
+        assert.lengthOf(
+            wrapper.find('[data-testid="junction-gutter"]').hostNodes(),
             0
         );
     });
