@@ -3,9 +3,9 @@ import { observer } from 'mobx-react';
 import { observable, makeObservable, action } from 'mobx';
 import { getLoadConfig } from 'config/config';
 import { getChatServerBase, getChatOrigin } from './chatServerBase';
-import { goToPage } from './navigateTool';
+import { goToPage, normalizeBasePath } from './navigateTool';
 import { PortalWebMcp } from './portalWebMcp';
-import { getCurrentPageDetails, getCurrentContextHref } from './pageDetails';
+import { PageEvent, PageEventPublisher } from './pageEvents';
 import {
     captureViewport,
     waitForNetworkIdle,
@@ -52,6 +52,7 @@ export default class ChatSidebar extends React.Component<{}, {}> {
 
     private iframeRef = React.createRef<HTMLIFrameElement>();
     private webMcp = new PortalWebMcp();
+    private pageEvents = new PageEventPublisher();
     private resizeStartX = 0;
     private resizeStartWidth = DEFAULT_CHAT_SIDEBAR_WIDTH;
 
@@ -92,6 +93,7 @@ export default class ChatSidebar extends React.Component<{}, {}> {
             /* ignore */
         }
         this.syncBodyClass();
+        this.sendOpenState();
     }
 
     private syncBodyClass() {
@@ -114,6 +116,7 @@ export default class ChatSidebar extends React.Component<{}, {}> {
         document.body.classList.remove('chat-sidebar-closed');
         document.body.classList.remove('chat-sidebar-resizing');
         this.webMcp.stop();
+        this.pageEvents.stop();
     }
 
     @action.bound
@@ -172,40 +175,42 @@ export default class ChatSidebar extends React.Component<{}, {}> {
         this.storeWidth();
     }
 
-    // The iframe posts a URL here since it can't call routingStore itself.
-    private handleNavigate(url: string) {
-        goToPage(url);
+    // The iframe posts a portal path here since it can't call routingStore
+    // itself.
+    private handleNavigate(path: string) {
+        goToPage(path);
+    }
+
+    private sendPageEvent = (event: PageEvent) => {
+        this.iframeRef.current?.contentWindow?.postMessage(
+            { type: 'chat-sidebar:pageEvent', event },
+            getChatOrigin()
+        );
+    };
+
+    // The iframe stays loaded while closed; it holds off on work nobody would
+    // see until it's open.
+    private sendOpenState() {
+        this.iframeRef.current?.contentWindow?.postMessage(
+            { type: 'chat-sidebar:open', open: this.open },
+            getChatOrigin()
+        );
     }
 
     onMessage = (e: MessageEvent) => {
         if (e.source !== this.iframeRef.current?.contentWindow) return;
         if (e.origin !== getChatOrigin()) return;
+        // Sent on every iframe load, once it's listening — anything posted
+        // before then would be lost.
+        if (e.data?.type === 'chat-sidebar:ready') {
+            this.sendOpenState();
+            this.pageEvents.start(this.sendPageEvent);
+            return;
+        }
         if (e.data?.type === 'chat-sidebar:navigate') {
-            this.handleNavigate(e.data.url);
-            return;
-        }
-        if (e.data?.type === 'chat-sidebar:requestPageInfo') {
-            const requestId = e.data.requestId;
-            this.iframeRef.current?.contentWindow?.postMessage(
-                {
-                    type: 'chat-sidebar:pageInfo',
-                    requestId,
-                    href: getCurrentContextHref(),
-                },
-                getChatOrigin()
-            );
-            return;
-        }
-        if (e.data?.type === 'chat-sidebar:requestPageDetails') {
-            const requestId = e.data.requestId;
-            this.iframeRef.current?.contentWindow?.postMessage(
-                {
-                    type: 'chat-sidebar:pageDetails',
-                    requestId,
-                    details: getCurrentPageDetails(),
-                },
-                getChatOrigin()
-            );
+            if (typeof e.data.path === 'string') {
+                this.handleNavigate(e.data.path);
+            }
             return;
         }
         if (e.data?.type === 'chat-sidebar:requestScreenshot') {
@@ -235,6 +240,12 @@ export default class ChatSidebar extends React.Component<{}, {}> {
         const params = new URLSearchParams();
         params.set('apiRoot', apiRoot);
         params.set('parentOrigin', window.location.origin);
+        // Where the iframe points portal links, including any base path the
+        // portal is served under.
+        params.set(
+            'portalUrl',
+            window.location.origin + normalizeBasePath(getLoadConfig().basePath)
+        );
         return `${getChatServerBase()}/?${params.toString()}`;
     }
 

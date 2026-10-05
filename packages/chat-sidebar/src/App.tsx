@@ -1,6 +1,5 @@
 import {
     FC,
-    PropsWithChildren,
     ReactNode,
     useEffect,
     useState,
@@ -11,19 +10,10 @@ import {
     AuiConfig,
     Suggestions,
     ToolCallMessagePartComponent,
-    useAuiState,
     useRemoteThreadListRuntime,
 } from '@assistant-ui/react';
-import {
-    Thread,
-    ThreadGroupPart,
-} from '@/components/assistant-ui/elements/thread.aui';
+import { Thread } from '@/components/assistant-ui/elements/thread.aui';
 import { ToolFallback } from '@/components/assistant-ui/elements/tool-fallback.aui';
-import {
-    ToolGroupContent,
-    ToolGroupRoot,
-    ToolGroupTrigger,
-} from '@/components/assistant-ui/elements/tool-group.aui';
 import { ChatHeader } from '@/components/ChatHeader';
 import { useCrossTabSync } from '@/hooks/use-cross-tab-sync';
 import {
@@ -35,6 +25,7 @@ import {
     setSelectedModel,
     subscribe,
 } from '@/lib/chatSession';
+import { setPortalLinkAliases } from '@/lib/portal-link';
 import { threadListAdapter } from '@/lib/threadListAdapter';
 import {
     readLastThreadId,
@@ -42,6 +33,11 @@ import {
     saveLastThreadId,
 } from '@/lib/threadStorage';
 import { useChatThreadRuntime } from '@/lib/useChatThreadRuntime';
+import {
+    FALLBACK_STARTERS,
+    getStartersState,
+    subscribeToStarters,
+} from '@/lib/starters';
 
 const AUTH_ERROR_CONTENT: Record<
     AuthErrorStatus,
@@ -99,64 +95,9 @@ const AppToolFallback: ToolCallMessagePartComponent = part => {
     return <ToolFallback {...part} />;
 };
 
-// Welcome-screen starters. The title labels the category; `label` renders the
-// prompt itself as a second line, so the card shows what will be sent.
-const WELCOME_CONFIG = AuiConfig({
-    suggestions: Suggestions([
-        {
-            title: 'Explore Data',
-            label:
-                'Which cBioPortal studies include lung adenocarcinoma samples with mutation and copy-number data?',
-            prompt:
-                'Which cBioPortal studies include lung adenocarcinoma samples with mutation and copy-number data?',
-        },
-        {
-            title: 'Navigate cBioPortal',
-            label:
-                'Give me an OncoPrint for EGFR and KRAS in TCGA lung adenocarcinoma.',
-            prompt:
-                'Give me an OncoPrint for EGFR and KRAS in TCGA lung adenocarcinoma.',
-        },
-        {
-            title: 'Analyze Data',
-            label: 'Compare low grade glioma by molecular subtype.',
-            prompt: 'Compare low grade glioma by molecular subtype.',
-        },
-    ]),
-});
-
-const AppToolGroup = ({
-    group,
-    children,
-}: PropsWithChildren<{ group: ThreadGroupPart }>) => {
-    const visibleToolCount = useAuiState(state =>
-        group.indices.reduce((count, index) => {
-            const part = state.message.parts[index];
-            return (
-                count +
-                (part?.type === 'tool-call' && !SILENT_TOOLS.has(part.toolName)
-                    ? 1
-                    : 0)
-            );
-        }, 0)
-    );
-
-    if (visibleToolCount === 0) return null;
-
-    return (
-        <ToolGroupRoot variant="ghost">
-            <ToolGroupTrigger
-                count={visibleToolCount}
-                active={group.status.type === 'running'}
-            />
-            <ToolGroupContent>{children}</ToolGroupContent>
-        </ToolGroupRoot>
-    );
-};
-
 const THREAD_COMPONENTS = {
     ToolFallback: AppToolFallback,
-    ToolGroup: AppToolGroup,
+    hiddenTools: SILENT_TOOLS,
 };
 
 export function App() {
@@ -169,6 +110,19 @@ export function App() {
 
     useEffect(() => {
         removeLegacyChatStorage();
+    }, []);
+
+    useEffect(() => {
+        fetch('/api/chat/config')
+            .then(r => (r.ok ? r.json() : null))
+            .then((data: { portalLinkAliases?: string[] } | null) => {
+                if (Array.isArray(data?.portalLinkAliases)) {
+                    setPortalLinkAliases(data.portalLinkAliases);
+                }
+            })
+            .catch(() => {
+                /* links keep the default aliases */
+            });
     }, []);
 
     useEffect(() => {
@@ -214,9 +168,24 @@ export function App() {
 
     useCrossTabSync(runtime);
 
+    // While loading, the composer shows skeletons instead of this list.
+    const starters = useSyncExternalStore(
+        subscribeToStarters,
+        getStartersState
+    );
+    const config = AuiConfig({
+        // `label` is required by the type but unused.
+        suggestions: Suggestions(
+            (starters.suggestions ?? FALLBACK_STARTERS).map(s => ({
+                ...s,
+                label: '',
+            }))
+        ),
+    });
+
     return (
         <div className="flex h-full flex-col">
-            <AssistantRuntimeProvider runtime={runtime} config={WELCOME_CONFIG}>
+            <AssistantRuntimeProvider runtime={runtime} config={config}>
                 {authError ? (
                     <div className="min-h-0 flex-1">
                         <AuthErrorScreen status={authError} />

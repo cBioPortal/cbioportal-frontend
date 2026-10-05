@@ -7,6 +7,7 @@ import {
     useState,
     FC,
     PropsWithChildren,
+    ReactNode,
 } from 'react';
 import { ChevronDownIcon, LoaderIcon } from 'lucide-react';
 import { cva, VariantProps } from 'class-variance-authority';
@@ -93,17 +94,21 @@ function ToolGroupRoot({
     );
 }
 
+// `label` replaces the default "N tool calls"; `icon` shows in place of the
+// loader while not active.
 function ToolGroupTrigger({
-    count,
+    count = 0,
     active = false,
+    label = `${count} tool ${count === 1 ? 'call' : 'calls'}`,
+    icon,
     className,
     ...props
 }: React.ComponentProps<typeof CollapsibleTrigger> & {
-    count: number;
+    count?: number;
     active?: boolean;
+    label?: ReactNode;
+    icon?: ReactNode;
 }) {
-    const label = `${count} tool ${count === 1 ? 'call' : 'calls'}`;
-
     return (
         <CollapsibleTrigger
             data-slot="tool-group-trigger"
@@ -116,11 +121,13 @@ function ToolGroupTrigger({
             )}
             {...props}
         >
-            {active && (
+            {active ? (
                 <LoaderIcon
                     data-slot="tool-group-trigger-loader"
                     className="aui-tool-group-trigger-loader size-3 shrink-0 animate-spin [animation-duration:0.6s]"
                 />
+            ) : (
+                icon
             )}
             <span
                 data-slot="tool-group-trigger-label"

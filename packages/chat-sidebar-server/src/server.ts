@@ -6,6 +6,7 @@ import {
     MODEL,
     AVAILABLE_MODELS,
     runChat,
+    runFollowups,
     runReport,
     runTitle,
 } from './core.js';
@@ -27,6 +28,19 @@ app.use(express.json({ limit: '8mb' }));
 
 app.get('/api/chat/health', (_req, res) => {
     res.json({ ok: true, model: MODEL });
+});
+
+// Hosts whose links the sidebar rewrites to the portal it is embedded in —
+// whatever host the MCP tools build their links on.
+const portalLinkAliases = (
+    process.env.PORTAL_LINK_ALIASES || 'www.cbioportal.org,cbioportal.org'
+)
+    .split(',')
+    .map(host => host.trim().toLowerCase())
+    .filter(Boolean);
+
+app.get('/api/chat/config', (_req, res) => {
+    res.json({ portalLinkAliases });
 });
 
 app.get('/api/chat/models', (_req, res) => {
@@ -78,6 +92,53 @@ app.post('/api/chat/title', async (req, res) => {
     } catch (err) {
         console.error('title generation failed:', err);
         const message = err instanceof Error ? err.message : 'title failed';
+        res.status(500).json({ error: message });
+    }
+});
+
+// Streamed as NDJSON, one { title, prompt } per line, so each pill can show as
+// soon as it is complete.
+app.post('/api/chat/followups', async (req, res) => {
+    const { question, answer, href, details } = req.body ?? {};
+    if (typeof question !== 'string' || typeof answer !== 'string') {
+        res.status(400).json({
+            error: 'question and answer (strings) required',
+        });
+        return;
+    }
+    // Also fires once the response ends normally, when nothing is left to stop.
+    const controller = new AbortController();
+    res.on('close', () => controller.abort());
+    try {
+        const followups = runFollowups(
+            {
+                question,
+                answer,
+                href: typeof href === 'string' ? href : '',
+                details: details ?? { available: false },
+            },
+            controller.signal
+        );
+        for await (const followup of followups) {
+            if (!res.headersSent) {
+                res.writeHead(200, {
+                    'Content-Type': 'application/x-ndjson',
+                    'Cache-Control': 'no-cache',
+                    'X-Accel-Buffering': 'no',
+                });
+            }
+            res.write(`${JSON.stringify(followup)}\n`);
+        }
+        res.end();
+    } catch (err) {
+        if (controller.signal.aborted) return;
+        console.error('follow-ups generation failed:', err);
+        if (res.headersSent) {
+            res.end();
+            return;
+        }
+        const message =
+            err instanceof Error ? err.message : 'follow-ups failed';
         res.status(500).json({ error: message });
     }
 });

@@ -4,6 +4,7 @@ import {
     streamText,
     generateText,
     convertToModelMessages,
+    Output,
     stepCountIs,
     tool,
     CallSettings,
@@ -34,6 +35,12 @@ const bedrock = createAmazonBedrock({
 });
 
 const BEDROCK_MODEL_ID = process.env.BEDROCK_MODEL_ID;
+
+// Follow-up suggestions always run on this small Bedrock model, whatever the
+// user picked for the chat itself.
+const SUGGESTIONS_MODEL_ID =
+    process.env.SUGGESTIONS_MODEL_ID ||
+    'us.anthropic.claude-haiku-4-5-20251001-v1:0';
 
 // Direct Anthropic and Vertex access currently use Sonnet 5.
 const CLAUDE_MODEL_ID = 'claude-sonnet-5';
@@ -76,6 +83,16 @@ const LOCAL_SYSTEM_PROMPT_TEXT = readFileSync(
 );
 const LOCAL_REPORT_PROMPT_TEXT = readFileSync(
     join(__dirname, 'reportPrompt.md'),
+    'utf-8'
+);
+const LOCAL_FOLLOWUPS_PROMPT_TEXT = readFileSync(
+    join(__dirname, 'followupsPrompt.md'),
+    'utf-8'
+);
+// What the assistant can and can't do, so the follow-ups suggest only what it
+// can deliver.
+const CAPABILITIES_PROMPT_TEXT = readFileSync(
+    join(__dirname, 'capabilitiesPrompt.md'),
     'utf-8'
 );
 
@@ -229,7 +246,7 @@ async function getMcpTools(): Promise<ToolSet> {
 // No `execute` — client-side tool; the browser navigates and reports back
 // via addToolOutput.
 const goToPageTool = tool({
-    description: `Immediately navigates the user's browser to a cBioPortal URL — the user is taken there right away, with no confirmation step. Only call this when the user has clearly asked to go somewhere. If you're only mentioning a study, patient, or page as context, write it as a normal markdown link in your reply instead and don't call this tool. Resolve the correct URL first (e.g. via resolve_and_route / navigate_to_* tools) if you don't already have it.`,
+    description: `Immediately navigates the user's browser to a cBioPortal URL — the user is taken there right away, with no confirmation step. Once the navigate_to_* tools have produced URL(s), call this yourself, without waiting to be asked, with the main one: the page that most directly answers the user's request. Call it at most once per reply. Still include that URL and any others as markdown links in your reply, so the user can open them manually if navigation fails. Don't call it when the user is already on that page or is asking about the page they're on. Resolve the correct URL first (e.g. via resolve_and_route / navigate_to_* tools) if you don't already have it.`,
     inputSchema: z.object({
         url: z
             .string()
@@ -341,7 +358,19 @@ export async function runReport(
     // Claude rejects a request whose messages end on 'assistant' (treats it
     // as an unsupported prefill) — the session's history ends there whenever
     // the last turn was a reply, so append an explicit trigger turn.
-    const messages = await convertToModelMessages(uiMessages);
+    // Reasoning is left out: the report runs without thinking and needs only
+    // what was said and what the tools returned. Replaying it would have to
+    // be exact — Claude rejects a latest assistant turn whose thinking blocks
+    // differ from the original response, and the Bedrock provider drops
+    // reasoning parts that carry no signature.
+    const messages = await convertToModelMessages(
+        uiMessages
+            .map(message => ({
+                ...message,
+                parts: message.parts.filter(part => part.type !== 'reasoning'),
+            }))
+            .filter(message => message.parts.length > 0)
+    );
     const { text } = await generateText({
         model: getModel(modelId),
         system,
@@ -374,4 +403,62 @@ export async function runTitle(text: string, model?: string): Promise<string> {
         messages: [{ role: 'user', content: text }],
     });
     return title.trim().slice(0, MAX_TITLE_CHARS);
+}
+
+const SuggestionSchema = z.object({ title: z.string(), prompt: z.string() });
+
+export type Suggestion = z.infer<typeof SuggestionSchema>;
+
+// The page the user is on, appended to the follow-ups system prompt.
+function formatPageSection(href: string, details: unknown): string {
+    return `## Current page\n\nURL: ${href}\n\nDetails (JSON):\n${JSON.stringify(
+        details,
+        null,
+        2
+    )}`;
+}
+
+const FOLLOWUP_COUNT = 3;
+
+export interface FollowupsInput {
+    question: string;
+    answer: string;
+    href: string;
+    details: unknown;
+}
+
+// Follow-ups for the latest exchange on the page the user is on, yielded one
+// at a time as each is complete. No tools, no reasoning, and only the
+// exchange the client sends, so the call stays fast and cheap.
+export async function* runFollowups(
+    { question, answer, href, details }: FollowupsInput,
+    abortSignal: AbortSignal
+): AsyncGenerator<Suggestion> {
+    const system = `${LOCAL_FOLLOWUPS_PROMPT_TEXT}\n\n${CAPABILITIES_PROMPT_TEXT}\n\n${formatPageSection(
+        href,
+        details
+    )}`;
+    // streamText reports failures here rather than throwing.
+    let error: unknown;
+    const result = streamText({
+        model: bedrock(SUGGESTIONS_MODEL_ID),
+        system,
+        messages: [
+            {
+                role: 'user',
+                content: `## Latest exchange\n\nUser:\n${question}\n\nAssistant:\n${answer}\n\nSuggest follow-ups.`,
+            },
+        ],
+        output: Output.array({ element: SuggestionSchema }),
+        abortSignal,
+        onError: event => {
+            error = event.error;
+        },
+    });
+    let count = 0;
+    for await (const suggestion of result.elementStream) {
+        yield suggestion;
+        if (++count === FOLLOWUP_COUNT) return;
+    }
+    if (error !== undefined) throw error;
 }

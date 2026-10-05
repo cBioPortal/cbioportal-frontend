@@ -9,13 +9,7 @@ import { File } from '@/components/assistant-ui/elements/file';
 import { ThreadFollowupSuggestions } from '@/components/assistant-ui/elements/follow-up-suggestions.aui';
 import { Image } from '@/components/assistant-ui/elements/image';
 import { MarkdownText } from '@/components/assistant-ui/elements/markdown-text';
-import {
-    Reasoning,
-    ReasoningContent,
-    ReasoningRoot,
-    ReasoningText,
-    ReasoningTrigger,
-} from '@/components/assistant-ui/elements/reasoning.aui';
+import { Reasoning } from '@/components/assistant-ui/elements/reasoning.aui';
 import { ToolFallback } from '@/components/assistant-ui/elements/tool-fallback.aui';
 import {
     ToolGroupContent,
@@ -25,6 +19,8 @@ import {
 import { TooltipIconButton } from '@/components/assistant-ui/elements/tooltip-icon-button';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getPageType, PageType, subscribe } from '@/lib/page-events';
+import { getStartersState, subscribeToStarters } from '@/lib/starters';
 import { cn } from '@/lib/utils';
 import {
     ActionBarMorePrimitive,
@@ -34,8 +30,10 @@ import {
     BranchPickerPrimitive,
     ComposerPrimitive,
     ErrorPrimitive,
+    GroupByContext,
     groupPartByType,
     MessagePrimitive,
+    PartState,
     SuggestionPrimitive,
     ThreadPrimitive,
     FileMessagePartComponent,
@@ -46,15 +44,19 @@ import {
 import {
     ArrowDownIcon,
     ArrowUpIcon,
+    BrainIcon,
     CheckIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
     CopyIcon,
     DownloadIcon,
+    LucideIcon,
+    MessageCircleIcon,
     MicIcon,
     MoreHorizontalIcon,
     PencilIcon,
     RefreshCwIcon,
+    SparklesIcon,
     SquareIcon,
     TriangleAlertIcon,
 } from 'lucide-react';
@@ -64,27 +66,28 @@ import {
     ComponentType,
     FC,
     PropsWithChildren,
+    RefObject,
+    useMemo,
+    useRef,
+    useState,
+    useSyncExternalStore,
 } from 'react';
 
 export type ThreadGroupPart = MessagePrimitive.GroupedParts.GroupPart;
 
 /**
  * Optional component overrides for the thread. `AssistantMessage` and
- * `Welcome` replace whole sections; the remaining slots override how the
- * assistant message renders tool calls and part groups. Tool UIs registered
- * by name (toolkit `render`, `useAssistantDataUI`) take precedence over
- * `ToolFallback`.
+ * `Welcome` replace whole sections; `ToolFallback` overrides how the
+ * assistant message renders tool calls. Tool UIs registered by name (toolkit
+ * `render`, `useAssistantDataUI`) take precedence over `ToolFallback`.
+ * `hiddenTools` names the tools `ToolFallback` renders nothing for, so the
+ * work block's tool count leaves them out.
  */
 export type ThreadComponents = {
     AssistantMessage?: ComponentType | undefined;
     Welcome?: ComponentType | undefined;
     ToolFallback?: ToolCallMessagePartComponent | undefined;
-    ToolGroup?:
-        | ComponentType<PropsWithChildren<{ group: ThreadGroupPart }>>
-        | undefined;
-    ReasoningGroup?:
-        | ComponentType<PropsWithChildren<{ group: ThreadGroupPart }>>
-        | undefined;
+    hiddenTools?: ReadonlySet<string> | undefined;
 };
 
 export type ThreadProps = {
@@ -187,23 +190,20 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
                         </ThreadPrimitive.Messages>
                     </div>
 
+                    {/* Docked, messages scroll behind the footer; the gradient
+                        on its top edge fades them out rather than cutting
+                        them off. A mask such as shadcn's scroll-fade can't do
+                        this: the footer sticks inside the viewport, so
+                        masking the viewport's edge would fade the footer. */}
                     <ThreadPrimitive.ViewportFooter
                         className={cn(
                             'aui-thread-viewport-footer bg-background flex flex-col gap-4 overflow-visible pb-4 md:pb-6',
                             !isEmpty &&
-                                'sticky bottom-0 mt-auto rounded-t-(--composer-radius)'
+                                'before:from-background sticky bottom-0 mt-auto before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-16 before:bg-linear-to-t before:from-25% before:to-transparent'
                         )}
                     >
                         <ThreadScrollToBottom />
-                        <ThreadFollowupSuggestions />
                         <Composer autoFocus={autoFocus} />
-                        <AuiIf
-                            condition={s =>
-                                isNewChatView(s) && s.composer.isEmpty
-                            }
-                        >
-                            <ThreadSuggestions />
-                        </AuiIf>
                     </ThreadPrimitive.ViewportFooter>
                 </div>
             </ThreadPrimitive.Viewport>
@@ -239,11 +239,26 @@ const ThreadScrollToBottom: FC = () => {
     );
 };
 
+const WELCOME_TITLES: Record<PageType, string> = {
+    study: 'What would you like to know about this study?',
+    results: "Let's dig into these results",
+    patient: 'Questions about this patient?',
+    groupComparison: 'Explore how these groups differ',
+};
+
+const DEFAULT_WELCOME_TITLE = 'Ask anything about cBioPortal';
+
 const ThreadWelcome: FC = () => {
+    const pageType = useSyncExternalStore(subscribe, getPageType, getPageType);
+    const title = pageType ? WELCOME_TITLES[pageType] : DEFAULT_WELCOME_TITLE;
     return (
         <div className="aui-thread-welcome-root mb-6 flex flex-col items-center text-center">
-            <h1 className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in fill-mode-both text-2xl font-medium tracking-tight duration-200">
-                Ask anything about cBioPortal
+            {/* Keyed so the fade-in replays when the page type changes. */}
+            <h1
+                key={title}
+                className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in fill-mode-both text-2xl font-medium tracking-tight duration-200"
+            >
+                {title}
             </h1>
             <p className="text-muted-foreground fade-in slide-in-from-bottom-1 animate-in fill-mode-both mt-3 flex max-w-xs items-start gap-2 text-left text-xs leading-relaxed duration-200">
                 <TriangleAlertIcon
@@ -259,45 +274,123 @@ const ThreadWelcome: FC = () => {
     );
 };
 
-const ThreadSuggestions: FC = () => {
+// Rendered directly above the composer shell; the input placeholder continues
+// the heading ("Or ask your own question…").
+// Widths vary so the placeholders read as pills of different lengths.
+const STARTER_SKELETON_WIDTHS = ['w-56', 'w-48', 'w-64'];
+
+const ComposerSuggestions: FC<{
+    inputRef: RefObject<HTMLTextAreaElement | null>;
+}> = ({ inputRef }) => {
+    const starters = useSyncExternalStore(
+        subscribeToStarters,
+        getStartersState,
+        getStartersState
+    );
+    const loading = starters.status === 'loading';
+
     return (
-        <div className="aui-thread-welcome-suggestions mx-auto flex w-full max-w-md flex-col gap-2">
-            <ThreadPrimitive.Suggestions>
-                {() => <ThreadSuggestionItem />}
-            </ThreadPrimitive.Suggestions>
+        <div
+            data-slot="aui_composer-suggestions"
+            className="aui-composer-suggestions mb-3 flex flex-col items-start gap-1.5"
+        >
+            <p className="aui-composer-suggestions-heading text-muted-foreground flex items-center gap-1.5 px-2 pt-0.5 text-xs font-medium">
+                Try an example
+            </p>
+            {loading ? (
+                STARTER_SKELETON_WIDTHS.map(width => (
+                    <Skeleton
+                        key={width}
+                        className={cn('h-8 max-w-full rounded-full', width)}
+                    />
+                ))
+            ) : (
+                <ThreadPrimitive.Suggestions>
+                    {() => <ComposerSuggestionItem inputRef={inputRef} />}
+                </ThreadPrimitive.Suggestions>
+            )}
         </div>
     );
 };
 
-const ThreadSuggestionItem: FC = () => {
+// Called from a suggestion's click, before it sets the composer text; the
+// caret is placed after that text on the next frame.
+const focusInputAtEnd = (inputRef: RefObject<HTMLTextAreaElement | null>) => {
+    const input = inputRef.current;
+    if (!input) return;
+    input.focus();
+    requestAnimationFrame(() => {
+        const end = input.value.length;
+        input.setSelectionRange(end, end);
+        input.scrollTop = input.scrollHeight;
+    });
+};
+
+// Replaces the composer text with the prompt, for the user to edit or send,
+// and moves focus to the input. Highlighted while the composer holds its
+// prompt unedited.
+const ComposerSuggestionItem: FC<{
+    inputRef: RefObject<HTMLTextAreaElement | null>;
+}> = ({ inputRef }) => {
+    const selected = useAuiState(
+        s => s.composer.text !== '' && s.composer.text === s.suggestion.prompt
+    );
+
     return (
-        <div className="aui-thread-welcome-suggestion-display fade-in slide-in-from-bottom-2 animate-in fill-mode-both w-full duration-200">
-            <SuggestionPrimitive.Trigger
-                send
-                render={
-                    <Button
-                        variant="ghost"
-                        className="aui-thread-welcome-suggestion text-foreground hover:bg-muted border-border/60 flex h-auto w-full flex-col items-start gap-0.5 rounded-xl border px-3.5 py-2.5 text-left text-sm font-normal whitespace-normal transition-colors"
-                    />
-                }
-            >
-                <SuggestionPrimitive.Title className="aui-thread-welcome-suggestion-text-1 font-medium" />
-                <SuggestionPrimitive.Description className="aui-thread-welcome-suggestion-text-2 text-muted-foreground empty:hidden" />
-            </SuggestionPrimitive.Trigger>
-        </div>
+        <SuggestionPrimitive.Trigger
+            onClick={() => focusInputAtEnd(inputRef)}
+            aria-pressed={selected}
+            render={
+                <Button
+                    type="button"
+                    variant="ghost"
+                    className={cn(
+                        'aui-composer-suggestion fade-in slide-in-from-bottom-1 animate-in fill-mode-both h-auto max-w-full cursor-pointer justify-start gap-2 rounded-full px-3.5 py-1.5 text-left font-normal duration-200',
+                        selected
+                            ? 'border-primary/60 bg-accent hover:bg-accent dark:hover:bg-accent'
+                            : 'border-border hover:border-muted-foreground/40 bg-(--composer-bg) dark:border-muted-foreground/20'
+                    )}
+                />
+            }
+        >
+            <SparklesIcon
+                className={cn(
+                    'size-3.5 shrink-0',
+                    selected ? 'text-primary' : 'text-muted-foreground'
+                )}
+                aria-hidden
+            />
+            <SuggestionPrimitive.Title className="aui-composer-suggestion-title text-foreground min-w-0 truncate text-sm" />
+        </SuggestionPrimitive.Trigger>
     );
 };
 
 const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
+    // On a new chat the placeholder continues the starter suggestions shown
+    // above it.
+    const showsSuggestions = useAuiState(isNewChatView);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
+
     return (
         <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
+            <AuiIf condition={isNewChatView}>
+                <ComposerSuggestions inputRef={inputRef} />
+            </AuiIf>
+            <ThreadFollowupSuggestions
+                onSelect={() => focusInputAtEnd(inputRef)}
+            />
             <div
                 data-slot="aui_composer-shell"
-                className="border-border/60 focus-within:border-border dark:border-muted-foreground/15 dark:focus-within:border-muted-foreground/30 flex w-full cursor-text flex-col gap-2 rounded-(--composer-radius) border bg-(--composer-bg) p-(--composer-padding) transition-[border-color]"
+                className="border-border focus-within:border-muted-foreground/40 dark:border-muted-foreground/15 dark:focus-within:border-muted-foreground/30 flex w-full cursor-text flex-col gap-2 rounded-(--composer-radius) border bg-(--composer-bg) p-(--composer-padding) transition-[border-color]"
             >
                 <ComposerAttachments />
                 <ComposerPrimitive.Input
-                    placeholder="Ask anything about cBioPortal…"
+                    ref={inputRef}
+                    placeholder={
+                        showsSuggestions
+                            ? 'Or ask your own question…'
+                            : 'Ask anything about cBioPortal…'
+                    }
                     className="aui-composer-input caret-primary placeholder:text-muted-foreground/60 max-h-48 min-h-10 w-full resize-none bg-transparent px-2.5 py-1 text-base leading-6 outline-none"
                     rows={1}
                     autoFocus={autoFocus}
@@ -398,12 +491,119 @@ const MessageError: FC = () => {
     );
 };
 
+type WorkGroupKey =
+    | 'group-chainOfThought'
+    | 'group-thought'
+    | 'group-narration';
+
+const groupWorkByType = groupPartByType<WorkGroupKey>({
+    reasoning: ['group-chainOfThought', 'group-thought'],
+    'tool-call': ['group-chainOfThought'],
+    'standalone-tool-call': [],
+});
+
+const NARRATION_PATH: readonly WorkGroupKey[] = [
+    'group-chainOfThought',
+    'group-narration',
+];
+
+// Everything before the reply's answer goes into one work block: reasoning,
+// tool calls, and text that has more reasoning or tool calls after it (the
+// model narrating its steps). Text after the last of those is the answer and
+// stays outside. GroupedParts passes groupBy the same part objects as
+// s.message.parts, which carry no index, so narration is looked up by object.
+const useWorkGroupBy = () => {
+    const parts = useAuiState(s => s.message.parts);
+    return useMemo(() => {
+        let lastWork = -1;
+        parts.forEach((part, index) => {
+            if (part.type === 'reasoning' || part.type === 'tool-call') {
+                lastWork = index;
+            }
+        });
+        const narration = new Set(
+            parts.filter(
+                (part, index) => part.type === 'text' && index < lastWork
+            )
+        );
+        return (part: PartState, context: GroupByContext) =>
+            narration.has(part)
+                ? NARRATION_PATH
+                : groupWorkByType(part, context);
+    }, [parts]);
+};
+
+// One step on the work block's timeline: a thought or a bit of narration.
+const WorkStep: FC<PropsWithChildren<{
+    icon: LucideIcon;
+    className?: string;
+}>> = ({ icon: Icon, className, children }) => (
+    <div className={cn('flex gap-2 text-sm', className)}>
+        <Icon className="mt-1 size-3.5 shrink-0 opacity-70" aria-hidden />
+        <div className="min-w-0 flex-1">{children}</div>
+    </div>
+);
+
+// The work behind a reply, collapsed to one line above the answer. Open while
+// the reply streams and collapsed once it's done, unless the user has toggled
+// it.
+const WorkBlock: FC<PropsWithChildren<{ group: ThreadGroupPart }>> = ({
+    group,
+    children,
+}) => {
+    const { hiddenTools } = useContext(ThreadComponentsContext);
+    const active = useAuiState(s => s.message.status?.type === 'running');
+    const [userOpen, setUserOpen] = useState<boolean>();
+    const toolCount = useAuiState(s =>
+        group.indices.reduce((count, index) => {
+            const part = s.message.parts[index];
+            return part?.type === 'tool-call' &&
+                !hiddenTools?.has(part.toolName)
+                ? count + 1
+                : count;
+        }, 0)
+    );
+    const hasProse = useAuiState(s =>
+        group.indices.some(index => {
+            const type = s.message.parts[index]?.type;
+            return type === 'reasoning' || type === 'text';
+        })
+    );
+
+    // Only hidden tools, such as a lone get_page_details: nothing to show.
+    if (toolCount === 0 && !hasProse) return null;
+
+    const tools =
+        toolCount > 0
+            ? ` · ${toolCount} tool ${toolCount === 1 ? 'call' : 'calls'}`
+            : '';
+
+    return (
+        <ToolGroupRoot
+            variant="ghost"
+            open={userOpen ?? active}
+            onOpenChange={setUserOpen}
+            className="mb-2"
+        >
+            <ToolGroupTrigger
+                active={active}
+                icon={<BrainIcon className="size-3 shrink-0" aria-hidden />}
+                label={active ? `Thinking…${tools}` : `Done thinking${tools}`}
+            />
+            <ToolGroupContent>
+                <div className="ml-1.5 flex flex-col gap-2 border-l ps-4">
+                    {children}
+                </div>
+            </ToolGroupContent>
+        </ToolGroupRoot>
+    );
+};
+
 const AssistantMessage: FC = () => {
-    const {
-        ToolFallback: ToolFallbackComponent = ToolFallback,
-        ToolGroup,
-        ReasoningGroup,
-    } = useContext(ThreadComponentsContext);
+    const { ToolFallback: ToolFallbackComponent = ToolFallback } = useContext(
+        ThreadComponentsContext
+    );
+    const groupBy = useWorkGroupBy();
 
     const ACTION_BAR_PT = 'pt-1.5';
     // Keep the action bar inside the contained root's paint box, then cancel its reserved space in flow.
@@ -419,62 +619,33 @@ const AssistantMessage: FC = () => {
                 data-slot="aui_assistant-message-content"
                 className="text-foreground px-2 leading-relaxed wrap-break-word"
             >
-                <MessagePrimitive.GroupedParts
-                    groupBy={groupPartByType({
-                        reasoning: ['group-chainOfThought', 'group-reasoning'],
-                        'tool-call': ['group-chainOfThought', 'group-tool'],
-                        'standalone-tool-call': [],
-                    })}
-                >
+                <MessagePrimitive.GroupedParts groupBy={groupBy}>
                     {({ part, children }) => {
                         switch (part.type) {
                             case 'group-chainOfThought':
                                 return (
-                                    <div data-slot="aui_chain-of-thought">
+                                    <WorkBlock group={part}>
                                         {children}
-                                    </div>
+                                    </WorkBlock>
                                 );
-                            case 'group-tool':
-                                if (ToolGroup) {
-                                    return (
-                                        <ToolGroup group={part}>
-                                            {children}
-                                        </ToolGroup>
-                                    );
-                                }
+                            case 'group-thought':
                                 return (
-                                    <ToolGroupRoot variant="ghost">
-                                        <ToolGroupTrigger
-                                            count={part.indices.length}
-                                            active={
-                                                part.status.type === 'running'
-                                            }
-                                        />
-                                        <ToolGroupContent>
-                                            {children}
-                                        </ToolGroupContent>
-                                    </ToolGroupRoot>
+                                    <WorkStep
+                                        icon={BrainIcon}
+                                        className="text-muted-foreground"
+                                    >
+                                        {children}
+                                    </WorkStep>
                                 );
-                            case 'group-reasoning': {
-                                if (ReasoningGroup) {
-                                    return (
-                                        <ReasoningGroup group={part}>
-                                            {children}
-                                        </ReasoningGroup>
-                                    );
-                                }
-                                const running = part.status.type === 'running';
+                            case 'group-narration':
                                 return (
-                                    <ReasoningRoot streaming={running}>
-                                        <ReasoningTrigger active={running} />
-                                        <ReasoningContent aria-busy={running}>
-                                            <ReasoningText>
-                                                {children}
-                                            </ReasoningText>
-                                        </ReasoningContent>
-                                    </ReasoningRoot>
+                                    <WorkStep
+                                        icon={MessageCircleIcon}
+                                        className="text-foreground/80"
+                                    >
+                                        {children}
+                                    </WorkStep>
                                 );
-                            }
                             case 'text':
                                 return <MarkdownText />;
                             case 'reasoning':
@@ -657,7 +828,7 @@ const EditComposer: FC = () => {
             data-slot="aui_edit-composer-wrapper"
             className="flex flex-col px-2 [contain-intrinsic-size:auto_200px] [content-visibility:auto]"
         >
-            <ComposerPrimitive.Root className="aui-edit-composer-root border-border/60 dark:border-muted-foreground/15 ms-auto flex w-full max-w-[85%] cursor-text flex-col rounded-(--composer-radius) border bg-(--composer-bg)">
+            <ComposerPrimitive.Root className="aui-edit-composer-root border-border dark:border-muted-foreground/15 ms-auto flex w-full max-w-[85%] cursor-text flex-col rounded-(--composer-radius) border bg-(--composer-bg)">
                 <ComposerPrimitive.Input
                     className="aui-edit-composer-input text-foreground min-h-14 w-full resize-none bg-transparent px-4 pt-3 pb-1 text-base outline-none"
                     autoFocus

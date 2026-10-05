@@ -3,9 +3,9 @@
 import { memo, useCallback, useRef, useState } from 'react';
 import {
     AlertCircleIcon,
-    CheckIcon,
     ChevronDownIcon,
     LoaderIcon,
+    WrenchIcon,
     XCircleIcon,
 } from 'lucide-react';
 import {
@@ -92,7 +92,7 @@ type ToolStatus = ToolCallMessagePartStatus['type'];
 
 const statusIconMap: Record<ToolStatus, React.ElementType> = {
     running: LoaderIcon,
-    complete: CheckIcon,
+    complete: WrenchIcon,
     incomplete: XCircleIcon,
     'requires-action': AlertCircleIcon,
 };
@@ -141,7 +141,11 @@ function ToolFallbackTrigger({
         status?.type === 'incomplete' && status.reason === 'cancelled';
 
     const Icon = statusIconMap[statusType];
-    const label = isCancelled ? 'Cancelled tool' : 'Used tool';
+    const label = isCancelled
+        ? 'Cancelled tool'
+        : isRunning
+        ? 'Using tool'
+        : 'Used tool';
 
     return (
         <CollapsibleTrigger

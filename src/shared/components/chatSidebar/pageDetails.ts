@@ -157,10 +157,22 @@ function getPatientViewDetails(
     };
 }
 
+// A new Study View store has no study until updateStoreFromURL runs. Its chart
+// list must not be read before then: that sends the chart-eligibility requests
+// (treatments, clinical event types) with no study ids, which the API rejects.
+function studyViewHasStudy(store: StudyViewPageStore): boolean {
+    return (
+        store.queriedPhysicalStudyIds.isComplete &&
+        store.queriedPhysicalStudyIds.result.length > 0
+    );
+}
+
 export function getCurrentPageDetails(): PageDetails {
     const store = getCurrentPageStore();
     if (store instanceof StudyViewPageStore) {
-        return getStudyViewDetails(store);
+        return studyViewHasStudy(store)
+            ? getStudyViewDetails(store)
+            : { available: false };
     }
     if (store instanceof ResultsViewPageStore) {
         return getResultsViewDetails(store);
@@ -172,6 +184,38 @@ export function getCurrentPageDetails(): PageDetails {
         return getPatientViewDetails(store);
     }
     return { available: false };
+}
+
+// True while the data behind getCurrentPageDetails() is still loading, so a
+// snapshot taken now would describe a page the user never saw (e.g. Study
+// View's 0 samples, 0 charts). Keep in step with the get*Details functions.
+export function isCurrentPageDetailsPending(): boolean {
+    const store = getCurrentPageStore();
+    if (store instanceof StudyViewPageStore) {
+        // loadingInitialDataForSummaryTab is false before the study ids
+        // resolve, and the visible charts are only set once it turns false.
+        return (
+            !studyViewHasStudy(store) ||
+            store.loadingInitialDataForSummaryTab ||
+            store.selectedSamples.isPending
+        );
+    }
+    if (store instanceof ResultsViewPageStore) {
+        return (
+            store.filteredSamples.isPending || store.filteredPatients.isPending
+        );
+    }
+    if (store instanceof GroupComparisonStore) {
+        return store.activeGroups.isPending;
+    }
+    if (store instanceof PatientViewPageStore) {
+        return (
+            store.studyMetaData.isPending ||
+            store.clinicalEvents.isPending ||
+            store.sampleToMutationGenePanelId.isPending
+        );
+    }
+    return false;
 }
 
 // Mirrors StudyViewPage.tsx's bookmark-link formula — Study View never puts
