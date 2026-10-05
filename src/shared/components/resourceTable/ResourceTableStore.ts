@@ -3,12 +3,13 @@ import { remoteData } from 'cbioportal-frontend-commons';
 import {
     fetchResourceTableTabs,
     fetchResourceTableData,
+    fetchResourceTableMetadata,
     ResourceColumnFilter,
     ResourceColumnInfo,
     ResourceFacetOption,
     ResourceNumericRange,
     ResourceTableTab,
-    ResourceTableResult,
+    ResourceTableMetadataResult,
     ResourceTableRow,
 } from 'shared/api/resourceTableClient';
 import {
@@ -25,10 +26,8 @@ import _ from 'lodash';
 // Guards against a pathological resource pulling an unbounded result set into the browser.
 const MAX_DOWNLOAD_ROWS = 100000;
 
-const EMPTY_RESULT: ResourceTableResult = {
-    tabs: [],
+const EMPTY_METADATA: ResourceTableMetadataResult = {
     columns: [],
-    rows: [],
     totalRowCount: 0,
     filteredPatientCount: 0,
     filteredSampleCount: 0,
@@ -152,27 +151,61 @@ export class ResourceTableStore {
         return this.selectedResourceId || this.tabs.result?.[0]?.resourceId;
     }
 
-    readonly tableData = remoteData<ResourceTableResult>({
+    /**
+     * The cohort-scoped request, without paging. Both fetches start from this; only the rows
+     * fetch adds pageNumber/pageSize, which is what keeps the metadata fetch from re-running
+     * when the user turns a page.
+     */
+    @computed private get baseQuery() {
+        return {
+            studyIds: this.studyIds,
+            patientIdentifiers: this.patientIdentifiers,
+            sampleIdentifiers: this.sampleIdentifiers,
+            sortBy: this.sortBy,
+            direction: this.sortDirection,
+            search: this.searchTerm || undefined,
+            filters: this.filters.length > 0 ? this.filters : undefined,
+        };
+    }
+
+    /**
+     * Columns, filter options and counts. Deliberately does not read pageNumber or pageSize, so
+     * MobX will not re-run it when the user pages. It is the expensive half of the response and
+     * cannot change between pages of the same query.
+     */
+    readonly tableMetadata = remoteData<ResourceTableMetadataResult>({
         await: () => [this.tabs],
         invoke: async () => {
             const resourceId = this.activeResourceId;
             if (!resourceId || this.studyIds.length === 0) {
-                return EMPTY_RESULT;
+                return EMPTY_METADATA;
             }
-            return fetchResourceTableData({
-                studyIds: this.studyIds,
+            return fetchResourceTableMetadata({
+                ...this.baseQuery,
                 resourceId,
-                patientIdentifiers: this.patientIdentifiers,
-                sampleIdentifiers: this.sampleIdentifiers,
-                pageNumber: this.pageNumber,
-                pageSize: this.pageSize,
-                sortBy: this.sortBy,
-                direction: this.sortDirection,
-                search: this.searchTerm || undefined,
-                filters: this.filters.length > 0 ? this.filters : undefined,
+                pageNumber: 0,
+                pageSize: 0,
             });
         },
-        default: EMPTY_RESULT,
+        default: EMPTY_METADATA,
+    });
+
+    /** Just the page on screen. */
+    readonly tableData = remoteData<ResourceTableRow[]>({
+        await: () => [this.tabs],
+        invoke: async () => {
+            const resourceId = this.activeResourceId;
+            if (!resourceId || this.studyIds.length === 0) {
+                return [];
+            }
+            return fetchResourceTableData({
+                ...this.baseQuery,
+                resourceId,
+                pageNumber: this.pageNumber,
+                pageSize: this.pageSize,
+            });
+        },
+        default: [],
     });
 
     /** Display name of the resource currently shown, e.g. "Slide Microscopy". */
@@ -193,35 +226,35 @@ export class ResourceTableStore {
     }
 
     @computed get totalRowCount(): number {
-        return this.tableData.result?.totalRowCount || 0;
+        return this.tableMetadata.result?.totalRowCount || 0;
     }
 
     @computed get filteredPatientCount(): number {
-        return this.tableData.result?.filteredPatientCount || 0;
+        return this.tableMetadata.result?.filteredPatientCount || 0;
     }
 
     @computed get filteredSampleCount(): number {
-        return this.tableData.result?.filteredSampleCount || 0;
+        return this.tableMetadata.result?.filteredSampleCount || 0;
     }
 
     @computed get distinctValueCounts(): Record<string, number> {
-        return this.tableData.result?.distinctValueCounts || {};
+        return this.tableMetadata.result?.distinctValueCounts || {};
     }
 
     @computed get columns(): ResourceColumnInfo[] {
-        return this.tableData.result?.columns || [];
+        return this.tableMetadata.result?.columns || [];
     }
 
     @computed get facets(): Record<string, ResourceFacetOption[]> {
-        return this.tableData.result?.facets || {};
+        return this.tableMetadata.result?.facets || {};
     }
 
     @computed get facetRanges(): Record<string, ResourceNumericRange> {
-        return this.tableData.result?.facetRanges || {};
+        return this.tableMetadata.result?.facetRanges || {};
     }
 
     @computed get rowsForDisplay(): IResourceTableRow[] {
-        return this.toDisplayRows(this.tableData.result?.rows || []);
+        return this.toDisplayRows(this.tableData.result || []);
     }
 
     /**
@@ -248,7 +281,7 @@ export class ResourceTableStore {
             search: this.searchTerm || undefined,
             filters: this.filters.length > 0 ? this.filters : undefined,
         });
-        return this.toDisplayRows(result.rows);
+        return this.toDisplayRows(result);
     }
 
     /** Maps API rows onto the shape the table renders. Shared by the page and the download. */
