@@ -25,6 +25,21 @@ export interface ResourceTableRow {
     metadata: { [key: string]: any };
 }
 
+/**
+ * The half of the resource table that does not depend on which page is shown. Fetch it once per
+ * study/resource/cohort/search/filter combination and keep it while the user pages; recomputing
+ * facets and key discovery per page is the expensive part of a large resource's response.
+ */
+export interface ResourceTableMetadataResult {
+    columns: ResourceColumnInfo[];
+    totalRowCount: number;
+    filteredPatientCount: number;
+    filteredSampleCount: number;
+    facets: { [columnId: string]: ResourceFacetOption[] };
+    facetRanges: { [columnId: string]: ResourceNumericRange };
+    distinctValueCounts: { [backendField: string]: number };
+}
+
 export interface ResourceColumnInfo {
     id: string;
     label: string;
@@ -45,20 +60,6 @@ export interface ResourceFacetOption {
 export interface ResourceNumericRange {
     min: number;
     max: number;
-}
-
-export interface ResourceTableResult {
-    tabs: ResourceTableTab[];
-    columns: ResourceColumnInfo[];
-    rows: ResourceTableRow[];
-    totalRowCount: number;
-    filteredPatientCount: number;
-    filteredSampleCount: number;
-    facets: { [columnId: string]: ResourceFacetOption[] };
-    facetRanges: { [columnId: string]: ResourceNumericRange };
-    // How many distinct values a few builtin columns carry across the whole filtered set,
-    // keyed by backend field name. Used to hide columns that say the same thing in every row.
-    distinctValueCounts?: { [backendField: string]: number };
 }
 
 /**
@@ -111,9 +112,19 @@ export async function fetchResourceTableTabs(
 
 export async function fetchResourceTableData(
     query: ResourceTableQuery
-): Promise<ResourceTableResult> {
-    const response = await axios.post<ResourceTableResult>(
+): Promise<ResourceTableRow[]> {
+    const response = await axios.post<ResourceTableRow[]>(
         resourceTableApiUrl('query/fetch'),
+        query
+    );
+    return response.data;
+}
+
+export async function fetchResourceTableMetadata(
+    query: ResourceTableQuery
+): Promise<ResourceTableMetadataResult> {
+    const response = await axios.post<ResourceTableMetadataResult>(
+        resourceTableApiUrl('metadata/fetch'),
         query
     );
     return response.data;

@@ -342,8 +342,8 @@ export class ResourceDataTable extends React.Component<
 
     /**
      * What to call the rows. The resource's own display name reads far better than a generic
-     * "resources" — "3,074 Slide Microscopies" rather than "3,074 resources" — so use it when the
-     * tab has loaded and fall back to the caller's label otherwise.
+     * "resources" — "Slide Microscopies" rather than "resources" — so use it when the tab has
+     * loaded and fall back to the caller's label otherwise.
      */
     @computed get itemsLabel(): string {
         const resourceName = this.props.store.activeResourceLabel;
