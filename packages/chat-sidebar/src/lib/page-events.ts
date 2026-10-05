@@ -1,6 +1,6 @@
 import { setFollowupsPage, setFollowupsSidebarOpen } from './followups';
 import { isFromParent, parentOrigin } from './parent-origin';
-import { setSettledSnapshot, setSidebarOpen } from './starters';
+import { setSettledSnapshot } from './starters';
 
 // Mirrors the host's pageEvents.ts, loosely — details are passed on as sent.
 export interface PageEvent {
@@ -60,14 +60,12 @@ function updatePageType(event: PageEvent): void {
 
 // The host pushes every page change here (its pageEvents.ts); this keeps the
 // latest, which is where the chat reads what the user is looking at. It also
-// reports whether the sidebar is open, which gates the starters and follow-ups
-// requests.
+// reports whether the sidebar is open, which gates the follow-ups requests.
 export function listenForPageEvents(): void {
     if (!window.parent || window.parent === window) return;
     window.addEventListener('message', (e: MessageEvent) => {
         if (!isFromParent(e)) return;
         if (e.data?.type === 'chat-sidebar:open') {
-            setSidebarOpen(Boolean(e.data.open));
             setFollowupsSidebarOpen(Boolean(e.data.open));
             return;
         }

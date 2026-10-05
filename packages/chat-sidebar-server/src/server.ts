@@ -8,7 +8,6 @@ import {
     runChat,
     runFollowups,
     runReport,
-    runStarters,
     runTitle,
 } from './core.js';
 
@@ -80,22 +79,6 @@ app.post('/api/chat/title', async (req, res) => {
     } catch (err) {
         console.error('title generation failed:', err);
         const message = err instanceof Error ? err.message : 'title failed';
-        res.status(500).json({ error: message });
-    }
-});
-
-app.post('/api/chat/starters', async (req, res) => {
-    const { href, details } = req.body ?? {};
-    if (typeof href !== 'string' || !href.trim()) {
-        res.status(400).json({ error: 'href (string) required' });
-        return;
-    }
-    try {
-        const result = await runStarters(href, details ?? { available: false });
-        res.json(result);
-    } catch (err) {
-        console.error('starters generation failed:', err);
-        const message = err instanceof Error ? err.message : 'starters failed';
         res.status(500).json({ error: message });
     }
 });

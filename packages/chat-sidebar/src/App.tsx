@@ -9,7 +9,6 @@ import {
 import {
     AssistantRuntimeProvider,
     AuiConfig,
-    SuggestionConfig,
     Suggestions,
     ToolCallMessagePartComponent,
     useAuiState,
@@ -43,7 +42,11 @@ import {
     saveLastThreadId,
 } from '@/lib/threadStorage';
 import { useChatThreadRuntime } from '@/lib/useChatThreadRuntime';
-import { getStartersState, subscribeToStarters } from '@/lib/starters';
+import {
+    FALLBACK_STARTERS,
+    getStartersState,
+    subscribeToStarters,
+} from '@/lib/starters';
 
 const AUTH_ERROR_CONTENT: Record<
     AuthErrorStatus,
@@ -100,31 +103,6 @@ const AppToolFallback: ToolCallMessagePartComponent = part => {
     if (SILENT_TOOLS.has(part.toolName)) return null;
     return <ToolFallback {...part} />;
 };
-
-// Welcome-screen starters shown when page-aware ones aren't available (not
-// embedded, or the request failed). `title` is the short pill text; `prompt`
-// is the detailed message sent on click. `label` is required by the type but
-// unused.
-const FALLBACK_STARTERS: SuggestionConfig[] = [
-    {
-        title: 'Find lung adenocarcinoma studies',
-        label: '',
-        prompt:
-            'Which cBioPortal studies include lung adenocarcinoma samples with both mutation and copy-number data? For each study, list the number of samples and the available molecular profiles.',
-    },
-    {
-        title: 'OncoPrint for EGFR and KRAS',
-        label: '',
-        prompt:
-            'Give me an OncoPrint for EGFR and KRAS in TCGA lung adenocarcinoma, and summarize how often each gene is altered and whether their alterations tend to be mutually exclusive.',
-    },
-    {
-        title: 'Compare glioma subtypes',
-        label: '',
-        prompt:
-            'Compare low grade glioma by molecular subtype, highlighting differences in the most frequently altered genes and in overall survival between subtypes.',
-    },
-];
 
 const AppToolGroup = ({
     group,
@@ -221,10 +199,12 @@ export function App() {
         getStartersState
     );
     const config = AuiConfig({
+        // `label` is required by the type but unused.
         suggestions: Suggestions(
-            starters.status === 'ready'
-                ? starters.suggestions.map(s => ({ ...s, label: '' }))
-                : FALLBACK_STARTERS
+            (starters.suggestions ?? FALLBACK_STARTERS).map(s => ({
+                ...s,
+                label: '',
+            }))
         ),
     });
 

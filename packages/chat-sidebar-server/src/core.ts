@@ -36,8 +36,8 @@ const bedrock = createAmazonBedrock({
 
 const BEDROCK_MODEL_ID = process.env.BEDROCK_MODEL_ID;
 
-// Suggestions (welcome starters and follow-ups) always run on this small
-// Bedrock model, whatever the user picked for the chat itself.
+// Follow-up suggestions always run on this small Bedrock model, whatever the
+// user picked for the chat itself.
 const SUGGESTIONS_MODEL_ID =
     process.env.SUGGESTIONS_MODEL_ID ||
     'us.anthropic.claude-haiku-4-5-20251001-v1:0';
@@ -85,16 +85,12 @@ const LOCAL_REPORT_PROMPT_TEXT = readFileSync(
     join(__dirname, 'reportPrompt.md'),
     'utf-8'
 );
-const LOCAL_STARTERS_PROMPT_TEXT = readFileSync(
-    join(__dirname, 'startersPrompt.md'),
-    'utf-8'
-);
 const LOCAL_FOLLOWUPS_PROMPT_TEXT = readFileSync(
     join(__dirname, 'followupsPrompt.md'),
     'utf-8'
 );
-// What the assistant can and can't do, shared by the starters and follow-ups
-// prompts so both suggest only what it can deliver.
+// What the assistant can and can't do, so the follow-ups suggest only what it
+// can deliver.
 const CAPABILITIES_PROMPT_TEXT = readFileSync(
     join(__dirname, 'capabilitiesPrompt.md'),
     'utf-8'
@@ -399,41 +395,15 @@ export async function runTitle(text: string, model?: string): Promise<string> {
 
 const SuggestionSchema = z.object({ title: z.string(), prompt: z.string() });
 
-const StartersSchema = z.object({
-    suggestions: z.array(SuggestionSchema).length(3),
-});
-
 export type Suggestion = z.infer<typeof SuggestionSchema>;
 
-// The page the user is on, appended to a suggestions system prompt.
+// The page the user is on, appended to the follow-ups system prompt.
 function formatPageSection(href: string, details: unknown): string {
     return `## Current page\n\nURL: ${href}\n\nDetails (JSON):\n${JSON.stringify(
         details,
         null,
         2
     )}`;
-}
-
-// Welcome-screen starters for the page the user is on. The page snapshot rides
-// in the system prompt; the user turn only asks for them. No tools, no
-// reasoning — the call is meant to be fast.
-export async function runStarters(
-    href: string,
-    details: unknown
-): Promise<{ suggestions: Suggestion[] }> {
-    const system = `${LOCAL_STARTERS_PROMPT_TEXT}\n\n${CAPABILITIES_PROMPT_TEXT}\n\n${formatPageSection(
-        href,
-        details
-    )}`;
-    const { output } = await generateText({
-        model: bedrock(SUGGESTIONS_MODEL_ID),
-        system,
-        messages: [
-            { role: 'user', content: 'Suggest starters for this page.' },
-        ],
-        output: Output.object({ schema: StartersSchema }),
-    });
-    return { suggestions: output.suggestions };
 }
 
 const FOLLOWUP_COUNT = 3;
@@ -446,8 +416,8 @@ export interface FollowupsInput {
 }
 
 // Follow-ups for the latest exchange on the page the user is on, yielded one
-// at a time as each is complete. Lean like the starters call: no tools, no
-// reasoning, and only the exchange the client sends.
+// at a time as each is complete. No tools, no reasoning, and only the
+// exchange the client sends, so the call stays fast and cheap.
 export async function* runFollowups(
     { question, answer, href, details }: FollowupsInput,
     abortSignal: AbortSignal

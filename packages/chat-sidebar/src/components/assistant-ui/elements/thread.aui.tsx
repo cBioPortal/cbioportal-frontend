@@ -26,11 +26,7 @@ import { TooltipIconButton } from '@/components/assistant-ui/elements/tooltip-ic
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getPageType, PageType, subscribe } from '@/lib/page-events';
-import {
-    getStartersState,
-    setWelcomeVisible,
-    subscribeToStarters,
-} from '@/lib/starters';
+import { getStartersState, subscribeToStarters } from '@/lib/starters';
 import { cn } from '@/lib/utils';
 import {
     ActionBarMorePrimitive,
@@ -72,7 +68,6 @@ import {
     FC,
     PropsWithChildren,
     RefObject,
-    useEffect,
     useRef,
     useSyncExternalStore,
 } from 'react';
@@ -115,13 +110,6 @@ const isNewChatView = (s: AssistantState) =>
     s.thread.messages.length === 0 &&
     (!s.thread.isLoading || s.threads.isLoading);
 
-// The welcome screen once startup is over. Unlike isNewChatView, excludes the
-// startup placeholder, which also shows while a restored conversation loads.
-const isWelcomeReady = (s: AssistantState) =>
-    s.thread.messages.length === 0 &&
-    !s.thread.isLoading &&
-    !s.threads.isLoading;
-
 // A switched thread that is still fetching its history: skeleton, not welcome.
 const isHistoryLoadingView = (s: AssistantState) =>
     s.thread.messages.length === 0 &&
@@ -155,13 +143,6 @@ export const Thread: FC<ThreadProps> = ({
     autoFocus = true,
 }) => {
     const isEmpty = useAuiState(isNewChatView);
-    const welcomeReady = useAuiState(isWelcomeReady);
-
-    // Starters are only generated while the welcome screen can be seen.
-    useEffect(() => {
-        setWelcomeVisible(welcomeReady);
-        return () => setWelcomeVisible(false);
-    }, [welcomeReady]);
 
     return (
         <ThreadComponentsContext.Provider value={components}>
@@ -316,23 +297,8 @@ const ComposerSuggestions: FC<{
             data-slot="aui_composer-suggestions"
             className="aui-composer-suggestions mb-3 flex flex-col items-start gap-1.5"
         >
-            <p
-                aria-live="polite"
-                className="aui-composer-suggestions-heading text-muted-foreground flex items-center gap-1.5 px-2 pt-0.5 text-xs font-medium"
-            >
-                {loading ? (
-                    <>
-                        <SparklesIcon
-                            className="size-3.5 shrink-0"
-                            aria-hidden
-                        />
-                        <span className="shimmer motion-reduce:animate-none">
-                            Thinking…
-                        </span>
-                    </>
-                ) : (
-                    'Try an example'
-                )}
+            <p className="aui-composer-suggestions-heading text-muted-foreground flex items-center gap-1.5 px-2 pt-0.5 text-xs font-medium">
+                Try an example
             </p>
             {loading ? (
                 STARTER_SKELETON_WIDTHS.map(width => (
