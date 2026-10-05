@@ -1,5 +1,5 @@
 import { test, expect, Page } from '../fixtures';
-import { expectElementScreenshot } from './helpers/common';
+import { expectElementScreenshot, stubEmbeddingData } from './helpers/common';
 
 /**
  * Port of end-to-end-test/local/specs/core/embeddings.screenshot.spec.js.
@@ -113,6 +113,10 @@ function embeddingsUrl(query = ''): string {
 }
 
 test.describe('embeddings tab screenshots', () => {
+    test.beforeEach(async ({ page }) => {
+        await stubEmbeddingData(page);
+    });
+
     test.describe('basic embedding visualization', () => {
         test('renders embeddings tab with default cancer type coloring', async ({
             page,

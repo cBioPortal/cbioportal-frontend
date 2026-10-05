@@ -16,6 +16,7 @@ import {
     ANNOTATED_PROTEIN_IMPACT_TYPE_FILTER_ID,
     countDuplicateMutations,
     groupMutationsByGeneAndPatientAndProteinChange,
+    sortMutationsDeterministically,
 } from 'shared/lib/MutationUtils';
 import { mergeMutations } from 'shared/lib/StoreUtils';
 
@@ -236,7 +237,7 @@ export default class MutationMapperDataStore
         highlightFilters: DataFilter[] = [],
         groupFilters: { group: string; filter: DataFilter }[] = []
     ) {
-        super(data);
+        super(sortMutationsDeterministically(data));
 
         makeObservable(this);
 

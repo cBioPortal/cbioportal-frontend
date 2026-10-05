@@ -140,6 +140,34 @@ test.describe('oncoprint', () => {
         test('shows binary and multiple category tracks', async ({ page }) => {
             await goToUrlAndSetLocalStorage(page, genericArrayUrl, true);
             await waitForOncoprint(page);
+            // The generic assay tracks are added after the gene tracks, so
+            // wait for all four (SBS1 and SBS9 in both groups) and for both
+            // groups' legends before taking the screenshot.
+            await expect
+                .poll(
+                    () =>
+                        page.evaluate(() => {
+                            const model = (window as any).frontendOnc.model;
+                            return model
+                                .getTracks()
+                                .filter((id: number) =>
+                                    /^SBS/.test(model.getTrackLabel(id) || '')
+                                ).length;
+                        }),
+                    { timeout: 30000 }
+                )
+                .toBe(4);
+            for (const group of [
+                'mutational signature binary SBS',
+                'mutational signature category SBS',
+            ]) {
+                await expect(
+                    page
+                        .locator('#oncoprintDiv .oncoprint-legend-div svg text')
+                        .filter({ hasText: group })
+                        .first()
+                ).toBeAttached({ timeout: 30000 });
+            }
             await expectOncoprintScreenshot(
                 page,
                 'oncoprint-generic-assay-categorical-tracks.png'

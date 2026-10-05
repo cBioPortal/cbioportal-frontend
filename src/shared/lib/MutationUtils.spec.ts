@@ -8,6 +8,7 @@ import {
     updateMissingGeneInfo,
     genomicLocationString,
     hasASCNProperty,
+    sortMutationsDeterministically,
 } from './MutationUtils';
 import { assert } from 'chai';
 import { Gene, MolecularProfile, Mutation } from 'cbioportal-ts-api-client';
@@ -592,6 +593,42 @@ describe('MutationUtils', () => {
             assert.isFalse(
                 missingASCN,
                 'hasASCNProperty() returned true when looking for ascnMethod, should be false (all of alleleSpecificCopyNumber is missing).'
+            );
+        });
+    });
+
+    describe('sortMutationsDeterministically', () => {
+        const row = (gene: string, pos: number, sampleId: string) => [
+            initMutation({
+                gene: { hugoGeneSymbol: gene },
+                proteinPosStart: pos,
+                proteinChange: `X${pos}Y`,
+                sampleId,
+            }),
+        ];
+        const label = (d: Mutation[]) =>
+            `${d[0].gene.hugoGeneSymbol} ${d[0].proteinPosStart} ${d[0].sampleId}`;
+
+        it('orders rows the same way whatever their input order', () => {
+            const rows = [
+                row('TP53', 175, 'S1'),
+                row('PIK3CA', 1047, 'S2'),
+                row('PIK3CA', 545, 'S3'),
+                row('PIK3CA', 545, 'S1'),
+            ];
+            const expected = [
+                'PIK3CA 545 S1',
+                'PIK3CA 545 S3',
+                'PIK3CA 1047 S2',
+                'TP53 175 S1',
+            ];
+            assert.deepEqual(
+                sortMutationsDeterministically(rows).map(label),
+                expected
+            );
+            assert.deepEqual(
+                sortMutationsDeterministically([...rows].reverse()).map(label),
+                expected
             );
         });
     });
