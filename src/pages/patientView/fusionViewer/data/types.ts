@@ -182,6 +182,13 @@ export interface FusionPairSummary {
     sampleIds: string[];
     /** FusionEvent.id members. */
     eventIds: string[];
+    /**
+     * Majority 5′ gene among events whose caller annotation states the
+     * 5′::3′ order; null when no event states it.
+     */
+    fivePrime: string | null;
+    /** Caller-stated events with the other gene as 5′. */
+    reciprocalCount: number;
 }
 
 /**

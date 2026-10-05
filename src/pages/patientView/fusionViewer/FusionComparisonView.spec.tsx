@@ -1291,3 +1291,63 @@ describe('FusionComparisonView partner column', () => {
         );
     });
 });
+
+describe('FusionComparisonView caller-confirmed reciprocals (pair mode)', () => {
+    const FORWARD =
+        'ENST00000318522.10(EML4):e.1_13::ENST00000389048.8(ALK):e.20_29';
+    const RECIPROCAL =
+        'ENST00000389048.8(ALK):e.1_19::ENST00000318522.10(EML4):e.22_23';
+    const sv = (sampleId: string, g1: string, g2: string, annotation: string) =>
+        ({
+            site1HugoSymbol: g1,
+            site2HugoSymbol: g2,
+            sampleId,
+            site1Position: 250,
+            site2Position: 250,
+            annotation,
+        } as any);
+
+    function mountPair() {
+        const store = new FusionCohortStore();
+        store.setStructuralVariants([
+            sv('S1', 'EML4', 'ALK', FORWARD),
+            sv('S2', 'EML4', 'ALK', FORWARD),
+            sv('S3', 'ALK', 'EML4', RECIPROCAL),
+        ]);
+        store.setAnchor({ mode: 'pair', key: 'ALK::EML4' });
+        const wrapper = mount(<FusionComparisonView store={store} />);
+        const view = wrapper.instance() as any;
+        runInAction(() => {
+            view.transcriptsByKey = new Map([
+                ['GRCh38|EML4|', tx('EML4')],
+                ['GRCh38|ALK|', tx('ALK')],
+            ]);
+        });
+        wrapper.update();
+        return { wrapper, store, view };
+    }
+
+    it('excludes the reciprocal from the drawn rows instead of flipping it', () => {
+        const { view } = mountPair();
+        assert.equal(view.anchorGene, 'EML4');
+        assert.deepEqual(view.orientedRows.map((r: any) => r.sampleId).sort(), [
+            'S1',
+            'S2',
+        ]);
+    });
+
+    it('shows a note that switches to the reciprocal 5′ gene', () => {
+        const { wrapper, store } = mountPair();
+        const note = wrapper
+            .find('[data-testid="pair-reciprocal-note"]')
+            .hostNodes();
+        assert.lengthOf(note, 1);
+        assert.include(note.text(), '1 reciprocal ALK → EML4');
+        note.simulate('click');
+        assert.deepEqual(store.anchor, {
+            mode: 'gene',
+            gene: 'ALK',
+            side: '5p',
+        });
+    });
+});

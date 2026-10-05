@@ -10,6 +10,7 @@ import {
     extractGenePartnerOptions,
     extractSvTypeOptions,
     defaultCohortFilter,
+    pairDisplayLabel,
 } from './cohortAggregation';
 import { FusionEvent, FusionCohortFilter } from './types';
 
@@ -449,6 +450,62 @@ describe('eventMatchesFilter', () => {
 // ---------------------------------------------------------------------------
 // buildPairSummaries
 // ---------------------------------------------------------------------------
+
+describe('buildPairSummaries 5′ orientation', () => {
+    const FWD =
+        'ENST00000318522.10(EML4):e.1_13::ENST00000389048.8(ALK):e.20_29';
+    const REV =
+        'ENST00000389048.8(ALK):e.1_19::ENST00000318522.10(EML4):e.22_23';
+    const ev = (id: string, g1: string, g2: string, annotation: string) =>
+        makeEvent({
+            id,
+            tumorId: id,
+            gene1: { ...makeEvent().gene1, symbol: g1 },
+            gene2: { ...makeEvent().gene2!, symbol: g2 },
+            annotation,
+        });
+
+    it('takes the majority caller-stated 5′ gene and counts reciprocals', () => {
+        const [s] = buildPairSummaries([
+            ev('a', 'EML4', 'ALK', FWD),
+            ev('b', 'EML4', 'ALK', FWD),
+            ev('c', 'ALK', 'EML4', REV),
+        ]);
+        assert.equal(s.key, 'ALK::EML4');
+        assert.equal(s.fivePrime, 'EML4');
+        assert.equal(s.reciprocalCount, 1);
+        assert.equal(pairDisplayLabel(s), 'EML4::ALK');
+    });
+
+    it('falls back to a caller "A::B Fusion" event label when the annotation is NA', () => {
+        const e = ev('a', 'ENSG00000259345', 'FSIP1', 'NA');
+        e.eventLabel = 'ENSG00000259345::FSIP1 Fusion';
+        const [s] = buildPairSummaries([e]);
+        assert.equal(s.fivePrime, 'ENSG00000259345');
+        assert.equal(pairDisplayLabel(s), 'ENSG00000259345::FSIP1');
+    });
+
+    it('does not read order from a hyphenated event label', () => {
+        const e = ev('a', 'ALK', 'EML4', 'NA');
+        e.eventLabel = 'ALK-EML4 Fusion';
+        const [s] = buildPairSummaries([e]);
+        assert.isNull(s.fivePrime);
+    });
+
+    it('leaves orientation unknown when no event states it', () => {
+        const [s] = buildPairSummaries([ev('a', 'ERG', 'TMPRSS2', 'NA')]);
+        assert.isNull(s.fivePrime);
+        assert.equal(s.reciprocalCount, 0);
+        assert.equal(pairDisplayLabel(s), 'ERG / TMPRSS2');
+    });
+
+    it('labels single-gene keys as-is', () => {
+        const [s] = buildPairSummaries([
+            makeEvent({ id: 'x', gene2: null, annotation: '' }),
+        ]);
+        assert.equal(pairDisplayLabel(s), s.key);
+    });
+});
 
 describe('buildPairSummaries', () => {
     it('returns empty array for no events', () => {

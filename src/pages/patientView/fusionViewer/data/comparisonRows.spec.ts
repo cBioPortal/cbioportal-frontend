@@ -4,6 +4,8 @@ import {
     sortComparisonRows,
     resolveComparisonRows,
     orientComparisonRowsTo5p,
+    callerFivePrimeSymbol,
+    splitCallerReciprocals,
     snapBreakpointsToAnchorGene,
     ComparisonAnchor,
     ComparisonRow,
@@ -182,6 +184,71 @@ describe('resolveComparisonRows', () => {
         const resolved = resolveComparisonRows(naiveErgAnchorRow, () => []);
         assert.equal(resolved[0].fivePrimeSymbol, 'ERG');
         assert.equal(resolved[0].threePrimeSymbol, 'TMPRSS2');
+    });
+});
+
+describe('callerFivePrimeSymbol', () => {
+    it('reads the 5′ gene from a TARGET-style annotation', () => {
+        assert.equal(
+            callerFivePrimeSymbol(
+                'ENST00000389048.8(ALK):e.1_19::ENST00000318522.10(EML4):e.22_23'
+            ),
+            'ALK'
+        );
+    });
+
+    it('returns null for annotations that do not state a 5′::3′ order', () => {
+        assert.isNull(callerFivePrimeSymbol(''));
+        assert.isNull(callerFivePrimeSymbol('NA'));
+        assert.isNull(
+            callerFivePrimeSymbol(
+                'EML4 (NM_019063) - ALK (NM_004304) fusion: c.667+703:EML4_c.3249:ALKinv'
+            )
+        );
+    });
+});
+
+describe('splitCallerReciprocals', () => {
+    const mk = (five: string, three: string, annotation: string) =>
+        ({
+            event: { annotation } as any,
+            sampleId: 's',
+            fivePrimeSymbol: five,
+            threePrimeSymbol: three,
+            anchorBreakpoint: 1,
+            partnerBreakpoint: 2,
+            frame: 'unknown',
+        } as ComparisonRow);
+    const RECIPROCAL =
+        'ENST00000389048.8(ALK):e.1_19::ENST00000318522.10(EML4):e.22_23';
+    const FORWARD =
+        'ENST00000318522.10(EML4):e.1_13::ENST00000389048.8(ALK):e.20_29';
+
+    it('pulls out rows the caller called with the partner as 5′', () => {
+        const recip = mk('ALK', 'EML4', RECIPROCAL);
+        const fwd = mk('EML4', 'ALK', FORWARD);
+        const out = splitCallerReciprocals([fwd, recip], 'EML4');
+        assert.deepEqual(out.rows, [fwd]);
+        assert.deepEqual(out.reciprocal, [recip]);
+    });
+
+    it('catches a reciprocal even when the resolver already put the anchor 5′', () => {
+        const recip = mk('EML4', 'ALK', RECIPROCAL);
+        const out = splitCallerReciprocals([recip], 'EML4');
+        assert.deepEqual(out.reciprocal, [recip]);
+    });
+
+    it('keeps rows with no caller order so the usual flip still applies', () => {
+        const guessed = mk('ALK', 'EML4', 'NA');
+        const out = splitCallerReciprocals([guessed], 'EML4');
+        assert.deepEqual(out.rows, [guessed]);
+        assert.lengthOf(out.reciprocal, 0);
+    });
+
+    it('keeps mislabelled rows whose caller order agrees with the anchor', () => {
+        const swapped = mk('ALK', 'EML4', FORWARD);
+        const out = splitCallerReciprocals([swapped], 'EML4');
+        assert.deepEqual(out.rows, [swapped]);
     });
 });
 
