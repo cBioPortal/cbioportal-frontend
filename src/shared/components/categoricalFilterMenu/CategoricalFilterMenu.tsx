@@ -34,6 +34,10 @@ export default class CategoricalFilterMenu extends React.Component<
     declare context: React.ContextType<typeof FilterMenuOpenContext>;
 
     @observable private filterString: string = '';
+    // Values the user checked that together cover all values. That filter
+    // doesn't restrict the table, so it isn't kept, but the values should
+    // still show as checked.
+    @observable.ref private checkedAllValues: Set<string> | undefined;
 
     constructor(props: ICategoricalFilterMenuProps) {
         super(props);
@@ -106,7 +110,23 @@ export default class CategoricalFilterMenu extends React.Component<
     }
 
     private isChecked(selection: string) {
-        return this.isRestricting && this.props.currSelections.has(selection);
+        if (this.isRestricting) {
+            return this.props.currSelections.has(selection);
+        }
+        // only while they still cover all values, which can change with the
+        // filters of the other columns
+        const checkedAll = this.checkedAllValues;
+        return (
+            !!checkedAll &&
+            checkedAll.has(selection) &&
+            Array.from(this.props.allSelections).every(s => checkedAll.has(s))
+        );
+    }
+
+    private get checkedCount() {
+        return Array.from(this.props.allSelections).filter(s =>
+            this.isChecked(s)
+        ).length;
     }
 
     // toggles to the given included values
@@ -123,6 +143,7 @@ export default class CategoricalFilterMenu extends React.Component<
 
     @action.bound
     private clearSelection() {
+        this.checkedAllValues = undefined;
         this.setIncluded(new Set(this.props.allSelections));
     }
 
@@ -140,6 +161,11 @@ export default class CategoricalFilterMenu extends React.Component<
         } else {
             checked.add(id);
         }
+        const coversAllValues = Array.from(this.props.allSelections).every(s =>
+            checked.has(s)
+        );
+        this.checkedAllValues =
+            checked.size > 0 && coversAllValues ? checked : undefined;
         // unchecking the last value removes the restriction
         this.setIncluded(
             checked.size > 0 ? checked : new Set(this.props.allSelections)
@@ -147,9 +173,7 @@ export default class CategoricalFilterMenu extends React.Component<
     }
 
     @computed get selectionControls() {
-        const checkedCount = this.isRestricting
-            ? this.props.currSelections.size
-            : 0;
+        const checkedCount = this.checkedCount;
         return (
             <div className={styles.selectionControls}>
                 <span className={styles.selectedCount}>
