@@ -49,6 +49,10 @@ declare const styles: {
   readonly "matchingNodeText": string;
   readonly "moreGenes": string;
   readonly "multiChoiceLabel": string;
+  readonly "naturalLanguageQuery": string;
+  readonly "naturalLanguageQueryActions": string;
+  readonly "naturalLanguageQueryExplanation": string;
+  readonly "naturalLanguageQueryHint": string;
   readonly "noChoiceLabel": string;
   readonly "noData": string;
   readonly "nonMatchingNodeText": string;

@@ -96,6 +96,7 @@ export interface IServerConfig {
     skin_documentation_markdown: boolean;
     skin_description: string;
     skin_email_contact: string;
+    nl_oql_service_url: string | null; // base URL of the natural-language to OQL service; empty hides the input
     skin_example_study_queries: string | null;
     skin_examples_right_column_html: string | null;
     skin_documentation_faq: string | null;

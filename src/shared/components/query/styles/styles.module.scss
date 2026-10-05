@@ -353,6 +353,39 @@ div.SelectedStudiesWindow {
         margin-bottom: 8px;
     }
 
+    .naturalLanguageQuery {
+        max-width: 555px;
+        margin: 4px 0 8px;
+
+        label {
+            font-weight: normal;
+            margin-bottom: 4px;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+    }
+
+    .naturalLanguageQueryActions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 6px;
+    }
+
+    .naturalLanguageQueryHint {
+        color: #777;
+        font-size: 12px;
+    }
+
+    .naturalLanguageQueryExplanation {
+        margin: 6px 0 0;
+        padding-left: 18px;
+        color: #555;
+        font-size: 12px;
+    }
+
     :global(.oqlValidationContainer) {
         min-height: 27px;
     }
