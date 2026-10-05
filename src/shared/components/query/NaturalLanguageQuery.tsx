@@ -9,6 +9,7 @@ type Issue = { code: string; message: string; suggestion?: string };
 
 type TranslateResponse = {
     oql?: string;
+    checkedStudies?: string[];
     warnings?: Issue[];
     error?: string;
     errors?: Issue[];
@@ -36,10 +37,22 @@ export default class NaturalLanguageQuery extends QueryStoreComponent<{}, {}> {
         return url ? url.replace(/\/+$/, '') : null;
     }
 
-    /** The study is sent only when exactly one is selected, so the service can check its data types. */
-    get studyId(): string | undefined {
-        const ids = this.store.physicalStudyIdsInSelection;
-        return ids.length === 1 ? ids[0] : undefined;
+    /** All selected studies are sent so the service can check they have the data each alteration needs. */
+    get studyIds(): string[] {
+        return this.store.physicalStudyIdsInSelection;
+    }
+
+    /** Which studies the returned query was checked against, once a translation succeeded. */
+    get checkedLabel(): { text: string; title: string } | null {
+        const ids = this.result?.oql ? this.result.checkedStudies || [] : [];
+        if (!ids.length) return null;
+        return {
+            text:
+                ids.length === 1
+                    ? `Checked against ${ids[0]}`
+                    : `Checked against ${ids.length} studies`,
+            title: ids.join(', '),
+        };
     }
 
     @action.bound
@@ -71,7 +84,7 @@ export default class NaturalLanguageQuery extends QueryStoreComponent<{}, {}> {
             const res = await fetch(`${this.serviceUrl}/api/v1/translate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt, studyId: this.studyId }),
+                body: JSON.stringify({ prompt, studyIds: this.studyIds }),
             });
             result = await res.json();
         } catch (e) {
@@ -153,9 +166,13 @@ export default class NaturalLanguageQuery extends QueryStoreComponent<{}, {}> {
                             'Translate to OQL'
                         )}
                     </button>
-                    {this.studyId && (
-                        <span className={styles.naturalLanguageQueryHint}>
-                            Checked against {this.studyId}
+                    {this.checkedLabel && (
+                        <span
+                            className={styles.naturalLanguageQueryHint}
+                            title={this.checkedLabel.title}
+                            data-test="nlOqlChecked"
+                        >
+                            {this.checkedLabel.text}
                         </span>
                     )}
                 </div>
