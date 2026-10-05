@@ -498,7 +498,9 @@ describe('patient view page', function() {
         });
 
         it('displays expected alt copies column tooltip on mouseover element', async () => {
-            await jsApiHover('span[data-test=eac-cell] span span svg g rect');
+            await jsApiHover(
+                'span[data-test=eac-cell] span[data-test=eac-value]'
+            );
             await (
                 await $('div[role=tooltip] span[data-test=eac-tooltip]')
             ).waitForExist();
@@ -506,7 +508,7 @@ describe('patient view page', function() {
 
         it('displays integer copy number column tooltip on mouseover element', async () => {
             await jsApiHover(
-                'span[data-test=ascn-copy-number-cell] span span svg g rect'
+                'span[data-test=ascn-copy-number-cell] span[data-test=ascn-copy-number-value]'
             );
             await (
                 await $(

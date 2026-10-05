@@ -7,33 +7,15 @@ import {
     ASCNCopyNumberElementTooltip,
     ASCNCopyNumberValueEnum,
 } from './ASCNCopyNumberElement';
-import {
-    ASCN_AMP,
-    ASCN_GAIN,
-    ASCN_HETLOSS,
-    ASCN_HOMDEL,
-    ASCN_BLACK,
-    ASCN_WHITE,
-} from 'shared/lib/Colors';
-
 /* Test Design:
 
-    Test of copy number element rendering with NA properties
-    - black icon is returned if:
-        - ascn copy number value is NA
-        - wgd value is NA
-        - total copy number NA
-        - ascn copy number is not 2, 1, 0, -1, or -2
-    - then also test opacity of black icon is 0
+    Test of copy number element rendering
+    - nothing is shown if the total copy number or the wgd value is NA
+    - otherwise the total copy number is shown as text
 
-    Test of copy number element rendering with in-range properties
-    - test for presence of backing colored rect
-    - test all rendered colors and that opacity is 100
-    - test that icon displays total copy number
-
-    Test "WGD" supratext above copy number indicator
-    - test wgd text is displayed when properties show WGD
-    - test wgd element (span) is not present when properties do not show WGD
+    Test "WGD" tag next to the copy number
+    - test wgd tag is displayed when properties show WGD
+    - test wgd tag is not present when properties do not show WGD
 
     Test tooltip
     - test ASCNCopyNumberValueEnum text correct {Gain, Diploid, Double Loss After, ...}
@@ -58,47 +40,14 @@ describe('ASCNCopyNumberElement', () => {
         };
     }
 
-    function testExpectedColorValidASCNCopyNumberElement(
-        componentProperties: any,
-        expectedColor: string
-    ) {
+    function testNoValueASCNCopyNumberElement(componentProperties: any) {
         const ascnCopyNumberElement = mount(
             <ASCNCopyNumberElement {...componentProperties} />
         );
-
-        expect(ascnCopyNumberElement.find('rect').length).to.not.equal(
-            0,
-            "Expected to find a 'rect' element but did not"
-        );
-        expect(ascnCopyNumberElement.find('rect').props()).to.have.property(
-            'fill',
-            expectedColor
-        );
-        expect(ascnCopyNumberElement.find('rect').props()).to.have.property(
-            'opacity',
-            100
-        );
-    }
-
-    function testExpectedColorInvalidASCNCopyNumberElement(
-        componentProperties: any
-    ) {
-        const ascnCopyNumberElement = mount(
-            <ASCNCopyNumberElement {...componentProperties} />
-        );
-
-        expect(ascnCopyNumberElement.find('rect').length).to.not.equal(
-            0,
-            "Expected to find a 'rect' element but did not"
-        );
-        expect(ascnCopyNumberElement.find('rect').props()).to.have.property(
-            'fill',
-            ASCN_BLACK
-        );
-        expect(ascnCopyNumberElement.find('rect').props()).to.have.property(
-            'opacity',
-            0
-        );
+        expect(
+            ascnCopyNumberElement.find('[data-test="ascn-copy-number-value"]')
+                .length
+        ).to.equal(0);
     }
 
     function testExpectedTCNValidASCNCopyNumberElement(
@@ -108,18 +57,18 @@ describe('ASCNCopyNumberElement', () => {
             <ASCNCopyNumberElement {...componentProperties} />
         );
 
-        const textElement = ascnCopyNumberElement.findWhere(
-            n =>
-                n.type() === 'text' &&
-                n.render().text() ===
-                    componentProperties['totalCopyNumberValue']
+        const valueElement = ascnCopyNumberElement.find(
+            'span[data-test="ascn-copy-number-value"]'
         );
-
-        expect(textElement.length).to.not.equal(
-            0,
-            "Expected to find a 'text' element containing total copy number value '" +
+        expect(
+            valueElement
+                .text()
+                .startsWith(componentProperties['totalCopyNumberValue'])
+        ).to.equal(
+            true,
+            "Expected the value to show total copy number '" +
                 componentProperties['totalCopyNumberValue'] +
-                "' but did not"
+                "' but it did not"
         );
     }
 
@@ -131,19 +80,19 @@ describe('ASCNCopyNumberElement', () => {
             <ASCNCopyNumberElement {...componentProperties} />
         );
 
-        const textElement = ascnCopyNumberElement.findWhere(
-            n => n.type() === 'text' && n.render().text() === 'WGD'
+        const wgdTag = ascnCopyNumberElement.findWhere(
+            n => n.type() === 'span' && n.text() === 'WGD'
         );
 
         if (expectWgd) {
-            expect(textElement.length).to.not.equal(
+            expect(wgdTag.length).to.not.equal(
                 0,
-                "Expected to find a 'text' element containing 'WGD' but did not"
+                "Expected to find a 'WGD' tag but did not"
             );
         } else {
-            expect(textElement.length).to.equal(
+            expect(wgdTag.length).to.equal(
                 0,
-                "Expected no 'text' element containing 'WGD' but found one"
+                "Expected no 'WGD' tag but found one"
             );
         }
     }
@@ -232,61 +181,26 @@ describe('ASCNCopyNumberElement', () => {
         );
     }
 
-    it('ascn copy number of 2 should have the ASCN_AMP color and be visible', () => {
-        let sample = initSample();
-        sample.ascnCopyNumberValue = '2';
-        testExpectedColorValidASCNCopyNumberElement(sample, ASCN_AMP);
-    });
-
-    it('ascn copy number of 1 should have the ASCN_GAIN color and be visible', () => {
-        let sample = initSample();
-        sample.ascnCopyNumberValue = '1';
-        testExpectedColorValidASCNCopyNumberElement(sample, ASCN_GAIN);
-    });
-
-    it('ascn copy number value 0 should have the ASCN_LIGHTGREY color and be visible', () => {
-        let sample = initSample();
-        sample.ascnCopyNumberValue = '0';
-        testExpectedColorValidASCNCopyNumberElement(sample, ASCN_WHITE);
-    });
-
-    it('ascn copy number value -1 should have the ASCN_HETLOSS color and be visible', () => {
-        let sample = initSample();
-        sample.ascnCopyNumberValue = '-1';
-        testExpectedColorValidASCNCopyNumberElement(sample, ASCN_HETLOSS);
-    });
-
-    it('ascn copy number value -2 should have the ASCN_HOMDEL color and be visible', () => {
-        let sample = initSample();
-        sample.ascnCopyNumberValue = '-2';
-        testExpectedColorValidASCNCopyNumberElement(sample, ASCN_HOMDEL);
-    });
-
-    it('ascn copy number value of anything else should have the ASCN_BLACK color and be invisible', () => {
+    it('shows the total copy number for any ascn copy number call', () => {
         let sample = initSample();
         sample.ascnCopyNumberValue = '999';
-        testExpectedColorInvalidASCNCopyNumberElement(sample);
+        sample.totalCopyNumberValue = '4';
+        testExpectedTCNValidASCNCopyNumberElement(sample);
     });
 
-    it('total copy number of NA should have the ASCN_BLACK color and be invisible', () => {
+    it('shows nothing if the total copy number is NA', () => {
         let sample = initSample();
         sample.totalCopyNumberValue = ASCNCopyNumberValueEnum.NA;
-        testExpectedColorInvalidASCNCopyNumberElement(sample);
+        testNoValueASCNCopyNumberElement(sample);
     });
 
-    it('WGD of NA should have the ASCN_BLACK color and be invisible', () => {
+    it('shows nothing if the WGD status is NA', () => {
         let sample = initSample();
         sample.wgdValue = ASCNCopyNumberValueEnum.NA;
-        testExpectedColorInvalidASCNCopyNumberElement(sample);
+        testNoValueASCNCopyNumberElement(sample);
     });
 
-    it('ascn copy number of NA should have the ASCN_BLACK color and be invisible', () => {
-        let sample = initSample();
-        sample.ascnCopyNumberValue = ASCNCopyNumberValueEnum.NA;
-        testExpectedColorInvalidASCNCopyNumberElement(sample);
-    });
-
-    it('total copy number should be displayed in a rect', () => {
+    it('total copy number should be displayed', () => {
         let sample = initSample();
         // use a nonsense total copy number value so we won't have an accidental success with it
         sample.totalCopyNumberValue = '999';

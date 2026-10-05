@@ -3,7 +3,6 @@ import { mount } from 'enzyme';
 import { expect } from 'chai';
 import {
     default as ExpectedAltCopiesElement,
-    ExpectedAltCopiesColor,
     ExpectedAltCopiesElementTooltip,
 } from './ExpectedAltCopiesElement';
 
@@ -64,10 +63,11 @@ describe('ExpectedAltCopiesElement', () => {
                 {...getExpectedAltCopiesProps('S001', '4', '2')}
             />
         );
-        expect(expectedAltCopiesElementTest.find('text').text()).to.equal('2');
-        expect(expectedAltCopiesElementTest.find('rect').prop('fill')).to.equal(
-            ExpectedAltCopiesColor.WHITE
-        );
+        expect(
+            expectedAltCopiesElementTest
+                .find('span[data-test="eac-value"]')
+                .text()
+        ).to.equal('2');
         testExpectedAltCopiesElementTooltip(expectedAltCopiesElementTest);
     });
 
@@ -78,10 +78,11 @@ describe('ExpectedAltCopiesElement', () => {
                 {...getExpectedAltCopiesProps('S001', '3', 'INDETERMINATE')}
             />
         );
-        expect(expectedAltCopiesElementTest.find('text').text()).to.equal('-');
-        expect(expectedAltCopiesElementTest.find('rect').prop('fill')).to.equal(
-            ExpectedAltCopiesColor.LIGHTGREY
-        );
+        expect(
+            expectedAltCopiesElementTest
+                .find('span[data-test="eac-value"]')
+                .text()
+        ).to.equal('-');
         testExpectedIndeterminateAltCopiesElementTooltip(
             expectedAltCopiesElementTest
         );

@@ -1,0 +1,47 @@
+/* copy numbers shown as plain numbers, aligned like the other numeric columns */
+.value {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.wgd {
+    margin-left: 3px;
+    padding: 0 3px;
+    border-radius: 3px;
+    background: #eee;
+    color: #555;
+    font-size: 9px;
+    font-weight: bold;
+    vertical-align: middle;
+}
+
+/* a patient's samples each get a fixed-width slot, also when they have no
+   value, so their values line up across rows */
+.slots {
+    white-space: nowrap;
+}
+
+.mutantCopiesSlot,
+.totalCopyNumberSlot,
+.totalCopyNumberSlotWithWgd {
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.mutantCopiesSlot,
+.totalCopyNumberSlot {
+    width: 20px;
+}
+
+/* a two digit wide, right-aligned box, so 1, 12 and '-' line up on their
+   last digit */
+.number {
+    display: inline-block;
+    width: 2ch;
+    text-align: right;
+}
+
+/* WGD is a property of the sample, so all of a sample's slots have the tag */
+.totalCopyNumberSlotWithWgd {
+    width: 42px;
+}

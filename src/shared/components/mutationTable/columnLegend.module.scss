@@ -1,0 +1,39 @@
+.columnLegend {
+    max-width: 380px;
+    text-align: left;
+    font-weight: normal;
+}
+
+.description {
+    margin-bottom: 4px;
+}
+
+.breakdown {
+    width: 100%;
+    border-collapse: collapse;
+
+    td {
+        padding: 2px 4px;
+        vertical-align: top;
+        border-top: 1px solid #eee;
+    }
+
+    tr:first-child td {
+        border-top: none;
+    }
+}
+
+.swatch {
+    width: 20px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.value {
+    font-weight: bold;
+}
+
+.valueDescription {
+    color: #666;
+    font-size: 11px;
+}

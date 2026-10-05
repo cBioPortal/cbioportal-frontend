@@ -5,13 +5,23 @@ import {
     DataFilter,
     DataFilterType,
     onFilterOptionSelect,
+    applyDataFiltersOnDatum,
     FilterResetPanel,
 } from 'react-mutation-mapper';
 import { observer } from 'mobx-react';
 import { action, computed, observable, makeObservable } from 'mobx';
 
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
-import { Mutation } from 'cbioportal-ts-api-client';
+import { Mutation, SampleIdentifier } from 'cbioportal-ts-api-client';
+import autobind from 'autobind-decorator';
+import comparisonClient from 'shared/api/comparisonGroupClientInstance';
+import {
+    getComparisonLoadingUrl,
+    redirectToComparisonPage,
+} from 'shared/api/urls';
+import { LoadingPhase } from 'pages/groupComparison/GroupComparisonLoading';
+import { MAX_GROUPS_IN_SESSION } from 'pages/groupComparison/GroupComparisonUtils';
+import { getGroupParameters } from 'pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
 import { EnsemblTranscript } from 'genome-nexus-ts-api-client';
 import {
     columnIdToFilterId,
@@ -25,6 +35,17 @@ import { Column } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import FilterIconModal from 'shared/components/filterIconModal/FilterIconModal';
 import DoubleHandleSlider from 'shared/components/doubleHandleSlider/DoubleHandleSlider';
 import CategoricalFilterMenu from 'shared/components/categoricalFilterMenu/CategoricalFilterMenu';
+import SectionedFilterMenu, {
+    SectionedFilterSection,
+} from 'shared/components/sectionedFilterMenu/SectionedFilterMenu';
+import {
+    countOptionIds,
+    SectionedFilterValue,
+} from 'shared/components/sectionedFilterMenu/SectionedFilterUtils';
+import { getAnnotationFilterSections } from 'shared/components/mutationTable/column/annotation/AnnotationFilterSections';
+import { getAnnotationOptionIds } from 'shared/components/mutationTable/column/annotation/AnnotationFilterUtils';
+import { getFunctionalImpactFilterSections } from 'shared/components/mutationTable/column/FunctionalImpactFilter';
+import { shouldShowMutationAssessor } from 'shared/lib/genomeNexusAnnotationSourcesUtils';
 
 import styles from 'shared/components/mutationMapper/mutationMapper.module.scss';
 import {
@@ -39,7 +60,10 @@ import MutationRateSummary from 'pages/resultsView/mutation/MutationRateSummary'
 import ResultsViewMutationMapperStore from 'pages/resultsView/mutation/ResultsViewMutationMapperStore';
 import ResultsViewMutationTable from 'pages/resultsView/mutation/ResultsViewMutationTable';
 import { submitToStudyViewPage } from '../querySummary/QuerySummaryUtils';
-import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
+import {
+    ExtendedMutationTableColumnType,
+    MutationTableColumnType,
+} from 'shared/components/mutationTable/MutationTable';
 import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
 import { PatientSampleSummary } from '../querySummary/PatientSampleSummary';
 import { getServerConfig } from 'config/config';
@@ -57,6 +81,10 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     onClickSettingMenu?: (visible: boolean) => void;
     enableCustomDriver: boolean;
 }
+
+// the functional impact filter loads the functional impact of every mutation
+// from Genome Nexus, which is only done for queries up to this size
+const MAX_MUTATIONS_FOR_FUNCTIONAL_IMPACT_FILTER = 10000;
 
 @observer
 export default class ResultsViewMutationMapper extends MutationMapper<
@@ -320,6 +348,8 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         return [
             ...this.props.store.numericalFilterColumns,
             ...this.props.store.categoricalFilterColumns,
+            MutationTableColumnType.ANNOTATION,
+            MutationTableColumnType.FUNCTIONAL_IMPACT,
         ];
     }
 
@@ -360,18 +390,20 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 let dMin, dMax;
 
                 for (const d of this.store.dataStore.allData) {
-                    const val = column.sortBy(d);
-                    if (val !== null) {
-                        if (+val < min) {
-                            min = +val;
-                            dMin = d;
+                    // sort values can be one value per sample of the row
+                    for (const val of _.flatten([column.sortBy(d)])) {
+                        if (val !== null && val !== undefined) {
+                            if (+val < min) {
+                                min = +val;
+                                dMin = d;
+                            }
+                            if (+val > max) {
+                                max = +val;
+                                dMax = d;
+                            }
+                        } else {
+                            hasEmptyValues = true;
                         }
-                        if (+val > max) {
-                            max = +val;
-                            dMax = d;
-                        }
-                    } else {
-                        hasEmptyValues = true;
                     }
                 }
 
@@ -647,6 +679,250 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         return components;
     }
 
+    // mutations that pass the search box, the filters of all but the given
+    // column and, like the table, the residues selected in the lollipop plot
+    private getDataPassingOtherFilters(columnId: string): Mutation[][] {
+        const dataStore = this.store.dataStore as MutationMapperDataStore;
+        const ownFilterId = columnIdToFilterId(columnId);
+        const otherFilters = dataStore.dataFilters.filter(
+            f => f.id !== ownFilterId
+        );
+        const rows = dataStore.allData.filter(
+            d =>
+                dataStore.applyLazyMobXTableFilter(d) &&
+                (otherFilters.length === 0 ||
+                    applyDataFiltersOnDatum(
+                        d,
+                        otherFilters,
+                        dataStore.applyFilter
+                    ))
+        );
+        if (dataStore.selectionFilters.length > 0) {
+            const selectedRows = rows.filter(dataStore.dataSelectFilter);
+            if (selectedRows.length > 0) {
+                return selectedRows;
+            }
+        }
+        return rows;
+    }
+
+    // opens group comparison with the samples of the mutations of each group
+    @autobind
+    private async compareGroups(
+        title: string,
+        groups: { name: string; rows: Mutation[][] }[]
+    ) {
+        const origin = Object.keys(
+            this.props.store.studyIdToStudy.result || {}
+        );
+        // open the window before any await, so it is not blocked as a pop-up
+        const comparisonWindow: any = window.open(
+            getComparisonLoadingUrl({
+                phase: LoadingPhase.CREATING_SESSION,
+                clinicalAttributeName: title,
+                origin: origin.join(','),
+            }),
+            '_blank'
+        );
+        // the loading page shows an error if it is not pinged
+        const pingInterval = setInterval(() => {
+            try {
+                comparisonWindow && comparisonWindow.ping();
+            } catch (e) {}
+        }, 500);
+        try {
+            const sessionGroups = groups
+                .filter(group => group.rows.length > 0)
+                .slice(0, MAX_GROUPS_IN_SESSION)
+                .map(group =>
+                    getGroupParameters(
+                        group.name,
+                        _.uniqBy(
+                            _.flatten(group.rows).map(
+                                (m): SampleIdentifier => ({
+                                    studyId: m.studyId,
+                                    sampleId: m.sampleId,
+                                })
+                            ),
+                            s => `${s.studyId}_${s.sampleId}`
+                        ),
+                        origin
+                    )
+                );
+            const { id } = await comparisonClient.addComparisonSession({
+                groups: sessionGroups,
+                origin,
+                clinicalAttributeName: title,
+            });
+            if (comparisonWindow && !comparisonWindow.closed) {
+                redirectToComparisonPage(comparisonWindow, {
+                    comparisonId: id,
+                });
+            }
+        } finally {
+            clearInterval(pingInterval);
+        }
+    }
+
+    // compares the mutations with each of the values, among the mutations that
+    // pass the other filters (as counted in the filter menu)
+    private compareColumnValues(column: Column<Mutation[]>, values: string[]) {
+        const rows = _.groupBy(
+            this.getDataPassingOtherFilters(column.name),
+            d => this.resolveMutationToColumnValue(d, column)
+        );
+        this.compareGroups(
+            column.name,
+            values.map(value => ({ name: value, rows: rows[value] || [] }))
+        );
+    }
+
+    // mutations per value of the column, among the mutations that pass the
+    // search box and the filters of the other columns
+    private getColumnValueCounts(column: Column<Mutation[]>) {
+        const counts = new Map<string, number>();
+        for (const d of this.getDataPassingOtherFilters(column.name)) {
+            const value = this.resolveMutationToColumnValue(d, column);
+            counts.set(value, (counts.get(value) || 0) + 1);
+        }
+        return counts;
+    }
+
+    // filter menus with options in sections, per column, e.g. the annotation
+    // sources; getOptionIds gives the options of a mutation
+    @computed get sectionedFilterColumns(): {
+        [columnId: string]: {
+            sections: SectionedFilterSection[];
+            getOptionIds: (mutation: Mutation) => string[];
+            isLoading: () => boolean;
+            loadingMessage: () => string;
+            getLoadError?: () => string | undefined;
+            sectionNoun: string;
+        };
+    } {
+        const store = this.props.store;
+        return {
+            [MutationTableColumnType.ANNOTATION]: {
+                sections: getAnnotationFilterSections({
+                    showOncoKb: this.props.enableOncoKb,
+                    showHotspot: this.props.enableHotspot,
+                    showCivic: this.props.enableCivic,
+                }),
+                getOptionIds: m =>
+                    getAnnotationOptionIds(store.getAnnotation(m)),
+                isLoading: () =>
+                    [
+                        store.oncoKbData,
+                        store.oncoKbCancerGenes,
+                        store.indexedHotspotData,
+                        store.civicGenes,
+                        store.civicVariants,
+                    ].some(data => data.isPending),
+                loadingMessage: () => 'Loading annotations…',
+                sectionNoun: 'source',
+            },
+            ...(this.props.enableGenomeNexus
+                ? {
+                      [MutationTableColumnType.FUNCTIONAL_IMPACT]: {
+                          sections: getFunctionalImpactFilterSections(
+                              shouldShowMutationAssessor()
+                          ),
+                          getOptionIds: store.getFunctionalImpactOptionIds,
+                          // loads the functional impact of all mutations the
+                          // first time the menu is opened
+                          isLoading: () =>
+                              !this.tooManyMutationsForFunctionalImpactFilter &&
+                              store.functionalImpactDataOfAllMutations
+                                  .isPending,
+                          loadingMessage: () => {
+                              const progress =
+                                  store.functionalImpactLoadingProgress;
+                              return `Loading functional impact… ${progress.loaded.toLocaleString()} of ${progress.total.toLocaleString()} mutations`;
+                          },
+                          getLoadError: () => {
+                              if (
+                                  this.tooManyMutationsForFunctionalImpactFilter
+                              ) {
+                                  return `The functional impact filter is available for queries with up to ${MAX_MUTATIONS_FOR_FUNCTIONAL_IMPACT_FILTER.toLocaleString()} mutations, as it loads the functional impact of every mutation. This query has ${store.mutationsWithGenomicLocation.length.toLocaleString()}.`;
+                              }
+                              return store.functionalImpactDataOfAllMutations
+                                  .isError
+                                  ? 'The functional impact of some mutations could not be loaded from Genome Nexus. Reload the page to try again.'
+                                  : undefined;
+                          },
+                          sectionNoun: 'predictor',
+                      },
+                  }
+                : {}),
+        };
+    }
+
+    @computed get tooManyMutationsForFunctionalImpactFilter() {
+        return (
+            this.props.store.mutationsWithGenomicLocation.length >
+            MAX_MUTATIONS_FOR_FUNCTIONAL_IMPACT_FILTER
+        );
+    }
+
+    @computed get sectionedFilterComponents() {
+        const components: { [columnId: string]: JSX.Element } = {};
+        _.forIn(this.sectionedFilterColumns, (config, columnId) => {
+            const filter = this.getFilters[columnId] as
+                | DataFilter<SectionedFilterValue>
+                | undefined;
+            const value: SectionedFilterValue = filter
+                ? filter.values[0]
+                : { selections: [], matchAll: true };
+            // option ids of the mutations passing the other filters
+            const getOptionIdsOfRows = () =>
+                this.getDataPassingOtherFilters(columnId).map(d => ({
+                    d,
+                    ids: config.getOptionIds(d[0]),
+                }));
+            components[columnId] = (
+                <SectionedFilterMenu
+                    sections={config.sections}
+                    selections={new Set(value.selections)}
+                    matchAll={value.matchAll}
+                    onChange={(selections: string[], matchAll: boolean) => {
+                        if (selections.length === 0) {
+                            this.deactivateColumnFilter(columnId);
+                        } else {
+                            onFilterOptionSelect(
+                                [{ selections, matchAll }] as any,
+                                false,
+                                this.store.dataStore,
+                                columnId,
+                                columnIdToFilterId(columnId)
+                            );
+                        }
+                    }}
+                    getOptionCounts={() =>
+                        countOptionIds(getOptionIdsOfRows().map(r => r.ids))
+                    }
+                    isLoading={config.isLoading}
+                    loadingMessage={config.loadingMessage}
+                    getLoadError={config.getLoadError}
+                    sectionNoun={config.sectionNoun}
+                    onCompare={options => {
+                        const rows = getOptionIdsOfRows();
+                        this.compareGroups(
+                            columnId,
+                            options.map(option => ({
+                                name: option.name,
+                                rows: rows
+                                    .filter(r => r.ids.includes(option.id))
+                                    .map(r => r.d),
+                            }))
+                        );
+                    }}
+                    dataTestPrefix={`${_.kebabCase(columnId)}-filter`}
+                />
+            );
+        });
+        return components;
+    }
+
     @computed get categoricalFilterComponents() {
         const components: { [columnId: string]: JSX.Element } = {};
         for (let column of this.allUniqDataColumns) {
@@ -665,6 +941,10 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                             : this.allUniqColumnDataFiltered[columnId]
                     }
                     allSelections={this.allUniqColumnDataFiltered[columnId]}
+                    getValueCounts={() => this.getColumnValueCounts(column)}
+                    onCompare={values =>
+                        this.compareColumnValues(column, values)
+                    }
                     updateFilterCondition={newFilterCondition => {
                         if (filter) {
                             filter.values[0].filterCondition = newFilterCondition;
@@ -732,10 +1012,20 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         const isCategoricalFilterColumn = this.props.store.categoricalFilterColumns.has(
             columnId
         );
+        const isSectionedFilterColumn = columnId in this.sectionedFilterColumns;
 
-        if (isNumericalFilterColumn || isCategoricalFilterColumn) {
+        if (
+            isNumericalFilterColumn ||
+            isCategoricalFilterColumn ||
+            isSectionedFilterColumn
+        ) {
             let menuComponent;
-            if (isNumericalFilterColumn && this.minMaxColumns.has(column)) {
+            if (isSectionedFilterColumn) {
+                menuComponent = this.sectionedFilterComponents[columnId];
+            } else if (
+                isNumericalFilterColumn &&
+                this.minMaxColumns.has(column)
+            ) {
                 menuComponent = this.numericalFilterComponents[columnId];
             } else if (
                 isCategoricalFilterColumn &&
