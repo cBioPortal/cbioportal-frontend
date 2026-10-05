@@ -1,9 +1,11 @@
 import { FollowupsExchange } from './followupsInput';
 import { PageEvent } from './page-events';
+import { PREFIX } from './threadStorage';
 
 // Follow-up suggestions shown above the composer after a reply, generated
-// server-side from the latest exchange and the page the user is on. They
-// belong to that pair: a new reply or a page change replaces them.
+// server-side from the latest exchange and the page the user is on when they
+// are requested. They belong to the reply: a new reply replaces them, but a
+// page change doesn't, so each reply costs at most one request.
 
 export interface Followup {
     title: string;
@@ -19,8 +21,14 @@ export interface FollowupsState {
 }
 
 const FOLLOWUP_COUNT = 3;
-// Enough to switch between a few threads and back without regenerating.
+// Enough to switch between a few threads and back without regenerating. Also
+// the cap on stored replies, which at a few hundred bytes each stays small
+// next to the chats sharing the quota.
 const MAX_CACHED = 20;
+
+// Ready results by reply id, oldest first, so a reload or another tab shows a
+// restored reply's suggestions without requesting them again.
+const STORAGE_KEY = `${PREFIX}followups`;
 
 const IDLE: FollowupsState = { status: 'idle', suggestions: [] };
 const LOADING: FollowupsState = { status: 'loading', suggestions: [] };
@@ -57,16 +65,14 @@ interface FollowupsPage {
     href: string;
     details: Record<string, unknown>;
 }
-// The latest settled page, and it serialized for comparison — the host can
-// resend an unchanged page.
+// The latest settled page.
 let page: FollowupsPage | undefined = embedded
     ? undefined
     : { href: '', details: { available: false } };
-let pageBody: string | undefined = page && JSON.stringify(page);
 let target: FollowupsExchange | null = null;
 
-// Finished results by exchange and page, errors included, so an error isn't
-// retried until one of them changes.
+// Finished results by reply id, errors included, so an error isn't retried
+// for the same reply.
 const cache = new Map<string, FollowupsState>();
 let inFlight: { key: string; controller: AbortController } | undefined;
 
@@ -74,7 +80,6 @@ export function setFollowupsPage(event: PageEvent): void {
     pagePending = event.pending;
     if (!event.pending) {
         page = { href: event.href, details: event.details };
-        pageBody = JSON.stringify(page);
     }
     update();
 }
@@ -103,30 +108,72 @@ function abortInFlight(): void {
     inFlight = undefined;
 }
 
+// [reply id, suggestions]
+type StoredEntry = [string, Followup[]];
+
+function readStored(): StoredEntry[] {
+    try {
+        const parsed: unknown = JSON.parse(
+            localStorage.getItem(STORAGE_KEY) ?? '[]'
+        );
+        if (!Array.isArray(parsed)) return [];
+        return parsed.filter(
+            (entry): entry is StoredEntry =>
+                Array.isArray(entry) &&
+                typeof entry[0] === 'string' &&
+                Array.isArray(entry[1]) &&
+                entry[1].length > 0 &&
+                entry[1].every(isFollowup)
+        );
+    } catch {
+        return [];
+    }
+}
+
+// Read on every miss rather than once at load, so results another tab stored
+// since are picked up too.
+function lookUpStored(key: string): FollowupsState | undefined {
+    const entry = readStored().find(([storedKey]) => storedKey === key);
+    return entry && { status: 'ready', suggestions: entry[1] };
+}
+
+// Written straight to localStorage rather than through threadStorage, whose
+// quota handling deletes old chats to make room — suggestions are never worth
+// that, so a failed write is just skipped. Re-reads before writing so entries
+// stored by another tab are kept.
+function store(key: string, suggestions: readonly Followup[]): void {
+    const entries = readStored().filter(([storedKey]) => storedKey !== key);
+    entries.push([key, [...suggestions]]);
+    try {
+        localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(entries.slice(-MAX_CACHED))
+        );
+    } catch {
+        /* this reply's suggestions are requested again after a reload */
+    }
+}
+
+// Errors are kept in memory only, so a reload retries them.
 function remember(key: string, result: FollowupsState): void {
     cache.delete(key);
     cache.set(key, result);
     if (cache.size > MAX_CACHED) {
         cache.delete(cache.keys().next().value!);
     }
+    if (result.status === 'ready') store(key, result.suggestions);
 }
 
 // Requested only while the sidebar is open; a request left running when it
-// closes still finishes, since its result fits the same exchange and page.
+// closes still finishes. Once a reply's request has started, page changes
+// neither restart nor abort it.
 function update(): void {
     if (!target) {
         abortInFlight();
         publish(IDLE);
         return;
     }
-    // After a navigation the new page is still loading: wait for it rather
-    // than suggest from the page the user just left.
-    if (pagePending || !page || pageBody === undefined) {
-        abortInFlight();
-        publish(LOADING);
-        return;
-    }
-    const key = `${target.messageId}\n${pageBody}`;
+    const key = target.messageId;
     const cached = cache.get(key);
     if (cached) {
         abortInFlight();
@@ -134,8 +181,18 @@ function update(): void {
         return;
     }
     if (inFlight?.key === key) return;
+    const stored = lookUpStored(key);
+    if (stored) {
+        abortInFlight();
+        remember(key, stored);
+        publish(stored);
+        return;
+    }
     abortInFlight();
     publish(LOADING);
+    // After a navigation the new page is still loading: wait for it rather
+    // than suggest from the page the user just left.
+    if (pagePending || !page) return;
     if (sidebarOpen) request(key, target, page);
 }
 
