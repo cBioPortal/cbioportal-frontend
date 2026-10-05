@@ -98,4 +98,33 @@ describe('CategoricalFilterMenu', () => {
         all.forEach(v => assert.isTrue(checkbox(v).prop('checked'), v));
         assert.include(menu.text(), '3 of 3 selected');
     });
+
+    it('stops showing remembered values as checked once a new value appears', () => {
+        const menu = mount(
+            <CategoricalFilterMenu
+                id="Mutation Type"
+                currSelections={new Set(['Missense'])}
+                allSelections={new Set(['Missense'])}
+                updateFilterCondition={() => {}}
+                updateFilterString={() => {}}
+                toggleSelections={() => {}}
+            />
+        );
+        const checkbox = (value: string) =>
+            menu.find(
+                `[data-test="categorical-filter-menu-option-${value}"] input`
+            );
+        checkbox('Missense').simulate('change');
+        menu.update();
+        assert.isTrue(checkbox('Missense').prop('checked'));
+
+        // e.g. after a filter on another column changes, a value appears
+        // that wasn't checked, and the table still isn't restricted
+        const values = new Set(['Missense', 'Nonsense']);
+        menu.setProps({ allSelections: values, currSelections: values });
+        menu.update();
+        assert.isFalse(checkbox('Missense').prop('checked'));
+        assert.isFalse(checkbox('Nonsense').prop('checked'));
+        assert.include(menu.text(), 'All 2 values');
+    });
 });
