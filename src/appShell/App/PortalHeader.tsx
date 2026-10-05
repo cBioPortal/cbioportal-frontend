@@ -161,7 +161,7 @@ export default class PortalHeader extends React.Component<
 
         return shownTabs.map(tab => {
             return (
-                <li key={tab.id}>
+                <li>
                     {tab.internal ? (
                         <NavLink activeClassName={'selected'} to={tab.address}>
                             {tab.text}

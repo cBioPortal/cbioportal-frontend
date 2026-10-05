@@ -51,7 +51,6 @@ export enum PatientViewPageTabs {
     FilesAndLinks = 'filesAndLinks',
     PathologyReport = 'pathologyReport',
     TissueImage = 'tissueImage',
-    MSKTissueImage = 'MSKTissueImage',
     WSIHESlides = 'wsiHESlides',
     TrialMatchTab = 'trialMatchTab',
     MutationalSignatures = 'mutationalSignatures',
