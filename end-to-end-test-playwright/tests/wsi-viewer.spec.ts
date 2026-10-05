@@ -1,8 +1,5 @@
 import { Page, test, expect } from '../fixtures';
-import {
-    ensureLocalLogin,
-    goToUrlAndSetLocalStorage,
-} from './local/helpers';
+import { ensureLocalLogin, goToUrlAndSetLocalStorage } from './local/helpers';
 
 const baseUrl = process.env.WSI_VIEWER_BASE_URL ?? '';
 const studyId = process.env.WSI_LIVE_STUDY_ID ?? 'msk_spectrum_tme_2022';

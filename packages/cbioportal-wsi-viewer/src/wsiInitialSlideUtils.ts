@@ -54,7 +54,7 @@ function chooseInitialServableSlideInternal(
             options.requestedSlideKey &&
             entry.slide.slide_key === options.requestedSlideKey
         ) {
-            requested ??= entry;
+            requested = requested ?? entry;
         }
 
         const inPreferredSample =
@@ -66,20 +66,21 @@ function chooseInitialServableSlideInternal(
         );
 
         if (inPreferredSample) {
-            preferredSampleAny ??= entry;
+            preferredSampleAny = preferredSampleAny ?? entry;
             if (matchesRequestedStain) {
-                preferredSampleMatchingStain ??= entry;
+                preferredSampleMatchingStain =
+                    preferredSampleMatchingStain ?? entry;
             }
             if (entry.slide.is_hne) {
-                preferredSampleHne ??= entry;
+                preferredSampleHne = preferredSampleHne ?? entry;
             }
         }
 
         if (matchesRequestedStain) {
-            matchingStain ??= entry;
+            matchingStain = matchingStain ?? entry;
         }
         if (entry.slide.is_hne) {
-            hne ??= entry;
+            hne = hne ?? entry;
         }
     }
 

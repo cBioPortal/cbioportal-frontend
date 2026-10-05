@@ -14,7 +14,8 @@ import { Page } from '@playwright/test';
 const KEYCLOAK_USERNAME = process.env.KEYCLOAK_USERNAME ?? 'testuser';
 const KEYCLOAK_PASSWORD = process.env.KEYCLOAK_PASSWORD ?? 'P@ssword1';
 const BASIC_USERNAME = process.env.WSI_BASIC_LOGIN_USERNAME ?? 'wsi-ci-user';
-const BASIC_PASSWORD = process.env.WSI_BASIC_LOGIN_PASSWORD ?? 'wsi-ci-password';
+const BASIC_PASSWORD =
+    process.env.WSI_BASIC_LOGIN_PASSWORD ?? 'wsi-ci-password';
 
 /**
  * If the current URL is the Keycloak realm login form, submit the test
@@ -111,20 +112,21 @@ export async function ensureLocalLogin(
         const copyPortalCookies = async () => {
             const portalCookies = await page.context().cookies(authBase);
             await page.context().addCookies(
-                portalCookies.map(({ domain: _domain, path: _path, ...cookie }) => ({
-                    ...cookie,
-                    url: frontendOrigin,
-                    sameSite: 'Lax' as const,
-                    secure: new URL(frontendOrigin).protocol === 'https:',
-                }))
+                portalCookies.map(
+                    ({ domain: _domain, path: _path, ...cookie }) => ({
+                        ...cookie,
+                        url: frontendOrigin,
+                        sameSite: 'Lax' as const,
+                        secure: new URL(frontendOrigin).protocol === 'https:',
+                    })
+                )
             );
             return portalCookies;
         };
 
-        const portalProbe = await page.context().request.get(
-            `${authBase}${loginProbePath}`,
-            { maxRedirects: 0 }
-        );
+        const portalProbe = await page
+            .context()
+            .request.get(`${authBase}${loginProbePath}`, { maxRedirects: 0 });
         let portalCookies = await copyPortalCookies();
         // Keycloak 16 can leave the browser on the Spring SAML callback after
         // posting a valid assertion. In that local fixture the callback does
@@ -133,29 +135,30 @@ export async function ensureLocalLogin(
         // same `saml_plus_basic` stack and still verifies the protected proxy,
         // while making the failure actionable instead of reporting a viewer
         // error for a missing test session.
-        if (
-            portalProbe.status() >= 400 ||
-            portalProbe.status() === 302
-        ) {
+        if (portalProbe.status() >= 400 || portalProbe.status() === 302) {
             if (process.env.WSI_ALLOW_BASIC_FALLBACK !== 'true') {
-                const cookieNames = portalCookies.map(cookie => cookie.name).join(',');
+                const cookieNames = portalCookies
+                    .map(cookie => cookie.name)
+                    .join(',');
                 throw new Error(
-                    `SAML portal probe failed (${portalProbe.status()}); cookies=${cookieNames || 'none'}`
+                    `SAML portal probe failed (${portalProbe.status()}); cookies=${cookieNames ||
+                        'none'}`
                 );
             }
-            const basicLogin = await page.context().request.post(
-                `${authBase}/j_spring_security_check`,
-                {
+            const basicLogin = await page
+                .context()
+                .request.post(`${authBase}/j_spring_security_check`, {
                     form: {
                         j_username: BASIC_USERNAME,
                         j_password: BASIC_PASSWORD,
                         user_id: BASIC_USERNAME,
                     },
                     maxRedirects: 0,
-                }
-            );
+                });
             if (basicLogin.status() !== 302) {
-                throw new Error(`basic login fallback failed (${basicLogin.status()})`);
+                throw new Error(
+                    `basic login fallback failed (${basicLogin.status()})`
+                );
             }
             portalCookies = await copyPortalCookies();
         }
@@ -164,7 +167,8 @@ export async function ensureLocalLogin(
         );
         if (!probe || probe.status() >= 400) {
             throw new Error(
-                `authenticated WSI probe failed (${probe?.status() ?? 'no response'})`
+                `authenticated WSI probe failed (${probe?.status() ??
+                    'no response'})`
             );
         }
     }

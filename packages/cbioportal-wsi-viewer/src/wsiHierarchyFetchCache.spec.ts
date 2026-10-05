@@ -89,11 +89,12 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         );
 
         expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(
-            fetchMock
-        ).toHaveBeenCalledWith('/api/wsi/v2/hierarchy/study/P%201', {
-            credentials: 'include',
-        });
+        expect(fetchMock).toHaveBeenCalledWith(
+            '/api/wsi/v2/hierarchy/study/P%201',
+            {
+                credentials: 'include',
+            }
+        );
         expect(viewed).toBe(gated);
         expect(gated.patient_id).toBe('P 1');
     });

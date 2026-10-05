@@ -84,17 +84,15 @@ export function buildOsdOptions({
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isOsdViewerIdle(osdViewer: any): boolean {
-    return [osdViewer, osdViewer?.navigator]
-        .filter(Boolean)
-        .every(viewer => {
-            const loader = viewer.imageLoader;
-            return (
-                loader != null &&
-                loader.jobsInProgress === 0 &&
-                (loader.jobQueue?.length ?? 0) === 0 &&
-                (loader.failedTiles?.length ?? 0) === 0
-            );
-        });
+    return [osdViewer, osdViewer?.navigator].filter(Boolean).every(viewer => {
+        const loader = viewer.imageLoader;
+        return (
+            loader != null &&
+            loader.jobsInProgress === 0 &&
+            (loader.jobQueue?.length ?? 0) === 0 &&
+            (loader.failedTiles?.length ?? 0) === 0
+        );
+    });
 }
 
 /**
