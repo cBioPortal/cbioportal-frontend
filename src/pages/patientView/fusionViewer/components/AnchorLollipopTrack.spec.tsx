@@ -1,7 +1,9 @@
 import { assert } from 'chai';
 import { mount } from 'enzyme';
 import * as React from 'react';
-import AnchorLollipopTrack from './AnchorLollipopTrack';
+import AnchorLollipopTrack, {
+    LollipopTooltipContent,
+} from './AnchorLollipopTrack';
 import { LollipopStick } from '../data/linkAggregation';
 
 const stick = (
@@ -69,26 +71,68 @@ describe('AnchorLollipopTrack', () => {
         assert.equal(picked, 'exon:E20');
     });
 
-    it('tooltip shows slot label, genomic span, total and category counts', () => {
+    it('uses a styled tooltip instead of a native <title>', () => {
         const w = mount(
             <svg>
-                <AnchorLollipopTrack
-                    sticks={sticks}
-                    colorOf={() => '#000'}
-                    categoryLabel={c => c.toLowerCase()}
-                />
+                <AnchorLollipopTrack sticks={sticks} colorOf={() => '#000'} />
             </svg>
         );
-        const t = w.find('g[data-key="intron:19-20"] title').text();
-        assert.include(t, 'intron 19-20');
+        assert.lengthOf(w.find('g[data-key="intron:19-20"] title'), 0);
+        assert.isTrue(w.find('DefaultTooltip').exists());
+    });
+
+    it('tooltip shows gene + slot, chr span, total and per-category rows', () => {
+        const w = mount(
+            <LollipopTooltipContent
+                stick={sticks[0]}
+                gene="ALK"
+                chromosome="2"
+                colorOf={c => (c === 'EML4' ? '#123456' : '#654321')}
+                categoryLabel={c => c.toLowerCase()}
+            />
+        );
+        const t = w.text();
+        assert.include(t, 'ALK · intron 19-20');
         assert.notInclude(t, 'intron:19-20');
         assert.include(
             t,
-            `${(1000).toLocaleString()}–${(2000).toLocaleString()}`
+            `chr2:${(1000).toLocaleString()}–${(2000).toLocaleString()}`
         );
         assert.include(t, '15 samples');
-        assert.include(t, 'eml4 15');
-        assert.include(t, 'kif5b 3');
+        const rows = w.find('[data-testid="lollipop-tip-row"]');
+        assert.lengthOf(rows, 2);
+        assert.include(rows.at(0).text(), 'eml4');
+        assert.include(rows.at(0).text(), '15');
+        assert.include(rows.at(1).text(), 'kif5b');
+        assert.equal(
+            rows
+                .at(0)
+                .find('[data-testid="lollipop-tip-swatch"]')
+                .prop('style')!.background,
+            '#123456'
+        );
+        assert.notInclude(t, 'Click');
+    });
+
+    it('caps the partner rows and offers the click hint when selectable', () => {
+        const many = stick(
+            'exon:E20',
+            0,
+            Array.from({ length: 11 }, (_, i): [string, number] => [
+                `G${i + 10}`,
+                11 - i,
+            ])
+        );
+        const w = mount(
+            <LollipopTooltipContent
+                stick={many}
+                colorOf={() => '#000'}
+                selectable
+            />
+        );
+        assert.lengthOf(w.find('[data-testid="lollipop-tip-row"]'), 8);
+        assert.include(w.text(), '+3 more');
+        assert.include(w.text(), 'Click to filter to these 11 samples');
     });
 
     it('head radius is bounded by the slot width and heads are outlined', () => {

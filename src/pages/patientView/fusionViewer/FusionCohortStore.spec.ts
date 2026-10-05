@@ -49,6 +49,9 @@ function makeEvent(overrides: Partial<FusionEvent> = {}): FusionEvent {
         significance: 'NA',
         note: '',
         connectionType: '5to3',
+        svIdiom: 'INTERGENIC_FUSION',
+        frame: 'IN_FRAME',
+        isRnaDerived: true,
         ...overrides,
     };
 }
@@ -245,15 +248,6 @@ describe('FusionCohortStore', () => {
         it('svTypeOptions contains all distinct callMethod values', () => {
             assert.include(store.svTypeOptions, 'FUSION');
             assert.include(store.svTypeOptions, 'DELETION');
-        });
-    });
-
-    describe('junctionLabelMode', () => {
-        it('defaults to inline-tooltip and updates via setter', () => {
-            const store = new FusionCohortStore();
-            assert.equal(store.junctionLabelMode, 'inline-tooltip');
-            store.setJunctionLabelMode('gutter');
-            assert.equal(store.junctionLabelMode, 'gutter');
         });
     });
 

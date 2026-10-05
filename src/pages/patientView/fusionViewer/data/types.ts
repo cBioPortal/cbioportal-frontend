@@ -199,7 +199,6 @@ export interface RetainedDomain {
 export type FrameStatus = 'inFrame' | 'outOfFrame' | 'unknown';
 
 /** Placement strategy for the junction exon labels on fusion-product strips. */
-export type JunctionLabelMode = 'inline-tooltip' | 'inline-both' | 'gutter';
 
 /**
  * A recurrence-aggregated fusion pair across the cohort.

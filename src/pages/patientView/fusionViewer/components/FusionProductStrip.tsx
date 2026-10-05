@@ -2,11 +2,11 @@ import * as React from 'react';
 import {
     computeJunctionAlignedLayout,
     retainedExonsInOrder,
-    junctionExonNumbers,
     exonsInOrder,
     exonRetentionFlags,
     exonDisplayNumbers,
     genomicToExonX,
+    junctionExonNumbers,
 } from './fusionProductHelpers';
 import { frameStatusStyle } from './frameStatusStyle';
 import {
@@ -17,7 +17,6 @@ import {
     COLOR_ACTIVE_OUTLINE,
     COLOR_EXON_LOST,
     FrameStatus,
-    JunctionLabelMode,
 } from '../data/types';
 import { splitExonByFivePrimeUtr } from './GeneTrack';
 
@@ -89,8 +88,6 @@ export interface FusionProductStripProps {
     // (green in-frame / red out-of-frame / grey unknown) instead of the
     // per-sample "In-frame · 12r" text.
     frameSummary?: Record<FrameStatus, number>;
-    // Junction exon label placement (feature 2). Defaults to 'inline-tooltip'.
-    junctionLabelMode?: JunctionLabelMode;
     // Exon rendering mode. 'retained' (default) draws only the exons kept by
     // the fusion; 'full' draws the complete transcript ladder with the excluded
     // exons greyed and a breakpoint tick per side.
@@ -109,8 +106,10 @@ export interface PartnerLabel {
     title?: string;
 }
 
-const PARTNER_X_OFFSET = 112; // from rightX; clears "Out-of-frame · 1234r"
-const PARTNER_MAX_CHARS = 14;
+export const PARTNER_X_OFFSET = 112; // from rightX; clears "Out-of-frame · 1234r"
+/** Partner label text x (from rightX); the column header aligns to it. */
+export const PARTNER_TEXT_OFFSET = PARTNER_X_OFFSET + 12;
+const PARTNER_MAX_CHARS = 24; // fits "38 partners (top: TMPRSS2)"
 const truncate = (s: string) =>
     s.length > PARTNER_MAX_CHARS ? `${s.slice(0, PARTNER_MAX_CHARS - 1)}…` : s;
 
@@ -154,7 +153,6 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
     compact = false,
     countLabel,
     frameSummary,
-    junctionLabelMode = 'inline-tooltip',
     exonMode = 'retained',
     onExonHover,
     partnerLabel,
@@ -272,16 +270,8 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
             : junction.threePrime !== undefined
             ? `E${junction.threePrime}`
             : '';
-    const junctionArrow =
-        junction.fivePrime !== undefined && junction.threePrime !== undefined
-            ? `E${junction.fivePrime}→E${junction.threePrime}`
-            : junctionText;
-    // Inline seam label shows in sample/collapsed always; in dense only when the
-    // user picked 'inline-both' (dense 'inline-tooltip' uses the hover <title>).
-    const showInlineJunction =
-        junctionLabelMode !== 'gutter' &&
-        !!junctionText &&
-        (!compact || junctionLabelMode === 'inline-both');
+    // Junction exon label always sits inline at the seam (dense floats it above).
+    const showInlineJunction = !!junctionText;
 
     return (
         <g
@@ -300,11 +290,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
         >
             {compact && (
                 <title>
-                    {label}
-                    {junctionLabelMode === 'inline-tooltip' && junctionArrow
-                        ? ` · ${junctionArrow}`
-                        : ''}{' '}
-                    · {style.label} · {reads}r
+                    {label} · {style.label} · {reads}r
                     {partnerLabel
                         ? ` · ${partnerLabel.title ?? partnerLabel.text}`
                         : ''}
@@ -534,18 +520,6 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                     {junctionText}
                 </text>
             )}
-            {junctionLabelMode === 'gutter' && junctionText && (
-                <text
-                    data-testid="junction-gutter"
-                    x={rightX + 8}
-                    y={compact ? centerY + 2 : textBaseline + 9}
-                    fontSize={compact ? 6 : 9}
-                    fontWeight={600}
-                    fill={COLOR_BREAKPOINT}
-                >
-                    {junctionText}
-                </text>
-            )}
             {/* Right gutter: oncoprint-style frame cell (collapsed, mixed frame
                 calls) or the per-sample "In-frame · 12r" text. Suppressed in
                 dense mode (surfaced via the hover <title>). */}
@@ -573,7 +547,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                     />
                     <text
                         data-testid="partner-label"
-                        x={rightX + PARTNER_X_OFFSET + 12}
+                        x={rightX + PARTNER_TEXT_OFFSET}
                         y={textBaseline - 2}
                         fontSize={9.5}
                         fill="#495057"
