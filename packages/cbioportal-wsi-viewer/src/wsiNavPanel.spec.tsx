@@ -1190,116 +1190,38 @@ describe('WsiNavPanel', () => {
         expect(text).toContain('Proc d-5');
     });
 
-    describe('sample sequencing context', () => {
-        function renderWithTimelines(
-            samples: Sample[],
-            sampleTimelines?: Map<
-                string,
-                { acquisitionDays?: number; sequencingDays?: number }
-            >
-        ) {
-            return TestRenderer.create(
-                <WsiNavPanel
-                    hierarchy={makeHierarchy(samples)}
-                    selectedSlide={null}
-                    stainFilter="all"
-                    onFilterChange={() => {}}
-                    onSelectSlide={() => {}}
-                    sampleTimelines={sampleTimelines}
-                    theme={theme}
-                    navWidth={252}
-                    sectionTitleStyle={sectionTitleStyle}
-                />
-            );
-        }
-
-        function procSlide(slideKey: string, days: number): Slide {
-            return makeSlide({
-                slide_key: slideKey,
-                slide_timepoint_days: days,
-                slide_timepoint_source: 'Procedure date',
-            });
-        }
-
-        it('relates slide procedures to the sample sequencing day', () => {
-            const renderer = renderWithTimelines(
-                [
+    it('shows the procedure day with the day notation tooltip', () => {
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([
                     makeSample('S-1', [
-                        procSlide('slide-before', -242),
-                        procSlide('slide-after', 20),
-                        procSlide('slide-same', 7),
+                        makeSlide({
+                            slide_key: 'slide-1',
+                            slide_timepoint_days: -242,
+                            slide_timepoint_source: 'Procedure date',
+                        }),
                     ]),
-                ],
-                new Map([['S-1', { sequencingDays: 7 }]])
-            );
+                ])}
+                selectedSlide={null}
+                stainFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                theme={theme}
+                navWidth={252}
+                sectionTitleStyle={sectionTitleStyle}
+            />
+        );
 
-            expect(
-                findButtonText(renderer, 'wsi-slide-item-slide-before')
-            ).toContain('Proc 249 d before sequencing');
-            expect(
-                findButtonText(renderer, 'wsi-slide-item-slide-after')
-            ).toContain('Proc 13 d after sequencing');
-            expect(
-                findButtonText(renderer, 'wsi-slide-item-slide-same')
-            ).toContain('Proc same day as sequencing');
-            expect(findButtonText(renderer, 'wsi-sample-sequenced-S-1')).toBe(
-                'sequenced d+7'
-            );
-            expect(
-                renderer.root.findByProps({
-                    'data-testid': 'wsi-sample-sequenced-S-1',
-                }).props.title
-            ).toContain('first tumor sequencing (d0)');
-            expect(
-                renderer.root.findByProps({
-                    'data-testid': 'wsi-slide-timepoint-slide-before',
-                }).props.title
-            ).toContain(
-                'Procedure on d-242, 249 days before this sample was sequenced (d+7)'
-            );
-        });
-
-        it('keeps patient-level procedure text without a sequencing day', () => {
-            const renderer = renderWithTimelines(
-                [makeSample('S-1', [procSlide('slide-1', -242)])],
-                new Map([['S-1', { acquisitionDays: -242 }]])
-            );
-
-            expect(
-                findButtonText(renderer, 'wsi-slide-item-slide-1')
-            ).toContain('Proc d-242');
-            expect(
-                renderer.root.findAllByProps({
-                    'data-testid': 'wsi-sample-sequenced-S-1',
-                })
-            ).toHaveLength(0);
-        });
-
-        it('keeps patient-level procedure text without timeline data', () => {
-            const renderer = renderWithTimelines([
-                makeSample('S-1', [procSlide('slide-1', -242)]),
-            ]);
-
-            expect(
-                findButtonText(renderer, 'wsi-slide-item-slide-1')
-            ).toContain('Proc d-242');
-        });
-
-        it('keeps patient-level procedure text for unmatched slides', () => {
-            const renderer = renderWithTimelines(
-                [makeSample('UNMATCHED', [procSlide('slide-u', -30)])],
-                new Map([['UNMATCHED', { sequencingDays: 7 }]])
-            );
-
-            expect(
-                findButtonText(renderer, 'wsi-slide-item-slide-u')
-            ).toContain('Proc d-30');
-            expect(
-                renderer.root.findAllByProps({
-                    'data-testid': 'wsi-sample-sequenced-UNMATCHED',
-                })
-            ).toHaveLength(0);
-        });
+        expect(findButtonText(renderer, 'wsi-slide-item-slide-1')).toContain(
+            'Proc d-242'
+        );
+        expect(
+            renderer.root.findByProps({
+                'data-testid': 'wsi-slide-timepoint-slide-1',
+            }).props.title
+        ).toBe(
+            "Procedure on d-242. Days are counted from the patient's first tumor sequencing (d0): d-242 is 242 days before it, d+7 is 7 days after."
+        );
     });
 
     it('renders a discrete time slider and filters slides by the selected date', () => {

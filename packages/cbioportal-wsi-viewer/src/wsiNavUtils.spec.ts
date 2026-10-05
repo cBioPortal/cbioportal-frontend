@@ -1,6 +1,8 @@
 import {
     compareSamplesByTimepoint,
+    DAY_ZERO_TOOLTIP,
     procedureSlideTimepointText,
+    procedureTooltip,
     timepointText,
 } from './wsiNavUtils';
 import { Sample } from './wsiViewerTypes';
@@ -326,5 +328,18 @@ describe('wsiNavUtils', () => {
                 0
             );
         });
+    });
+});
+
+describe('day tooltips', () => {
+    it('explains d0 as the first tumor sequencing', () => {
+        expect(DAY_ZERO_TOOLTIP).toContain('first tumor sequencing (d0)');
+    });
+
+    it('describes the procedure day', () => {
+        expect(procedureTooltip(-242)).toBe(
+            `Procedure on d-242. ${DAY_ZERO_TOOLTIP}`
+        );
+        expect(procedureTooltip(undefined)).toBeUndefined();
     });
 });

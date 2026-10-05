@@ -217,46 +217,10 @@ describe('buildPathRows timeline row', () => {
         return rows.find(row => row.label === 'Timeline')?.value;
     }
 
-    it('shows procedure, acquisition and sequencing days in one row', () => {
-        const rows = buildPathRows(
-            { ...procedureSlide },
-            sample,
-            'P-1',
-            undefined,
-            undefined,
-            { acquisitionDays: -242, sequencingDays: 7 }
-        );
-
-        expect(timeline(rows)).toBe(
-            'Procedure d-242 · acquired d-242 · sequenced d+7 (249 d later)'
-        );
-        const labels = rows.map(row => row.label);
-        ['Procedure', 'Timepoint', 'Acquired', 'Sequenced'].forEach(label =>
-            expect(labels).not.toContain(label)
-        );
-    });
-
-    it('shows only the procedure day when the sample timeline is unknown', () => {
+    it('shows the procedure day', () => {
         expect(
             timeline(buildPathRows({ ...procedureSlide }, sample, 'P-1'))
         ).toBe('Procedure d-242');
-    });
-
-    it('shows sequencing without an offset for an undated slide', () => {
-        expect(
-            timeline(
-                buildPathRows(
-                    { ...slide },
-                    sample,
-                    'P-1',
-                    undefined,
-                    undefined,
-                    {
-                        sequencingDays: 7,
-                    }
-                )
-            )
-        ).toBe('sequenced d+7');
     });
 
     it('falls back to the sequencing report date', () => {
@@ -269,21 +233,6 @@ describe('buildPathRows timeline row', () => {
                 )
             )
         ).toBe('sequenced 2021-03-04');
-    });
-
-    it('keeps only the procedure day for unmatched slides', () => {
-        expect(
-            timeline(
-                buildPathRows(
-                    { ...procedureSlide },
-                    { ...sample, sample_id: 'UNMATCHED' },
-                    'P-1',
-                    undefined,
-                    undefined,
-                    { acquisitionDays: 1, sequencingDays: 7 }
-                )
-            )
-        ).toBe('Procedure d-242');
     });
 
     it('has no timeline row without any timing', () => {
