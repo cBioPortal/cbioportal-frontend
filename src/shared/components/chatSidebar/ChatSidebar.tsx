@@ -3,7 +3,7 @@ import { observer } from 'mobx-react';
 import { observable, makeObservable, action } from 'mobx';
 import { getLoadConfig } from 'config/config';
 import { getChatServerBase, getChatOrigin } from './chatServerBase';
-import { goToPage } from './navigateTool';
+import { goToPage, normalizeBasePath } from './navigateTool';
 import { PortalWebMcp } from './portalWebMcp';
 import { PageEvent, PageEventPublisher } from './pageEvents';
 import {
@@ -175,9 +175,10 @@ export default class ChatSidebar extends React.Component<{}, {}> {
         this.storeWidth();
     }
 
-    // The iframe posts a URL here since it can't call routingStore itself.
-    private handleNavigate(url: string) {
-        goToPage(url);
+    // The iframe posts a portal path here since it can't call routingStore
+    // itself.
+    private handleNavigate(path: string) {
+        goToPage(path);
     }
 
     private sendPageEvent = (event: PageEvent) => {
@@ -207,7 +208,9 @@ export default class ChatSidebar extends React.Component<{}, {}> {
             return;
         }
         if (e.data?.type === 'chat-sidebar:navigate') {
-            this.handleNavigate(e.data.url);
+            if (typeof e.data.path === 'string') {
+                this.handleNavigate(e.data.path);
+            }
             return;
         }
         if (e.data?.type === 'chat-sidebar:requestScreenshot') {
@@ -237,6 +240,12 @@ export default class ChatSidebar extends React.Component<{}, {}> {
         const params = new URLSearchParams();
         params.set('apiRoot', apiRoot);
         params.set('parentOrigin', window.location.origin);
+        // Where the iframe points portal links, including any base path the
+        // portal is served under.
+        params.set(
+            'portalUrl',
+            window.location.origin + normalizeBasePath(getLoadConfig().basePath)
+        );
         return `${getChatServerBase()}/?${params.toString()}`;
     }
 

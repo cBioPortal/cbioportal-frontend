@@ -25,6 +25,7 @@ import {
     setSelectedModel,
     subscribe,
 } from '@/lib/chatSession';
+import { setPortalLinkAliases } from '@/lib/portal-link';
 import { threadListAdapter } from '@/lib/threadListAdapter';
 import {
     readLastThreadId,
@@ -109,6 +110,19 @@ export function App() {
 
     useEffect(() => {
         removeLegacyChatStorage();
+    }, []);
+
+    useEffect(() => {
+        fetch('/api/chat/config')
+            .then(r => (r.ok ? r.json() : null))
+            .then((data: { portalLinkAliases?: string[] } | null) => {
+                if (Array.isArray(data?.portalLinkAliases)) {
+                    setPortalLinkAliases(data.portalLinkAliases);
+                }
+            })
+            .catch(() => {
+                /* links keep the default aliases */
+            });
     }, []);
 
     useEffect(() => {

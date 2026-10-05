@@ -246,7 +246,7 @@ async function getMcpTools(): Promise<ToolSet> {
 // No `execute` — client-side tool; the browser navigates and reports back
 // via addToolOutput.
 const goToPageTool = tool({
-    description: `Immediately navigates the user's browser to a cBioPortal URL — the user is taken there right away, with no confirmation step. Only call this when the user has clearly asked to go somewhere. If you're only mentioning a study, patient, or page as context, write it as a normal markdown link in your reply instead and don't call this tool. Resolve the correct URL first (e.g. via resolve_and_route / navigate_to_* tools) if you don't already have it.`,
+    description: `Immediately navigates the user's browser to a cBioPortal URL — the user is taken there right away, with no confirmation step. Once the navigate_to_* tools have produced URL(s), call this yourself, without waiting to be asked, with the main one: the page that most directly answers the user's request. Call it at most once per reply. Still include that URL and any others as markdown links in your reply, so the user can open them manually if navigation fails. Don't call it when the user is already on that page or is asking about the page they're on. Resolve the correct URL first (e.g. via resolve_and_route / navigate_to_* tools) if you don't already have it.`,
     inputSchema: z.object({
         url: z
             .string()

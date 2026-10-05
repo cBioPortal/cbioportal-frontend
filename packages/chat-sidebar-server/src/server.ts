@@ -30,6 +30,19 @@ app.get('/api/chat/health', (_req, res) => {
     res.json({ ok: true, model: MODEL });
 });
 
+// Hosts whose links the sidebar rewrites to the portal it is embedded in —
+// whatever host the MCP tools build their links on.
+const portalLinkAliases = (
+    process.env.PORTAL_LINK_ALIASES || 'www.cbioportal.org,cbioportal.org'
+)
+    .split(',')
+    .map(host => host.trim().toLowerCase())
+    .filter(Boolean);
+
+app.get('/api/chat/config', (_req, res) => {
+    res.json({ portalLinkAliases });
+});
+
 app.get('/api/chat/models', (_req, res) => {
     res.json({ models: AVAILABLE_MODELS });
 });

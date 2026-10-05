@@ -11,7 +11,7 @@ import {
 } from '@assistant-ui/react';
 import { useAISDKRuntime } from '@assistant-ui/ai-sdk';
 import { AuthErrorStatus, getSelectedModel, setAuthError } from './chatSession';
-import { isPortalLink, notifyNavigate } from './portal-link';
+import { notifyNavigate, resolvePortalLink } from './portal-link';
 import { getLatestPageEvents } from './page-events';
 
 export class ChatAuthError extends Error {
@@ -60,8 +60,9 @@ export function useChatThreadRuntime(): AssistantRuntime {
         onToolCall: async ({ toolCall }) => {
             if (toolCall.toolName === 'go_to_page') {
                 const { url } = toolCall.input as { url: string };
-                const navigated = isPortalLink(url);
-                if (navigated) notifyNavigate(url);
+                const path = resolvePortalLink(url)?.path;
+                const navigated = Boolean(path);
+                if (path) notifyNavigate(path);
                 addToolOutput({
                     tool: 'go_to_page',
                     toolCallId: toolCall.toolCallId,

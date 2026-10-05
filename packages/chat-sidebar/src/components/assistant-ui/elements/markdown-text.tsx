@@ -37,7 +37,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { cn } from '@/lib/utils';
-import { isPortalLink, notifyNavigate } from '@/lib/portal-link';
+import { notifyNavigate, resolvePortalLink } from '@/lib/portal-link';
 import {
     hasInlineScriptMetadata,
     metaFromNode,
@@ -377,17 +377,30 @@ const memoizedComponents = memoizeMarkdownComponents({
         />
     ),
     a: ({ className, href, children, ...props }) => {
-        if (isPortalLink(href)) {
+        const portalLink = resolvePortalLink(href);
+        const path = portalLink?.path;
+        if (path) {
             return (
                 <a
                     className={cn(
                         'aui-md-a text-primary hover:text-primary/80 underline underline-offset-2',
                         className
                     )}
-                    href={href}
+                    href={portalLink.href}
                     onClick={e => {
+                        // Modified and non-primary clicks keep the browser's
+                        // new-tab/window behaviour on the rewritten href.
+                        if (
+                            e.button !== 0 ||
+                            e.metaKey ||
+                            e.ctrlKey ||
+                            e.shiftKey ||
+                            e.altKey
+                        ) {
+                            return;
+                        }
                         e.preventDefault();
-                        notifyNavigate(href!);
+                        notifyNavigate(path);
                     }}
                     {...props}
                 >
@@ -401,7 +414,7 @@ const memoizedComponents = memoizeMarkdownComponents({
                     'aui-md-a text-primary hover:text-primary/80 underline underline-offset-2',
                     className
                 )}
-                href={href}
+                href={portalLink?.href ?? href}
                 target="_blank"
                 rel="noopener noreferrer"
                 {...props}
