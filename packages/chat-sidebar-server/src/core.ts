@@ -358,7 +358,19 @@ export async function runReport(
     // Claude rejects a request whose messages end on 'assistant' (treats it
     // as an unsupported prefill) — the session's history ends there whenever
     // the last turn was a reply, so append an explicit trigger turn.
-    const messages = await convertToModelMessages(uiMessages);
+    // Reasoning is left out: the report runs without thinking and needs only
+    // what was said and what the tools returned. Replaying it would have to
+    // be exact — Claude rejects a latest assistant turn whose thinking blocks
+    // differ from the original response, and the Bedrock provider drops
+    // reasoning parts that carry no signature.
+    const messages = await convertToModelMessages(
+        uiMessages
+            .map(message => ({
+                ...message,
+                parts: message.parts.filter(part => part.type !== 'reasoning'),
+            }))
+            .filter(message => message.parts.length > 0)
+    );
     const { text } = await generateText({
         model: getModel(modelId),
         system,
