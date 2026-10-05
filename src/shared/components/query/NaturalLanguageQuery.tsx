@@ -10,6 +10,7 @@ type Issue = { code: string; message: string; suggestion?: string };
 type TranslateResponse = {
     oql?: string;
     checkedStudies?: string[];
+    rejected?: boolean;
     warnings?: Issue[];
     error?: string;
     errors?: Issue[];
@@ -176,7 +177,15 @@ export default class NaturalLanguageQuery extends QueryStoreComponent<{}, {}> {
                         </span>
                     )}
                 </div>
-                {r && !r.oql && (
+                {r && r.rejected && (
+                    <div
+                        className={styles.naturalLanguageQueryHint}
+                        data-test="nlOqlRejected"
+                    >
+                        {r.error}
+                    </div>
+                )}
+                {r && !r.oql && !r.rejected && (
                     <div className="text-danger" data-test="nlOqlError">
                         {r.error}
                         {(r.errors || []).map((e, i) => (
