@@ -169,6 +169,36 @@ export function eventMatchesFilter(
 // Aggregation: events → pair summaries
 // ---------------------------------------------------------------------------
 
+// TARGET caller annotation: ENST…(GENE5):e.1_19::ENST…(GENE3):e.22_23
+const CALLER_ORDER_RE = /^ENST[\d.]+\(([^)]+)\):e\.[\d_]+::ENST[\d.]+\([^)]+\):e\.[\d_]+/;
+// HGNC-style event label: "GENE5::GENE3 Fusion" (hyphenated labels don't count).
+const EVENT_LABEL_ORDER_RE = /^([^\s:]+)::[^\s:]+ Fusion$/;
+
+/**
+ * The 5′ gene the caller explicitly reported, or null when neither the
+ * annotation nor an HGNC "A::B Fusion" event label states a 5′::3′ order.
+ */
+export function callerFivePrimeSymbol(
+    annotation: string,
+    eventLabel?: string
+): string | null {
+    const m =
+        CALLER_ORDER_RE.exec((annotation || '').trim()) ||
+        EVENT_LABEL_ORDER_RE.exec((eventLabel || '').trim());
+    return m ? m[1] : null;
+}
+
+/**
+ * Table label for a pair. HGNC '::' means 5′::3′, so it's used only when the
+ * caller stated the order; otherwise the unordered key reads "A / B".
+ */
+export function pairDisplayLabel(s: FusionPairSummary): string {
+    const [a, b] = s.key.split('::');
+    if (b === '-' || b === undefined) return s.key;
+    if (!s.fivePrime) return `${a} / ${b}`;
+    return `${s.fivePrime}::${s.fivePrime === a ? b : a}`;
+}
+
 /**
  * Aggregate a flat array of FusionEvents into per-pair recurrence summaries,
  * sorted by sampleCount descending (then eventCount descending as tiebreak).
@@ -186,6 +216,7 @@ export function buildPairSummaries(events: FusionEvent[]): FusionPairSummary[] {
             eventCount: number;
             anyInFrame: boolean;
             eventIds: string[];
+            callerFivePrime: { [gene: string]: number };
         }
     >();
 
@@ -201,10 +232,15 @@ export function buildPairSummaries(events: FusionEvent[]): FusionPairSummary[] {
                 eventCount: 0,
                 anyInFrame: false,
                 eventIds: [],
+                callerFivePrime: {},
             };
             map.set(key, acc);
         }
 
+        const five = callerFivePrimeSymbol(event.annotation, event.eventLabel);
+        if (five) {
+            acc.callerFivePrime[five] = (acc.callerFivePrime[five] || 0) + 1;
+        }
         acc.sampleIdSet.add(event.tumorId);
         acc.eventCount += 1;
         acc.eventIds.push(event.id);
@@ -216,7 +252,16 @@ export function buildPairSummaries(events: FusionEvent[]): FusionPairSummary[] {
 
     const summaries: FusionPairSummary[] = [];
     for (const [key, acc] of map.entries()) {
+        const stated = Object.entries(acc.callerFivePrime).sort(
+            (a, b) => b[1] - a[1] || a[0].localeCompare(b[0])
+        );
+        const fivePrime = stated.length > 0 ? stated[0][0] : null;
+        const reciprocalCount = stated
+            .slice(1)
+            .reduce((n, [, count]) => n + count, 0);
         summaries.push({
+            fivePrime,
+            reciprocalCount,
             key,
             gene5: acc.gene5,
             gene3: acc.gene3,

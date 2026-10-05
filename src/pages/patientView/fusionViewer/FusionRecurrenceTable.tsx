@@ -5,6 +5,7 @@ import LazyMobXTable, {
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import { FusionCohortStore } from './FusionCohortStore';
 import { FusionPairSummary } from './data/types';
+import { pairDisplayLabel } from './data/cohortAggregation';
 import { colorFor } from './data/partnerPalette';
 import { PartnerSummary } from './data/anchorSummaries';
 import { frameStatusStyle } from './components/frameStatusStyle';
@@ -181,14 +182,33 @@ export class FusionRecurrenceTable extends React.Component<
                         onClick={() =>
                             store.setAnchor({ mode: 'pair', key: d.key })
                         }
+                        title={
+                            d.fivePrime
+                                ? undefined
+                                : '5′/3′ order not stated by the caller'
+                        }
                     >
-                        {d.key}
+                        {pairDisplayLabel(d)}
+                        {d.reciprocalCount > 0 && (
+                            <span
+                                style={{
+                                    color: '#888',
+                                    fontWeight: 400,
+                                    fontSize: '0.85em',
+                                }}
+                            >
+                                {' '}
+                                (+{d.reciprocalCount} reciprocal)
+                            </span>
+                        )}
                     </span>
                 ),
-                sortBy: (d: FusionPairSummary) => d.key,
-                download: (d: FusionPairSummary) => d.key,
+                sortBy: (d: FusionPairSummary) => pairDisplayLabel(d),
+                download: (d: FusionPairSummary) => pairDisplayLabel(d),
                 filter: (d: FusionPairSummary, _f: string, up: string) =>
-                    d.key.toUpperCase().indexOf(up) > -1,
+                    `${pairDisplayLabel(d)} ${d.key}`
+                        .toUpperCase()
+                        .indexOf(up) > -1,
             },
             {
                 name: '# samples',

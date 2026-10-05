@@ -38,7 +38,8 @@ describe('FusionRecurrenceTable', () => {
     it('renders one row per pair summary', () => {
         const store = storeWithDemo();
         const wrapper = mount(<FusionRecurrenceTable store={store} />);
-        assert.include(wrapper.text(), 'ERG::TMPRSS2');
+        // Demo rows state no caller 5′::3′ order, so the label is unordered.
+        assert.include(wrapper.text(), 'ERG / TMPRSS2');
         assert.include(wrapper.text(), 'KMT2A::-');
     });
 
@@ -130,7 +131,7 @@ describe('FusionRecurrenceTable', () => {
         wrapper.update();
 
         // The pair facet must not remove its own unselected options.
-        assert.include(wrapper.text(), 'CCDC6::RET');
+        assert.include(wrapper.text(), 'CCDC6 / RET');
         wrapper
             .find('[data-test="pair-filter-CCDC6::RET"]')
             .hostNodes()

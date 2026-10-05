@@ -1,5 +1,9 @@
 import { FusionEvent, FrameStatus, TranscriptData } from './types';
-import { classifyFrame, buildPairKey } from './cohortAggregation';
+import {
+    classifyFrame,
+    buildPairKey,
+    callerFivePrimeSymbol,
+} from './cohortAggregation';
 import { resolveFusionPartners } from './partnerResolution';
 
 export type AnchorSide = '5p' | '3p';
@@ -89,6 +93,36 @@ export function resolveComparisonRows(
                 : null,
         };
     });
+}
+
+export { callerFivePrimeSymbol };
+
+/**
+ * Pair mode: separate rows the caller explicitly called in the reverse
+ * orientation (the partner as 5′, e.g. a reciprocal ALK::EML4 inside
+ * EML4→ALK). Flipping those would draw a product the caller says doesn't
+ * exist, so they're excluded and reported. Rows with no caller order keep the
+ * usual orientComparisonRowsTo5p flip.
+ */
+export function splitCallerReciprocals(
+    rows: ComparisonRow[],
+    fivePrimeSymbol: string
+): { rows: ComparisonRow[]; reciprocal: ComparisonRow[] } {
+    const kept: ComparisonRow[] = [];
+    const reciprocal: ComparisonRow[] = [];
+    rows.forEach(row => {
+        const caller5p = callerFivePrimeSymbol(
+            row.event.annotation,
+            row.event.eventLabel
+        );
+        const isPartner =
+            caller5p !== null &&
+            caller5p !== fivePrimeSymbol &&
+            (caller5p === row.fivePrimeSymbol ||
+                caller5p === row.threePrimeSymbol);
+        (isPartner ? reciprocal : kept).push(row);
+    });
+    return { rows: kept, reciprocal };
 }
 
 /**
