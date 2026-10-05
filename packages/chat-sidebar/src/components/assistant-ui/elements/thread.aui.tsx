@@ -9,13 +9,7 @@ import { File } from '@/components/assistant-ui/elements/file';
 import { ThreadFollowupSuggestions } from '@/components/assistant-ui/elements/follow-up-suggestions.aui';
 import { Image } from '@/components/assistant-ui/elements/image';
 import { MarkdownText } from '@/components/assistant-ui/elements/markdown-text';
-import {
-    Reasoning,
-    ReasoningContent,
-    ReasoningRoot,
-    ReasoningText,
-    ReasoningTrigger,
-} from '@/components/assistant-ui/elements/reasoning.aui';
+import { Reasoning } from '@/components/assistant-ui/elements/reasoning.aui';
 import { ToolFallback } from '@/components/assistant-ui/elements/tool-fallback.aui';
 import {
     ToolGroupContent,
@@ -36,8 +30,10 @@ import {
     BranchPickerPrimitive,
     ComposerPrimitive,
     ErrorPrimitive,
+    GroupByContext,
     groupPartByType,
     MessagePrimitive,
+    PartState,
     SuggestionPrimitive,
     ThreadPrimitive,
     FileMessagePartComponent,
@@ -48,11 +44,14 @@ import {
 import {
     ArrowDownIcon,
     ArrowUpIcon,
+    BrainIcon,
     CheckIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
     CopyIcon,
     DownloadIcon,
+    LucideIcon,
+    MessageCircleIcon,
     MicIcon,
     MoreHorizontalIcon,
     PencilIcon,
@@ -68,7 +67,9 @@ import {
     FC,
     PropsWithChildren,
     RefObject,
+    useMemo,
     useRef,
+    useState,
     useSyncExternalStore,
 } from 'react';
 
@@ -76,21 +77,17 @@ export type ThreadGroupPart = MessagePrimitive.GroupedParts.GroupPart;
 
 /**
  * Optional component overrides for the thread. `AssistantMessage` and
- * `Welcome` replace whole sections; the remaining slots override how the
- * assistant message renders tool calls and part groups. Tool UIs registered
- * by name (toolkit `render`, `useAssistantDataUI`) take precedence over
- * `ToolFallback`.
+ * `Welcome` replace whole sections; `ToolFallback` overrides how the
+ * assistant message renders tool calls. Tool UIs registered by name (toolkit
+ * `render`, `useAssistantDataUI`) take precedence over `ToolFallback`.
+ * `hiddenTools` names the tools `ToolFallback` renders nothing for, so the
+ * work block's tool count leaves them out.
  */
 export type ThreadComponents = {
     AssistantMessage?: ComponentType | undefined;
     Welcome?: ComponentType | undefined;
     ToolFallback?: ToolCallMessagePartComponent | undefined;
-    ToolGroup?:
-        | ComponentType<PropsWithChildren<{ group: ThreadGroupPart }>>
-        | undefined;
-    ReasoningGroup?:
-        | ComponentType<PropsWithChildren<{ group: ThreadGroupPart }>>
-        | undefined;
+    hiddenTools?: ReadonlySet<string> | undefined;
 };
 
 export type ThreadProps = {
@@ -494,12 +491,119 @@ const MessageError: FC = () => {
     );
 };
 
+type WorkGroupKey =
+    | 'group-chainOfThought'
+    | 'group-thought'
+    | 'group-narration';
+
+const groupWorkByType = groupPartByType<WorkGroupKey>({
+    reasoning: ['group-chainOfThought', 'group-thought'],
+    'tool-call': ['group-chainOfThought'],
+    'standalone-tool-call': [],
+});
+
+const NARRATION_PATH: readonly WorkGroupKey[] = [
+    'group-chainOfThought',
+    'group-narration',
+];
+
+// Everything before the reply's answer goes into one work block: reasoning,
+// tool calls, and text that has more reasoning or tool calls after it (the
+// model narrating its steps). Text after the last of those is the answer and
+// stays outside. GroupedParts passes groupBy the same part objects as
+// s.message.parts, which carry no index, so narration is looked up by object.
+const useWorkGroupBy = () => {
+    const parts = useAuiState(s => s.message.parts);
+    return useMemo(() => {
+        let lastWork = -1;
+        parts.forEach((part, index) => {
+            if (part.type === 'reasoning' || part.type === 'tool-call') {
+                lastWork = index;
+            }
+        });
+        const narration = new Set(
+            parts.filter(
+                (part, index) => part.type === 'text' && index < lastWork
+            )
+        );
+        return (part: PartState, context: GroupByContext) =>
+            narration.has(part)
+                ? NARRATION_PATH
+                : groupWorkByType(part, context);
+    }, [parts]);
+};
+
+// One step on the work block's timeline: a thought or a bit of narration.
+const WorkStep: FC<PropsWithChildren<{
+    icon: LucideIcon;
+    className?: string;
+}>> = ({ icon: Icon, className, children }) => (
+    <div className={cn('flex gap-2 text-sm', className)}>
+        <Icon className="mt-1 size-3.5 shrink-0 opacity-70" aria-hidden />
+        <div className="min-w-0 flex-1">{children}</div>
+    </div>
+);
+
+// The work behind a reply, collapsed to one line above the answer. Open while
+// the reply streams and collapsed once it's done, unless the user has toggled
+// it.
+const WorkBlock: FC<PropsWithChildren<{ group: ThreadGroupPart }>> = ({
+    group,
+    children,
+}) => {
+    const { hiddenTools } = useContext(ThreadComponentsContext);
+    const active = useAuiState(s => s.message.status?.type === 'running');
+    const [userOpen, setUserOpen] = useState<boolean>();
+    const toolCount = useAuiState(s =>
+        group.indices.reduce((count, index) => {
+            const part = s.message.parts[index];
+            return part?.type === 'tool-call' &&
+                !hiddenTools?.has(part.toolName)
+                ? count + 1
+                : count;
+        }, 0)
+    );
+    const hasProse = useAuiState(s =>
+        group.indices.some(index => {
+            const type = s.message.parts[index]?.type;
+            return type === 'reasoning' || type === 'text';
+        })
+    );
+
+    // Only hidden tools, such as a lone get_page_details: nothing to show.
+    if (toolCount === 0 && !hasProse) return null;
+
+    const tools =
+        toolCount > 0
+            ? ` · ${toolCount} tool ${toolCount === 1 ? 'call' : 'calls'}`
+            : '';
+
+    return (
+        <ToolGroupRoot
+            variant="ghost"
+            open={userOpen ?? active}
+            onOpenChange={setUserOpen}
+            className="mb-2"
+        >
+            <ToolGroupTrigger
+                active={active}
+                icon={<BrainIcon className="size-3 shrink-0" aria-hidden />}
+                label={active ? `Thinking…${tools}` : `Done thinking${tools}`}
+            />
+            <ToolGroupContent>
+                <div className="ml-1.5 flex flex-col gap-2 border-l ps-4">
+                    {children}
+                </div>
+            </ToolGroupContent>
+        </ToolGroupRoot>
+    );
+};
+
 const AssistantMessage: FC = () => {
-    const {
-        ToolFallback: ToolFallbackComponent = ToolFallback,
-        ToolGroup,
-        ReasoningGroup,
-    } = useContext(ThreadComponentsContext);
+    const { ToolFallback: ToolFallbackComponent = ToolFallback } = useContext(
+        ThreadComponentsContext
+    );
+    const groupBy = useWorkGroupBy();
 
     const ACTION_BAR_PT = 'pt-1.5';
     // Keep the action bar inside the contained root's paint box, then cancel its reserved space in flow.
@@ -515,62 +619,33 @@ const AssistantMessage: FC = () => {
                 data-slot="aui_assistant-message-content"
                 className="text-foreground px-2 leading-relaxed wrap-break-word"
             >
-                <MessagePrimitive.GroupedParts
-                    groupBy={groupPartByType({
-                        reasoning: ['group-chainOfThought', 'group-reasoning'],
-                        'tool-call': ['group-chainOfThought', 'group-tool'],
-                        'standalone-tool-call': [],
-                    })}
-                >
+                <MessagePrimitive.GroupedParts groupBy={groupBy}>
                     {({ part, children }) => {
                         switch (part.type) {
                             case 'group-chainOfThought':
                                 return (
-                                    <div data-slot="aui_chain-of-thought">
+                                    <WorkBlock group={part}>
                                         {children}
-                                    </div>
+                                    </WorkBlock>
                                 );
-                            case 'group-tool':
-                                if (ToolGroup) {
-                                    return (
-                                        <ToolGroup group={part}>
-                                            {children}
-                                        </ToolGroup>
-                                    );
-                                }
+                            case 'group-thought':
                                 return (
-                                    <ToolGroupRoot variant="ghost">
-                                        <ToolGroupTrigger
-                                            count={part.indices.length}
-                                            active={
-                                                part.status.type === 'running'
-                                            }
-                                        />
-                                        <ToolGroupContent>
-                                            {children}
-                                        </ToolGroupContent>
-                                    </ToolGroupRoot>
+                                    <WorkStep
+                                        icon={BrainIcon}
+                                        className="text-muted-foreground"
+                                    >
+                                        {children}
+                                    </WorkStep>
                                 );
-                            case 'group-reasoning': {
-                                if (ReasoningGroup) {
-                                    return (
-                                        <ReasoningGroup group={part}>
-                                            {children}
-                                        </ReasoningGroup>
-                                    );
-                                }
-                                const running = part.status.type === 'running';
+                            case 'group-narration':
                                 return (
-                                    <ReasoningRoot streaming={running}>
-                                        <ReasoningTrigger active={running} />
-                                        <ReasoningContent aria-busy={running}>
-                                            <ReasoningText>
-                                                {children}
-                                            </ReasoningText>
-                                        </ReasoningContent>
-                                    </ReasoningRoot>
+                                    <WorkStep
+                                        icon={MessageCircleIcon}
+                                        className="text-foreground/80"
+                                    >
+                                        {children}
+                                    </WorkStep>
                                 );
-                            }
                             case 'text':
                                 return <MarkdownText />;
                             case 'reasoning':

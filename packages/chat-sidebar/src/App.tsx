@@ -1,6 +1,5 @@
 import {
     FC,
-    PropsWithChildren,
     ReactNode,
     useEffect,
     useState,
@@ -11,19 +10,10 @@ import {
     AuiConfig,
     Suggestions,
     ToolCallMessagePartComponent,
-    useAuiState,
     useRemoteThreadListRuntime,
 } from '@assistant-ui/react';
-import {
-    Thread,
-    ThreadGroupPart,
-} from '@/components/assistant-ui/elements/thread.aui';
+import { Thread } from '@/components/assistant-ui/elements/thread.aui';
 import { ToolFallback } from '@/components/assistant-ui/elements/tool-fallback.aui';
-import {
-    ToolGroupContent,
-    ToolGroupRoot,
-    ToolGroupTrigger,
-} from '@/components/assistant-ui/elements/tool-group.aui';
 import { ChatHeader } from '@/components/ChatHeader';
 import { useCrossTabSync } from '@/hooks/use-cross-tab-sync';
 import {
@@ -104,38 +94,9 @@ const AppToolFallback: ToolCallMessagePartComponent = part => {
     return <ToolFallback {...part} />;
 };
 
-const AppToolGroup = ({
-    group,
-    children,
-}: PropsWithChildren<{ group: ThreadGroupPart }>) => {
-    const visibleToolCount = useAuiState(state =>
-        group.indices.reduce((count, index) => {
-            const part = state.message.parts[index];
-            return (
-                count +
-                (part?.type === 'tool-call' && !SILENT_TOOLS.has(part.toolName)
-                    ? 1
-                    : 0)
-            );
-        }, 0)
-    );
-
-    if (visibleToolCount === 0) return null;
-
-    return (
-        <ToolGroupRoot variant="ghost">
-            <ToolGroupTrigger
-                count={visibleToolCount}
-                active={group.status.type === 'running'}
-            />
-            <ToolGroupContent>{children}</ToolGroupContent>
-        </ToolGroupRoot>
-    );
-};
-
 const THREAD_COMPONENTS = {
     ToolFallback: AppToolFallback,
-    ToolGroup: AppToolGroup,
+    hiddenTools: SILENT_TOOLS,
 };
 
 export function App() {
