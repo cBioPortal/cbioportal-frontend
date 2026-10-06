@@ -66,9 +66,27 @@ export function buildPairKey(gene5: string, gene3: string | null): string {
     return `${a}::${b}`;
 }
 
+// Caller-stated keys use their own separator so an unordered (sorted) key can
+// never equal a stated one: EML4>ALK, ALK>EML4 and ALK::EML4 are three pairs.
+const STATED_SEP = '>';
+
+/** Key for a pair whose 5′::3′ order the caller stated. */
+export function statedPairKey(five: string, three: string): string {
+    return `${five}${STATED_SEP}${three}`;
+}
+
+/** The two genes of a pair key; `stated` keys list the 5′ gene first. */
+export function parsePairKey(
+    key: string
+): { a: string; b: string | undefined; stated: boolean } {
+    const stated = key.includes(STATED_SEP);
+    const [a, b] = key.split(stated ? STATED_SEP : '::');
+    return { a, b, stated };
+}
+
 /**
  * Pair key for an event. When the caller stated the 5′::3′ order the key is
- * that order (EML4::ALK and its reciprocal ALK::EML4 are separate pairs);
+ * that order (EML4>ALK and its reciprocal ALK>EML4 are separate pairs);
  * otherwise it falls back to the order-free symbol-sorted key.
  */
 export function pairKeyFromEvent(event: FusionEvent): string {
@@ -76,7 +94,7 @@ export function pairKeyFromEvent(event: FusionEvent): string {
     const gene2 = event.gene2?.symbol ?? null;
     const five = callerFivePrimeSymbol(event.annotation, event.eventLabel);
     if (gene2 && five && (five === gene1 || five === gene2)) {
-        return `${five}::${five === gene1 ? gene2 : gene1}`;
+        return statedPairKey(five, five === gene1 ? gene2 : gene1);
     }
     return buildPairKey(gene1, gene2);
 }
@@ -199,10 +217,9 @@ export function callerFivePrimeSymbol(
  * caller stated the order; otherwise the unordered key reads "A / B".
  */
 export function pairDisplayLabel(s: FusionPairSummary): string {
-    const [a, b] = s.key.split('::');
+    const { a, b, stated } = parsePairKey(s.key);
     if (b === '-' || b === undefined) return s.key;
-    if (!s.fivePrime) return `${a} / ${b}`;
-    return `${s.fivePrime}::${s.fivePrime === a ? b : a}`;
+    return stated ? `${a}::${b}` : `${a} / ${b}`;
 }
 
 /**
@@ -222,7 +239,6 @@ export function buildPairSummaries(events: FusionEvent[]): FusionPairSummary[] {
             eventCount: number;
             anyInFrame: boolean;
             eventIds: string[];
-            callerFivePrime: { [gene: string]: number };
         }
     >();
 
@@ -238,16 +254,10 @@ export function buildPairSummaries(events: FusionEvent[]): FusionPairSummary[] {
                 eventCount: 0,
                 anyInFrame: false,
                 eventIds: [],
-                callerFivePrime: {},
             };
             map.set(key, acc);
         }
 
-        const five = callerFivePrimeSymbol(event.annotation, event.eventLabel);
-        const genes = [event.gene1.symbol, event.gene2?.symbol];
-        if (five && genes.includes(five)) {
-            acc.callerFivePrime[five] = (acc.callerFivePrime[five] || 0) + 1;
-        }
         acc.sampleIdSet.add(event.tumorId);
         acc.eventCount += 1;
         acc.eventIds.push(event.id);
@@ -259,12 +269,9 @@ export function buildPairSummaries(events: FusionEvent[]): FusionPairSummary[] {
 
     const summaries: FusionPairSummary[] = [];
     for (const [key, acc] of map.entries()) {
-        const stated = Object.entries(acc.callerFivePrime).sort(
-            (a, b) => b[1] - a[1] || a[0].localeCompare(b[0])
-        );
-        const fivePrime = stated.length > 0 ? stated[0][0] : null;
+        const parsed = parsePairKey(key);
         summaries.push({
-            fivePrime,
+            fivePrime: parsed.stated ? parsed.a : null,
             key,
             gene5: acc.gene5,
             gene3: acc.gene3,

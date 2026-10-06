@@ -168,6 +168,23 @@ describe('resolveComparisonRows', () => {
         { mode: 'gene', gene: 'ERG', side: '5p' }
     );
 
+    it('prefers the caller-stated 5′ gene over the resolver', () => {
+        // Resolver alone picks TMPRSS2 (see below); the caller states ERG::TMPRSS2.
+        const stated = naiveErgAnchorRow.map(r => ({
+            ...r,
+            event: {
+                ...r.event,
+                annotation: '',
+                eventLabel: 'ERG::TMPRSS2 Fusion',
+            },
+        }));
+        const resolved = resolveComparisonRows(stated, txFor);
+        assert.equal(resolved[0].fivePrimeSymbol, 'ERG');
+        assert.equal(resolved[0].threePrimeSymbol, 'TMPRSS2');
+        assert.equal(resolved[0].anchorBreakpoint, 39860000);
+        assert.equal(resolved[0].partnerBreakpoint, 42880000);
+    });
+
     it('flips TMPRSS2-ERG so TMPRSS2 becomes the 5′ anchor', () => {
         // sanity: the naive row anchors on ERG
         assert.equal(naiveErgAnchorRow[0].fivePrimeSymbol, 'ERG');
@@ -221,7 +238,7 @@ describe('buildComparisonRows pair orientation', () => {
         rev.gene2 = { ...rev.gene2!, symbol: 'EML4' };
         const rows = buildComparisonRows([fwd, rev], {
             mode: 'pair',
-            key: 'EML4::ALK',
+            key: 'EML4>ALK',
         });
         assert.deepEqual(
             rows.map(r => r.event.id),

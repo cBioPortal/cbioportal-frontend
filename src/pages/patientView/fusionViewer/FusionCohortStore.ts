@@ -23,6 +23,7 @@ import {
     extractGenePartnerOptions,
     extractPairKeyOptions,
     extractSvTypeOptions,
+    parsePairKey,
 } from './data/cohortAggregation';
 import {
     buildComparisonRows,
@@ -552,8 +553,9 @@ export class FusionCohortStore {
             return;
         }
         if (current?.mode === 'gene') return;
-        const pairGenes =
-            current?.mode === 'pair' ? current.key.split('::') : [];
+        const pair =
+            current?.mode === 'pair' ? parsePairKey(current.key) : undefined;
+        const pairGenes = pair ? [pair.a, pair.b] : [];
         const pick =
             this.geneSummaries.find(g => pairGenes.includes(g.gene)) ||
             this.geneSummaries[0];

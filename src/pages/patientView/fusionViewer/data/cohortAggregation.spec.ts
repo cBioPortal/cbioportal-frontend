@@ -474,21 +474,35 @@ describe('buildPairSummaries 5′ orientation', () => {
         assert.deepEqual(
             summaries.map(s => [s.key, s.sampleCount, pairDisplayLabel(s)]),
             [
-                ['EML4::ALK', 2, 'EML4::ALK'],
-                ['ALK::EML4', 1, 'ALK::EML4'],
+                ['EML4>ALK', 2, 'EML4::ALK'],
+                ['ALK>EML4', 1, 'ALK::EML4'],
+            ]
+        );
+    });
+
+    it('keeps unordered events out of a stated row with the same sorted genes', () => {
+        const unordered = ev('u', 'EML4', 'ALK', 'NA');
+        unordered.eventLabel = 'EML4-ALK Fusion';
+        const summaries = buildPairSummaries([
+            ev('a', 'ALK', 'EML4', REV),
+            ev('b', 'EML4', 'ALK', FWD),
+            unordered,
+        ]);
+        assert.deepEqual(
+            summaries
+                .map(s => [s.key, s.sampleCount, pairDisplayLabel(s)])
+                .sort(),
+            [
+                ['ALK::EML4', 1, 'ALK / EML4'],
+                ['ALK>EML4', 1, 'ALK::EML4'],
+                ['EML4>ALK', 1, 'EML4::ALK'],
             ]
         );
     });
 
     it('pairKeyFromEvent: stated order wins; otherwise the sorted key', () => {
-        assert.equal(
-            pairKeyFromEvent(ev('a', 'ALK', 'EML4', FWD)),
-            'EML4::ALK'
-        );
-        assert.equal(
-            pairKeyFromEvent(ev('a', 'EML4', 'ALK', REV)),
-            'ALK::EML4'
-        );
+        assert.equal(pairKeyFromEvent(ev('a', 'ALK', 'EML4', FWD)), 'EML4>ALK');
+        assert.equal(pairKeyFromEvent(ev('a', 'EML4', 'ALK', REV)), 'ALK>EML4');
         assert.equal(
             pairKeyFromEvent(ev('a', 'ERG', 'TMPRSS2', 'NA')),
             'ERG::TMPRSS2'
