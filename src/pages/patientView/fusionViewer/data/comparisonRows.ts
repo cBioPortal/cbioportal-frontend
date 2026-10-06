@@ -1,7 +1,7 @@
 import { FusionEvent, FrameStatus, TranscriptData } from './types';
 import {
     classifyFrame,
-    buildPairKey,
+    pairKeyFromEvent,
     callerFivePrimeSymbol,
 } from './cohortAggregation';
 import { resolveFusionPartners } from './partnerResolution';
@@ -38,12 +38,7 @@ export function buildComparisonRows(
 ): ComparisonRow[] {
     const matches = (e: FusionEvent): boolean => {
         if (anchor.mode === 'pair') {
-            return (
-                buildPairKey(
-                    e.gene1.symbol,
-                    e.gene2 ? e.gene2.symbol : null
-                ) === anchor.key
-            );
+            return pairKeyFromEvent(e) === anchor.key;
         }
         return (
             e.gene1.symbol === anchor.gene ||
@@ -96,34 +91,6 @@ export function resolveComparisonRows(
 }
 
 export { callerFivePrimeSymbol };
-
-/**
- * Pair mode: separate rows the caller explicitly called in the reverse
- * orientation (the partner as 5′, e.g. a reciprocal ALK::EML4 inside
- * EML4→ALK). Flipping those would draw a product the caller says doesn't
- * exist, so they're excluded and reported. Rows with no caller order keep the
- * usual orientComparisonRowsTo5p flip.
- */
-export function splitCallerReciprocals(
-    rows: ComparisonRow[],
-    fivePrimeSymbol: string
-): { rows: ComparisonRow[]; reciprocal: ComparisonRow[] } {
-    const kept: ComparisonRow[] = [];
-    const reciprocal: ComparisonRow[] = [];
-    rows.forEach(row => {
-        const caller5p = callerFivePrimeSymbol(
-            row.event.annotation,
-            row.event.eventLabel
-        );
-        const isPartner =
-            caller5p !== null &&
-            caller5p !== fivePrimeSymbol &&
-            (caller5p === row.fivePrimeSymbol ||
-                caller5p === row.threePrimeSymbol);
-        (isPartner ? reciprocal : kept).push(row);
-    });
-    return { rows: kept, reciprocal };
-}
 
 /**
  * Force every row in a pair-anchored comparison onto ONE canonical 5′ gene.

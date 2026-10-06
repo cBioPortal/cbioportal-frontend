@@ -21,8 +21,6 @@ import FusionStripList from './components/FusionStripList';
 import ExonRuler from './components/ExonRuler';
 import {
     orientComparisonRowsTo5p,
-    splitCallerReciprocals,
-    callerFivePrimeSymbol,
     snapBreakpointsToAnchorGene,
     ComparisonRow,
     AnchorSide,
@@ -47,6 +45,7 @@ import {
     COLOR_5PRIME,
     COLOR_3PRIME,
     FrameStatus,
+    FusionPairSummary,
 } from './data/types';
 import WindowStore from 'shared/components/window/WindowStore';
 import {
@@ -451,18 +450,6 @@ export default class FusionComparisonView extends React.Component<
         return this.transcriptForGene(this.anchorGene);
     }
 
-    // Pair mode: rows the caller explicitly called with the partner as 5′
-    // (reciprocals) are excluded rather than flipped; the rest are drawn.
-    @computed get pairSplit(): {
-        rows: ComparisonRow[];
-        reciprocal: ComparisonRow[];
-    } {
-        if (this.isGeneMode) {
-            return { rows: this.resolvedRows, reciprocal: [] };
-        }
-        return splitCallerReciprocals(this.resolvedRows, this.anchorGene);
-    }
-
     // Pair mode: orient every row onto one 5′ gene, then snap (pattern B).
     // Gene mode: rows are already resolved 5′→3′ and side-filtered; only snap
     // the anchor-side position into the anchor gene (D20).
@@ -479,7 +466,7 @@ export default class FusionComparisonView extends React.Component<
                 : this.resolvedRows;
         }
         const oriented = orientComparisonRowsTo5p(
-            this.pairSplit.rows,
+            this.resolvedRows,
             this.anchorGene
         );
         return t
@@ -922,31 +909,32 @@ export default class FusionComparisonView extends React.Component<
         return sampleFusionViewerHref(studyId, sampleId);
     };
 
+    /** Pair mode: the caller-stated reciprocal row of the anchored pair. */
+    @computed get reciprocalPair(): FusionPairSummary | undefined {
+        const a = this.props.store.anchor;
+        if (!a || a.mode !== 'pair') return undefined;
+        const [five, three] = a.key.split('::');
+        if (!three || three === '-') return undefined;
+        const key = `${three}::${five}`;
+        return this.props.store.pairSummaries.find(
+            s => s.key === key && s.fivePrime === three
+        );
+    }
+
     private renderReciprocalNote() {
-        const reciprocal = this.pairSplit.reciprocal;
-        if (reciprocal.length === 0) return null;
-        const five =
-            callerFivePrimeSymbol(
-                reciprocal[0].event.annotation,
-                reciprocal[0].event.eventLabel
-            ) || '';
-        const three = this.anchorGene;
-        const n = reciprocal.length;
+        const r = this.reciprocalPair;
+        if (!r) return null;
+        const n = r.sampleCount;
         return (
             <div style={{ fontSize: 11, margin: '0 0 4px' }}>
                 <a
                     data-testid="pair-reciprocal-note"
                     style={{ cursor: 'pointer' }}
                     onClick={() =>
-                        this.props.store.setAnchor({
-                            mode: 'gene',
-                            gene: five,
-                            side: '5p',
-                        })
+                        this.props.store.setAnchor({ mode: 'pair', key: r.key })
                     }
                 >
-                    {n} reciprocal {five} → {three} event{n === 1 ? '' : 's'}{' '}
-                    (called with {five} as 5′) not shown — view {five} as 5′
+                    Reciprocal {r.key}: {n} sample{n === 1 ? '' : 's'} — view
                 </a>
             </div>
         );
