@@ -1383,7 +1383,7 @@ describe('FusionComparisonView caller-confirmed reciprocals (pair mode)', () => 
             sv('S2', 'EML4', 'ALK', FORWARD),
             sv('S3', 'ALK', 'EML4', RECIPROCAL),
         ]);
-        store.setAnchor({ mode: 'pair', key: 'ALK::EML4' });
+        store.setAnchor({ mode: 'pair', key: 'EML4::ALK' });
         const wrapper = mount(<FusionComparisonView store={store} />);
         const view = wrapper.instance() as any;
         runInAction(() => {
@@ -1396,7 +1396,7 @@ describe('FusionComparisonView caller-confirmed reciprocals (pair mode)', () => 
         return { wrapper, store, view };
     }
 
-    it('excludes the reciprocal from the drawn rows instead of flipping it', () => {
+    it('draws only the anchored orientation', () => {
         const { view } = mountPair();
         assert.equal(view.anchorGene, 'EML4');
         assert.deepEqual(view.orientedRows.map((r: any) => r.sampleId).sort(), [
@@ -1405,18 +1405,26 @@ describe('FusionComparisonView caller-confirmed reciprocals (pair mode)', () => 
         ]);
     });
 
-    it('shows a note that switches to the reciprocal 5′ gene', () => {
+    it('links to the reciprocal pair row', () => {
         const { wrapper, store } = mountPair();
         const note = wrapper
             .find('[data-testid="pair-reciprocal-note"]')
             .hostNodes();
         assert.lengthOf(note, 1);
-        assert.include(note.text(), '1 reciprocal ALK → EML4');
+        assert.include(note.text(), 'Reciprocal ALK::EML4');
+        assert.include(note.text(), '1 sample');
         note.simulate('click');
-        assert.deepEqual(store.anchor, {
-            mode: 'gene',
-            gene: 'ALK',
-            side: '5p',
-        });
+        assert.deepEqual(store.anchor, { mode: 'pair', key: 'ALK::EML4' });
+    });
+
+    it('shows no note when the pair has no reciprocal row', () => {
+        const store = new FusionCohortStore();
+        store.setStructuralVariants([sv('S1', 'EML4', 'ALK', FORWARD)]);
+        store.setAnchor({ mode: 'pair', key: 'EML4::ALK' });
+        const wrapper = mount(<FusionComparisonView store={store} />);
+        assert.lengthOf(
+            wrapper.find('[data-testid="pair-reciprocal-note"]').hostNodes(),
+            0
+        );
     });
 });

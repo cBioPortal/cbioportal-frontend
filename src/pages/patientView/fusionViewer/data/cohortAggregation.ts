@@ -67,12 +67,18 @@ export function buildPairKey(gene5: string, gene3: string | null): string {
 }
 
 /**
- * Build the pair key directly from a FusionEvent (uses gene symbols).
+ * Pair key for an event. When the caller stated the 5′::3′ order the key is
+ * that order (EML4::ALK and its reciprocal ALK::EML4 are separate pairs);
+ * otherwise it falls back to the order-free symbol-sorted key.
  */
 export function pairKeyFromEvent(event: FusionEvent): string {
-    const gene5 = event.gene1.symbol;
-    const gene3 = event.gene2?.symbol ?? null;
-    return buildPairKey(gene5, gene3);
+    const gene1 = event.gene1.symbol;
+    const gene2 = event.gene2?.symbol ?? null;
+    const five = callerFivePrimeSymbol(event.annotation, event.eventLabel);
+    if (gene2 && five && (five === gene1 || five === gene2)) {
+        return `${five}::${five === gene1 ? gene2 : gene1}`;
+    }
+    return buildPairKey(gene1, gene2);
 }
 
 // ---------------------------------------------------------------------------
@@ -238,7 +244,8 @@ export function buildPairSummaries(events: FusionEvent[]): FusionPairSummary[] {
         }
 
         const five = callerFivePrimeSymbol(event.annotation, event.eventLabel);
-        if (five) {
+        const genes = [event.gene1.symbol, event.gene2?.symbol];
+        if (five && genes.includes(five)) {
             acc.callerFivePrime[five] = (acc.callerFivePrime[five] || 0) + 1;
         }
         acc.sampleIdSet.add(event.tumorId);
@@ -256,12 +263,8 @@ export function buildPairSummaries(events: FusionEvent[]): FusionPairSummary[] {
             (a, b) => b[1] - a[1] || a[0].localeCompare(b[0])
         );
         const fivePrime = stated.length > 0 ? stated[0][0] : null;
-        const reciprocalCount = stated
-            .slice(1)
-            .reduce((n, [, count]) => n + count, 0);
         summaries.push({
             fivePrime,
-            reciprocalCount,
             key,
             gene5: acc.gene5,
             gene3: acc.gene3,

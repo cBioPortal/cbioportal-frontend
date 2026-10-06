@@ -189,18 +189,6 @@ export class FusionRecurrenceTable extends React.Component<
                         }
                     >
                         {pairDisplayLabel(d)}
-                        {d.reciprocalCount > 0 && (
-                            <span
-                                style={{
-                                    color: '#888',
-                                    fontWeight: 400,
-                                    fontSize: '0.85em',
-                                }}
-                            >
-                                {' '}
-                                (+{d.reciprocalCount} reciprocal)
-                            </span>
-                        )}
                     </span>
                 ),
                 sortBy: (d: FusionPairSummary) => pairDisplayLabel(d),

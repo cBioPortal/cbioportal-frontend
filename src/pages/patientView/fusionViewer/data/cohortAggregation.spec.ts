@@ -465,16 +465,45 @@ describe('buildPairSummaries 5′ orientation', () => {
             annotation,
         });
 
-    it('takes the majority caller-stated 5′ gene and counts reciprocals', () => {
-        const [s] = buildPairSummaries([
+    it('splits caller-stated orientations into separate pair rows', () => {
+        const summaries = buildPairSummaries([
             ev('a', 'EML4', 'ALK', FWD),
             ev('b', 'EML4', 'ALK', FWD),
             ev('c', 'ALK', 'EML4', REV),
         ]);
-        assert.equal(s.key, 'ALK::EML4');
-        assert.equal(s.fivePrime, 'EML4');
-        assert.equal(s.reciprocalCount, 1);
-        assert.equal(pairDisplayLabel(s), 'EML4::ALK');
+        assert.deepEqual(
+            summaries.map(s => [s.key, s.sampleCount, pairDisplayLabel(s)]),
+            [
+                ['EML4::ALK', 2, 'EML4::ALK'],
+                ['ALK::EML4', 1, 'ALK::EML4'],
+            ]
+        );
+    });
+
+    it('pairKeyFromEvent: stated order wins; otherwise the sorted key', () => {
+        assert.equal(
+            pairKeyFromEvent(ev('a', 'ALK', 'EML4', FWD)),
+            'EML4::ALK'
+        );
+        assert.equal(
+            pairKeyFromEvent(ev('a', 'EML4', 'ALK', REV)),
+            'ALK::EML4'
+        );
+        assert.equal(
+            pairKeyFromEvent(ev('a', 'ERG', 'TMPRSS2', 'NA')),
+            'ERG::TMPRSS2'
+        );
+        assert.equal(
+            pairKeyFromEvent(ev('a', 'TMPRSS2', 'ERG', 'NA')),
+            'ERG::TMPRSS2'
+        );
+    });
+
+    it('ignores a stated 5′ gene that is not one of the event genes', () => {
+        const e = ev('a', 'EML4', 'ALK', 'NA');
+        e.eventLabel = 'EWSR1::WT1 Fusion';
+        assert.equal(pairKeyFromEvent(e), 'ALK::EML4');
+        assert.isNull(buildPairSummaries([e])[0].fivePrime);
     });
 
     it('falls back to a caller "A::B Fusion" event label when the annotation is NA', () => {
@@ -495,7 +524,6 @@ describe('buildPairSummaries 5′ orientation', () => {
     it('leaves orientation unknown when no event states it', () => {
         const [s] = buildPairSummaries([ev('a', 'ERG', 'TMPRSS2', 'NA')]);
         assert.isNull(s.fivePrime);
-        assert.equal(s.reciprocalCount, 0);
         assert.equal(pairDisplayLabel(s), 'ERG / TMPRSS2');
     });
 

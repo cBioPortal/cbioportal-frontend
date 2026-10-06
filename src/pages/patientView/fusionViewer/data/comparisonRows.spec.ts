@@ -5,7 +5,6 @@ import {
     resolveComparisonRows,
     orientComparisonRowsTo5p,
     callerFivePrimeSymbol,
-    splitCallerReciprocals,
     snapBreakpointsToAnchorGene,
     ComparisonAnchor,
     ComparisonRow,
@@ -208,47 +207,26 @@ describe('callerFivePrimeSymbol', () => {
     });
 });
 
-describe('splitCallerReciprocals', () => {
-    const mk = (five: string, three: string, annotation: string) =>
-        ({
-            event: { annotation } as any,
-            sampleId: 's',
-            fivePrimeSymbol: five,
-            threePrimeSymbol: three,
-            anchorBreakpoint: 1,
-            partnerBreakpoint: 2,
-            frame: 'unknown',
-        } as ComparisonRow);
-    const RECIPROCAL =
-        'ENST00000389048.8(ALK):e.1_19::ENST00000318522.10(EML4):e.22_23';
-    const FORWARD =
+describe('buildComparisonRows pair orientation', () => {
+    const FWD =
         'ENST00000318522.10(EML4):e.1_13::ENST00000389048.8(ALK):e.20_29';
-
-    it('pulls out rows the caller called with the partner as 5′', () => {
-        const recip = mk('ALK', 'EML4', RECIPROCAL);
-        const fwd = mk('EML4', 'ALK', FORWARD);
-        const out = splitCallerReciprocals([fwd, recip], 'EML4');
-        assert.deepEqual(out.rows, [fwd]);
-        assert.deepEqual(out.reciprocal, [recip]);
-    });
-
-    it('catches a reciprocal even when the resolver already put the anchor 5′', () => {
-        const recip = mk('EML4', 'ALK', RECIPROCAL);
-        const out = splitCallerReciprocals([recip], 'EML4');
-        assert.deepEqual(out.reciprocal, [recip]);
-    });
-
-    it('keeps rows with no caller order so the usual flip still applies', () => {
-        const guessed = mk('ALK', 'EML4', 'NA');
-        const out = splitCallerReciprocals([guessed], 'EML4');
-        assert.deepEqual(out.rows, [guessed]);
-        assert.lengthOf(out.reciprocal, 0);
-    });
-
-    it('keeps mislabelled rows whose caller order agrees with the anchor', () => {
-        const swapped = mk('ALK', 'EML4', FORWARD);
-        const out = splitCallerReciprocals([swapped], 'EML4');
-        assert.deepEqual(out.rows, [swapped]);
+    const REV =
+        'ENST00000389048.8(ALK):e.1_19::ENST00000318522.10(EML4):e.22_23';
+    it('a stated-order pair key matches only that orientation', () => {
+        const fwd = ev({ id: 'f', annotation: FWD } as any);
+        const rev = ev({ id: 'r', annotation: REV } as any);
+        fwd.gene1 = { ...fwd.gene1, symbol: 'EML4' };
+        fwd.gene2 = { ...fwd.gene2!, symbol: 'ALK' };
+        rev.gene1 = { ...rev.gene1, symbol: 'ALK' };
+        rev.gene2 = { ...rev.gene2!, symbol: 'EML4' };
+        const rows = buildComparisonRows([fwd, rev], {
+            mode: 'pair',
+            key: 'EML4::ALK',
+        });
+        assert.deepEqual(
+            rows.map(r => r.event.id),
+            ['f']
+        );
     });
 });
 

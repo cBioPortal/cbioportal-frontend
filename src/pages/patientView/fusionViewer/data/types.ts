@@ -186,8 +186,6 @@ export interface FusionPairSummary {
      * 5′::3′ order; null when no event states it.
      */
     fivePrime: string | null;
-    /** Caller-stated events with the other gene as 5′. */
-    reciprocalCount: number;
 }
 
 /**
