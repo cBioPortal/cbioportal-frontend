@@ -7,7 +7,9 @@ import { ClinicalAttribute, ClinicalData } from 'cbioportal-ts-api-client';
 import {
     buildWsiClinicalRows,
     clearWsiClinicalRowsCache,
+    buildWsiPatientClinicalRows,
     selectWsiClinicalAttributes,
+    selectWsiMoreClinicalAttributes,
     useWsiClinicalRows,
     WsiPatientClinicalData,
 } from './wsiClinicalRows';
@@ -153,7 +155,7 @@ describe('selectWsiClinicalAttributes', () => {
         ]);
     });
 
-    it('leaves out sequencing QC, administrative and consent attributes', () => {
+    it('leaves out sequencing QC, administrative, slide-availability and consent attributes', () => {
         const selected = selectWsiClinicalAttributes(
             [
                 attribute('CANCER_TYPE', 3000),
@@ -161,6 +163,7 @@ describe('selectWsiClinicalAttributes', () => {
                 attribute('INSTITUTE', 1),
                 attribute('SAMPLE_COVERAGE', 1),
                 attribute('SOMATIC_STATUS', 1),
+                attribute('PATH_SLIDE_EXISTS', 1),
                 attribute('PARTC_CONSENTED_12_245', 1, true),
                 attribute('SAMPLE_COUNT', 1, true),
             ],
@@ -173,7 +176,8 @@ describe('selectWsiClinicalAttributes', () => {
                 'GENE_PANEL',
                 'INSTITUTE',
                 'SAMPLE_COVERAGE',
-                'SOMATIC_STATUS'
+                'SOMATIC_STATUS',
+                'PATH_SLIDE_EXISTS'
             )
         );
         expect(selected.map(a => a.clinicalAttributeId)).toEqual([
@@ -195,6 +199,65 @@ describe('selectWsiClinicalAttributes', () => {
             2
         );
         expect(selected.map(a => a.clinicalAttributeId)).toEqual(['A', 'B']);
+    });
+});
+
+describe('selectWsiMoreClinicalAttributes', () => {
+    it('keeps the populated attributes past the cap and those not shown by default', () => {
+        const more = selectWsiMoreClinicalAttributes(
+            [
+                attribute('A', 4),
+                attribute('B', 2),
+                attribute('C', 1),
+                attribute('ZETA', 0),
+                attribute('ALPHA', 0),
+                attribute('HIDDEN', -1),
+                attribute('EMPTY', 0),
+                attribute('GENE_PANEL', 0),
+                attribute('PARTA_CONSENTED_12_245', 0, true),
+            ],
+            [datum('PARTA_CONSENTED_12_245', 'YES')],
+            sampleValues(
+                'A',
+                'B',
+                'C',
+                'ZETA',
+                'ALPHA',
+                'HIDDEN',
+                'GENE_PANEL'
+            ),
+            2
+        );
+        expect(more.map(a => a.clinicalAttributeId)).toEqual([
+            'C',
+            'ALPHA',
+            'ZETA',
+        ]);
+    });
+});
+
+describe('buildWsiPatientClinicalRows', () => {
+    it('appends the other populated attributes as more rows', () => {
+        const rows = buildWsiPatientClinicalRows({
+            attributes: [
+                attribute('CANCER_TYPE', 3000, false, 'Cancer Type'),
+                attribute('PRIMARY_SITE', 0, false, 'Primary Site'),
+            ],
+            patientData: [],
+            sampleData: [
+                datum('PRIMARY_SITE', 'Skin', 'S-1'),
+                datum('CANCER_TYPE', 'Melanoma', 'S-1'),
+            ],
+        });
+        expect(rows).toEqual([
+            { label: 'Cancer Type', value: 'Melanoma', sampleId: 'S-1' },
+            {
+                label: 'Primary Site',
+                value: 'Skin',
+                sampleId: 'S-1',
+                more: true,
+            },
+        ]);
     });
 });
 
@@ -262,13 +325,19 @@ describe('useWsiClinicalRows', () => {
         ]);
     });
 
-    it('loads the default, populated attributes for the patient once', async () => {
+    it('loads the populated attributes for the patient once', async () => {
         const { result, rerender } = renderClinicalRows('P-1');
         expect(result.current).toBeUndefined();
         await act(async () => {});
 
         expect(result.current).toEqual([
             { label: 'Cancer Type', value: 'Melanoma', sampleId: 'S-1' },
+            {
+                label: 'PRIMARY_SITE',
+                value: 'Skin',
+                sampleId: 'S-1',
+                more: true,
+            },
         ]);
         expect(mockClient.fetchClinicalDataUsingPOST).toHaveBeenCalledWith({
             clinicalDataType: 'SAMPLE',
@@ -291,10 +360,9 @@ describe('useWsiClinicalRows', () => {
         const { result } = renderClinicalRows('P-1');
         await act(async () => {});
 
-        expect(result.current!.map(row => row.label)).toEqual([
-            'Cancer Type',
-            'SPARSE',
-        ]);
+        expect(
+            result.current!.filter(row => !row.more).map(row => row.label)
+        ).toEqual(['Cancer Type', 'SPARSE']);
     });
 
     it('builds the rows from the page data without fetching', async () => {
@@ -346,8 +414,9 @@ describe('useWsiClinicalRows', () => {
 
         const second = renderClinicalRows('P-1');
         await act(async () => {});
-        expect(second.result.current).toEqual([
-            { label: 'Cancer Type', value: 'Melanoma', sampleId: 'S-1' },
+        expect(second.result.current!.map(row => row.label)).toEqual([
+            'Cancer Type',
+            'PRIMARY_SITE',
         ]);
         consoleError.mockRestore();
     });

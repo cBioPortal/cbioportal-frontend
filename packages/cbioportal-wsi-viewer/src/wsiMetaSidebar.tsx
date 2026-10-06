@@ -26,6 +26,13 @@ export interface MetaRow {
     value: React.ReactNode;
     href?: string;
     valueTip?: string;
+    /** Shown only after "Show more". */
+    more?: boolean;
+}
+
+/** Browser-stored "Show more" state of a sidebar section. */
+export function wsiSidebarSectionExpandedKey(sectionId: string): string {
+    return `wsi.viewer.sidebarSection.${sectionId}.expanded`;
 }
 
 /** Browser-stored collapsed state of a sidebar section. */
@@ -191,6 +198,66 @@ function MetaTable({ rows }: { rows: ReadonlyArray<MetaRow> }) {
     );
 }
 
+const showMoreStyle: React.CSSProperties = {
+    border: 'none',
+    background: 'transparent',
+    padding: 0,
+    marginTop: 4,
+    fontSize: 11,
+    color: SIDEBAR_COLORS.blue,
+    cursor: 'pointer',
+};
+
+/** Rows marked `more` stay behind a "Show N more" toggle. */
+function ExpandableMetaTable({
+    id,
+    rows,
+}: {
+    id: string;
+    rows: ReadonlyArray<MetaRow>;
+}) {
+    const storageKey = wsiSidebarSectionExpandedKey(id);
+    const [expanded, setExpanded] = React.useState(() =>
+        readWsiPanelFlag(storageKey)
+    );
+    const toggle = React.useCallback(() => {
+        setExpanded(current => {
+            writeWsiPanelFlag(storageKey, !current);
+            return !current;
+        });
+    }, [storageKey]);
+    const moreCount = rows.filter(row => row.more).length;
+    const visibleRows = expanded ? rows : rows.filter(row => !row.more);
+
+    return (
+        <>
+            {visibleRows.length > 0 ? (
+                <MetaTable rows={visibleRows} />
+            ) : (
+                <div style={{ marginTop: 6 }}>
+                    <EmptyState />
+                </div>
+            )}
+            {moreCount > 0 && (
+                <button
+                    type="button"
+                    aria-expanded={expanded}
+                    data-testid={`wsi-sidebar-section-${id}-more`}
+                    onClick={toggle}
+                    style={showMoreStyle}
+                >
+                    <i
+                        className={`fa fa-angle-${expanded ? 'up' : 'down'}`}
+                        aria-hidden="true"
+                        style={{ marginRight: 4 }}
+                    />
+                    {expanded ? 'Show less' : `Show ${moreCount} more`}
+                </button>
+            )}
+        </>
+    );
+}
+
 function WsiMetaSidebarComponent({
     width,
     showImageProperties,
@@ -251,7 +318,10 @@ function WsiMetaSidebarComponent({
             {clinicalRows && (
                 <SbSection id="clinical" title="Clinical">
                     {clinicalRows.length > 0 ? (
-                        <MetaTable rows={clinicalRows} />
+                        <ExpandableMetaTable
+                            id="clinical"
+                            rows={clinicalRows}
+                        />
                     ) : (
                         <EmptyState />
                     )}

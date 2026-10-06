@@ -23,15 +23,16 @@ export interface WsiPatientClinicalData {
 }
 
 /**
- * Attributes left out of the Clinical section although the study shows them
- * by default: sequencing QC and administrative fields that say nothing about
- * the patient or the tissue on the slide.
+ * Attributes left out of the Clinical section: sequencing QC and
+ * administrative fields that say nothing about the patient or the tissue on
+ * the slide, and PATH_SLIDE_EXISTS, which the viewer itself already answers.
  */
 export const WSI_CLINICAL_EXCLUDED_ATTRIBUTE_IDS: ReadonlySet<string> = new Set(
     [
         'GENE_PANEL',
         'INSTITUTE',
         'OTHER_PATIENT_ID',
+        'PATH_SLIDE_EXISTS',
         'SAMPLE_COVERAGE',
         'SOMATIC_STATUS',
     ]
@@ -79,18 +80,16 @@ function cleanedSampleValues(
 }
 
 /**
- * The study's default clinical attributes that have a value for this
- * patient, as the study view picks its default charts and Clinical Data
- * columns: priority above 0 (with the frontend priority overrides), highest
- * priority first, at most `studyview_clinical_attribute_chart_count`,
- * without the WSI_CLINICAL_EXCLUDED_ATTRIBUTE_IDS and consent flags.
- * Null-like values ("Not Available", "unknown", ...) count as missing.
+ * The study's clinical attributes that have a value for this patient, with
+ * the frontend priority overrides applied, highest priority first. Leaves out
+ * hidden attributes (priority below 0), the WSI_CLINICAL_EXCLUDED_ATTRIBUTE_IDS
+ * and consent flags. Null-like values ("Not Available", "unknown", ...) count
+ * as missing.
  */
-export function selectWsiClinicalAttributes(
+function populatedWsiClinicalAttributes(
     attributes: ReadonlyArray<ClinicalAttribute>,
     patientData: ReadonlyArray<ClinicalData>,
-    sampleData: ReadonlyArray<ClinicalData>,
-    limit: number = getServerConfig().studyview_clinical_attribute_chart_count
+    sampleData: ReadonlyArray<ClinicalData>
 ): ClinicalAttribute[] {
     const patientValues = cleanedPatientValues(patientData);
     const sampleValues = Array.from(cleanedSampleValues(sampleData).values());
@@ -105,14 +104,62 @@ export function selectWsiClinicalAttributes(
             ...attribute,
             priority: getPriorityByClinicalAttribute(attribute).toString(),
         }))
-        .filter(attribute => (parseInt(attribute.priority) || 0) > 0)
+        .filter(attribute => (parseInt(attribute.priority) || 0) >= 0)
         .filter(
             attribute =>
                 !isExcludedClinicalAttribute(attribute.clinicalAttributeId)
         )
         .filter(hasValue)
-        .sort(clinicalAttributeComparator)
+        .sort(clinicalAttributeComparator);
+}
+
+function isDefaultClinicalAttribute(attribute: ClinicalAttribute): boolean {
+    return (parseInt(attribute.priority) || 0) > 0;
+}
+
+/**
+ * The study's default clinical attributes that have a value for this
+ * patient, as the study view picks its default charts and Clinical Data
+ * columns: priority above 0 (with the frontend priority overrides), highest
+ * priority first, at most `studyview_clinical_attribute_chart_count`,
+ * without the WSI_CLINICAL_EXCLUDED_ATTRIBUTE_IDS and consent flags.
+ * Null-like values ("Not Available", "unknown", ...) count as missing.
+ */
+export function selectWsiClinicalAttributes(
+    attributes: ReadonlyArray<ClinicalAttribute>,
+    patientData: ReadonlyArray<ClinicalData>,
+    sampleData: ReadonlyArray<ClinicalData>,
+    limit: number = getServerConfig().studyview_clinical_attribute_chart_count
+): ClinicalAttribute[] {
+    return populatedWsiClinicalAttributes(attributes, patientData, sampleData)
+        .filter(isDefaultClinicalAttribute)
         .slice(0, limit);
+}
+
+/**
+ * The patient's other populated attributes, for "Show more": those past the
+ * chart count and those the study does not show by default (priority 0),
+ * highest priority first, then by name.
+ */
+export function selectWsiMoreClinicalAttributes(
+    attributes: ReadonlyArray<ClinicalAttribute>,
+    patientData: ReadonlyArray<ClinicalData>,
+    sampleData: ReadonlyArray<ClinicalData>,
+    limit: number = getServerConfig().studyview_clinical_attribute_chart_count
+): ClinicalAttribute[] {
+    const shown = new Set(
+        selectWsiClinicalAttributes(
+            attributes,
+            patientData,
+            sampleData,
+            limit
+        ).map(attribute => attribute.clinicalAttributeId)
+    );
+    return populatedWsiClinicalAttributes(
+        attributes,
+        patientData,
+        sampleData
+    ).filter(attribute => !shown.has(attribute.clinicalAttributeId));
 }
 
 /**
@@ -158,17 +205,31 @@ export function buildWsiClinicalRows(
     return rows;
 }
 
-/** Sidebar rows for the patient's default, populated attributes. */
+/**
+ * Sidebar rows for the patient's default, populated attributes, followed by
+ * the rows of their other populated attributes, marked `more`.
+ */
 export function buildWsiPatientClinicalRows({
     attributes,
     patientData,
     sampleData,
 }: WsiPatientClinicalData): WsiClinicalRow[] {
-    return buildWsiClinicalRows(
-        selectWsiClinicalAttributes(attributes, patientData, sampleData),
-        patientData,
-        sampleData
-    );
+    return [
+        ...buildWsiClinicalRows(
+            selectWsiClinicalAttributes(attributes, patientData, sampleData),
+            patientData,
+            sampleData
+        ),
+        ...buildWsiClinicalRows(
+            selectWsiMoreClinicalAttributes(
+                attributes,
+                patientData,
+                sampleData
+            ),
+            patientData,
+            sampleData
+        ).map(row => ({ ...row, more: true })),
+    ];
 }
 
 const clinicalRowsRequests = new Map<string, Promise<WsiClinicalRow[]>>();
