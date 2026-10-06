@@ -3609,9 +3609,16 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
                 max_zoom: 6,
                 tile_size: 256,
             });
-            expect(networkFetchMock).toHaveBeenCalledTimes(2);
-            expect(networkFetchMock.mock.calls[0][0]).toBe(hierarchyUrl);
-            expect(networkFetchMock.mock.calls[1][0]).toContain('/thumbnails');
+            // Count only slide server requests; hosts may add their own
+            // requests alongside the mount.
+            const slideRequests = networkFetchMock.mock.calls
+                .map(([url]: [string]) => url)
+                .filter((url: string) =>
+                    url.startsWith('https://tiles.example.com/')
+                );
+            expect(slideRequests).toHaveLength(2);
+            expect(slideRequests[0]).toBe(hierarchyUrl);
+            expect(slideRequests[1]).toContain('/thumbnails');
         } finally {
             (global as any).requestAnimationFrame = origRaf;
         }
