@@ -1383,7 +1383,8 @@ describe('FusionComparisonView caller-confirmed reciprocals (pair mode)', () => 
             sv('S2', 'EML4', 'ALK', FORWARD),
             sv('S3', 'ALK', 'EML4', RECIPROCAL),
         ]);
-        store.setAnchor({ mode: 'pair', key: 'EML4::ALK' });
+        const fwd = store.pairSummaries.find(p => p.fivePrime === 'EML4')!;
+        store.setAnchor({ mode: 'pair', key: fwd.key });
         const wrapper = mount(<FusionComparisonView store={store} />);
         const view = wrapper.instance() as any;
         runInAction(() => {
@@ -1414,13 +1415,40 @@ describe('FusionComparisonView caller-confirmed reciprocals (pair mode)', () => 
         assert.include(note.text(), 'Reciprocal ALK::EML4');
         assert.include(note.text(), '1 sample');
         note.simulate('click');
-        assert.deepEqual(store.anchor, { mode: 'pair', key: 'ALK::EML4' });
+        assert.deepEqual(store.anchor, { mode: 'pair', key: 'ALK>EML4' });
+    });
+
+    it('draws the stated 5′ gene even when site1 is the 3′ gene', () => {
+        const store = new FusionCohortStore();
+        // Stated ALK::EML4, but site1 = EML4 and no connectionType.
+        store.setStructuralVariants([sv('S1', 'EML4', 'ALK', RECIPROCAL)]);
+        store.setAnchor({ mode: 'pair', key: 'ALK>EML4' });
+        const wrapper = mount(<FusionComparisonView store={store} />);
+        const view = wrapper.instance() as any;
+        assert.equal(view.anchorGene, 'ALK');
+        assert.equal(view.orientedRows[0].fivePrimeSymbol, 'ALK');
+    });
+
+    it('does not count unordered events as the reciprocal', () => {
+        const store = new FusionCohortStore();
+        store.setStructuralVariants([
+            sv('S1', 'EML4', 'ALK', FORWARD),
+            { ...sv('S2', 'EML4', 'ALK', 'NA'), eventInfo: 'EML4-ALK Fusion' },
+            sv('S3', 'ALK', 'EML4', RECIPROCAL),
+        ]);
+        const fwd = store.pairSummaries.find(p => p.fivePrime === 'EML4')!;
+        store.setAnchor({ mode: 'pair', key: fwd.key });
+        const wrapper = mount(<FusionComparisonView store={store} />);
+        const note = wrapper
+            .find('[data-testid="pair-reciprocal-note"]')
+            .hostNodes();
+        assert.include(note.text(), '1 sample');
     });
 
     it('shows no note when the pair has no reciprocal row', () => {
         const store = new FusionCohortStore();
         store.setStructuralVariants([sv('S1', 'EML4', 'ALK', FORWARD)]);
-        store.setAnchor({ mode: 'pair', key: 'EML4::ALK' });
+        store.setAnchor({ mode: 'pair', key: 'EML4>ALK' });
         const wrapper = mount(<FusionComparisonView store={store} />);
         assert.lengthOf(
             wrapper.find('[data-testid="pair-reciprocal-note"]').hostNodes(),

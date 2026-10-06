@@ -76,16 +76,20 @@ export function resolveComparisonRows(
             gene1Transcripts: transcriptsForGene(e.gene1.symbol),
             gene2Transcripts: e.gene2 ? transcriptsForGene(e.gene2.symbol) : [],
         });
+        // A caller-stated 5′ gene beats the strand/connectionType resolver.
+        const stated = callerFivePrimeSymbol(e.annotation, e.eventLabel);
+        const swap =
+            !!stated &&
+            resolved.threePrime?.symbol === stated &&
+            resolved.fivePrime.symbol !== stated;
+        const five = swap ? resolved.threePrime! : resolved.fivePrime;
+        const three = swap ? resolved.fivePrime : resolved.threePrime;
         return {
             ...row,
-            fivePrimeSymbol: resolved.fivePrime.symbol,
-            threePrimeSymbol: resolved.threePrime
-                ? resolved.threePrime.symbol
-                : null,
-            anchorBreakpoint: resolved.fivePrime.position,
-            partnerBreakpoint: resolved.threePrime
-                ? resolved.threePrime.position
-                : null,
+            fivePrimeSymbol: five.symbol,
+            threePrimeSymbol: three ? three.symbol : null,
+            anchorBreakpoint: five.position,
+            partnerBreakpoint: three ? three.position : null,
         };
     });
 }

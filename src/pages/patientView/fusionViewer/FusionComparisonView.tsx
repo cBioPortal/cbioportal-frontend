@@ -31,6 +31,11 @@ import {
     INTRAGENIC,
 } from './data/comparisonRows';
 import {
+    pairDisplayLabel,
+    parsePairKey,
+    statedPairKey,
+} from './data/cohortAggregation';
+import {
     CollapseKind,
     CollapsedGroup,
     exonStructureKey,
@@ -913,12 +918,10 @@ export default class FusionComparisonView extends React.Component<
     @computed get reciprocalPair(): FusionPairSummary | undefined {
         const a = this.props.store.anchor;
         if (!a || a.mode !== 'pair') return undefined;
-        const [five, three] = a.key.split('::');
-        if (!three || three === '-') return undefined;
-        const key = `${three}::${five}`;
-        return this.props.store.pairSummaries.find(
-            s => s.key === key && s.fivePrime === three
-        );
+        const { a: five, b: three, stated } = parsePairKey(a.key);
+        if (!stated || !three) return undefined;
+        const key = statedPairKey(three, five);
+        return this.props.store.pairSummaries.find(s => s.key === key);
     }
 
     private renderReciprocalNote() {
@@ -934,7 +937,8 @@ export default class FusionComparisonView extends React.Component<
                         this.props.store.setAnchor({ mode: 'pair', key: r.key })
                     }
                 >
-                    Reciprocal {r.key}: {n} sample{n === 1 ? '' : 's'} — view
+                    Reciprocal {pairDisplayLabel(r)}: {n} sample
+                    {n === 1 ? '' : 's'} — view
                 </a>
             </div>
         );
