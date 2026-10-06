@@ -1,13 +1,7 @@
 import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import SampleManager from 'pages/patientView/SampleManager';
-
-export enum ExpectedAltCopiesColor {
-    WHITE = 'white',
-    LIGHTGREY = 'lightgrey',
-    BLACK = 'black',
-    DARKGREY = 'darkgrey',
-}
+import styles from 'shared/components/mutationTable/column/ascnCopyNumber/ascnCopyNumber.module.scss';
 
 export const ExpectedAltCopiesElementTooltip: React.FunctionComponent<{
     sampleId: string;
@@ -37,67 +31,21 @@ export const ExpectedAltCopiesElementTooltip: React.FunctionComponent<{
     );
 };
 
-function getOpacity(expectedAltCopiesValue: string): number {
-    return expectedAltCopiesValue !== 'NA' ? 100 : 0;
-}
-
-function getTextColor(expectedAltCopiesValue: string): string {
-    return expectedAltCopiesValue && expectedAltCopiesValue !== 'INDETERMINATE'
-        ? ExpectedAltCopiesColor.BLACK
-        : ExpectedAltCopiesColor.WHITE;
-}
-
-function getFillColor(expectedAltCopiesValue: string): string {
-    return expectedAltCopiesValue && expectedAltCopiesValue !== 'INDETERMINATE'
-        ? ExpectedAltCopiesColor.WHITE
-        : ExpectedAltCopiesColor.LIGHTGREY;
-}
-
-function getStrokeColor(expectedAltCopiesValue: string): string {
-    return expectedAltCopiesValue && expectedAltCopiesValue !== 'INDETERMINATE'
-        ? ExpectedAltCopiesColor.DARKGREY
-        : ExpectedAltCopiesColor.LIGHTGREY;
-}
-
-function getTextSize(expectedAltCopiesValue: string): number {
-    return expectedAltCopiesValue && expectedAltCopiesValue !== 'INDETERMINATE'
-        ? 9
-        : 12;
-}
-
-const MutantIntegerCopyNumberIcon: React.FunctionComponent<{
+// the number of mutant copies as plain text, '-' when indeterminate
+const MutantIntegerCopyNumberValue: React.FunctionComponent<{
     expectedAltCopiesValue: string;
 }> = props => {
+    if (props.expectedAltCopiesValue === 'NA') {
+        return null;
+    }
     return (
-        <svg width="18" height="20" className="case-label-header">
-            <g transform="translate(3,8)">
-                <rect
-                    width="11"
-                    height="11"
-                    rx="15%"
-                    ry="15%"
-                    stroke={getStrokeColor(props.expectedAltCopiesValue)}
-                    stroke-width="1"
-                    fill={getFillColor(props.expectedAltCopiesValue)}
-                    opacity={getOpacity(props.expectedAltCopiesValue)}
-                />
-                <svg>
-                    <text
-                        x="5.5"
-                        y="6"
-                        dominantBaseline="middle"
-                        textAnchor="middle"
-                        fontSize={getTextSize(props.expectedAltCopiesValue)}
-                        fill={getTextColor(props.expectedAltCopiesValue)}
-                        opacity={getOpacity(props.expectedAltCopiesValue)}
-                    >
-                        {props.expectedAltCopiesValue === 'INDETERMINATE'
-                            ? '-'
-                            : props.expectedAltCopiesValue}
-                    </text>
-                </svg>
-            </g>
-        </svg>
+        <span className={styles.value} data-test="eac-value">
+            <span className={styles.number}>
+                {props.expectedAltCopiesValue === 'INDETERMINATE'
+                    ? '-'
+                    : props.expectedAltCopiesValue}
+            </span>
+        </span>
     );
 };
 
@@ -109,7 +57,7 @@ const ExpectedAltCopiesElement: React.FunctionComponent<{
 }> = props => {
     return props.expectedAltCopiesValue === 'NA' ? (
         <span>
-            <MutantIntegerCopyNumberIcon
+            <MutantIntegerCopyNumberValue
                 expectedAltCopiesValue={props.expectedAltCopiesValue}
             />
         </span>
@@ -119,7 +67,7 @@ const ExpectedAltCopiesElement: React.FunctionComponent<{
             placement="left"
         >
             <span>
-                <MutantIntegerCopyNumberIcon
+                <MutantIntegerCopyNumberValue
                     expectedAltCopiesValue={props.expectedAltCopiesValue}
                 />
             </span>

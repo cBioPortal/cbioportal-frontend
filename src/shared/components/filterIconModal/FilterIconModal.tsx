@@ -6,6 +6,7 @@ import { Dropdown } from 'react-bootstrap';
 import { observer } from 'mobx-react';
 import { action, observable, makeObservable } from 'mobx';
 import { ICON_FILTER_OFF } from 'shared/lib/Colors';
+import { FilterMenuOpenContext } from './FilterMenuOpenContext';
 
 export interface IFilterIconModalProps {
     id: string;
@@ -74,7 +75,11 @@ class FilterMenu extends React.Component<any, {}> {
                     {this.props.id}
 
                     <div style={{ marginTop: '10px' }}>
-                        {this.props.menuComponent}
+                        <FilterMenuOpenContext.Provider
+                            value={!!this.props.isOpen}
+                        >
+                            {this.props.menuComponent}
+                        </FilterMenuOpenContext.Provider>
                     </div>
 
                     <button

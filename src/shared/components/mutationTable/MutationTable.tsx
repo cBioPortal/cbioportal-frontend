@@ -72,6 +72,7 @@ import autobind from 'autobind-decorator';
 import DbsnpColumnFormatter from './column/DbsnpColumnFormatter';
 import SignalColumnFormatter from './column/SignalColumnFormatter';
 import { getDefaultASCNCopyNumberColumnDefinition } from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberColumnFormatter';
+import { getDefaultMutantTotalCopyNumberColumnDefinition } from 'shared/components/mutationTable/column/mutantTotalCopyNumber/MutantTotalCopyNumberColumnFormatter';
 import { getDefaultASCNMethodColumnDefinition } from 'shared/components/mutationTable/column/ascnMethod/ASCNMethodColumnFormatter';
 import { getDefaultCancerCellFractionColumnDefinition } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionColumnFormatter';
 import { getDefaultClonalColumnDefinition } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
@@ -86,6 +87,14 @@ import {
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import CustomDriverColumnFormatter from './column/CustomDriverColumnFormatter';
 import CustomDriverTierColumnFormatter from './column/CustomDriverTierColumnFormatter';
+import ColumnLegend from './ColumnLegend';
+import {
+    CopyNumberColumnLegend,
+    MutationStatusColumnLegend,
+    MutationTypeColumnLegend,
+    ValidationStatusColumnLegend,
+    VariantTypeColumnLegend,
+} from './MutationTableColumnLegends';
 
 export interface IMutationTableProps {
     studyIdToStudy?: { [studyId: string]: CancerStudy };
@@ -196,6 +205,7 @@ export enum MutationTableColumnType {
     HGVSG = 'HGVSg',
     COPY_NUM = 'Copy #',
     ASCN_COPY_NUM = 'Total Integer Copy #',
+    MUTANT_TOTAL_COPY_NUM = 'Mutant / Total Copy #',
     ASCN_METHOD = 'ASCN Method',
     MRNA_EXPR = 'mRNA Expr.',
     COHORT = 'Cohort',
@@ -461,7 +471,9 @@ export default class MutationTable<
                     this.props.studyIdToStudy
                 );
             },
-            tooltip: <span>Study of Origin</span>,
+            tooltip: (
+                <ColumnLegend description={<span>Study of Origin</span>} />
+            ),
             visible: false,
             resizable: true,
             truncateOnResize: true,
@@ -481,6 +493,7 @@ export default class MutationTable<
                 filterString: string,
                 filterStringUpper: string
             ) => defaultFilter(d, 'sampleId', filterStringUpper),
+            tooltip: <span>Sample in which the mutation was found</span>,
             visible: true,
             resizable: true,
             truncateOnResize: true,
@@ -496,7 +509,16 @@ export default class MutationTable<
             ),
             download: TumorAlleleFreqColumnFormatter.getTextValue,
             sortBy: TumorAlleleFreqColumnFormatter.getSortValue,
-            tooltip: <span>Variant allele frequency in the tumor sample</span>,
+            tooltip: (
+                <ColumnLegend
+                    description={
+                        <span>
+                            Variant allele frequency in the tumor sample
+                            (variant reads / total reads)
+                        </span>
+                    }
+                />
+            ),
             visible: true,
         };
 
@@ -510,7 +532,16 @@ export default class MutationTable<
             ),
             download: NormalAlleleFreqColumnFormatter.getTextValue,
             sortBy: NormalAlleleFreqColumnFormatter.getSortValue,
-            tooltip: <span>Variant allele frequency in the normal sample</span>,
+            tooltip: (
+                <ColumnLegend
+                    description={
+                        <span>
+                            Variant allele frequency in the matched normal
+                            sample (variant reads / total reads)
+                        </span>
+                    }
+                />
+            ),
             visible: false,
         };
 
@@ -525,6 +556,13 @@ export default class MutationTable<
                 ) : (
                     <span></span>
                 ),
+            tooltip: (
+                <span>
+                    mRNA expression of the gene in this sample, shown as its
+                    percentile within the cohort. Hover over a value for the
+                    z-score.
+                </span>
+            ),
         };
 
         this._columns[MutationTableColumnType.COHORT] = {
@@ -560,6 +598,7 @@ export default class MutationTable<
         let copyNumVisibleOverride: boolean | undefined = undefined;
         this._columns[MutationTableColumnType.COPY_NUM] = {
             name: MutationTableColumnType.COPY_NUM,
+            tooltip: <CopyNumberColumnLegend />,
             render: (d: Mutation[]) => {
                 if (
                     this.props.discreteCNACache &&
@@ -659,6 +698,16 @@ export default class MutationTable<
                     'normalRefCount'
                 ),
             sortBy: (d: Mutation[]) => d.map(m => m.normalRefCount),
+            tooltip: (
+                <ColumnLegend
+                    description={
+                        <span>
+                            Number of reads supporting the reference allele in
+                            the matched normal sample
+                        </span>
+                    }
+                />
+            ),
             visible: false,
             align: 'right',
         };
@@ -678,6 +727,16 @@ export default class MutationTable<
                     'normalAltCount'
                 ),
             sortBy: (d: Mutation[]) => d.map(m => m.normalAltCount),
+            tooltip: (
+                <ColumnLegend
+                    description={
+                        <span>
+                            Number of reads supporting the variant allele in the
+                            matched normal sample
+                        </span>
+                    }
+                />
+            ),
             visible: false,
             align: 'right',
         };
@@ -697,6 +756,16 @@ export default class MutationTable<
                     'tumorRefCount'
                 ),
             sortBy: (d: Mutation[]) => d.map(m => m.tumorRefCount),
+            tooltip: (
+                <ColumnLegend
+                    description={
+                        <span>
+                            Number of reads supporting the reference allele in
+                            the tumor sample
+                        </span>
+                    }
+                />
+            ),
             visible: false,
             align: 'right',
         };
@@ -716,6 +785,16 @@ export default class MutationTable<
                     'tumorAltCount'
                 ),
             sortBy: (d: Mutation[]) => d.map(m => m.tumorAltCount),
+            tooltip: (
+                <ColumnLegend
+                    description={
+                        <span>
+                            Number of reads supporting the variant allele in the
+                            tumor sample
+                        </span>
+                    }
+                />
+            ),
             visible: false,
             align: 'right',
         };
@@ -727,6 +806,7 @@ export default class MutationTable<
             download: (d: Mutation[]) =>
                 getTextForDataField(d, 'startPosition'),
             sortBy: (d: Mutation[]) => d.map(m => m.startPosition),
+            tooltip: <span>Genomic start position of the mutation</span>,
             visible: false,
             align: 'right',
             filter: (
@@ -742,6 +822,7 @@ export default class MutationTable<
                 getDivForDataField(d, 'endPosition', true),
             download: (d: Mutation[]) => getTextForDataField(d, 'endPosition'),
             sortBy: (d: Mutation[]) => d.map(m => m.endPosition),
+            tooltip: <span>Genomic end position of the mutation</span>,
             visible: false,
             align: 'right',
             filter: (
@@ -757,6 +838,7 @@ export default class MutationTable<
             download: (d: Mutation[]) =>
                 getTextForDataField(d, 'referenceAllele'),
             sortBy: (d: Mutation[]) => d.map(m => m.referenceAllele),
+            tooltip: <span>Reference allele</span>,
             visible: false,
         };
 
@@ -766,12 +848,13 @@ export default class MutationTable<
             download: (d: Mutation[]) =>
                 getTextForDataField(d, 'variantAllele'),
             sortBy: (d: Mutation[]) => d.map(m => m.variantAllele),
+            tooltip: <span>Variant (tumor) allele</span>,
             visible: false,
         };
 
         this._columns[MutationTableColumnType.MUTATION_STATUS] = {
             name: MutationTableColumnType.MUTATION_STATUS,
-            tooltip: <span>Mutation Status</span>,
+            tooltip: <MutationStatusColumnLegend />,
             render: MutationStatusColumnFormatter.renderFunction,
             download: MutationStatusColumnFormatter.download,
             sortBy: MutationStatusColumnFormatter.sortValue,
@@ -785,7 +868,7 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.VALIDATION_STATUS] = {
             name: MutationTableColumnType.VALIDATION_STATUS,
-            tooltip: <span>Validation Status</span>,
+            tooltip: <ValidationStatusColumnLegend />,
             render: ValidationStatusColumnFormatter.renderFunction,
             download: ValidationStatusColumnFormatter.download,
             sortBy: ValidationStatusColumnFormatter.sortValue,
@@ -807,6 +890,15 @@ export default class MutationTable<
                 filterString: string,
                 filterStringUpper: string
             ) => defaultFilter(d, 'center', filterStringUpper),
+            tooltip: (
+                <ColumnLegend
+                    description={
+                        <span>
+                            Center that sequenced or called the mutation
+                        </span>
+                    }
+                />
+            ),
             visible: false,
         };
 
@@ -823,6 +915,9 @@ export default class MutationTable<
                 GeneColumnFormatter.getTextValue(d)
                     .toUpperCase()
                     .includes(filterStringUpper),
+            tooltip: (
+                <ColumnLegend description={<span>HUGO gene symbol</span>} />
+            ),
         };
 
         this._columns[MutationTableColumnType.CHROMOSOME] = {
@@ -844,6 +939,11 @@ export default class MutationTable<
                 (ChromosomeColumnFormatter.getData(d) + '')
                     .toUpperCase()
                     .includes(filterStringUpper),
+            tooltip: (
+                <ColumnLegend
+                    description={<span>Chromosome of the mutation</span>}
+                />
+            ),
             visible: false,
             align: 'right',
         };
@@ -859,6 +959,16 @@ export default class MutationTable<
             sortBy: (d: Mutation[]) =>
                 ProteinChangeColumnFormatter.getSortValue(d),
             filter: ProteinChangeColumnFormatter.getFilterValue,
+            tooltip: (
+                <ColumnLegend
+                    description={
+                        <span>
+                            Amino acid change caused by the mutation (HGVSp
+                            short notation)
+                        </span>
+                    }
+                />
+            ),
         };
 
         this._columns[MutationTableColumnType.MUTATION_TYPE] = {
@@ -879,6 +989,7 @@ export default class MutationTable<
                 MutationTypeColumnFormatter.getDisplayValue(d)
                     .toUpperCase()
                     .includes(filterStringUpper),
+            tooltip: <MutationTypeColumnLegend />,
         };
 
         this._columns[MutationTableColumnType.VARIANT_TYPE] = {
@@ -895,6 +1006,7 @@ export default class MutationTable<
                 VariantTypeColumnFormatter.getDisplayValue(d)
                     .toUpperCase()
                     .includes(filterStringUpper),
+            tooltip: <VariantTypeColumnLegend />,
             visible: false,
         };
 
@@ -913,6 +1025,13 @@ export default class MutationTable<
         this._columns[
             MutationTableColumnType.ASCN_COPY_NUM
         ] = getDefaultASCNCopyNumberColumnDefinition(
+            undefined,
+            this.props.sampleIdToClinicalDataMap
+        );
+
+        this._columns[
+            MutationTableColumnType.MUTANT_TOTAL_COPY_NUM
+        ] = getDefaultMutantTotalCopyNumberColumnDefinition(
             undefined,
             this.props.sampleIdToClinicalDataMap
         );
@@ -1089,6 +1208,12 @@ export default class MutationTable<
                 ),
             download: (d: Mutation[]) => HgvsgColumnFormatter.download(d),
             sortBy: (d: Mutation[]) => HgvsgColumnFormatter.getSortValue(d),
+            tooltip: (
+                <span>
+                    Genomic change in HGVS notation (HGVSg). Click a value to
+                    view it in Genome Nexus.
+                </span>
+            ),
             visible: false,
             align: 'left',
         };
@@ -1121,7 +1246,9 @@ export default class MutationTable<
                     filterStringUpper,
                     this.props.uniqueSampleKeyToTumorType
                 ),
-            tooltip: <span>Cancer Type Detailed</span>,
+            tooltip: (
+                <ColumnLegend description={<span>Cancer Type Detailed</span>} />
+            ),
             resizable: true,
             truncateOnResize: true,
         };
@@ -1174,6 +1301,12 @@ export default class MutationTable<
                     d,
                     this.props.genomeNexusCache as GenomeNexusCache
                 ),
+            tooltip: (
+                <span>
+                    Exon affected by the mutation, from the Genome Nexus
+                    annotation of the selected transcript
+                </span>
+            ),
             visible: false,
             align: 'right',
         };
@@ -1202,6 +1335,12 @@ export default class MutationTable<
                     this.props.indexedVariantAnnotations,
                     this.props.selectedTranscriptId
                 ),
+            tooltip: (
+                <span>
+                    Coding DNA change in HGVS notation (HGVSc) for the selected
+                    transcript
+                </span>
+            ),
             visible: false,
             align: 'right',
         };

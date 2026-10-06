@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { getDefaultMutantTotalCopyNumberColumnDefinition } from 'shared/components/mutationTable/column/mutantTotalCopyNumber/MutantTotalCopyNumberColumnFormatter';
 import { MobxPromise } from 'cbioportal-frontend-commons';
 import {
     IMutationTableProps,
@@ -67,6 +68,7 @@ export default class ResultsViewMutationTable extends MutationTable<
             MutationTableColumnType.CLONAL,
             MutationTableColumnType.CANCER_CELL_FRACTION,
             MutationTableColumnType.EXPECTED_ALT_COPIES,
+            MutationTableColumnType.MUTANT_TOTAL_COPY_NUM,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
             MutationTableColumnType.NORMAL_ALLELE_FREQ,
             MutationTableColumnType.CANCER_TYPE_DETAILED,
@@ -193,6 +195,33 @@ export default class ResultsViewMutationTable extends MutationTable<
 
         this._columns[MutationTableColumnType.GENE].visible = false;
 
+        // show ASCN columns by default if the data exists, as in the patient view
+        this._columns[
+            MutationTableColumnType.CANCER_CELL_FRACTION
+        ].visible = !!this.props.existsSomeMutationWithAscnProperty[
+            ASCNAttributes.CCF_EXPECTED_COPIES_STRING
+        ];
+        // mutant and total copies together, instead of in separate columns
+        this._columns[
+            MutationTableColumnType.MUTANT_TOTAL_COPY_NUM
+        ].visible = !!(
+            this.props.existsSomeMutationWithAscnProperty[
+                ASCNAttributes.EXPECTED_ALT_COPIES_STRING
+            ] &&
+            this.props.existsSomeMutationWithAscnProperty[
+                ASCNAttributes.TOTAL_COPY_NUMBER_STRING
+            ]
+        );
+        // the ASCN copy numbers are more precise than the putative copy number
+        // call, so hide the latter by default when they exist
+        if (
+            this.props.existsSomeMutationWithAscnProperty[
+                ASCNAttributes.EXPECTED_ALT_COPIES_STRING
+            ]
+        ) {
+            this._columns[MutationTableColumnType.COPY_NUM].visible = false;
+        }
+
         // override default visibility for some columns
         this._columns[
             MutationTableColumnType.CANCER_TYPE_DETAILED
@@ -233,7 +262,8 @@ export default class ResultsViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.ASCN_METHOD].order = 46;
         this._columns[MutationTableColumnType.CLONAL].order = 47;
         this._columns[MutationTableColumnType.CANCER_CELL_FRACTION].order = 48;
-        this._columns[MutationTableColumnType.EXPECTED_ALT_COPIES].order = 49;
+        this._columns[MutationTableColumnType.MUTANT_TOTAL_COPY_NUM].order = 49;
+        this._columns[MutationTableColumnType.EXPECTED_ALT_COPIES].order = 49.5;
         this._columns[MutationTableColumnType.ASCN_COPY_NUM].order = 50;
         this._columns[MutationTableColumnType.COPY_NUM].order = 51;
         this._columns[MutationTableColumnType.MUTATION_STATUS].order = 70;
@@ -298,6 +328,19 @@ export default class ResultsViewMutationTable extends MutationTable<
             return !this.props.existsSomeMutationWithAscnProperty[
                 ASCNAttributes.CCF_EXPECTED_COPIES_STRING
             ];
+        };
+
+        this._columns[
+            MutationTableColumnType.MUTANT_TOTAL_COPY_NUM
+        ].shouldExclude = () => {
+            return (
+                !this.props.existsSomeMutationWithAscnProperty[
+                    ASCNAttributes.EXPECTED_ALT_COPIES_STRING
+                ] ||
+                !this.props.existsSomeMutationWithAscnProperty[
+                    ASCNAttributes.TOTAL_COPY_NUMBER_STRING
+                ]
+            );
         };
 
         this._columns[
