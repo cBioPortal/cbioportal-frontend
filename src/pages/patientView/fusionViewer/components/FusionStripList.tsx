@@ -211,7 +211,13 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
                         if (lone3p ? !t3 : !t5) return null;
                         return (
                             <FusionProductStrip
-                                key={group ? group.key : row.sampleId}
+                                // A sample can carry several events (and the
+                                // same breakpoints twice), so sampleId alone
+                                // repeats; duplicate keys left stale strips
+                                // behind on a Dense -> Per sample switch.
+                                key={
+                                    group ? group.key : `${row.event.id}#${idx}`
+                                }
                                 sampleId={row.sampleId}
                                 label={row.sampleId}
                                 transcript5p={t5}

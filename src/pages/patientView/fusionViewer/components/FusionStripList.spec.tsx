@@ -434,3 +434,44 @@ describe('FusionStripList linked hover', () => {
         assert.isUndefined(calls[calls.length - 1]);
     });
 });
+
+describe('FusionStripList rows sharing a sample', () => {
+    // Two events from one sample (e.g. two breakpoints of the same gene).
+    const twin = (id: string): ComparisonRow => {
+        const r = makeRow('S1');
+        return { ...r, event: { ...r.event, id } };
+    };
+    const rows = [twin('ev-a'), twin('ev-b'), makeRow('S2')];
+    const transcriptForRow = (row: ComparisonRow, is5p: boolean) =>
+        is5p ? tx(row.fivePrimeSymbol) : tx(row.threePrimeSymbol || '');
+    const props = {
+        rows,
+        transcriptForRow,
+        width: 900,
+        pxPerBp5p: 0.5,
+        pxPerBp3p: 0.5,
+        alignment: 'junction' as const,
+    };
+
+    it('switching Dense -> Per sample leaves exactly one full-size strip per row', () => {
+        const errors: string[] = [];
+        const spy = jest
+            .spyOn(console, 'error')
+            .mockImplementation((...a: any[]) => errors.push(String(a[0])));
+        const wrapper = mount(<FusionStripList {...props} mode="dense" />);
+        wrapper.setProps({ mode: 'sample' });
+        wrapper.update();
+        spy.mockRestore();
+        const strips = wrapper.find('FusionProductStrip');
+        assert.lengthOf(strips, 3);
+        strips.forEach(s => assert.isFalse(!!s.prop('compact')));
+        assert.lengthOf(
+            wrapper.find('[data-testid="product-strip"]').hostNodes(),
+            3
+        );
+        assert.isFalse(
+            errors.some(e => /same key/i.test(e)),
+            'duplicate React keys'
+        );
+    });
+});
