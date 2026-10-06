@@ -6,15 +6,34 @@ const CBIOPORTAL_URL = (
     process.env.CBIOPORTAL_URL ?? 'http://localhost:8080'
 ).replace(/\/$/, '');
 
-/** Text of each cell in each row of `table`, excluding nested tables. */
-async function rowTexts(table: Locator): Promise<string[][]> {
-    return table.evaluate(t =>
-        Array.from(t.querySelectorAll(':scope > tbody > tr')).map(tr =>
+/**
+ * Text of each cell in each row of a json-to-table table. With `key`, reads
+ * the sub-table labelled `key` instead.
+ */
+async function rowTexts(table: Locator, key?: string): Promise<string[][]> {
+    return table.evaluate((t, key) => {
+        let target: Element | undefined = t;
+        if (key !== undefined) {
+            const cell = Array.from(
+                t.querySelectorAll(':scope > tbody > tr > td')
+            ).find(
+                td =>
+                    td.querySelector(':scope > div > strong')?.textContent ===
+                    key
+            );
+            target = cell?.querySelector(':scope > table') ?? undefined;
+        }
+        if (!target) {
+            return [];
+        }
+        return Array.from(
+            target.querySelectorAll(':scope > tbody > tr')
+        ).map(tr =>
             Array.from(tr.querySelectorAll(':scope > td')).map(td =>
                 (td.textContent || '').trim()
             )
-        )
-    );
+        );
+    }, key);
 }
 
 // study_es_0's tags_file (cbioportal-test data/studies/study_es_0/study_tags.yml)
@@ -44,18 +63,12 @@ test.describe('study tags tooltip', () => {
         expect(rows).toContainEqual(['Loaded by', 'Jill']);
         expect(rows).toContainEqual(['Load id', '34']);
 
-        const analyst = table.locator(
-            ':scope > tbody > tr > td:has(> div > strong:text-is("Analyst")) > table'
-        );
-        expect(await rowTexts(analyst)).toEqual([
+        expect(await rowTexts(table, 'Analyst')).toEqual([
             ['name', 'Jack'],
             ['email', 'jack@xyz.com'],
         ]);
 
-        const sponsors = table.locator(
-            ':scope > tbody > tr > td:has(> div > strong:text-is("Study sponsors")) > table'
-        );
-        expect(await rowTexts(sponsors)).toEqual([
+        expect(await rowTexts(table, 'Study sponsors')).toEqual([
             ['name', 'email'],
             ['john', 'john@@xyz.com'],
             ['jane', 'jane@@xyz.com'],
