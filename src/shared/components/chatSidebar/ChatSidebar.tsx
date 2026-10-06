@@ -19,26 +19,39 @@ import {
 } from './chatSidebarWidth';
 import './ChatSidebar.scss';
 
-const OPEN_STORAGE_KEY = 'chat-sidebar:open';
+// The full panel, a thin strip the iframe draws its own controls in, or
+// nothing but the launcher.
+type ChatSidebarMode = 'expanded' | 'rail' | 'hidden';
+
+const MODE_STORAGE_KEY = 'chat-sidebar:mode';
+// Holds the open/closed boolean stored before the rail existed; read only
+// when no mode has been stored.
+const LEGACY_OPEN_STORAGE_KEY = 'chat-sidebar:open';
 const WIDTH_STORAGE_KEY = 'chat-sidebar:width';
 const KEYBOARD_RESIZE_STEP = 20;
 
-function readStoredOpen(): boolean {
+function isChatSidebarMode(v: unknown): v is ChatSidebarMode {
+    return v === 'expanded' || v === 'rail' || v === 'hidden';
+}
+
+function readStoredMode(): ChatSidebarMode {
     try {
-        const v = localStorage.getItem(OPEN_STORAGE_KEY);
-        if (v === 'true') return true;
-        if (v === 'false') return false;
+        const mode = localStorage.getItem(MODE_STORAGE_KEY);
+        if (isChatSidebarMode(mode)) return mode;
+        if (localStorage.getItem(LEGACY_OPEN_STORAGE_KEY) === 'false') {
+            return 'hidden';
+        }
     } catch {
         /* localStorage may be unavailable */
     }
-    return true;
+    return 'expanded';
 }
 
 // Mounted once globally in Container.tsx, outside routed content, so it
 // survives page navigation.
 @observer
 export default class ChatSidebar extends React.Component<{}, {}> {
-    @observable open = readStoredOpen();
+    @observable mode: ChatSidebarMode = readStoredMode();
     @observable width = readStoredChatSidebarWidth(
         localStorage,
         WIDTH_STORAGE_KEY
@@ -85,10 +98,12 @@ export default class ChatSidebar extends React.Component<{}, {}> {
     }
 
     @action.bound
-    toggle() {
-        this.open = !this.open;
+    setMode(mode: ChatSidebarMode) {
+        if (mode === this.mode) return;
+        if (this.resizing) this.stopResizing();
+        this.mode = mode;
         try {
-            localStorage.setItem(OPEN_STORAGE_KEY, String(this.open));
+            localStorage.setItem(MODE_STORAGE_KEY, mode);
         } catch {
             /* ignore */
         }
@@ -96,8 +111,16 @@ export default class ChatSidebar extends React.Component<{}, {}> {
         this.sendOpenState();
     }
 
+    @action.bound
+    expand() {
+        this.setMode('expanded');
+    }
+
     private syncBodyClass() {
-        document.body.classList.toggle('chat-sidebar-closed', !this.open);
+        document.body.classList.toggle(
+            'chat-sidebar-closed',
+            this.mode !== 'expanded'
+        );
     }
 
     componentDidMount() {
@@ -151,6 +174,13 @@ export default class ChatSidebar extends React.Component<{}, {}> {
         this.stopResizing();
     }
 
+    // The two clicks before it each start and end a resize that moved
+    // nothing, so the width is left as it was.
+    @action.bound
+    onResizeDoubleClick() {
+        this.setMode('rail');
+    }
+
     @action.bound
     onResizeKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
         let nextWidth = this.width;
@@ -188,11 +218,16 @@ export default class ChatSidebar extends React.Component<{}, {}> {
         );
     };
 
-    // The iframe stays loaded while closed; it holds off on work nobody would
-    // see until it's open.
+    // The iframe stays loaded in every mode; it holds off on work nobody would
+    // see until it's expanded, and draws the rail itself. `open` is kept
+    // alongside `mode` for chat servers deployed before the rail.
     private sendOpenState() {
         this.iframeRef.current?.contentWindow?.postMessage(
-            { type: 'chat-sidebar:open', open: this.open },
+            {
+                type: 'chat-sidebar:open',
+                open: this.mode === 'expanded',
+                mode: this.mode,
+            },
             getChatOrigin()
         );
     }
@@ -210,6 +245,14 @@ export default class ChatSidebar extends React.Component<{}, {}> {
         if (e.data?.type === 'chat-sidebar:navigate') {
             if (typeof e.data.path === 'string') {
                 this.handleNavigate(e.data.path);
+            }
+            return;
+        }
+        // The iframe's collapse and expand buttons. Nothing in the UI hides
+        // the sidebar; `hidden` is only reached from a stored mode.
+        if (e.data?.type === 'chat-sidebar:setMode') {
+            if (e.data.mode === 'expanded' || e.data.mode === 'rail') {
+                this.setMode(e.data.mode);
             }
             return;
         }
@@ -250,13 +293,18 @@ export default class ChatSidebar extends React.Component<{}, {}> {
     }
 
     render() {
+        const expanded = this.mode === 'expanded';
+        const rail = this.mode === 'rail';
+        let panelClassName = 'chat-sidebar-panel';
+        if (rail) panelClassName += ' chat-sidebar-panel-rail';
+        if (this.resizing) panelClassName += ' chat-sidebar-panel-resizing';
         return (
             <>
-                {!this.open && (
+                {this.mode === 'hidden' && (
                     <button
                         type="button"
                         className="chat-sidebar-launcher"
-                        onClick={this.toggle}
+                        onClick={this.expand}
                         aria-label="Open chat"
                         title="Open chat"
                     >
@@ -264,38 +312,35 @@ export default class ChatSidebar extends React.Component<{}, {}> {
                     </button>
                 )}
                 <aside
-                    className={`chat-sidebar-panel${
-                        this.resizing ? ' chat-sidebar-panel-resizing' : ''
-                    }`}
+                    className={panelClassName}
                     aria-label="Chat"
-                    hidden={!this.open}
-                    style={{ width: this.width }}
+                    hidden={this.mode === 'hidden'}
+                    // The rail's width, including its hover growth, is in
+                    // the stylesheet.
+                    style={rail ? undefined : { width: this.width }}
                 >
-                    <div
-                        className="chat-sidebar-resize-handle"
-                        role="separator"
-                        aria-label="Resize chat sidebar"
-                        aria-orientation="vertical"
-                        aria-valuemin={this.minimumWidth}
-                        aria-valuemax={this.maximumWidth}
-                        aria-valuenow={this.width}
-                        tabIndex={0}
-                        onPointerDown={this.onResizePointerDown}
-                        onPointerMove={this.onResizePointerMove}
-                        onPointerUp={this.onResizePointerEnd}
-                        onPointerCancel={this.onResizePointerEnd}
-                        onLostPointerCapture={this.stopResizing}
-                        onKeyDown={this.onResizeKeyDown}
-                    />
-                    <button
-                        type="button"
-                        className="chat-sidebar-collapse"
-                        onClick={this.toggle}
-                        aria-label="Close chat"
-                        title="Close chat"
-                    >
-                        <i className="fa fa-times" aria-hidden="true" />
-                    </button>
+                    {/* A conditional sibling keeps its slot when absent, so
+                        the iframe below is never remounted (which would
+                        reload the chat) as the mode changes. */}
+                    {expanded && (
+                        <div
+                            className="chat-sidebar-resize-handle"
+                            role="separator"
+                            aria-label="Resize chat sidebar"
+                            aria-orientation="vertical"
+                            aria-valuemin={this.minimumWidth}
+                            aria-valuemax={this.maximumWidth}
+                            aria-valuenow={this.width}
+                            tabIndex={0}
+                            onPointerDown={this.onResizePointerDown}
+                            onPointerMove={this.onResizePointerMove}
+                            onPointerUp={this.onResizePointerEnd}
+                            onPointerCancel={this.onResizePointerEnd}
+                            onLostPointerCapture={this.stopResizing}
+                            onKeyDown={this.onResizeKeyDown}
+                            onDoubleClick={this.onResizeDoubleClick}
+                        />
+                    )}
                     <iframe
                         ref={this.iframeRef}
                         title="Chat"

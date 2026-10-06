@@ -29,3 +29,7 @@ export function portalUrl(): string {
 export function isFromParent(e: MessageEvent): boolean {
     return e.source === window.parent && e.origin === PARENT_ORIGIN;
 }
+
+// False when the app is opened on its own (e.g. the dev server in a tab):
+// there is no host page to talk to.
+export const embedded = Boolean(window.parent && window.parent !== window);

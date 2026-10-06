@@ -1,5 +1,10 @@
 import { setFollowupsPage, setFollowupsSidebarOpen } from './followups';
 import { isFromParent, parentOrigin } from './parent-origin';
+import {
+    isSidebarMode,
+    SidebarMode,
+    setSidebarModeFromHost,
+} from './sidebar-mode';
 import { setSettledSnapshot } from './starters';
 
 // Mirrors the host's pageEvents.ts, loosely — details are passed on as sent.
@@ -60,13 +65,21 @@ function updatePageType(event: PageEvent): void {
 
 // The host pushes every page change here (its pageEvents.ts); this keeps the
 // latest, which is where the chat reads what the user is looking at. It also
-// reports whether the sidebar is open, which gates the follow-ups requests.
+// reports the sidebar's mode, which picks the layout and gates the follow-ups
+// requests to when the chat is expanded.
 export function listenForPageEvents(): void {
     if (!window.parent || window.parent === window) return;
     window.addEventListener('message', (e: MessageEvent) => {
         if (!isFromParent(e)) return;
         if (e.data?.type === 'chat-sidebar:open') {
-            setFollowupsSidebarOpen(Boolean(e.data.open));
+            // Hosts from before the rail send only `open`.
+            const mode: SidebarMode = isSidebarMode(e.data.mode)
+                ? e.data.mode
+                : e.data.open
+                ? 'expanded'
+                : 'hidden';
+            setSidebarModeFromHost(mode);
+            setFollowupsSidebarOpen(mode === 'expanded');
             return;
         }
         if (e.data?.type !== 'chat-sidebar:pageEvent') return;

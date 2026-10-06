@@ -30,39 +30,6 @@
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
 }
 
-/* Close button in the panel's top-right corner. Rendered inside
- * `.chat-sidebar-panel` so absolute positioning is panel-relative.
- * Matches the iframe header controls' vertical box (22px at top:8) so
- * the chevron, the `|` divider, and the model dropdown all sit on the
- * same horizontal axis. */
-.chat-sidebar-collapse {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 22px;
-    height: 22px;
-    border: none;
-    border-radius: 3px;
-    background: transparent;
-    color: #b0b5bb;
-    font-size: 14px;
-    line-height: 1;
-    padding: 0;
-    cursor: pointer;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.chat-sidebar-collapse .fa {
-    color: inherit;
-}
-
-.chat-sidebar-collapse:hover {
-    color: #6e7681;
-}
-
 .chat-sidebar-panel {
     position: fixed;
     top: 0;
@@ -77,6 +44,20 @@
     z-index: 10000;
     display: flex;
     flex-direction: column;
+}
+
+/* Always-visible strip: the wide ambient shadow would weigh too much on the
+ * page's edge, so only the contact shadow is kept. It widens a little on
+ * hover, hinting that a click opens it. Hovering the iframe counts as
+ * hovering the panel, so this works although the rail is drawn inside it. */
+.chat-sidebar-panel-rail {
+    width: 48px;
+    box-shadow: -1px 0 2px rgba(0, 0, 0, 0.06);
+    transition: width 0.15s ease;
+}
+
+.chat-sidebar-panel-rail:hover {
+    width: 56px;
 }
 
 .chat-sidebar-resize-handle {
