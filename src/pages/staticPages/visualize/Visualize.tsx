@@ -81,7 +81,7 @@ export default class Visualize extends React.Component<{}, {}> {
                         <a href="https://github.com/cBioPortal/cbioportal">
                             GitHub
                         </a>{' '}
-                        under the terms of Affero GPL V3.
+                        under the terms of the Apache License 2.0.
                     </li>
                     <li>
                         Please note that, installing a local version requires
