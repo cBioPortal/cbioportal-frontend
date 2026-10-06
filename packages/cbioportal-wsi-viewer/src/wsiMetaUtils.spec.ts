@@ -1,4 +1,4 @@
-import { buildPathRows, buildWsiRows } from './wsiMetaUtils';
+import { buildPathRows, buildWsiRows, stainValue } from './wsiMetaUtils';
 import {
     Sample,
     Slide,
@@ -252,5 +252,19 @@ describe('buildWsiRows', () => {
 
         expect(Object.isFrozen(rows)).toBe(true);
         expect(Object.isFrozen(rows[0])).toBe(true);
+    });
+});
+
+describe('stainValue', () => {
+    it.each([
+        ['H&E', 'H&E', 'H&E'],
+        ['H&E', 'HE', 'H&E'],
+        ['IHC', 'IHC', 'IHC'],
+        ['Other', 'Other', 'Other'],
+        ['IHC', '', 'IHC'],
+        ['IHC', 'Ki-67', 'IHC — Ki-67'],
+        ['Other', 'Trichrome', 'Other — Trichrome'],
+    ])('shows group %s with stain %s as %s', (badge, name, expected) => {
+        expect(stainValue(badge, name)).toBe(expected);
     });
 });

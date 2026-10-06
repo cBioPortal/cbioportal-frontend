@@ -56,6 +56,20 @@ export function getStainBadge(
         : 'Unknown';
 }
 
+function stainKey(name: string): string {
+    return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+/**
+ * The stain group, followed by the stain name when it adds to the group
+ * (`IHC — Ki-67`); a name that only repeats the group (`H&E`) is left out.
+ */
+export function stainValue(stainBadge: string, stainName: string): string {
+    return !stainName || stainKey(stainName) === stainKey(stainBadge)
+        ? stainBadge
+        : `${stainBadge} — ${stainName}`;
+}
+
 export function getStainDotColor(
     slide: Pick<Slide, 'is_hne' | 'is_ihc' | 'slide_type'>,
     colors: { blue: string; orange: string }
@@ -169,6 +183,7 @@ export function buildPathRows(
 ): MetaRow[] {
     const isUnmatchedSample = sample.sample_id === 'UNMATCHED';
     const stainBadge = getStainBadge(slide);
+    const stainName = cleanStain(slide.stain_name);
     const sampleUrl =
         studyId && sample.sample_id && !isUnmatchedSample
             ? buildSampleUrl(studyId, sample.sample_id, patientId)
@@ -196,14 +211,8 @@ export function buildPathRows(
         {
             label: 'Stain',
             labelTip: 'Staining protocol used for this slide',
-            value: stainBadge
-                ? `${stainBadge} — ${cleanStain(slide.stain_name)}`
-                : cleanStain(slide.stain_name),
-            valueTip: stainBadge
-                ? `Stain group: ${stainBadge}. Stain: ${cleanStain(
-                      slide.stain_name
-                  )}`
-                : undefined,
+            value: stainValue(stainBadge, stainName),
+            valueTip: `Stain group: ${stainBadge}. Stain: ${stainName || '—'}`,
         },
         {
             label: 'Sample',
