@@ -15,6 +15,7 @@ import {
 import { Thread } from '@/components/assistant-ui/elements/thread.aui';
 import { ToolFallback } from '@/components/assistant-ui/elements/tool-fallback.aui';
 import { ChatHeader } from '@/components/ChatHeader';
+import { SidebarRail } from '@/components/SidebarRail';
 import { useCrossTabSync } from '@/hooks/use-cross-tab-sync';
 import {
     AuthErrorStatus,
@@ -26,6 +27,7 @@ import {
     subscribe,
 } from '@/lib/chatSession';
 import { setPortalLinkAliases } from '@/lib/portal-link';
+import { getSidebarMode, subscribeToSidebarMode } from '@/lib/sidebar-mode';
 import { threadListAdapter } from '@/lib/threadListAdapter';
 import {
     readLastThreadId,
@@ -107,6 +109,11 @@ export function App() {
         getAuthError,
         getAuthError
     );
+    const sidebarMode = useSyncExternalStore(
+        subscribeToSidebarMode,
+        getSidebarMode,
+        getSidebarMode
+    );
 
     useEffect(() => {
         removeLegacyChatStorage();
@@ -183,22 +190,32 @@ export function App() {
         ),
     });
 
+    // The chat stays mounted in the rail, only hidden, so a reply keeps
+    // streaming and the draft survives a collapse. In the hidden mode the host
+    // hides the whole frame, so the chat is left as it is, ready to reopen.
+    const chatVisible = sidebarMode === 'expanded' || sidebarMode === 'hidden';
+
     return (
-        <div className="flex h-full flex-col">
-            <AssistantRuntimeProvider runtime={runtime} config={config}>
-                {authError ? (
-                    <div className="min-h-0 flex-1">
-                        <AuthErrorScreen status={authError} />
-                    </div>
-                ) : (
-                    <>
-                        <ChatHeader models={models} />
+        <>
+            {sidebarMode === 'rail' && <SidebarRail />}
+            <div
+                className={`h-full flex-col ${chatVisible ? 'flex' : 'hidden'}`}
+            >
+                <AssistantRuntimeProvider runtime={runtime} config={config}>
+                    {authError ? (
                         <div className="min-h-0 flex-1">
-                            <Thread components={THREAD_COMPONENTS} />
+                            <AuthErrorScreen status={authError} />
                         </div>
-                    </>
-                )}
-            </AssistantRuntimeProvider>
-        </div>
+                    ) : (
+                        <>
+                            <ChatHeader models={models} />
+                            <div className="min-h-0 flex-1">
+                                <Thread components={THREAD_COMPONENTS} />
+                            </div>
+                        </>
+                    )}
+                </AssistantRuntimeProvider>
+            </div>
+        </>
     );
 }

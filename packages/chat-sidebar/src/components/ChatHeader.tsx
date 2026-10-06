@@ -9,6 +9,7 @@ import {
     ChevronDownIcon,
     FileChartColumnIcon,
     LoaderIcon,
+    PanelRightIcon,
     PlusIcon,
     TriangleAlertIcon,
 } from 'lucide-react';
@@ -28,7 +29,9 @@ import {
     subscribe,
 } from '@/lib/chatSession';
 import { downloadTextFile } from '@/lib/download';
+import { embedded } from '@/lib/parent-origin';
 import { appendScreenshotAppendix } from '@/lib/report';
+import { requestSidebarMode } from '@/lib/sidebar-mode';
 
 // Lives inside the runtime provider: everything here acts on the chat the user
 // is looking at.
@@ -90,7 +93,7 @@ export const ChatHeader: FC<{ models: ModelInfo[] }> = ({ models }) => {
     };
 
     return (
-        <header className="flex items-center gap-2 border-b border-border bg-muted/40 pt-2 pb-2 pr-[38px] pl-4">
+        <header className="flex items-center gap-2 border-b border-border bg-muted/40 pt-2 pb-2 px-4">
             <div className="min-w-0 flex-shrink truncate text-sm font-semibold leading-7">
                 cBioPortal Chat
             </div>
@@ -160,6 +163,19 @@ export const ChatHeader: FC<{ models: ModelInfo[] }> = ({ models }) => {
                         </PopoverContent>
                     </Popover>
                 </ButtonGroup>
+                {embedded && (
+                    <TooltipIconButton
+                        tooltip="Collapse chat"
+                        side="bottom"
+                        type="button"
+                        size="icon-sm"
+                        className="text-muted-foreground"
+                        aria-label="Collapse chat"
+                        onClick={() => requestSidebarMode('rail')}
+                    >
+                        <PanelRightIcon />
+                    </TooltipIconButton>
+                )}
             </div>
         </header>
     );

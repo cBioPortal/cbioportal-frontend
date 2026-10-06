@@ -1,5 +1,6 @@
 import { FollowupsExchange } from './followupsInput';
 import { PageEvent } from './page-events';
+import { embedded } from './parent-origin';
 import { PREFIX } from './threadStorage';
 
 // Follow-up suggestions shown above the composer after a reply, generated
@@ -33,8 +34,6 @@ const STORAGE_KEY = `${PREFIX}followups`;
 const IDLE: FollowupsState = { status: 'idle', suggestions: [] };
 const LOADING: FollowupsState = { status: 'loading', suggestions: [] };
 const ERROR: FollowupsState = { status: 'error', suggestions: [] };
-
-const embedded = Boolean(window.parent && window.parent !== window);
 
 let state: FollowupsState = IDLE;
 

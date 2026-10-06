@@ -17,100 +17,45 @@ import {
     ThreadPrimitive,
 } from '@assistant-ui/react';
 import { SparklesIcon } from 'lucide-react';
-import {
-    useCallback,
-    useEffect,
-    useRef,
-    useState,
-    useSyncExternalStore,
-    FC,
-} from 'react';
+import { useEffect, useSyncExternalStore, FC } from 'react';
 
 // Widths vary so the placeholders read as pills of different lengths.
 const SKELETON_WIDTHS = ['w-40', 'w-48', 'w-36'];
 
 // While loading, the pills received so far are followed by placeholders for
-// the rest, in the same row so an arriving pill takes a placeholder's place
+// the rest, in the same list so an arriving pill takes a placeholder's place
 // without the others moving or remounting.
-const FollowupSuggestionsRow: FC<{
+const FollowupSuggestionsList: FC<{
     suggestions: readonly Followup[];
     loading: boolean;
     onSelect: () => void;
-}> = ({ suggestions, loading, onSelect }) => {
-    const scrollRef = useRef<HTMLDivElement>(null);
-    const rtlRef = useRef<boolean | null>(null);
-    const [fades, setFades] = useState({ left: false, right: false });
-
-    const updateFades = useCallback(() => {
-        const el = scrollRef.current;
-        if (!el) return;
-        const maxScroll = el.scrollWidth - el.clientWidth;
-        // scrollLeft runs 0..-max in RTL; normalize to hidden width per physical edge.
-        const fromStart = Math.abs(el.scrollLeft);
-        // getComputedStyle forces a style recalc per scroll event; direction is stable, read it once.
-        const rtl =
-            rtlRef.current ??
-            (rtlRef.current = getComputedStyle(el).direction === 'rtl');
-        const [left, right] = rtl
-            ? [maxScroll - fromStart, fromStart]
-            : [fromStart, maxScroll - fromStart];
-        setFades(prev => {
-            const next = { left: left > 1, right: right > 1 };
-            return prev.left === next.left && prev.right === next.right
-                ? prev
-                : next;
-        });
-    }, []);
-
-    useEffect(() => {
-        updateFades();
-        const el = scrollRef.current;
-        if (!el?.firstElementChild) return undefined;
-        const observer = new ResizeObserver(updateFades);
-        observer.observe(el);
-        observer.observe(el.firstElementChild);
-        return () => observer.disconnect();
-    }, [updateFades]);
-
-    const maskImage = `linear-gradient(to right, ${
-        fades.left ? 'transparent, black 2rem' : 'black'
-    }, ${fades.right ? 'black calc(100% - 2rem), transparent' : 'black'})`;
-
-    return (
-        <div
-            ref={scrollRef}
-            onScroll={updateFades}
-            // overflow-x clips both axes; py-1/-my-1 gives focus rings vertical room without changing outer height.
-            className="aui-thread-followup-suggestions -my-1 w-full overflow-x-auto py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            style={{ maskImage, WebkitMaskImage: maskImage }}
-        >
-            <div className="flex min-h-8 w-max items-center gap-2 px-0.5">
-                {suggestions.map((suggestion, idx) => (
-                    <FollowupSuggestionItem
-                        key={idx}
-                        suggestion={suggestion}
-                        index={idx}
-                        onSelect={onSelect}
-                    />
-                ))}
-                {loading &&
-                    SKELETON_WIDTHS.slice(suggestions.length).map(width => (
-                        <Skeleton
-                            key={width}
-                            className={cn(
-                                'h-8.5 rounded-full motion-reduce:animate-none',
-                                width
-                            )}
-                        />
-                    ))}
-            </div>
-        </div>
-    );
-};
+}> = ({ suggestions, loading, onSelect }) => (
+    <div className="aui-thread-followup-suggestions flex w-full flex-col items-start gap-2 px-0.5">
+        {suggestions.map((suggestion, idx) => (
+            <FollowupSuggestionItem
+                key={idx}
+                suggestion={suggestion}
+                index={idx}
+                onSelect={onSelect}
+            />
+        ))}
+        {loading &&
+            SKELETON_WIDTHS.slice(suggestions.length).map(width => (
+                <Skeleton
+                    key={width}
+                    className={cn(
+                        'h-8.5 rounded-full motion-reduce:animate-none',
+                        width
+                    )}
+                />
+            ))}
+    </div>
+);
 
 // Behaves like the welcome starters: replaces the composer text with the
 // prompt, for the user to edit or send, and is highlighted while the composer
-// holds its prompt unedited.
+// holds its prompt unedited. A title too long for the panel wraps; the 17px
+// radius is a full pill at one line and stays moderate past it.
 const FollowupSuggestionItem: FC<{
     suggestion: Followup;
     index: number;
@@ -130,7 +75,7 @@ const FollowupSuggestionItem: FC<{
                     type="button"
                     variant="ghost"
                     className={cn(
-                        'aui-thread-followup-suggestion fade-in slide-in-from-bottom-1 animate-in fill-mode-both h-auto cursor-pointer gap-2 rounded-full px-3.5 py-1.5 font-normal whitespace-nowrap duration-200',
+                        'aui-thread-followup-suggestion fade-in slide-in-from-bottom-1 animate-in fill-mode-both h-auto max-w-full cursor-pointer gap-2 rounded-[17px] px-3.5 py-1.5 text-left font-normal whitespace-normal duration-200',
                         selected
                             ? 'border-primary/60 bg-accent hover:bg-accent dark:hover:bg-accent'
                             : 'border-border hover:border-muted-foreground/40 bg-(--composer-bg) dark:border-muted-foreground/20'
@@ -151,7 +96,7 @@ const FollowupSuggestionItem: FC<{
     );
 };
 
-// The "Thinking…" heading, like the welcome starters', stays over the row
+// The "Thinking…" heading, like the welcome starters', stays over the list
 // until the last suggestion arrives.
 const FollowupSuggestions: FC<{
     suggestions: readonly Followup[];
@@ -170,7 +115,7 @@ const FollowupSuggestions: FC<{
                 </span>
             </p>
         )}
-        <FollowupSuggestionsRow
+        <FollowupSuggestionsList
             suggestions={suggestions}
             loading={loading}
             onSelect={onSelect}
