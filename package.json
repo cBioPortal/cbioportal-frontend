@@ -76,7 +76,7 @@
     "node": "22.18.0"
   },
   "author": "",
-  "license": "AGPL-3.0-or-later",
+  "license": "Apache-2.0",
   "dependencies": {
     "3dmol": "^2.5.4",
     "@babel/core": "7.29.6",

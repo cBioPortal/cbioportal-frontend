@@ -13,7 +13,7 @@
     "wdio": "pnpm exec wdio ./shared/wdio/wdio.conf.js"
   },
   "author": "",
-  "license": "AGPL-3.0-or-later",
+  "license": "Apache-2.0",
   "dependencies": {
     "@wdio/cli": "7.35",
     "@wdio/codemod": "^0.12.0",
