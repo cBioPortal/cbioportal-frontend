@@ -208,6 +208,7 @@ export function initializeAPIClients() {
     cachePostMethods(CBioPortalAPIInternal, [
         'fetchMutatedGenesUsingPOST',
         'fetchCNAGenesUsingPOST',
+        'createDataAccessTokenUsingPOST',
     ]);
     cachePostMethods(CivicAPI);
     cachePostMethods(Genome2StructureAPI);

@@ -158,6 +158,7 @@ export interface IServerConfig {
     query_product_limit: number;
     clinical_attribute_product_limit: number;
     dat_method: string;
+    dat_uuid_max_number_per_user: number;
     skin_show_gsva: boolean;
     skin_geneset_hierarchy_default_gsva_score: number;
     skin_geneset_hierarchy_default_p_value: number;
