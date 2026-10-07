@@ -3,6 +3,7 @@ import { observer } from 'mobx-react';
 import classNames from 'classnames';
 import { FusionViewerStore } from './FusionViewerStore';
 import { FusionEvent } from './data/types';
+import { filterFusions } from './data/fusionSearch';
 import moduleStyles from './styles.module.scss';
 
 interface IFusionListSidebarProps {
@@ -29,6 +30,17 @@ const styles = {
         color: '#555',
         borderBottom: '1px solid #ddd',
         backgroundColor: '#fff',
+    },
+    search: {
+        width: '100%',
+        fontSize: 12,
+        fontWeight: 400 as const,
+        marginTop: 6,
+    },
+    empty: {
+        padding: '8px 12px',
+        fontSize: 12,
+        color: '#999',
     },
     list: {
         listStyle: 'none' as const,
@@ -106,8 +118,11 @@ function formatBreakpoint(fusion: FusionEvent): string {
 
 @observer
 export class FusionListSidebar extends React.Component<
-    IFusionListSidebarProps
+    IFusionListSidebarProps,
+    { query: string }
 > {
+    public state = { query: '' };
+
     private handleClick = (fusionId: string) => {
         this.props.store.selectFusion(fusionId);
     };
@@ -115,14 +130,33 @@ export class FusionListSidebar extends React.Component<
     public render() {
         const { store } = this.props;
         const isIntergenic = (f: FusionEvent) => f.gene2 === null;
+        const shown = filterFusions(store.fusions, this.state.query);
+        const filtered = shown.length !== store.fusions.length;
 
         return (
             <div style={styles.container}>
                 <div style={styles.header}>
-                    Fusions ({store.fusions.length})
+                    Fusions (
+                    {filtered
+                        ? `${shown.length} of ${store.fusions.length}`
+                        : store.fusions.length}
+                    )
+                    <input
+                        type="search"
+                        className="form-control input-sm"
+                        style={styles.search}
+                        placeholder="Gene, partner, class, or chr7:55,000,000"
+                        aria-label="Filter fusions"
+                        data-testid="fusion-search"
+                        value={this.state.query}
+                        onChange={e => this.setState({ query: e.target.value })}
+                    />
                 </div>
+                {shown.length === 0 && (
+                    <div style={styles.empty}>No fusions match.</div>
+                )}
                 <ul style={styles.list}>
-                    {store.fusions.map(rawFusion => {
+                    {shown.map(rawFusion => {
                         const selected =
                             rawFusion.id === store.selectedFusionId;
                         // Only the selected fusion has its transcripts loaded, so
