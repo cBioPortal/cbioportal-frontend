@@ -120,6 +120,29 @@ describe('FusionCircos', () => {
         );
     });
 
+    it('colors and pulses only the selected arc and its breakpoint dots', () => {
+        const fusions = [makeFusion({ id: 'f1' }), makeFusion({ id: 'f2' })];
+        const wrapper = mount(
+            <FusionCircos
+                fusions={fusions}
+                selectedFusionId="f1"
+                genomeBuild="GRCh38"
+                onSelectFusion={() => {}}
+            />
+        );
+        const arc = (id: string) =>
+            wrapper
+                .find('path[data-testid="circos-arc"]')
+                .filterWhere(n => n.prop('data-fusion-id') === id);
+        assert.equal(arc('f1').prop('stroke'), '#FF8C00');
+        assert.notEqual(arc('f2').prop('stroke'), '#FF8C00');
+        assert.isOk(arc('f1').prop('className'));
+        assert.isNotOk(arc('f2').prop('className'));
+        const dots = wrapper.find('circle');
+        assert.equal(dots.length, 2);
+        dots.forEach(d => assert.equal(d.prop('fill'), '#FF8C00'));
+    });
+
     it('calls onSelectFusion with the clicked fusion id', () => {
         const onSelectFusion = sinon.spy();
         const fusions = [makeFusion({ id: 'f1' })];

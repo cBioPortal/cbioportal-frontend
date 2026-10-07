@@ -1,4 +1,6 @@
 declare const styles: {
+  readonly "circosSelectedArc": string;
+  readonly "circosSelectedPulse": string;
   readonly "diagramContainer": string;
   readonly "diagramPanel": string;
   readonly "fusionItem": string;
