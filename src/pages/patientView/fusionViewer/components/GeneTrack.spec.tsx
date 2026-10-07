@@ -6,6 +6,7 @@ import {
     getGeneTrackHeight,
     GeneTrack,
     splitExonByFivePrimeUtr,
+    segmentRetainedFraction,
     applyUpstreamExtension,
 } from './GeneTrack';
 import { TranscriptData } from '../data/types';
@@ -600,6 +601,8 @@ function mountGeneTrack(opts: {
     exons?: TranscriptData['exons'];
     txStart?: number;
     txEnd?: number;
+    position?: number;
+    retainedExonNumbers?: Set<number>;
 }) {
     const {
         strand = '+',
@@ -613,6 +616,8 @@ function mountGeneTrack(opts: {
         ],
         txStart = 100,
         txEnd = 700,
+        position = 400,
+        retainedExonNumbers,
     } = opts;
 
     const forte = makeTranscript({
@@ -630,7 +635,7 @@ function mountGeneTrack(opts: {
             <GeneTrack
                 symbol="GENE_A"
                 chromosome="1"
-                position={400}
+                position={position}
                 strand={strand}
                 siteDescription=""
                 forteTranscript={forte}
@@ -641,6 +646,7 @@ function mountGeneTrack(opts: {
                 is5Prime={is5Prime}
                 showPromoter={showPromoter}
                 activeTranscriptId={activeTranscriptId}
+                retainedExonNumbers={retainedExonNumbers}
             />
         </svg>
     );
@@ -1073,5 +1079,84 @@ describe('applyUpstreamExtension', () => {
             exons
         );
         assert.equal(upstreamWindow, 2000);
+    });
+});
+
+describe('segmentRetainedFraction', () => {
+    const exon = { start: 100, end: 199 }; // 100 bp
+    it('5′ partner on + keeps the low-coordinate part', () => {
+        assert.equal(segmentRetainedFraction(exon, 149, true, '+'), 0.5);
+    });
+    it('5′ partner on − keeps the high-coordinate part', () => {
+        assert.equal(segmentRetainedFraction(exon, 149, true, '-'), 0.51);
+    });
+    it('3′ partner on + keeps the high-coordinate part', () => {
+        assert.equal(segmentRetainedFraction(exon, 149, false, '+'), 0.51);
+    });
+    it('3′ partner on − keeps the low-coordinate part', () => {
+        assert.equal(segmentRetainedFraction(exon, 149, false, '-'), 0.5);
+    });
+    it('is 1 / 0 when the exon is wholly on the kept / lost side', () => {
+        assert.equal(segmentRetainedFraction(exon, 500, true, '+'), 1);
+        assert.equal(segmentRetainedFraction(exon, 50, true, '+'), 0);
+    });
+    it('counts the breakpoint base as retained', () => {
+        assert.equal(segmentRetainedFraction(exon, 100, true, '+'), 0.01);
+        assert.equal(segmentRetainedFraction(exon, 199, true, '+'), 1);
+    });
+});
+
+describe('GeneTrack — breakpoint inside an exon', () => {
+    const exons = [
+        { number: 1, start: 100, end: 199 },
+        { number: 2, start: 500, end: 700 },
+    ];
+    const retained = new Set([1, 2]);
+
+    it('draws the 5′ exon half dark (left) and half grey (right)', () => {
+        const w = mountGeneTrack({
+            is5Prime: true,
+            exons,
+            position: 149,
+            retainedExonNumbers: retained,
+        });
+        const kept = w.find('[data-testid="exon-cds-rect"]').first();
+        const lost = w.find('[data-testid="exon-lost-rect"]');
+        assert.equal(lost.length, 1);
+        assert.equal(kept.prop('fill'), GENE_COLOR);
+        assert.equal(lost.prop('fill'), '#ddd');
+        // Lost piece starts where the kept piece ends.
+        assert.closeTo(
+            Number(kept.prop('x')) + Number(kept.prop('width')),
+            Number(lost.prop('x')),
+            0.001
+        );
+    });
+
+    it('draws the 3′ exon grey on the left, dark on the right', () => {
+        const w = mountGeneTrack({
+            is5Prime: false,
+            exons,
+            position: 149,
+            retainedExonNumbers: retained,
+        });
+        const kept = w.find('[data-testid="exon-cds-rect"]').first();
+        const lost = w.find('[data-testid="exon-lost-rect"]');
+        assert.equal(lost.length, 1);
+        assert.isBelow(Number(lost.prop('x')), Number(kept.prop('x')));
+    });
+
+    it('splits only the exon the breakpoint falls in', () => {
+        const w = mountGeneTrack({
+            is5Prime: true,
+            exons,
+            position: 600,
+            retainedExonNumbers: retained,
+        });
+        assert.equal(
+            w.find('[data-testid="exon-lost-rect"]').length,
+            1,
+            'only the breakpoint exon (500-700) is split'
+        );
     });
 });
