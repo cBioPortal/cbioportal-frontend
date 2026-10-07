@@ -41,6 +41,10 @@ import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
 import { FusionViewerTab } from './fusionViewer/FusionViewerTab';
+import {
+    hasRnaFusion,
+    patientSvTabLabel,
+} from './fusionViewer/data/svTabLabels';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -825,7 +829,7 @@ export function tabs(
         <MSKTab
             key={9}
             id={PatientViewPageTabs.FusionViewer}
-            linkText="Fusion Viewer"
+            linkText={patientSvTabLabel(hasRnaFusion(svData.result || []))}
             hide={hideFusionViewer}
         >
             <FusionViewerTab
