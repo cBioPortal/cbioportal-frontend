@@ -12,6 +12,7 @@ import {
     chordPath,
     svIdiomColor,
 } from '../data/circosGeometry';
+import styles from '../styles.module.scss';
 
 export interface FusionCircosProps {
     fusions: FusionEvent[];
@@ -25,9 +26,12 @@ const GAP_DEG = 1.5;
 const RING_STROKE = '#bdbdbd';
 const RING_STROKE_WIDTH = 4;
 const SELECTED_OPACITY = 1;
-const DIMMED_OPACITY = 0.4;
-const SELECTED_STROKE_WIDTH = 2.25;
+const DIMMED_OPACITY = 0.3;
+const HOVERED_STROKE_WIDTH = 2.25;
+const SELECTED_STROKE_WIDTH = 3.5;
 const DIMMED_STROKE_WIDTH = 1.25;
+// Outside the SV-type palette (grey/red/green/blue) so the selection reads at a glance.
+const SELECTED_COLOR = '#FF8C00';
 
 interface Breakpoint {
     chromIdx: number;
@@ -128,6 +132,7 @@ export function FusionCircos(props: FusionCircosProps) {
 
     const arcs = ordered.map(({ fusion, bp1, bp2 }) => {
         const active = isActive(fusion.id);
+        const selected = fusion.id === selectedFusionId;
         const gene2Symbol = fusion.gene2 ? fusion.gene2.symbol : 'IGR';
         const overlay = (
             <div style={{ maxWidth: 240 }}>
@@ -150,10 +155,17 @@ export function FusionCircos(props: FusionCircosProps) {
                     data-testid="circos-arc"
                     data-fusion-id={fusion.id}
                     d={chordPath(bp1.angle, bp2.angle, chordRadius, cx, cy)}
-                    stroke={svIdiomColor(fusion.svIdiom)}
+                    className={selected ? styles.circosSelectedArc : undefined}
+                    stroke={
+                        selected ? SELECTED_COLOR : svIdiomColor(fusion.svIdiom)
+                    }
                     strokeOpacity={active ? SELECTED_OPACITY : DIMMED_OPACITY}
                     strokeWidth={
-                        active ? SELECTED_STROKE_WIDTH : DIMMED_STROKE_WIDTH
+                        selected
+                            ? SELECTED_STROKE_WIDTH
+                            : active
+                            ? HOVERED_STROKE_WIDTH
+                            : DIMMED_STROKE_WIDTH
                     }
                     strokeLinecap="round"
                     fill="none"
@@ -176,8 +188,10 @@ export function FusionCircos(props: FusionCircosProps) {
                       key={`dot-${i}`}
                       cx={p.x}
                       cy={p.y}
-                      r={2.5}
-                      fill={svIdiomColor(selectedEntry.fusion.svIdiom)}
+                      r={3.5}
+                      fill={SELECTED_COLOR}
+                      stroke="#fff"
+                      strokeWidth={1}
                   />
               );
           })

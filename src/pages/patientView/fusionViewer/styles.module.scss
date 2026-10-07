@@ -50,3 +50,24 @@
     color: #666;
     font-style: italic;
 }
+
+/* Selected Circos arc: a few pulses on selection, then rests thick. */
+@keyframes circosSelectedPulse {
+    0%,
+    100% {
+        stroke-width: 3.5px;
+    }
+    50% {
+        stroke-width: 7px;
+    }
+}
+
+.circosSelectedArc {
+    animation: circosSelectedPulse 0.6s ease-in-out 3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .circosSelectedArc {
+        animation: none;
+    }
+}
