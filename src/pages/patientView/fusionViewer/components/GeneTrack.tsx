@@ -690,6 +690,31 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
             // render at half height (UCSC/IGV convention). Always on.
             const segments = splitExonByFivePrimeUtr(exon, transcript.utrs);
 
+            // The 5px minimum width applies to the EXON, not to each piece:
+            // inflating every UTR/CDS piece separately stacked the half-height
+            // UTR box on top of the full-height CDS box in tiny exons. Pieces
+            // are laid out proportionally inside the (possibly inflated) box.
+            const rawW = Math.abs(exEnd - exStart);
+            const exonFrac =
+                retainedExonNumbers === undefined
+                    ? 1
+                    : segmentRetainedFraction(exon, position, is5Prime, strand);
+            // Inflation can also push a tiny exon across the breakpoint line
+            // although its true extent is wholly on one side. Keep the box on
+            // that side: kept exons end at the line (5′) or start at it (3′);
+            // lost exons are the mirror image.
+            let boxL = ex;
+            if (
+                (exonFrac >= 1 || exonFrac <= 0) &&
+                ex < bpX &&
+                ex + ewFull > bpX
+            ) {
+                const wantLeftOfLine = exonFrac >= 1 ? is5Prime : !is5Prime;
+                boxL = wantLeftOfLine ? bpX - ewFull : bpX;
+            }
+            const place = (svgX: number) =>
+                boxL + (rawW > 0 ? (svgX - ex) / rawW : 0.5) * ewFull;
+
             // One tooltip wrapper per exon; all segments live inside it so
             // the hover target is the conceptual exon, not individual pieces.
             elements.push(
@@ -700,10 +725,12 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                 >
                     <g>
                         {segments.map((seg, si) => {
-                            const segStart = toSvg(seg.start);
-                            const segEnd = toSvg(seg.end);
-                            const sx = Math.min(segStart, segEnd);
-                            const sw = Math.max(5, Math.abs(segEnd - segStart));
+                            const segStart = place(toSvg(seg.start));
+                            const segEnd = place(toSvg(seg.end));
+                            const sx =
+                                rawW > 0 ? Math.min(segStart, segEnd) : boxL;
+                            const sw =
+                                rawW > 0 ? Math.abs(segEnd - segStart) : ewFull;
                             const sh = seg.isUtr
                                 ? EXON_HEIGHT / 2
                                 : EXON_HEIGHT;
@@ -744,23 +771,8 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                                 ? 'exon-utr-rect'
                                 : 'exon-cds-rect';
                             if (frac >= 1 || frac <= 0) {
-                                // The min-width inflation can push a tiny
-                                // exon across the breakpoint line even though
-                                // its true extent is wholly on one side. Keep
-                                // the box on that side of the line: kept
-                                // exons end at it (5′) or start at it (3′);
-                                // lost exons are the mirror image.
-                                const keptOnLeft = is5Prime;
-                                const wantLeftOfLine =
-                                    frac >= 1 ? keptOnLeft : !keptOnLeft;
-                                const crosses = sx < bpX && sx + sw > bpX;
-                                const nx = !crosses
-                                    ? sx
-                                    : wantLeftOfLine
-                                    ? bpX - sw
-                                    : bpX;
                                 return rectFor(
-                                    nx,
+                                    sx,
                                     sw,
                                     frac >= 1,
                                     baseId,
@@ -802,7 +814,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                 elements.push(
                     <text
                         key={`exon-label-${transcript.transcriptId}-${displayNumber}`}
-                        x={ex + ewFull / 2}
+                        x={boxL + ewFull / 2}
                         y={yPos + EXON_HEIGHT + EXON_LABEL_OFFSET}
                         textAnchor="middle"
                         fontSize={7}
