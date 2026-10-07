@@ -110,4 +110,50 @@ describe('filterFusions', () => {
         assert.deepEqual(ids('erg deletion'), []);
         assert.deepEqual(ids('chr2 eml4'), ['alk']);
     });
+
+    it('matches a pasted fusion name in either order and separator', () => {
+        assert.deepEqual(ids('tmprss2::erg'), ['erg']);
+        assert.deepEqual(ids('TMPRSS2-ERG'), ['erg']);
+        assert.deepEqual(ids('erg::tmprss2'), ['erg']);
+        assert.deepEqual(ids('tmprss2::e'), ['erg']); // still typing
+        assert.deepEqual(ids('tmprss2::alk'), []);
+    });
+
+    it('reads a trailing colon or dash as a partial coordinate', () => {
+        assert.deepEqual(ids('chr21:'), ['erg']);
+        assert.deepEqual(ids('chr2:29000000-'), ['alk']); // open range: >= start
+        assert.deepEqual(ids('chr2:43000000-'), []);
+    });
+
+    it('accepts a reversed range', () => {
+        assert.deepEqual(ids('chr21:40000000-39000000'), ['erg']);
+    });
+
+    it('matches the mitochondrial chromosome whichever way it is stored', () => {
+        const mt = makeFusion({
+            id: 'mt',
+            gene1: { ...tmprssErg.gene1, symbol: 'MT-ND1', chromosome: 'M' },
+            gene2: null,
+        });
+        const mt2 = makeFusion({
+            id: 'mt2',
+            gene1: { ...tmprssErg.gene1, symbol: 'MT-CO1', chromosome: 'MT' },
+            gene2: null,
+        });
+        const q = (t: string) => filterFusions([mt, mt2], t).map(f => f.id);
+        assert.deepEqual(q('chrM'), ['mt', 'mt2']);
+        assert.deepEqual(q('chrMT'), ['mt', 'mt2']);
+    });
+
+    it('still finds a gene whose symbol looks like a chromosome term', () => {
+        const chrm = makeFusion({
+            id: 'chrm',
+            gene1: { ...tmprssErg.gene1, symbol: 'CHRM1', chromosome: '11' },
+            gene2: null,
+        });
+        assert.deepEqual(
+            filterFusions([chrm, tmprssErg], 'chrm').map(f => f.id),
+            ['chrm']
+        );
+    });
 });
