@@ -37,6 +37,9 @@ const POS_EPSILON = 3;
 // Minimum ghost width in px below which the ghost rect is suppressed.
 // The badge + tooltip still show so truncation is not silently lost.
 const MIN_GHOST_W = 2;
+// Truncation "!" badge: big enough to notice at a glance.
+const TRUNC_BADGE_R = 7;
+const TRUNC_BADGE_FONT = 11;
 
 export function getProteinDomainTrackHeight(): number {
     return PADDING_TOP + LABEL_HEIGHT + DOMAIN_HEIGHT + DOMAIN_GAP + 8;
@@ -558,14 +561,17 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
                                     <circle
                                         cx={badgeX}
                                         cy={badgeCy}
-                                        r={5}
+                                        r={TRUNC_BADGE_R}
                                         fill={COLOR_BREAKPOINT}
+                                        stroke="white"
+                                        strokeWidth={1}
                                     />
                                     <text
                                         x={badgeX}
-                                        y={badgeCy + 3.5}
+                                        y={badgeCy}
+                                        dominantBaseline="central"
                                         textAnchor="middle"
-                                        fontSize={7}
+                                        fontSize={TRUNC_BADGE_FONT}
                                         fontWeight="bold"
                                         fill="white"
                                     >
