@@ -27,16 +27,24 @@ function safeNumber(value: number | null | undefined): number {
  * fusion call (the caller chose the transcripts) or a DNA-level SV.
  *
  * This is the single source-abstraction point. Today the signal is:
- *   1. variantClass — "Fusion" always implies RNA (the portal's own variant
- *      typing already distinguishes fusion calls from DNA-level SVs).
- *   2. rnaSupport / dnaSupport — the caller's own detection support fields
+ *   1. rnaSupport / dnaSupport — the caller's own detection support fields
  *      (rnaSupport present and truthy → RNA; dnaSupport present and truthy →
  *      DNA), and when they disagree, RNA support wins (fusion callers set it).
- *   3. Fallback (both support fields empty): the molecular profile id, but
- *      ONLY a /fusion/ match implies RNA. We deliberately do NOT treat
- *      "_structural_variants" as DNA, because cBioPortal stores RNA-derived
- *      fusions in "<study>_structural_variants" profiles too — so that suffix
- *      cannot distinguish the two.
+ *   2. variantClass — an explicit "Fusion" class means the portal itself
+ *      classified the row as an RNA fusion call. DNA structural variants carry
+ *      a genomic class instead (INVERSION, TRANSLOCATION, DELETION, ...). This
+ *      is checked after the support columns above, but still beats the
+ *      profile-id fallback below, because it is the only signal the real
+ *      msktarget export actually populates: rnaSupport/dnaSupport are "NA" on
+ *      every row and the profile id is "<study>_structural_variants" for RNA
+ *      fusions too, so without this every RNA fusion was silently classified
+ *      as a DNA SV and defaulted to the canonical transcript instead of the
+ *      caller's.
+ *   3. Fallback (both support fields empty and variantClass isn't "Fusion"):
+ *      the molecular profile id, but ONLY a /fusion/ match implies RNA. We
+ *      deliberately do NOT treat "_structural_variants" as DNA, because
+ *      cBioPortal stores RNA-derived fusions in "<study>_structural_variants"
+ *      profiles too — so that suffix cannot distinguish the two.
  *   4. Default when nothing is conclusive: false (treat as DNA SV — the
  *      conservative choice, so a caller-selected transcript is never honored,
  *      and no genuine DNA SV is ever mislabeled "Called", for an event we
@@ -45,23 +53,28 @@ function safeNumber(value: number | null | undefined): number {
  * When the data moves to different ClickHouse tables, only this function
  * changes; everything downstream reads FusionEvent.isRnaDerived.
  */
-function isRnaDerivedFusion(sv: StructuralVariant): boolean {
-    if (
-        safeString(sv.variantClass)
-            .trim()
-            .toLowerCase() === 'fusion'
-    ) {
-        return true;
-    }
-
+export function isRnaDerivedFusion(sv: StructuralVariant): boolean {
     const truthy = (v: string): boolean => {
         const s = v.trim().toLowerCase();
         return s !== '' && s !== 'no' && s !== 'false' && s !== '0';
     };
+
     const rna = truthy(safeString(sv.rnaSupport));
     const dna = truthy(safeString(sv.dnaSupport));
     if (rna || dna) {
         return rna;
+    }
+
+    // Only needs to beat the profile-id fallback below, NOT the explicit
+    // support columns above: legacy data_fusions.txt content migrated into the
+    // SV model keeps "Fusion" as the class on DNA-panel calls, so treating it
+    // as decisive would make an explicit dnaSupport unreachable.
+    if (
+        safeString(sv.variantClass)
+            .trim()
+            .toUpperCase() === 'FUSION'
+    ) {
+        return true;
     }
 
     // Fallback: only an explicit /fusion/ profile implies RNA. Everything else
