@@ -24,6 +24,10 @@ describe('svTabLabels', () => {
             hasRnaFusion([sv({ dnaSupport: 'Yes' }), sv({ rnaSupport: 'Yes' })])
         );
         assert.isTrue(hasRnaFusion([sv({ variantClass: 'Fusion' })]));
+        // A DNA call that the legacy export labels "Fusion" is still DNA.
+        assert.isFalse(
+            hasRnaFusion([sv({ variantClass: 'Fusion', dnaSupport: 'Yes' })])
+        );
     });
 
     it('names the tabs by data type', () => {
