@@ -744,8 +744,23 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                                 ? 'exon-utr-rect'
                                 : 'exon-cds-rect';
                             if (frac >= 1 || frac <= 0) {
+                                // The min-width inflation can push a tiny
+                                // exon across the breakpoint line even though
+                                // its true extent is wholly on one side. Keep
+                                // the box on that side of the line: kept
+                                // exons end at it (5′) or start at it (3′);
+                                // lost exons are the mirror image.
+                                const keptOnLeft = is5Prime;
+                                const wantLeftOfLine =
+                                    frac >= 1 ? keptOnLeft : !keptOnLeft;
+                                const crosses = sx < bpX && sx + sw > bpX;
+                                const nx = !crosses
+                                    ? sx
+                                    : wantLeftOfLine
+                                    ? bpX - sw
+                                    : bpX;
                                 return rectFor(
-                                    sx,
+                                    nx,
                                     sw,
                                     frac >= 1,
                                     baseId,
