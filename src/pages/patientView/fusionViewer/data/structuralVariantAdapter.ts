@@ -53,7 +53,7 @@ function safeNumber(value: number | null | undefined): number {
  * When the data moves to different ClickHouse tables, only this function
  * changes; everything downstream reads FusionEvent.isRnaDerived.
  */
-function isRnaDerivedFusion(sv: StructuralVariant): boolean {
+export function isRnaDerivedFusion(sv: StructuralVariant): boolean {
     const truthy = (v: string): boolean => {
         const s = v.trim().toLowerCase();
         return s !== '' && s !== 'no' && s !== 'false' && s !== '0';
