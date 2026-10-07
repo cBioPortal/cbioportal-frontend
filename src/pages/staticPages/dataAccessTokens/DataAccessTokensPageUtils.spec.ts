@@ -2,7 +2,9 @@ import { assert } from 'chai';
 import {
     getNumberOfTokensRevokedOnCreate,
     getTokenFileContents,
+    isSummaryOfToken,
     isTokenExpired,
+    maskToken,
     parseTokenDate,
 } from './DataAccessTokensPageUtils';
 
@@ -62,6 +64,51 @@ describe('DataAccessTokensPageUtils', () => {
                     expiration: '2026-11-06 12:00:00',
                 }),
                 'token: abc\ncreation_date: 2026-10-07 12:00:00\nexpiration_date: 2026-11-06 12:00:00\n'
+            );
+        });
+    });
+
+    describe('maskToken', () => {
+        it('keeps the first and last four characters', () => {
+            assert.equal(
+                maskToken('3f2a9c1e-0000-4000-8000-00000000b7d4'),
+                '3f2a…b7d4'
+            );
+        });
+        it('hides short tokens entirely', () => {
+            assert.equal(maskToken('abcdefgh'), '…');
+        });
+    });
+
+    describe('isSummaryOfToken', () => {
+        const token = {
+            token: '3f2a9c1e-0000-4000-8000-00000000b7d4',
+            username: 'user',
+            creation: '2026-10-07 12:00:00',
+            expiration: '2026-11-06 12:00:00',
+        };
+        const summary = {
+            id: 'id',
+            tokenPreview: '3f2a…b7d4',
+            username: 'user',
+            creation: '2026-10-07 12:00:00',
+            expiration: '2026-11-06 12:00:00',
+        };
+        it('matches the summary of the same token', () => {
+            assert.isTrue(isSummaryOfToken(summary, token));
+        });
+        it('does not match a different token', () => {
+            assert.isFalse(
+                isSummaryOfToken(
+                    { ...summary, tokenPreview: 'aaaa…bbbb' },
+                    token
+                )
+            );
+            assert.isFalse(
+                isSummaryOfToken(
+                    { ...summary, creation: '2026-10-07 12:00:01' },
+                    token
+                )
             );
         });
     });

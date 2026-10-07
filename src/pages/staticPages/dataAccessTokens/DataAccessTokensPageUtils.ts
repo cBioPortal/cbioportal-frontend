@@ -1,4 +1,7 @@
-import { DataAccessToken } from 'cbioportal-ts-api-client';
+import {
+    DataAccessToken,
+    DataAccessTokenSummary,
+} from 'cbioportal-ts-api-client';
 
 export const DATA_ACCESS_TOKEN_FILE_NAME = 'cbioportal_data_access_token.txt';
 
@@ -45,4 +48,23 @@ export function getNumberOfTokensRevokedOnCreate(
         return 0;
     }
     return numberOfTokens - maxNumberOfTokens + 1;
+}
+
+// Same masking as the server's token preview
+export function maskToken(token: string): string {
+    const n = 4;
+    if (!token || token.length <= n * 2) {
+        return '…';
+    }
+    return token.slice(0, n) + '…' + token.slice(-n);
+}
+
+export function isSummaryOfToken(
+    summary: DataAccessTokenSummary,
+    token: DataAccessToken
+): boolean {
+    return (
+        summary.tokenPreview === maskToken(token.token) &&
+        summary.creation === token.creation
+    );
 }

@@ -22,6 +22,7 @@ import {
     formatTokenDate,
     getNumberOfTokensRevokedOnCreate,
     getTokenFileContents,
+    isSummaryOfToken,
     isTokenExpired,
 } from './DataAccessTokensPageUtils';
 
@@ -136,6 +137,14 @@ export default class DataAccessTokensPage extends React.Component<{}, {}> {
             action(() => {
                 this.tokens = tokens;
                 this.tokensLoadFailed = false;
+                const newToken = this.newToken;
+                if (
+                    newToken &&
+                    !tokens.some(t => isSummaryOfToken(t, newToken))
+                ) {
+                    // the one-time token display is only useful while the token is valid
+                    this.newToken = undefined;
+                }
             })();
         } catch (e) {
             action(() => (this.tokensLoadFailed = true))();
@@ -145,8 +154,13 @@ export default class DataAccessTokensPage extends React.Component<{}, {}> {
     }
 
     @action.bound
-    private requestCreate() {
+    private async requestCreate() {
         this.errorMessage = undefined;
+        // refresh first so the warning reflects tokens created elsewhere, e.g. in another tab
+        await this.reload();
+        if (this.tokensLoadFailed) {
+            return;
+        }
         if (this.tokensRevokedOnCreate.length > 0) {
             this.pendingAction = { kind: 'create' };
         } else {
@@ -303,9 +317,13 @@ export default class DataAccessTokensPage extends React.Component<{}, {}> {
             return (
                 <div className="alert alert-danger">
                     Could not load your tokens.{' '}
-                    <a onClick={this.reload} style={{ cursor: 'pointer' }}>
+                    <Button
+                        bsStyle="link"
+                        onClick={this.reload}
+                        style={{ padding: 0, verticalAlign: 'baseline' }}
+                    >
                         Retry
-                    </a>
+                    </Button>
                 </div>
             );
         }
