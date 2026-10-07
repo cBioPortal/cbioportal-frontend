@@ -1160,3 +1160,39 @@ describe('GeneTrack — breakpoint inside an exon', () => {
         );
     });
 });
+
+describe('GeneTrack — tiny exon at the breakpoint', () => {
+    // Real case: TMPRSS2 ENST00000332149 E2 (71 bp) with the breakpoint on its
+    // first base. The exon is wholly kept, but the min-width box used to
+    // straddle the breakpoint line and look half on the lost side.
+    const exons = [
+        { number: 1, start: 100, end: 199 },
+        { number: 2, start: 400, end: 410 }, // 11 bp -> inflated to 5px
+        { number: 3, start: 5000, end: 5100 },
+    ];
+    const bpLineX = (w: ReturnType<typeof mountGeneTrack>) =>
+        Number(
+            w
+                .find('line[strokeDasharray="4 3"]')
+                .first()
+                .prop('x1')
+        );
+
+    it('keeps a wholly kept 5′ exon on the kept side of the line', () => {
+        const w = mountGeneTrack({
+            is5Prime: true,
+            strand: '+',
+            exons,
+            txStart: 100,
+            txEnd: 5100,
+            position: 410, // exon 2's last base: 5′ + strand keeps it all
+            retainedExonNumbers: new Set([1, 2]),
+        });
+        const rects = w.find('[data-testid="exon-cds-rect"]');
+        const e2 = rects.at(1);
+        assert.isAtMost(
+            Number(e2.prop('x')) + Number(e2.prop('width')),
+            bpLineX(w) + 0.001
+        );
+    });
+});
