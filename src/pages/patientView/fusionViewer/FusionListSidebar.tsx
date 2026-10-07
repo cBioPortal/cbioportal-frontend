@@ -145,7 +145,7 @@ export class FusionListSidebar extends React.Component<
                         type="search"
                         className="form-control input-sm"
                         style={styles.search}
-                        placeholder="Gene, partner, class, or chr7:55,000,000"
+                        placeholder="Gene, TMPRSS2::ERG, class, or chr7:55,000,000-56,000,000"
                         aria-label="Filter fusions"
                         data-testid="fusion-search"
                         value={this.state.query}
