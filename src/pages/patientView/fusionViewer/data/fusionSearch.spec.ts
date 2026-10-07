@@ -35,7 +35,9 @@ function makeFusion(overrides: Partial<FusionEvent> = {}): FusionEvent {
         frame: 'UNKNOWN',
         isRnaDerived: true,
         ...overrides,
-    };
+        // Cast: eventLabel/ncbiBuild exist only on branches with the
+        // data-refresh-fixes FusionEvent.
+    } as FusionEvent;
 }
 
 const tmprssErg = makeFusion({ id: 'erg' });
