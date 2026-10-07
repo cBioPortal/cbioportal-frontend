@@ -125,9 +125,15 @@ export function FusionCircos(props: FusionCircosProps) {
     const isActive = (id: string) =>
         id === selectedFusionId || id === hoveredId;
 
+    // Draw order: dimmed, then hovered, then the selected arc last. The
+    // selected arc keeps the final slot whatever is hovered, so React never
+    // re-appends it and its CSS pulse is not restarted on every hover-out.
     const ordered = [
         ...mappable.filter(e => !isActive(e.fusion.id)),
-        ...mappable.filter(e => isActive(e.fusion.id)),
+        ...mappable.filter(
+            e => isActive(e.fusion.id) && e.fusion.id !== selectedFusionId
+        ),
+        ...mappable.filter(e => e.fusion.id === selectedFusionId),
     ];
 
     const arcs = ordered.map(({ fusion, bp1, bp2 }) => {
