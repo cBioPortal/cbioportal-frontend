@@ -118,6 +118,30 @@ export function computeRetainedShadeX(
     }
 }
 
+/**
+ * Fraction of a genomic segment that lies on the retained (kept-in-fusion)
+ * side of the breakpoint, 0..1. A breakpoint inside an exon keeps only part of
+ * it, so the exon must be drawn half dark, half grey -- not all one colour.
+ * The breakpoint base itself counts as retained, matching the exon-level rule.
+ *
+ *   5′ partner, + strand / 3′ partner, − strand → retained are coords <= bp
+ *   5′ partner, − strand / 3′ partner, + strand → retained are coords >= bp
+ */
+export function segmentRetainedFraction(
+    seg: { start: number; end: number },
+    breakpoint: number,
+    is5Prime: boolean,
+    strand: string
+): number {
+    const lengthBp = seg.end - seg.start + 1;
+    if (lengthBp <= 0) return 0;
+    const keepsLowCoords = is5Prime ? strand === '+' : strand === '-';
+    const keptBp = keepsLowCoords
+        ? breakpoint - seg.start + 1
+        : seg.end - breakpoint + 1;
+    return Math.min(1, Math.max(0, keptBp / lengthBp));
+}
+
 const FORTE_TRACK_HEIGHT = 48;
 const USER_TRACK_HEIGHT = 42;
 // Header (gene symbol + transcript ID) height. Includes 6px of bottom gap
@@ -686,24 +710,71 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                             const sy = seg.isUtr
                                 ? yPos + EXON_HEIGHT / 4
                                 : yPos;
-                            return (
+                            const frac =
+                                retainedExonNumbers === undefined
+                                    ? 1
+                                    : segmentRetainedFraction(
+                                          seg,
+                                          position,
+                                          is5Prime,
+                                          strand
+                                      );
+                            const rectFor = (
+                                x: number,
+                                w: number,
+                                keep: boolean,
+                                testId: string,
+                                key: string
+                            ) => (
                                 <rect
-                                    key={si}
-                                    data-testid={
-                                        seg.isUtr
-                                            ? 'exon-utr-rect'
-                                            : 'exon-cds-rect'
-                                    }
-                                    x={sx}
+                                    key={key}
+                                    data-testid={testId}
+                                    x={x}
                                     y={sy}
-                                    width={sw}
+                                    width={w}
                                     height={sh}
-                                    fill={isRetained ? color : '#ddd'}
-                                    stroke={isRetained ? color : '#ddd'}
+                                    fill={keep ? color : '#ddd'}
+                                    stroke={keep ? color : '#ddd'}
                                     strokeWidth={strokeWidth}
-                                    opacity={isRetained ? opacity : 1}
+                                    opacity={keep ? opacity : 1}
                                     rx={1}
                                 />
+                            );
+                            const baseId = seg.isUtr
+                                ? 'exon-utr-rect'
+                                : 'exon-cds-rect';
+                            if (frac >= 1 || frac <= 0) {
+                                return rectFor(
+                                    sx,
+                                    sw,
+                                    frac >= 1,
+                                    baseId,
+                                    `${si}`
+                                );
+                            }
+                            // Breakpoint inside this segment: the retained part
+                            // sits toward the gene's retained end. Genes are
+                            // mirrored to read 5′→3′, so that is the LEFT of a
+                            // 5′ partner's exon and the RIGHT of a 3′ partner's.
+                            const keptW = sw * frac;
+                            const lostW = sw - keptW;
+                            return (
+                                <React.Fragment key={si}>
+                                    {rectFor(
+                                        is5Prime ? sx : sx + lostW,
+                                        keptW,
+                                        true,
+                                        baseId,
+                                        'kept'
+                                    )}
+                                    {rectFor(
+                                        is5Prime ? sx + keptW : sx,
+                                        lostW,
+                                        false,
+                                        'exon-lost-rect',
+                                        'lost'
+                                    )}
+                                </React.Fragment>
                             );
                         })}
                     </g>
