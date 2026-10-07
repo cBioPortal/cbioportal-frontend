@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import { getClient } from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
+import { hasRnaFusion } from 'pages/patientView/fusionViewer/data/svTabLabels';
 import {
     action,
     comparer,
@@ -11835,7 +11836,32 @@ export class StudyViewPageStore
             });
         },
         default: [],
+        onResult: svs => {
+            // Pin the tab name from the first whole-study load, so it names
+            // the study's data and doesn't flip as the cohort filter changes.
+            if (
+                this.pinnedStudyHasRnaFusions === undefined &&
+                this.samples.isComplete &&
+                this.selectedSamples.result.length ===
+                    this.samples.result.length
+            ) {
+                this.pinnedStudyHasRnaFusions = hasRnaFusion(svs);
+            }
+        },
     });
+
+    @observable private pinnedStudyHasRnaFusions: boolean | undefined;
+
+    /**
+     * Whether the study has RNA fusions (vs. DNA SVs only). Falls back to the
+     * current cohort until a whole-study load has been seen, e.g. when the
+     * page opens with a filter already in the URL.
+     */
+    @computed get studyHasRnaFusions(): boolean {
+        return this.pinnedStudyHasRnaFusions !== undefined
+            ? this.pinnedStudyHasRnaFusions
+            : hasRnaFusion(this.cohortStructuralVariants.result || []);
+    }
 
     readonly topSvGenePairsData = remoteData<SvGenePairRow[]>({
         await: () => [this.cohortStructuralVariants],

@@ -29,6 +29,7 @@ import StudyPageHeader from './studyPageHeader/StudyPageHeader';
 import CNSegments from './tabs/CNSegments';
 import FusionComparisonView from 'pages/patientView/fusionViewer/FusionComparisonView';
 import { FusionCohortStore } from 'pages/patientView/fusionViewer/FusionCohortStore';
+import { cohortSvTabLabel } from 'pages/patientView/fusionViewer/data/svTabLabels';
 import { getInternalClient } from 'shared/api/cbioportalInternalClientInstance';
 import AddChartButton from './addChartButton/AddChartButton';
 import { sleep } from '../../shared/lib/TimeUtils';
@@ -761,7 +762,9 @@ export default class StudyViewPage extends React.Component<
                                         id={
                                             StudyViewPageTabKeyEnum.FUSION_COMPARISON
                                         }
-                                        linkText="SV / Fusion Comparison"
+                                        linkText={cohortSvTabLabel(
+                                            this.store.studyHasRnaFusions
+                                        )}
                                         hide={
                                             this.store.cohortStructuralVariants
                                                 .isPending ||
