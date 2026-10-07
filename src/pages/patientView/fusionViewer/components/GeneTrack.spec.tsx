@@ -1196,3 +1196,61 @@ describe('GeneTrack — tiny exon at the breakpoint', () => {
         );
     });
 });
+
+describe('GeneTrack — tiny exon split into UTR and CDS', () => {
+    // Real case: TMPRSS2 E2 (41,498,119-41,498,189, minus strand) is 56 bp of
+    // 5' UTR + 15 bp of CDS. Both pieces are sub-pixel; each used to be
+    // inflated to 5px on its own, so the half-height UTR box was drawn on top
+    // of the full-height CDS box instead of beside it.
+    const exons = [
+        { number: 1, start: 30000, end: 30100 },
+        { number: 2, start: 10119, end: 10189 },
+        { number: 3, start: 100, end: 300 },
+    ];
+    const utrs = [
+        { start: 30000, end: 30100, type: 'five_prime' as const },
+        { start: 10134, end: 10189, type: 'five_prime' as const },
+    ];
+
+    const mountIt = () =>
+        mountGeneTrack({
+            strand: '-',
+            is5Prime: true,
+            exons,
+            utrs,
+            txStart: 100,
+            txEnd: 30100,
+            position: 10119,
+            retainedExonNumbers: new Set([1, 2]),
+        });
+
+    const box = (r: any) => ({
+        l: Number(r.prop('x')),
+        r: Number(r.prop('x')) + Number(r.prop('width')),
+    });
+
+    it('draws the UTR and CDS pieces side by side, not stacked', () => {
+        const w = mountIt();
+        // Exon 2's pieces: the CDS rect that is not exon 3's (exon 3 is the
+        // widest, lost, grey) and the UTR rect that is not exon 1's.
+        const bp = Number(
+            w
+                .find('line[strokeDasharray="4 3"]')
+                .first()
+                .prop('x1')
+        );
+        // Exon 2's pieces are the ones within 10px of the breakpoint line.
+        const near = (r: any) => Math.abs(Number(r.prop('x')) - bp) < 10;
+        const cds = w.find('[data-testid="exon-cds-rect"]').filterWhere(near);
+        const utr = w.find('[data-testid="exon-utr-rect"]').filterWhere(near);
+        assert.equal(cds.length, 1, 'one kept CDS piece (exon 2)');
+        assert.equal(utr.length, 1, 'one small UTR piece (exon 2)');
+        const c = box(cds.first());
+        const u = box(utr.first());
+        const overlap = Math.min(c.r, u.r) - Math.max(c.l, u.l);
+        assert.isAtMost(overlap, 0.001, 'UTR and CDS boxes must not overlap');
+        // Minus strand, mirrored to read 5'->3': the UTR (5' end of the exon)
+        // is left of the CDS, and the CDS ends at the breakpoint line.
+        assert.isBelow(u.l, c.l);
+    });
+});
