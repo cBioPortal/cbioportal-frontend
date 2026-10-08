@@ -24,6 +24,9 @@ categories:
     labels:
       - 'style tweak'
       - 'cl-style-tweak'
+  - title: '🔒 Security fixes'
+    labels:
+      - 'security'
   - title: '⚙️ Changes to handle external APIs'
     labels:
       - 'external api'
