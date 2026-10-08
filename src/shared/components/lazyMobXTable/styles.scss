@@ -15,6 +15,31 @@
     padding-bottom: 4px;
 }
 
+.cbioportal-frontend .table > thead > tr > th.multilineHeader .headerFilterIcon {
+    visibility: hidden;
+}
+
+.cbioportal-frontend
+    .table
+    > thead
+    > tr
+    > th.multilineHeader:hover
+    .headerFilterIcon,
+.cbioportal-frontend
+    .table
+    > thead
+    > tr
+    > th.multilineHeader
+    .headerFilterIcon.active,
+.cbioportal-frontend
+    .table
+    > thead
+    > tr
+    > th.multilineHeader
+    .headerFilterIcon.open {
+    visibility: visible;
+}
+
 .topPagination {
     .textBetweenButtons {
         opacity: 1 !important;
