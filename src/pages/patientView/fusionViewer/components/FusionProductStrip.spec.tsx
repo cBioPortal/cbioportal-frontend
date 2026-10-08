@@ -118,6 +118,50 @@ describe('FusionProductStrip', () => {
         assert.equal(outline.prop('opacity'), 1);
     });
 
+    it('compact mode draws a one-colour frame cell and no reads text', () => {
+        const strip = (frame: 'inFrame' | 'outOfFrame' | 'unknown') =>
+            mount(
+                <svg>
+                    <FusionProductStrip
+                        sampleId="S1"
+                        label="S1"
+                        transcript5p={tx('TMPRSS2')}
+                        transcript3p={tx('ERG')}
+                        breakpoint5p={250}
+                        breakpoint3p={250}
+                        frame={frame}
+                        reads={12}
+                        y={0}
+                        rowHeight={7}
+                        compact
+                        leftX={170}
+                        junctionX={400}
+                        rightX={700}
+                        pxPerBp5p={0.5}
+                        pxPerBp3p={0.5}
+                    />
+                </svg>
+            );
+        const cell = (frame: 'inFrame' | 'outOfFrame' | 'unknown') =>
+            strip(frame)
+                .find('rect[data-testid="frame-cell-dense"]')
+                .hostNodes();
+        assert.lengthOf(cell('inFrame'), 1);
+        assert.equal(cell('inFrame').prop('fill'), '#2f9e44');
+        assert.equal(cell('outOfFrame').prop('fill'), '#e03131');
+        assert.equal(cell('unknown').prop('fill'), '#ced4da');
+        // The cell fits inside the 7px dense row.
+        assert.isAtMost(cell('inFrame').prop('height') as number, 7);
+        assert.notInclude(
+            strip('inFrame')
+                .find('text')
+                .hostNodes()
+                .map(t => t.text())
+                .join(' '),
+            '12r'
+        );
+    });
+
     it('compact mode hides the label/reads text and exposes a hover <title>', () => {
         const wrapper = mount(
             <svg>
