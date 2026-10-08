@@ -81,6 +81,28 @@ export class ResourceTableStore {
     }
 
     /**
+     * Sets the cohort from a study view selection.
+     *
+     * The backend reads a request carrying no patient or sample identifiers as the whole of
+     * `studyIds`, so when every sample is selected the identifiers describe the same cohort at a
+     * cost that grows with the study. A study view opened without filters is exactly that case,
+     * and it is also the largest: the identifiers would be sent again on every page turn, sort and
+     * filter change. Passing `all` as undefined (the sample set has not loaded yet) keeps the
+     * explicit list, which is correct either way.
+     */
+    @action
+    setContextFromSelection(
+        selected: Pick<Sample, 'studyId' | 'patientId' | 'sampleId'>[],
+        all: Pick<Sample, 'studyId'>[] | undefined
+    ) {
+        if (all !== undefined && selected.length === all.length) {
+            this.setContext(_.uniq(selected.map(s => s.studyId)));
+        } else {
+            this.setContextFromSamples(selected);
+        }
+    }
+
+    /**
      * Derives the whole cohort from a sample set, keeping each id paired with its own study. Use
      * this wherever the cohort *is* the samples, so a call site cannot flatten the pairing away.
      * The patient view builds its context explicitly instead, because a patient with no samples
