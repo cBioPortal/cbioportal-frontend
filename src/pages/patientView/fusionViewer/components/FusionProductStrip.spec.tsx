@@ -185,10 +185,8 @@ describe('FusionProductStrip', () => {
                 />
             </svg>
         );
-        // compact mode's only visible <text> is the inline junction label
-        const texts = wrapper.find('text').hostNodes();
-        assert.lengthOf(texts, 1);
-        assert.equal(texts.first().prop('data-testid'), 'junction-label');
+        // compact mode draws no visible <text> at all
+        assert.lengthOf(wrapper.find('text').hostNodes(), 0);
         // hover title carries sample · frame · reads
         assert.include(
             wrapper
@@ -609,11 +607,11 @@ describe('junction exon labels', () => {
         assert.equal(label.text(), 'E2|E2');
     });
 
-    it('draws the inline seam label in dense mode too', () => {
+    it('draws no seam label in dense mode', () => {
         const w = renderStrip(true);
         assert.equal(
             w.find('[data-testid="junction-label"]').hostNodes().length,
-            1
+            0
         );
         assert.notInclude(w.find('title').text(), 'E2→E2');
     });

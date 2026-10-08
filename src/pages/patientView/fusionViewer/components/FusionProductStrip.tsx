@@ -296,8 +296,9 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
             : junction.threePrime !== undefined
             ? `E${junction.threePrime}`
             : '';
-    // Junction exon label always sits inline at the seam (dense floats it above).
-    const showInlineJunction = !!junctionText;
+    // Junction exon label sits inline at the seam; dense rows are too thin for
+    // it, so it is left out there.
+    const showInlineJunction = !!junctionText && !compact;
 
     return (
         <g
@@ -553,9 +554,9 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                 <text
                     data-testid="junction-label"
                     x={layout.junctionX}
-                    y={yEx - (compact ? 1.5 : 5)}
+                    y={yEx - 5}
                     textAnchor="middle"
-                    fontSize={compact ? 5 : 9}
+                    fontSize={9}
                     fontWeight={600}
                     fill={COLOR_BREAKPOINT}
                 >
