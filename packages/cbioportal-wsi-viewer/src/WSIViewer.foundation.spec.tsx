@@ -224,4 +224,46 @@ describe('WSIViewer foundation behavior', () => {
             expect(loadedInstance().requestedSlideUnavailable).toBe(false);
         });
     });
+
+    describe('linked sample scope', () => {
+        function scopedInstance(pathologyFilter?: Record<string, string>) {
+            const instance = makeInstance(undefined, { pathologyFilter });
+            action(() => {
+                instance.hierarchy = makeHierarchy([makeSlide('slide-a')]);
+                instance.loading = false;
+            })();
+            return instance;
+        }
+
+        it('scopes the slide list to a sample-only link', () => {
+            const instance = scopedInstance({ sampleId: 'S-1' });
+            expect(instance.scopedSampleId).toBe('S-1');
+            const rendered = TestRenderer.create(instance.render());
+            expect(
+                rendered.root.findAllByProps({
+                    'data-testid': 'wsi-sample-scope',
+                })
+            ).toHaveLength(1);
+        });
+
+        it('does not hide other samples for a specimen or match-level link', () => {
+            expect(
+                scopedInstance({ sampleId: 'S-1', matchLevel: 'PART' })
+                    .scopedSampleId
+            ).toBeUndefined();
+            expect(
+                scopedInstance({ sampleId: 'S-1', specimenKey: 'part::1' })
+                    .scopedSampleId
+            ).toBeUndefined();
+            expect(scopedInstance().scopedSampleId).toBeUndefined();
+        });
+
+        it('drops the scope once the link scope is cleared', () => {
+            const instance = scopedInstance({ sampleId: 'S-1' });
+            action(() => {
+                instance.linkoutScopeActive = false;
+            })();
+            expect(instance.scopedSampleId).toBeUndefined();
+        });
+    });
 });

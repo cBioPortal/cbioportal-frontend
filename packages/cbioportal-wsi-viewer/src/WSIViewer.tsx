@@ -647,6 +647,19 @@ export default class WSIViewer extends React.Component<Props, {}> {
         return this.linkoutScopeActive ? this.props.pathologyFilter : undefined;
     }
 
+    /**
+     * The sample a sample-only link scopes the slide list to. A specimen or
+     * match-level link can name a source sample that is not a portal sample
+     * and fall back to unmatched slides, so only a scope with nothing but a
+     * sample hides the other samples outright.
+     */
+    private get scopedSampleId(): string | undefined {
+        const filter = this.activePathologyFilter;
+        return filter?.sampleId && !filter.matchLevel && !filter.specimenKey
+            ? filter.sampleId
+            : undefined;
+    }
+
     private canReusePathologyFilterLocally(): boolean {
         return !!this.hierarchy?.slide_associations?.length;
     }
@@ -1030,6 +1043,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     <WsiNavPanel
                         hierarchy={hierarchy}
                         selectedSlide={selectedSlide}
+                        sampleIdFilter={this.scopedSampleId}
                         slideIdFilter={getPathologyPreferredSlideKeys(
                             hierarchy,
                             this.activePathologyFilter

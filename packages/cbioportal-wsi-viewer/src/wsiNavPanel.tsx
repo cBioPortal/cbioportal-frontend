@@ -624,6 +624,35 @@ function WsiNavPanelComponent({
                             );
                         })}
                 </div>
+                {sampleIdFilter && linkoutScopeActive && (
+                    <div
+                        data-testid="wsi-sample-scope"
+                        style={{
+                            marginTop: 6,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            padding: '1px 6px',
+                            borderRadius: 3,
+                            background: theme.blueLight,
+                            color: theme.text,
+                            fontSize: 11,
+                        }}
+                    >
+                        <span>Sample {sampleIdFilter}</span>
+                        <button
+                            type="button"
+                            className="btn btn-link btn-xs"
+                            data-testid="wsi-sample-scope-clear"
+                            aria-label={`Show all slides, not only sample ${sampleIdFilter}`}
+                            title="Show all slides"
+                            style={{ padding: 0, color: theme.muted }}
+                            onClick={onClearFilters}
+                        >
+                            <i className="fa fa-times" />
+                        </button>
+                    </div>
+                )}
                 {showClearFilters && (
                     <button
                         type="button"

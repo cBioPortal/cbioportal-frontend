@@ -1134,6 +1134,56 @@ describe('WsiNavPanel', () => {
         expect(onClearFilters).toHaveBeenCalledTimes(1);
     });
 
+    it('shows the linked sample scope and widens it to all slides', () => {
+        const onClearFilters = jest.fn();
+        const panel = (scoped: boolean) => (
+            <WsiNavPanel
+                hierarchy={makeHierarchy([
+                    makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })]),
+                    makeSample('S-2', [makeSlide({ slide_key: 'slide-2' })]),
+                ])}
+                selectedSlide={null}
+                stainFilter="all"
+                sampleIdFilter="S-1"
+                linkoutScopeActive={scoped}
+                showClearFilters={true}
+                onFilterChange={() => {}}
+                onClearFilters={onClearFilters}
+                onSelectSlide={() => {}}
+                theme={theme}
+                navWidth={252}
+                sectionTitleStyle={sectionTitleStyle}
+            />
+        );
+        const renderer = TestRenderer.create(panel(true));
+
+        const chip = renderer.root.findByProps({
+            'data-testid': 'wsi-sample-scope',
+        });
+        expect(flattenRenderedText(chip.children)).toContain('Sample S-1');
+        expect(
+            flattenRenderedText(
+                renderer.root.findByProps({
+                    'data-testid': 'wsi-filtered-slide-count',
+                }).children
+            )
+        ).toContain('Showing 1 slide');
+
+        act(() => {
+            renderer.root
+                .findByProps({ 'data-testid': 'wsi-sample-scope-clear' })
+                .props.onClick();
+        });
+        expect(onClearFilters).toHaveBeenCalledTimes(1);
+
+        act(() => {
+            renderer.update(panel(false));
+        });
+        expect(
+            renderer.root.findAllByProps({ 'data-testid': 'wsi-sample-scope' })
+        ).toHaveLength(0);
+    });
+
     it('computes facet counts from the patient hierarchy while a linkout scope is active', () => {
         const onFilterChange = jest.fn();
         const renderer = TestRenderer.create(
