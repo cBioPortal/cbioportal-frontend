@@ -59,6 +59,17 @@ header {
     color: #777;
 }
 
+#feature-flags-icon {
+    cursor: pointer;
+    margin-right: 15px;
+    color: #999 !important;
+    font-size: 16px;
+
+    &:hover {
+        color: #3786c2 !important;
+    }
+}
+
 #rightHeaderContent .username {
     max-width: 150px;
     text-overflow: ellipsis;
