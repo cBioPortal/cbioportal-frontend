@@ -226,16 +226,14 @@ export class FusionViewerStore {
         const resolved = this.resolvedFusion;
         if (!resolved) return raw;
 
-        // Until both transcript lists load, the resolver can only echo the raw
+        // While the transcripts load, the resolver can only echo the raw
         // site1/site2 order, which flashes "ERG::TMPRSS2" on every selection.
         // Orient from the site descriptions meanwhile, as the sidebar does.
-        const transcriptsReady =
-            !this.transcriptsLoading &&
-            this.gene1Transcripts.length > 0 &&
-            (!raw.gene2 || this.gene2Transcripts.length > 0);
-        const partners = transcriptsReady
-            ? { gene1: resolved.fivePrime, gene2: resolved.threePrime }
-            : orientByDescriptions(raw);
+        // Once loading ends, always follow the resolver -- even if a side came
+        // back empty -- because the diagram draws the resolver's transcripts.
+        const partners = this.transcriptsLoading
+            ? orientByDescriptions(raw)
+            : { gene1: resolved.fivePrime, gene2: resolved.threePrime };
 
         // If the raw fusion label was the algorithmic "A::B" fallback (no eventInfo),
         // rebuild it from the canonical 5'/3' symbols so the displayed name matches
