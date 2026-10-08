@@ -104,7 +104,7 @@ export function oncoKbTooltip(
             // each with their associated (OncoKB level) cancer types.
             const groupedByStudyCancerType = _.groupBy(
                 indicators,
-                indicator => indicator.query.tumorType || ''
+                indicator => indicator.query?.tumorType || ''
             );
             const cancerTypeCounts = _.keys(groupedByStudyCancerType).map(
                 cancerType => ({
@@ -297,7 +297,9 @@ export function collectLevelSummaries(
     const cancerTypesByLevel: { [level: string]: Set<string> } = {};
 
     indicatorData.forEach(indicator => {
-        indicator.treatments.forEach(treatment => {
+        // An indicator can arrive without its treatments array; it contributes
+        // no levels rather than stopping the summary for every other sample.
+        (indicator.treatments || []).forEach(treatment => {
             const parts = treatment.level.split('_');
             const level = parts.length === 2 ? parts[1] : treatment.level;
             const cancerType = getTumorTypeName(
