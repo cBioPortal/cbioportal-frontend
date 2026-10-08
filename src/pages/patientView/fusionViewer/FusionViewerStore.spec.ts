@@ -833,6 +833,34 @@ describe('FusionViewerStore', () => {
                 },
             });
 
+        it('labels the same 5prime gene the diagram draws when one side has no transcripts', async () => {
+            // ERG loads, TMPRSS2 comes back empty: the resolver cannot orient,
+            // so the diagram draws ERG as 5'. The label must agree with it.
+            mockFetchTranscripts.mockImplementation((symbol: string) =>
+                Promise.resolve(
+                    symbol === 'ERG'
+                        ? [
+                              makeTranscript({
+                                  transcriptId: 'ENST_ERG',
+                                  gene: 'ERG',
+                                  strand: '-',
+                                  txStart: 39751949,
+                                  txEnd: 40033704,
+                                  isForteSelected: true,
+                              }),
+                          ]
+                        : []
+                )
+            );
+            store.setStructuralVariants([row('f1', 42875116)] as any);
+            await new Promise(r => setTimeout(r, 50));
+            assert.isFalse(store.transcriptsLoading);
+            assert.equal(
+                store.canonicalFusion!.gene1.symbol,
+                store.forteTranscript5p!.gene
+            );
+        });
+
         it('keeps the 5prime partner first while the new selection loads', async () => {
             store.setStructuralVariants([
                 row('f1', 42875116),
