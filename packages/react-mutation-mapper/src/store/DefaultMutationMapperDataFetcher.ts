@@ -15,6 +15,7 @@ import {
     EvidenceType,
     IndicatorQueryResp,
     IOncoKbData,
+    fetchGermlineStructuralVariantIndicators,
     generateProteinChangeQuery,
     generateAnnotateStructuralVariantQuery,
     generateGermlineHgvscQuery,
@@ -341,12 +342,15 @@ export class DefaultMutationMapperDataFetcher
     ) {
         // Somatic (non-germline) mutations are annotated via the protein-change
         // endpoint. Germline mutations are handled separately below and must
-        // never fall through to this somatic endpoint.
+        // never fall through to this somatic endpoint. Structural variants go
+        // to the structural variant endpoint instead; their mutation type
+        // arrives lowercased, so each check for it is case insensitive.
         const mutationQueryVariants: AnnotateMutationByProteinChangeQuery[] = _.uniqBy(
             _.map(
                 queryVariants.filter(
                     mutation =>
-                        mutation.mutationType !== 'Fusion' &&
+                        mutation.mutationType?.toUpperCase() !==
+                            StructuralVariantType.FUSION &&
                         !isGermlineMutationStatus(mutation.mutationStatus)
                 ),
                 (mutation: Mutation) => {
@@ -376,7 +380,8 @@ export class DefaultMutationMapperDataFetcher
         queryVariants
             .filter(
                 mutation =>
-                    mutation.mutationType !== 'Fusion' &&
+                    mutation.mutationType?.toUpperCase() !==
+                        StructuralVariantType.FUSION &&
                     isGermlineMutationStatus(mutation.mutationStatus)
             )
             .forEach(mutation => {
@@ -415,22 +420,31 @@ export class DefaultMutationMapperDataFetcher
             'id'
         );
 
-        const structuralQueryVariants: AnnotateStructuralVariantQuery[] = _.uniqBy(
-            _.map(
-                queryVariants.filter(
-                    mutation =>
-                        mutation.mutationType?.toUpperCase() ===
-                        StructuralVariantType.FUSION
-                ),
-                (mutation: Mutation) => {
-                    return generateAnnotateStructuralVariantQuery(
-                        /* @ts-ignore */
-                        mutation.structuralVariant,
-                        getTumorType(mutation),
-                        evidenceTypes
-                    );
-                }
+        // OncoKB does not curate germline structural variants, so a germline
+        // variant sent to the annotation endpoint comes back annotated with
+        // somatic content. Annotate the somatic ones, and fall back to the
+        // gene-level curation for the germline ones.
+        const [
+            germlineStructuralVariants,
+            somaticStructuralVariants,
+        ] = _.partition(
+            queryVariants.filter(
+                mutation =>
+                    mutation.mutationType?.toUpperCase() ===
+                    StructuralVariantType.FUSION
             ),
+            mutation => isGermlineMutationStatus(mutation.mutationStatus)
+        );
+
+        const structuralQueryVariants: AnnotateStructuralVariantQuery[] = _.uniqBy(
+            _.map(somaticStructuralVariants, (mutation: Mutation) => {
+                return generateAnnotateStructuralVariantQuery(
+                    /* @ts-ignore */
+                    mutation.structuralVariant,
+                    getTumorType(mutation),
+                    evidenceTypes
+                );
+            }),
             'id'
         );
 
@@ -455,6 +469,15 @@ export class DefaultMutationMapperDataFetcher
                       body: structuralQueryVariants,
                   });
 
+        const germlineStructuralVariantResult = await fetchGermlineStructuralVariantIndicators(
+            germlineStructuralVariants.map((mutation: Mutation) => ({
+                /* @ts-ignore */
+                structuralVariant: mutation.structuralVariant,
+                tumorType: getTumorType(mutation),
+            })),
+            client
+        );
+
         return {
             // generateIdToIndicatorMap(oncokbSearch)
             indicatorMap: _.keyBy(
@@ -462,6 +485,7 @@ export class DefaultMutationMapperDataFetcher
                     ...mutationQueryResult,
                     ...germlineHgvscQueryResult,
                     ...structuralVariantQueryResult,
+                    ...germlineStructuralVariantResult,
                 ] as IndicatorQueryResp[],
                 indicator => indicator.query.id
             ),
