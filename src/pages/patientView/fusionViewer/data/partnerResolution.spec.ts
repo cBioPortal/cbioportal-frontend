@@ -332,3 +332,106 @@ describe('resolveFusionPartners', () => {
         assert.equal(result.swapped, false);
     });
 });
+
+import {
+    orientByDescriptions,
+    parseSiteDescription,
+} from './partnerResolution';
+
+describe('parseSiteDescription', () => {
+    it('reads the gene and strand from IMPACT and TARGET descriptions', () => {
+        assert.deepEqual(
+            parseSiteDescription('Intron of ERG(-): 17Kb before exon 4'),
+            { symbol: 'ERG', strand: '-' }
+        );
+        assert.deepEqual(parseSiteDescription('Exon 7 of EWSR1(+)'), {
+            symbol: 'EWSR1',
+            strand: '+',
+        });
+    });
+
+    it('returns null when the description carries no strand', () => {
+        assert.isNull(parseSiteDescription(''));
+        assert.isNull(parseSiteDescription('exon'));
+        assert.isNull(parseSiteDescription('IGR: 5Kb before TP53'));
+    });
+});
+
+describe('orientByDescriptions', () => {
+    // Three calls of one TMPRSS2-ERG deletion in one patient; every row lists
+    // ERG first. TMPRSS2 sits at 42.87M, ERG at 39.83M, both on '-'.
+    const site = (symbol: string, position: number, desc: string) => ({
+        ...makeGene(symbol, '21', position, 'NA'),
+        siteDescription: desc,
+    });
+    const ergDesc = 'Intron of ERG(-): 17Kb before exon 4';
+    const tmprss2Desc = 'Intron of TMPRSS2(-): 5Kb after exon 1';
+
+    it('puts TMPRSS2 5prime for an ERG-first deletion row', () => {
+        const out = orientByDescriptions(
+            makeFusion({
+                gene1: site('ERG', 39834655, ergDesc),
+                gene2: site('TMPRSS2', 42875116, tmprss2Desc),
+                connectionType: '3to5',
+            })
+        );
+        assert.equal(out.gene1.symbol, 'TMPRSS2');
+        assert.equal(out.gene1.position, 42875116);
+        assert.equal(out.gene2!.symbol, 'ERG');
+        assert.equal(out.gene2!.position, 39834655);
+    });
+
+    it('re-pairs symbols with positions when they are swapped (pattern B)', () => {
+        const out = orientByDescriptions(
+            makeFusion({
+                gene1: site('TMPRSS2', 39834655, ergDesc),
+                gene2: site('ERG', 42875117, tmprss2Desc),
+                connectionType: '3to5',
+            })
+        );
+        assert.equal(out.gene1.symbol, 'TMPRSS2');
+        assert.equal(out.gene1.position, 42875117);
+        assert.equal(out.gene2!.symbol, 'ERG');
+        assert.equal(out.gene2!.position, 39834655);
+    });
+
+    it('uses each site’s own strand for a same-gene row', () => {
+        // Same symbol on both sides, far apart: the second site's strand must
+        // come from its own description, not the first site's.
+        const out = orientByDescriptions(
+            makeFusion({
+                gene1: site('GENE_A', 1000000, 'Intron of GENE_A(+)'),
+                gene2: site('GENE_A', 5000000, 'Intron of GENE_A(-)'),
+                connectionType: '5to3',
+            })
+        );
+        // '+|-|5to3' -> 'high'
+        assert.equal(out.gene1.position, 5000000);
+    });
+
+    it('leaves the row unchanged when a description has no strand', () => {
+        const fusion = makeFusion({
+            gene1: site('ERG', 39834655, ''),
+            gene2: site('TMPRSS2', 42875116, tmprss2Desc),
+        });
+        assert.strictEqual(orientByDescriptions(fusion), fusion);
+    });
+
+    it('keeps site1 as 5prime when there is no connection type (TARGET)', () => {
+        // TARGET rows are already in caller 5'->3' order and carry no
+        // connection type; the strand rule must not reorder them.
+        const fusion = makeFusion({
+            gene1: site('ERG', 39834655, ergDesc),
+            gene2: site('TMPRSS2', 42875116, tmprss2Desc),
+            connectionType: 'NA',
+        });
+        const out = orientByDescriptions(fusion);
+        assert.equal(out.gene1.symbol, 'ERG');
+        assert.equal(out.gene1.position, 39834655);
+    });
+
+    it('leaves an intergenic row unchanged', () => {
+        const fusion = makeFusion({ gene2: null });
+        assert.strictEqual(orientByDescriptions(fusion), fusion);
+    });
+});

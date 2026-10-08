@@ -156,4 +156,24 @@ describe('filterFusions', () => {
             ['chrm']
         );
     });
+    describe('sample', () => {
+        const t01 = makeFusion({ id: 't01', tumorId: 'PT-0001-T01-IM5' });
+        const t02 = makeFusion({ id: 't02', tumorId: 'PT-0001-T02-IM6' });
+        const samples = (q: string) =>
+            filterFusions([t01, t02], q).map(f => f.id);
+
+        it('matches a full or partly typed sample id', () => {
+            assert.deepEqual(samples('PT-0001-T01-IM5'), ['t01']);
+            assert.deepEqual(samples('pt-0001-t0'), ['t01', 't02']);
+        });
+
+        it('matches one part of a sample id, such as the specimen', () => {
+            assert.deepEqual(samples('t02'), ['t02']);
+            assert.deepEqual(samples('im5'), ['t01']);
+        });
+
+        it('combines with a gene term', () => {
+            assert.deepEqual(samples('erg t01'), ['t01']);
+        });
+    });
 });

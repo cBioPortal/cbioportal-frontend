@@ -62,6 +62,15 @@ function termMatches(fusion: FusionEvent, term: string): boolean {
     if (fusionNames(partners).some(n => n.startsWith(term))) {
         return true;
     }
+    // A sample id matches typed from the start, or by any one of its parts,
+    // so `t02` finds the second specimen.
+    const sample = fusion.tumorId.toLowerCase();
+    if (
+        sample.startsWith(term) ||
+        sample.split(/[-_.]/).some(part => part.startsWith(term))
+    ) {
+        return true;
+    }
     // Word-prefix, not substring: `erg` must not hit "intERGenic".
     const words = [
         ...partners.map(p => p.symbol),
@@ -77,8 +86,8 @@ function termMatches(fusion: FusionEvent, term: string): boolean {
 
 /**
  * Sidebar search: whitespace-separated terms, all of which must match
- * as a word prefix (gene / partner symbol, variant class, SV type) or as a
- * coordinate.
+ * as a word prefix (gene / partner symbol, sample, variant class, SV type)
+ * or as a coordinate.
  */
 export function filterFusions(
     fusions: FusionEvent[],
