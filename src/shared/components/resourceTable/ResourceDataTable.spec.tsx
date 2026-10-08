@@ -197,7 +197,7 @@ describe('ResourceDataTable metadata columns', () => {
         // the user anything.
         const single = {
             resourceDisplayName: 1,
-            type: 1,
+            resourceType: 1,
             displayName: 1,
         };
 
@@ -209,7 +209,7 @@ describe('ResourceDataTable metadata columns', () => {
     it('keeps a builtin column that actually varies', () => {
         const varied = {
             resourceDisplayName: 3,
-            type: 2,
+            resourceType: 2,
             displayName: 47,
         };
 

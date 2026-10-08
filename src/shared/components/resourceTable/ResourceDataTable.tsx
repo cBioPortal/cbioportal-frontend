@@ -43,19 +43,17 @@ export interface IResourceDataTableProps {
 const RESOURCE_TABLE_MAX_HEIGHT = 'calc(100vh - 220px)';
 const NOT_AVAILABLE = '';
 const NO_DESCRIPTION = 'No description provided';
-const BACKEND_SCOPE_COLUMN_ID = 'type';
 const SORT_FIELD_MAP: Record<string, string> = {
     patientId: 'patientId',
     sampleId: 'sampleId',
     resourceType: 'resourceDisplayName',
-    resourceScope: BACKEND_SCOPE_COLUMN_ID,
+    resourceScope: 'resourceType',
     description: 'displayName',
 };
 const SORT_COLUMN_MAP: Record<string, string> = {
     patientId: 'patientId',
     sampleId: 'sampleId',
     resourceDisplayName: 'resourceType',
-    type: 'resourceScope',
     displayName: 'description',
 };
 
@@ -251,23 +249,12 @@ export class ResourceDataTable extends React.Component<
     }
 
     @computed get remappedFacets() {
-        const remapped: Record<string, { value: string; count: number }[]> = {};
-        Object.entries(this.props.store.facets).forEach(
-            ([columnId, options]) => {
-                remapped[
-                    columnId === BACKEND_SCOPE_COLUMN_ID
-                        ? 'resourceScope'
-                        : columnId
-                ] = options;
-            }
-        );
-        return remapped;
+        // Every facet the backend returns is a metadata:* key, and those already match the
+        // column ids, so no remapping is needed.
+        return this.props.store.facets;
     }
 
     @computed get remappedFacetRanges() {
-        // no builtin column currently uses a numeric range facet, so no
-        // BACKEND_SCOPE_COLUMN_ID-style remapping is needed here (unlike
-        // remappedFacets) — metadata:* keys already match column ids as-is.
         return this.props.store.facetRanges;
     }
 
@@ -311,7 +298,14 @@ export class ResourceDataTable extends React.Component<
                 'Scope',
                 row => <span>{row.resourceScope}</span>,
                 row => row.resourceScope,
-                { visible: !this.isSingleValuedColumn('resourceScope') }
+                {
+                    visible: !this.isSingleValuedColumn('resourceScope'),
+                    // The entity a row hangs off is fixed by the resource definition, so within a
+                    // resource tab it is the same for every row. It is shown when a multi-study
+                    // cohort disagrees, but there is nothing to sort or filter by.
+                    sortable: false,
+                    filterable: false,
+                }
             ),
             ...this.metadataColumns,
             this.createColumn(
@@ -482,24 +476,18 @@ export class ResourceDataTable extends React.Component<
         return this.renderLinkOrText(row.sampleId, href);
     };
 
-    private getBackendColumnId(columnId: string) {
-        return columnId === 'resourceScope'
-            ? BACKEND_SCOPE_COLUMN_ID
-            : columnId;
-    }
-
     private syncStoreFilters() {
         const categoricalFilters: ResourceColumnFilter[] = Object.entries(
             this.activeFilters
         ).map(([columnId, selectedValues]) => ({
-            columnId: this.getBackendColumnId(columnId),
+            columnId,
             operator: 'in',
             values: Array.from(selectedValues),
         }));
         const rangeFilters: ResourceColumnFilter[] = Object.entries(
             this.activeRangeFilters
         ).map(([columnId, range]) => ({
-            columnId: this.getBackendColumnId(columnId),
+            columnId,
             operator: 'between',
             values: [String(range.min), String(range.max)],
         }));

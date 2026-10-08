@@ -21,7 +21,6 @@ export interface ResourceTableRow {
     sampleId: string | null;
     url: string;
     displayName: string | null;
-    type: string | null;
     metadata: { [key: string]: any };
 }
 
