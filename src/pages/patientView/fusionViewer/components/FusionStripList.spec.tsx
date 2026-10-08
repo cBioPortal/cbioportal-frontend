@@ -161,6 +161,37 @@ describe('ladderTranscript', () => {
     });
 });
 
+describe('FusionStripList height', () => {
+    const list = (n: number, viewportHeight: number) =>
+        mount(
+            <FusionStripList
+                rows={Array.from({ length: n }, (_, i) => makeRow(`S${i}`))}
+                transcriptForRow={(_, is5p) =>
+                    is5p ? tx('TMPRSS2') : tx('ERG')
+                }
+                width={800}
+                viewportHeight={viewportHeight}
+                pxPerBp5p={0.5}
+                pxPerBp3p={0.5}
+                alignment="junction"
+            />
+        );
+    const height = (w: any) =>
+        w
+            .find('[data-testid="strip-scroll"]')
+            .hostNodes()
+            .prop('style').height;
+
+    it('shrinks to its rows when they are shorter than the viewport', () => {
+        // Two 50px rows: no empty space below them.
+        assert.equal(height(list(2, 600)), 100);
+    });
+
+    it('caps at the viewport and scrolls when the rows are taller', () => {
+        assert.equal(height(list(40, 600)), 600);
+    });
+});
+
 describe('FusionStripList stale hover overlay', () => {
     function mountList() {
         return mount(
