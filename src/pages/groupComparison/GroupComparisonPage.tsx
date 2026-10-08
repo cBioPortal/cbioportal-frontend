@@ -49,6 +49,7 @@ import GroupComparisonMutationsTab from './GroupComparisonMutationsTab';
 import GroupComparisonPathwayMapperUserSelectionStore from './pathwayMapper/GroupComparisonPathwayMapperUserSelectionStore';
 import { Tour } from 'tours';
 import GenericAssayEnrichmentCollections from './GenericAssayEnrichmentCollections';
+import SwimmerPlot from './SwimmerPlot';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -171,6 +172,16 @@ export default class GroupComparisonPage extends React.Component<
                         <ClinicalData
                             store={this.store}
                             key={`gc-clinical-data-${this.store.overlapStrategy}`}
+                        />
+                    </MSKTab>
+                    <MSKTab
+                        id={GroupComparisonTab.SWIMMER_PLOT}
+                        pending={false}
+                        linkText="Swimmer Plot"
+                    >
+                        <SwimmerPlot
+                            store={this.store}
+                            key={`gc-swimmer-plot-${this.store.overlapStrategy}`}
                         />
                     </MSKTab>
                     <MSKTab
