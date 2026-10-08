@@ -304,8 +304,12 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
                     {hoveredExon.exonNumber}
                     <br />
                     <span style={{ color: '#666' }}>
-                        {hoveredExon.retained ? 'retained' : 'lost'} ·{' '}
-                        {hoveredExon.sizeBp.toLocaleString()} bp
+                        {hoveredExon.retainedNt !== undefined &&
+                        hoveredExon.lostNt !== undefined
+                            ? `partially lost · ${hoveredExon.retainedNt.toLocaleString()} nt retained · ${hoveredExon.lostNt.toLocaleString()} nt lost`
+                            : `${
+                                  hoveredExon.retained ? 'retained' : 'lost'
+                              } · ${hoveredExon.sizeBp.toLocaleString()} bp`}
                     </span>
                 </div>
             )}

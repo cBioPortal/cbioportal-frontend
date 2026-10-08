@@ -502,6 +502,64 @@ describe('FusionProductStrip full exon mode', () => {
         assert.equal(tick5.prop('x1'), tick5.prop('x2'));
     });
 
+    it('reports retained and lost nt for an exon the breakpoint splits', () => {
+        // Exon 2 is 200-300 (101 nt). Collect the hover payload for every
+        // exon-2 rect of one gene; both halves of a split exon report the same.
+        const hoversFor = (gene: string, props: any) => {
+            const seen: any[] = [];
+            const w = mountFull({
+                ...props,
+                onExonHover: (i: any) => i && seen.push(i),
+            });
+            w.find('[data-testid="strip-exon"]')
+                .hostNodes()
+                .forEach(r => r.simulate('mouseenter'));
+            return seen.filter(i => i.gene === gene && i.exonNumber === 2);
+        };
+        const check = (
+            gene: string,
+            props: any,
+            retainedNt: number,
+            lostNt: number
+        ) => {
+            const hits = hoversFor(gene, props);
+            assert.lengthOf(hits, 2, `${gene}: both halves hover`);
+            hits.forEach(i => {
+                assert.equal(i.retainedNt, retainedNt, `${gene} retained`);
+                assert.equal(i.lostNt, lostNt, `${gene} lost`);
+                assert.equal(i.retainedNt + i.lostNt, i.sizeBp);
+            });
+        };
+        // 5' on +: 200..250 kept, 251..300 lost. 3' on +: 250..300 kept.
+        check('TMPRSS2', {}, 51, 50);
+        check('ERG', {}, 51, 50);
+        // 5' on -: transcription runs 300 -> 200, so 300..220 is kept.
+        check(
+            'TMPRSS2',
+            { transcript5p: tx('TMPRSS2', '-'), breakpoint5p: 220 },
+            81,
+            20
+        );
+        // 3' on -: 220..200 (the downstream part) is kept.
+        check(
+            'ERG',
+            { transcript3p: tx('ERG', '-'), breakpoint3p: 220 },
+            21,
+            80
+        );
+    });
+
+    it('leaves a whole exon without a partial split', () => {
+        let seen: any = null;
+        mountFull({ onExonHover: (i: any) => (seen = i) })
+            .find('[data-testid="strip-exon"]')
+            .hostNodes()
+            .first()
+            .simulate('mouseenter');
+        assert.isUndefined(seen.retainedNt);
+        assert.isUndefined(seen.lostNt);
+    });
+
     it('reports exon identity on hover', () => {
         let seen: any = null;
         const wrapper = mountFull({ onExonHover: (i: any) => (seen = i) });

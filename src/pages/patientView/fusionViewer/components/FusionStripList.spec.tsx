@@ -178,6 +178,23 @@ describe('FusionStripList stale hover overlay', () => {
         );
     }
 
+    it('says "partially lost" with nt counts for a split exon', () => {
+        const wrapper = mountList();
+        // Breakpoint 250 splits exon 2; its lost half carries data-lost.
+        const split = wrapper
+            .find('rect[data-testid="strip-exon"][data-lost="true"]')
+            .hostNodes()
+            .first();
+        split.simulate('mouseenter', { clientX: 10, clientY: 20 });
+        const text = wrapper
+            .find('[data-testid="exon-hover-readout"]')
+            .hostNodes()
+            .text();
+        assert.include(text, 'partially lost');
+        assert.include(text, '51 nt retained');
+        assert.include(text, '50 nt lost');
+    });
+
     it('shows the shared overlay on exon hover and clears it on scroll', () => {
         const wrapper = mountList();
         wrapper
