@@ -1,3 +1,4 @@
+import { LABEL_GUTTER, RIGHT_GUTTER } from './comparisonFrame';
 import { assert } from 'chai';
 import { mount } from 'enzyme';
 import * as React from 'react';
@@ -355,11 +356,14 @@ describe('FusionStripList partnerless rows with a 3′ anchor (D33)', () => {
         const note = wrapper.find('[data-testid="strip-left-note"]');
         assert.isTrue(note.exists());
         assert.equal(note.text(), 'no partner');
-        // Every exon rect sits right of the junction (frame junctionX = 170 + (880-170)/2 = 525).
+        // Every exon rect sits right of the junction, midway between the
+        // label gutter and the right gutter.
+        const junctionX =
+            LABEL_GUTTER + (1000 - RIGHT_GUTTER - LABEL_GUTTER) / 2;
         const rects = wrapper.find('rect[data-testid="strip-exon"]');
         assert.isAbove(rects.length, 0);
         rects.forEach(r => {
-            assert.isAbove(Number(r.prop('x')), 525);
+            assert.isAbove(Number(r.prop('x')), junctionX);
         });
     });
 

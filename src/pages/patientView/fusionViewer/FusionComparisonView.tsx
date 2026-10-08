@@ -1479,8 +1479,8 @@ export default class FusionComparisonView extends React.Component<
                     <div
                         style={{
                             position: 'relative',
-                            height: 18,
-                            fontSize: 11,
+                            height: 20,
+                            fontSize: 13,
                             fontWeight: 600,
                             color: '#6c757d',
                             width: contentWidth,

@@ -130,7 +130,7 @@ export interface PartnerLabel {
     title?: string;
 }
 
-export const PARTNER_X_OFFSET = 112; // from rightX; clears "Out-of-frame · 1234r"
+export const PARTNER_X_OFFSET = 138; // from rightX; clears "Out-of-frame · 1234r"
 /** Partner label text x (from rightX); the column header aligns to it. */
 export const PARTNER_TEXT_OFFSET = PARTNER_X_OFFSET + 12;
 const PARTNER_MAX_CHARS = 24; // fits "38 partners (top: TMPRSS2)"
@@ -582,7 +582,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                 <text
                     x={rightX + 8}
                     y={textBaseline - 2}
-                    fontSize={9.5}
+                    fontSize={11.5}
                     fill="#666"
                 >
                     {style.label} · {reads}r
@@ -602,7 +602,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                         data-testid="partner-label"
                         x={rightX + PARTNER_TEXT_OFFSET}
                         y={textBaseline - 2}
-                        fontSize={9.5}
+                        fontSize={11.5}
                         fill="#495057"
                     >
                         {truncate(partnerLabel.text)}
