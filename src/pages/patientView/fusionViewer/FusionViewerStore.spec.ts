@@ -809,4 +809,43 @@ describe('FusionViewerStore', () => {
             assert.equal(store.effectiveActive5pId, 'ENST_TMPRSS2');
         });
     });
+
+    describe('canonicalFusion while transcripts load', () => {
+        // Two calls of one TMPRSS2-ERG deletion, both listing ERG first.
+        const row = (id: string, tmprss2Pos: number) =>
+            makeFusion({
+                id,
+                connectionType: '3to5',
+                fusion: 'ERG::TMPRSS2',
+                gene1: {
+                    symbol: 'ERG',
+                    chromosome: '21',
+                    position: 39834655,
+                    selectedTranscriptId: '',
+                    siteDescription: 'Intron of ERG(-): 17Kb before exon 4',
+                },
+                gene2: {
+                    symbol: 'TMPRSS2',
+                    chromosome: '21',
+                    position: tmprss2Pos,
+                    selectedTranscriptId: '',
+                    siteDescription: 'Intron of TMPRSS2(-): 5Kb after exon 1',
+                },
+            });
+
+        it('keeps the 5prime partner first while the new selection loads', async () => {
+            store.setStructuralVariants([
+                row('f1', 42875116),
+                row('f2', 42875117),
+            ] as any);
+            await new Promise(r => setTimeout(r, 50));
+            // The next fetch never resolves: the selection stays loading.
+            mockFetchTranscripts.mockReturnValue(new Promise(() => {}));
+            store.selectFusion('f2');
+            assert.isTrue(store.transcriptsLoading);
+            assert.equal(store.canonicalFusion!.gene1.symbol, 'TMPRSS2');
+            assert.equal(store.canonicalFusion!.gene1.position, 42875117);
+            assert.equal(store.canonicalFusion!.fusion, 'TMPRSS2::ERG');
+        });
+    });
 });
