@@ -177,7 +177,12 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
         <>
             <div
                 data-testid="strip-scroll"
-                style={{ height: viewportHeight, overflowY: 'auto' }}
+                // Shrink to the rows when they are shorter than the viewport,
+                // so a small cohort leaves no blank space below the list.
+                style={{
+                    height: Math.min(viewportHeight, items.length * rowHeight),
+                    overflowY: 'auto',
+                }}
                 onScroll={e => {
                     setScrollTop((e.target as HTMLDivElement).scrollTop);
                     setHoveredExon(null);
