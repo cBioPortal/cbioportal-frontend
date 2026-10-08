@@ -10,6 +10,7 @@ import { StructuralVariant } from 'cbioportal-ts-api-client';
 import { FusionEvent, TranscriptData } from './data/types';
 import { convertStructuralVariantsToFusionEvents } from './data/structuralVariantAdapter';
 import {
+    orientByDescriptions,
     resolveFusionPartners,
     ResolvedFusion,
 } from './data/partnerResolution';
@@ -225,6 +226,17 @@ export class FusionViewerStore {
         const resolved = this.resolvedFusion;
         if (!resolved) return raw;
 
+        // Until both transcript lists load, the resolver can only echo the raw
+        // site1/site2 order, which flashes "ERG::TMPRSS2" on every selection.
+        // Orient from the site descriptions meanwhile, as the sidebar does.
+        const transcriptsReady =
+            !this.transcriptsLoading &&
+            this.gene1Transcripts.length > 0 &&
+            (!raw.gene2 || this.gene2Transcripts.length > 0);
+        const partners = transcriptsReady
+            ? { gene1: resolved.fivePrime, gene2: resolved.threePrime }
+            : orientByDescriptions(raw);
+
         // If the raw fusion label was the algorithmic "A::B" fallback (no eventInfo),
         // rebuild it from the canonical 5'/3' symbols so the displayed name matches
         // the rendered orientation. When the label came from eventInfo (free-text
@@ -234,15 +246,15 @@ export class FusionViewerStore {
             : raw.gene1.symbol;
         const fusionLabel =
             raw.fusion === rawSymbolLabel
-                ? resolved.threePrime
-                    ? `${resolved.fivePrime.symbol}::${resolved.threePrime.symbol}`
-                    : resolved.fivePrime.symbol
+                ? partners.gene2
+                    ? `${partners.gene1.symbol}::${partners.gene2.symbol}`
+                    : partners.gene1.symbol
                 : raw.fusion;
 
         return {
             ...raw,
-            gene1: resolved.fivePrime,
-            gene2: resolved.threePrime,
+            gene1: partners.gene1,
+            gene2: partners.gene2,
             fusion: fusionLabel,
         };
     }
