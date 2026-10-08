@@ -204,43 +204,6 @@ describe('buildPathRows', () => {
     });
 });
 
-describe('buildPathRows timeline row', () => {
-    const procedureSlide: Slide = {
-        ...slide,
-        slide_key: 'slide-timeline',
-        slide_timepoint_days: -242,
-        slide_timepoint_source: 'Procedure date',
-    };
-
-    function timeline(rows: ReturnType<typeof buildPathRows>) {
-        return rows.find(row => row.label === 'Timeline')?.value;
-    }
-
-    it('shows the procedure day', () => {
-        expect(
-            timeline(buildPathRows({ ...procedureSlide }, sample, 'P-1'))
-        ).toBe('Procedure d-242');
-    });
-
-    it('falls back to the sequencing report date', () => {
-        expect(
-            timeline(
-                buildPathRows(
-                    { ...slide },
-                    { ...sample, sequencing_date: '2021-03-04' },
-                    'P-1'
-                )
-            )
-        ).toBe('sequenced 2021-03-04');
-    });
-
-    it('has no timeline row without any timing', () => {
-        expect(timeline(buildPathRows({ ...slide }, sample, 'P-1'))).toBe(
-            undefined
-        );
-    });
-});
-
 describe('buildWsiRows', () => {
     it('shows dimensions, magnification and scanner', () => {
         expect(buildWsiRows(slide, metadata)).toEqual([

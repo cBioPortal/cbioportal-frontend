@@ -7,7 +7,6 @@ import {
     PathologySlideMatchFilter,
     WsiStainFilter,
     WsiClinicalRow,
-    WsiTimepointSelection,
 } from './wsiViewerTypes';
 
 export interface WsiViewerProps {
@@ -23,8 +22,6 @@ export interface WsiViewerProps {
     height: number;
     initialStainFilter?: WsiStainFilter;
     initialMatchFilter?: PathologySlideMatchFilter;
-    initialTimepointDays?: WsiTimepointSelection;
-    onTimepointChange?: (days: WsiTimepointSelection) => void;
     onStainFilterChange?: (filter: WsiStainFilter) => void;
     onMatchFilterChange?: (filter: PathologySlideMatchFilter) => void;
     onClearFilters?: () => void;

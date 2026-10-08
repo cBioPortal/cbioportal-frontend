@@ -189,25 +189,6 @@ function makeWireHierarchy(slides: Slide[], patientId = 'P-123'): any {
                                     matchLevel: slide.match_level || 'BLOCK',
                                     specimenKey:
                                         slide.specimen_key || 'specimen-1',
-                                    procedureDateDays:
-                                        slide.slide_timepoint_days ?? null,
-                                    timepointSource:
-                                        slide.slide_timepoint_source ||
-                                        'Procedure date unavailable',
-                                    procedureDateKind:
-                                        slide.slide_timepoint_kind || 'UNDATED',
-                                    procedureDateSource:
-                                        slide.slide_timepoint_date_source ||
-                                        'missing_procedure_date',
-                                    procedureDateReason:
-                                        slide.slide_timepoint_reason ||
-                                        'unavailable',
-                                    procedureDateStatus:
-                                        slide.slide_timepoint_status ||
-                                        'MISSING_PROCEDURE_DATE',
-                                    procedureCoordinateSystem:
-                                        slide.slide_timepoint_coordinate_system ||
-                                        'patient_first_tumor_sequencing_day_zero',
                                 })),
                             },
                         ],
@@ -247,55 +228,26 @@ function toWireHierarchy(hierarchy: PatientHierarchy): any {
                 blocks: part.blocks.map(block => ({
                     blockNumber: block.block_number,
                     blockLabel: block.block_label,
-                    slides: block.slides.map(slide => {
-                        const hasDays = slide.slide_timepoint_days != null;
-                        return {
-                            slideKey: slide.slide_key,
-                            stainName: slide.stain_name,
-                            stainGroup: slide.stain_group,
-                            isHne: slide.is_hne,
-                            isIhc: slide.is_ihc,
-                            magnification: slide.magnification,
-                            fileSizeBytes: slide.file_size_bytes
-                                ? Number(slide.file_size_bytes)
-                                : null,
-                            canServeTiles: slide.can_serve_tiles,
-                            slideType: slide.slide_type || null,
-                            sampleId: slide.sample_id ?? sample.sample_id,
-                            matchLevel:
-                                slide.match_level ||
-                                (sample.sample_id === 'UNMATCHED'
-                                    ? 'UNMATCHED'
-                                    : 'BLOCK'),
-                            specimenKey: slide.specimen_key || 'specimen-1',
-                            procedureDateDays:
-                                slide.slide_timepoint_days ?? null,
-                            timepointSource:
-                                slide.slide_timepoint_source ||
-                                (hasDays
-                                    ? 'Procedure date'
-                                    : 'Procedure date unavailable'),
-                            procedureDateKind:
-                                slide.slide_timepoint_kind ||
-                                (hasDays ? 'RECORDED' : 'UNDATED'),
-                            procedureDateSource:
-                                slide.slide_timepoint_date_source ||
-                                (hasDays
-                                    ? 'recorded_procedure_date'
-                                    : 'missing_procedure_date'),
-                            procedureDateReason: hasDays
-                                ? null
-                                : slide.slide_timepoint_reason || 'unavailable',
-                            procedureDateStatus:
-                                slide.slide_timepoint_status ||
-                                (hasDays
-                                    ? 'AVAILABLE'
-                                    : 'MISSING_PROCEDURE_DATE'),
-                            procedureCoordinateSystem:
-                                slide.slide_timepoint_coordinate_system ||
-                                'patient_first_tumor_sequencing_day_zero',
-                        };
-                    }),
+                    slides: block.slides.map(slide => ({
+                        slideKey: slide.slide_key,
+                        stainName: slide.stain_name,
+                        stainGroup: slide.stain_group,
+                        isHne: slide.is_hne,
+                        isIhc: slide.is_ihc,
+                        magnification: slide.magnification,
+                        fileSizeBytes: slide.file_size_bytes
+                            ? Number(slide.file_size_bytes)
+                            : null,
+                        canServeTiles: slide.can_serve_tiles,
+                        slideType: slide.slide_type || null,
+                        sampleId: slide.sample_id ?? sample.sample_id,
+                        matchLevel:
+                            slide.match_level ||
+                            (sample.sample_id === 'UNMATCHED'
+                                ? 'UNMATCHED'
+                                : 'BLOCK'),
+                        specimenKey: slide.specimen_key || 'specimen-1',
+                    })),
                 })),
             })),
         })),
@@ -726,90 +678,51 @@ describe('WSIViewer — componentWillUnmount', () => {
 });
 
 describe('WSIViewer — pathology filter updates', () => {
-    it('selects a slide matching the initial and interactive timepoint filter', async () => {
-        const early = makeSlide({
-            slide_key: 'early',
-            slide_timepoint_days: -20,
-            slide_timepoint_source: 'Procedure date',
-        });
-        const late = makeSlide({
-            slide_key: 'late',
-            slide_timepoint_days: -5,
-            slide_timepoint_source: 'Procedure date',
-        });
+    it('orders slides by part, block and H&E first, and defaults to the first', () => {
+        const slide = (key: string, blockNumber: string, isHne: boolean) =>
+            makeSlide({
+                slide_key: key,
+                block_number: blockNumber,
+                block_label: `A${blockNumber}`,
+                stain_name: isHne ? 'H&E' : 'CD3',
+                is_hne: isHne,
+                is_ihc: !isHne,
+                slide_type: isHne ? 'H&E' : 'IHC',
+            });
+        // Hierarchy order differs from the expected display order.
         const sample = makeSample('S-1', [
-            makePart([makeBlock([early, late])]),
+            {
+                ...makePart([makeBlock([slide('p2-b1-he', '1', true)])]),
+                part_number: '2',
+            },
+            {
+                ...makePart([
+                    makeBlock([slide('p1-b2-he', '2', true)], '2'),
+                    makeBlock([
+                        slide('p1-b1-ihc', '1', false),
+                        slide('p1-b1-he', '1', true),
+                    ]),
+                ]),
+                part_number: '1',
+            },
         ]);
-        const hierarchy = makeHierarchy([early, late]);
-        hierarchy.samples[0] = sample;
-        const onTimepointChange = jest.fn();
         const inst = new (WSIViewer as any)({
             ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
-            initialTimepointDays: -20,
-            onTimepointChange,
         });
-        inst.hierarchy = hierarchy;
-        inst.selectedSample = sample;
-        inst.selectedSlide = late;
-        const selectSlideSpy = jest
-            .spyOn(controllerOf(inst), 'selectSlide')
-            .mockResolvedValue(undefined);
+        inst.hierarchy = { patient_id: 'P-XYZ', samples: [sample] };
 
+        expect(
+            (inst as any).servableSlides.map(
+                (entry: { slide: Slide }) => entry.slide.slide_key
+            )
+        ).toEqual(['p1-b1-he', 'p1-b1-ihc', 'p1-b2-he', 'p2-b1-he']);
         expect(
             (inst as any).chooseInitialServableSlide(
                 (inst as any).servableSlides
             ).slide.slide_key
-        ).toBe('early');
-
-        inst.timepointDays = undefined;
-        await act(async () => {
-            (inst as any).handleTimepointChange(-20);
-        });
-        expect(onTimepointChange).toHaveBeenCalledWith(-20);
-        expect(selectSlideSpy).toHaveBeenCalledWith(early, sample);
-    });
-
-    it('preserves an unavailable linkout timepoint instead of broadening scope', () => {
-        const onTimepointChange = jest.fn();
-        const slide = makeSlide({
-            slide_key: 'dated-slide',
-            slide_timepoint_days: -5,
-            slide_timepoint_source: 'Procedure date',
-        });
-        const sample = makeSample('S-1', [makePart([makeBlock([slide])])]);
-        const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
-            height: 500,
-            initialTimepointDays: -20,
-            pathologyFilter: {
-                sampleId: 'S-1',
-                matchLevel: 'BLOCK',
-                specimenKey: 'block::1::A1',
-            },
-            onTimepointChange,
-        });
-
-        (inst as any).createControllerHost().setHierarchy({
-            patient_id: 'P-XYZ',
-            samples: [sample],
-            slide_associations: [
-                {
-                    slide_key: 'dated-slide',
-                    sample_id: 'S-1',
-                    match_level: 'BLOCK',
-                    specimen_key: 'block::1::A1',
-                    slide_type: 'H&E',
-                    can_serve_tiles: true,
-                },
-            ],
-        });
-
-        expect(inst.timepointDays).toBe(-20);
-        expect(onTimepointChange).not.toHaveBeenCalled();
-        expect((inst as any).linkoutScopeActive).toBe(true);
+        ).toBe('p1-b1-he');
     });
 
     it('only mounts the latest slide after rapid left-nav clicks', () => {
@@ -3487,16 +3400,6 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
                                             sampleId: 'S-123456-T01',
                                             matchLevel: 'BLOCK',
                                             specimenKey: 'block::1::1',
-                                            procedureDateDays: 0,
-                                            timepointSource:
-                                                'Recorded procedure date relative to first tumor sequencing',
-                                            procedureDateKind: 'RECORDED',
-                                            procedureDateSource:
-                                                'Recorded procedure date relative to first tumor sequencing',
-                                            procedureDateReason: null,
-                                            procedureDateStatus: 'AVAILABLE',
-                                            procedureCoordinateSystem:
-                                                'patient_first_tumor_sequencing_day_zero',
                                         },
                                     ],
                                 },

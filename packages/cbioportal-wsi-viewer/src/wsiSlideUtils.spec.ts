@@ -1,12 +1,11 @@
 import {
+    compareSlidesInSample,
     countServableSlidesForSample,
     getOrderedServableSlidesForSampleReadOnly,
     getServableSlideAssociationsBySlideKeyReadOnly,
     getServableSlideEntriesForHierarchyReadOnly,
     getServableSlideIdsForPathologyFilterReadOnly,
     getServableSlidesForSampleReadOnly,
-    getWsiTimepointOptions,
-    matchesWsiTimepointFilter,
     sampleHasMultiplePartDescriptions,
     sampleHasServableSlide,
     selectMetadataPrefetchSlides,
@@ -62,57 +61,6 @@ function makeSample(sampleId: string, slides: Slide[]): Sample {
 }
 
 describe('wsiSlideUtils read-only slide derivation', () => {
-    it('builds ordered unique timepoint options and keeps undated slides in All', () => {
-        const slides = [
-            makeSlide({
-                slide_key: 'late',
-                slide_timepoint_days: 10,
-                slide_timepoint_source: 'Procedure date',
-            }),
-            makeSlide({
-                slide_key: 'early',
-                slide_timepoint_days: -10,
-                slide_timepoint_source: 'Procedure date',
-            }),
-            makeSlide({ slide_key: 'undated' }),
-        ];
-        const options = getWsiTimepointOptions(
-            slides.map(slide => ({ slide }))
-        );
-
-        expect(options).toEqual([
-            { days: -10, label: 'Proc d-10' },
-            { days: 10, label: 'Proc d+10' },
-            { days: 'undated', label: 'Undated' },
-        ]);
-        expect(matchesWsiTimepointFilter(slides[2], undefined, 'undated')).toBe(
-            true
-        );
-        expect(matchesWsiTimepointFilter(slides[2], undefined, -10)).toBe(
-            false
-        );
-        expect(matchesWsiTimepointFilter(slides[2], undefined)).toBe(true);
-    });
-
-    it('uses only the slide timing contract', () => {
-        const slide = makeSlide({ slide_key: 'legacy' });
-        const association: SlideAssociation = {
-            slide_key: 'legacy',
-            sample_id: 'S-1',
-            match_level: 'BLOCK',
-            specimen_key: 'block::1',
-            slide_type: 'H&E',
-            procedure_date_days: -4,
-            timepoint_source: 'Procedure date',
-            can_serve_tiles: true,
-        };
-
-        expect(getWsiTimepointOptions([{ slide, association }])).toEqual([
-            { days: 'undated', label: 'Undated' },
-        ]);
-        expect(matchesWsiTimepointFilter(slide, association, -4)).toBe(false);
-    });
-
     it('selects the preferred association for an image', () => {
         const associations: SlideAssociation[] = [
             {
@@ -223,17 +171,90 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         ).not.toBe(first);
     });
 
-    it('orders slides by slide-level timepoint', () => {
+    it('orders slides by part, then block, then H&E first', () => {
+        const slide = (key: string, blockNumber: string, isHne: boolean) =>
+            makeSlide({
+                slide_key: key,
+                block_number: blockNumber,
+                stain_name: isHne ? 'H&E' : 'CD3',
+                is_hne: isHne,
+                is_ihc: !isHne,
+            });
+        const part = (partNumber: string, slides: Slide[]) => ({
+            ...makeSample('unused', []).parts[0],
+            part_number: partNumber,
+            blocks: [{ block_number: '', block_label: '', slides }],
+        });
+        // Hierarchy order differs from the expected display order.
+        const sample: Sample = {
+            ...makeSample('S-1', []),
+            parts: [
+                part('10', [slide('p10-b1-he', '1', true)]),
+                part('2', [
+                    slide('p2-b10-he', '10', true),
+                    slide('p2-b2-ihc', '2', false),
+                    slide('p2-b2-he', '2', true),
+                ]),
+            ],
+        };
+
+        expect(
+            getOrderedServableSlidesForSampleReadOnly(sample).map(
+                entry => entry.slide.slide_key
+            )
+        ).toEqual(['p2-b2-he', 'p2-b2-ihc', 'p2-b10-he', 'p10-b1-he']);
+    });
+
+    it('keeps hierarchy order for slides with the same part, block and stain', () => {
         const sample = makeSample('S-1', [
-            makeSlide({ slide_key: 'late', slide_timepoint_days: 10 }),
-            makeSlide({ slide_key: 'early', slide_timepoint_days: -10 }),
+            makeSlide({ slide_key: 'first' }),
+            makeSlide({ slide_key: 'second' }),
         ]);
 
         expect(
             getOrderedServableSlidesForSampleReadOnly(sample).map(
                 entry => entry.slide.slide_key
             )
-        ).toEqual(['early', 'late']);
+        ).toEqual(['first', 'second']);
+    });
+
+    it('sorts numeric part and block numbers before other and missing ones', () => {
+        const entry = (partNumber: string | null, blockNumber: string) => ({
+            partNumber,
+            slide: makeSlide({ block_number: blockNumber }),
+        });
+        const ordered = [
+            entry(null, '1'),
+            entry('A', '1'),
+            entry('3', ''),
+            entry('3', 'B'),
+            entry('3', '2'),
+            entry('1', '1'),
+        ].sort(compareSlidesInSample);
+
+        expect(
+            ordered.map(e => `${e.partNumber}/${e.slide.block_number}`)
+        ).toEqual(['1/1', '3/2', '3/B', '3/', 'A/1', 'null/1']);
+    });
+
+    it('orders non-H&E stains in one block by stain name', () => {
+        const ordered = [
+            makeSlide({
+                slide_key: 'ki67',
+                stain_name: 'Ki-67',
+                is_hne: false,
+            }),
+            makeSlide({ slide_key: 'cd3', stain_name: 'CD3', is_hne: false }),
+            makeSlide({ slide_key: 'he', stain_name: 'H&E' }),
+        ]
+            .map(slide => ({ slide, partNumber: '1' }))
+            .sort(compareSlidesInSample);
+
+        expect(ordered.map(e => e.slide.slide_key)).toEqual([
+            'he',
+            'cd3',
+            'ki67',
+        ]);
     });
 
     it('uses association metadata for pathology filtering', () => {

@@ -5,15 +5,7 @@ import {
     SlideAssociation,
     TileMetadata,
 } from './wsiViewerTypes';
-import {
-    cleanStain,
-    DAY_ZERO_TOOLTIP,
-    fmtMB,
-    formatDaysSinceDiagnosis,
-    getSlideTimepointDays,
-    normalizeBlockLabel,
-    procedureSlideTimepointText,
-} from './wsiNavUtils';
+import { cleanStain, fmtMB, normalizeBlockLabel } from './wsiNavUtils';
 import { blockName, formatSpecimenLabel } from './wsiSpecimenUtils';
 import { wsiStainKind } from './wsiSlideUtils';
 
@@ -225,10 +217,6 @@ export function buildPathRows(
             valueTip: sampleTip,
         },
     ];
-    const timeline = buildTimelineRow(slide, sample);
-    if (timeline) {
-        rows.push(timeline);
-    }
     if (association && hasSpecimenDetails) {
         rows.push({
             label: 'Specimen',
@@ -265,34 +253,4 @@ export function buildPathRows(
     }
 
     return freezeMetaRows(rows);
-}
-
-/**
- * One row for the slide's timing: the procedure day (or other recorded
- * timepoint), then the sample's sequencing date when known. Days count from
- * the patient's first tumor sequencing.
- */
-function buildTimelineRow(slide: Slide, sample: Sample): MetaRow | undefined {
-    const timepoint = procedureSlideTimepointText(slide);
-    const procedureDays = timepoint ? getSlideTimepointDays(slide) : undefined;
-    const parts: string[] = [];
-    if (procedureDays != null) {
-        parts.push(`Procedure ${formatDaysSinceDiagnosis(procedureDays)}`);
-    } else if (timepoint) {
-        parts.push(timepoint);
-    }
-    if (sample.sequencing_date) {
-        parts.push(`sequenced ${sample.sequencing_date}`);
-    }
-    if (parts.length === 0) {
-        return undefined;
-    }
-    return {
-        label: 'Timeline',
-        labelTip: 'Procedure day and sample sequencing date for this slide',
-        value: parts.join(' · '),
-        valueTip: slide.slide_timepoint_source
-            ? `${slide.slide_timepoint_source}. ${DAY_ZERO_TOOLTIP}`
-            : DAY_ZERO_TOOLTIP,
-    };
 }

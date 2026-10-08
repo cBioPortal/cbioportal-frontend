@@ -1,152 +1,16 @@
-import { Sample, Slide } from './wsiViewerTypes';
+import { Sample } from './wsiViewerTypes';
 
-// A normalized hierarchy is never mutated, so the per-sample value is
-// memoized by object identity.
-const earliestServableSlideTimepointCache = new WeakMap<
-    Sample,
-    number | undefined
->();
-
-export function formatDaysSinceDiagnosis(days: number): string {
-    if (days === 0) return 'd0';
-    return days > 0 ? `d+${days}` : `d${days}`;
-}
-
-/** Explains the day notation wherever a slide or sample day is shown. */
-export const DAY_ZERO_TOOLTIP =
-    "Days are counted from the patient's first tumor sequencing (d0): " +
-    'd-242 is 242 days before it, d+7 is 7 days after.';
-
-/** Tooltip for a slide's procedure timepoint. */
-export function procedureTooltip(
-    procedureDays: number | null | undefined
-): string | undefined {
-    return procedureDays == null
-        ? undefined
-        : `Procedure on ${formatDaysSinceDiagnosis(
-              procedureDays
-          )}. ${DAY_ZERO_TOOLTIP}`;
-}
-
-function timepointSourceAbbreviation(source: string): string {
-    const normalizedSource = source.toLowerCase();
-    return normalizedSource.includes('procedure')
-        ? 'Proc'
-        : normalizedSource.includes('sample acquisition')
-        ? 'Acq'
-        : normalizedSource.includes('sequencing')
-        ? 'Seq'
-        : 'Proc';
-}
-
-function asFiniteNumber(value: number | null | undefined): number | undefined {
-    return value != null && Number.isFinite(value) ? value : undefined;
-}
-
-export function timepointText(
-    days: number | null | undefined,
-    source: string | null | undefined
-): string | null {
-    const normalizedDays = asFiniteNumber(days);
-    if (normalizedDays == null || !source) {
-        return null;
-    }
-    const normalizedSource = source.toLowerCase();
-    if (
-        !normalizedSource.includes('procedure') &&
-        normalizedSource.includes('sequencing')
-    ) {
-        return null;
-    }
-    return `${timepointSourceAbbreviation(source)} ${formatDaysSinceDiagnosis(
-        normalizedDays
-    )}`;
-}
-
-export function getSlideTimepointDays(
-    slide: Pick<Slide, 'slide_timepoint_days'>
-): number | undefined {
-    return asFiniteNumber(slide.slide_timepoint_days);
-}
-
-export function procedureSlideTimepointText(
-    slide: Pick<Slide, 'slide_timepoint_days' | 'slide_timepoint_source'>
-): string | null {
-    return slide.slide_timepoint_source?.toLowerCase().includes('procedure')
-        ? timepointText(
-              slide.slide_timepoint_days,
-              slide.slide_timepoint_source
-          )
-        : null;
-}
-
-function computeEarliestServableSlideTimepoint(
-    sample: Sample
-): number | undefined {
-    let earliest: number | undefined;
-    for (const part of sample.parts) {
-        for (const block of part.blocks) {
-            for (const slide of block.slides) {
-                if (
-                    !slide.can_serve_tiles ||
-                    !slide.slide_key ||
-                    (!slide.is_hne && !slide.is_ihc)
-                ) {
-                    continue;
-                }
-                const days = asFiniteNumber(slide.slide_timepoint_days);
-                if (days != null) {
-                    earliest =
-                        earliest == null ? days : Math.min(earliest, days);
-                }
-            }
-        }
-    }
-    return earliest;
-}
-
-function getEarliestServableSlideTimepoint(sample: Sample): number | undefined {
-    if (!earliestServableSlideTimepointCache.has(sample)) {
-        earliestServableSlideTimepointCache.set(
-            sample,
-            computeEarliestServableSlideTimepoint(sample)
-        );
-    }
-    return earliestServableSlideTimepointCache.get(sample);
-}
-
-export function compareSamplesByTimepoint(a: Sample, b: Sample): number {
+/**
+ * Orders samples for the slide list: matched samples in hierarchy order (as
+ * the backend sends them), then the unmatched group. Use with a stable sort.
+ */
+export function compareSamplesForNavigation(a: Sample, b: Sample): number {
     const aIsUnmatched = a.sample_id === 'UNMATCHED';
     const bIsUnmatched = b.sample_id === 'UNMATCHED';
     if (aIsUnmatched !== bIsUnmatched) {
         return aIsUnmatched ? 1 : -1;
     }
-
-    const aDays = getEarliestServableSlideTimepoint(a);
-    const bDays = getEarliestServableSlideTimepoint(b);
-    const aHasDays = aDays != null && Number.isFinite(aDays);
-    const bHasDays = bDays != null && Number.isFinite(bDays);
-
-    if (aHasDays && bHasDays && aDays !== bDays) {
-        return aDays - bDays;
-    }
-    if (aHasDays !== bHasDays) {
-        return aHasDays ? -1 : 1;
-    }
-
-    const sampleTypeCmp = (a.sample_type || '').localeCompare(
-        b.sample_type || '',
-        undefined,
-        { sensitivity: 'base' }
-    );
-    if (sampleTypeCmp !== 0) {
-        return sampleTypeCmp;
-    }
-
-    return a.sample_id.localeCompare(b.sample_id, undefined, {
-        numeric: true,
-        sensitivity: 'base',
-    });
+    return 0;
 }
 
 export function cleanStain(name: string): string {

@@ -1,91 +1,13 @@
-import {
-    formatDaysSinceDiagnosis,
-    getSlideTimepointDays,
-    normalizeBlockLabel,
-    timepointText,
-} from './wsiNavUtils';
+import { normalizeBlockLabel } from './wsiNavUtils';
 import {
     PathologySlideFilter,
     PatientHierarchy,
     Sample,
     Slide,
     SlideAssociation,
-    WsiTimepointSelection,
 } from './wsiViewerTypes';
 
 export type WsiStainFilter = 'all' | 'hne' | 'ihc' | 'other' | 'unknown';
-
-export type WsiTimepointOption = {
-    days: WsiTimepointSelection;
-    label: string;
-};
-
-export function getServableSlideTimepointDays(
-    slide: Pick<Slide, 'slide_timepoint_days'>,
-    _association?: Pick<SlideAssociation, 'procedure_date_days'>
-): number | undefined {
-    return getSlideTimepointDays(slide);
-}
-
-export function getServableSlideTimepointSource(
-    slide: Pick<Slide, 'slide_timepoint_source'>,
-    _association?: Pick<SlideAssociation, 'timepoint_source'>
-): string | undefined {
-    return slide.slide_timepoint_source || undefined;
-}
-
-export function getWsiTimepointOptions(
-    entries: Array<{
-        slide: Pick<Slide, 'slide_timepoint_days' | 'slide_timepoint_source'>;
-        association?: Pick<
-            SlideAssociation,
-            'procedure_date_days' | 'timepoint_source'
-        >;
-    }>
-): WsiTimepointOption[] {
-    const optionsByDays = new Map<number, WsiTimepointOption>();
-    let hasUndated = false;
-    entries.forEach(({ slide, association }) => {
-        const days = getServableSlideTimepointDays(slide, association);
-        if (days == null) {
-            hasUndated = true;
-            return;
-        }
-        if (optionsByDays.has(days)) {
-            return;
-        }
-        const source = getServableSlideTimepointSource(slide, association);
-        optionsByDays.set(days, {
-            days,
-            label:
-                timepointText(days, source) || formatDaysSinceDiagnosis(days),
-        });
-    });
-
-    const options = Array.from(optionsByDays.values()).sort(
-        (left, right) => Number(left.days) - Number(right.days)
-    );
-    if (hasUndated) {
-        options.push({ days: 'undated', label: 'Undated' });
-    }
-    return options;
-}
-
-export function matchesWsiTimepointFilter(
-    slide: Pick<Slide, 'slide_timepoint_days' | 'slide_timepoint_source'>,
-    association:
-        | Pick<SlideAssociation, 'procedure_date_days' | 'timepoint_source'>
-        | undefined,
-    timepointDays?: WsiTimepointSelection
-): boolean {
-    return (
-        timepointDays == null ||
-        (timepointDays === 'undated'
-            ? getServableSlideTimepointDays(slide, association) == null
-            : getServableSlideTimepointDays(slide, association) ===
-              timepointDays)
-    );
-}
 
 export interface ServableSlideEntry {
     slide: Slide;
@@ -265,10 +187,68 @@ export function selectMetadataPrefetchSlides(
     return matching.concat(otherStain).slice(0, options.limit);
 }
 
+/**
+ * Compares part or block numbers numerically. Numbers sort before
+ * non-numeric values, which sort before missing ones; non-numeric values
+ * compare as natural-order text.
+ */
+function compareSpecimenNumbers(
+    left: string | null | undefined,
+    right: string | null | undefined
+): number {
+    const leftText = (left ?? '').trim();
+    const rightText = (right ?? '').trim();
+    const rank = (text: string) =>
+        text === '' ? 2 : /^\d+$/.test(text) ? 0 : 1;
+    const leftRank = rank(leftText);
+    const rightRank = rank(rightText);
+    if (leftRank !== rightRank) {
+        return leftRank - rightRank;
+    }
+    if (leftRank === 0) {
+        return Number(leftText) - Number(rightText);
+    }
+    return leftText.localeCompare(rightText, undefined, {
+        numeric: true,
+        sensitivity: 'base',
+    });
+}
+
+export interface SampleSlideOrderEntry {
+    slide: Pick<Slide, 'block_number' | 'is_hne' | 'stain_name'>;
+    /** Number of the part holding the slide. */
+    partNumber?: string | null;
+}
+
+/**
+ * Orders slides within a sample by part number, then block number (as the
+ * backend orders them), then stain: H&E first, the rest by stain name. Slide
+ * selection takes the first matching slide in this order as the default.
+ */
+export function compareSlidesInSample(
+    left: SampleSlideOrderEntry,
+    right: SampleSlideOrderEntry
+): number {
+    return (
+        compareSpecimenNumbers(left.partNumber, right.partNumber) ||
+        compareSpecimenNumbers(
+            left.slide.block_number,
+            right.slide.block_number
+        ) ||
+        Number(!!right.slide.is_hne) - Number(!!left.slide.is_hne) ||
+        (left.slide.stain_name || '').localeCompare(
+            right.slide.stain_name || ''
+        )
+    );
+}
+
 function buildSampleSlideData(sample: Sample): SampleSlideData {
     const seen = new Set<string>();
     const deduped: Slide[] = [];
-    const orderedSlides: OrderedServableSlideEntry[] = [];
+    const unorderedSlides: Array<{
+        entry: OrderedServableSlideEntry;
+        partNumber: string;
+    }> = [];
     const slideCounts: ServableSlideCounts = {
         all: 0,
         hne: 0,
@@ -293,7 +273,10 @@ function buildSampleSlideData(sample: Sample): SampleSlideData {
                 if (seen.has(key)) continue;
                 seen.add(key);
                 deduped.push(slide);
-                orderedSlides.push({ slide, blockLabel });
+                unorderedSlides.push({
+                    entry: { slide, blockLabel },
+                    partNumber: part.part_number,
+                });
                 slideCounts.all += 1;
                 slideKeys.add(slide.slide_key);
                 if (slide.part_description) {
@@ -322,29 +305,15 @@ function buildSampleSlideData(sample: Sample): SampleSlideData {
             }
         }
     }
-    orderedSlides.sort((a, b) => {
-        const aTimepoint = getSlideTimepointDays(a.slide);
-        const bTimepoint = getSlideTimepointDays(b.slide);
-        if (
-            aTimepoint != null &&
-            bTimepoint != null &&
-            aTimepoint !== bTimepoint
-        ) {
-            return aTimepoint - bTimepoint;
-        }
-        if ((aTimepoint != null) !== (bTimepoint != null)) {
-            return aTimepoint != null ? -1 : 1;
-        }
-
-        const aBlockNumber = Number(a.slide.block_number) || 0;
-        const bBlockNumber = Number(b.slide.block_number) || 0;
-        if (aBlockNumber !== bBlockNumber) {
-            return aBlockNumber - bBlockNumber;
-        }
-        return (a.slide.stain_name || '').localeCompare(
-            b.slide.stain_name || ''
-        );
-    });
+    // Array.prototype.sort is stable, so ties keep the hierarchy order.
+    const orderedSlides = unorderedSlides
+        .sort((a, b) =>
+            compareSlidesInSample(
+                { slide: a.entry.slide, partNumber: a.partNumber },
+                { slide: b.entry.slide, partNumber: b.partNumber }
+            )
+        )
+        .map(({ entry }) => entry);
     return {
         slides: deduped,
         orderedSlides,

@@ -224,47 +224,4 @@ describe('WSIViewer foundation behavior', () => {
             expect(loadedInstance().requestedSlideUnavailable).toBe(false);
         });
     });
-
-    describe('slide timeline', () => {
-        function textOf(node: any): string {
-            if (typeof node === 'string') {
-                return node;
-            }
-            return (node?.children || []).map(textOf).join(' ');
-        }
-
-        function renderSelected() {
-            const slide = {
-                ...makeSlide('slide-a'),
-                slide_timepoint_days: -242,
-                slide_timepoint_source: 'Procedure date',
-            };
-            const instance = makeInstance();
-            action(() => {
-                instance.hierarchy = makeHierarchy([slide]);
-                instance.loading = false;
-                instance.selectedSlide = slide;
-                instance.selectedSample = instance.hierarchy.samples[0];
-            })();
-            return TestRenderer.create(instance.render());
-        }
-
-        it('shows the procedure day in the list and pathology panel', () => {
-            const rendered = renderSelected();
-            const sidebar = textOf(
-                rendered.root.findByProps({
-                    'data-testid': 'wsi-metadata-sidebar',
-                })
-            );
-            expect(sidebar).toContain('Timeline Procedure d-242');
-            expect(sidebar).not.toContain('sequenced');
-            expect(
-                textOf(
-                    rendered.root.findByProps({
-                        'data-testid': 'wsi-slide-item-slide-a',
-                    })
-                )
-            ).toContain('Proc d-242');
-        });
-    });
 });

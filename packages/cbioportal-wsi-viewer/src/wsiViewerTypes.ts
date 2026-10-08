@@ -12,19 +12,6 @@ export interface Slide {
     block_number: string;
     /** Anatomical site / part description propagated from the parent Part (e.g. "Lung, left") */
     part_description?: string;
-    /** Preferred slide timepoint in days relative to tumor sequencing. */
-    slide_timepoint_days?: number;
-    /** Source of the preferred slide timepoint. */
-    slide_timepoint_source?: string;
-    /** RECORDED, ESTIMATED, or UNDATED. */
-    slide_timepoint_kind?: string;
-    /** Machine-readable timing source. */
-    slide_timepoint_date_source?: string;
-    /** Why a relative date is unavailable, when undated. */
-    slide_timepoint_reason?: string;
-    /** Published timing status and coordinate system. */
-    slide_timepoint_status?: string;
-    slide_timepoint_coordinate_system?: string;
     /** Association fields carried by the nested v2 slide placement. */
     sample_id?: string | null;
     match_level?: MatchLevel;
@@ -34,7 +21,6 @@ export interface Slide {
 
 export type MatchLevel = 'PART' | 'BLOCK' | 'UNMATCHED';
 export type WsiSlideType = 'H&E' | 'IHC' | 'Other' | 'Unknown';
-export type WsiTimepointSelection = number | 'undated';
 
 export type WsiStainFilter = 'all' | 'hne' | 'ihc' | 'other' | 'unknown';
 export type PathologySlideMatchFilter = 'all' | 'part' | 'block' | 'unmatched';
@@ -49,13 +35,6 @@ export interface SlideAssociation {
     block_label?: string | null;
     slide_type: WsiSlideType;
     stain_name?: string | null;
-    procedure_date_days?: number | null;
-    timepoint_source?: string | null;
-    timepoint_kind?: string | null;
-    timepoint_date_source?: string | null;
-    timepoint_reason?: string | null;
-    timepoint_status?: string | null;
-    timepoint_coordinate_system?: string | null;
     can_serve_tiles: boolean;
 }
 
@@ -80,7 +59,6 @@ export interface Sample {
     oncotree_code: string;
     primary_site: string;
     sample_type: string;
-    sequencing_date?: string;
     metastatic_site?: string;
     parts: Part[];
 }
@@ -108,13 +86,6 @@ export interface WsiV2Slide {
     sampleId: string | null;
     matchLevel: MatchLevel;
     specimenKey: string;
-    procedureDateDays: number | null;
-    timepointSource: string | null;
-    procedureDateKind: string | null;
-    procedureDateSource: string | null;
-    procedureDateReason: string | null;
-    procedureDateStatus: string | null;
-    procedureCoordinateSystem: string | null;
 }
 
 export interface WsiV2Block {
