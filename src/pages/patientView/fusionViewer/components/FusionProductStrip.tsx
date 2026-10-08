@@ -119,7 +119,7 @@ const truncate = (s: string) =>
 
 const PH = 14; // product exon height
 const PH_COMPACT = 6; // dense-mode exon height
-// Oncoprint-style frame cell (collapsed mode).
+// Oncoprint-style frame cell (collapsed and dense modes).
 const FRAME_CELL_W = 44;
 const FRAME_COLORS: Record<FrameStatus, string> = {
     inFrame: '#2f9e44',
@@ -521,20 +521,30 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                 </text>
             )}
             {/* Right gutter: oncoprint-style frame cell (collapsed, mixed frame
-                calls) or the per-sample "In-frame · 12r" text. Suppressed in
-                dense mode (surfaced via the hover <title>). */}
-            {frameSummary
-                ? renderFrameCell(frameSummary, rightX + 8, centerY)
-                : !compact && (
-                      <text
-                          x={rightX + 8}
-                          y={textBaseline - 2}
-                          fontSize={9.5}
-                          fill="#666"
-                      >
-                          {style.label} · {reads}r
-                      </text>
-                  )}
+                calls), a one-colour frame cell per row (dense; stacked rows
+                read as an oncoprint track, reads stay in the hover <title>),
+                or the per-sample "In-frame · 12r" text. */}
+            {frameSummary ? (
+                renderFrameCell(frameSummary, rightX + 8, centerY)
+            ) : compact ? (
+                <rect
+                    data-testid="frame-cell-dense"
+                    x={rightX + 8}
+                    y={yEx}
+                    width={FRAME_CELL_W}
+                    height={ph}
+                    fill={FRAME_COLORS[frame]}
+                />
+            ) : (
+                <text
+                    x={rightX + 8}
+                    y={textBaseline - 2}
+                    fontSize={9.5}
+                    fill="#666"
+                >
+                    {style.label} · {reads}r
+                </text>
+            )}
             {partnerLabel && !compact && (
                 <g>
                     <title>{partnerLabel.title ?? partnerLabel.text}</title>
