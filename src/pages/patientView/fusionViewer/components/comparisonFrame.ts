@@ -12,8 +12,8 @@
 // fanning left into the gene.
 
 export const LABEL_GUTTER = 170; // left gutter for sample-ID labels
-export const RIGHT_GUTTER = 120; // right gutter for frame-status / read counts
-export const PARTNER_RIGHT_GUTTER = 250; // Gene mode: room for the Partner column
+export const RIGHT_GUTTER = 146; // right gutter for frame-status / read counts
+export const PARTNER_RIGHT_GUTTER = 300; // Gene mode: room for the Partner column
 export const JUNCTION_FRAC = 0.5; // seam position within the drawable region
 
 export interface ComparisonFrame {
