@@ -98,6 +98,11 @@ const WebAPIPage = SuspenseWrapper(
     React.lazy(() => import('./pages/staticPages/webAPI/WebAPIPage'))
 );
 
+const AccountPage = SuspenseWrapper(
+    // @ts-ignore
+    React.lazy(() => import('./pages/account/AccountPage'))
+);
+
 import $ from 'jquery';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { seekUrlHash } from 'shared/lib/seekUrlHash';
@@ -490,6 +495,7 @@ export const makeRoutes = () => {
                     )}
                 />
                 <Route path="/webAPI" component={GoToHashLink(WebAPIPage)} />
+                <Route path="/account" component={ScrollToTop(AccountPage)} />
                 <Route path="/mutation_mapper" component={MutationMapperTool} />
                 <Route path="/oncoprinter" component={OncoprinterTool} />
                 <Route path="/datasets" component={ScrollToTop(DatasetPage)} />
