@@ -9,6 +9,8 @@ import {
     hgvscDownload,
     hgvscSortValue,
 } from 'react-mutation-mapper';
+import { AnnotationErrorBoundary } from 'cbioportal-frontend-commons';
+import { errorIcon } from 'oncokb-frontend-commons';
 
 export default class HgvscColumnFormatter {
     public static renderFunction(
@@ -20,11 +22,18 @@ export default class HgvscColumnFormatter {
     ) {
         return (
             <span style={{ display: 'inline-block', float: 'right' }}>
-                <Hgvsc
-                    mutation={data[0]}
-                    indexedVariantAnnotations={indexedVariantAnnotations}
-                    selectedTranscriptId={selectedTranscriptId}
-                />
+                <AnnotationErrorBoundary
+                    componentName="Hgvsc"
+                    fallback={errorIcon(
+                        'HGVSc annotation could not be displayed'
+                    )}
+                >
+                    <Hgvsc
+                        mutation={data[0]}
+                        indexedVariantAnnotations={indexedVariantAnnotations}
+                        selectedTranscriptId={selectedTranscriptId}
+                    />
+                </AnnotationErrorBoundary>
             </span>
         );
     }

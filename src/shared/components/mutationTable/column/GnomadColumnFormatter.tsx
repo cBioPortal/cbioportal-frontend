@@ -8,6 +8,8 @@ import {
 } from 'cbioportal-utils';
 import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { Gnomad, gnomadDownload, gnomadSortValue } from 'react-mutation-mapper';
+import { AnnotationErrorBoundary } from 'cbioportal-frontend-commons';
+import { errorIcon } from 'oncokb-frontend-commons';
 
 export default class GnomadColumnFormatter {
     public static renderFunction(
@@ -21,14 +23,21 @@ export default class GnomadColumnFormatter {
     ) {
         return (
             <span data-test="gnomad-column" data-test2={data[0].sampleId}>
-                <Gnomad
-                    className=""
-                    mutation={data[0]}
-                    indexedVariantAnnotations={indexedVariantAnnotations}
-                    indexedMyVariantInfoAnnotations={
-                        indexedMyVariantInfoAnnotations
-                    }
-                />
+                <AnnotationErrorBoundary
+                    componentName="Gnomad"
+                    fallback={errorIcon(
+                        'gnomAD annotation could not be displayed'
+                    )}
+                >
+                    <Gnomad
+                        className=""
+                        mutation={data[0]}
+                        indexedVariantAnnotations={indexedVariantAnnotations}
+                        indexedMyVariantInfoAnnotations={
+                            indexedMyVariantInfoAnnotations
+                        }
+                    />
+                </AnnotationErrorBoundary>
             </span>
         );
     }

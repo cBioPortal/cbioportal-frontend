@@ -14,6 +14,8 @@ import {
     clinvarDownload,
     getClinvarData,
 } from 'react-mutation-mapper';
+import { AnnotationErrorBoundary } from 'cbioportal-frontend-commons';
+import { errorIcon } from 'oncokb-frontend-commons';
 
 export default class ClinvarColumnFormatter {
     public static renderFunction(
@@ -24,10 +26,17 @@ export default class ClinvarColumnFormatter {
     ) {
         return (
             <div data-test="clinvar-data">
-                <ClinvarInterpretation
-                    mutation={data[0]}
-                    indexedVariantAnnotations={indexedVariantAnnotations}
-                />
+                <AnnotationErrorBoundary
+                    componentName="ClinvarInterpretation"
+                    fallback={errorIcon(
+                        'ClinVar annotation could not be displayed'
+                    )}
+                >
+                    <ClinvarInterpretation
+                        mutation={data[0]}
+                        indexedVariantAnnotations={indexedVariantAnnotations}
+                    />
+                </AnnotationErrorBoundary>
             </div>
         );
     }
