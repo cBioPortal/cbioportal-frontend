@@ -99,8 +99,11 @@ export function filterMutationByTranscriptId(
         : undefined;
 
     if (variantAnnotation) {
+        // Genome Nexus omits annotation_summary for variants it cannot
+        // annotate, so treat a missing summary as no match instead of
+        // dereferencing it.
         return (
-            variantAnnotation.annotation_summary.canonicalTranscriptId ===
+            variantAnnotation.annotation_summary?.canonicalTranscriptId ===
             ensemblTranscriptId
         );
     } else {
@@ -316,12 +319,13 @@ export function findCanonicalTranscript(
             annotationSummary.canonicalTranscriptId
     );
 
-    // if no transcript matching the canonical transcript id, then return the first one (if exists)
+    // if no transcript matching the canonical transcript id, then return the first one (if exists).
+    // Genome Nexus can return an annotation summary without any transcript
+    // consequence summaries at all, so check the array before indexing it.
     if (!canonical) {
-        canonical =
-            annotationSummary.transcriptConsequenceSummaries.length > 0
-                ? annotationSummary.transcriptConsequenceSummaries[0]
-                : undefined;
+        canonical = annotationSummary.transcriptConsequenceSummaries?.length
+            ? annotationSummary.transcriptConsequenceSummaries[0]
+            : undefined;
     }
 
     return canonical;
@@ -343,8 +347,14 @@ export function genomicLocationStringFromVariantAnnotation(
     const chromosome = annotation.seq_region_name;
     const start = annotation.start;
     const end = annotation.end;
-    const referenceAllele = annotation.allele_string.split('/')[0];
-    const variantAllele = annotation.allele_string.split('/')[1];
+    // Genome Nexus can return a variant annotation without an allele_string
+    // (e.g. entries it could not resolve to alleles). Fall back to empty
+    // alleles instead of crashing the whole index build.
+    const alleles = annotation.allele_string
+        ? annotation.allele_string.split('/')
+        : [];
+    const referenceAllele = alleles[0] || '';
+    const variantAllele = alleles[1] || '';
 
     return genomicLocationString({
         chromosome,
