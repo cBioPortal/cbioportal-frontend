@@ -166,7 +166,12 @@ export function ensureNavigator({
         return osdViewer?.navigator ?? null;
     }
 
-    osdViewer.navigator = new openSeadragon.Navigator({
+    // OpenSeadragon's navigator mirrors the viewer's images: each one it shows must be added with
+    // its original (`originalTiledImage`), whose bounds it then follows. The viewer adds images to
+    // a navigator that exists when they open; this one is created later, so the image already on
+    // screen is added here. Passing it as `tileSources` instead opens it without an original, and
+    // the navigator fails ("Unable to open ... getBoundsNoRotate").
+    const navigator = new openSeadragon.Navigator({
         viewer: osdViewer,
         position: 'BOTTOM_RIGHT',
         sizeRatio: 0.2,
@@ -178,10 +183,18 @@ export function ensureNavigator({
         displayRegionColor: '#900',
         ajaxHeaders: buildWsiRequestHeaders(accessToken),
         loadTilesWithAjax: Boolean(accessToken),
-        tileSources: buildOsdTileSource(meta, baseUrl),
     });
+    osdViewer.navigator = navigator;
+    const world = osdViewer.world;
+    const itemCount = world?.getItemCount?.() ?? 0;
+    for (let i = 0; i < itemCount; i++) {
+        navigator.addTiledImage({
+            tileSource: buildOsdTileSource(meta, baseUrl),
+            originalTiledImage: world.getItemAt(i),
+        });
+    }
     offsetNavigatorElement(osdViewer);
-    return osdViewer.navigator;
+    return navigator;
 }
 
 export function offsetNavigatorElement(
