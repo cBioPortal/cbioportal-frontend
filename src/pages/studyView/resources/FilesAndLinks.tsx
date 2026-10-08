@@ -25,7 +25,10 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
         this.storeReactionDisposer = autorun(() => {
             const samples = this.props.store.selectedSamples.result;
             if (!samples) return;
-            this.resourceTableStore.setContextFromSamples(samples);
+            this.resourceTableStore.setContextFromSelection(
+                samples,
+                this.props.store.samples.result
+            );
         });
     }
 
