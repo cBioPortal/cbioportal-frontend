@@ -48,8 +48,32 @@ export interface ExonHoverInfo {
     exonNumber: number;
     retained: boolean;
     sizeBp: number;
+    /** Set only when the breakpoint falls inside the exon. */
+    retainedNt?: number;
+    lostNt?: number;
     clientX: number;
     clientY: number;
+}
+
+/**
+ * Nucleotides of an exon kept and lost when the breakpoint falls inside it.
+ * The breakpoint base is the last kept base of the 5' partner and the first
+ * kept base of the 3' partner; "upstream" follows the transcript's strand.
+ */
+export function splitExonNt(
+    exon: { start: number; end: number },
+    breakpoint: number,
+    strand: '+' | '-',
+    is5p: boolean
+): { retainedNt: number; lostNt: number } {
+    const size = exon.end - exon.start + 1;
+    // Bases from the transcript's start of the exon up to the breakpoint.
+    const upstream =
+        strand === '+'
+            ? breakpoint - exon.start + 1
+            : exon.end - breakpoint + 1;
+    const retainedNt = is5p ? upstream : size - upstream + 1;
+    return { retainedNt, lostNt: size - retainedNt };
 }
 
 export interface FusionProductStripProps {
@@ -236,7 +260,8 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
         gene: string,
         exon: { start: number; end: number },
         exonNumber: number,
-        retained: boolean
+        retained: boolean,
+        split?: { retainedNt: number; lostNt: number }
     ) =>
         onExonHover
             ? {
@@ -246,6 +271,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                           exonNumber,
                           retained,
                           sizeBp: Math.abs(exon.end - exon.start) + 1,
+                          ...split,
                           clientX: e.clientX,
                           clientY: e.clientY,
                       }),
@@ -354,6 +380,12 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                     // colour the two halves accordingly instead of the whole
                     // exon as one solid block.
                     const retainedW = split - x;
+                    const nt = splitExonNt(
+                        exon,
+                        breakpoint5p,
+                        transcript5p!.strand,
+                        true
+                    );
                     return (
                         <React.Fragment key={`5p-${i}`}>
                             <rect
@@ -368,7 +400,8 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                                     transcript5p!.gene,
                                     exon,
                                     n,
-                                    retained
+                                    retained,
+                                    nt
                                 )}
                             />
                             <rect
@@ -384,7 +417,8 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                                     transcript5p!.gene,
                                     exon,
                                     n,
-                                    retained
+                                    retained,
+                                    nt
                                 )}
                             />
                         </React.Fragment>
@@ -418,6 +452,12 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                     // this exon, so only the sequence from it onward is
                     // actually retained — the part before it is not.
                     const lostW = split - x;
+                    const nt = splitExonNt(
+                        exon,
+                        breakpoint3p!,
+                        transcript3p!.strand,
+                        false
+                    );
                     return (
                         <React.Fragment key={`3p-${i}`}>
                             <rect
@@ -433,7 +473,8 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                                     transcript3p!.gene,
                                     exon,
                                     n,
-                                    retained
+                                    retained,
+                                    nt
                                 )}
                             />
                             <rect
@@ -448,7 +489,8 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                                     transcript3p!.gene,
                                     exon,
                                     n,
-                                    retained
+                                    retained,
+                                    nt
                                 )}
                             />
                         </React.Fragment>
