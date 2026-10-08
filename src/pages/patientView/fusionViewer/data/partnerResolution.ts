@@ -243,3 +243,62 @@ export function resolveFusionPartners(input: ResolveInput): ResolvedFusion {
         mismatchStatus,
     };
 }
+
+/** `Intron of ERG(-): …` or `Exon 7 of EWSR1(+)`: the gene and its strand. */
+const SITE_DESCRIPTION_RE = /([A-Za-z0-9._-]+)\(([+-])\)/;
+
+export function parseSiteDescription(
+    description: string
+): { symbol: string; strand: '+' | '-' } | null {
+    const m = SITE_DESCRIPTION_RE.exec(description || '');
+    return m ? { symbol: m[1], strand: m[2] as '+' | '-' } : null;
+}
+
+/**
+ * Orient a fusion 5'->3' from its site descriptions alone, for rows whose
+ * transcripts are not loaded (every sidebar row but the selected one).
+ *
+ * Each description names the gene and strand at that breakpoint, which is
+ * all {@link resolveFusionPartners} reads from transcripts. A one-point
+ * stand-in transcript per gene is built at the site whose description names
+ * it, so symbol/position swaps ("pattern B") are still caught. Returns the
+ * fusion unchanged when either description carries no strand.
+ */
+export function orientByDescriptions(fusion: FusionEvent): FusionEvent {
+    if (!fusion.gene2) {
+        return fusion;
+    }
+    const sites = [fusion.gene1, fusion.gene2].map(partner => ({
+        partner,
+        parsed: parseSiteDescription(partner.siteDescription),
+    }));
+    if (sites.some(s => !s.parsed)) {
+        return fusion;
+    }
+    const standIn = (own: number): TranscriptData[] => {
+        const symbol = sites[own].partner.symbol;
+        const other = sites[1 - own];
+        const at =
+            sites[own].parsed!.symbol !== symbol &&
+            other.parsed!.symbol === symbol
+                ? other
+                : sites[own];
+        return [
+            {
+                strand: at.parsed!.strand,
+                txStart: at.partner.position,
+                txEnd: at.partner.position,
+            } as TranscriptData,
+        ];
+    };
+    const resolved = resolveFusionPartners({
+        fusion,
+        gene1Transcripts: standIn(0),
+        gene2Transcripts: standIn(1),
+    });
+    return {
+        ...fusion,
+        gene1: resolved.fivePrime,
+        gene2: resolved.threePrime,
+    };
+}

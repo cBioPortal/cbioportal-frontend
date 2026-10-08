@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import { FusionViewerStore } from './FusionViewerStore';
 import { FusionEvent } from './data/types';
 import { filterFusions } from './data/fusionSearch';
+import { orientByDescriptions } from './data/partnerResolution';
 import moduleStyles from './styles.module.scss';
 
 interface IFusionListSidebarProps {
@@ -59,6 +60,20 @@ const styles = {
         fontWeight: 600 as const,
         fontSize: 13,
         marginBottom: 2,
+        display: 'flex',
+        alignItems: 'baseline' as const,
+        gap: 6,
+    },
+    sample: {
+        marginLeft: 'auto',
+        minWidth: 0,
+        fontWeight: 400 as const,
+        fontStyle: 'normal' as const,
+        fontSize: 11,
+        color: '#777',
+        whiteSpace: 'nowrap' as const,
+        overflow: 'hidden' as const,
+        textOverflow: 'ellipsis' as const,
     },
     coordinates: {
         color: '#777',
@@ -145,7 +160,7 @@ export class FusionListSidebar extends React.Component<
                         type="search"
                         className="form-control input-sm"
                         style={styles.search}
-                        placeholder="Gene, TMPRSS2::ERG, class, or chr7:55,000,000-56,000,000"
+                        placeholder="Gene, TMPRSS2::ERG, sample, class, or chr7:55,000,000-56,000,000"
                         aria-label="Filter fusions"
                         data-testid="fusion-search"
                         value={this.state.query}
@@ -160,13 +175,13 @@ export class FusionListSidebar extends React.Component<
                         const selected =
                             rawFusion.id === store.selectedFusionId;
                         // Only the selected fusion has its transcripts loaded, so
-                        // only it can be shown in canonical 5'->3' order. Showing
-                        // the canonical form here keeps the sidebar label from
-                        // contradicting the diagram when partners were swapped.
+                        // it uses the transcript-based canonical 5'->3' order.
+                        // Every other row is oriented from its site descriptions,
+                        // so a row's label does not change when it is selected.
                         const fusion =
                             selected && store.canonicalFusion
                                 ? store.canonicalFusion
-                                : rawFusion;
+                                : orientByDescriptions(rawFusion);
                         const intergenic = isIntergenic(fusion);
 
                         const nameStyle = {
@@ -185,7 +200,14 @@ export class FusionListSidebar extends React.Component<
                                 onClick={() => this.handleClick(rawFusion.id)}
                             >
                                 <div style={nameStyle}>
-                                    {formatFusionName(fusion)}
+                                    <span>{formatFusionName(fusion)}</span>
+                                    <span
+                                        style={styles.sample}
+                                        title={fusion.tumorId}
+                                        data-testid="fusion-sample"
+                                    >
+                                        {fusion.tumorId}
+                                    </span>
                                 </div>
                                 <div style={styles.coordinates}>
                                     {formatBreakpoint(fusion)}
