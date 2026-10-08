@@ -161,6 +161,67 @@ describe('FusionCircos', () => {
         assert.isTrue(onSelectFusion.calledOnceWith('f1'));
     });
 
+    it('does not move arc nodes in the DOM on hover', () => {
+        // Moving the node under the cursor makes the browser drop its
+        // mouseleave, which leaves that arc's tooltip stuck open.
+        const fusions = [
+            makeFusion({ id: 'f1' }),
+            makeFusion({ id: 'f2' }),
+            makeFusion({ id: 'f3' }),
+        ];
+        const wrapper = mount(
+            <FusionCircos
+                fusions={fusions}
+                selectedFusionId="f1"
+                genomeBuild="GRCh38"
+                onSelectFusion={() => {}}
+            />
+        );
+        const domOrder = () =>
+            Array.from(
+                wrapper
+                    .getDOMNode()
+                    .querySelectorAll('path[data-testid="circos-arc"]')
+            ).map(n => n.getAttribute('data-fusion-id'));
+        const before = domOrder();
+        wrapper
+            .find('path[data-testid="circos-arc"]')
+            .filterWhere(n => n.prop('data-fusion-id') === 'f2')
+            .simulate('mouseenter');
+        assert.deepEqual(domOrder(), before);
+    });
+
+    it('draws a non-interactive highlight of the hovered arc below the selected arc', () => {
+        const fusions = [makeFusion({ id: 'f1' }), makeFusion({ id: 'f2' })];
+        const wrapper = mount(
+            <FusionCircos
+                fusions={fusions}
+                selectedFusionId="f1"
+                genomeBuild="GRCh38"
+                onSelectFusion={() => {}}
+            />
+        );
+        wrapper
+            .find('path[data-testid="circos-arc"]')
+            .filterWhere(n => n.prop('data-fusion-id') === 'f2')
+            .simulate('mouseenter');
+        const paths = Array.from(
+            wrapper.getDOMNode().querySelectorAll('path[data-fusion-id]')
+        );
+        const hover = paths.findIndex(
+            p => p.getAttribute('data-testid') === 'circos-arc-hover'
+        );
+        const selected = paths.findIndex(
+            p =>
+                p.getAttribute('data-testid') === 'circos-arc' &&
+                p.getAttribute('data-fusion-id') === 'f1'
+        );
+        assert.isAtLeast(hover, 0);
+        assert.equal(paths[hover].getAttribute('data-fusion-id'), 'f2');
+        assert.equal(paths[hover].getAttribute('pointer-events'), 'none');
+        assert.isBelow(hover, selected);
+    });
+
     it('renders without error for an empty fusions list', () => {
         const wrapper = mount(
             <FusionCircos

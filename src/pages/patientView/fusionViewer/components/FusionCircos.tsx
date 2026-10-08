@@ -125,14 +125,12 @@ export function FusionCircos(props: FusionCircosProps) {
     const isActive = (id: string) =>
         id === selectedFusionId || id === hoveredId;
 
-    // Draw order: dimmed, then hovered, then the selected arc last. The
-    // selected arc keeps the final slot whatever is hovered, so React never
-    // re-appends it and its CSS pulse is not restarted on every hover-out.
+    // Draw order: unselected arcs in a fixed order, then the selected arc
+    // last. Hover never reorders the arcs: moving the node under the cursor
+    // makes the browser drop its mouseleave and its tooltip sticks open. The
+    // selected arc keeps the final slot so its CSS pulse is not restarted.
     const ordered = [
-        ...mappable.filter(e => !isActive(e.fusion.id)),
-        ...mappable.filter(
-            e => isActive(e.fusion.id) && e.fusion.id !== selectedFusionId
-        ),
+        ...mappable.filter(e => e.fusion.id !== selectedFusionId),
         ...mappable.filter(e => e.fusion.id === selectedFusionId),
     ];
 
@@ -156,7 +154,13 @@ export function FusionCircos(props: FusionCircosProps) {
         );
 
         return (
-            <DefaultTooltip key={fusion.id} placement="top" overlay={overlay}>
+            <DefaultTooltip
+                key={fusion.id}
+                placement="top"
+                overlay={overlay}
+                mouseEnterDelay={0}
+                mouseLeaveDelay={0}
+            >
                 <path
                     data-testid="circos-arc"
                     data-fusion-id={fusion.id}
@@ -183,6 +187,39 @@ export function FusionCircos(props: FusionCircosProps) {
             </DefaultTooltip>
         );
     });
+
+    // The hovered arc is raised by drawing a copy of it above the other
+    // unselected arcs (but below the selected arc), not by moving its node.
+    // The copy ignores the pointer so the real arc keeps the hover.
+    const hoveredEntry =
+        hoveredId !== selectedFusionId
+            ? mappable.find(e => e.fusion.id === hoveredId)
+            : undefined;
+    if (hoveredEntry) {
+        const { fusion, bp1, bp2 } = hoveredEntry;
+        const hoverCopy = (
+            <path
+                key="circos-arc-hover"
+                data-testid="circos-arc-hover"
+                data-fusion-id={fusion.id}
+                d={chordPath(bp1.angle, bp2.angle, chordRadius, cx, cy)}
+                stroke={svIdiomColor(fusion.svIdiom)}
+                strokeOpacity={SELECTED_OPACITY}
+                strokeWidth={HOVERED_STROKE_WIDTH}
+                strokeLinecap="round"
+                fill="none"
+                pointerEvents="none"
+            />
+        );
+        const selectedIndex = ordered.findIndex(
+            e => e.fusion.id === selectedFusionId
+        );
+        arcs.splice(
+            selectedIndex === -1 ? arcs.length : selectedIndex,
+            0,
+            hoverCopy
+        );
+    }
 
     // Breakpoint dots for the selected fusion.
     const selectedEntry = mappable.find(e => e.fusion.id === selectedFusionId);
