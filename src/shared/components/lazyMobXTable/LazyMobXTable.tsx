@@ -35,7 +35,7 @@ import { ICopyDownloadControlsProps } from '../copyDownloadControls/ICopyDownloa
 import { SimpleCopyDownloadControls } from '../copyDownloadControls/SimpleCopyDownloadControls';
 import { serializeData } from 'shared/lib/Serializer';
 import { ButtonToolbar } from 'react-bootstrap';
-import ColumnResizer from 'react-column-resizer';
+import ColumnResizer from './ColumnResizer';
 import { SortMetric } from '../../lib/ISortMetric';
 import {
     ILazyMobXTableApplicationDataStore,
