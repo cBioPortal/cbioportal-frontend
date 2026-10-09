@@ -16,12 +16,7 @@ import {
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import { isUrl, pluralize, remoteData } from 'cbioportal-frontend-commons';
 import { makeObservable, observable, computed } from 'mobx';
-import {
-    ResourceData,
-    ResourceDefinition,
-    StudyViewFilter,
-} from 'cbioportal-ts-api-client';
-import { isWsiResourceId } from 'shared/lib/ResourcePolicy';
+import { ResourceData, StudyViewFilter } from 'cbioportal-ts-api-client';
 import {
     getResourceConfig,
     ResourceCustomConfig,
@@ -41,31 +36,13 @@ class FilesLinksTableComponent extends LazyMobXTable<{
 
 const RECORD_LIMIT = 500;
 
-function getResourceDataOfEntireStudy(
-    studyIds: string[],
-    resourceDefinitions: ResourceDefinition[]
-) {
-    // Fetch each study's patient and sample resources per definition, leaving
-    // out the whole-slide image definitions: one row per slide would pull the
-    // entire slide inventory of a large study into the browser.
-    const allResources = _.flatMap(studyIds, studyId =>
-        resourceDefinitions
-            .filter(
-                definition =>
-                    definition.studyId === studyId &&
-                    (definition.resourceType === 'SAMPLE' ||
-                        definition.resourceType === 'PATIENT') &&
-                    !isWsiResourceId(definition.resourceId)
-            )
-            .map(definition =>
-                internalClient.getAllStudyResourceDataInStudyPatientSampleUsingGET(
-                    {
-                        studyId: studyId,
-                        resourceId: definition.resourceId,
-                        projection: 'DETAILED',
-                    }
-                )
-            )
+function getResourceDataOfEntireStudy(studyIds: string[]) {
+    // Fetch resource data for each studyId, then return combined results
+    const allResources = studyIds.map(studyId =>
+        internalClient.getAllStudyResourceDataInStudyPatientSampleUsingGET({
+            studyId: studyId,
+            projection: 'DETAILED',
+        })
     );
 
     return Promise.all(allResources).then(allResources =>
@@ -115,7 +92,6 @@ function buildItemsAndResources(resourceData: {
 export async function fetchFilesLinksData(
     filters: StudyViewFilter,
     selectedSamples: Array<any>,
-    resourceDefinitions: ResourceDefinition[],
     searchTerm: string | undefined,
     sortAttributeId: string | undefined,
     sortDirection: 'asc' | 'desc' | undefined,
@@ -133,8 +109,7 @@ export async function fetchFilesLinksData(
 
     // Fetch resources for entire study
     const resourcesForEntireStudy = await getResourceDataOfEntireStudy(
-        selectedStudyIds,
-        resourceDefinitions
+        selectedStudyIds
     );
 
     // Filter the resources to consist of only studyView selected samples
@@ -270,7 +245,6 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
             const resources = await fetchFilesLinksData(
                 this.props.store.filters,
                 this.props.store.selectedSamples.result,
-                this.props.store.resourceDefinitions.result || [],
                 this.searchTerm,
                 'patientId',
                 'asc',

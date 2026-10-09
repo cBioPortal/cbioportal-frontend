@@ -40,41 +40,26 @@ describe('FilesAndLinks WSI resource filtering', () => {
     });
 
     it('excludes legacy H&E resources from selected study data', async () => {
-        const resources = [
-            makeResource('MSK_HNE', 'H&E Slides'),
-            makeResource('OTHER', 'Pathology report'),
-        ];
         const fetchSpy = jest
             .spyOn(
                 internalClient,
                 'getAllStudyResourceDataInStudyPatientSampleUsingGET'
             )
-            .mockImplementation(async ({ resourceId }: any) =>
-                resources.filter(r => r.resourceId === resourceId)
-            );
-        const definitions = [
-            ...resources.map(r => r.resourceDefinition),
-            {
-                ...resources[1].resourceDefinition,
-                resourceId: 'WSI_SAMPLE',
-                resourceType: 'SAMPLE',
-            },
-        ];
+            .mockResolvedValue([
+                makeResource('MSK_HNE', 'H&E Slides'),
+                makeResource('OTHER', 'Pathology report'),
+            ]);
 
         const result = await fetchFilesLinksData(
             {} as any,
             [{ studyId: 'study', patientId: 'P-1', sampleId: 'S-1' }],
-            definitions as any,
             undefined,
             undefined,
             undefined,
             500
         );
 
-        // Slide resources are never fetched for the study table.
-        expect(
-            fetchSpy.mock.calls.map(([args]: any) => args.resourceId)
-        ).toEqual(['MSK_HNE', 'OTHER']);
+        expect(fetchSpy).toHaveBeenCalledTimes(1);
         expect(result.totalItems).toBe(1);
         expect(result.data).toEqual([
             expect.objectContaining({
