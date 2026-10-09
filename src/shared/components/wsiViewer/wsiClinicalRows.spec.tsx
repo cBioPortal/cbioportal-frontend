@@ -164,7 +164,6 @@ describe('selectWsiClinicalAttributes', () => {
                 attribute('SAMPLE_COVERAGE', 1),
                 attribute('SOMATIC_STATUS', 1),
                 attribute('PATH_SLIDE_EXISTS', 1),
-                attribute('MSK_SLIDE_ID', 1),
                 attribute('PARTC_CONSENTED_12_245', 1, true),
                 attribute('SAMPLE_COUNT', 1, true),
             ],
@@ -178,8 +177,7 @@ describe('selectWsiClinicalAttributes', () => {
                 'INSTITUTE',
                 'SAMPLE_COVERAGE',
                 'SOMATIC_STATUS',
-                'PATH_SLIDE_EXISTS',
-                'MSK_SLIDE_ID'
+                'PATH_SLIDE_EXISTS'
             )
         );
         expect(selected.map(a => a.clinicalAttributeId)).toEqual([
