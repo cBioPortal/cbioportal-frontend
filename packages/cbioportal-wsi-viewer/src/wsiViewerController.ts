@@ -17,14 +17,12 @@ import {
     destroyOsdHandles,
     ensureNavigator,
     offsetNavigatorElement,
-    OSD_SPINNER_FALLBACK_MS,
     OSD_TILE_RETRY_MAX,
     isOsdViewerIdle,
     isStaleOsdTileEvent,
     promoteOsdImageLoaderLimit,
     reopenOsdViewer,
     restoreOrHomeViewport,
-    scheduleOsdSpinnerFallback,
     scheduleOsdSpinnerHide,
 } from './wsiOsdUtils';
 import { getWsiSlideAccess } from './wsiAuth';
@@ -1089,15 +1087,6 @@ export class WsiViewerController {
             // real draw still clears the thumbnail underlay when available.
             markNativeTileReady();
         };
-        this.spinnerTimer = scheduleOsdSpinnerFallback({
-            existingTimer: this.spinnerTimer,
-            hideSpinner: () => {
-                if (seq !== this.mountSeq || didMarkNativeTileReady) return;
-                this.spinnerTimer = null;
-                this.host.setSpinnerVisible(false);
-            },
-            fallbackMs: OSD_SPINNER_FALLBACK_MS,
-        });
         // OpenSeadragon rejects tile-drawn for WebGL. Use its public drawer
         // type instead of a constructor name, which is minified in production.
         const drawerType = this.osdViewer.drawer?.getType?.();

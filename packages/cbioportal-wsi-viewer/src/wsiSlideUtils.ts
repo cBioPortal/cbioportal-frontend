@@ -7,9 +7,8 @@ import {
     Sample,
     Slide,
     SlideAssociation,
+    WsiStainFilter,
 } from './wsiViewerTypes';
-
-export type WsiStainFilter = 'all' | 'hne' | 'ihc' | 'other' | 'unknown';
 
 export interface ServableSlideEntry {
     slide: Slide;
@@ -30,7 +29,6 @@ export interface OrderedServableSlideEntry {
 }
 
 type SampleSlideData = {
-    slides: Slide[];
     orderedSlides: OrderedServableSlideEntry[];
     slideCounts: ServableSlideCounts;
     partDescriptionCount: number;
@@ -40,10 +38,6 @@ type SampleSlideData = {
 // A normalized hierarchy is never mutated, so everything derived from it is
 // memoized by object identity.
 const sampleSlideDataCache = new WeakMap<Sample, SampleSlideData>();
-const hierarchySlideEntriesCache = new WeakMap<
-    PatientHierarchy,
-    ServableSlideEntry[]
->();
 const servableAssociationsBySlideKeyCache = new WeakMap<
     SlideAssociation[],
     Map<string, SlideAssociation>
@@ -244,7 +238,6 @@ export function compareSlidesInSample(
 
 function buildSampleSlideData(sample: Sample): SampleSlideData {
     const seen = new Set<string>();
-    const deduped: Slide[] = [];
     const unorderedSlides: Array<{
         entry: OrderedServableSlideEntry;
         partNumber: string;
@@ -272,7 +265,6 @@ function buildSampleSlideData(sample: Sample): SampleSlideData {
                 const key = uniqueSlideKey(sample.sample_id, slide);
                 if (seen.has(key)) continue;
                 seen.add(key);
-                deduped.push(slide);
                 unorderedSlides.push({
                     entry: { slide, blockLabel },
                     partNumber: part.part_number,
@@ -315,7 +307,6 @@ function buildSampleSlideData(sample: Sample): SampleSlideData {
         )
         .map(({ entry }) => entry);
     return {
-        slides: deduped,
         orderedSlides,
         slideCounts,
         partDescriptionCount: partDescriptions.size,
@@ -330,26 +321,6 @@ function getCachedServableSlideData(sample: Sample): SampleSlideData {
         sampleSlideDataCache.set(sample, data);
     }
     return data;
-}
-
-export function getServableSlidesForSampleReadOnly(sample: Sample): Slide[] {
-    return getCachedServableSlideData(sample).slides;
-}
-
-export function getServableSlideEntriesForHierarchyReadOnly(
-    hierarchy: PatientHierarchy
-): ServableSlideEntry[] {
-    let entries = hierarchySlideEntriesCache.get(hierarchy);
-    if (!entries) {
-        entries = hierarchy.samples.flatMap(sample =>
-            getCachedServableSlideData(sample).slides.map(slide => ({
-                slide,
-                sample,
-            }))
-        );
-        hierarchySlideEntriesCache.set(hierarchy, entries);
-    }
-    return entries;
 }
 
 export function countServableSlidesForSample(

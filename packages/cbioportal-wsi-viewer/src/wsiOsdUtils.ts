@@ -8,7 +8,6 @@ export const OSD_STEADY_IMAGE_LOADER_LIMIT = 4;
 export const OSD_TILE_REQUEST_TIMEOUT_MS = 120_000;
 export const OSD_TILE_RETRY_MAX = 2;
 export const OSD_TILE_RETRY_DELAY_MS = 1_500;
-export const OSD_SPINNER_FALLBACK_MS = 185_000;
 
 export function buildOsdTileSource(meta: TileMetadata, baseUrl: string) {
     return {
@@ -50,17 +49,9 @@ export function buildOsdOptions({
         zoomOutButton: `${navId}-zoom-out`,
         homeButton: `${navId}-home`,
         // Creating the navigator eagerly starts a second tile pyramid during
-        // cold load. The controller creates it after the first main-view tile
-        // is drawn.
+        // cold load. The controller creates it (ensureNavigator) after the
+        // first main-view tile is drawn.
         showNavigator: false,
-        navigatorPosition: 'BOTTOM_RIGHT' as const,
-        navigatorSizeRatio: 0.2,
-        navigatorAutoFade: true,
-        navigatorRotate: true,
-        navigatorBackground: '#000',
-        navigatorOpacity: 0.8,
-        navigatorBorderColor: '#555',
-        navigatorDisplayRegionColor: '#900',
         crossOriginPolicy: 'Anonymous' as const,
         ...(prefixUrl ? { prefixUrl } : {}),
         showFullPageControl: false,
@@ -327,21 +318,6 @@ export function scheduleOsdSpinnerHide({
         clearTimeout(existingTimer);
     }
     return setTimeout(hideSpinner, remaining);
-}
-
-export function scheduleOsdSpinnerFallback({
-    existingTimer,
-    hideSpinner,
-    fallbackMs = OSD_SPINNER_FALLBACK_MS,
-}: {
-    existingTimer: ReturnType<typeof setTimeout> | null;
-    hideSpinner: () => void;
-    fallbackMs?: number;
-}): ReturnType<typeof setTimeout> {
-    if (existingTimer !== null) {
-        clearTimeout(existingTimer);
-    }
-    return setTimeout(hideSpinner, fallbackMs);
 }
 
 export function createOsdMouseTracker({

@@ -1014,10 +1014,6 @@ describe('WSIViewer — pathology filter updates', () => {
         inst.selectedSample = sample;
         inst.selectedSlide = sample.parts[0].blocks[0].slides[0];
 
-        const getEntriesSpy = jest.spyOn(
-            wsiSlideUtils,
-            'getServableSlideEntriesForHierarchyReadOnly'
-        );
         const getOrderedSlidesSpy = jest.spyOn(
             wsiSlideUtils,
             'getOrderedServableSlidesForSampleReadOnly'
@@ -1034,7 +1030,6 @@ describe('WSIViewer — pathology filter updates', () => {
 
         (inst as any).applyPathologyFilterFromSourceHierarchy();
 
-        expect(getEntriesSpy).not.toHaveBeenCalled();
         expect(getOrderedSlidesSpy).toHaveBeenCalledTimes(1);
         expect(inst.selectedSlide?.slide_key).toBe('block-slide');
         expect(inst.selectedSample?.sample_id).toBe('S-1');

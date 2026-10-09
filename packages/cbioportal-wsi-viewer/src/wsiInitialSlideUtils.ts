@@ -1,5 +1,5 @@
-import { Sample, Slide } from './wsiViewerTypes';
-import { matchesWsiStainFilter, WsiStainFilter } from './wsiSlideUtils';
+import { Sample, Slide, WsiStainFilter } from './wsiViewerTypes';
+import { matchesWsiStainFilter } from './wsiSlideUtils';
 
 export interface InitialSlideEntry {
     slide: Slide;

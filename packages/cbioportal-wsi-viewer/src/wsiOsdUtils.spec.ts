@@ -29,8 +29,6 @@ describe('buildOsdOptions', () => {
         });
 
         expect(options.showNavigator).toBe(false);
-        expect(options.navigatorPosition).toBe('BOTTOM_RIGHT');
-        expect(options.navigatorSizeRatio).toBe(0.2);
         expect(options.timeout).toBe(OSD_TILE_REQUEST_TIMEOUT_MS);
         expect(options.imageLoaderLimit).toBe(OSD_INITIAL_IMAGE_LOADER_LIMIT);
         expect(options.tileRetryMax).toBe(OSD_TILE_RETRY_MAX);

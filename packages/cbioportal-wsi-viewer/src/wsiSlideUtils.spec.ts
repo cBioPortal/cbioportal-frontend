@@ -3,9 +3,7 @@ import {
     countServableSlidesForSample,
     getOrderedServableSlidesForSampleReadOnly,
     getServableSlideAssociationsBySlideKeyReadOnly,
-    getServableSlideEntriesForHierarchyReadOnly,
     getServableSlideIdsForPathologyFilterReadOnly,
-    getServableSlidesForSampleReadOnly,
     sampleHasMultiplePartDescriptions,
     sampleHasServableSlide,
     selectMetadataPrefetchSlides,
@@ -71,11 +69,11 @@ describe('wsiSlideUtils read-only slide derivation', () => {
 
     it('memoizes servable slides by sample identity', () => {
         const sample = makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })]);
-        const first = getServableSlidesForSampleReadOnly(sample);
+        const first = getOrderedServableSlidesForSampleReadOnly(sample);
 
-        expect(getServableSlidesForSampleReadOnly(sample)).toBe(first);
+        expect(getOrderedServableSlidesForSampleReadOnly(sample)).toBe(first);
         expect(
-            getServableSlidesForSampleReadOnly(
+            getOrderedServableSlidesForSampleReadOnly(
                 makeSample('S-1', [
                     makeSlide({ slide_key: 'slide-1', can_serve_tiles: false }),
                 ])
@@ -99,35 +97,6 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         expect(countServableSlidesForSample(sample, 'all')).toBe(3);
         expect(countServableSlidesForSample(sample, 'hne')).toBe(2);
         expect(countServableSlidesForSample(sample, 'ihc')).toBe(1);
-    });
-
-    it('aggregates hierarchy entries from samples', () => {
-        const hierarchy: PatientHierarchy = {
-            patient_id: 'P-1',
-            samples: [
-                makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })]),
-                makeSample('S-2', [makeSlide({ slide_key: 'slide-2' })]),
-            ],
-        };
-
-        expect(
-            getServableSlideEntriesForHierarchyReadOnly(hierarchy)
-        ).toHaveLength(2);
-    });
-
-    it('memoizes hierarchy entries by hierarchy identity', () => {
-        const hierarchy: PatientHierarchy = {
-            patient_id: 'P-1',
-            samples: [makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })])],
-        };
-        const first = getServableSlideEntriesForHierarchyReadOnly(hierarchy);
-
-        expect(getServableSlideEntriesForHierarchyReadOnly(hierarchy)).toBe(
-            first
-        );
-        expect(
-            getServableSlideEntriesForHierarchyReadOnly({ ...hierarchy })
-        ).not.toBe(first);
     });
 
     it('orders slides by part, then block, then H&E first', () => {
