@@ -19,7 +19,13 @@ import {
     registerWsiResourceAccessTarget,
 } from './wsiAuth';
 import { clearWsiThumbnailFetchCache } from './wsiThumbnailFetchCache';
-import { PatientHierarchy, Block, Part, Sample, Slide } from './wsiViewerTypes';
+import { PatientHierarchy, Part, Sample, Slide } from './wsiViewerTypes';
+import {
+    makeBlock,
+    makePart,
+    makeSample as fixtureSample,
+    makeSlide,
+} from './wsiTestFixtures';
 import { configureWsiViewerRuntime, WsiViewerConfig } from './wsiViewerConfig';
 
 // Component tests use a synthetic origin, so keep portal API URLs relative.
@@ -93,57 +99,15 @@ mockLoadOpenSeadragon.mockResolvedValue(OSD);
 
 // ---- test data factories ----
 
-function makeSlide(overrides: Partial<Slide> = {}): Slide {
-    return {
-        slide_key: '1000',
-        stain_name: 'H&E',
-        stain_group: 'Histology',
-        is_hne: true,
-        is_ihc: false,
-        magnification: '20x',
-        file_size_bytes: '100000000',
-        can_serve_tiles: true,
-        block_label: 'A1',
-        block_number: '1',
-        ...overrides,
-    };
-}
-
-function makeBlock(slides: Slide[], blockNumber = '1'): Block {
-    return {
-        block_number: blockNumber,
-        block_label: `A${blockNumber}`,
-        slides,
-    };
-}
-
-function makePart(blocks: Block[]): Part {
-    return {
-        part_number: '1',
-        part_type: 'Resection',
-        part_description: 'Test part',
-        subspecialty: 'GI',
-        blocks,
-    };
-}
-
 function makeSample(sampleId: string, parts: Part[]): Sample {
-    return {
-        sample_id: sampleId,
-        cancer_type: 'Colorectal Cancer',
-        cancer_type_detailed: 'Colon Adenocarcinoma',
-        oncotree_code: 'COAD',
-        primary_site: 'Colon',
-        sample_type: 'Primary',
-        parts,
-    };
+    return fixtureSample(sampleId, [], { parts });
 }
 
 function makeHierarchy(slides: Slide[], patientId = 'P-123'): PatientHierarchy {
-    const block = makeBlock(slides);
-    const part = makePart([block]);
-    const sample = makeSample('S-123456-T01', [part]);
-    return { patient_id: patientId, samples: [sample] };
+    return {
+        patient_id: patientId,
+        samples: [makeSample('S-123456-T01', [makePart([makeBlock(slides)])])],
+    };
 }
 
 function makeWireHierarchy(slides: Slide[], patientId = 'P-123'): any {

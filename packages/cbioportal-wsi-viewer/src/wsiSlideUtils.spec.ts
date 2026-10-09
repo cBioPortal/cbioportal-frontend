@@ -11,54 +11,13 @@ import {
     selectMetadataPrefetchSlides,
     wsiStainKind,
 } from './wsiSlideUtils';
+import { makeSample, makeSlide } from './wsiTestFixtures';
 import {
     PatientHierarchy,
     Sample,
     Slide,
     SlideAssociation,
 } from './wsiViewerTypes';
-
-function makeSlide(overrides: Partial<Slide> = {}): Slide {
-    return {
-        slide_key: '1000',
-        stain_name: 'H&E',
-        stain_group: 'Histology',
-        is_hne: true,
-        is_ihc: false,
-        magnification: '20x',
-        file_size_bytes: '100000000',
-        can_serve_tiles: true,
-        block_label: 'A1',
-        block_number: '1',
-        ...overrides,
-    };
-}
-
-function makeSample(sampleId: string, slides: Slide[]): Sample {
-    return {
-        sample_id: sampleId,
-        cancer_type: '',
-        cancer_type_detailed: '',
-        oncotree_code: '',
-        primary_site: '',
-        sample_type: 'Primary',
-        parts: [
-            {
-                part_number: '1',
-                part_type: 'Resection',
-                part_description: 'Test part',
-                subspecialty: 'GI',
-                blocks: [
-                    {
-                        block_number: '1',
-                        block_label: 'A1',
-                        slides,
-                    },
-                ],
-            },
-        ],
-    };
-}
 
 describe('wsiSlideUtils read-only slide derivation', () => {
     it('selects the preferred association for an image', () => {

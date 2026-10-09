@@ -1,24 +1,11 @@
 import { compareSamplesForNavigation } from './wsiNavUtils';
-import { Sample } from './wsiViewerTypes';
-
-function makeSample(overrides: Partial<Sample> = {}): Sample {
-    return {
-        sample_id: 'S-1',
-        cancer_type: '',
-        cancer_type_detailed: '',
-        oncotree_code: '',
-        primary_site: '',
-        sample_type: '',
-        parts: [],
-        ...overrides,
-    };
-}
+import { makeSample } from './wsiTestFixtures';
 
 describe('wsiNavUtils', () => {
     describe('compareSamplesForNavigation', () => {
         it('places unmatched slides after matched samples', () => {
-            const unmatched = makeSample({ sample_id: 'UNMATCHED' });
-            const matched = makeSample({ sample_id: 'S-1' });
+            const unmatched = makeSample('UNMATCHED');
+            const matched = makeSample('S-1');
 
             expect(
                 compareSamplesForNavigation(unmatched, matched)
@@ -30,10 +17,10 @@ describe('wsiNavUtils', () => {
 
         it('keeps the hierarchy order of matched samples', () => {
             const samples = [
-                makeSample({ sample_id: 'S-2', sample_type: 'Primary' }),
-                makeSample({ sample_id: 'UNMATCHED' }),
-                makeSample({ sample_id: 'S-10', sample_type: 'Metastasis' }),
-                makeSample({ sample_id: 'S-1', sample_type: 'Primary' }),
+                makeSample('S-2', [], { sample_type: 'Primary' }),
+                makeSample('UNMATCHED'),
+                makeSample('S-10', [], { sample_type: 'Metastasis' }),
+                makeSample('S-1', [], { sample_type: 'Primary' }),
             ];
 
             expect(
