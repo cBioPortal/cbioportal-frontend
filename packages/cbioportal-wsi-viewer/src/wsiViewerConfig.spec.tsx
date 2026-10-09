@@ -69,7 +69,6 @@ describe('WSI viewer runtime', () => {
     it('defaults to the #wsi: hash and requires a configured API URL builder', () => {
         const runtime = getWsiViewerRuntime();
 
-        expect(runtime.urlState).toBe(hashUrlState);
         expect(runtime.osdPrefixUrl).toBeUndefined();
         expect(() => runtime.buildApiUrl('api/x')).toThrow(
             'WSI viewer is not configured'
@@ -167,13 +166,11 @@ describe('WsiViewer', () => {
     });
 
     it('uses the installed host services and passes the viewer settings', () => {
-        const urlState = makeMemoryUrlState();
         const fetchImpl = (jest.fn() as unknown) as typeof fetch;
         const renderLoading = () => 'loading';
         configureWsiViewerRuntime(
             makeConfig({
                 osdPrefixUrl: '/osd/',
-                urlState,
                 fetchImpl,
             })
         );
@@ -193,7 +190,6 @@ describe('WsiViewer', () => {
         expect(getWsiViewerRuntime()).toEqual(
             expect.objectContaining({
                 osdPrefixUrl: '/osd/',
-                urlState,
                 fetchImpl,
             })
         );

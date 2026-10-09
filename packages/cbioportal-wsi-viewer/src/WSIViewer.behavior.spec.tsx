@@ -362,7 +362,7 @@ describe('WSIViewer — tileServerBase', () => {
             'https://tiles.example.com',
         ],
         [
-            'handles numeric-only patient IDs (legacy IMPACT format)',
+            'handles numeric-only patient IDs',
             'http://localhost:8081/patient/12345',
             'http://localhost:8081',
         ],

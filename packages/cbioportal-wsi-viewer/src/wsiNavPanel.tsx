@@ -1055,7 +1055,7 @@ function SlideItem({
                 {matchBadge && (
                     <div
                         data-testid={`wsi-slide-match-badge-${slide.slide_key}`}
-                        title={`${matchBadge.label}-matched to this IMPACT sample`}
+                        title={`${matchBadge.label}-matched to this sequenced sample`}
                         style={{
                             display: 'inline-block',
                             padding: '0 3px',

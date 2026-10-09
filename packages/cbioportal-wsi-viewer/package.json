@@ -50,7 +50,6 @@
   },
   "peerDependencies": {
     "cbioportal-frontend-commons": "workspace:*",
-    "cbioportal-ts-api-client": "workspace:*",
     "mobx": "^6.0.0",
     "mobx-react": "^6.0.0 || ^7.0.0",
     "react": "^16.8.0 || ^17.0.0 || ^18.0.0",

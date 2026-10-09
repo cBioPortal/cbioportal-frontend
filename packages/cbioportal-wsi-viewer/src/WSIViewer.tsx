@@ -24,7 +24,7 @@ import {
 import { chooseInitialServableSlide } from './wsiInitialSlideUtils';
 import { MetaRow, WsiMetaSidebar } from './wsiMetaSidebar';
 import { buildPathRows, buildWsiRows } from './wsiMetaUtils';
-import { getWsiViewerRuntime } from './wsiViewerConfig';
+import { hashUrlState } from './wsiViewStateUtils';
 import { compareSamplesForNavigation } from './wsiNavUtils';
 import { WsiNavPanel } from './wsiNavPanel';
 import {
@@ -378,7 +378,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
             getServableSlides: () => this.servableSlides,
             getStainFilter: () => this.stainFilter,
             getTileServerBase: () => this.tileServerBase,
-            getTileServerOrigin: () => this.tileServerOrigin,
             getViewerContainerElement: () => this.viewerContainerRef.current,
             chooseInitialServableSlide: allSlides =>
                 this.chooseInitialServableSlide(allSlides),
@@ -448,7 +447,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     componentDidMount() {
-        this.unsubscribeUrlState = getWsiViewerRuntime().urlState.subscribe(
+        this.unsubscribeUrlState = hashUrlState.subscribe(
             this.handleHashChange
         );
         if (typeof document !== 'undefined') {
@@ -469,7 +468,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
     };
 
     private async selectSlideFromHash(): Promise<void> {
-        const hashState = getWsiViewerRuntime().urlState.read();
+        const hashState = hashUrlState.read();
         if (!hashState || !this.hierarchy) return;
 
         const preferredSlideKeys = this.preferredSlideKeys;
@@ -726,7 +725,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private chooseInitialServableSlide(
         allSlides: Array<{ slide: Slide; sample: Sample }>
     ) {
-        const hashState = getWsiViewerRuntime().urlState.read();
+        const hashState = hashUrlState.read();
         const preferredSlideKeys = this.preferredSlideKeys;
 
         return chooseInitialServableSlide(allSlides, {
@@ -888,15 +887,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
                   ).get(this.selectedSlide.slide_key)
                 : undefined
         );
-    }
-
-    @computed
-    private get tileServerOrigin(): string {
-        try {
-            return new URL(this.tileServerBase, window.location.href).origin;
-        } catch {
-            return this.tileServerBase;
-        }
     }
 
     // ---- render ----

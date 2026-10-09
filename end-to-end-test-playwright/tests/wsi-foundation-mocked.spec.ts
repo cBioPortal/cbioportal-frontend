@@ -109,7 +109,6 @@ if (process.env.PW_SUITE === 'wsi' && process.env.WSI_CHILD_CONTRACT !== '1') {
             }
             expect(tileRequestHeaders.length).toBeGreaterThan(0);
             for (const headers of tileRequestHeaders) {
-                expect(headers['x-wsi-source']).toBeUndefined();
                 expect(headers.authorization).toBe(
                     'Bearer wsi-foundation-smoke-token'
                 );

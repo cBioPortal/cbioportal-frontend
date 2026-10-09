@@ -9,7 +9,6 @@ export {
     readWsiHashState,
     WsiHashState,
     WsiHashViewport,
-    WsiUrlStateAdapter,
 } from './wsiViewStateUtils';
 export { fetchWsiPatientHierarchy } from './wsiHierarchyFetchCache';
 export { createPromiseCache, PromiseCache } from './wsiCacheUtils';

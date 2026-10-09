@@ -14,31 +14,19 @@ function freezeMetaRows(rows: MetaRow[]): MetaRow[] {
     return Object.freeze(rows) as MetaRow[];
 }
 
-export function getPatientId(sampleId: string, patientId?: string): string {
-    if (patientId) {
-        return patientId;
-    }
-    return sampleId.replace(/-T\d+.*$/i, '');
-}
-
-export function buildPatientUrl(
-    studyId: string,
-    sampleId: string,
-    patientId?: string
-): string {
+export function buildPatientUrl(studyId: string, patientId: string): string {
     return `/patient?studyId=${encodeURIComponent(
         studyId
-    )}&caseId=${encodeURIComponent(getPatientId(sampleId, patientId))}`;
+    )}&caseId=${encodeURIComponent(patientId)}`;
 }
 
 export function buildSampleUrl(
     studyId: string,
     sampleId: string,
-    patientId?: string
+    patientId: string
 ): string {
     return `${buildPatientUrl(
         studyId,
-        sampleId,
         patientId
     )}&sampleId=${encodeURIComponent(sampleId)}`;
 }
@@ -177,15 +165,15 @@ function specimenTooltip(association: {
 export function buildPathRows(
     slide: Slide,
     sample: Sample,
-    patientId?: string,
-    studyId?: string,
+    patientId: string,
+    studyId: string,
     association?: SlideAssociation
 ): MetaRow[] {
     const isUnmatchedSample = sample.sample_id === 'UNMATCHED';
     const stainBadge = getStainBadge(slide);
     const stainName = cleanStain(slide.stain_name);
     const sampleUrl =
-        studyId && sample.sample_id && !isUnmatchedSample
+        sample.sample_id && !isUnmatchedSample
             ? buildSampleUrl(studyId, sample.sample_id, patientId)
             : undefined;
     const blockLbl = normalizeBlockLabel(slide.block_label, slide.block_number);
@@ -241,7 +229,7 @@ export function buildPathRows(
         rows.push({
             label: 'Match',
             labelTip:
-                'How this pathology slide was matched to the IMPACT sample',
+                'How this pathology slide was matched to the sequenced sample',
             value:
                 association.match_level === 'BLOCK'
                     ? 'Block-matched'

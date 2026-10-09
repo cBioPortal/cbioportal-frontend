@@ -1,5 +1,3 @@
-import { hashUrlState, WsiUrlStateAdapter } from './wsiViewStateUtils';
-
 /**
  * Host services shared by every viewer on the page. Hosts install them once,
  * at startup, with `configureWsiViewerRuntime`.
@@ -12,8 +10,6 @@ export interface WsiViewerConfig {
     buildApiUrl: (path: string) => string;
     /** OpenSeadragon `prefixUrl`; OpenSeadragon's own default when unset. */
     osdPrefixUrl?: string;
-    /** Slide and viewport link state; the `#wsi:` URL hash when unset. */
-    urlState?: WsiUrlStateAdapter;
     /**
      * Fetch used for hierarchy, slide access and thumbnail requests; the
      * global `fetch` when unset. OpenSeadragon loads tiles itself.
@@ -26,7 +22,6 @@ export interface WsiViewerRuntime {
     buildApiUrl: (path: string) => string;
     fetchImpl: typeof fetch;
     osdPrefixUrl?: string;
-    urlState: WsiUrlStateAdapter;
 }
 
 // Resolves the global at call time so a replaced `window.fetch` is used.
@@ -40,7 +35,6 @@ const DEFAULT_RUNTIME: WsiViewerRuntime = {
         );
     },
     fetchImpl: globalFetch,
-    urlState: hashUrlState,
 };
 
 let runtime: WsiViewerRuntime = DEFAULT_RUNTIME;
@@ -51,7 +45,6 @@ export function configureWsiViewerRuntime(config: WsiViewerConfig): void {
         buildApiUrl: config.buildApiUrl,
         fetchImpl: config.fetchImpl ?? globalFetch,
         osdPrefixUrl: config.osdPrefixUrl,
-        urlState: config.urlState ?? hashUrlState,
     };
 }
 

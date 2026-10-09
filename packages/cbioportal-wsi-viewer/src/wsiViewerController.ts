@@ -6,6 +6,7 @@ import {
     buildWsiViewState,
     clampImageCoordinates,
     copyCurrentUrlToClipboard,
+    hashUrlState,
     downloadCanvasAsJpeg,
     scheduleHashStateWrite,
     writeSelectedSlideState,
@@ -27,7 +28,6 @@ import {
 } from './wsiOsdUtils';
 import { getWsiSlideAccess } from './wsiAuth';
 import { buildWsiRequestHeaders } from './wsiUrls';
-import { ensureWsiPreconnect } from './wsiNetworkWarmup';
 import { fetchWsiThumbnailBlob } from './wsiThumbnailFetchCache';
 import {
     PatientHierarchy,
@@ -73,7 +73,6 @@ export interface WsiViewerControllerHost {
     getServableSlides(): Array<{ slide: Slide; sample: Sample }>;
     getStainFilter(): WsiStainFilter;
     getTileServerBase(): string;
-    getTileServerOrigin(): string;
     getViewerContainerElement(): HTMLDivElement | null;
     chooseInitialServableSlide(
         allSlides: Array<{ slide: Slide; sample: Sample }>
@@ -236,7 +235,7 @@ export class WsiViewerController {
         this.cancelBackgroundWorkSchedule();
         this.cancelNavigatorSchedule();
         this.destroyViewer();
-        getWsiViewerRuntime().urlState.clear();
+        hashUrlState.clear();
     }
 
     private cancelBackgroundWorkSchedule() {
@@ -298,7 +297,7 @@ export class WsiViewerController {
             timer: this.writeHashTimer,
             selectedSlideId: this.host.getSelectedSlide()?.slide_key,
             osdViewer: this.mountedViewer,
-            urlState: getWsiViewerRuntime().urlState,
+            urlState: hashUrlState,
         });
     }
 
@@ -579,7 +578,6 @@ export class WsiViewerController {
         this.cancelNavigatorSchedule();
         this.initialSlideLoadStartedAt = Date.now();
         this.host.resetHierarchyLoadState();
-        ensureWsiPreconnect(this.host.getTileServerOrigin());
         void this.primeOpenSeadragonLoad().catch(() => {});
 
         try {
@@ -860,10 +858,7 @@ export class WsiViewerController {
     ): Promise<void> {
         this.cancelActiveMount();
         this.host.beginSlideSelection(slide, sample);
-        writeSelectedSlideState(
-            getWsiViewerRuntime().urlState,
-            slide.slide_key
-        );
+        writeSelectedSlideState(hashUrlState, slide.slide_key);
         if (notifyHost) this.host.onSlideSelectionStarted?.(slide);
         this.loadingStart = Date.now();
         const seq = this.mountSeq;
@@ -881,7 +876,7 @@ export class WsiViewerController {
 
         restoreOrHomeViewport({
             osdViewer: this.mountedViewer,
-            hashState: getWsiViewerRuntime().urlState.read(),
+            hashState: hashUrlState.read(),
             selectedSlideId: slide.slide_key,
             openSeadragon: this.openSeadragon,
             meta: this.host.getSelectedMeta(),
@@ -893,7 +888,7 @@ export class WsiViewerController {
         this.resetMount();
         this.destroyViewer();
         this.host.clearSelectedSlide();
-        getWsiViewerRuntime().urlState.clear();
+        hashUrlState.clear();
     }
 
     goToCoordinates() {
@@ -945,12 +940,13 @@ export class WsiViewerController {
     }
 
     async copyViewLink() {
-        const { urlState } = getWsiViewerRuntime();
         const state = buildWsiViewState({
             selectedSlideId: this.host.getSelectedSlide()?.slide_key,
             osdViewer: this.mountedViewer,
         });
-        const url = state ? urlState.write(state) : urlState.currentUrl();
+        const url = state
+            ? hashUrlState.write(state)
+            : hashUrlState.currentUrl();
         await copyCurrentUrlToClipboard(url);
     }
 
@@ -1014,9 +1010,7 @@ export class WsiViewerController {
         this.clearTimer('osdOpenTimer');
         this.clearTimer('selectionTimeoutTimer');
         this.host.setViewerReady(true);
-        const hashState = restoreHashViewport
-            ? getWsiViewerRuntime().urlState.read()
-            : null;
+        const hashState = restoreHashViewport ? hashUrlState.read() : null;
         try {
             restoreOrHomeViewport({
                 osdViewer: this.osdViewer,

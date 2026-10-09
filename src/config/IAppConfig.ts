@@ -155,10 +155,8 @@ export interface IServerConfig {
     sessionServiceEnabled: boolean;
     session_url_length_threshold: string;
     /**
-     * Base URL of the MSK WSI tile server, e.g. https://tiles.cbioportal.org
-     * Set to empty string to use dev-server proxy (paths /patient and /tiles are forwarded).
-     * In local dev, this may also be set to a direct tile-server origin to bypass rspack.
-     * Null/undefined = feature hidden.
+     * Base URL of the WSI tile server (absolute, or a path on the portal's
+     * origin such as /wsi). Empty or unset hides the slide viewer.
      */
     msk_wsi_tile_server_url: string | null;
     query_product_limit: number;

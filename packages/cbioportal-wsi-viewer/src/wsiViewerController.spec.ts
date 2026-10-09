@@ -18,9 +18,6 @@ jest.mock('./wsiThumbnailFetchCache', () => ({
     ),
 }));
 jest.mock('./wsiOpenSeadragonLoader', () => ({}));
-jest.mock('./wsiNetworkWarmup', () => ({
-    ensureWsiPreconnect: jest.fn(),
-}));
 
 const getWsiSlideAccessMock = getWsiSlideAccess as jest.Mock;
 
@@ -120,7 +117,6 @@ function makeHarness() {
         getServableSlides: () => [],
         getStainFilter: () => 'all' as any,
         getTileServerBase: () => 'https://tiles.example.com',
-        getTileServerOrigin: () => 'https://tiles.example.com',
         getViewerContainerElement: () => container,
         chooseInitialServableSlide: () => undefined,
         beginSlideSelection: slide => {
