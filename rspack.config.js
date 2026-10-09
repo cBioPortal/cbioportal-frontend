@@ -51,33 +51,6 @@ console.log('NODE_ENV', NODE_ENV);
 // devServer config
 const devHost = process.env.HOST || 'localhost';
 const devPort = process.env.PORT || 3000;
-const devServerProxy = [];
-if (process.env.CBIOPORTAL_PROXY_TARGET) {
-    const cbioportalProxyTarget = cleanAndValidateUrl(
-        process.env.CBIOPORTAL_PROXY_TARGET
-    );
-    devServerProxy.push({
-        // Match deployed ingress semantics: every portal API request remains
-        // same-origin in the browser and is forwarded to the backend here.
-        context: ['/api', '/config_service'],
-        target: cbioportalProxyTarget,
-        changeOrigin: true,
-        // changeOrigin updates Host but http-proxy leaves the browser Origin
-        // untouched. Rewrite it as well so Spring evaluates the forwarded
-        // request as same-origin, matching the deployed ingress topology.
-        headers: { Origin: new URL(cbioportalProxyTarget).origin },
-    });
-}
-if (process.env.WSI_TILE_PROXY_TARGET) {
-    devServerProxy.push({
-        // Keep the application route `/wsi/patient/...` on the frontend;
-        // proxy only tile-contract paths to the tile fixture/service.
-        context: ['/wsi/health', '/wsi/tiles', '/wsi/thumbnails'],
-        target: cleanAndValidateUrl(process.env.WSI_TILE_PROXY_TARGET),
-        changeOrigin: true,
-        pathRewrite: { '^/wsi': '' },
-    });
-}
 
 const root = resolve(__dirname);
 const src = join(root, 'src');
@@ -218,18 +191,11 @@ var config = {
             VERSION: version,
             COMMIT: commit,
             IS_DEV_MODE: isDev,
-            // An explicitly empty URL is the local same-origin mode: the
-            // rspack proxy owns /api and the browser must use the current
-            // origin. Keep the unset case as a hard-to-miss placeholder for
-            // production/build environments that forgot to configure it.
-            ENV_CBIOPORTAL_URL:
-                process.env.CBIOPORTAL_URL === ''
-                    ? '""'
-                    : process.env.CBIOPORTAL_URL
-                    ? JSON.stringify(
-                          cleanAndValidateUrl(process.env.CBIOPORTAL_URL)
-                      )
-                    : '"replace_me_env_cbioportal_url"',
+            ENV_CBIOPORTAL_URL: process.env.CBIOPORTAL_URL
+                ? JSON.stringify(
+                      cleanAndValidateUrl(process.env.CBIOPORTAL_URL)
+                  )
+                : '"replace_me_env_cbioportal_url"',
             ENV_GENOME_NEXUS_URL: process.env.GENOME_NEXUS_URL
                 ? JSON.stringify(
                       cleanAndValidateUrl(process.env.GENOME_NEXUS_URL)
@@ -495,7 +461,7 @@ var config = {
                 warnings: false,
             },
         },
-        server: process.env.DEV_SERVER_PROTOCOL || 'https',
+        server: 'https',
         host: devHost,
         headers: { 'Access-Control-Allow-Origin': '*' },
         allowedHosts: 'all',
@@ -503,15 +469,6 @@ var config = {
             publicPath: '/',
             stats: 'errors-only',
         },
-        ...(devServerProxy.length > 0
-            ? {
-                  // Exercise the same-origin portal API and WSI tile topology
-                  // used by deployed portals during integration tests.
-                  // Keep this opt-in so the ordinary standalone frontend
-                  // configuration remains unchanged.
-                  proxy: devServerProxy,
-              }
-            : {}),
     },
 };
 
