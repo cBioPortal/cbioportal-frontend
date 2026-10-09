@@ -39,17 +39,11 @@ const originalRevokeObjectUrl = Object.getOwnPropertyDescriptor(
     'revokeObjectURL'
 );
 
-const theme = {
-    blue: '#2986e2',
-    blueLight: '#e8f1fb',
-    orange: '#f5a623',
-    text: '#333',
-    muted: '#737373',
-    border: '#ddd',
-    navBg: '#fafafa',
+const navContext = {
+    tileServerBase: 'https://tiles.example.com',
+    studyId: 'study-1',
+    authScope: 'user-a',
 };
-
-const sectionTitleStyle: React.CSSProperties = {};
 
 function findButtonText(
     renderer: TestRenderer.ReactTestRenderer,
@@ -128,9 +122,7 @@ describe('WsiNavPanel', () => {
                 stainFilter="all"
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -161,9 +153,7 @@ describe('WsiNavPanel', () => {
                 stainFilter="all"
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -189,9 +179,7 @@ describe('WsiNavPanel', () => {
                 stainFilter="all"
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -207,9 +195,7 @@ describe('WsiNavPanel', () => {
                     stainFilter="all"
                     onFilterChange={() => {}}
                     onSelectSlide={() => {}}
-                    theme={theme}
-                    navWidth={252}
-                    sectionTitleStyle={sectionTitleStyle}
+                    {...navContext}
                 />
             );
         });
@@ -245,9 +231,7 @@ describe('WsiNavPanel', () => {
                 stainFilter="all"
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -265,9 +249,7 @@ describe('WsiNavPanel', () => {
                 stainFilter="all"
                 onFilterChange={() => {}}
                 onSelectSlide={onSelectSlide}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -293,9 +275,7 @@ describe('WsiNavPanel', () => {
                 stainFilter="all"
                 onFilterChange={() => {}}
                 onSelectSlide={onSelectSlide}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
         const slideNode = renderer.root.findByProps({
@@ -330,9 +310,7 @@ describe('WsiNavPanel', () => {
                 stainFilter="all"
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
         const sampleHeader = renderer.root.findByProps({
@@ -365,9 +343,7 @@ describe('WsiNavPanel', () => {
                 stainFilter="all"
                 onFilterChange={onFilterChange}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -394,9 +370,7 @@ describe('WsiNavPanel', () => {
                 onFilterChange={() => {}}
                 onMatchFilterChange={onMatchFilterChange}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -440,9 +414,7 @@ describe('WsiNavPanel', () => {
                 stainFilter="all"
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -479,9 +451,7 @@ describe('WsiNavPanel', () => {
                 stainFilter="all"
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -520,9 +490,7 @@ describe('WsiNavPanel', () => {
                 matchFilter="part"
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -558,9 +526,7 @@ describe('WsiNavPanel', () => {
                 matchFilter="unmatched"
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -580,9 +546,7 @@ describe('WsiNavPanel', () => {
                 matchFilter="all"
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
         return renderer.root
@@ -643,9 +607,7 @@ describe('WsiNavPanel', () => {
                 matchFilter="block"
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -714,9 +676,7 @@ describe('WsiNavPanel', () => {
                 stainFilter="hne"
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -786,9 +746,7 @@ describe('WsiNavPanel', () => {
                 matchFilter="block"
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -837,9 +795,7 @@ describe('WsiNavPanel', () => {
                 matchFilter="all"
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -902,9 +858,7 @@ describe('WsiNavPanel', () => {
                 matchFilter="all"
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -956,9 +910,7 @@ describe('WsiNavPanel', () => {
                 matchFilter="all"
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -984,9 +936,7 @@ describe('WsiNavPanel', () => {
                 stainFilter="all"
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -1011,9 +961,7 @@ describe('WsiNavPanel', () => {
                 stainFilter="all"
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -1025,9 +973,7 @@ describe('WsiNavPanel', () => {
                     stainFilter="all"
                     onFilterChange={() => {}}
                     onSelectSlide={() => {}}
-                    theme={theme}
-                    navWidth={252}
-                    sectionTitleStyle={sectionTitleStyle}
+                    {...navContext}
                 />
             );
         });
@@ -1055,9 +1001,7 @@ describe('WsiNavPanel', () => {
                 onFilterChange={() => {}}
                 onClearFilters={onClearFilters}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -1085,9 +1029,7 @@ describe('WsiNavPanel', () => {
                 onFilterChange={() => {}}
                 onClearFilters={onClearFilters}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
         const renderer = TestRenderer.create(panel(true));
@@ -1145,9 +1087,7 @@ describe('WsiNavPanel', () => {
                 slideIdFilter={new Set(['hne-slide'])}
                 onFilterChange={onFilterChange}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -1180,9 +1120,7 @@ describe('WsiNavPanel', () => {
                 deferOffscreenSamples={true}
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 
@@ -1218,9 +1156,7 @@ describe('WsiNavPanel', () => {
                 deferOffscreenSamples={true}
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
+                {...navContext}
             />
         );
 

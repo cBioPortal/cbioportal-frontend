@@ -306,6 +306,7 @@ function renderViewer(url = 'https://tiles.example.com/patient/P-1') {
             <WSIViewer
                 tileServerUrl={tileServerUrl}
                 studyId="study"
+                authScope="anonymousUser"
                 patientId={patientId}
                 height={500}
             />

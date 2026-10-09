@@ -13,6 +13,8 @@ export interface InitialSlideOptions {
     /** Slide named by a `slideKey` link; used when no hash slide matches. */
     requestedSlideKey?: string;
     stainFilter: WsiStainFilter;
+    /** Only slides it accepts are considered. */
+    matchesEntry?: (entry: InitialSlideEntry) => boolean;
 }
 
 /**
@@ -20,11 +22,9 @@ export interface InitialSlideOptions {
  * link slide, then the default ranking (preferred sample and stain, H&E,
  * first). Unknown IDs fall through to the next level.
  */
-function chooseInitialServableSlideInternal(
+export function chooseInitialServableSlide(
     allSlides: Iterable<InitialSlideEntry>,
-    options: InitialSlideOptions & {
-        matchesEntry?: (entry: InitialSlideEntry) => boolean;
-    }
+    options: InitialSlideOptions
 ): InitialSlideEntry | undefined {
     let requested: InitialSlideEntry | undefined;
     let preferredSampleMatchingStain: InitialSlideEntry | undefined;
@@ -93,20 +93,4 @@ function chooseInitialServableSlideInternal(
         hne ??
         first
     );
-}
-
-export function chooseInitialServableSlide(
-    allSlides: InitialSlideEntry[],
-    options: InitialSlideOptions
-): InitialSlideEntry | undefined {
-    return chooseInitialServableSlideInternal(allSlides, options);
-}
-
-export function chooseInitialMatchingServableSlide(
-    allSlides: Iterable<InitialSlideEntry>,
-    options: InitialSlideOptions & {
-        matchesEntry: (entry: InitialSlideEntry) => boolean;
-    }
-): InitialSlideEntry | undefined {
-    return chooseInitialServableSlideInternal(allSlides, options);
 }

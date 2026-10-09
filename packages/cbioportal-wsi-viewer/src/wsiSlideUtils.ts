@@ -1,6 +1,8 @@
 import { normalizeBlockLabel } from './wsiNavUtils';
 import {
+    MatchLevel,
     PathologySlideFilter,
+    PathologySlideMatchFilter,
     PatientHierarchy,
     Sample,
     Slide,
@@ -376,20 +378,26 @@ export function sampleHasServableSlide(
     );
 }
 
-function normalizeMatchLevel(
+/** The match level a filter or linkout names, in the hierarchy's casing. */
+export function normalizeMatchLevel(
     value: string | null | undefined
-): string | undefined {
-    if (!value) {
-        return undefined;
-    }
-    const normalized = value.toUpperCase();
-    if (normalized === 'UNMATCHED') {
-        return 'UNMATCHED';
-    }
-    if (normalized === 'PART' || normalized === 'BLOCK') {
-        return normalized;
-    }
-    return undefined;
+): MatchLevel | undefined {
+    const normalized = value?.toUpperCase();
+    return normalized === 'PART' ||
+        normalized === 'BLOCK' ||
+        normalized === 'UNMATCHED'
+        ? normalized
+        : undefined;
+}
+
+export function matchesMatchFilter(
+    association: Pick<SlideAssociation, 'match_level'> | undefined,
+    matchFilter: PathologySlideMatchFilter
+): boolean {
+    return (
+        matchFilter === 'all' ||
+        association?.match_level === normalizeMatchLevel(matchFilter)
+    );
 }
 
 function buildPathologyFilterCacheKey(

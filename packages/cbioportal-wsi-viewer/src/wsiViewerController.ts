@@ -62,10 +62,10 @@ export interface WsiInitialSlideLoadPerformance {
 
 export interface WsiViewerControllerHost {
     getProps(): {
-        studyId?: string;
-        patientId?: string;
+        studyId: string;
+        patientId: string;
         pathologyFilter?: PathologySlideFilter;
-        authScope?: string;
+        authScope: string;
     };
     resetHierarchyLoadState(): void;
     setHierarchy(data: PatientHierarchy | null): void;
@@ -409,7 +409,7 @@ export class WsiViewerController {
                 }
                 const blob = await fetchWsiThumbnailBlob(
                     this.host.getTileServerBase(),
-                    this.host.getProps().studyId || '',
+                    this.host.getProps().studyId,
                     slideKey,
                     access,
                     requestController.signal,
@@ -587,8 +587,8 @@ export class WsiViewerController {
         try {
             const { authScope, studyId, patientId } = this.host.getProps();
             const data = await fetchWsiPatientHierarchy(
-                studyId || '',
-                patientId || '',
+                studyId,
+                patientId,
                 authScope,
                 abortController.signal
             );
@@ -724,8 +724,7 @@ export class WsiViewerController {
             ) {
                 return;
             }
-            const studyId = this.host.getProps().studyId;
-            if (!studyId) return;
+            const { studyId } = this.host.getProps();
             try {
                 const access = await getWsiSlideAccess(
                     studyId,
@@ -774,12 +773,9 @@ export class WsiViewerController {
     /** Tile metadata comes with the slide access, which is cached. */
     private fetchSlideMetadata(slideKey: string): Promise<TileMetadata> {
         const { studyId, authScope } = this.host.getProps();
-        return getWsiSlideAccess(
-            studyId || '',
-            slideKey,
-            false,
-            authScope
-        ).then(access => access.tileMetadata);
+        return getWsiSlideAccess(studyId, slideKey, false, authScope).then(
+            access => access.tileMetadata
+        );
     }
 
     private async prefetchSlideMetadata(
@@ -1162,21 +1158,17 @@ export class WsiViewerController {
         restoreHashViewport = true
     ) {
         const openSeadragonPromise = this.primeOpenSeadragonLoad();
-        const studyId = this.host.getProps().studyId;
-        const accessPromise = studyId
-            ? getWsiSlideAccess(
-                  studyId,
-                  slide.slide_key,
-                  false,
-                  this.host.getProps().authScope
-              )
-            : null;
-        if (studyId && accessPromise) {
-            // The access request is shared with metadata loading. Starting
-            // the published-thumbnail fetch here lets it run while OSD and
-            // slide metadata initialize.
-            this.startThumbnailPreview(slide.slide_key, seq, accessPromise);
-        }
+        const { studyId, authScope } = this.host.getProps();
+        const accessPromise = getWsiSlideAccess(
+            studyId,
+            slide.slide_key,
+            false,
+            authScope
+        );
+        // The access request is shared with metadata loading. Starting the
+        // published-thumbnail fetch here lets it run while OSD and slide
+        // metadata initialize.
+        this.startThumbnailPreview(slide.slide_key, seq, accessPromise);
         let meta: TileMetadata;
         try {
             meta = await this.fetchSlideMetadata(slide.slide_key);
@@ -1210,9 +1202,6 @@ export class WsiViewerController {
         let reopenSlide: (() => void) | null = null;
         try {
             const openSeadragon = await openSeadragonPromise;
-            if (!studyId || !accessPromise) {
-                throw new Error('WSI viewer requires a study ID');
-            }
             const access = await accessPromise;
             if (seq !== this.mountSeq) return;
             // Reuse needs an idle viewer: tile requests of the previous slide

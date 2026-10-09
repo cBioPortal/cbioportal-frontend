@@ -1,7 +1,4 @@
-import {
-    chooseInitialMatchingServableSlide,
-    chooseInitialServableSlide,
-} from './wsiInitialSlideUtils';
+import { chooseInitialServableSlide } from './wsiInitialSlideUtils';
 import { makeSample, makeSlide } from './wsiTestFixtures';
 
 describe('chooseInitialServableSlide', () => {
@@ -100,7 +97,7 @@ describe('chooseInitialServableSlide', () => {
         ];
 
         expect(
-            chooseInitialMatchingServableSlide(entries, {
+            chooseInitialServableSlide(entries, {
                 preferredSlideId: 'hidden',
                 stainFilter: 'all',
                 matchesEntry: entry => entry.slide.slide_key !== 'hidden',
@@ -116,7 +113,7 @@ describe('chooseInitialServableSlide', () => {
         ];
 
         expect(
-            chooseInitialMatchingServableSlide(entries, {
+            chooseInitialServableSlide(entries, {
                 stainFilter: 'all',
                 matchesEntry: () => false,
             })
@@ -140,7 +137,7 @@ describe('chooseInitialServableSlide', () => {
         };
 
         expect(
-            chooseInitialMatchingServableSlide([rejectedPreferred, accepted], {
+            chooseInitialServableSlide([rejectedPreferred, accepted], {
                 preferredSlideId: 'rejected-preferred',
                 stainFilter: 'hne',
                 matchesEntry: entry => entry === accepted,
@@ -206,7 +203,7 @@ describe('chooseInitialServableSlide requested image', () => {
 
     it('ignores a requested image excluded by the entry filter', () => {
         expect(
-            chooseInitialMatchingServableSlide([hne, encoded, third], {
+            chooseInitialServableSlide([hne, encoded, third], {
                 requestedSlideKey: 'slide id/2 #x',
                 stainFilter: 'all',
                 matchesEntry: entry => entry.sample === preferred,
