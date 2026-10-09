@@ -36,9 +36,7 @@ export function validateWsiTileMetadata(
         throw new Error('Invalid WSI tile metadata');
     }
 
-    const schema = metadata.tile_metadata_schema_version;
-    if (schema == null) return;
-    if (!Number.isInteger(schema) || schema !== 2) {
+    if (metadata.tile_metadata_schema_version !== 2) {
         throw new Error('Invalid WSI tile metadata schema');
     }
     const safeMinLevel = metadata.safe_min_level;
@@ -79,7 +77,7 @@ export function normalizeWsiAuthScope(scope?: string): string {
 
 // An access is reused until 30 s before its token expires.
 const slideAccess = createPromiseCache<WsiSlideAccess>(
-    access => (access.expiresAt ?? 0) - 30_000
+    access => access.expiresAt - 30_000
 );
 /**
  * Patient of every slide a loaded hierarchy published, keyed by study and
@@ -186,9 +184,6 @@ async function requestSlideAccess(
         payload.slideKey !== slideKey ||
         !payload.accessToken ||
         !payload.tileMetadata ||
-        !payload.thumbnail ||
-        !Number.isFinite(payload.thumbnail.width) ||
-        !Number.isFinite(payload.thumbnail.height) ||
         !Number.isFinite(payload.expiresIn) ||
         payload.expiresIn <= 0
     ) {
@@ -200,13 +195,7 @@ async function requestSlideAccess(
     return {
         slideKey,
         tileMetadata: payload.tileMetadata,
-        thumbnail: {
-            width: payload.thumbnail.width,
-            height: payload.thumbnail.height,
-            contentType: payload.thumbnail.contentType,
-        },
         accessToken: payload.accessToken,
-        tokenType: payload.tokenType,
         expiresIn: payload.expiresIn,
         expiresAt: Date.now() + payload.expiresIn * 1000,
     };

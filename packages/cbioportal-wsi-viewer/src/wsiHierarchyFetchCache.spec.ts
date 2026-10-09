@@ -10,6 +10,7 @@ import {
     clearWsiSlideAccess,
     getWsiSlideAccess,
 } from './wsiAuth';
+import { makeTileMetadata } from './wsiTestFixtures';
 import { configureWsiViewerRuntime } from './wsiViewerConfig';
 
 configureWsiViewerRuntime({
@@ -394,7 +395,7 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
 
     const accessPayload = {
         slideKey: 'slide',
-        tileMetadata: {
+        tileMetadata: makeTileMetadata({
             dimensions: { width: 100, height: 80 },
             levels: 1,
             level_dimensions: [{ width: 100, height: 80 }],
@@ -402,7 +403,7 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
             max_zoom: 0,
             tile_size: 256,
             safe_min_level: 0,
-        },
+        }),
         thumbnail: {
             width: 128,
             height: 96,

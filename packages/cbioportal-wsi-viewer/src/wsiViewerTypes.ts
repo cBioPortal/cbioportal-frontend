@@ -124,9 +124,9 @@ export interface TileMetadata {
     level_dimensions: Array<{ width: number; height: number }>;
     level_downsamples?: number[];
     max_zoom: number;
-    /** Version of the offline tile metadata contract, when supplied. */
+    /** Version of the offline tile metadata contract; the viewer requires 2. */
     tile_metadata_schema_version?: number | null;
-    /** Versioned bounded-read policy, when supplied. */
+    /** Versioned bounded-read policy. */
     decode_policy_version?: string | null;
     max_decode_pixels?: number | null;
     thumbnail_max_decode_pixels?: number | null;
@@ -141,15 +141,10 @@ export interface TileMetadata {
 export interface WsiSlideAccess {
     slideKey: string;
     tileMetadata: TileMetadata;
-    thumbnail: {
-        width: number;
-        height: number;
-        contentType: string;
-    };
     accessToken: string;
-    tokenType: string;
     expiresIn: number;
-    expiresAt?: number;
+    /** When the access token expires (ms since the epoch). */
+    expiresAt: number;
 }
 
 /** A label/value row for the sidebar's Clinical section, built by the host. */

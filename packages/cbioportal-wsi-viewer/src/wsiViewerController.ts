@@ -543,7 +543,7 @@ export class WsiViewerController {
                 studyId,
                 slideKey,
                 seq,
-                access.expiresAt || Date.now() + access.expiresIn * 1000
+                access.expiresAt
             );
         } catch (_) {
             if (seq !== this.mountSeq) return;
@@ -1349,7 +1349,7 @@ export class WsiViewerController {
                 studyId,
                 slide.slide_key,
                 seq,
-                access.expiresAt || Date.now() + access.expiresIn * 1000
+                access.expiresAt
             );
         } catch (err) {
             if (seq !== this.mountSeq) return;

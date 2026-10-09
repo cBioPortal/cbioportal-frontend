@@ -7,7 +7,12 @@ import { WsiNavPanel } from './wsiNavPanel';
 import { getWsiSlideAccess } from './wsiAuth';
 import { clearWsiThumbnailFetchCache } from './wsiThumbnailFetchCache';
 import * as wsiSlideUtils from './wsiSlideUtils';
-import { makeHierarchy, makeSample, makeSlide } from './wsiTestFixtures';
+import {
+    makeHierarchy,
+    makeSample,
+    makeSlide,
+    makeTileMetadata,
+} from './wsiTestFixtures';
 import {
     PatientHierarchy,
     Sample,
@@ -17,14 +22,7 @@ import {
 
 jest.mock('./wsiAuth', () => ({
     getWsiSlideAccess: jest.fn(() =>
-        Promise.resolve({
-            accessToken: 'test-token',
-            thumbnail: {
-                width: 128,
-                height: 96,
-                contentType: 'image/jpeg',
-            },
-        })
+        Promise.resolve({ accessToken: 'test-token' })
     ),
 }));
 
@@ -82,21 +80,10 @@ describe('WsiNavPanel', () => {
         mockGetWsiSlideAccess.mockReset();
         mockGetWsiSlideAccess.mockResolvedValue({
             accessToken: 'test-token',
-            tileMetadata: {
-                dimensions: { width: 100, height: 80 },
-                levels: 1,
-                level_dimensions: [{ width: 100, height: 80 }],
-                max_zoom: 0,
-                tile_size: 256,
-            },
-            thumbnail: {
-                width: 128,
-                height: 96,
-                contentType: 'image/jpeg',
-            },
+            tileMetadata: makeTileMetadata(),
             slideKey: '1000',
-            tokenType: 'Bearer',
             expiresIn: 300,
+            expiresAt: Date.now() + 300_000,
         });
         global.fetch = jest.fn().mockResolvedValue({
             ok: true,

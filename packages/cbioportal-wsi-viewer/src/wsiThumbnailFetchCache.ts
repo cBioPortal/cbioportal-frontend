@@ -145,7 +145,7 @@ export function fetchWsiThumbnailBlob(
             blob: result.blob,
             expiresAt: Math.min(
                 startedAt + THUMBNAIL_CACHE_TTL_MS,
-                access.expiresAt ?? startedAt + access.expiresIn * 1000,
+                access.expiresAt,
                 Date.now() + (result.maxAgeMs ?? THUMBNAIL_CACHE_TTL_MS)
             ),
         };

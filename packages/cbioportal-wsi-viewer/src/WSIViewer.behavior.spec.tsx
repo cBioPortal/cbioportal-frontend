@@ -25,6 +25,7 @@ import {
     makePart,
     makeSample as fixtureSample,
     makeSlide,
+    makeTileMetadata,
 } from './wsiTestFixtures';
 import { configureWsiViewerRuntime, WsiViewerConfig } from './wsiViewerConfig';
 
@@ -600,14 +601,14 @@ describe('WSIViewer — componentWillUnmount', () => {
                 inst.hierarchy = hierarchy;
                 inst.selectedSample = sample;
                 inst.selectedSlide = slide;
-                inst.selectedMeta = {
+                inst.selectedMeta = makeTileMetadata({
                     dimensions: { width: 1000, height: 800 },
                     levels: 1,
                     level_dimensions: [{ width: 1000, height: 800 }],
                     max_zoom: 6,
                     tile_size: 256,
                     mpp: { x: 0.25, y: 0.25 },
-                };
+                });
                 inst.tilesReady = true;
             })();
         });
@@ -1476,13 +1477,13 @@ describe('WSIViewer — pathology filter updates', () => {
 
         inst.selectedSample = sample;
         inst.selectedSlide = slide;
-        inst.selectedMeta = {
+        inst.selectedMeta = makeTileMetadata({
             dimensions: { width: 1000, height: 800 },
             levels: 1,
             level_dimensions: [{ width: 1000, height: 800 }],
             max_zoom: 6,
             tile_size: 256,
-        };
+        });
         (controller as any).osdViewer = { destroy: jest.fn() };
         (controller as any).osdSlideMounted = true;
 
@@ -1520,14 +1521,14 @@ describe('WSIViewer — sidebar row caching', () => {
                 inst.hierarchy = hierarchy;
                 inst.selectedSample = sample;
                 inst.selectedSlide = slide;
-                inst.selectedMeta = {
+                inst.selectedMeta = makeTileMetadata({
                     dimensions: { width: 1000, height: 800 },
                     levels: 1,
                     level_dimensions: [{ width: 1000, height: 800 }],
                     max_zoom: 6,
                     tile_size: 256,
                     mpp: { x: 0.25, y: 0.25 },
-                };
+                });
                 inst.spinnerVisible = false;
             })();
         });
@@ -1673,13 +1674,13 @@ describe('WSIViewer — loadHierarchy', () => {
             .spyOn(controller as any, 'fetchSlideMetadata')
             .mockImplementation(async () => {
                 releaseMetadata();
-                return {
+                return makeTileMetadata({
                     dimensions: { width: 1000, height: 800 },
                     levels: 1,
                     level_dimensions: [{ width: 1000, height: 800 }],
                     max_zoom: 6,
                     tile_size: 256,
-                };
+                });
             });
         const selectSlideSpy = jest
             .spyOn(controller, 'selectSlide')
@@ -1966,13 +1967,13 @@ describe('WSIViewer — loadHierarchy', () => {
             [makeSlide({ slide_key: 'A', can_serve_tiles: true })],
             'P-XYZ'
         );
-        const metadata = {
+        const metadata = makeTileMetadata({
             dimensions: { width: 1000, height: 800 },
             levels: 1,
             level_dimensions: [{ width: 1000, height: 800 }],
             max_zoom: 6,
             tile_size: 256,
-        };
+        });
         setFetchMock(
             jest.fn().mockImplementation((url: string) =>
                 Promise.resolve({
@@ -2020,13 +2021,13 @@ describe('WSIViewer — loadHierarchy', () => {
             [makeSlide({ slide_key: 'A', can_serve_tiles: true })],
             'P-XYZ'
         );
-        const metadata = {
+        const metadata = makeTileMetadata({
             dimensions: { width: 1000, height: 800 },
             levels: 1,
             level_dimensions: [{ width: 1000, height: 800 }],
             max_zoom: 6,
             tile_size: 256,
-        };
+        });
         setFetchMock(
             jest.fn().mockImplementation((url: string) =>
                 Promise.resolve({
@@ -2117,13 +2118,13 @@ describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
                     Promise.resolve({
                         accessToken: 'test-token',
                         slideKey: 'AAA',
-                        tileMetadata: {
+                        tileMetadata: makeTileMetadata({
                             dimensions: { width: 1000, height: 800 },
                             levels: 1,
                             level_dimensions: [{ width: 1000, height: 800 }],
                             max_zoom: 6,
                             tile_size: 256,
-                        },
+                        }),
                         thumbnail: {
                             width: 256,
                             height: 256,
@@ -2233,13 +2234,13 @@ describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
         jest.spyOn(controller, 'fetchSlideMetadata').mockImplementation(
             async (slideKey: string) => {
                 order.push(slideKey);
-                return {
+                return makeTileMetadata({
                     dimensions: { width: 1000, height: 800 },
                     levels: 1,
                     level_dimensions: [{ width: 1000, height: 800 }],
                     max_zoom: 6,
                     tile_size: 256,
-                };
+                });
             }
         );
 
@@ -2298,13 +2299,15 @@ describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
         jest.spyOn(controller, 'fetchSlideMetadata').mockImplementation(
             (slideKey: string) => {
                 order.push(slideKey);
-                return deferred.get(slideKey)!.promise.then(() => ({
-                    dimensions: { width: 1000, height: 800 },
-                    levels: 1,
-                    level_dimensions: [{ width: 1000, height: 800 }],
-                    max_zoom: 6,
-                    tile_size: 256,
-                }));
+                return deferred.get(slideKey)!.promise.then(() =>
+                    makeTileMetadata({
+                        dimensions: { width: 1000, height: 800 },
+                        levels: 1,
+                        level_dimensions: [{ width: 1000, height: 800 }],
+                        max_zoom: 6,
+                        tile_size: 256,
+                    })
+                );
             }
         );
 
@@ -2487,13 +2490,13 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         | null;
     let idleCallbacks: Array<() => void>;
 
-    const metaMock = {
+    const metaMock = makeTileMetadata({
         dimensions: { width: 40000, height: 30000 },
         levels: 1,
         level_dimensions: [{ width: 40000, height: 30000 }],
         max_zoom: 8,
         tile_size: 256,
-    };
+    });
 
     beforeEach(() => {
         origFetch = (global as any).fetch;
@@ -3064,7 +3067,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
                         Promise.resolve({
                             accessToken: 'test-token',
                             slideKey: '42',
-                            tileMetadata: {
+                            tileMetadata: makeTileMetadata({
                                 dimensions: { width: 1000, height: 800 },
                                 levels: 1,
                                 level_dimensions: [
@@ -3072,7 +3075,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
                                 ],
                                 max_zoom: 6,
                                 tile_size: 256,
-                            },
+                            }),
                             thumbnail: {
                                 width: 256,
                                 height: 256,
@@ -3109,7 +3112,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
                         Promise.resolve({
                             accessToken: 'test-token',
                             slideKey: '42',
-                            tileMetadata: {
+                            tileMetadata: makeTileMetadata({
                                 dimensions: { width: 1000, height: 800 },
                                 levels: 1,
                                 level_dimensions: [
@@ -3117,7 +3120,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
                                 ],
                                 max_zoom: 6,
                                 tile_size: 256,
-                            },
+                            }),
                             thumbnail: {
                                 width: 256,
                                 height: 256,

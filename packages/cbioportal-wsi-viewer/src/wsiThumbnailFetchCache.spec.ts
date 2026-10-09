@@ -12,14 +12,9 @@ function makeAccess(overrides: Partial<WsiSlideAccess> = {}): WsiSlideAccess {
     return {
         slideKey: 'slide-1',
         tileMetadata: {} as WsiSlideAccess['tileMetadata'],
-        thumbnail: {
-            width: 128,
-            height: 88,
-            contentType: 'image/jpeg',
-        },
         accessToken: 'token-1',
-        tokenType: 'Bearer',
         expiresIn: 300,
+        expiresAt: Date.now() + 300_000,
         ...overrides,
     };
 }
