@@ -34,11 +34,6 @@ import { hasPreloadedOpenSeadragon } from './wsiOpenSeadragonLoader';
 import { fetchWsiThumbnailBlob } from './wsiThumbnailFetchCache';
 import { hasCachedPatientHierarchy } from './wsiHierarchyFetchCache';
 import {
-    evictSlideMetadataCache,
-    fetchSlideMetadataCachedReadOnly,
-    hasCachedSlideMetadata,
-} from './wsiMetadataFetchCache';
-import {
     PatientHierarchy,
     PathologySlideFilter,
     Sample,
@@ -1016,24 +1011,15 @@ export class WsiViewerController {
         this.navigatorTimer = setTimeout(runNavigatorSetup, 150);
     }
 
+    /** Tile metadata comes with the slide access, which is cached. */
     private fetchSlideMetadata(slideKey: string): Promise<TileMetadata> {
-        const tileServerBase = this.host.getTileServerBase();
         const { studyId, authScope } = this.host.getProps();
-        if (
-            slideKey === this.initialSlideKey &&
-            this.initialSlideLoadTrace &&
-            hasCachedSlideMetadata(tileServerBase, slideKey, studyId, authScope)
-        ) {
-            this.initialSlideLoadTrace.metadataCacheHit = true;
-            this.initialSlideLoadTrace.metadataSource = 'shared-cache';
-        }
-        return fetchSlideMetadataCachedReadOnly(
-            tileServerBase,
+        return getWsiSlideAccess(
+            studyId || '',
             slideKey,
-            undefined,
-            studyId,
+            false,
             authScope
-        );
+        ).then(access => access.tileMetadata);
     }
 
     private async prefetchSlideMetadata(
@@ -1047,13 +1033,6 @@ export class WsiViewerController {
                 stainFilter: this.host.getStainFilter(),
                 limit: WsiViewerController.METADATA_PREFETCH_LIMIT,
                 skipSlideKey,
-                isCached: slideKey =>
-                    hasCachedSlideMetadata(
-                        this.host.getTileServerBase(),
-                        slideKey,
-                        this.host.getProps().studyId,
-                        this.host.getProps().authScope
-                    ),
             }
         );
 
@@ -1133,12 +1112,6 @@ export class WsiViewerController {
         const sample = this.host.getSelectedSample();
         if (!slide || !sample) return;
 
-        evictSlideMetadataCache(
-            this.host.getTileServerBase(),
-            slide.slide_key,
-            this.host.getProps().studyId,
-            this.host.getProps().authScope
-        );
         this.cancelActiveMount();
         this.host.beginSlideSelection(slide, sample);
         writeSelectedSlideState(

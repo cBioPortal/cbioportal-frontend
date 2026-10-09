@@ -12,19 +12,6 @@ import { Sample, Slide, TileMetadata } from './wsiViewerTypes';
 jest.mock('./wsiAuth', () => ({
     getWsiSlideAccess: jest.fn(),
 }));
-jest.mock('./wsiMetadataFetchCache', () => ({
-    evictSlideMetadataCache: jest.fn(),
-    fetchSlideMetadataCachedReadOnly: jest.fn(() =>
-        Promise.resolve({
-            dimensions: { width: 1000, height: 800 },
-            levels: 3,
-            level_dimensions: [],
-            max_zoom: 10,
-            tile_size: 256,
-        })
-    ),
-    hasCachedSlideMetadata: jest.fn(() => false),
-}));
 jest.mock('./wsiThumbnailFetchCache', () => ({
     fetchWsiThumbnailBlob: jest.fn(() =>
         Promise.reject(new Error('no preview'))
@@ -103,6 +90,13 @@ function makeSlide(slideKey: string): Slide {
 function makeAccess(slideKey: string, token: string) {
     return {
         slideKey,
+        tileMetadata: {
+            dimensions: { width: 1000, height: 800 },
+            levels: 3,
+            level_dimensions: [],
+            max_zoom: 10,
+            tile_size: 256,
+        },
         accessToken: token,
         tokenType: 'Bearer',
         expiresIn: 600,
@@ -181,7 +175,6 @@ describe('WsiViewerController viewer lifecycle', () => {
     beforeAll(() => {
         configureWsiViewerRuntime({
             buildApiUrl: path => `/${path}`,
-            authEnabled: false,
         });
     });
 

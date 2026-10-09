@@ -162,7 +162,6 @@ export function selectMetadataPrefetchSlides(
         stainFilter: WsiStainFilter;
         limit: number;
         skipSlideKey?: string;
-        isCached?: (slideKey: string) => boolean;
     }
 ): Slide[] {
     const matching: Slide[] = [];
@@ -173,8 +172,7 @@ export function selectMetadataPrefetchSlides(
         if (
             sample.sample_id !== options.selectedSampleId ||
             slideKey === options.skipSlideKey ||
-            seen.has(slideKey) ||
-            options.isCached?.(slideKey)
+            seen.has(slideKey)
         ) {
             continue;
         }

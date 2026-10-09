@@ -10,7 +10,6 @@ import { configureWsiViewerRuntime, WsiViewerConfig } from './wsiViewerConfig';
 function configureRuntime(overrides: Partial<WsiViewerConfig> = {}) {
     configureWsiViewerRuntime({
         buildApiUrl: (path: string) => `/${path}`,
-        authEnabled: true,
         ...overrides,
     });
 }
@@ -329,7 +328,6 @@ describe('WSI access capability', () => {
             // The portal's URL builder encodes a "?" inside the path.
             configureWsiViewerRuntime({
                 buildApiUrl: (path: string) => `/${path.replace(/\?/g, '%3F')}`,
-                authEnabled: true,
             });
             registerWsiResourceAccess('study-1', hierarchy(['slide-1']));
             const fetchSpy = jest

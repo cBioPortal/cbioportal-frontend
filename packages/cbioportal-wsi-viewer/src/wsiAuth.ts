@@ -72,50 +72,9 @@ export function validateWsiTileMetadata(
     }
 }
 
-const WSI_SESSION_CACHE_PREFIXES = [
-    'wsi-hierarchy-cache-',
-    'wsi-metadata-cache-',
-    'wsi-bootstrap-cache-',
-];
-let protectedSessionCachePurged = false;
-
 export function normalizeWsiAuthScope(scope?: string): string {
     const normalized = scope?.trim();
     return normalized || 'anonymousUser';
-}
-
-export function isWsiAuthConfigured(): boolean {
-    return getWsiViewerRuntime().authEnabled;
-}
-
-export function getWsiSessionStorage(): Storage | null {
-    if (typeof window === 'undefined') {
-        return null;
-    }
-
-    try {
-        const storage = window.sessionStorage;
-        if (!isWsiAuthConfigured()) {
-            return storage;
-        }
-        if (!protectedSessionCachePurged) {
-            for (let index = storage.length - 1; index >= 0; index -= 1) {
-                const key = storage.key(index);
-                if (
-                    key &&
-                    WSI_SESSION_CACHE_PREFIXES.some(prefix =>
-                        key.startsWith(prefix)
-                    )
-                ) {
-                    storage.removeItem(key);
-                }
-            }
-            protectedSessionCachePurged = true;
-        }
-        return null;
-    } catch (_) {
-        return null;
-    }
 }
 
 const slideAccess = new Map<string, WsiSlideAccess>();

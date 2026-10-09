@@ -405,8 +405,8 @@ describe('selectMetadataPrefetchSlides', () => {
         ]);
     });
 
-    it('skips the given image, already-cached slides and duplicates', () => {
-        const sample = makeSample('S1', [hne('h1'), hne('h2'), hne('h3')]);
+    it('skips the given image and duplicates', () => {
+        const sample = makeSample('S1', [hne('h1'), hne('h2')]);
 
         const picked = selectMetadataPrefetchSlides(
             [...entries(sample), ...entries(sample)],
@@ -415,7 +415,6 @@ describe('selectMetadataPrefetchSlides', () => {
                 stainFilter: 'all',
                 limit: 10,
                 skipSlideKey: 'h1',
-                isCached: slideKey => slideKey === 'h3',
             }
         );
 

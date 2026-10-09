@@ -22,8 +22,6 @@ OpenSeadragon is not in either entry. The viewer loads it on the first slide ope
 
    configureWsiViewerRuntime({
        buildApiUrl: path => buildCBioPortalAPIUrl(path), // adds the portal's context path
-       authEnabled: true,               // the portal authenticates users: protected
-                                        // responses are never kept in sessionStorage
        osdPrefixUrl: '/reactapp/osd-images/', // optional: OpenSeadragon button images
        // urlState: …, fetchImpl: …     // optional overrides (default: #wsi: hash, global fetch)
    });

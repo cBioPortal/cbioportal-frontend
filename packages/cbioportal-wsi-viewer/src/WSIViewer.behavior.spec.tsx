@@ -16,12 +16,9 @@ import {
 } from './wsiHierarchyFetchCache';
 import {
     clearWsiSlideAccess,
+    getWsiSlideAccess,
     registerWsiResourceAccessTarget,
 } from './wsiAuth';
-import {
-    clearSlideMetadataCache,
-    fetchSlideMetadataCachedReadOnly,
-} from './wsiMetadataFetchCache';
 import { clearWsiThumbnailFetchCache } from './wsiThumbnailFetchCache';
 import { PatientHierarchy, Block, Part, Sample, Slide } from './wsiViewerTypes';
 import { configureWsiViewerRuntime, WsiViewerConfig } from './wsiViewerConfig';
@@ -30,7 +27,6 @@ import { configureWsiViewerRuntime, WsiViewerConfig } from './wsiViewerConfig';
 function configureTestRuntime(overrides: Partial<WsiViewerConfig> = {}) {
     configureWsiViewerRuntime({
         buildApiUrl: (path: string) => `/${path}`,
-        authEnabled: false,
         ...overrides,
     });
 }
@@ -381,7 +377,6 @@ beforeEach(() => {
             .fetchPatientHierarchyReadOnly(...args)
     );
     clearPatientHierarchyCache();
-    clearSlideMetadataCache();
     clearWsiThumbnailFetchCache();
     clearWsiSlideAccess();
 });
@@ -3217,13 +3212,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             'study',
             'P-1'
         );
-        await fetchSlideMetadataCachedReadOnly(
-            'https://tiles.example.com',
-            '42',
-            undefined,
-            'study',
-            'anonymousUser'
-        );
+        await getWsiSlideAccess('study', '42', false, 'anonymousUser');
 
         window.location.hash = '';
         const inst = await runMount(makeSlide({ slide_key: '42' }));
@@ -3257,64 +3246,6 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
                 hierarchyCacheHit: true,
                 metadataCacheHit: true,
                 hierarchySource: 'shared-cache',
-                metadataSource: 'shared-cache',
-            })
-        );
-    });
-
-    it('attributes initial slide metadata to the shared cache when it is warm', async () => {
-        const metadata = {
-            dimensions: { width: 1000, height: 800 },
-            levels: 1,
-            level_dimensions: [{ width: 1000, height: 800 }],
-            max_zoom: 6,
-            tile_size: 256,
-        };
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
-        const controller = controllerOf(inst);
-
-        controller.initialSlideKey = '42';
-        controller.initialSlideLoadTrace = {
-            loadSeq: 9,
-            startedAt: 10,
-            slideId: '42',
-            openSeadragonWarmHit: false,
-            hierarchyCacheHit: false,
-            metadataCacheHit: false,
-            hierarchySource: 'network',
-            metadataSource: 'network',
-            reported: false,
-        };
-
-        registerTestSlideAccess('study', 'P-1', '42');
-        setFetchMock(
-            jest.fn().mockResolvedValue({
-                ok: true,
-                json: async () => ({
-                    accessToken: 'test-token',
-                    slideKey: '42',
-                    tileMetadata: metadata,
-                    thumbnail: {
-                        width: 256,
-                        height: 256,
-                    },
-                    expiresIn: 300,
-                }),
-            })
-        );
-        await fetchSlideMetadataCachedReadOnly(
-            'https://tiles.example.com',
-            '42',
-            undefined,
-            'study',
-            'anonymousUser'
-        );
-
-        await (controller as any).fetchSlideMetadata('42');
-
-        expect(controller.initialSlideLoadTrace).toEqual(
-            expect.objectContaining({
-                metadataCacheHit: true,
                 metadataSource: 'shared-cache',
             })
         );
@@ -3449,16 +3380,10 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             'study',
             'P-1'
         );
-        await fetchSlideMetadataCachedReadOnly(
-            'https://tiles.example.com',
-            '42',
-            undefined,
-            'study',
-            'anonymousUser'
-        );
+        await getWsiSlideAccess('study', '42', false, 'anonymousUser');
 
         clearPatientHierarchyCache();
-        clearSlideMetadataCache();
+        clearWsiSlideAccess();
 
         const networkFetchMock = jest.fn().mockImplementation((url: string) => {
             if (url === hierarchyUrl) {

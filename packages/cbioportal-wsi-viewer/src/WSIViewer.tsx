@@ -37,7 +37,6 @@ import { loadOpenSeadragon } from './wsiOpenSeadragonLoader';
 import { clearPatientHierarchyCache } from './wsiHierarchyFetchCache';
 import { clearWsiSlideAccess } from './wsiAuth';
 import { clearWsiThumbnailFetchCache } from './wsiThumbnailFetchCache';
-import { clearSlideMetadataCache } from './wsiMetadataFetchCache';
 import {
     WSI_NAV_WIDTH,
     WSI_FONT_FAMILY,
@@ -566,7 +565,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
         if (authScopeChanged) {
             clearPatientHierarchyCache();
             clearWsiSlideAccess();
-            clearSlideMetadataCache();
             clearWsiThumbnailFetchCache();
         }
 
