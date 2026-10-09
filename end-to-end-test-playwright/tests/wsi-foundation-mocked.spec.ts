@@ -20,7 +20,7 @@ function slideAccessTarget(url: string): string {
     return `${studyAndPatient}/${parsed.searchParams.get('slideKey')}`;
 }
 
-if (process.env.PW_SUITE === 'wsi' && process.env.WSI_CHILD_CONTRACT !== '1') {
+if (process.env.PW_SUITE === 'wsi') {
     test.describe('WSI foundation browser contract', () => {
         test('loads a deep-linked slide and serves the viewer without enrichment', async ({
             page,
