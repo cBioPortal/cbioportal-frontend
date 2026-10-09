@@ -25,7 +25,3 @@ export function loadOpenSeadragon(): Promise<typeof import('openseadragon')> {
 
     return openSeadragonPromise;
 }
-
-export function hasPreloadedOpenSeadragon(): boolean {
-    return openSeadragonPromise !== null;
-}

@@ -9,7 +9,6 @@ import { readWsiHashState } from './wsiViewStateUtils';
 
 jest.mock('./wsiOpenSeadragonLoader', () => ({
     loadOpenSeadragon: jest.fn(),
-    hasPreloadedOpenSeadragon: () => false,
 }));
 
 function makeInstance(

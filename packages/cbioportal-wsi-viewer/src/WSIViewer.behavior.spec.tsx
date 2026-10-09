@@ -76,7 +76,6 @@ jest.mock('openseadragon', () => {
 
 jest.mock('./wsiOpenSeadragonLoader', () => ({
     loadOpenSeadragon: () => mockLoadOpenSeadragon(),
-    hasPreloadedOpenSeadragon: () => false,
 }));
 
 jest.mock('./wsiHierarchyFetchCache', () => ({
@@ -2050,14 +2049,7 @@ describe('WSIViewer — loadHierarchy', () => {
 
         await loadHierarchyFor(inst);
 
-        expect(controller.initialSlideLoadTrace).toEqual(
-            expect.objectContaining({
-                hierarchySource: 'network',
-                metadataSource: 'network',
-                metadataCacheHit: false,
-                slideId: 'unmatched-1',
-            })
-        );
+        expect(controller.initialSlideKey).toBe('unmatched-1');
     });
 
     it('primes OpenSeadragon on hierarchy load and mounts the initial slide with it', async () => {
@@ -3071,7 +3063,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         expect(prefetchSpy).not.toHaveBeenCalled();
     });
 
-    it('reports staged initial-slide timings after the first tile is ready', async () => {
+    it('reports the outcome and first-tile time once the first tile is ready', async () => {
         window.location.hash = '';
         const slide = makeSlide({ slide_key: '42' });
         const inst = await runMount(slide, { studyId: 'study-1' });
@@ -3081,224 +3073,43 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             .mockImplementation(() => undefined);
 
         controller.initialSlideKey = '42';
-        controller.initialSlideLoadTrace = {
-            loadSeq: 7,
-            startedAt: 10,
-            slideId: '42',
-            openSeadragonWarmHit: false,
-            hierarchyCacheHit: false,
-            metadataCacheHit: false,
-            hierarchySource: 'network',
-            metadataSource: 'network',
-            hierarchyLoadedAt: 20,
-            metadataLoadedAt: 40,
-            reported: false,
-        };
+        controller.initialSlideLoadStartedAt = Date.now() - 50;
         controller.loadingStart = Date.now() - 1000;
 
         capturedOpenCb!();
         capturedTileDrawnCb!();
+        capturedTileDrawnCb!();
 
         expect(reportSpy).toHaveBeenCalledTimes(1);
-        expect(reportSpy).toHaveBeenCalledWith(
-            expect.objectContaining({
-                loadSeq: 7,
-                slideId: '42',
-                studyId: 'study-1',
-                openSeadragonWarmHit: false,
-                hierarchyCacheHit: false,
-                metadataCacheHit: false,
-                hierarchySource: 'network',
-                metadataSource: 'network',
-                hierarchyMs: 10,
-                metadataMs: 30,
-            })
-        );
         const reportedMetric = reportSpy.mock.calls[0][0] as any;
-        expect(reportedMetric.osdOpenMs).toBeGreaterThanOrEqual(30);
-        expect(reportedMetric.firstTileReadyMs).toBeGreaterThanOrEqual(
-            reportedMetric.osdOpenMs
-        );
+        expect(Object.keys(reportedMetric).sort()).toEqual([
+            'firstTileReadyMs',
+            'outcome',
+        ]);
+        expect(reportedMetric.outcome).toBe('success');
+        expect(reportedMetric.firstTileReadyMs).toBeGreaterThanOrEqual(50);
     });
 
-    it('dispatches a non-PHI browser performance event payload', () => {
+    it('dispatches the browser performance event', () => {
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
         const dispatchSpy = jest
             .spyOn(window, 'dispatchEvent')
             .mockReturnValue(true);
 
         (inst as any).reportInitialSlideLoadPerformance({
-            loadSeq: 7,
-            slideId: 'slide-42',
-            patientId: 'P-1',
-            studyId: 'study-1',
-            openSeadragonWarmHit: true,
-            hierarchyCacheHit: false,
-            metadataCacheHit: true,
-            hierarchySource: 'network',
-            metadataSource: 'viewer-cache',
-            hierarchyMs: 15,
-            metadataMs: 23,
-            osdOpenMs: 40,
+            outcome: 'success',
             firstTileReadyMs: 67,
         });
 
         expect(dispatchSpy).toHaveBeenCalledTimes(1);
         const event = dispatchSpy.mock.calls[0][0] as CustomEvent;
         expect(event.type).toBe('wsi-initial-slide-performance');
-        expect(event.detail).toEqual(
-            expect.objectContaining({
-                loadSeq: 7,
-                hierarchySource: 'network',
-                metadataSource: 'viewer-cache',
-                openSeadragonWarmHit: true,
-                hierarchyCacheHit: false,
-                metadataCacheHit: true,
-                hierarchyMs: 15,
-                metadataMs: 23,
-                osdOpenMs: 40,
-                firstTileReadyMs: 67,
-            })
-        );
-        expect(event.detail).not.toHaveProperty('slideId');
-        expect(event.detail).not.toHaveProperty('patientId');
-        expect(event.detail).not.toHaveProperty('studyId');
+        expect(event.detail).toEqual({
+            outcome: 'success',
+            firstTileReadyMs: 67,
+        });
 
         dispatchSpy.mockRestore();
-    });
-
-    it('reports cache-hit flags when initial hierarchy and metadata were warmed', async () => {
-        const hierarchy = makeHierarchy(
-            [makeSlide({ slide_key: '42' })],
-            'P-1'
-        );
-        setFetchMock(
-            jest.fn().mockImplementation((url: string) => {
-                if (url.includes('/wsi/v2/resources/')) {
-                    return Promise.resolve({
-                        ok: true,
-                        json: () =>
-                            Promise.resolve({
-                                accessToken: 'test-token',
-                                slideKey: '42',
-                                tileMetadata: {
-                                    dimensions: { width: 1000, height: 800 },
-                                    levels: 1,
-                                    level_dimensions: [
-                                        { width: 1000, height: 800 },
-                                    ],
-                                    max_zoom: 6,
-                                    tile_size: 256,
-                                },
-                                thumbnail: {
-                                    width: 256,
-                                    height: 256,
-                                },
-                                expiresIn: 300,
-                            }),
-                    });
-                }
-                return Promise.resolve({
-                    ok: true,
-                    json: () => Promise.resolve(toWireHierarchy(hierarchy)),
-                });
-            })
-        );
-
-        await fetchPatientHierarchyReadOnly(
-            'https://tiles.example.com/patient/P-1',
-            undefined,
-            undefined,
-            'study',
-            'P-1'
-        );
-        await getWsiSlideAccess('study', '42', false, 'anonymousUser');
-
-        window.location.hash = '';
-        const inst = await runMount(makeSlide({ slide_key: '42' }));
-        const controller = controllerOf(inst);
-        const reportSpy = jest
-            .spyOn(inst as any, 'reportInitialSlideLoadPerformance')
-            .mockImplementation(() => undefined);
-
-        controller.initialSlideKey = '42';
-        controller.initialSlideLoadTrace = {
-            loadSeq: 8,
-            startedAt: 10,
-            slideId: '42',
-            openSeadragonWarmHit: true,
-            hierarchyCacheHit: true,
-            metadataCacheHit: true,
-            hierarchySource: 'shared-cache',
-            metadataSource: 'shared-cache',
-            hierarchyLoadedAt: 20,
-            metadataLoadedAt: 40,
-            reported: false,
-        };
-        controller.loadingStart = Date.now() - 1000;
-
-        capturedOpenCb!();
-        capturedTileDrawnCb!();
-
-        expect(reportSpy).toHaveBeenCalledWith(
-            expect.objectContaining({
-                openSeadragonWarmHit: true,
-                hierarchyCacheHit: true,
-                metadataCacheHit: true,
-                hierarchySource: 'shared-cache',
-                metadataSource: 'shared-cache',
-            })
-        );
-    });
-
-    it('treats a warm shared hierarchy cache reuse as a hierarchy cache hit', async () => {
-        const hierarchy = makeHierarchy(
-            [
-                makeSlide({
-                    slide_key: 'bootstrap-slide',
-                    can_serve_tiles: true,
-                }),
-            ],
-            'P-XYZ'
-        );
-        await warmHierarchyCache(
-            'https://tiles.example.com/patient/P-XYZ?studyId=study',
-            hierarchy,
-            'study'
-        );
-        setFetchMock(
-            jest.fn().mockResolvedValue({
-                ok: true,
-                json: () =>
-                    Promise.resolve({
-                        dimensions: { width: 1000, height: 800 },
-                        levels: 1,
-                        level_dimensions: [{ width: 1000, height: 800 }],
-                        max_zoom: 6,
-                        tile_size: 256,
-                    }),
-            })
-        );
-
-        const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl(
-                'https://tiles.example.com/patient/P-XYZ?studyId=study'
-            ),
-            url: 'https://tiles.example.com/patient/P-XYZ?studyId=study',
-            height: 500,
-            studyId: 'study',
-        });
-        const controller = controllerOf(inst);
-        jest.spyOn(controller, 'selectSlide').mockResolvedValue(undefined);
-
-        await loadHierarchyFor(inst);
-
-        expect(controller.initialSlideLoadTrace).toEqual(
-            expect.objectContaining({
-                hierarchyCacheHit: true,
-                hierarchySource: 'shared-cache',
-            })
-        );
     });
 
     it('reloads the initial slide from the published hierarchy after cache clear', async () => {
@@ -3430,9 +3241,6 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             const inst = makeInstance(hierarchyUrl);
             await loadHierarchyFor(inst);
 
-            const trace = controllerOf(inst).initialSlideLoadTrace;
-            expect(trace?.hierarchyCacheHit).toBe(false);
-            expect(trace?.hierarchySource).toBe('network');
             expect(inst.selectedMeta).toMatchObject({
                 max_zoom: 6,
                 tile_size: 256,

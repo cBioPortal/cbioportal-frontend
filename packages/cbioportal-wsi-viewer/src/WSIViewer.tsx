@@ -439,29 +439,15 @@ export default class WSIViewer extends React.Component<Props, {}> {
         };
     }
 
+    /** Announces how the first slide loaded, for browser-side monitoring. */
     private reportInitialSlideLoadPerformance(
         metric: WsiInitialSlideLoadPerformance
     ) {
-        const {
-            slideId: _slideId,
-            patientId: _patientId,
-            studyId: _studyId,
-            ...browserEventDetail
-        } = metric;
-        if (
-            typeof window !== 'undefined' &&
-            typeof window.dispatchEvent === 'function'
-        ) {
-            try {
-                window.dispatchEvent(
-                    new CustomEvent('wsi-initial-slide-performance', {
-                        detail: browserEventDetail,
-                    })
-                );
-            } catch (_) {
-                // Ignore environments without CustomEvent support.
-            }
-        }
+        window.dispatchEvent(
+            new CustomEvent('wsi-initial-slide-performance', {
+                detail: metric,
+            })
+        );
     }
 
     selectSlide(slide: Slide, sample: Sample): Promise<void> {

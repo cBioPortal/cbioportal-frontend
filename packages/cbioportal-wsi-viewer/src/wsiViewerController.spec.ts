@@ -17,9 +17,7 @@ jest.mock('./wsiThumbnailFetchCache', () => ({
         Promise.reject(new Error('no preview'))
     ),
 }));
-jest.mock('./wsiOpenSeadragonLoader', () => ({
-    hasPreloadedOpenSeadragon: () => false,
-}));
+jest.mock('./wsiOpenSeadragonLoader', () => ({}));
 jest.mock('./wsiNetworkWarmup', () => ({
     ensureWsiPreconnect: jest.fn(),
 }));

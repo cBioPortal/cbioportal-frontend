@@ -30,9 +30,7 @@ import {
 import { getWsiSlideAccess } from './wsiAuth';
 import { buildWsiRequestHeaders } from './wsiUrls';
 import { ensureWsiPreconnect } from './wsiNetworkWarmup';
-import { hasPreloadedOpenSeadragon } from './wsiOpenSeadragonLoader';
 import { fetchWsiThumbnailBlob } from './wsiThumbnailFetchCache';
-import { hasCachedPatientHierarchy } from './wsiHierarchyFetchCache';
 import {
     PatientHierarchy,
     PathologySlideFilter,
@@ -55,23 +53,11 @@ export type WsiInitialSlideLoadOutcome =
     | 'tile_timeout'
     | 'selection_timeout';
 
+/** How the first slide of a hierarchy load ended. */
 export interface WsiInitialSlideLoadPerformance {
-    loadSeq: number;
-    slideId: string;
-    patientId?: string;
-    studyId?: string;
-    openSeadragonWarmHit: boolean;
-    hierarchyCacheHit: boolean;
-    metadataCacheHit: boolean;
-    hierarchySource: 'shared-cache' | 'network';
-    metadataSource: 'shared-cache' | 'network';
-    hierarchyMs: number;
-    metadataMs: number | null;
-    osdOpenMs: number | null;
-    previewShown: boolean;
-    previewReadyMs: number | null;
+    outcome: WsiInitialSlideLoadOutcome;
+    /** Time from the hierarchy request to the first tile; null on failure. */
     firstTileReadyMs: number | null;
-    outcome?: WsiInitialSlideLoadOutcome;
 }
 
 export interface WsiViewerControllerHost {
@@ -167,24 +153,8 @@ export class WsiViewerController {
     private navigatorTimer: ReturnType<typeof setTimeout> | null = null;
     private restoreHashViewportForNextSelection = false;
     private initialSlideKey: string | undefined = undefined;
-    private initialSlideLoadTrace: {
-        loadSeq: number;
-        startedAt: number;
-        slideId?: string;
-        openSeadragonWarmHit: boolean;
-        hierarchyCacheHit: boolean;
-        metadataCacheHit: boolean;
-        hierarchySource: 'shared-cache' | 'network';
-        metadataSource: 'shared-cache' | 'network';
-        hierarchyLoadedAt?: number;
-        metadataLoadedAt?: number;
-        osdOpenAt?: number;
-        previewReadyAt?: number;
-        previewShown: boolean;
-        firstTileReadyAt?: number;
-        outcome?: WsiInitialSlideLoadOutcome;
-        reported: boolean;
-    } | null = null;
+    /** Start time of the hierarchy load whose first slide is unreported. */
+    private initialSlideLoadStartedAt: number | null = null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private openSeadragon: any | null = null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -272,195 +242,19 @@ export class WsiViewerController {
         this.navigatorScheduled = false;
     }
 
-    private now(): number {
-        if (
-            typeof window !== 'undefined' &&
-            typeof window.performance?.now === 'function'
-        ) {
-            return window.performance.now();
-        }
-        return Date.now();
-    }
-
-    private markPerformanceStage(loadSeq: number, stage: string) {
-        if (typeof window === 'undefined') {
-            return;
-        }
-        try {
-            window.performance?.mark?.(`wsi:${loadSeq}:${stage}`);
-        } catch (_) {
-            // Performance marks are best-effort only.
-        }
-    }
-
-    private measurePerformanceStage(
-        loadSeq: number,
-        measureName: string,
-        startStage: string,
-        endStage: string
-    ) {
-        if (typeof window === 'undefined') {
-            return;
-        }
-        try {
-            window.performance?.measure?.(
-                `wsi:${loadSeq}:${measureName}`,
-                `wsi:${loadSeq}:${startStage}`,
-                `wsi:${loadSeq}:${endStage}`
-            );
-        } catch (_) {
-            // Ignore duplicate or missing mark errors.
-        }
-    }
-
-    private startInitialSlideLoadTrace(loadSeq: number) {
-        this.initialSlideLoadTrace = {
-            loadSeq,
-            startedAt: this.now(),
-            openSeadragonWarmHit: false,
-            hierarchyCacheHit: false,
-            metadataCacheHit: false,
-            hierarchySource: 'network',
-            metadataSource: 'network',
-            previewShown: false,
-            outcome: undefined,
-            reported: false,
-        };
-        this.markPerformanceStage(loadSeq, 'start');
-    }
-
-    private setInitialSlideTraceSlide(loadSeq: number, slideId: string) {
-        if (this.initialSlideLoadTrace?.loadSeq !== loadSeq) {
-            return;
-        }
-        this.initialSlideLoadTrace.slideId = slideId;
-    }
-
-    private recordInitialSlideStage(
-        loadSeq: number,
-        stage:
-            | 'hierarchyLoadedAt'
-            | 'metadataLoadedAt'
-            | 'osdOpenAt'
-            | 'previewReadyAt'
-            | 'firstTileReadyAt',
-        performanceStage:
-            | 'hierarchy-loaded'
-            | 'metadata-loaded'
-            | 'osd-open'
-            | 'preview-ready'
-            | 'first-tile-ready',
-        slideId?: string
-    ) {
-        const trace = this.initialSlideLoadTrace;
-        if (!trace || trace.loadSeq !== loadSeq) {
-            return;
-        }
-        if (slideId && trace.slideId && slideId !== trace.slideId) {
-            return;
-        }
-        if (trace[stage] != null) {
-            return;
-        }
-
-        trace[stage] = this.now();
-        this.markPerformanceStage(loadSeq, performanceStage);
-    }
-
-    private maybeReportInitialSlideLoadPerformance(loadSeq: number) {
-        const trace = this.initialSlideLoadTrace;
-        if (
-            !trace ||
-            trace.loadSeq !== loadSeq ||
-            trace.reported ||
-            !trace.slideId ||
-            trace.hierarchyLoadedAt == null ||
-            (!trace.outcome && trace.firstTileReadyAt == null)
-        ) {
-            return;
-        }
-
-        trace.reported = true;
-        this.measurePerformanceStage(
-            loadSeq,
-            'hierarchy-ms',
-            'start',
-            'hierarchy-loaded'
-        );
-        if (trace.metadataLoadedAt != null) {
-            this.measurePerformanceStage(
-                loadSeq,
-                'metadata-ms',
-                'start',
-                'metadata-loaded'
-            );
-        }
-        if (trace.osdOpenAt != null) {
-            this.measurePerformanceStage(
-                loadSeq,
-                'osd-open-ms',
-                'start',
-                'osd-open'
-            );
-        }
-        if (trace.firstTileReadyAt != null) {
-            this.measurePerformanceStage(
-                loadSeq,
-                'first-tile-ready-ms',
-                'start',
-                'first-tile-ready'
-            );
-        }
-        if (trace.previewReadyAt != null) {
-            this.measurePerformanceStage(
-                loadSeq,
-                'preview-ready-ms',
-                'start',
-                'preview-ready'
-            );
-        }
+    /**
+     * Reports how the first slide of the current hierarchy load ended, once.
+     * Nothing is reported before that slide is chosen.
+     */
+    private finishInitialSlideLoad(outcome: WsiInitialSlideLoadOutcome): void {
+        const startedAt = this.initialSlideLoadStartedAt;
+        if (startedAt === null || !this.initialSlideKey) return;
+        this.initialSlideLoadStartedAt = null;
         this.host.reportInitialSlideLoadPerformance({
-            loadSeq,
-            slideId: trace.slideId,
-            patientId: this.host.getPatientId(),
-            studyId: this.host.getProps().studyId,
-            openSeadragonWarmHit: trace.openSeadragonWarmHit,
-            hierarchyCacheHit: trace.hierarchyCacheHit,
-            metadataCacheHit: trace.metadataCacheHit,
-            hierarchySource: trace.hierarchySource,
-            metadataSource: trace.metadataSource,
-            hierarchyMs: trace.hierarchyLoadedAt - trace.startedAt,
-            metadataMs:
-                trace.metadataLoadedAt == null
-                    ? null
-                    : trace.metadataLoadedAt - trace.startedAt,
-            osdOpenMs:
-                trace.osdOpenAt == null
-                    ? null
-                    : trace.osdOpenAt - trace.startedAt,
-            previewShown: trace.previewShown,
-            previewReadyMs:
-                trace.previewReadyAt == null
-                    ? null
-                    : trace.previewReadyAt - trace.startedAt,
+            outcome,
             firstTileReadyMs:
-                trace.firstTileReadyAt == null
-                    ? null
-                    : trace.firstTileReadyAt - trace.startedAt,
-            outcome: trace.outcome || 'success',
+                outcome === 'success' ? Date.now() - startedAt : null,
         });
-    }
-
-    private finishInitialSlideLoad(
-        loadSeq: number,
-        outcome: WsiInitialSlideLoadOutcome
-    ): void {
-        const trace = this.initialSlideLoadTrace;
-        if (!trace || trace.loadSeq !== loadSeq || trace.outcome) {
-            return;
-        }
-        trace.outcome = outcome;
-        this.maybeReportInitialSlideLoadPerformance(loadSeq);
     }
 
     private primeOpenSeadragonLoad() {
@@ -611,15 +405,6 @@ export class WsiViewerController {
                 this.revokeThumbnailPreviewObjectUrl();
                 this.thumbnailPreviewObjectUrl = objectUrl;
                 this.host.setThumbnailPreview(objectUrl);
-                this.recordInitialSlideStage(
-                    this.hierarchyLoadSeq,
-                    'previewReadyAt',
-                    'preview-ready',
-                    slideKey
-                );
-                if (this.initialSlideLoadTrace?.slideId === slideKey) {
-                    this.initialSlideLoadTrace.previewShown = true;
-                }
             })
             .catch(error => {
                 if (requestController.signal.aborted || seq !== this.mountSeq) {
@@ -786,10 +571,7 @@ export class WsiViewerController {
         this.initialSlideKey = undefined;
         this.cancelBackgroundWorkSchedule();
         this.cancelNavigatorSchedule();
-        this.startInitialSlideLoadTrace(loadSeq);
-        if (this.initialSlideLoadTrace?.loadSeq === loadSeq) {
-            this.initialSlideLoadTrace.openSeadragonWarmHit = hasPreloadedOpenSeadragon();
-        }
+        this.initialSlideLoadStartedAt = Date.now();
         this.host.resetHierarchyLoadState();
         ensureWsiPreconnect(this.host.getTileServerOrigin());
         void this.primeOpenSeadragonLoad().catch(() => {});
@@ -801,10 +583,6 @@ export class WsiViewerController {
                 studyId,
                 patientId,
             } = this.host.getProps();
-            const hierarchyCacheHit = hasCachedPatientHierarchy(
-                hierarchyUrl,
-                authScope
-            );
             const hierarchy = await fetchPatientHierarchyReadOnly(
                 hierarchyUrl,
                 abortController.signal,
@@ -812,12 +590,6 @@ export class WsiViewerController {
                 studyId,
                 patientId
             );
-            if (this.initialSlideLoadTrace?.loadSeq === loadSeq) {
-                this.initialSlideLoadTrace.hierarchyCacheHit = hierarchyCacheHit;
-                this.initialSlideLoadTrace.hierarchySource = hierarchyCacheHit
-                    ? 'shared-cache'
-                    : 'network';
-            }
             const data = hierarchy;
             if (
                 loadSeq !== this.hierarchyLoadSeq ||
@@ -828,18 +600,12 @@ export class WsiViewerController {
 
             this.host.setHierarchy(data);
             this.host.setLoading(false);
-            this.recordInitialSlideStage(
-                loadSeq,
-                'hierarchyLoadedAt',
-                'hierarchy-loaded'
-            );
 
             const allSlides = this.host.getServableSlides();
             const first = this.host.chooseInitialServableSlide(allSlides);
             if (first) {
                 this.restoreHashViewportForNextSelection = restoreHashViewport;
                 this.initialSlideKey = first.slide.slide_key;
-                this.setInitialSlideTraceSlide(loadSeq, first.slide.slide_key);
                 await this.fetchSlideMetadata(first.slide.slide_key).catch(
                     () => {
                         // Best-effort warmup; selectSlide will surface real errors.
@@ -1243,10 +1009,7 @@ export class WsiViewerController {
             this.clearThumbnailPreview();
             this.host.setSpinnerVisible(false);
             this.host.setTilesReady(true);
-            this.finishInitialSlideLoad(
-                this.initialSlideLoadTrace?.loadSeq ?? this.hierarchyLoadSeq,
-                'selection_timeout'
-            );
+            this.finishInitialSlideLoad('selection_timeout');
         }, WSI_SELECTION_TIMEOUT_MS);
     }
 
@@ -1269,22 +1032,8 @@ export class WsiViewerController {
             this.osdOpenTimer = null;
         }
         this.ensureMouseTrackerForReadyViewer(seq);
-        const selectedSlideId = this.host.getSelectedSlide()?.slide_key;
-        if (
-            selectedSlideId &&
-            selectedSlideId === this.initialSlideKey &&
-            this.initialSlideLoadTrace
-        ) {
-            this.recordInitialSlideStage(
-                this.initialSlideLoadTrace.loadSeq,
-                'firstTileReadyAt',
-                'first-tile-ready',
-                selectedSlideId
-            );
-            this.finishInitialSlideLoad(
-                this.initialSlideLoadTrace.loadSeq,
-                'success'
-            );
+        if (this.host.getSelectedSlide()?.slide_key === this.initialSlideKey) {
+            this.finishInitialSlideLoad('success');
         }
         this.startBackgroundWorkIfReady(seq);
     }
@@ -1328,17 +1077,6 @@ export class WsiViewerController {
             this.selectionTimeoutTimer = null;
         }
         this.host.setViewerReady(true);
-        if (
-            slide.slide_key === this.initialSlideKey &&
-            this.initialSlideLoadTrace
-        ) {
-            this.recordInitialSlideStage(
-                this.initialSlideLoadTrace.loadSeq,
-                'osdOpenAt',
-                'osd-open',
-                slide.slide_key
-            );
-        }
         const hashState = restoreHashViewport
             ? getWsiViewerRuntime().urlState.read()
             : null;
@@ -1388,10 +1126,7 @@ export class WsiViewerController {
             this.clearThumbnailPreview();
             this.host.setSpinnerVisible(false);
             this.host.setTilesReady(true);
-            this.finishInitialSlideLoad(
-                this.initialSlideLoadTrace?.loadSeq ?? this.hierarchyLoadSeq,
-                'tile_timeout'
-            );
+            this.finishInitialSlideLoad('tile_timeout');
         }, WSI_TILE_READY_TIMEOUT_MS);
         let didMarkNativeTileReady = false;
         let didMarkNativeTileDrawn = false;
@@ -1470,10 +1205,7 @@ export class WsiViewerController {
         this.host.setViewerReady(false);
         this.host.setSpinnerVisible(false);
         this.host.setTilesReady(true);
-        this.finishInitialSlideLoad(
-            this.initialSlideLoadTrace?.loadSeq ?? this.hierarchyLoadSeq,
-            'osd_open_failed'
-        );
+        this.finishInitialSlideLoad('osd_open_failed');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1513,10 +1245,7 @@ export class WsiViewerController {
         this.clearThumbnailPreview();
         this.host.setSpinnerVisible(false);
         this.host.setTilesReady(true);
-        this.finishInitialSlideLoad(
-            this.initialSlideLoadTrace?.loadSeq ?? this.hierarchyLoadSeq,
-            'tile_failed'
-        );
+        this.finishInitialSlideLoad('tile_failed');
     }
 
     private async mountOSD(
@@ -1558,26 +1287,12 @@ export class WsiViewerController {
             // request cannot leave the viewer in a perpetual loading state.
             this.host.setSpinnerVisible(false);
             this.host.setTilesReady(true);
-            this.finishInitialSlideLoad(
-                this.initialSlideLoadTrace?.loadSeq ?? this.hierarchyLoadSeq,
-                'metadata_failed'
-            );
+            this.finishInitialSlideLoad('metadata_failed');
             return;
         }
 
         if (seq !== this.mountSeq) return;
         this.host.setSelectedMeta(meta);
-        if (
-            slide.slide_key === this.initialSlideKey &&
-            this.initialSlideLoadTrace
-        ) {
-            this.recordInitialSlideStage(
-                this.initialSlideLoadTrace.loadSeq,
-                'metadataLoadedAt',
-                'metadata-loaded',
-                slide.slide_key
-            );
-        }
 
         await new Promise<void>(resolve =>
             requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
@@ -1657,10 +1372,7 @@ export class WsiViewerController {
             this.host.setViewerReady(false);
             this.host.setSpinnerVisible(false);
             this.host.setTilesReady(true);
-            this.finishInitialSlideLoad(
-                this.initialSlideLoadTrace?.loadSeq ?? this.hierarchyLoadSeq,
-                'osd_init_failed'
-            );
+            this.finishInitialSlideLoad('osd_init_failed');
             return;
         }
 
@@ -1683,10 +1395,7 @@ export class WsiViewerController {
             this.clearThumbnailPreview();
             this.host.setSpinnerVisible(false);
             this.host.setTilesReady(true);
-            this.finishInitialSlideLoad(
-                this.initialSlideLoadTrace?.loadSeq ?? this.hierarchyLoadSeq,
-                'osd_open_failed'
-            );
+            this.finishInitialSlideLoad('osd_open_failed');
         }, WSI_OSD_OPEN_TIMEOUT_MS);
 
         offsetNavigatorElement(this.osdViewer);

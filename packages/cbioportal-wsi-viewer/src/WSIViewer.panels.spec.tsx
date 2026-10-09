@@ -11,7 +11,6 @@ import WSIViewer, {
 
 jest.mock('./wsiOpenSeadragonLoader', () => ({
     loadOpenSeadragon: jest.fn(),
-    hasPreloadedOpenSeadragon: () => false,
 }));
 
 const hierarchy = {

@@ -8,7 +8,6 @@ import { action as mobxAction } from 'mobx';
 
 jest.mock('./wsiOpenSeadragonLoader', () => ({
     loadOpenSeadragon: jest.fn(),
-    hasPreloadedOpenSeadragon: () => false,
 }));
 
 function makeInstance() {
