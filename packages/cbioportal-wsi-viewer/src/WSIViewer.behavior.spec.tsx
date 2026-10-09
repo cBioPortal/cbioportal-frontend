@@ -11,8 +11,7 @@ import { readWsiHashState } from './wsiViewStateUtils';
 import * as wsiSlideUtils from './wsiSlideUtils';
 import {
     clearPatientHierarchyCache,
-    fetchPatientHierarchyReadOnly,
-    hasCachedPatientHierarchy,
+    fetchWsiPatientHierarchy,
 } from './wsiHierarchyFetchCache';
 import {
     clearWsiSlideAccess,
@@ -81,10 +80,8 @@ jest.mock('./wsiOpenSeadragonLoader', () => ({
 jest.mock('./wsiHierarchyFetchCache', () => ({
     clearPatientHierarchyCache: jest.requireActual('./wsiHierarchyFetchCache')
         .clearPatientHierarchyCache,
-    fetchPatientHierarchyReadOnly: (...args: unknown[]) =>
+    fetchWsiPatientHierarchy: (...args: unknown[]) =>
         mockFetchPatientHierarchy(...args),
-    hasCachedPatientHierarchy: jest.requireActual('./wsiHierarchyFetchCache')
-        .hasCachedPatientHierarchy,
 }));
 
 // Keep a reference to the original shared mockViewer so integration tests can
@@ -262,7 +259,6 @@ function viewerPropsForUrl(url: string) {
             /\/patient\/[^/]+\/?$/,
             ''
         )}`.replace(/\/$/, ''),
-        hierarchyUrl: url,
         patientId,
     };
 }
@@ -289,9 +285,8 @@ function setFetchMock(mockImpl: unknown) {
 
 /** Loads a hierarchy into the shared cache as an earlier viewer would. */
 async function warmHierarchyCache(
-    url: string,
     hierarchy: PatientHierarchy,
-    studyId?: string
+    studyId = 'study'
 ) {
     const previousFetch = (global as any).fetch;
     setFetchMock(
@@ -303,12 +298,10 @@ async function warmHierarchyCache(
     try {
         await jest
             .requireActual('./wsiHierarchyFetchCache')
-            .fetchPatientHierarchyReadOnly(
-                url,
-                undefined,
-                'anonymousUser',
+            .fetchWsiPatientHierarchy(
                 studyId,
-                hierarchy.patient_id
+                hierarchy.patient_id,
+                'anonymousUser'
             );
     } finally {
         setFetchMock(previousFetch);
@@ -347,7 +340,7 @@ function renderViewer(url = 'https://tiles.example.com/patient/P-1') {
         renderer = TestRenderer.create(
             <WSIViewer
                 tileServerUrl={tileServerUrl}
-                hierarchyUrl={`/api/wsi/v2/hierarchy/study/${patientId}`}
+                studyId="study"
                 patientId={patientId}
                 height={500}
             />
@@ -373,7 +366,7 @@ beforeEach(() => {
     mockFetchPatientHierarchy.mockImplementation((...args: unknown[]) =>
         jest
             .requireActual('./wsiHierarchyFetchCache')
-            .fetchPatientHierarchyReadOnly(...args)
+            .fetchWsiPatientHierarchy(...args)
     );
     clearPatientHierarchyCache();
     clearWsiThumbnailFetchCache();
@@ -1844,28 +1837,10 @@ describe('WSIViewer — loadHierarchy', () => {
         setFetchMock(
             jest.fn(async (input: RequestInfo | URL) => {
                 const url = String(input);
-                if (
-                    url ===
-                    'https://tiles.example.com/patient/P-XYZ?studyId=study'
-                ) {
+                if (url === '/api/wsi/v2/hierarchy/study/P-XYZ') {
                     return {
                         ok: true,
                         json: async () => hierarchy,
-                    } as Response;
-                }
-                if (
-                    url ===
-                    'https://tiles.example.com/tiles/bootstrap-slide/metadata?studyId=study'
-                ) {
-                    return {
-                        ok: true,
-                        json: async () => ({
-                            dimensions: { width: 1000, height: 800 },
-                            levels: 1,
-                            level_dimensions: [{ width: 1000, height: 800 }],
-                            max_zoom: 6,
-                            tile_size: 256,
-                        }),
                     } as Response;
                 }
                 throw new Error(`Unexpected fetch ${url}`);
@@ -1890,13 +1865,13 @@ describe('WSIViewer — loadHierarchy', () => {
         expect(
             (global as any).fetch.mock.calls.filter(
                 ([url]: [string]) =>
-                    url.includes('/patient/P-XYZ') ||
+                    url.includes('/hierarchy/study/P-XYZ') ||
                     url === testAccessUrl('study', 'P-XYZ', 'bootstrap-slide')
             )
         ).toHaveLength(2);
         expect((global as any).fetch).toHaveBeenNthCalledWith(
             1,
-            'https://tiles.example.com/patient/P-XYZ?studyId=study',
+            '/api/wsi/v2/hierarchy/study/P-XYZ',
             { credentials: 'include' }
         );
         expect((global as any).fetch).toHaveBeenNthCalledWith(
@@ -1915,28 +1890,10 @@ describe('WSIViewer — loadHierarchy', () => {
             [makeSlide({ slide_key: 'cached-slide', can_serve_tiles: true })],
             'P-1'
         );
-        await warmHierarchyCache(
-            'https://tiles.example.com/patient/P-1',
-            hierarchy
-        );
+        await warmHierarchyCache(hierarchy);
         setFetchMock(
             jest.fn(async (input: RequestInfo | URL) => {
                 const url = String(input);
-                if (
-                    url ===
-                    'https://tiles.example.com/tiles/cached-slide/metadata'
-                ) {
-                    return {
-                        ok: true,
-                        json: async () => ({
-                            dimensions: { width: 1000, height: 1000 },
-                            levels: 1,
-                            level_dimensions: [{ width: 1000, height: 1000 }],
-                            max_zoom: 4,
-                            tile_size: 256,
-                        }),
-                    } as Response;
-                }
                 throw new Error(`Unexpected fetch ${url}`);
             }) as any
         );
@@ -1945,6 +1902,7 @@ describe('WSIViewer — loadHierarchy', () => {
             ...viewerPropsForUrl('https://tiles.example.com/patient/P-1'),
             url: 'https://tiles.example.com/patient/P-1',
             height: 500,
+            studyId: 'study',
         });
         const controller = controllerOf(inst);
         const selectSlideSpy = jest
@@ -2005,28 +1963,10 @@ describe('WSIViewer — loadHierarchy', () => {
         setFetchMock(
             jest.fn(async (input: RequestInfo | URL) => {
                 const url = String(input);
-                if (
-                    url ===
-                    'https://tiles.example.com/patient/P-XYZ?studyId=study'
-                ) {
+                if (url === '/api/wsi/v2/hierarchy/study/P-XYZ') {
                     return {
                         ok: true,
                         json: async () => toWireHierarchy(mockHierarchy),
-                    } as Response;
-                }
-                if (
-                    url ===
-                    'https://tiles.example.com/tiles/unmatched-1/metadata?studyId=study'
-                ) {
-                    return {
-                        ok: true,
-                        json: async () => ({
-                            dimensions: { width: 1000, height: 800 },
-                            levels: 1,
-                            level_dimensions: [{ width: 1000, height: 800 }],
-                            max_zoom: 6,
-                            tile_size: 256,
-                        }),
                     } as Response;
                 }
                 throw new Error(`Unexpected fetch ${url}`);
@@ -2039,6 +1979,7 @@ describe('WSIViewer — loadHierarchy', () => {
             ),
             url: 'https://tiles.example.com/patient/P-XYZ?studyId=study',
             height: 500,
+            studyId: 'study',
             pathologyFilter: {
                 matchLevel: 'Unmatched',
                 specimenKey: 'unmatched::1::B1',
@@ -2074,7 +2015,7 @@ describe('WSIViewer — loadHierarchy', () => {
                     ok: true,
                     json: () =>
                         Promise.resolve(
-                            url.includes('/patient/')
+                            url.includes('/hierarchy/')
                                 ? mockHierarchy
                                 : {
                                       accessToken: 'test-token',
@@ -2128,7 +2069,7 @@ describe('WSIViewer — loadHierarchy', () => {
                     ok: true,
                     json: () =>
                         Promise.resolve(
-                            url.includes('/patient/')
+                            url.includes('/hierarchy/')
                                 ? mockHierarchy
                                 : {
                                       accessToken: 'test-token',
@@ -3183,14 +3124,8 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         });
         setFetchMock(preloadFetchMock);
 
-        const hierarchyUrl = 'https://tiles.example.com/patient/P-1';
-        await fetchPatientHierarchyReadOnly(
-            hierarchyUrl,
-            undefined,
-            undefined,
-            'study',
-            'P-1'
-        );
+        const hierarchyUrl = '/api/wsi/v2/hierarchy/study/P-1';
+        await fetchWsiPatientHierarchy('study', 'P-1');
         await getWsiSlideAccess('study', '42', false, 'anonymousUser');
 
         clearPatientHierarchyCache();
@@ -3238,23 +3173,20 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         };
 
         try {
-            const inst = makeInstance(hierarchyUrl);
+            const inst = makeInstance('https://tiles.example.com/patient/P-1');
             await loadHierarchyFor(inst);
 
             expect(inst.selectedMeta).toMatchObject({
                 max_zoom: 6,
                 tile_size: 256,
             });
-            // Count only slide server requests; hosts may add their own
-            // requests alongside the mount.
-            const slideRequests = networkFetchMock.mock.calls
-                .map(([url]: [string]) => url)
-                .filter((url: string) =>
-                    url.startsWith('https://tiles.example.com/')
-                );
-            expect(slideRequests).toHaveLength(2);
-            expect(slideRequests[0]).toBe(hierarchyUrl);
-            expect(slideRequests[1]).toContain('/thumbnails');
+            const requests = networkFetchMock.mock.calls.map(
+                ([url]: [string]) => url
+            );
+            expect(requests[0]).toBe(hierarchyUrl);
+            expect(
+                requests.filter((url: string) => url.includes('/thumbnails'))
+            ).toHaveLength(1);
         } finally {
             (global as any).requestAnimationFrame = origRaf;
         }

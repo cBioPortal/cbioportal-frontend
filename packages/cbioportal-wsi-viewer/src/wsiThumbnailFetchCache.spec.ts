@@ -117,12 +117,8 @@ describe('wsiThumbnailFetchCache', () => {
 
     it('does not cancel the shared request when one caller aborts', async () => {
         let resolveResponse!: (response: Response) => void;
-        let requestSignal!: AbortSignal;
         (global.fetch as jest.Mock).mockImplementation(
-            (_url: string, init: RequestInit) => {
-                requestSignal = init.signal!;
-                return new Promise(resolve => (resolveResponse = resolve));
-            }
+            () => new Promise(resolve => (resolveResponse = resolve))
         );
         const access = makeAccess();
         const abortController = new AbortController();
@@ -150,52 +146,7 @@ describe('wsiThumbnailFetchCache', () => {
             })
         );
         await expect(shared).resolves.toBeInstanceOf(Blob);
-        expect(requestSignal.aborted).toBe(false);
         expect(global.fetch).toHaveBeenCalledTimes(1);
-    });
-
-    it('aborts and evicts the request when all consumers abort', async () => {
-        let requestSignal!: AbortSignal;
-        (global.fetch as jest.Mock).mockImplementation(
-            (_url: string, init: RequestInit) =>
-                new Promise((_resolve, reject) => {
-                    requestSignal = init.signal!;
-                    requestSignal.addEventListener(
-                        'abort',
-                        () => reject(new DOMException('Aborted', 'AbortError')),
-                        { once: true }
-                    );
-                })
-        );
-        const access = makeAccess();
-        const abortController = new AbortController();
-        const pending = fetchWsiThumbnailBlob(
-            'https://tiles.example.com',
-            'study-1',
-            'slide-1',
-            access,
-            abortController.signal
-        );
-
-        abortController.abort();
-        await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
-        expect(requestSignal.aborted).toBe(true);
-
-        (global.fetch as jest.Mock).mockResolvedValueOnce(
-            makeResponse(200, new Blob(['thumbnail'], { type: 'image/jpeg' }), {
-                'Content-Type': 'image/jpeg',
-                'X-Thumbnail-Status': 'ok',
-            })
-        );
-        await expect(
-            fetchWsiThumbnailBlob(
-                'https://tiles.example.com',
-                'study-1',
-                'slide-1',
-                access
-            )
-        ).resolves.toBeInstanceOf(Blob);
-        expect(global.fetch).toHaveBeenCalledTimes(2);
     });
 
     it('evicts failed requests so a later attempt can recover', async () => {
@@ -231,6 +182,39 @@ describe('wsiThumbnailFetchCache', () => {
                 access
             )
         ).resolves.toBeInstanceOf(Blob);
+        expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
+});
+
+describe('wsiThumbnailFetchCache expiry', () => {
+    afterEach(() => {
+        clearWsiThumbnailFetchCache();
+        jest.useRealTimers();
+    });
+
+    it('refetches once the Cache-Control max-age has passed', async () => {
+        jest.useFakeTimers();
+        global.fetch = jest.fn().mockResolvedValue(
+            makeResponse(200, new Blob(['thumbnail'], { type: 'image/jpeg' }), {
+                'Cache-Control': 'private, max-age=60',
+                'Content-Type': 'image/jpeg',
+            })
+        ) as typeof fetch;
+        const fetchThumbnail = () =>
+            fetchWsiThumbnailBlob(
+                'https://tiles.example.com',
+                'study-1',
+                'slide-1',
+                makeAccess({ expiresAt: Date.now() + 300_000 })
+            );
+
+        await fetchThumbnail();
+        jest.advanceTimersByTime(59_000);
+        await fetchThumbnail();
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+
+        jest.advanceTimersByTime(2_000);
+        await fetchThumbnail();
         expect(global.fetch).toHaveBeenCalledTimes(2);
     });
 });

@@ -1,6 +1,6 @@
 import { selectMetadataPrefetchSlides } from './wsiSlideUtils';
 import { WsiStainFilter } from './wsiViewerTypes';
-import { fetchPatientHierarchyReadOnly } from './wsiHierarchyFetchCache';
+import { fetchWsiPatientHierarchy } from './wsiHierarchyFetchCache';
 import {
     buildWsiDownloadFilename,
     buildWsiViewState,
@@ -62,7 +62,6 @@ export interface WsiInitialSlideLoadPerformance {
 
 export interface WsiViewerControllerHost {
     getProps(): {
-        hierarchyUrl: string;
         studyId?: string;
         patientId?: string;
         pathologyFilter?: PathologySlideFilter;
@@ -577,20 +576,13 @@ export class WsiViewerController {
         void this.primeOpenSeadragonLoad().catch(() => {});
 
         try {
-            const {
-                hierarchyUrl,
+            const { authScope, studyId, patientId } = this.host.getProps();
+            const data = await fetchWsiPatientHierarchy(
+                studyId || '',
+                patientId || '',
                 authScope,
-                studyId,
-                patientId,
-            } = this.host.getProps();
-            const hierarchy = await fetchPatientHierarchyReadOnly(
-                hierarchyUrl,
-                abortController.signal,
-                authScope,
-                studyId,
-                patientId
+                abortController.signal
             );
-            const data = hierarchy;
             if (
                 loadSeq !== this.hierarchyLoadSeq ||
                 abortController.signal.aborted

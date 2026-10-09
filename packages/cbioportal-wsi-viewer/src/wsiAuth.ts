@@ -1,6 +1,6 @@
 import { getWsiViewerRuntime } from './wsiViewerConfig';
 import { PatientHierarchy, WsiSlideAccess } from './wsiViewerTypes';
-import { deleteExpiredEntries } from './wsiCacheUtils';
+import { createPromiseCache } from './wsiCacheUtils';
 
 const CURRENT_WSI_DECODE_POLICY =
     'geometry-v2;tile-max=16777216;thumbnail-max=16777216';
@@ -77,8 +77,10 @@ export function normalizeWsiAuthScope(scope?: string): string {
     return normalized || 'anonymousUser';
 }
 
-const slideAccess = new Map<string, WsiSlideAccess>();
-const pendingSlideAccess = new Map<string, Promise<WsiSlideAccess>>();
+// An access is reused until 30 s before its token expires.
+const slideAccess = createPromiseCache<WsiSlideAccess>(
+    access => (access.expiresAt ?? 0) - 30_000
+);
 /**
  * Patient of every slide a loaded hierarchy published, keyed by study and
  * slide key. Access is only ever requested for these slides.
@@ -233,45 +235,19 @@ export function getWsiSlideAccess(
         patientId,
         slideKey,
     ].join('::');
-    if (!forceRefresh) {
-        const cached = slideAccess.get(key);
-        if (
-            cached &&
-            cached.expiresAt &&
-            cached.expiresAt > Date.now() + 30_000
-        ) {
-            return Promise.resolve(cached);
-        }
-    }
-    slideAccess.delete(key);
-    let request = pendingSlideAccess.get(key);
-    if (!request) {
-        request = requestSlideAccess(studyId, patientId, slideKey)
-            .then(access => {
-                deleteExpiredEntries(slideAccess);
-                slideAccess.set(key, access);
-                return access;
-            })
-            .finally(() => {
-                pendingSlideAccess.delete(key);
-            });
-        pendingSlideAccess.set(key, request);
-    }
-    return request;
+    return slideAccess.get(
+        key,
+        () => requestSlideAccess(studyId, patientId, slideKey),
+        forceRefresh
+    );
 }
 
 export function clearWsiSlideAccess(studyId?: string): void {
     if (studyId) {
-        for (const key of slideAccess.keys()) {
-            if (key.includes(`::${studyId}::`)) slideAccess.delete(key);
-        }
-        for (const key of pendingSlideAccess.keys()) {
-            if (key.includes(`::${studyId}::`)) pendingSlideAccess.delete(key);
-        }
+        slideAccess.clear(key => key.includes(`::${studyId}::`));
         clearWsiResourceAccessTargets(studyId);
         return;
     }
     slideAccess.clear();
-    pendingSlideAccess.clear();
     clearWsiResourceAccessTargets();
 }

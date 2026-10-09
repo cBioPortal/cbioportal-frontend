@@ -17,7 +17,6 @@ function makeInstance(
 ) {
     return new (WSIViewer as any)({
         tileServerUrl: url.replace(/\/patient\/[^/]+\/?$/, ''),
-        hierarchyUrl: `/api/wsi/v2/hierarchy/study/P-1`,
         patientId: 'P-1',
         height: 500,
         ...extraProps,

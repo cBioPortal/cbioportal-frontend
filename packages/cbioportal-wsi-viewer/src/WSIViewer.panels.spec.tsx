@@ -49,7 +49,6 @@ const hierarchy = {
 function makeViewer(extraProps: Record<string, unknown> = {}) {
     const instance = new (WSIViewer as any)({
         tileServerUrl: 'https://tiles.example.com',
-        hierarchyUrl: '/api/wsi/v2/hierarchy/study/P-1',
         patientId: 'P-1',
         height: 500,
         ...extraProps,

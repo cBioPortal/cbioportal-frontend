@@ -43,3 +43,66 @@ export function deleteExpiredEntries(
         }
     }
 }
+
+/** Promises shared by key, such as one request per patient or slide. */
+export interface PromiseCache<T> {
+    /**
+     * The pending or unexpired promise for `key`, else the one `load`
+     * starts. `refresh` replaces a settled entry but still joins a pending
+     * one. A rejected load is forgotten, so the next call retries it.
+     */
+    get(key: string, load: () => Promise<T>, refresh?: boolean): Promise<T>;
+    /** Forgets the entries whose key matches; all entries when unset. */
+    clear(matches?: (key: string) => boolean): void;
+}
+
+/**
+ * Creates a PromiseCache. `expiresAt` gives the time (ms since the epoch)
+ * at which a resolved value goes stale; values never expire by default.
+ */
+export function createPromiseCache<T>(
+    expiresAt: (value: T) => number = () => Infinity
+): PromiseCache<T> {
+    const entries = new Map<
+        string,
+        { promise: Promise<T>; expiresAt?: number }
+    >();
+    return {
+        get(key, load, refresh = false) {
+            const now = Date.now();
+            const cached = entries.get(key);
+            if (
+                cached &&
+                (cached.expiresAt === undefined ||
+                    (!refresh && cached.expiresAt > now))
+            ) {
+                return cached.promise;
+            }
+            deleteExpiredEntries(entries, now);
+            const entry: { promise: Promise<T>; expiresAt?: number } = {
+                promise: load(),
+            };
+            entries.set(key, entry);
+            entry.promise.then(
+                value => {
+                    if (entries.get(key) === entry) {
+                        entry.expiresAt = expiresAt(value);
+                    }
+                },
+                () => {
+                    if (entries.get(key) === entry) entries.delete(key);
+                }
+            );
+            return entry.promise;
+        },
+        clear(matches) {
+            if (!matches) {
+                entries.clear();
+                return;
+            }
+            for (const key of Array.from(entries.keys())) {
+                if (matches(key)) entries.delete(key);
+            }
+        },
+    };
+}

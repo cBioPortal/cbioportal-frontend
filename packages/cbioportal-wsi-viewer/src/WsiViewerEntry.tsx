@@ -1,6 +1,4 @@
 import * as React from 'react';
-import { buildWsiHierarchyApiUrl } from './wsiUrls';
-import { getWsiViewerRuntime } from './wsiViewerConfig';
 import WSIViewer from './WSIViewer';
 import {
     PathologySlideFilter,
@@ -54,23 +52,6 @@ export interface WsiViewerProps {
  * linkout handling around it without changing the hierarchy or serving
  * contract used by the viewer itself.
  */
-export default function WsiViewer({
-    patientId,
-    studyId,
-    ...viewerProps
-}: WsiViewerProps) {
-    const hierarchyUrl = buildWsiHierarchyApiUrl(
-        getWsiViewerRuntime().buildApiUrl,
-        studyId,
-        patientId
-    );
-
-    return (
-        <WSIViewer
-            {...viewerProps}
-            hierarchyUrl={hierarchyUrl}
-            patientId={patientId}
-            studyId={studyId}
-        />
-    );
+export default function WsiViewer(props: WsiViewerProps) {
+    return <WSIViewer {...props} />;
 }

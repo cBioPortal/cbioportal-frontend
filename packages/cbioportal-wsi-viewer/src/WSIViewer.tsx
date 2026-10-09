@@ -68,8 +68,6 @@ export const WSI_METADATA_COLLAPSED_KEY = 'wsi.viewer.metadataCollapsed';
 interface Props {
     /** Tile-server base URL (never a patient-scoped or resource URL). */
     tileServerUrl: string;
-    /** Backend-owned hierarchy endpoint for this patient. */
-    hierarchyUrl: string;
     patientId: string;
     height: number;
     /** cBioPortal study ID — used to build sample links in the sidebar */
@@ -533,7 +531,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
             prev.initialMatchFilter !== this.props.initialMatchFilter;
         const requiresHierarchyReload =
             authScopeChanged ||
-            prev.hierarchyUrl !== this.props.hierarchyUrl ||
+            prev.studyId !== this.props.studyId ||
             prev.tileServerUrl !== this.props.tileServerUrl ||
             prev.patientId !== this.props.patientId ||
             (pathologyFilterChanged && !this.canReusePathologyFilterLocally());
@@ -619,7 +617,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
     private get controllerProps() {
         return {
-            hierarchyUrl: this.props.hierarchyUrl,
             studyId: this.props.studyId,
             patientId: this.props.patientId,
             pathologyFilter: this.activePathologyFilter,

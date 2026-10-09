@@ -108,7 +108,6 @@ function makeHarness() {
     let meta: TileMetadata | null = null;
     const host: WsiViewerControllerHost = {
         getProps: () => ({
-            hierarchyUrl: '/api/wsi/v2/hierarchy/study/P-1',
             studyId: 'study',
             patientId: 'P-1',
             authScope: 'user',

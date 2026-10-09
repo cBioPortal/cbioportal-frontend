@@ -10,24 +10,14 @@ import {
     registerWsiResourceAccess,
 } from './wsiAuth';
 import { getWsiViewerRuntime } from './wsiViewerConfig';
-import { deleteExpiredEntries, withAbort } from './wsiCacheUtils';
+import { createPromiseCache, withAbort } from './wsiCacheUtils';
 import { buildWsiHierarchyApiUrl } from './wsiUrls';
 
 const HIERARCHY_CACHE_TTL_MS = 5 * 60 * 1000;
 
-type CachedHierarchyEntry = {
-    expiresAt: number;
-    promise: Promise<PatientHierarchy>;
-    /** Study whose resource access targets this entry registered. */
-    studyId?: string;
-    patientId?: string;
-};
-
-const hierarchyCache = new Map<string, CachedHierarchyEntry>();
-
-function hierarchyCacheKey(url: string, authScope?: string): string {
-    return `${normalizeWsiAuthScope(authScope)}::${url}`;
-}
+const hierarchyCache = createPromiseCache<PatientHierarchy>(
+    () => Date.now() + HIERARCHY_CACHE_TTL_MS
+);
 
 function deriveSlideAssociations(
     hierarchy: PatientHierarchy
@@ -147,108 +137,26 @@ function normalizeHierarchyPayload(
     );
 }
 
-/**
- * Publishes the slides of a hierarchy for slide access, but only while that
- * hierarchy is still the cached one for its URL, so a superseded response
- * cannot overwrite a newer one.
- */
-function registerIfCurrent(
-    url: string,
-    authScope: string | undefined,
-    promise: Promise<PatientHierarchy>,
-    hierarchy: PatientHierarchy,
-    studyId: string | undefined
-): void {
-    if (!studyId) return;
-    const current = hierarchyCache.get(hierarchyCacheKey(url, authScope));
-    if (current?.promise !== promise) return;
-    registerWsiResourceAccess(studyId, hierarchy);
-}
-
-function getOrCreateHierarchyRequest(
-    url: string,
-    authScope: string | undefined,
-    studyId: string | undefined,
-    patientId: string | undefined
+async function requestHierarchy(
+    studyId: string,
+    patientId: string
 ): Promise<PatientHierarchy> {
-    const cacheKey = hierarchyCacheKey(url, authScope);
-    const now = Date.now();
-    const cached = hierarchyCache.get(cacheKey);
-    if (cached && cached.expiresAt > now) {
-        const cachedPromise = cached.promise;
-        const targetStudyId = studyId ?? cached.studyId;
-        if (studyId && !cached.studyId) {
-            cached.studyId = studyId;
-        }
-        return cachedPromise.then(hierarchy => {
-            registerIfCurrent(
-                url,
-                authScope,
-                cachedPromise,
-                hierarchy,
-                targetStudyId
-            );
-            return hierarchy;
-        });
-    }
-
-    const expiresAt = now + HIERARCHY_CACHE_TTL_MS;
-
-    const promise: Promise<PatientHierarchy> = getWsiViewerRuntime()
-        .fetchImpl(url, { credentials: 'include' })
-        .then(async response => {
-            if (!response.ok) {
-                throw new Error(`Server returned ${response.status}`);
-            }
-            const payload = await response.json();
-            const hierarchy = normalizeHierarchyPayload(
-                payload,
-                patientId ?? ''
-            );
-            registerIfCurrent(url, authScope, promise, hierarchy, studyId);
-            return hierarchy;
-        })
-        .catch(error => {
-            const current = hierarchyCache.get(cacheKey);
-            if (current?.promise === promise) {
-                hierarchyCache.delete(cacheKey);
-            }
-            throw error;
-        });
-
-    deleteExpiredEntries(hierarchyCache, now);
-    hierarchyCache.set(cacheKey, {
-        expiresAt,
-        promise,
-        studyId,
-        patientId: patientId ?? '',
-    });
-    return promise;
-}
-
-/**
- * Loads a patient hierarchy through the shared cache. When `studyId` is given,
- * every returned hierarchy (network or cached) registers the slides that slide
- * access requests may name. `patientId` is recorded on the
- * normalized hierarchy; the URL is never parsed for either identity.
- */
-export async function fetchPatientHierarchyReadOnly(
-    url: string,
-    signal?: AbortSignal,
-    authScope?: string,
-    studyId?: string,
-    patientId?: string
-): Promise<PatientHierarchy> {
-    return withAbort(
-        getOrCreateHierarchyRequest(url, authScope, studyId, patientId),
-        signal
+    const { buildApiUrl, fetchImpl } = getWsiViewerRuntime();
+    const response = await fetchImpl(
+        buildWsiHierarchyApiUrl(buildApiUrl, studyId, patientId),
+        { credentials: 'include' }
     );
+    if (!response.ok) {
+        throw new Error(`Server returned ${response.status}`);
+    }
+    return normalizeHierarchyPayload(await response.json(), patientId);
 }
 
 /**
  * Loads one patient's hierarchy from the portal through the cache the viewer
  * reads, so a viewer opened later for the same patient and `authScope` reuses
- * this request.
+ * this request. Every returned hierarchy (network or cached) registers the
+ * slides that slide access requests may name.
  */
 export function fetchWsiPatientHierarchy(
     studyId: string,
@@ -256,26 +164,18 @@ export function fetchWsiPatientHierarchy(
     authScope?: string,
     signal?: AbortSignal
 ): Promise<PatientHierarchy> {
-    return fetchPatientHierarchyReadOnly(
-        buildWsiHierarchyApiUrl(
-            getWsiViewerRuntime().buildApiUrl,
-            studyId,
-            patientId
-        ),
-        signal,
-        authScope,
-        studyId,
-        patientId
+    const key = [normalizeWsiAuthScope(authScope), studyId, patientId].join(
+        '::'
     );
-}
-
-export function hasCachedPatientHierarchy(
-    url: string,
-    authScope?: string
-): boolean {
-    const now = Date.now();
-    const cached = hierarchyCache.get(hierarchyCacheKey(url, authScope));
-    return !!cached && cached.expiresAt > now;
+    return withAbort(
+        hierarchyCache
+            .get(key, () => requestHierarchy(studyId, patientId))
+            .then(hierarchy => {
+                registerWsiResourceAccess(studyId, hierarchy);
+                return hierarchy;
+            }),
+        signal
+    );
 }
 
 export function clearPatientHierarchyCache() {

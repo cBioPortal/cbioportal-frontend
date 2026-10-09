@@ -199,8 +199,6 @@ describe('WsiViewer', () => {
         );
         expect(mockWsiViewer).toHaveBeenCalledWith(
             expect.objectContaining({
-                hierarchyUrl:
-                    'https://portal.example/beta/api/wsi/v2/hierarchy/study%2F1/P%201',
                 authScope: 'user-a',
                 showDownload: true,
                 renderLoading,

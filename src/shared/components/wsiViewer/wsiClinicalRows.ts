@@ -4,7 +4,7 @@ import {
     ClinicalData,
     ClinicalDataMultiStudyFilter,
 } from 'cbioportal-ts-api-client';
-import { WsiClinicalRow } from 'cbioportal-wsi-viewer';
+import { createPromiseCache, WsiClinicalRow } from 'cbioportal-wsi-viewer';
 import { getServerConfig } from 'config/config';
 import { getClient } from 'shared/api/cbioportalClientInstance';
 import { clean } from 'pages/patientView/clinicalInformation/lib/clinicalAttributesUtil.js';
@@ -232,29 +232,14 @@ export function buildWsiPatientClinicalRows({
     ];
 }
 
-const clinicalRowsRequests = new Map<string, Promise<WsiClinicalRow[]>>();
-
-function cached<T>(
-    cache: Map<string, Promise<T>>,
-    key: string,
-    load: () => Promise<T>
-): Promise<T> {
-    let request = cache.get(key);
-    if (!request) {
-        request = load();
-        // A failed request is retried the next time it is needed.
-        request.catch(() => cache.delete(key));
-        cache.set(key, request);
-    }
-    return request;
-}
+// A failed request is retried the next time it is needed.
+const clinicalRowsRequests = createPromiseCache<WsiClinicalRow[]>();
 
 function fetchWsiClinicalRows(
     studyId: string,
     patientId: string
 ): Promise<WsiClinicalRow[]> {
-    return cached(
-        clinicalRowsRequests,
+    return clinicalRowsRequests.get(
         `${studyId}\u0000${patientId}`,
         async () => {
             const [attributes, patientData, samples] = await Promise.all([
