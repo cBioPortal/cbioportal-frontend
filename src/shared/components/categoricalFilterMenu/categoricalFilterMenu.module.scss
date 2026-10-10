@@ -41,14 +41,13 @@
 }
 
 .options {
-    max-height: 250px;
-    overflow-y: auto;
     white-space: nowrap;
 }
 
 .option {
     display: flex;
     align-items: center;
+    box-sizing: border-box;
     padding: 0 4px;
     border-radius: 3px;
 

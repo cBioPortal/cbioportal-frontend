@@ -4,6 +4,7 @@ import { observer } from 'mobx-react';
 import classNames from 'classnames';
 import { action, computed, observable, makeObservable } from 'mobx';
 import { Checkbox } from 'react-bootstrap';
+import { List } from 'react-virtualized';
 import { TruncatedText } from 'cbioportal-frontend-commons';
 import { inputBoxChangeTimeoutEvent } from 'shared/lib/EventUtils';
 import { FilterMenuOpenContext } from 'shared/components/filterIconModal/FilterMenuOpenContext';
@@ -24,6 +25,12 @@ export interface ICategoricalFilterMenuProps {
     // opens a comparison of the given (selected) values
     onCompare?: (values: string[]) => void;
 }
+
+// the option rows have a fixed height so that only the rows in view need to
+// be rendered
+const OPTION_HEIGHT = 24;
+const OPTIONS_MAX_HEIGHT = 250;
+const OPTIONS_WIDTH = 340;
 
 @observer
 export default class CategoricalFilterMenu extends React.Component<
@@ -206,50 +213,86 @@ export default class CategoricalFilterMenu extends React.Component<
             : selections;
     }
 
+    // Only the rows in view are rendered, as a column can have many values
+    // (e.g. the sample ids of a gene in GENIE).
     private selectionCheckboxes(counts?: Map<string, number>) {
+        const selections = this.sortedSelections(counts);
         const maxCount = counts ? _.max(Array.from(counts.values())) || 1 : 1;
-        return this.sortedSelections(counts).map(selection => {
-            const count = counts ? counts.get(selection) || 0 : undefined;
-            return (
-                <div
-                    key={selection}
-                    className={classNames(styles.option, {
-                        [styles.emptyOption]: count === 0,
-                    })}
-                    data-test={`categorical-filter-menu-option-${selection}`}
+        return (
+            <List
+                width={OPTIONS_WIDTH}
+                height={Math.min(
+                    OPTIONS_MAX_HEIGHT,
+                    selections.length * OPTION_HEIGHT
+                )}
+                rowCount={selections.length}
+                rowHeight={OPTION_HEIGHT}
+                overscanRowCount={10}
+                rowRenderer={({ index, key, style }) =>
+                    this.selectionCheckbox(
+                        selections[index],
+                        key,
+                        style,
+                        counts,
+                        maxCount
+                    )
+                }
+                // List only re-renders when its props change
+                selections={selections}
+                renderedSelection={this.renderedSelection}
+                counts={counts}
+            />
+        );
+    }
+
+    private selectionCheckbox(
+        selection: string,
+        key: string,
+        style: React.CSSProperties,
+        counts: Map<string, number> | undefined,
+        maxCount: number
+    ) {
+        const count = counts ? counts.get(selection) || 0 : undefined;
+        return (
+            <div
+                key={key}
+                style={style}
+                className={classNames(styles.option, {
+                    [styles.emptyOption]: count === 0,
+                })}
+                data-test={`categorical-filter-menu-option-${selection}`}
+            >
+                <Checkbox
+                    data-id={selection}
+                    onChange={this.onChangeSelection}
+                    checked={this.isChecked(selection)}
+                    className={styles.checkbox}
                 >
-                    <Checkbox
-                        data-id={selection}
-                        onChange={this.onChangeSelection}
-                        checked={this.isChecked(selection)}
-                        className={styles.checkbox}
-                    >
-                        <TruncatedText
-                            maxLength={30}
-                            text={selection}
-                            tooltip={
-                                <div style={{ maxWidth: 300 }}>{selection}</div>
-                            }
-                        />
-                    </Checkbox>
-                    {count !== undefined && (
-                        <>
-                            <span className={styles.count}>
-                                {count.toLocaleString()}
-                            </span>
-                            <span className={styles.barCell}>
-                                <span
-                                    className={styles.bar}
-                                    style={{
-                                        width: `${(100 * count) / maxCount}%`,
-                                    }}
-                                />
-                            </span>
-                        </>
-                    )}
-                </div>
-            );
-        });
+                    <TruncatedText
+                        maxLength={30}
+                        text={selection}
+                        tooltip={
+                            <div style={{ maxWidth: 300 }}>{selection}</div>
+                        }
+                    />
+                </Checkbox>
+                {count !== undefined && (
+                    <>
+                        <span className={styles.count}>
+                            {count.toLocaleString()}
+                        </span>
+                        <span className={styles.barCell}>
+                            <span
+                                className={styles.bar}
+                                style={{
+                                    width: `${(100 * count) / maxCount}%`,
+                                }}
+                            />
+                        </span>
+                    </>
+                )}
+            </div>
+        );
     }
 
     // compares the checked values (all values if none is checked) that have
