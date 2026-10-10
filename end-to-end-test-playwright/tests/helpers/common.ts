@@ -1,4 +1,6 @@
+import * as fs from 'fs';
 import * as path from 'path';
+import * as zlib from 'zlib';
 import { expect, Locator, Page, Route } from '@playwright/test';
 
 /**
@@ -203,9 +205,11 @@ export async function setCheckboxChecked(
  * hang from CI's network path rather than erroring, stalling IGV's
  * initialization forever (cBioPortal/cbioportal#12314). A missing RefSeq
  * track also makes igv.js fall back to resolving gene-symbol loci (e.g.
- * "TP53") via igv.org/genomes/locus.php, which hangs the same way. Serve
- * both files from static fixtures, under either host, so tests don't
- * depend on third-party hosts being reachable from CI.
+ * "TP53") via igv.org/genomes/locus.php, which hangs the same way. It also
+ * does that when it searches for the gene before the RefSeq track has
+ * loaded. Serve both files from static fixtures, under either host, and
+ * answer locus.php from the RefSeq fixture, so tests don't depend on
+ * third-party hosts being reachable from CI.
  * Must be called before whatever navigation/interaction triggers IGV
  * to load the 'hg19' genome.
  */
@@ -225,6 +229,56 @@ export async function stubHg19GenomeFetches(page: Page): Promise<void> {
     ]) {
         await page.route(refSeqUrl, serveFixture('ncbiRefSeq.hg19.txt.gz'));
     }
+    await page.route('**/genomes/locus.php*', route => {
+        const gene = new URL(route.request().url()).searchParams.get('name');
+        const locus = gene ? hg19GeneLoci().get(gene.toUpperCase()) : undefined;
+        return route.fulfill({
+            contentType: 'text/plain',
+            body: locus ? `${gene}\t${locus}\trefseq\n` : '',
+        });
+    });
+}
+
+let geneLoci: Map<string, string> | undefined;
+
+/**
+ * Gene symbol -> "chr:start-end" from the RefSeq fixture: the span of all
+ * transcripts of the gene, which is what igv.org's locus.php answers with.
+ */
+function hg19GeneLoci(): Map<string, string> {
+    if (!geneLoci) {
+        geneLoci = new Map();
+        const spans = new Map<
+            string,
+            { chr: string; start: number; end: number }
+        >();
+        const refSeq = zlib
+            .gunzipSync(
+                fs.readFileSync(
+                    path.join(__dirname, 'fixtures', 'ncbiRefSeq.hg19.txt.gz')
+                )
+            )
+            .toString();
+        for (const line of refSeq.split('\n')) {
+            // UCSC refGene columns: bin, name, chrom, strand, txStart, txEnd, ..., name2
+            const t = line.split('\t');
+            if (t.length < 13 || !/^chr(\d+|X|Y|M)$/.test(t[2])) {
+                continue;
+            }
+            const gene = t[12].toUpperCase();
+            const span = spans.get(gene);
+            if (!span) {
+                spans.set(gene, { chr: t[2], start: +t[4], end: +t[5] });
+            } else if (span.chr === t[2]) {
+                span.start = Math.min(span.start, +t[4]);
+                span.end = Math.max(span.end, +t[5]);
+            }
+        }
+        spans.forEach((span, gene) =>
+            geneLoci!.set(gene, `${span.chr}:${span.start}-${span.end}`)
+        );
+    }
+    return geneLoci;
 }
 
 /**
