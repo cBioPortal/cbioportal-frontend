@@ -103,33 +103,38 @@ export default class CategoricalFilterMenu extends React.Component<
     // them. The filter itself keeps the included values, where all values
     // means no filter. It can also include values that the filters of the
     // other columns hide from this menu, so only the listed values count.
+    // Computed in one pass over the listed values, which can be many (e.g.
+    // sample ids), and kept for the render instead of per checkbox.
+    private selectionState() {
+        const listed = Array.from(this.props.allSelections);
+        const included = listed.filter(s => this.props.currSelections.has(s));
+        const restricting =
+            included.length > 0 && included.length < listed.length;
+        // remembered values only count while they still cover all values,
+        // which can change with the filters of the other columns
+        const remembered = this.checkedAllValues;
+        const checked = restricting
+            ? included
+            : remembered && listed.every(s => remembered.has(s))
+            ? listed
+            : [];
+        return { restricting, checked: new Set(checked) };
+    }
+
+    private renderedSelection: {
+        restricting: boolean;
+        checked: Set<string>;
+    } = {
+        restricting: false,
+        checked: new Set(),
+    };
+
     private get isRestricting() {
-        const listedIncluded = Array.from(this.props.allSelections).filter(s =>
-            this.props.currSelections.has(s)
-        ).length;
-        return (
-            listedIncluded > 0 && listedIncluded < this.props.allSelections.size
-        );
+        return this.renderedSelection.restricting;
     }
 
     private isChecked(selection: string) {
-        if (this.isRestricting) {
-            return this.props.currSelections.has(selection);
-        }
-        // only while they still cover all values, which can change with the
-        // filters of the other columns
-        const checkedAll = this.checkedAllValues;
-        return (
-            !!checkedAll &&
-            checkedAll.has(selection) &&
-            Array.from(this.props.allSelections).every(s => checkedAll.has(s))
-        );
-    }
-
-    private get checkedCount() {
-        return Array.from(this.props.allSelections).filter(s =>
-            this.isChecked(s)
-        ).length;
+        return this.renderedSelection.checked.has(selection);
     }
 
     // toggles to the given included values
@@ -156,9 +161,7 @@ export default class CategoricalFilterMenu extends React.Component<
         if (id === undefined || id === null) {
             return;
         }
-        const checked = new Set(
-            Array.from(this.props.allSelections).filter(s => this.isChecked(s))
-        );
+        const checked = new Set(this.selectionState().checked);
         if (checked.has(id)) {
             checked.delete(id);
         } else {
@@ -175,8 +178,8 @@ export default class CategoricalFilterMenu extends React.Component<
         );
     }
 
-    @computed get selectionControls() {
-        const checkedCount = this.checkedCount;
+    private get selectionControls() {
+        const checkedCount = this.renderedSelection.checked.size;
         return (
             <div className={styles.selectionControls}>
                 <span className={styles.selectedCount}>
@@ -283,6 +286,7 @@ export default class CategoricalFilterMenu extends React.Component<
     }
 
     render() {
+        this.renderedSelection = this.selectionState();
         const isOpen = this.context;
         const counts =
             isOpen && this.props.getValueCounts
