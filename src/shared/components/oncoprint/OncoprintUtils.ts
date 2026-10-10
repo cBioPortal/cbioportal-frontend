@@ -1,4 +1,5 @@
 import {
+    GAP_MODE_ENUM,
     ICategoricalRuleSetParams,
     IGeneticAlterationRuleSetParams,
     IGradientRuleSetParams,
@@ -6,6 +7,7 @@ import {
     RuleSetType,
 } from 'oncoprintjs';
 import {
+    ClinicalTrackConfig,
     ClinicalTrackSpec,
     GeneticTrackDatum,
     GeneticTrackSpec,
@@ -1330,6 +1332,20 @@ export function makeGeneticTracksMobxPromise(
     });
 }
 
+/**
+ * Gap mode to restore when a clinical track is created. A saved mode that
+ * shows gaps is restored exactly; otherwise gapOn decides, so configs with
+ * gapOn: true keep showing gaps even when gapMode says HIDE_GAPS.
+ */
+export function getSavedGapModeToRestore(
+    trackConfig: Pick<ClinicalTrackConfig, 'gapMode'>
+): GAP_MODE_ENUM | undefined {
+    return trackConfig.gapMode === GAP_MODE_ENUM.SHOW_GAPS ||
+        trackConfig.gapMode === GAP_MODE_ENUM.SHOW_GAPS_PERCENT
+        ? trackConfig.gapMode
+        : undefined;
+}
+
 export function makeClinicalTracksMobxPromise(
     oncoprint: ResultsViewOncoprint,
     sampleMode: boolean
@@ -1483,6 +1499,7 @@ export function makeClinicalTracksMobxPromise(
                     ];
                 ret.sortOrder = trackConfig.sortOrder || undefined;
                 ret.gapOn = trackConfig.gapOn || undefined;
+                ret.gapMode = getSavedGapModeToRestore(trackConfig);
 
                 return ret as ClinicalTrackSpec;
             });

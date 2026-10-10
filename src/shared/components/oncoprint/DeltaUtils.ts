@@ -1375,6 +1375,7 @@ function transitionClinicalTrack(
                     : nextSpec.custom_options,
             track_can_show_gaps: nextSpec.datatype === 'string',
             show_gaps_on_init: nextSpec.gapOn,
+            gap_mode_on_init: nextSpec.gapMode,
         };
         trackSpecKeyToTrackId[nextSpec.key] = oncoprint.addTracks([
             clinicalTrackParams,
