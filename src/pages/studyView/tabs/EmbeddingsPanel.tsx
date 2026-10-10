@@ -23,10 +23,12 @@ import {
     EMBEDDING_DATA_PREFIX,
     preComputeEmbeddingDataColors,
     getGeneAlterationLabel,
+    getShapeSlot,
 } from 'shared/components/plots/EmbeddingPlotUtils';
 import {
     EmbeddingDeckGLVisualization,
     EmbeddingDataOption,
+    ShapeMenuOption,
 } from 'shared/components/embeddings';
 import { EmbeddingControlStack } from 'shared/components/embeddings/controls/EmbeddingControlStack';
 import {
@@ -36,7 +38,11 @@ import {
     seedLowHighColors,
     pickPercentileRange,
 } from 'shared/components/embeddings/controls/GradientRangeEditor';
-import { Gene, ClinicalData } from 'cbioportal-ts-api-client';
+import {
+    Gene,
+    ClinicalData,
+    ClinicalDataCountItem,
+} from 'cbioportal-ts-api-client';
 import { addCancerStudyAttribute } from 'shared/lib/ClinicalAttributeUtils';
 
 import {
@@ -116,6 +122,8 @@ export class EmbeddingsPanel extends React.Component<
 > {
     // .ref, not deep: custom attributes' 'data' can reference back to their own parent, which a deep enhancer would loop on.
     @observable.ref private selectedColoringOption?: ColoringMenuOmnibarOption;
+    // undefined means no shape attribute selected.
+    @observable.ref private selectedShapeOption?: ShapeMenuOption;
     // undefined means "use the auto-computed range and colors".
     @observable.ref private gradientOverride: GradientOverride | undefined;
     // The ruler the gradient bar/handles/histogram are drawn against; undefined means the full data range.
@@ -585,6 +593,103 @@ export class EmbeddingsPanel extends React.Component<
         ]);
     }
 
+    // Shape-by attribute selection. One batched request for
+    // every categorical candidate's distinct-value count, mirroring
+    // StudyViewPageStore's unfilteredClinicalDataCount - so adding more
+    // candidate attributes doesn't add more requests.
+    readonly shapeByCandidateCounts = remoteData<ClinicalDataCountItem[]>({
+        await: () => [this.store.clinicalAttributes, this.store.customAttributes],
+        invoke: async () => {
+            const candidates = this.clinicalAttributes.filter(
+                attr => attr.datatype !== 'NUMBER'
+            );
+            if (candidates.length === 0) {
+                return [];
+            }
+            return this.store.internalClient.fetchClinicalDataCountsUsingPOST({
+                clinicalDataCountFilter: {
+                    attributes: candidates.map(attr => ({
+                        attributeId: attr.clinicalAttributeId,
+                        values: [],
+                    })),
+                    studyViewFilter: this.store.filters,
+                },
+            });
+        },
+        default: [],
+    });
+
+    // Categorical attributes with 2-3 distinct values across the cohort -
+    // the range we have shape icons for (see shapeIconAtlas.ts). Doesn't
+    // distinguish patient- vs sample-level attributes that happen to share
+    // a clinicalAttributeId; only a real concern if that overlap occurs.
+    //
+    // Mirrors ColoringMenuOmnibarOption's pattern: each option already
+    // carries its full ClinicalAttribute in .info, so when react-select
+    // hands a selection back, no reverse lookup into this list is needed.
+    @computed get shapeMenuOptions(): ShapeMenuOption[] {
+        if (!this.shapeByCandidateCounts.isComplete) {
+            return [];
+        }
+
+        const cardinalityByAttributeId = new Map(
+            this.shapeByCandidateCounts.result.map(item => [
+                item.attributeId,
+                item.counts.length,
+            ])
+        );
+        return this.clinicalAttributes
+            .filter(attr => {
+                const cardinality = cardinalityByAttributeId.get(
+                    attr.clinicalAttributeId
+                );
+                return (
+                    cardinality !== undefined &&
+                    cardinality >= 2 &&
+                    cardinality <= 3
+                );
+            })
+            .map(attr => ({
+                label: attr.displayName,
+                value: attr.clinicalAttributeId,
+                info: { clinicalAttribute: attr },
+            }));
+    }
+
+    // Shape-by legend key. Reuses the values already fetched
+    // for the cardinality scan above - no new network call - and reuses
+    // getShapeSlot so the key always matches what's actually drawn.
+    @computed get shapeLegendEntries(): { value: string; shape: string }[] {
+        if (!this.selectedShapeOption || !this.shapeByCandidateCounts.isComplete) {
+            return [];
+        }
+        const countItem = this.shapeByCandidateCounts.result.find(
+            item =>
+                item.attributeId ===
+                this.selectedShapeOption!.info.clinicalAttribute
+                    .clinicalAttributeId
+        );
+        if (!countItem) {
+            return [];
+        }
+        const distinctValues = countItem.counts
+            .map(c => c.value)
+            .sort();
+        const knownEntries = distinctValues
+            .map(value => ({
+                value,
+                shape: getShapeSlot(value, distinctValues),
+            }))
+            .filter(
+                (entry): entry is { value: string; shape: string } =>
+                    entry.shape !== undefined
+            );
+        // getShapeSlot falls back to 'circle' for any point with no value
+        // for this attribute - the legend key needs to explain that too,
+        // not just the two known categories.
+        return [...knownEntries, { value: 'No data', shape: 'circle' }];
+    }
+
     private getClinicalAttributeValueMap(
         clinicalAttributeId: string
     ): Map<string, string> {
@@ -999,6 +1104,14 @@ export class EmbeddingsPanel extends React.Component<
             : null;
     }
 
+    // Shape-by. shapeMenuOptions is already display-ready
+    // (label/value/info), so no separate "select options" transform is
+    // needed the way color-by's reactSelectEmbeddingOptions needed one.
+    @action.bound
+    onShapeSelectionChange(selectedOption: ShapeMenuOption | null) {
+        this.selectedShapeOption = selectedOption || undefined;
+    }
+
     readonly molecularDataForColoring = remoteData({
         await: () => {
             const toAwait: any[] = [];
@@ -1135,10 +1248,21 @@ export class EmbeddingsPanel extends React.Component<
             }
         }
 
+        // check clinical attribute cache is fully loaded to avoid rendering incomplete data
+        if (this.selectedShapeOption) {
+            const shapeDataCacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
+                this.selectedShapeOption.info.clinicalAttribute
+            );
+            if (!shapeDataCacheEntry?.isComplete) {
+                return [];
+            }
+        }
+
         return makeEmbeddingScatterPlotData(
             this.selectedEmbedding.data,
             this.store,
             this.selectedColoringOption,
+            this.selectedShapeOption?.info.clinicalAttribute,
             this.mutationTypeEnabled,
             this.copyNumberEnabled,
             this.structuralVariantEnabled,
@@ -2101,7 +2225,18 @@ export class EmbeddingsPanel extends React.Component<
         }
 
         const patientData = this.plotData;
+        // Read eagerly here (tracked, since this method runs inside
+        // render()) rather than inside the renderControls closure below -
+        // that closure is only invoked later by EmbeddingDeckGLVisualization,
+        // which isn't an @observer, so MobX would never see the dependency
+        // and this panel wouldn't re-render once the async scan resolves.
+        const shapeMenuOptions = this.shapeMenuOptions;
+        const selectedShapeOption = this.selectedShapeOption;
         const visualizationProps = {
+            shapeByEnabled: true,
+            shapeLegendEntries: this.shapeLegendEntries,
+            shapeAttributeDisplayName:
+                this.selectedShapeOption?.info.clinicalAttribute.displayName,
             data: patientData,
             title: `${this.selectedEmbedding.label} Embedding - ${this.selectedEmbedding.data.title}`,
             // No Y-axis label - it overlapped the panel controls.
@@ -2164,6 +2299,9 @@ export class EmbeddingsPanel extends React.Component<
                     mapOptions={this.reactSelectEmbeddingOptions}
                     selectedMapOption={this.selectedReactSelectOption}
                     onMapChange={this.onEmbeddingChange}
+                    shapeOptions={shapeMenuOptions}
+                    selectedShapeOption={selectedShapeOption}
+                    onShapeSelectionChange={this.onShapeSelectionChange}
                     showMapColorTooltipControls={this.shouldShowControls}
                     showMapInControlStack={
                         this.props.panelCount > 1 && !this.props.isMapLocked
