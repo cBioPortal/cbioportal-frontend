@@ -305,9 +305,10 @@ test.describe('mutation table: header filter dropdown', () => {
             page.locator('.multilineHeader .dropdown').first()
         ).toBeVisible();
 
+        // only the rows in view are rendered, so check the value count
         await expect(
-            page.locator('.multilineHeader .dropdown.open input[type=checkbox]')
-        ).toHaveCount(28);
+            page.locator('.multilineHeader .dropdown.open')
+        ).toContainText('All 28 values');
 
         await setInputText(
             page,
