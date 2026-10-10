@@ -2,7 +2,13 @@ import * as React from 'react';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 import classNames from 'classnames';
-import { action, computed, observable, makeObservable } from 'mobx';
+import {
+    action,
+    computed,
+    observable,
+    makeObservable,
+    runInAction,
+} from 'mobx';
 import { Checkbox } from 'react-bootstrap';
 import { List } from 'react-virtualized';
 import { TruncatedText } from 'cbioportal-frontend-commons';
@@ -41,6 +47,8 @@ export default class CategoricalFilterMenu extends React.Component<
     declare context: React.ContextType<typeof FilterMenuOpenContext>;
 
     @observable private filterString: string = '';
+    @observable private applyingFilterString = false;
+    private filterStringTimeout: number | undefined;
     // Values the user checked that together cover all values. That filter
     // doesn't restrict the table, so it isn't kept, but the values should
     // still show as checked.
@@ -89,9 +97,21 @@ export default class CategoricalFilterMenu extends React.Component<
     private onChangeFilterString(e: any) {
         const input = e.target.value;
         this.filterString = input;
-        window.setTimeout(() => {
+        // filtering the table can take a while with many mutations, so only
+        // apply the text once typing pauses, and show that it is pending
+        window.clearTimeout(this.filterStringTimeout);
+        this.applyingFilterString = true;
+        this.filterStringTimeout = window.setTimeout(() => {
             this.props.updateFilterString(input);
+            // after the table has re-rendered with the new filter
+            window.setTimeout(() =>
+                runInAction(() => (this.applyingFilterString = false))
+            );
         }, 400);
+    }
+
+    componentWillUnmount() {
+        window.clearTimeout(this.filterStringTimeout);
     }
 
     @computed get filterStringInputBox() {
@@ -190,7 +210,9 @@ export default class CategoricalFilterMenu extends React.Component<
         return (
             <div className={styles.selectionControls}>
                 <span className={styles.selectedCount}>
-                    {checkedCount > 0
+                    {this.applyingFilterString
+                        ? 'Filtering…'
+                        : checkedCount > 0
                         ? `${checkedCount} of ${this.props.allSelections.size} selected`
                         : `All ${this.props.allSelections.size} values`}
                 </span>
