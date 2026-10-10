@@ -114,7 +114,7 @@ export default class ResultsViewMutationTable extends MutationTable<
                         columnVisibilityControlsProps.showResetColumnsButton
                     }
                     clinicalAttributes={
-                        this.props.mutationsTabClinicalAttributes.result!
+                        this.props.mutationsTabClinicalAttributes.result || []
                     }
                     clinicalAttributeIdToAvailableFrequency={
                         this.props.clinicalAttributeIdToAvailableFrequency
@@ -135,8 +135,9 @@ export default class ResultsViewMutationTable extends MutationTable<
         super.generateColumns();
 
         // generate clinical attribute columns
-        let clinicalAttributes = this.props.mutationsTabClinicalAttributes
-            .result!;
+        // no clinical attribute columns if they failed to load
+        let clinicalAttributes =
+            this.props.mutationsTabClinicalAttributes.result || [];
         for (let i = 0; i < clinicalAttributes.length; i++) {
             const attributeId = clinicalAttributes[i].clinicalAttributeId;
             if (
