@@ -880,6 +880,7 @@ jobs:
             - cbioportal-frontend/packages/cbioportal-frontend-commons/node_modules
             - cbioportal-frontend/packages/cbioportal-ts-api-client/node_modules
             - cbioportal-frontend/packages/cbioportal-utils/node_modules
+            - cbioportal-frontend/packages/cbioportal-wsi-viewer/node_modules
             - cbioportal-frontend/packages/genome-nexus-ts-api-client/node_modules
             - cbioportal-frontend/packages/oncokb-frontend-commons/node_modules
             - cbioportal-frontend/packages/oncokb-ts-api-client/node_modules
@@ -917,6 +918,7 @@ jobs:
             - cbioportal-frontend/packages/cbioportal-frontend-commons/.turbo
             - cbioportal-frontend/packages/cbioportal-ts-api-client/.turbo
             - cbioportal-frontend/packages/cbioportal-utils/.turbo
+            - cbioportal-frontend/packages/cbioportal-wsi-viewer/.turbo
             - cbioportal-frontend/packages/genome-nexus-ts-api-client/.turbo
             - cbioportal-frontend/packages/oncokb-frontend-commons/.turbo
             - cbioportal-frontend/packages/oncokb-ts-api-client/.turbo

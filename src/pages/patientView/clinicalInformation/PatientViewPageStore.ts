@@ -1,4 +1,7 @@
 import _ from 'lodash';
+import { isWsiResourceId } from 'shared/lib/ResourcePolicy';
+import { fetchWsiPatientHierarchy } from 'cbioportal-wsi-viewer';
+import { wsiAuthScope } from 'shared/components/wsiViewer/wsiAppConfig';
 import {
     CBioPortalAPIInternal,
     ClinicalData,
@@ -1790,11 +1793,42 @@ export class PatientViewPageStore {
         []
     );
 
+    /**
+     * Whether the patient has pathology slides, from the WSI hierarchy that
+     * the backend builds from resource_data. False when slides aren't served
+     * or the hierarchy can't be read. The request goes through the viewer's
+     * hierarchy cache, so opening the Pathology Slides tab reuses it.
+     */
+    readonly hasPathologySlides = remoteData<boolean>({
+        invoke: async () => {
+            if (!getServerConfig().msk_wsi_tile_server_url) {
+                return false;
+            }
+            try {
+                const hierarchy = await fetchWsiPatientHierarchy(
+                    this.studyId,
+                    this.patientId,
+                    wsiAuthScope(this.appStore.userName)
+                );
+                return hierarchy.samples.length > 0;
+            } catch (e) {
+                return false;
+            }
+        },
+        default: false,
+    });
+
+    // Pathology slides are shown in the Pathology Slides tab, so their
+    // resources are left out of Files & Links and the resource tabs.
     readonly resourceDefinitions = remoteData({
         invoke: () =>
-            internalClient.getAllResourceDefinitionsInStudyUsingGET({
-                studyId: this.studyId,
-            }),
+            internalClient
+                .getAllResourceDefinitionsInStudyUsingGET({
+                    studyId: this.studyId,
+                })
+                .then(defs =>
+                    defs.filter(def => !isWsiResourceId(def.resourceId))
+                ),
         onResult: defs => {
             // open resources which have `openByDefault` set to true
             if (defs) {
@@ -2084,30 +2118,6 @@ export class PatientViewPageStore {
         },
         {}
     );
-
-    readonly getWholeSlideViewerIds = remoteData({
-        await: () => [this.clinicalDataGroupedBySample],
-        invoke: () => {
-            const clinicalData = this.clinicalDataGroupedBySample.result!;
-            const clinicalAttributeId = 'MSK_SLIDE_ID';
-            if (clinicalData) {
-                const ids = _.chain(clinicalData)
-                    .map(data => data.clinicalData)
-                    .flatten()
-                    .filter(attribute => {
-                        return (
-                            attribute.clinicalAttributeId ===
-                            clinicalAttributeId
-                        );
-                    })
-                    .map(attribute => attribute.value)
-                    .value();
-
-                return Promise.resolve(ids);
-            }
-            return Promise.resolve([]);
-        },
-    });
 
     readonly studyMetaData = remoteData({
         invoke: async () =>

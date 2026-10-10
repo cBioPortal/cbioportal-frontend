@@ -1,0 +1,1459 @@
+import * as React from 'react';
+import { observer } from 'mobx-react';
+import { observable, action, computed, makeObservable } from 'mobx';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import {
+    PathologySlideFilter,
+    PathologySlideMatchFilter,
+    Slide,
+    Sample,
+    PatientHierarchy,
+    TileMetadata,
+    WsiClinicalRow,
+    WsiStainFilter,
+} from './wsiViewerTypes';
+import {
+    getServableSlideAssociationsBySlideKeyReadOnly,
+    getOrderedServableSlidesForSampleReadOnly,
+    getServableSlideIdsForPathologyFilterReadOnly,
+    matchesMatchFilter,
+    matchesWsiStainFilter,
+    normalizeMatchLevel,
+    sampleHasServableSlide,
+} from './wsiSlideUtils';
+import { chooseInitialServableSlide } from './wsiInitialSlideUtils';
+import { MetaRow, WsiMetaSidebar } from './wsiMetaSidebar';
+import { buildPathRows, buildWsiRows } from './wsiMetaUtils';
+import { hashUrlState } from './wsiViewStateUtils';
+import { compareSamplesForNavigation } from './wsiNavUtils';
+import { WsiNavPanel } from './wsiNavPanel';
+import {
+    WsiInitialSlideLoadPerformance,
+    WsiViewerController,
+    WsiViewerControllerHost,
+} from './wsiViewerController';
+import { loadOpenSeadragon } from './wsiOpenSeadragonLoader';
+import { clearPatientHierarchyCache } from './wsiHierarchyFetchCache';
+import { clearWsiSlideAccess } from './wsiAuth';
+import { clearWsiThumbnailFetchCache } from './wsiThumbnailFetchCache';
+import {
+    WSI_FONT_FAMILY,
+    WSI_SIDEBAR_MAX_WIDTH,
+    WSI_SIDEBAR_MIN_WIDTH,
+    WSI_SIDEBAR_WIDTH,
+    WSI_THEME as C,
+} from './wsiTheme';
+import {
+    readWsiPanelFlag,
+    WsiCollapsedRail,
+    writeWsiPanelFlag,
+} from './wsiPanelChrome';
+
+const SIDEBAR_HANDLE_W = 8;
+const SLIDE_SELECTION_DEBOUNCE_MS = 120;
+
+/** Browser-stored hidden state of the slide list and the details sidebar. */
+export const WSI_NAV_COLLAPSED_KEY = 'wsi.viewer.navCollapsed';
+export const WSI_METADATA_COLLAPSED_KEY = 'wsi.viewer.metadataCollapsed';
+
+interface Props {
+    /** Tile-server base URL (never a patient-scoped or resource URL). */
+    tileServerUrl: string;
+    patientId: string;
+    height: number;
+    studyId: string;
+    initialStainFilter?: WsiStainFilter;
+    initialMatchFilter?: PathologySlideMatchFilter;
+    onStainFilterChange?: (filter: WsiStainFilter) => void;
+    onMatchFilterChange?: (filter: PathologySlideMatchFilter) => void;
+    onClearFilters?: () => void;
+    preferredSampleId?: string;
+    pathologyFilter?: PathologySlideFilter;
+    /** Authenticated subject scope used to isolate protected in-memory caches. */
+    authScope: string;
+    /**
+     * Slide named by a `slideKey` viewer link. A URL hash selection wins over
+     * it; an ID absent from the loaded hierarchy shows a notice and falls
+     * back to the default slide without any backend lookup.
+     */
+    requestedSlideKey?: string;
+    /**
+     * Clinical rows for the sidebar, in display order. Rows with a `sampleId`
+     * show only for that sample's slides; unset hides the section.
+     */
+    clinicalRows?: ReadonlyArray<WsiClinicalRow>;
+    /** Shows the "download view" control. */
+    showDownload?: boolean;
+    /** Indicator shown while the hierarchy loads. */
+    renderLoading?: () => React.ReactNode;
+    /**
+     * Hides the slide list. Unset, the viewer keeps the user's choice in
+     * browser storage.
+     */
+    navCollapsed?: boolean;
+    onNavCollapsedChange?: (collapsed: boolean) => void;
+    /**
+     * Hides the image details sidebar. Unset, the viewer keeps the user's
+     * choice in browser storage.
+     */
+    metadataCollapsed?: boolean;
+    onMetadataCollapsedChange?: (collapsed: boolean) => void;
+    /**
+     * The host hides the viewer without unmounting it (e.g. an inactive
+     * tab). Background work such as token refresh pauses meanwhile.
+     */
+    hidden?: boolean;
+}
+
+function DefaultLoadingIndicator() {
+    return (
+        <i
+            role="status"
+            aria-label="Loading"
+            className="fa fa-spinner fa-spin fa-3x"
+            style={{ color: '#888' }}
+        />
+    );
+}
+
+/** What the coordinate bar reads from the viewer. */
+interface CoordBarViewerState {
+    coordInputX: string;
+    coordInputY: string;
+    cursorPos: { x: number; y: number } | null;
+    readonly selectedMpp?: { x: number; y: number };
+}
+
+function getInitialMatchFilter(
+    pathologyFilter?: PathologySlideFilter
+): PathologySlideMatchFilter {
+    const matchLevel = normalizeMatchLevel(pathologyFilter?.matchLevel);
+    return matchLevel
+        ? (matchLevel.toLowerCase() as PathologySlideMatchFilter)
+        : 'all';
+}
+
+function getPathologyPreferredSlideKeys(
+    hierarchy: PatientHierarchy | null | undefined,
+    pathologyFilter?: PathologySlideFilter
+): Set<string> | undefined {
+    if (!hierarchy || !pathologyFilter) {
+        return undefined;
+    }
+
+    return getServableSlideIdsForPathologyFilterReadOnly(
+        hierarchy,
+        pathologyFilter
+    );
+}
+
+@observer
+export default class WSIViewer extends React.Component<Props, {}> {
+    @observable private hierarchy: PatientHierarchy | null = null;
+    @observable private selectedSlide: Slide | null = null;
+    @observable private selectedSample: Sample | null = null;
+    @observable private selectedMeta: TileMetadata | null = null;
+    @observable private loading = true;
+    @observable private error: string | null = null;
+    @observable private viewerReady = false;
+    /** True once OSD has loaded the first tile; used to release deferred
+     *  sidebar content after the initial viewer work settles. */
+    @observable private tilesReady = false;
+    /** Separate flag that controls spinner visibility; set true on slide select,
+     *  set false after viewerReady AND at least MIN_SPINNER_MS have elapsed.
+     *  Decoupled from viewerReady so viewport setup isn't delayed. */
+    @observable private spinnerVisible = false;
+    @observable private thumbnailPreviewUrl: string | null = null;
+    @observable private stainFilter: WsiStainFilter = 'all';
+    @observable private matchFilter: PathologySlideMatchFilter = 'all';
+    @observable private linkoutScopeActive = false;
+    @observable private sidebarWidth = WSI_SIDEBAR_WIDTH;
+    @observable private storedNavCollapsed = readWsiPanelFlag(
+        WSI_NAV_COLLAPSED_KEY
+    );
+    @observable private storedMetadataCollapsed = readWsiPanelFlag(
+        WSI_METADATA_COLLAPSED_KEY
+    );
+    /** Coordinate bar — input field values */
+    @observable coordInputX = '';
+    @observable coordInputY = '';
+    /** Current cursor position in image pixels (null when viewer not ready or cursor outside) */
+    @observable cursorPos: { x: number; y: number } | null = null;
+
+    private viewerContainerRef = React.createRef<HTMLDivElement>();
+    /** Stable per-instance ID prefix for OSD custom nav button elements */
+    private resizeStartX = 0;
+    private resizeStartWidth = 0;
+    private isResizingSidebar = false;
+    private controller: WsiViewerController;
+    @observable private requestedSlideNoticeDismissed = false;
+    private slideSelectionTimer: ReturnType<typeof setTimeout> | null = null;
+
+    private get navId() {
+        return this.controller.navId;
+    }
+
+    // ---- stable callbacks (prevent prop-equality churn on child components) ----
+    private cancelPendingSlideSelection() {
+        if (this.slideSelectionTimer !== null) {
+            clearTimeout(this.slideSelectionTimer);
+            this.slideSelectionTimer = null;
+        }
+    }
+
+    private readonly releaseLinkoutScope = action(() => {
+        if (!this.linkoutScopeActive) {
+            return false;
+        }
+        this.linkoutScopeActive = false;
+        return true;
+    });
+
+    private readonly handleFilterChange = action((f: WsiStainFilter) => {
+        const releasedScope = this.releaseLinkoutScope();
+        if (this.stainFilter === f && !releasedScope) {
+            return;
+        }
+        this.cancelPendingSlideSelection();
+        this.stainFilter = f;
+        this.props.onStainFilterChange?.(f);
+        void this.reselectSlideForCurrentFilters();
+    });
+    private readonly handleMatchFilterChange = action(
+        (f: PathologySlideMatchFilter) => {
+            const releasedScope = this.releaseLinkoutScope();
+            if (this.matchFilter === f && !releasedScope) {
+                return;
+            }
+            this.cancelPendingSlideSelection();
+            this.matchFilter = f;
+            this.props.onMatchFilterChange?.(f);
+            void this.reselectSlideForCurrentFilters();
+        }
+    );
+    private readonly handleClearFilters = action(() => {
+        this.cancelPendingSlideSelection();
+        this.linkoutScopeActive = false;
+        this.stainFilter = 'all';
+        this.matchFilter = 'all';
+        this.props.onClearFilters?.();
+        void this.reselectSlideForCurrentFilters();
+    });
+    private readonly handleSelectSlide = (slide: Slide, sample: Sample) => {
+        this.controller.cancelSlideSelection();
+        if (this.slideSelectionTimer !== null) {
+            clearTimeout(this.slideSelectionTimer);
+        }
+        this.slideSelectionTimer = setTimeout(() => {
+            this.slideSelectionTimer = null;
+            void this.controller.selectSlide(slide, sample);
+        }, SLIDE_SELECTION_DEBOUNCE_MS);
+    };
+    private readonly handleHashChange = () => {
+        void this.selectSlideFromHash();
+    };
+    private unsubscribeUrlState: (() => void) | null = null;
+    private readonly handleRetryViewer = () => {
+        void this.controller.retrySelectedSlide();
+    };
+    private readonly handleChangeX = action((v: string) => {
+        this.coordInputX = v;
+    });
+    private readonly handleChangeY = action((v: string) => {
+        this.coordInputY = v;
+    });
+    private readonly handleCopyLink = () => this.copyViewLink();
+    private readonly handleDownload = () => this.downloadView();
+    private readonly handleGoToCoordinates = () => {
+        this.goToCoordinates();
+    };
+    private readonly handleSidebarResizeMove = (event: MouseEvent) => {
+        if (!this.isResizingSidebar) return;
+        const nextWidth =
+            this.resizeStartWidth + (this.resizeStartX - event.clientX);
+        this.setSidebarWidth(nextWidth);
+    };
+    private readonly handleSidebarResizeEnd = () => {
+        if (!this.isResizingSidebar) return;
+        this.isResizingSidebar = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        window.removeEventListener('mousemove', this.handleSidebarResizeMove);
+        window.removeEventListener('mouseup', this.handleSidebarResizeEnd);
+    };
+
+    constructor(props: Props) {
+        super(props);
+        makeObservable(this);
+        if (props.initialStainFilter) {
+            this.stainFilter = props.initialStainFilter;
+        }
+        this.matchFilter =
+            props.initialMatchFilter ||
+            getInitialMatchFilter(props.pathologyFilter);
+        this.linkoutScopeActive = !!props.pathologyFilter;
+        this.controller = new WsiViewerController(
+            this.createControllerHost(),
+            loadOpenSeadragon
+        );
+    }
+
+    @computed private get navCollapsed(): boolean {
+        return this.props.navCollapsed ?? this.storedNavCollapsed;
+    }
+
+    @computed private get metadataCollapsed(): boolean {
+        return this.props.metadataCollapsed ?? this.storedMetadataCollapsed;
+    }
+
+    @action.bound
+    private setNavCollapsed(collapsed: boolean) {
+        if (this.props.navCollapsed === undefined) {
+            this.storedNavCollapsed = collapsed;
+            writeWsiPanelFlag(WSI_NAV_COLLAPSED_KEY, collapsed);
+        }
+        this.props.onNavCollapsedChange?.(collapsed);
+        this.resizeAfterLayout();
+    }
+
+    @action.bound
+    private setMetadataCollapsed(collapsed: boolean) {
+        if (this.props.metadataCollapsed === undefined) {
+            this.storedMetadataCollapsed = collapsed;
+            writeWsiPanelFlag(WSI_METADATA_COLLAPSED_KEY, collapsed);
+        }
+        this.props.onMetadataCollapsedChange?.(collapsed);
+        this.resizeAfterLayout();
+    }
+
+    private readonly hideNav = () => this.setNavCollapsed(true);
+    private readonly showNav = () => this.setNavCollapsed(false);
+    private readonly hideMetadata = () => this.setMetadataCollapsed(true);
+    private readonly showMetadata = () => this.setMetadataCollapsed(false);
+
+    /** Lets OpenSeadragon pick up the viewer's new size after a panel toggles. */
+    private resizeAfterLayout() {
+        if (typeof window.requestAnimationFrame === 'function') {
+            window.requestAnimationFrame(() => this.controller.forceResize());
+        } else {
+            this.controller.forceResize();
+        }
+    }
+
+    @action.bound
+    private setSidebarWidth(width: number) {
+        const clamped = Math.max(
+            WSI_SIDEBAR_MIN_WIDTH,
+            Math.min(WSI_SIDEBAR_MAX_WIDTH, width)
+        );
+        this.sidebarWidth = clamped;
+        this.controller.forceResize();
+    }
+
+    private beginSidebarResize = (event: React.MouseEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        this.isResizingSidebar = true;
+        this.resizeStartX = event.clientX;
+        this.resizeStartWidth = this.sidebarWidth;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        window.addEventListener('mousemove', this.handleSidebarResizeMove);
+        window.addEventListener('mouseup', this.handleSidebarResizeEnd);
+    };
+
+    private createControllerHost(): WsiViewerControllerHost {
+        return {
+            getProps: () => this.controllerProps,
+            resetHierarchyLoadState: () => this.resetHierarchyLoadState(),
+            setHierarchy: hierarchy => {
+                this.hierarchy = hierarchy;
+            },
+            setLoading: loading => {
+                this.loading = loading;
+            },
+            setError: error => {
+                this.error = error;
+            },
+            getHierarchy: () => this.hierarchy,
+            getServableSlides: () => this.servableSlides,
+            getStainFilter: () => this.stainFilter,
+            getTileServerBase: () => this.tileServerBase,
+            getViewerContainerElement: () => this.viewerContainerRef.current,
+            chooseInitialServableSlide: allSlides =>
+                this.chooseInitialServableSlide(allSlides),
+            beginSlideSelection: (slide, sample) =>
+                this.beginSlideSelection(slide, sample),
+            setSelectedMeta: meta => {
+                this.selectedMeta = meta;
+            },
+            setViewerReady: viewerReady => {
+                this.viewerReady = viewerReady;
+            },
+            setSpinnerVisible: spinnerVisible => {
+                this.spinnerVisible = spinnerVisible;
+            },
+            setTilesReady: tilesReady => {
+                this.tilesReady = tilesReady;
+            },
+            setThumbnailPreview: action(objectUrl => {
+                this.thumbnailPreviewUrl = objectUrl;
+            }),
+            getSelectedSlide: () => this.selectedSlide,
+            getSelectedSample: () => this.selectedSample,
+            getSelectedMeta: () => this.selectedMeta,
+            clearSelectedSlide: () => {
+                this.selectedSlide = null;
+                this.selectedSample = null;
+                this.selectedMeta = null;
+                this.viewerReady = false;
+                this.spinnerVisible = false;
+                this.tilesReady = false;
+                this.thumbnailPreviewUrl = null;
+            },
+            getPatientId: () => this.hierarchy?.patient_id,
+            setCoordInputs: (x, y) => this.setCoordInputs(x, y),
+            getCoordInputs: () => ({
+                x: this.coordInputX,
+                y: this.coordInputY,
+            }),
+            updateCursorPos: (x, y) => this.handleCursorMove(x, y),
+            clearCursorPos: () => this.clearCursorPos(),
+            reportInitialSlideLoadPerformance: metric =>
+                this.reportInitialSlideLoadPerformance(metric),
+        };
+    }
+
+    /** Announces how the first slide loaded, for browser-side monitoring. */
+    private reportInitialSlideLoadPerformance(
+        metric: WsiInitialSlideLoadPerformance
+    ) {
+        window.dispatchEvent(
+            new CustomEvent('wsi-initial-slide-performance', {
+                detail: metric,
+            })
+        );
+    }
+
+    goToCoordinates() {
+        this.controller.goToCoordinates();
+    }
+
+    downloadView() {
+        this.controller.downloadView();
+    }
+
+    async copyViewLink() {
+        return this.controller.copyViewLink();
+    }
+
+    componentDidMount() {
+        this.unsubscribeUrlState = hashUrlState.subscribe(
+            this.handleHashChange
+        );
+        if (typeof document !== 'undefined') {
+            document.addEventListener(
+                'visibilitychange',
+                this.updateControllerVisibility
+            );
+        }
+        this.updateControllerVisibility();
+        void this.controller.loadHierarchy();
+    }
+
+    private readonly updateControllerVisibility = () => {
+        const pageHidden =
+            typeof document !== 'undefined' &&
+            document.visibilityState === 'hidden';
+        this.controller.setVisible(!this.props.hidden && !pageHidden);
+    };
+
+    private async selectSlideFromHash(): Promise<void> {
+        const hashState = hashUrlState.read();
+        if (!hashState || !this.hierarchy) return;
+
+        const preferredSlideKeys = this.preferredSlideKeys;
+        const matching = this.servableSlides.find(
+            entry =>
+                entry.slide.slide_key === hashState.slideId &&
+                (!preferredSlideKeys ||
+                    preferredSlideKeys.has(entry.slide.slide_key))
+        );
+        if (!matching) return;
+
+        if (this.selectedSlide?.slide_key === matching.slide.slide_key) {
+            this.controller.restoreCurrentViewportFromHash();
+            return;
+        }
+
+        await this.controller.selectSlide(
+            matching.slide,
+            matching.sample,
+            true
+        );
+    }
+
+    componentDidUpdate(prev: Props) {
+        const authScopeChanged = prev.authScope !== this.props.authScope;
+        const preferredSampleChanged =
+            prev.preferredSampleId !== this.props.preferredSampleId;
+        const requestedSlideKeyChanged =
+            prev.requestedSlideKey !== this.props.requestedSlideKey;
+        const pathologyFilterChanged =
+            !!prev.pathologyFilter !== !!this.props.pathologyFilter ||
+            prev.pathologyFilter?.sampleId !==
+                this.props.pathologyFilter?.sampleId ||
+            prev.pathologyFilter?.matchLevel !==
+                this.props.pathologyFilter?.matchLevel ||
+            prev.pathologyFilter?.specimenKey !==
+                this.props.pathologyFilter?.specimenKey;
+        const initialMatchFilterChanged =
+            prev.initialMatchFilter !== this.props.initialMatchFilter;
+        const requiresHierarchyReload =
+            authScopeChanged ||
+            prev.studyId !== this.props.studyId ||
+            prev.tileServerUrl !== this.props.tileServerUrl ||
+            prev.patientId !== this.props.patientId ||
+            (pathologyFilterChanged && !this.canReusePathologyFilterLocally());
+        const stainFilterChanged =
+            prev.initialStainFilter !== this.props.initialStainFilter;
+
+        if (prev.hidden !== this.props.hidden) {
+            this.updateControllerVisibility();
+        }
+
+        if (requestedSlideKeyChanged) {
+            this.requestedSlideNoticeDismissed = false;
+        }
+
+        if (authScopeChanged) {
+            clearPatientHierarchyCache();
+            clearWsiSlideAccess();
+            clearWsiThumbnailFetchCache();
+        }
+
+        if (pathologyFilterChanged) {
+            this.linkoutScopeActive = !!this.props.pathologyFilter;
+            this.matchFilter =
+                this.props.initialMatchFilter ||
+                getInitialMatchFilter(this.props.pathologyFilter);
+            if (stainFilterChanged) {
+                this.stainFilter = this.props.initialStainFilter || 'all';
+            }
+        } else if (initialMatchFilterChanged) {
+            this.matchFilter =
+                this.props.initialMatchFilter || this.matchFilter;
+        } else if (stainFilterChanged) {
+            this.stainFilter = this.props.initialStainFilter || 'all';
+        }
+
+        if (requiresHierarchyReload) {
+            this.controller.dispose();
+            void this.controller.loadHierarchy(false);
+        } else if (pathologyFilterChanged) {
+            this.applyPathologyFilterFromSourceHierarchy();
+        } else if (initialMatchFilterChanged || stainFilterChanged) {
+            void this.reselectSlideForCurrentFilters();
+        } else if (preferredSampleChanged || requestedSlideKeyChanged) {
+            void this.reselectPreferredSampleSlide();
+        }
+    }
+
+    componentWillUnmount() {
+        this.unsubscribeUrlState?.();
+        this.unsubscribeUrlState = null;
+        if (typeof document !== 'undefined') {
+            document.removeEventListener(
+                'visibilitychange',
+                this.updateControllerVisibility
+            );
+        }
+        this.cancelPendingSlideSelection();
+        action(() => {
+            this.hierarchy = null; // stops the prefetchSlideMetadata loop
+        })();
+        this.controller.dispose();
+        this.handleSidebarResizeEnd();
+    }
+
+    // ---- data loading ----
+
+    @action.bound
+    private resetHierarchyLoadState() {
+        this.loading = true;
+        this.error = null;
+        this.hierarchy = null;
+        this.selectedSlide = null;
+        this.selectedSample = null;
+        this.selectedMeta = null;
+        this.viewerReady = false;
+        this.tilesReady = false;
+        this.spinnerVisible = false;
+        this.thumbnailPreviewUrl = null;
+        this.cursorPos = null;
+        this.coordInputX = '';
+        this.coordInputY = '';
+    }
+
+    private get controllerProps() {
+        return {
+            studyId: this.props.studyId,
+            patientId: this.props.patientId,
+            pathologyFilter: this.activePathologyFilter,
+            authScope: this.props.authScope,
+        };
+    }
+
+    private get activePathologyFilter(): PathologySlideFilter | undefined {
+        return this.linkoutScopeActive ? this.props.pathologyFilter : undefined;
+    }
+
+    /** Slides the active linkout scope allows; undefined when unscoped. */
+    @computed private get preferredSlideKeys(): Set<string> | undefined {
+        return getPathologyPreferredSlideKeys(
+            this.hierarchy,
+            this.activePathologyFilter
+        );
+    }
+
+    /**
+     * The sample a sample-only link scopes the slide list to. A specimen or
+     * match-level link can name a source sample that is not a portal sample
+     * and fall back to unmatched slides, so only a scope with nothing but a
+     * sample hides the other samples outright.
+     */
+    private get scopedSampleId(): string | undefined {
+        const filter = this.activePathologyFilter;
+        return filter?.sampleId && !filter.matchLevel && !filter.specimenKey
+            ? filter.sampleId
+            : undefined;
+    }
+
+    private canReusePathologyFilterLocally(): boolean {
+        return !!this.hierarchy?.slide_associations?.length;
+    }
+
+    @action.bound
+    private applyPathologyFilterFromSourceHierarchy() {
+        const hierarchy = this.hierarchy;
+        if (!hierarchy) {
+            return;
+        }
+
+        const preferredSlideKeys = this.preferredSlideKeys;
+        if (preferredSlideKeys) {
+            const currentSlideKey = this.selectedSlide?.slide_key;
+            const currentSampleId = this.selectedSample?.sample_id;
+            const currentSample = hierarchy.samples.find(
+                sample => sample.sample_id === currentSampleId
+            );
+            const firstMatchingSlide = currentSample
+                ? getOrderedServableSlidesForSampleReadOnly(currentSample).find(
+                      ({ slide }) =>
+                          preferredSlideKeys.has(slide.slide_key) &&
+                          matchesWsiStainFilter(slide, this.stainFilter)
+                  )?.slide
+                : undefined;
+            if (
+                currentSlideKey &&
+                firstMatchingSlide?.slide_key === currentSlideKey
+            ) {
+                this.selectedSlide = firstMatchingSlide;
+                this.selectedSample = currentSample!;
+                return;
+            }
+            void this.reselectSlideForPathologyFilter(preferredSlideKeys);
+            return;
+        }
+
+        const currentSlideKey = this.selectedSlide?.slide_key;
+        const currentSampleId = this.selectedSample?.sample_id;
+        if (!currentSlideKey || !currentSampleId) {
+            void this.reselectSlideForCurrentFilters();
+            return;
+        }
+
+        const matchingSample = hierarchy.samples.find(
+            sample =>
+                sample.sample_id === currentSampleId &&
+                sampleHasServableSlide(sample, currentSlideKey)
+        );
+        const matchingSlide = matchingSample
+            ? getOrderedServableSlidesForSampleReadOnly(matchingSample).find(
+                  ({ slide }) => slide.slide_key === currentSlideKey
+              )?.slide
+            : undefined;
+
+        if (matchingSample && matchingSlide) {
+            this.selectedSlide = matchingSlide;
+            this.selectedSample = matchingSample;
+            return;
+        }
+
+        void this.reselectSlideForCurrentFilters();
+    }
+
+    private async reselectSlideForPathologyFilter(
+        preferredSlideKeys: Set<string>
+    ): Promise<void> {
+        const servableSlides = this.servableSlides;
+        if (!this.hierarchy || !servableSlides.length) {
+            return;
+        }
+
+        const next = chooseInitialServableSlide(servableSlides, {
+            preferredSampleId: this.props.preferredSampleId,
+            stainFilter: this.stainFilter,
+            matchesEntry: entry =>
+                preferredSlideKeys.has(entry.slide.slide_key),
+        });
+
+        if (!next) {
+            this.controller.clearSelectedSlide();
+            return;
+        }
+
+        if (
+            this.selectedSlide?.slide_key === next.slide.slide_key &&
+            this.selectedSample?.sample_id === next.sample.sample_id
+        ) {
+            return;
+        }
+
+        await this.controller.selectSlide(next.slide, next.sample);
+    }
+
+    private chooseInitialServableSlide(
+        allSlides: Array<{ slide: Slide; sample: Sample }>
+    ) {
+        const hashState = hashUrlState.read();
+        const preferredSlideKeys = this.preferredSlideKeys;
+
+        return chooseInitialServableSlide(allSlides, {
+            preferredSampleId: this.props.preferredSampleId,
+            preferredSlideId: hashState?.slideId,
+            requestedSlideKey: this.props.requestedSlideKey,
+            stainFilter: this.stainFilter,
+            matchesEntry: entry =>
+                !preferredSlideKeys ||
+                preferredSlideKeys.has(entry.slide.slide_key),
+        });
+    }
+
+    @action.bound
+    private handleCursorMove(x: number, y: number) {
+        this.cursorPos = { x, y };
+    }
+
+    @action.bound
+    private beginSlideSelection(slide: Slide, sample: Sample) {
+        this.selectedSlide = slide;
+        this.selectedSample = sample;
+        this.selectedMeta = null;
+        this.viewerReady = false;
+        this.tilesReady = false;
+        this.spinnerVisible = true;
+        this.error = null;
+    }
+
+    @action.bound
+    private clearCursorPos() {
+        this.cursorPos = null;
+    }
+
+    private async reselectPreferredSampleSlide(): Promise<void> {
+        if (!this.hierarchy || !this.servableSlides.length) {
+            return;
+        }
+
+        const next = this.chooseInitialServableSlide(this.servableSlides);
+        if (!next) {
+            return;
+        }
+
+        if (
+            this.selectedSlide?.slide_key === next.slide.slide_key &&
+            this.selectedSample?.sample_id === next.sample.sample_id
+        ) {
+            return;
+        }
+
+        await this.controller.selectSlide(next.slide, next.sample);
+    }
+
+    private async reselectSlideForCurrentFilters(): Promise<void> {
+        const servableSlides = this.servableSlides;
+        if (!this.hierarchy || !servableSlides.length) {
+            return;
+        }
+
+        const preferredSlideKeys = this.preferredSlideKeys;
+        const associationsBySlideKey = getServableSlideAssociationsBySlideKeyReadOnly(
+            this.hierarchy.slide_associations
+        );
+        const matchingSlides = servableSlides.filter(({ slide }) => {
+            if (
+                preferredSlideKeys &&
+                !preferredSlideKeys.has(slide.slide_key)
+            ) {
+                return false;
+            }
+            if (!matchesWsiStainFilter(slide, this.stainFilter)) {
+                return false;
+            }
+            return matchesMatchFilter(
+                associationsBySlideKey.get(slide.slide_key),
+                this.matchFilter
+            );
+        });
+        if (!matchingSlides.length) {
+            this.controller.clearSelectedSlide();
+            return;
+        }
+
+        const next = matchingSlides[0];
+        await this.controller.selectSlide(next.slide, next.sample);
+    }
+
+    @action.bound
+    private setCoordInputs(x: string, y: string) {
+        this.coordInputX = x;
+        this.coordInputY = y;
+    }
+
+    @computed get servableSlides(): Array<{ slide: Slide; sample: Sample }> {
+        if (!this.hierarchy) return [];
+        return [...this.hierarchy.samples]
+            .sort(compareSamplesForNavigation)
+            .flatMap(sample =>
+                getOrderedServableSlidesForSampleReadOnly(
+                    sample
+                ).map(({ slide }) => ({ slide, sample }))
+            );
+    }
+
+    /** True when a `slideKey` link names a slide this patient cannot serve. */
+    @computed get requestedSlideUnavailable(): boolean {
+        const requestedSlideKey = this.props.requestedSlideKey;
+        return (
+            !!requestedSlideKey &&
+            !!this.hierarchy &&
+            !this.servableSlides.some(
+                entry => entry.slide.slide_key === requestedSlideKey
+            )
+        );
+    }
+
+    @action.bound
+    private dismissRequestedSlideNotice() {
+        this.requestedSlideNoticeDismissed = true;
+    }
+
+    /** Patient rows plus the selected sample's rows. */
+    @computed get selectedClinicalRows(): WsiClinicalRow[] | undefined {
+        const rows = this.props.clinicalRows;
+        if (!rows) return undefined;
+        const sampleId = this.selectedSample?.sample_id;
+        return rows.filter(row => !row.sampleId || row.sampleId === sampleId);
+    }
+
+    @computed get tileServerBase(): string {
+        return this.props.tileServerUrl.replace(/\/$/, '');
+    }
+
+    get selectedMpp(): { x: number; y: number } | undefined {
+        return this.selectedMeta?.mpp;
+    }
+
+    @computed
+    private get selectedWsiRows(): MetaRow[] {
+        return this.selectedMeta
+            ? buildWsiRows(this.selectedSlide, this.selectedMeta)
+            : [];
+    }
+
+    @computed
+    private get selectedPathRows(): MetaRow[] {
+        if (!this.selectedSlide || !this.selectedSample) {
+            return [];
+        }
+        return buildPathRows(
+            this.selectedSlide,
+            this.selectedSample,
+            this.props.patientId,
+            this.props.studyId,
+            this.hierarchy
+                ? getServableSlideAssociationsBySlideKeyReadOnly(
+                      this.hierarchy.slide_associations
+                  ).get(this.selectedSlide.slide_key)
+                : undefined
+        );
+    }
+
+    // ---- render ----
+
+    render() {
+        const { height } = this.props;
+        const {
+            loading,
+            error,
+            hierarchy,
+            selectedSlide,
+            selectedSample,
+            thumbnailPreviewUrl,
+            stainFilter,
+            matchFilter,
+        } = this;
+        const showClearFilters =
+            !!this.activePathologyFilter ||
+            !!this.props.preferredSampleId ||
+            this.props.initialStainFilter === 'hne' ||
+            this.props.initialStainFilter === 'ihc' ||
+            stainFilter !== 'all' ||
+            matchFilter !== 'all';
+
+        if (loading) {
+            return (
+                <div
+                    style={{
+                        height,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    {this.props.renderLoading ? (
+                        this.props.renderLoading()
+                    ) : (
+                        <DefaultLoadingIndicator />
+                    )}
+                </div>
+            );
+        }
+
+        if (!hierarchy) {
+            return (
+                <div
+                    style={{
+                        height,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#c00',
+                    }}
+                >
+                    {error || 'No data'}
+                </div>
+            );
+        }
+
+        return (
+            <div
+                style={{
+                    display: 'flex',
+                    height,
+                    overflow: 'hidden',
+                    fontFamily: WSI_FONT_FAMILY,
+                    fontSize: 13,
+                    color: C.text,
+                }}
+            >
+                {/* Left nav panel */}
+                {this.navCollapsed ? (
+                    <WsiCollapsedRail
+                        side="left"
+                        title="Slides"
+                        showLabel="Show slide list"
+                        onExpand={this.showNav}
+                        background={C.navBg}
+                        testId="wsi-nav-rail"
+                    />
+                ) : (
+                    <WsiNavPanel
+                        hierarchy={hierarchy}
+                        selectedSlide={selectedSlide}
+                        sampleIdFilter={this.scopedSampleId}
+                        slideIdFilter={this.preferredSlideKeys}
+                        linkoutScopeActive={this.linkoutScopeActive}
+                        stainFilter={stainFilter}
+                        matchFilter={matchFilter}
+                        showClearFilters={showClearFilters}
+                        deferOffscreenSamples={!this.tilesReady}
+                        onFilterChange={this.handleFilterChange}
+                        onMatchFilterChange={this.handleMatchFilterChange}
+                        onClearFilters={this.handleClearFilters}
+                        onSelectSlide={this.handleSelectSlide}
+                        tileServerBase={this.tileServerBase}
+                        studyId={this.props.studyId}
+                        authScope={this.props.authScope}
+                        onHide={this.hideNav}
+                    />
+                )}
+
+                {/* OSD viewer */}
+                <div
+                    style={{
+                        flex: 1,
+                        position: 'relative',
+                        background: '#e8e8e8',
+                    }}
+                >
+                    {selectedSlide && thumbnailPreviewUrl && (
+                        <img
+                            data-testid="wsi-thumbnail-preview"
+                            src={thumbnailPreviewUrl}
+                            alt=""
+                            aria-hidden="true"
+                            style={{
+                                position: 'absolute',
+                                inset: 0,
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'contain',
+                                pointerEvents: 'none',
+                                zIndex: 0,
+                            }}
+                        />
+                    )}
+                    <div
+                        ref={this.viewerContainerRef}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            position: 'relative',
+                            zIndex: 1,
+                            background: 'transparent',
+                        }}
+                    />
+                    {/* Custom Bootstrap-styled OSD nav buttons — always in DOM so OSD can adopt them.
+                        OSD wires zoom-in/zoom-out/home handlers onto these elements via the
+                        zoomInButton/zoomOutButton/homeButton options in mountOSD. */}
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: 8,
+                            left: 8,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 2,
+                            zIndex: 100,
+                        }}
+                    >
+                        <button
+                            id={`${this.navId}-zoom-in`}
+                            className="btn btn-default btn-sm"
+                            title="Zoom in"
+                            style={{
+                                width: 28,
+                                padding: '3px 0',
+                                lineHeight: 1,
+                            }}
+                        >
+                            <i className="fa fa-plus" />
+                        </button>
+                        <button
+                            id={`${this.navId}-zoom-out`}
+                            className="btn btn-default btn-sm"
+                            title="Zoom out"
+                            style={{
+                                width: 28,
+                                padding: '3px 0',
+                                lineHeight: 1,
+                            }}
+                        >
+                            <i className="fa fa-minus" />
+                        </button>
+                        <button
+                            id={`${this.navId}-home`}
+                            className="btn btn-default btn-sm"
+                            title="Fit to view"
+                            style={{
+                                width: 28,
+                                padding: '3px 0',
+                                lineHeight: 1,
+                            }}
+                        >
+                            <i className="fa fa-home" />
+                        </button>
+                    </div>
+                    {this.requestedSlideUnavailable &&
+                        !this.requestedSlideNoticeDismissed && (
+                            <div
+                                role="status"
+                                data-testid="wsi-requested-slide-unavailable"
+                                style={{
+                                    position: 'absolute',
+                                    top: 8,
+                                    left: '50%',
+                                    transform: 'translateX(-50%)',
+                                    zIndex: 120,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 8,
+                                    padding: '6px 10px',
+                                    borderRadius: 3,
+                                    color: C.text,
+                                    background: '#fcf8e3',
+                                    border: '1px solid #faebcc',
+                                    boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                                    fontSize: 12,
+                                }}
+                            >
+                                <span>
+                                    The requested slide is not available.
+                                    Showing the default slide instead.
+                                </span>
+                                <button
+                                    type="button"
+                                    className="close"
+                                    aria-label="Dismiss"
+                                    onClick={this.dismissRequestedSlideNotice}
+                                    style={{ float: 'none', fontSize: 16 }}
+                                >
+                                    &times;
+                                </button>
+                            </div>
+                        )}
+                    {this.spinnerVisible && selectedSlide && (
+                        <div
+                            data-testid="wsi-loading-spinner"
+                            style={{
+                                ...overlayStyle,
+                                background: thumbnailPreviewUrl
+                                    ? 'rgba(232,232,232,0.18)'
+                                    : 'rgba(232,232,232,0.75)',
+                            }}
+                        >
+                            {thumbnailPreviewUrl ? (
+                                <div
+                                    role="status"
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 8,
+                                        padding: '7px 10px',
+                                        borderRadius: 3,
+                                        color: C.text,
+                                        background: 'rgba(255,255,255,0.9)',
+                                        boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+                                        fontSize: 12,
+                                    }}
+                                >
+                                    <i
+                                        className="fa fa-spinner fa-spin"
+                                        style={{ color: '#666' }}
+                                    />
+                                    <span>Loading full-resolution image…</span>
+                                </div>
+                            ) : (
+                                <i
+                                    className="fa fa-spinner fa-spin fa-3x"
+                                    style={{ color: '#888' }}
+                                />
+                            )}
+                        </div>
+                    )}
+                    {error && selectedSlide && (
+                        <div
+                            data-testid="wsi-viewer-error"
+                            style={{
+                                ...overlayStyle,
+                                background: 'rgba(232,232,232,0.92)',
+                                zIndex: 110,
+                                pointerEvents: 'auto',
+                                flexDirection: 'column',
+                                gap: 12,
+                                padding: 24,
+                                textAlign: 'center',
+                            }}
+                        >
+                            <span style={{ color: C.text }}>{error}</span>
+                            <button
+                                className="btn btn-primary btn-sm"
+                                onClick={this.handleRetryViewer}
+                            >
+                                Retry
+                            </button>
+                        </div>
+                    )}
+                    {!selectedSlide && (
+                        <div style={overlayStyle}>
+                            <span style={{ color: C.muted, fontSize: 13 }}>
+                                No viewable slides for this patient
+                            </span>
+                        </div>
+                    )}
+                    {this.tilesReady && (
+                        <ObservedCoordBar
+                            viewer={this}
+                            onChangeX={this.handleChangeX}
+                            onChangeY={this.handleChangeY}
+                            onGo={this.handleGoToCoordinates}
+                            onCopyLink={this.handleCopyLink}
+                            onDownload={this.handleDownload}
+                            showDownload={!!this.props.showDownload}
+                        />
+                    )}
+                </div>
+
+                {this.metadataCollapsed ? (
+                    <WsiCollapsedRail
+                        side="right"
+                        title="Details"
+                        showLabel="Show image details"
+                        onExpand={this.showMetadata}
+                        background={C.sidebarBg}
+                        testId="wsi-metadata-rail"
+                    />
+                ) : (
+                    <>
+                        <div
+                            role="separator"
+                            aria-orientation="vertical"
+                            aria-label="Resize metadata sidebar"
+                            data-testid="wsi-metadata-resize-handle"
+                            onMouseDown={this.beginSidebarResize}
+                            style={{
+                                width: SIDEBAR_HANDLE_W,
+                                cursor: 'col-resize',
+                                flexShrink: 0,
+                                background: '#f0f0f0',
+                                borderRight: `1px solid ${C.border}`,
+                                position: 'relative',
+                            }}
+                        >
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    width: 2,
+                                    height: 36,
+                                    borderRadius: 2,
+                                    background: '#c3c3c3',
+                                    boxShadow:
+                                        '4px 0 0 #c3c3c3, -4px 0 0 #c3c3c3',
+                                }}
+                            />
+                        </div>
+
+                        {/* Right metadata sidebar */}
+                        <WsiMetaSidebar
+                            width={this.sidebarWidth}
+                            showImageProperties={!!this.selectedMeta}
+                            wsiRows={this.selectedWsiRows}
+                            showPathology={!!(selectedSlide && selectedSample)}
+                            pathRows={this.selectedPathRows}
+                            clinicalRows={this.selectedClinicalRows}
+                            onHide={this.hideMetadata}
+                        />
+                    </>
+                )}
+            </div>
+        );
+    }
+}
+
+// ---- helpers ----
+
+const overlayStyle: React.CSSProperties = {
+    position: 'absolute',
+    inset: 0,
+    zIndex: 10,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    pointerEvents: 'none',
+};
+
+// ---- CoordBar ----
+
+interface CoordBarProps {
+    inputX: string;
+    inputY: string;
+    cursorPos: { x: number; y: number } | null;
+    mpp?: { x: number; y: number };
+    onChangeX: (v: string) => void;
+    onChangeY: (v: string) => void;
+    onGo: () => void;
+    onCopyLink: () => void;
+    onDownload: () => void;
+    showDownload: boolean;
+}
+
+const ObservedCoordBar = observer(function ObservedCoordBar({
+    viewer,
+    onChangeX,
+    onChangeY,
+    onGo,
+    onCopyLink,
+    onDownload,
+    showDownload,
+}: {
+    viewer: CoordBarViewerState;
+    onChangeX: (v: string) => void;
+    onChangeY: (v: string) => void;
+    onGo: () => void;
+    onCopyLink: () => void;
+    onDownload: () => void;
+    showDownload: boolean;
+}) {
+    return (
+        <CoordBar
+            inputX={viewer.coordInputX}
+            inputY={viewer.coordInputY}
+            cursorPos={viewer.cursorPos}
+            mpp={viewer.selectedMpp}
+            onChangeX={onChangeX}
+            onChangeY={onChangeY}
+            onGo={onGo}
+            onCopyLink={onCopyLink}
+            onDownload={onDownload}
+            showDownload={showDownload}
+        />
+    );
+});
+
+function CoordBar({
+    inputX,
+    inputY,
+    cursorPos,
+    mpp,
+    onChangeX,
+    onChangeY,
+    onGo,
+    onCopyLink,
+    onDownload,
+    showDownload,
+}: CoordBarProps) {
+    const handleKey = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') onGo();
+    };
+    const [copied, setCopied] = React.useState(false);
+
+    const handleCopy = () => {
+        onCopyLink();
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    let cursorLabel = '';
+    if (cursorPos) {
+        cursorLabel = `${cursorPos.x.toLocaleString()} × ${cursorPos.y.toLocaleString()} px`;
+        if (mpp) {
+            const umX = (cursorPos.x * mpp.x).toFixed(1);
+            const umY = (cursorPos.y * mpp.y).toFixed(1);
+            cursorLabel += `  (${umX} × ${umY} μm)`;
+        }
+    }
+
+    return (
+        <div
+            style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '4px 10px',
+                background: 'rgba(250,250,250,0.92)',
+                borderTop: `1px solid ${C.border}`,
+                fontSize: 11,
+                color: C.muted,
+                backdropFilter: 'blur(2px)',
+                zIndex: 10,
+            }}
+        >
+            <span style={{ fontWeight: 600, color: C.text, marginRight: 2 }}>
+                Go to:
+            </span>
+            <div
+                className="input-group input-group-sm"
+                style={{
+                    width: 'auto',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                }}
+            >
+                <span style={{ color: C.muted }}>X</span>
+                <input
+                    type="number"
+                    value={inputX}
+                    placeholder="px"
+                    className="form-control input-sm"
+                    style={{ width: 88 }}
+                    onChange={e => onChangeX(e.target.value)}
+                    onKeyDown={handleKey}
+                />
+                <span style={{ color: C.muted }}>Y</span>
+                <input
+                    type="number"
+                    value={inputY}
+                    placeholder="px"
+                    className="form-control input-sm"
+                    style={{ width: 88 }}
+                    onChange={e => onChangeY(e.target.value)}
+                    onKeyDown={handleKey}
+                />
+            </div>
+            <button className="btn btn-primary btn-sm" onClick={onGo}>
+                Go
+            </button>
+            <DefaultTooltip
+                trigger={['hover']}
+                placement="top"
+                overlay={
+                    <span>
+                        Copy a link to this exact view (slide, position, zoom)
+                    </span>
+                }
+            >
+                <button
+                    className={`btn btn-default btn-sm`}
+                    data-testid="wsi-share-button"
+                    onClick={handleCopy}
+                >
+                    {copied ? (
+                        <i className="fa fa-check" />
+                    ) : (
+                        <i className="fa fa-clipboard" />
+                    )}
+                </button>
+            </DefaultTooltip>
+            {showDownload && (
+                <DefaultTooltip
+                    trigger={['hover']}
+                    placement="top"
+                    overlay={<span>Download current viewport as JPEG</span>}
+                >
+                    <button
+                        className="btn btn-default btn-sm"
+                        data-testid="wsi-download-button"
+                        onClick={onDownload}
+                    >
+                        <i className="fa fa-cloud-download" />
+                    </button>
+                </DefaultTooltip>
+            )}
+            {cursorPos && (
+                <span
+                    style={{
+                        marginLeft: 'auto',
+                        color: C.muted,
+                        fontFamily: 'monospace',
+                        fontSize: 11,
+                    }}
+                >
+                    <i
+                        className="fa fa-crosshairs"
+                        style={{ marginRight: 3 }}
+                    />
+                    {cursorLabel}
+                </span>
+            )}
+        </div>
+    );
+}
