@@ -101,11 +101,14 @@ export default class CategoricalFilterMenu extends React.Component<
 
     // Nothing checked means no filter, checking values restricts the table to
     // them. The filter itself keeps the included values, where all values
-    // means no filter.
+    // means no filter. It can also include values that the filters of the
+    // other columns hide from this menu, so only the listed values count.
     private get isRestricting() {
+        const listedIncluded = Array.from(this.props.allSelections).filter(s =>
+            this.props.currSelections.has(s)
+        ).length;
         return (
-            this.props.currSelections.size > 0 &&
-            this.props.currSelections.size < this.props.allSelections.size
+            listedIncluded > 0 && listedIncluded < this.props.allSelections.size
         );
     }
 
