@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { mount } from 'enzyme';
+import { act } from 'react-dom/test-utils';
 import { assert } from 'chai';
 import CategoricalFilterMenu from './CategoricalFilterMenu';
 
@@ -126,5 +127,70 @@ describe('CategoricalFilterMenu', () => {
         assert.isFalse(checkbox('Missense').prop('checked'));
         assert.isFalse(checkbox('Nonsense').prop('checked'));
         assert.include(menu.text(), 'All 2 values');
+    });
+
+    it('allows checking several values when the filter includes values the menu does not list', () => {
+        // a filter on another column hides most cancer types from the menu,
+        // but the filter, created from all values, still includes them
+        const hidden = Array.from({ length: 20 }, (_, i) => `Hidden ${i}`);
+        const toggled: Set<string>[] = [];
+        const menu = mount(
+            <CategoricalFilterMenu
+                id="Cancer Type Detailed"
+                currSelections={new Set(['CLONAL', ...hidden])}
+                allSelections={new Set(all)}
+                updateFilterCondition={() => {}}
+                updateFilterString={() => {}}
+                toggleSelections={s => toggled.push(new Set(s))}
+            />
+        );
+        const checkbox = (value: string) =>
+            menu.find(
+                `[data-test="categorical-filter-menu-option-${value}"] input`
+            );
+        assert.isTrue(checkbox('CLONAL').prop('checked'));
+        assert.isFalse(checkbox('SUBCLONAL').prop('checked'));
+        assert.include(menu.text(), '1 of 3 selected');
+
+        // checking a second value adds it to the filter
+        checkbox('SUBCLONAL').simulate('change');
+        assert.sameMembers(Array.from(toggled[0]), ['SUBCLONAL']);
+    });
+
+    it('applies the filter text once typing pauses, showing that it is pending', () => {
+        jest.useFakeTimers();
+        try {
+            const applied: string[] = [];
+            const menu = mount(
+                <CategoricalFilterMenu
+                    id="Cancer Type Detailed"
+                    currSelections={new Set(all)}
+                    allSelections={new Set(all)}
+                    updateFilterCondition={() => {}}
+                    updateFilterString={s => applied.push(s)}
+                    toggleSelections={() => {}}
+                />
+            );
+            const input = () =>
+                menu.find('[data-test="categorical-filter-menu-search-input"]');
+            ['C', 'CL', 'CLO'].forEach(value =>
+                input().simulate('change', { target: { value } })
+            );
+            menu.update();
+            assert.include(menu.text(), 'Filtering…');
+            assert.deepEqual(applied, []);
+
+            act(() => {
+                jest.advanceTimersByTime(400);
+            });
+            assert.deepEqual(applied, ['CLO']);
+            act(() => {
+                jest.runAllTimers();
+            });
+            menu.update();
+            assert.notInclude(menu.text(), 'Filtering…');
+        } finally {
+            jest.useRealTimers();
+        }
     });
 });
