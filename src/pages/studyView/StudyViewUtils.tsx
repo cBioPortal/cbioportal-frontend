@@ -98,10 +98,7 @@ import { IStudyViewScatterPlotData } from './charts/scatterPlot/StudyViewScatter
 import { CNA_TO_ALTERATION } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { Datalabel } from 'shared/lib/DataUtils';
-import {
-    CNAProfilesEnum,
-    StructuralVariantProfilesEnum,
-} from 'shared/components/query/QueryStoreUtils';
+import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { ChartOption } from './addChartButton/AddChartButton';
 import { observer } from 'mobx-react';
 import {
@@ -3663,27 +3660,18 @@ export async function getGenericAssayDataAsClinicalData(
     });
 }
 
-export function getStructuralVariantSamplesCount(molecularProfileSampleCountSet: {
-    [id: string]: number;
-}) {
-    return (
-        molecularProfileSampleCountSet[StructuralVariantProfilesEnum.fusion] ||
-        molecularProfileSampleCountSet[
-            StructuralVariantProfilesEnum.structural_variants
-        ] ||
-        0
-    );
-}
-
-export function getCNASamplesCount(molecularProfileSampleCountSet: {
-    [id: string]: number;
-}) {
-    return (
-        molecularProfileSampleCountSet[CNAProfilesEnum.cna] ||
-        molecularProfileSampleCountSet[CNAProfilesEnum.gistic] ||
-        molecularProfileSampleCountSet[CNAProfilesEnum.cna_rae] ||
-        molecularProfileSampleCountSet[CNAProfilesEnum.cna_consensus] ||
-        0
+// Profile sample counts are keyed by profile id suffix (e.g. "cna", "gistic"),
+// already summed across studies, and queried studies may use different suffixes
+// for the same kind of data, so add up each distinct suffix once.
+export function getProfiledSamplesCount(
+    profiles: MolecularProfile[],
+    molecularProfileSampleCountSet: {
+        [suffix: string]: number;
+    }
+) {
+    return _.sumBy(
+        _.uniq(profiles.map(getSuffixOfMolecularProfile)),
+        suffix => molecularProfileSampleCountSet[suffix] || 0
     );
 }
 
