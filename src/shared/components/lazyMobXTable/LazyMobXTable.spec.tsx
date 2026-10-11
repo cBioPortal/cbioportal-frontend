@@ -2315,6 +2315,92 @@ describe('LazyMobXTable', () => {
                 'Name\tNumber\tString\tInitially invisible column\r\n'
             );
         });
+        it('passes through raw text from a lazy download fetcher', async () => {
+            const table = mount(
+                <Table
+                    columns={columns}
+                    data={[]}
+                    downloadDataFetcher={() =>
+                        Promise.resolve('clinical-data-tsv')
+                    }
+                />
+            );
+
+            assert.equal(
+                (
+                    await (table.instance() as LazyMobXTable<
+                        any
+                    >).getDownloadDataPromise()
+                ).text,
+                'clinical-data-tsv'
+            );
+        });
+        it('passes through a Blob from a lazy download fetcher', async () => {
+            const blob = new Blob(['clinical-data-tsv'], {
+                type: 'text/tab-separated-values',
+            });
+            const table = mount(
+                <Table
+                    columns={columns}
+                    data={[]}
+                    downloadDataFetcher={() => Promise.resolve(blob)}
+                />
+            );
+
+            const result = await (table.instance() as LazyMobXTable<
+                any
+            >).getDownloadDataPromise();
+            assert.equal(result.blob, blob);
+            assert.equal(result.text, '');
+        });
+        it('propagates errors from a lazy download fetcher', async () => {
+            let rejectDownload: (error: Error) => void = () => undefined;
+            const pendingDownload = new Promise((_, reject) => {
+                rejectDownload = reject;
+            });
+            const table = mount(
+                <Table
+                    columns={columns}
+                    data={[]}
+                    downloadDataFetcher={() => pendingDownload}
+                />
+            );
+
+            const download = (table.instance() as LazyMobXTable<
+                any
+            >).getDownloadDataPromise();
+            rejectDownload(new Error('download failed'));
+            let error: Error | undefined;
+            try {
+                await download;
+            } catch (caughtError) {
+                error = caughtError as Error;
+            }
+            expect(error?.message).toBe('download failed');
+        });
+        it('propagates a lazy download cancellation callback', async () => {
+            let resolveDownload: (data: string) => void = () => undefined;
+            const pendingDownload: any = new Promise(resolve => {
+                resolveDownload = resolve;
+            });
+            const cancel = sinon.spy();
+            pendingDownload.cancel = cancel;
+            const table = mount(
+                <Table
+                    columns={columns}
+                    data={[]}
+                    downloadDataFetcher={() => pendingDownload}
+                />
+            );
+
+            const download = (table.instance() as LazyMobXTable<
+                any
+            >).getDownloadDataPromise() as any;
+            download.cancel?.();
+            assert.equal(cancel.callCount, 1);
+            resolveDownload('clinical-data-tsv');
+            await download;
+        });
         it("gives one row of data when theres one row. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell.", async () => {
             let table = mount(<Table columns={columns} data={[datum0]} />);
             assert.deepEqual(
