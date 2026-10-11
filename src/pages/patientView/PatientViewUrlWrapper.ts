@@ -20,6 +20,7 @@ export type PatientViewUrlQuery = {
         clusterHeatmap?: string;
         transposeHeatmap?: string;
         showMutationLabelsInHeatmap?: string;
+        showUncalledMutationsInHeatmap?: string;
 
         showOnlySelectedMutationsInChart?: string;
         logScaleChart?: string;
@@ -51,6 +52,7 @@ export default class PatientViewUrlWrapper extends URLWrapper<
                     clusterHeatmap: '',
                     transposeHeatmap: '',
                     showMutationLabelsInHeatmap: '',
+                    showUncalledMutationsInHeatmap: '',
 
                     showOnlySelectedMutationsInChart: '',
                     logScaleChart: '',

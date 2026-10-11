@@ -988,6 +988,56 @@ describe('Oncoprint DeltaUtils', () => {
             assert.isFalse((oncoprint.shareRuleSet as SinonStub).called);
             assert.equal(trackIdForRuleSetSharing.heatmap, 1);
         });
+
+        it('rebuilds mutation heatmap rules when conditional overlays change', () => {
+            const overlays: IHeatmapTrackSpec['conditionalOverlays'] = [
+                { condition: datum => datum.uncalled, shapes: [] },
+            ];
+            const previousTrack: IHeatmapTrackSpec = {
+                ...nextSpec,
+                key: 'MOLECULARTRACK_1',
+                molecularAlterationType: 'MUTATION_EXTENDED',
+            };
+            const highlightedTrack = {
+                ...previousTrack,
+                conditionalOverlays: overlays,
+            };
+            const trackIdForRuleSetSharing = { mutation: undefined };
+            const setRuleSet = oncoprint.setRuleSet as SinonStub;
+            setRuleSet.resetHistory();
+
+            transitionHeatmapTrack(
+                highlightedTrack,
+                previousTrack,
+                trackspec2trackId,
+                () => undefined,
+                oncoprint,
+                nextProps,
+                prevProps,
+                trackIdForRuleSetSharing
+            );
+            assert.equal(setRuleSet.firstCall.args[0], 1);
+            assert.strictEqual(
+                setRuleSet.firstCall.args[1].conditional_overlays,
+                overlays
+            );
+
+            trackIdForRuleSetSharing.mutation = undefined;
+            transitionHeatmapTrack(
+                previousTrack,
+                highlightedTrack,
+                trackspec2trackId,
+                () => undefined,
+                oncoprint,
+                nextProps,
+                prevProps,
+                trackIdForRuleSetSharing
+            );
+            assert.equal(setRuleSet.callCount, 2);
+            assert.isUndefined(
+                setRuleSet.secondCall.args[1].conditional_overlays
+            );
+        });
     });
 
     describe('transitionHeatmapTrack() for generic assay response profile', () => {

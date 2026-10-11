@@ -5,6 +5,7 @@ import {
     percentAltered,
     extractGenericAssaySelections,
     getGenericAssayTrackRuleSetParams,
+    getHeatmapTrackRuleSetParams,
     legendColorDarkBlue,
     legendColorLightBlue,
     legendColorLightRed,
@@ -16,11 +17,26 @@ import { assert } from 'chai';
 import { splitHeatmapTextField } from 'shared/components/oncoprint/OncoprintUtils';
 import { ISelectOption } from 'shared/components/oncoprint/controls/OncoprintControls';
 import { IHeatmapTrackSpec, IBaseHeatmapTrackDatum } from './Oncoprint';
-import { IGradientAndCategoricalRuleSetParams } from 'oncoprintjs';
+import {
+    IGradientAndCategoricalRuleSetParams,
+    IGradientRuleSetParams,
+} from 'oncoprintjs';
 import { isMutationProfile } from 'shared/lib/StoreUtils';
 import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
 
 describe('OncoprintUtils', () => {
+    it('passes conditional overlays to the VAF gradient rule set', () => {
+        const conditionalOverlays: IGradientRuleSetParams['conditional_overlays'] = [
+            { condition: datum => datum.uncalled, shapes: [] },
+        ];
+        const ruleSet = getHeatmapTrackRuleSetParams({
+            molecularAlterationType: 'MUTATION_EXTENDED',
+            conditionalOverlays,
+        } as IHeatmapTrackSpec) as IGradientRuleSetParams;
+
+        assert.strictEqual(ruleSet.conditional_overlays, conditionalOverlays);
+    });
+
     describe('alterationInfoForCaseAggregatedDataByOQLLine', () => {
         it('counts two sequenced samples if the gene was sequenced in two out of three samples', () => {
             // given

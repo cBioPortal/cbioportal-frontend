@@ -66,6 +66,22 @@ const INIT_PARAMS: InitParams = {
     cell_padding_off_cell_width_threshold: 10,
 };
 
+const UNCALLED_MUTATION_OVERLAYS: IMutationOncoprintTrackSpec['conditionalOverlays'] = [
+    {
+        condition: (datum: IMutationOncoprintTrackDatum) =>
+            datum.mutation.mutationStatus.toLowerCase() === 'uncalled',
+        shapes: [
+            {
+                type: 'rectangle',
+                fill: [0, 0, 0, 0],
+                stroke: [255, 255, 255, 1],
+                'stroke-width': 2,
+                z: 1001,
+            },
+        ],
+    },
+];
+
 @observer
 export default class MutationOncoprint extends React.Component<
     IMutationOncoprintProps,
@@ -82,6 +98,18 @@ export default class MutationOncoprint extends React.Component<
     private set showMutationLabels(o: boolean) {
         this.props.urlWrapper.updateURL(currentParams => {
             currentParams.genomicEvolutionSettings.showMutationLabelsInHeatmap = o.toString();
+            return currentParams;
+        });
+    }
+
+    private get showUncalledMutations() {
+        const urlValue = this.props.urlWrapper.query.genomicEvolutionSettings
+            .showUncalledMutationsInHeatmap;
+        return !urlValue || urlValue === 'true';
+    }
+    private set showUncalledMutations(show: boolean) {
+        this.props.urlWrapper.updateURL(currentParams => {
+            currentParams.genomicEvolutionSettings.showUncalledMutationsInHeatmap = show.toString();
             return currentParams;
         });
     }
@@ -554,6 +582,25 @@ export default class MutationOncoprint extends React.Component<
         }
     }
 
+    @computed get hasUncalledMutations() {
+        return (this.heatmapTracks.result || []).some(track =>
+            track.data.some(
+                datum =>
+                    datum.mutation.mutationStatus.toLowerCase() === 'uncalled'
+            )
+        );
+    }
+
+    @computed get displayedHeatmapTracks() {
+        const overlays = this.showUncalledMutations
+            ? UNCALLED_MUTATION_OVERLAYS
+            : undefined;
+        return this.heatmapTracks.result!.map(track => ({
+            ...track,
+            conditionalOverlays: overlays,
+        }));
+    }
+
     // View elements
 
     @computed get zoomControls() {
@@ -652,6 +699,23 @@ export default class MutationOncoprint extends React.Component<
                             Show mutation labels
                         </span>
                     </LabeledCheckbox>
+                    {this.hasUncalledMutations && (
+                        <LabeledCheckbox
+                            checked={this.showUncalledMutations}
+                            onChange={() => {
+                                this.showUncalledMutations = !this
+                                    .showUncalledMutations;
+                            }}
+                            labelProps={{ style: { marginRight: 10 } }}
+                            inputProps={{
+                                'data-test': 'HeatmapUncalledMutations',
+                            }}
+                        >
+                            <span style={{ marginTop: -3 }}>
+                                Highlight uncalled mutations
+                            </span>
+                        </LabeledCheckbox>
+                    )}
                     {this.zoomControls}
                 </div>
                 <DownloadControls
@@ -718,7 +782,7 @@ export default class MutationOncoprint extends React.Component<
                             geneticTracks={[]}
                             genesetHeatmapTracks={[]}
                             categoricalTracks={[]}
-                            heatmapTracks={this.heatmapTracks.result!}
+                            heatmapTracks={this.displayedHeatmapTracks}
                             heatmapTracksOrder={this.heatmapTracksOrder.result}
                             divId="MutationHeatmap"
                             width={WindowStore.size.width - 100}

@@ -276,6 +276,7 @@ export function getHeatmapTrackRuleSetParams(
         null_legend_label,
         na_legend_label,
         na_shapes: trackSpec.customNaShapes,
+        conditional_overlays: trackSpec.conditionalOverlays,
         legend_base_color: isWhiteBackgroundForGlyphsEnabled
             ? hexToRGBA(ASCN_WHITE)
             : undefined,
