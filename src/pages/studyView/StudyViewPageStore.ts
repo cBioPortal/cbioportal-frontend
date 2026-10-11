@@ -140,7 +140,7 @@ import {
     getChartSettingsMap,
     getClinicalDataCountWithColorByClinicalDataCount,
     getCNAByAlteration,
-    getCNASamplesCount,
+    getProfiledSamplesCount,
     getDataIntervalFilterValues,
     getDefaultPriorityByUniqueKey,
     getFilteredAndCompressedDataIntervalFilters,
@@ -169,7 +169,6 @@ import {
     getPriorityByClinicalAttribute,
     getRequestedAwaitPromisesForClinicalData,
     getSamplesByExcludingFiltersOnChart,
-    getStructuralVariantSamplesCount,
     getUniqueKey,
     getUniqueKeyFromGeneFilterMolecularProfileIds,
     getUniqueKeyFromMolecularProfileIds,
@@ -11980,13 +11979,15 @@ export class StudyViewPageStore
                 }
                 case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
                 case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE: {
-                    count = getStructuralVariantSamplesCount(
+                    count = getProfiledSamplesCount(
+                        this.structuralVariantProfiles.result,
                         this.molecularProfileSampleCountSet.result
                     );
                     break;
                 }
                 case ChartTypeEnum.CNA_GENES_TABLE: {
-                    count = getCNASamplesCount(
+                    count = getProfiledSamplesCount(
+                        this.cnaProfiles.result,
                         this.molecularProfileSampleCountSet.result
                     );
                     break;

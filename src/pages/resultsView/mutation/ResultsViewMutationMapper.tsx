@@ -11,7 +11,6 @@ import {
 import { observer } from 'mobx-react';
 import { action, computed, observable, makeObservable } from 'mobx';
 
-import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import { Mutation, SampleIdentifier } from 'cbioportal-ts-api-client';
 import autobind from 'autobind-decorator';
 import comparisonClient from 'shared/api/comparisonGroupClientInstance';
@@ -194,19 +193,20 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         }
     }
 
+    // Wait until all of them have finished: a group status is 'error' as soon
+    // as one fails (e.g. a Genome Nexus request), while others may still be
+    // pending, and the table needs their results to render.
     protected get isMutationTableDataLoading() {
-        return (
-            getRemoteDataGroupStatus(
-                this.props.store.clinicalDataForSamples,
-                this.props.store.studiesForSamplesWithoutCancerTypeClinicalData,
-                this.props.store.canonicalTranscript,
-                this.props.store.mutationData,
-                this.props.store.indexedVariantAnnotations,
-                this.props.store.activeTranscript,
-                this.props.store.clinicalDataGroupedBySampleMap,
-                this.props.store.mutationsTabClinicalAttributes
-            ) === 'pending'
-        );
+        return [
+            this.props.store.clinicalDataForSamples,
+            this.props.store.studiesForSamplesWithoutCancerTypeClinicalData,
+            this.props.store.canonicalTranscript,
+            this.props.store.mutationData,
+            this.props.store.indexedVariantAnnotations,
+            this.props.store.activeTranscript,
+            this.props.store.clinicalDataGroupedBySampleMap,
+            this.props.store.mutationsTabClinicalAttributes,
+        ].some(data => data.isPending);
     }
 
     protected get totalExonNumber() {
