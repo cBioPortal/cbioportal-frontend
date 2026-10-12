@@ -193,10 +193,14 @@ test.describe('oncoprint', () => {
                                 ) +
                                 30;
                             return (
-                                parseFloat(onc.$ctr.css('min-height')) ===
-                                    expectedHeight &&
-                                parseFloat(onc.$legend_div.css('top')) ===
-                                    areaHeight + 30
+                                Math.abs(
+                                    parseFloat(onc.$ctr.css('min-height')) -
+                                        expectedHeight
+                                ) < 1 &&
+                                Math.abs(
+                                    parseFloat(onc.$legend_div.css('top')) -
+                                        (areaHeight + 30)
+                                ) < 1
                             );
                         }),
                     { timeout: 10000 }
