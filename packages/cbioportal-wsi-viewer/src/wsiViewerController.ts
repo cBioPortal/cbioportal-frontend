@@ -293,6 +293,8 @@ export class WsiViewerController {
     }
 
     private writeHashState() {
+        // A viewport measured in a container with no size is not a view to share or restore.
+        if (!hasLaidOutContainer(this.mountedViewer)) return;
         this.writeHashTimer = scheduleHashStateWrite({
             timer: this.writeHashTimer,
             selectedSlideId: this.host.getSelectedSlide()?.slide_key,
@@ -304,15 +306,17 @@ export class WsiViewerController {
     /**
      * Binds a handler to the viewer for the current slide; it is removed when
      * the slide is unmounted, so the reused viewer does not collect handlers.
+     * Returns the bound handler, for removing it earlier.
      */
     private addSlideHandler(
         eventName: string,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         handler: (event: any) => void,
         once = false
-    ): void {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ): ((event: any) => void) | undefined {
         const viewer = this.osdViewer;
-        if (!viewer) return;
+        if (!viewer) return undefined;
         const tileEvent = eventName.startsWith('tile-');
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const registered = (event: any) => {
@@ -322,8 +326,11 @@ export class WsiViewerController {
             if (once) this.removeSlideHandler(eventName, registered);
             handler(event);
         };
-        if (viewer.addHandler(eventName, registered) === false) return;
+        if (viewer.addHandler(eventName, registered) === false) {
+            return undefined;
+        }
         this.osdSlideHandlers.push({ eventName, handler: registered });
+        return registered;
     }
 
     private removeSlideHandler(
@@ -1011,17 +1018,32 @@ export class WsiViewerController {
         this.clearTimer('selectionTimeoutTimer');
         this.host.setViewerReady(true);
         const hashState = restoreHashViewport ? hashUrlState.read() : null;
-        try {
-            restoreOrHomeViewport({
-                osdViewer: this.osdViewer,
-                hashState,
-                selectedSlideId: slide.slide_key,
-                openSeadragon: this.openSeadragon,
-                meta: this.host.getSelectedMeta(),
+        const applyInitialView = () => {
+            try {
+                restoreOrHomeViewport({
+                    osdViewer: this.osdViewer,
+                    hashState,
+                    selectedSlideId: slide.slide_key,
+                    openSeadragon: this.openSeadragon,
+                    meta: this.host.getSelectedMeta(),
+                });
+                this.writeHashState();
+            } catch (_) {
+                // viewport not ready
+            }
+        };
+        if (hasLaidOutContainer(this.osdViewer)) {
+            applyInitialView();
+        } else {
+            // Opened while hidden (e.g. in a tab laid out off-screen with no
+            // width): a view fitted now would be wrong once the container gets
+            // its size, so fit it then.
+            const onResize = this.addSlideHandler('resize', event => {
+                if (seq !== this.mountSeq) return;
+                if (!isLaidOutSize(event?.newContainerSize)) return;
+                if (onResize) this.removeSlideHandler('resize', onResize);
+                applyInitialView();
             });
-            this.writeHashState();
-        } catch (_) {
-            // viewport not ready
         }
         this.addSlideHandler('animation-finish', () => {
             this.writeHashState();
@@ -1275,4 +1297,21 @@ export class WsiViewerController {
             }
         }
     }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isLaidOutSize(size: any): boolean {
+    return !!size && size.x > 1 && size.y > 1;
+}
+
+/**
+ * Whether the viewer's container had a size when OpenSeadragon last measured
+ * it. A hidden container measures 1×1 at most (OpenSeadragon's floor) or has
+ * no width when laid out off-screen. Viewers that cannot report a size count
+ * as laid out.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function hasLaidOutContainer(osdViewer: any): boolean {
+    const size = osdViewer?.viewport?.getContainerSize?.();
+    return size === undefined || isLaidOutSize(size);
 }
