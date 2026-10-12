@@ -288,6 +288,22 @@ export async function waitForIgvRendered(
     );
 }
 
+/**
+ * Wait until the patient view summary tab has rendered its mutation and
+ * copy number tables and no loading indicators remain.
+ */
+export async function waitForPatientView(page: Page, timeoutMs = 30000) {
+    await expect(byTestHandle(page, 'patientview-mutation-table')).toBeVisible({
+        timeout: timeoutMs,
+    });
+    await expect(
+        byTestHandle(page, 'patientview-copynumber-table')
+    ).toBeVisible({ timeout: timeoutMs });
+    await expect(byTestHandle(page, 'LoadingIndicator')).toHaveCount(0, {
+        timeout: timeoutMs,
+    });
+}
+
 /** Wait for the comparison-tab overlap chart to render. */
 export async function waitForGroupComparisonTabOpen(
     page: Page,

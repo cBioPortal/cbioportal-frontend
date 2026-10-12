@@ -333,6 +333,11 @@ export function runResultsTestSuite(
             await page.locator('a.tabAnchor_pathways').click();
             await expect(page.locator('#cy')).toBeVisible({ timeout: 10000 });
             await waitForNetworkQuiet(page, 30000);
+            // Alteration frequencies of the pathway's non-query genes are
+            // computed after their requests finish, behind this banner.
+            await expect(
+                page.getByText('Loading alteration data...')
+            ).toHaveCount(0, { timeout: 30000 });
             await snapshot(
                 page,
                 '[data-test="pathwayMapperTabDiv"]',

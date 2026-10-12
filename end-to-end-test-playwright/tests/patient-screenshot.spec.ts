@@ -1,5 +1,9 @@
-import { test } from '../fixtures';
-import { expectPageScreenshot, waitForNetworkQuiet } from './helpers/common';
+import { expect, test } from '../fixtures';
+import {
+    expectPageScreenshot,
+    waitForNetworkQuiet,
+    waitForPatientView,
+} from './helpers/common';
 
 /**
  * Port of end-to-end-test/remote/specs/core/patient.screenshot.spec.js.
@@ -27,13 +31,21 @@ test.describe('Patient cohort view screenshot tests', () => {
             .locator('.nextPageBtn')
             .first()
             .click();
-        await page.waitForTimeout(2000);
+        // The header's sample chip only renders once the new patient's
+        // samples have loaded, so the previous patient's tables can't
+        // satisfy the waits below.
+        await expect(
+            page.locator('a', { hasText: 'TCGA-A6-2672-01' }).first()
+        ).toBeVisible({ timeout: 30000 });
+        await waitForPatientView(page);
+        await waitForNetworkQuiet(page);
         await expectPageScreenshot(page, 'patient-cohort-nav-1.png', {
             pauseMs: 500,
         });
 
         // Reload so the same patient is reached by direct URL (not cohort nav).
         await page.reload();
+        await waitForPatientView(page);
         await waitForNetworkQuiet(page);
         await expectPageScreenshot(page, 'patient-cohort-nav-2.png', {
             pauseMs: 500,

@@ -5,6 +5,7 @@ import {
     percentAltered,
     extractGenericAssaySelections,
     getGenericAssayTrackRuleSetParams,
+    getCategoricalTrackCategoryToColor,
     legendColorDarkBlue,
     legendColorLightBlue,
     legendColorLightRed,
@@ -852,5 +853,39 @@ describe('commonPrefixLength', () => {
     it('handles one string being a prefix of another', () => {
         // Shared prefix = "foo_bar", no divergence within, so no strip.
         assert.equal(commonPrefixLength(['foo_bar', 'foo_bar_baz']), 0);
+    });
+});
+
+describe('getCategoricalTrackCategoryToColor', () => {
+    it('assigns the same colors regardless of category order', () => {
+        const categories = [
+            'not significant',
+            'Mixed',
+            'highly significant',
+            'significant',
+        ];
+        assert.deepEqual(
+            getCategoricalTrackCategoryToColor(categories),
+            getCategoricalTrackCategoryToColor(
+                [...categories, 'Mixed'].reverse()
+            )
+        );
+    });
+
+    it('keeps reserved colors and gives other categories distinct colors', () => {
+        const categoryToColor = getCategoricalTrackCategoryToColor([
+            'true',
+            'false',
+            'Mixed',
+            'other category',
+        ]);
+        assert.notDeepEqual(categoryToColor['true'], categoryToColor['false']);
+        const assigned = [
+            categoryToColor['Mixed'],
+            categoryToColor['other category'],
+            categoryToColor['true'],
+            categoryToColor['false'],
+        ].map(c => c.join(','));
+        assert.equal(new Set(assigned).size, 4);
     });
 });

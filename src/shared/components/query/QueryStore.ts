@@ -2034,7 +2034,10 @@ export class QueryStore {
         return (
             (!this.submitError &&
                 (this.genes.isComplete || this.genesets.isComplete) &&
-                this.asyncUrlParams.isComplete) ||
+                this.asyncUrlParams.isComplete &&
+                // the default case set can't be chosen until the selected
+                // studies' sample lists are known
+                !this.sampleListInSelectedStudies.isPending) ||
             !!this.oql.error ||
             !!this.genesetIdsQuery.error
         ); // to make "Please click 'Submit' to see location of error." possible
