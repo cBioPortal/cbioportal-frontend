@@ -71,7 +71,7 @@ The viewer talks to the cBioPortal backend and tile server only:
 | `GET {api}/api/wsi/v2/resources/{studyId}/{patientId}/access?slideKey=…` | Short-lived access for one slide: a signed token and the tile metadata (no source location) |
 | `{tileServerUrl}/tiles/zxy/{level}/{x}/{y}`, `{tileServerUrl}/thumbnails` | Tiles and thumbnails, authorized with the access token |
 
-On the backend, slides are `resource_data` rows of the `WSI_SAMPLE`/`WSI_PATIENT` resources (`TYPE=WHOLE_SLIDE_IMAGE`). Their private serving metadata stays on the server, and the viewer sees only the hierarchy and per-slide access responses.
+On the backend, slides are `resource_data` rows of the `WSI_SAMPLE`/`WSI_PATIENT` resources. Their private serving metadata stays on the server, and the viewer sees only the hierarchy and per-slide access responses.
 
 The viewer stores the selected slide and viewport in the URL hash (`#wsi:slide=…&x=…&y=…&z=…`) so a view can be shared.
 
