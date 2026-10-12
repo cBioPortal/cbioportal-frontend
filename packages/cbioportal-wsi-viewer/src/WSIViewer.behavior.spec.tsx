@@ -2631,13 +2631,23 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         resizeCb!({ newContainerSize: { x: 1, y: 658 } });
         expect(mockViewport.goHome).not.toHaveBeenCalled();
 
+        // OpenSeadragon raises 'resize' before it rescales the viewport for
+        // the new size, so the view is fitted on the next frame.
+        const frames: FrameRequestCallback[] = [];
+        (global as any).requestAnimationFrame = (cb: FrameRequestCallback) => {
+            frames.push(cb);
+            return frames.length;
+        };
         containerSize = { x: 462, y: 658 };
         resizeCb!({ newContainerSize: containerSize });
-        expect(mockViewport.goHome).toHaveBeenCalledTimes(1);
+        expect(mockViewport.goHome).not.toHaveBeenCalled();
         expect(mockViewer.removeHandler).toHaveBeenCalledWith(
             'resize',
             resizeCb
         );
+
+        frames.forEach(cb => cb(0));
+        expect(mockViewport.goHome).toHaveBeenCalledTimes(1);
     });
 
     it('calls goHome(true) on fresh load with no wsi hash', async () => {

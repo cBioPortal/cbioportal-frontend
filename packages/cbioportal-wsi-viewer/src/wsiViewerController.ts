@@ -1037,12 +1037,15 @@ export class WsiViewerController {
         } else {
             // Opened while hidden (e.g. in a tab laid out off-screen with no
             // width): a view fitted now would be wrong once the container gets
-            // its size, so fit it then.
+            // its size, so fit it then. OpenSeadragon raises 'resize' before it
+            // rescales the viewport for the new size, so fit on the next frame.
             const onResize = this.addSlideHandler('resize', event => {
                 if (seq !== this.mountSeq) return;
                 if (!isLaidOutSize(event?.newContainerSize)) return;
                 if (onResize) this.removeSlideHandler('resize', onResize);
-                applyInitialView();
+                requestAnimationFrame(() => {
+                    if (seq === this.mountSeq) applyInitialView();
+                });
             });
         }
         this.addSlideHandler('animation-finish', () => {
