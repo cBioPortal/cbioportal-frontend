@@ -69,11 +69,7 @@ export class DataAccessTokensDropdown extends React.Component<
             },
             {
                 id: 'datDownload',
-                action: (
-                    <Link to="/webAPI#using-data-access-tokens">
-                        Data Access Token
-                    </Link>
-                ),
+                action: <Link to="/tokens">Data Access Tokens</Link>,
                 hide:
                     this.props.appStore.isSocialAuthenticated ||
                     !SUPPORTED_DAT_METHODS.includes(

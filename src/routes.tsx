@@ -98,6 +98,13 @@ const WebAPIPage = SuspenseWrapper(
     React.lazy(() => import('./pages/staticPages/webAPI/WebAPIPage'))
 );
 
+const DataAccessTokensPage = SuspenseWrapper(
+    React.lazy(() =>
+        // @ts-ignore
+        import('./pages/staticPages/dataAccessTokens/DataAccessTokensPage')
+    )
+);
+
 import $ from 'jquery';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { seekUrlHash } from 'shared/lib/seekUrlHash';
@@ -490,6 +497,10 @@ export const makeRoutes = () => {
                     )}
                 />
                 <Route path="/webAPI" component={GoToHashLink(WebAPIPage)} />
+                <Route
+                    path="/tokens"
+                    component={ScrollToTop(DataAccessTokensPage)}
+                />
                 <Route path="/mutation_mapper" component={MutationMapperTool} />
                 <Route path="/oncoprinter" component={OncoprinterTool} />
                 <Route path="/datasets" component={ScrollToTop(DatasetPage)} />
