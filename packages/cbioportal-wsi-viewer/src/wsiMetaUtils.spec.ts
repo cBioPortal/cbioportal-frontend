@@ -202,6 +202,18 @@ describe('buildPathRows', () => {
         );
         expect(rows.some(row => row.label === 'Path Dx')).toBe(false);
     });
+
+    it('drops a de-identified "Specimen <n>" part description as an anatomical site', () => {
+        const rows = buildPathRows(
+            { ...slide, part_description: 'Specimen 5' },
+            sample,
+            'P-1',
+            'study-1',
+            association('BLOCK')
+        );
+
+        expect(rows.some(row => row.label === 'Anatomical site')).toBe(false);
+    });
 });
 
 describe('buildWsiRows', () => {

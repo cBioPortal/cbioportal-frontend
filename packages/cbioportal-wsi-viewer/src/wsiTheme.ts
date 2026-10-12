@@ -1,9 +1,12 @@
 import * as React from 'react';
 
-/** Colors shared by the viewer panels and hosts that sit next to them. */
+/**
+ * Colors shared by the viewer panels and hosts that sit next to them. `blue` and `blueDark` are
+ * cBioPortal's link and link-hover colors, so the panels read as part of the portal.
+ */
 export const WSI_THEME = {
-    blue: '#2986e2',
-    blueDark: '#1a6cc4',
+    blue: '#3786c2',
+    blueDark: '#265e87',
     blueLight: '#e8f1fb',
     orange: '#f5a623',
     text: '#333',
@@ -34,7 +37,7 @@ export const WSI_STAIN_COLORS = {
 
 /** Uppercase panel section title ("Slides", "Image Properties"). */
 export const WSI_SECTION_TITLE_STYLE: React.CSSProperties = {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: 700,
     color: WSI_THEME.muted,
     textTransform: 'uppercase',

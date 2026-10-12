@@ -11,8 +11,8 @@ const SIDEBAR_COLORS = WSI_THEME;
 const sectionTitleStyle = WSI_SECTION_TITLE_STYLE;
 
 const emptyStateStyle: React.CSSProperties = {
-    color: '#bbb',
-    fontSize: 11,
+    color: SIDEBAR_COLORS.muted,
+    fontSize: 12,
 };
 
 const linkedValueStyle: React.CSSProperties = {
@@ -161,7 +161,7 @@ function MetaTable({ rows }: { rows: ReadonlyArray<MetaRow> }) {
                         <td
                             title={row.labelTip}
                             style={{
-                                fontSize: 11,
+                                fontSize: 12,
                                 color: SIDEBAR_COLORS.muted,
                                 width: '50%',
                                 paddingRight: 5,
@@ -180,7 +180,7 @@ function MetaTable({ rows }: { rows: ReadonlyArray<MetaRow> }) {
                         <td
                             title={row.valueTip}
                             style={{
-                                fontSize: 11,
+                                fontSize: 12,
                                 color: SIDEBAR_COLORS.text,
                                 fontWeight: 500,
                                 wordBreak: 'break-word',
@@ -203,7 +203,7 @@ const showMoreStyle: React.CSSProperties = {
     background: 'transparent',
     padding: 0,
     marginTop: 4,
-    fontSize: 11,
+    fontSize: 12,
     color: SIDEBAR_COLORS.blue,
     cursor: 'pointer',
 };

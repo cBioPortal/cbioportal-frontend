@@ -1,7 +1,15 @@
-import { compareSamplesForNavigation } from './wsiNavUtils';
+import { compareSamplesForNavigation, fmtFileSize } from './wsiNavUtils';
 import { makeSample } from './wsiTestFixtures';
 
 describe('wsiNavUtils', () => {
+    describe('fmtFileSize', () => {
+        it('shows MB below 1 GB and GB from there up', () => {
+            expect(fmtFileSize(26.2 * 1024 * 1024)).toBe('26.2 MB');
+            expect(fmtFileSize(1407 * 1024 * 1024)).toBe('1.4 GB');
+            expect(fmtFileSize(null)).toBe('—');
+        });
+    });
+
     describe('compareSamplesForNavigation', () => {
         it('places unmatched slides after matched samples', () => {
             const unmatched = makeSample('UNMATCHED');

@@ -38,10 +38,12 @@ export function abbreviatePartDesc(
         .replace(/\blower\b/gi, 'Lower');
 }
 
-export function fmtMB(bytes: string | number | null | undefined): string {
+/** A file size in MB, or in GB from 1 GB up. */
+export function fmtFileSize(bytes: string | number | null | undefined): string {
     const n = Number(bytes);
     if (!isFinite(n) || n <= 0) return '—';
-    return `${(n / (1024 * 1024)).toFixed(n >= 1_000_000_000 ? 0 : 1)} MB`;
+    const mb = n / (1024 * 1024);
+    return mb >= 1024 ? `${(mb / 1024).toFixed(1)} GB` : `${mb.toFixed(1)} MB`;
 }
 
 const BLOCK_CODE_MAP: Record<string, string> = {

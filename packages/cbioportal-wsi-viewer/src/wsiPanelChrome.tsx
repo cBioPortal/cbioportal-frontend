@@ -106,7 +106,7 @@ export function WsiCollapsedRail({
                     ...iconButtonStyle,
                     writingMode: 'vertical-rl',
                     transform: side === 'left' ? 'rotate(180deg)' : undefined,
-                    fontSize: 10,
+                    fontSize: 11,
                     fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '.8px',
