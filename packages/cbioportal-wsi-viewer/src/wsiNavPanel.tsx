@@ -584,6 +584,7 @@ function WsiNavPanelComponent({
                         className="btn btn-link btn-xs"
                         data-testid="wsi-clear-filters"
                         style={{
+                            display: 'block',
                             padding: '2px 0',
                             marginTop: 6,
                             color: theme.blue,
