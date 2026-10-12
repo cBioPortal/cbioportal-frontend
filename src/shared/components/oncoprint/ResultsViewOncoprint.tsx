@@ -1743,7 +1743,10 @@ export default class ResultsViewOncoprint extends React.Component<
         if (!isClinicalTrack) {
             return;
         }
-        Object.assign(clinicalTracks[stableId], change);
+        // Replace the entry rather than mutating it: the same object can be
+        // held by the saved user session, and an in-place change would leave
+        // pageUserSession.isDirty false.
+        clinicalTracks[stableId] = { ...clinicalTracks[stableId], ...change };
 
         const session = this.props.store.pageUserSession;
         session.userSettings = {

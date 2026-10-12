@@ -9,6 +9,7 @@ import {
     legendColorLightBlue,
     legendColorLightRed,
     legendColorDarkRed,
+    getSavedGapModeToRestore,
 } from './OncoprintUtils';
 import { IKeyValueMap, observable } from 'mobx';
 import _ from 'lodash';
@@ -16,7 +17,10 @@ import { assert } from 'chai';
 import { splitHeatmapTextField } from 'shared/components/oncoprint/OncoprintUtils';
 import { ISelectOption } from 'shared/components/oncoprint/controls/OncoprintControls';
 import { IHeatmapTrackSpec, IBaseHeatmapTrackDatum } from './Oncoprint';
-import { IGradientAndCategoricalRuleSetParams } from 'oncoprintjs';
+import {
+    GAP_MODE_ENUM,
+    IGradientAndCategoricalRuleSetParams,
+} from 'oncoprintjs';
 import { isMutationProfile } from 'shared/lib/StoreUtils';
 import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
 
@@ -852,5 +856,30 @@ describe('commonPrefixLength', () => {
     it('handles one string being a prefix of another', () => {
         // Shared prefix = "foo_bar", no divergence within, so no strip.
         assert.equal(commonPrefixLength(['foo_bar', 'foo_bar_baz']), 0);
+    });
+});
+
+describe('getSavedGapModeToRestore', () => {
+    it('restores saved modes that show gaps exactly', () => {
+        assert.equal(
+            getSavedGapModeToRestore({ gapMode: GAP_MODE_ENUM.SHOW_GAPS }),
+            GAP_MODE_ENUM.SHOW_GAPS
+        );
+        assert.equal(
+            getSavedGapModeToRestore({
+                gapMode: GAP_MODE_ENUM.SHOW_GAPS_PERCENT,
+            }),
+            GAP_MODE_ENUM.SHOW_GAPS_PERCENT
+        );
+    });
+
+    it('leaves HIDE_GAPS to gapOn, so gapOn: true still shows gaps', () => {
+        assert.isUndefined(
+            getSavedGapModeToRestore({ gapMode: GAP_MODE_ENUM.HIDE_GAPS })
+        );
+    });
+
+    it('returns nothing when no gap mode was saved', () => {
+        assert.isUndefined(getSavedGapModeToRestore({ gapMode: null }));
     });
 });

@@ -59,6 +59,7 @@ export type ClinicalTrackSpec = {
     custom_options?: CustomTrackOption[];
     sortOrder?: string;
     gapOn?: boolean;
+    gapMode?: GAP_MODE_ENUM;
 } & (
     | {
           datatype: 'counts';
@@ -86,6 +87,7 @@ export class ClinicalTrackConfig {
     public stableId: string | SpecialAttribute;
     public sortOrder: string | null = null;
     public gapOn: boolean | null = null;
+    public gapMode: GAP_MODE_ENUM | null = null;
 }
 
 export type ClinicalTrackConfigChange = {

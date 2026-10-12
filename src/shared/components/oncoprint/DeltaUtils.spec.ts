@@ -11,9 +11,10 @@ import {
 
 import { spy, SinonStub, match, createStubInstance } from 'sinon';
 
-import { OncoprintJS } from 'oncoprintjs';
+import { GAP_MODE_ENUM, OncoprintJS } from 'oncoprintjs';
 import { MolecularProfile, CancerStudy } from 'cbioportal-ts-api-client';
 import {
+    ClinicalTrackSpec,
     CLINICAL_TRACK_GROUP_INDEX,
     GENETIC_TRACK_GROUP_INDEX,
     ICategoricalTrackSpec,
@@ -479,6 +480,63 @@ describe('Oncoprint DeltaUtils', () => {
                     match.has('track_label_color', 'olive'),
                 ])
             );
+        });
+
+        const makeCancerTypeClinicalTrack = (gapSettings: {
+            gapOn?: boolean;
+            gapMode?: GAP_MODE_ENUM;
+        }): ClinicalTrackSpec => ({
+            key: 'CLINICALTRACK_CANCER_TYPE',
+            attributeId: 'CANCER_TYPE',
+            label: 'Cancer Type',
+            description: 'Cancer Type',
+            data: [],
+            datatype: 'string',
+            ...gapSettings,
+        });
+
+        const addClinicalTrackFromScratch = (
+            clinicalTrack: ClinicalTrackSpec
+        ) => {
+            const oncoprint: OncoprintJS = createStubInstance(OncoprintJS);
+            (oncoprint.addTracks as SinonStub).returns([1]);
+            transition(
+                {
+                    ...makeMinimalOncoprintProps(),
+                    clinicalTracks: [clinicalTrack],
+                },
+                makeMinimalOncoprintProps(),
+                oncoprint,
+                () => ({}),
+                () => makeMinimalProfileMap()
+            );
+            return oncoprint;
+        };
+
+        it('renders a clinical track with its saved gap mode', () => {
+            // given a clinical track restored from a session with gaps on
+            const oncoprint = addClinicalTrackFromScratch(
+                makeCancerTypeClinicalTrack({
+                    gapMode: GAP_MODE_ENUM.SHOW_GAPS,
+                })
+            );
+            // then the track is added with that exact gap mode
+            assert.isTrue(
+                (oncoprint.addTracks as SinonStub).calledWith([
+                    match.has('gap_mode_on_init', GAP_MODE_ENUM.SHOW_GAPS),
+                ])
+            );
+        });
+
+        it('still renders gaps for a clinical track configured with gapOn only', () => {
+            // given a clinical track config that only knows the boolean gapOn
+            const oncoprint = addClinicalTrackFromScratch(
+                makeCancerTypeClinicalTrack({ gapOn: true })
+            );
+            // then show_gaps_on_init is still passed and no gap mode overrides it
+            const [[trackParams]] = (oncoprint.addTracks as SinonStub).args[0];
+            assert.isTrue(trackParams.show_gaps_on_init);
+            assert.isUndefined(trackParams.gap_mode_on_init);
         });
     });
 
