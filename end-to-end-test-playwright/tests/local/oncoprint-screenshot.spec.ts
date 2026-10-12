@@ -168,6 +168,40 @@ test.describe('oncoprint', () => {
                         .first()
                 ).toBeAttached({ timeout: 30000 });
             }
+            // The tracks of each group share one legend once their rule
+            // sets are merged, and oncoprintjs resizes #oncoprintDiv to the
+            // new legend asynchronously. Wait until its height fits the
+            // current track area and legend.
+            await expect
+                .poll(
+                    () =>
+                        page.evaluate(() => {
+                            const onc = (window as any).frontendOnc;
+                            const areaHeight = onc.cell_view.getVisibleAreaHeight(
+                                onc.model
+                            );
+                            const minimapHeight = onc.$minimap_div.is(
+                                ':visible'
+                            )
+                                ? onc.$minimap_div.outerHeight()
+                                : 0;
+                            const expectedHeight =
+                                areaHeight +
+                                Math.max(
+                                    onc.$legend_div.outerHeight(),
+                                    minimapHeight
+                                ) +
+                                30;
+                            return (
+                                parseFloat(onc.$ctr.css('min-height')) ===
+                                    expectedHeight &&
+                                parseFloat(onc.$legend_div.css('top')) ===
+                                    areaHeight + 30
+                            );
+                        }),
+                    { timeout: 10000 }
+                )
+                .toBe(true);
             await expectOncoprintScreenshot(
                 page,
                 'oncoprint-generic-assay-categorical-tracks.png'
