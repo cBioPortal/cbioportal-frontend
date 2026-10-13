@@ -14,6 +14,44 @@ const iconButtonStyle: React.CSSProperties = {
     fontSize: 13,
 };
 
+/** A borderless, icon-only button labelled by its tooltip. */
+export function WsiIconButton({
+    icon,
+    label,
+    onClick,
+    disabled,
+    expanded,
+    testId,
+}: {
+    /** Font Awesome icon class, e.g. `fa-chevron-up`. */
+    icon: string;
+    label: string;
+    onClick: () => void;
+    disabled?: boolean;
+    /** `aria-expanded`, for buttons that show or hide a panel. */
+    expanded?: boolean;
+    testId?: string;
+}) {
+    return (
+        <button
+            type="button"
+            title={label}
+            aria-label={label}
+            aria-expanded={expanded}
+            disabled={disabled}
+            data-testid={testId}
+            onClick={onClick}
+            style={{
+                ...iconButtonStyle,
+                opacity: disabled ? 0.35 : 1,
+                cursor: disabled ? 'default' : 'pointer',
+            }}
+        >
+            <i className={`fa ${icon}`} aria-hidden="true" />
+        </button>
+    );
+}
+
 /** Header button that hides a panel toward its edge. */
 export function WsiPanelHideButton({
     side,
@@ -27,17 +65,13 @@ export function WsiPanelHideButton({
     testId?: string;
 }) {
     return (
-        <button
-            type="button"
-            title={label}
-            aria-label={label}
-            aria-expanded={true}
-            data-testid={testId}
+        <WsiIconButton
+            icon={`fa-angle-double-${side}`}
+            label={label}
+            expanded={true}
             onClick={onClick}
-            style={iconButtonStyle}
-        >
-            <i className={`fa fa-angle-double-${side}`} aria-hidden="true" />
-        </button>
+            testId={testId}
+        />
     );
 }
 
@@ -80,22 +114,13 @@ export function WsiCollapsedRail({
                     : 'borderLeft']: `1px solid ${WSI_THEME.border}`,
             }}
         >
-            <button
-                type="button"
-                title={showLabel}
-                aria-label={showLabel}
-                aria-expanded={false}
-                data-testid={testId && `${testId}-expand`}
+            <WsiIconButton
+                icon={`fa-angle-double-${side === 'left' ? 'right' : 'left'}`}
+                label={showLabel}
+                expanded={false}
                 onClick={onExpand}
-                style={iconButtonStyle}
-            >
-                <i
-                    className={`fa fa-angle-double-${
-                        side === 'left' ? 'right' : 'left'
-                    }`}
-                    aria-hidden="true"
-                />
-            </button>
+                testId={testId && `${testId}-expand`}
+            />
             {children}
             <button
                 type="button"
@@ -139,4 +164,22 @@ export function writeWsiPanelFlag(key: string, value: boolean): void {
     } catch (e) {
         // Blocked storage only loses the remembered state.
     }
+}
+
+/**
+ * A panel flag remembered in browser storage, such as a section's hidden or
+ * open state.
+ */
+export function useWsiPanelFlag(
+    key: string
+): [boolean, (value: boolean) => void] {
+    const [value, setValue] = React.useState(() => readWsiPanelFlag(key));
+    const update = React.useCallback(
+        (next: boolean) => {
+            setValue(next);
+            writeWsiPanelFlag(key, next);
+        },
+        [key]
+    );
+    return [value, update];
 }

@@ -37,6 +37,7 @@ import {
     WSI_THEME as theme,
 } from './wsiTheme';
 import { WsiPanelHideButton } from './wsiPanelChrome';
+import { WsiFilterChipGroup } from './wsiFilterChips';
 
 export interface WsiNavPanelProps {
     hierarchy: PatientHierarchy;
@@ -338,6 +339,9 @@ function WsiNavPanelComponent({
         });
         return filteredCounts;
     }, [facetSlides, stainFilter]);
+    /** A click on the active chip only matters for All, to drop a link scope. */
+    const reselects = (current: string, key: string) =>
+        current !== key || (key === 'all' && linkoutScopeActive);
 
     return (
         <div
@@ -375,116 +379,49 @@ function WsiNavPanelComponent({
                         />
                     )}
                 </div>
-                <div
-                    data-testid="wsi-stain-filter-row"
-                    className="btn-group btn-group-xs"
+                <WsiFilterChipGroup
+                    label="Filter slides by stain"
+                    testId="wsi-stain-filter-row"
+                    chipTestIdPrefix="wsi-stain-filter"
                     style={{ marginTop: 7 }}
-                >
-                    {chips.map(chip => {
-                        const count = stainCounts[chip.key];
-                        const disabled = chip.key !== 'all' && count === 0;
-                        const active = stainFilter === chip.key;
-                        return (
-                            <button
-                                key={chip.key}
-                                data-testid={`wsi-stain-filter-${chip.key}`}
-                                className={`btn btn-xs ${
-                                    active ? 'btn-primary' : 'btn-default'
-                                }`}
-                                disabled={disabled}
-                                onClick={() => {
-                                    if (
-                                        disabled ||
-                                        (active &&
-                                            !(
-                                                chip.key === 'all' &&
-                                                linkoutScopeActive
-                                            ))
-                                    ) {
-                                        return;
-                                    }
-                                    onFilterChange(chip.key);
-                                }}
-                            >
-                                {chip.key !== 'all' && (
-                                    <i
-                                        className="fa fa-circle"
-                                        style={{
-                                            fontSize: 8,
-                                            marginRight: 3,
-                                            color: active
-                                                ? undefined
-                                                : chip.color,
-                                            verticalAlign: 'middle',
-                                        }}
-                                    />
-                                )}
-                                {chip.label}
-                                {chip.key !== 'all' && (
-                                    <span
-                                        style={{ marginLeft: 4, opacity: 0.8 }}
-                                    >
-                                        ({count})
-                                    </span>
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
-                <div
-                    data-testid="wsi-match-filter-row"
-                    className="btn-group btn-group-xs"
+                    chips={chips.map(chip => ({
+                        ...chip,
+                        count:
+                            chip.key === 'all'
+                                ? undefined
+                                : stainCounts[chip.key],
+                        disabled:
+                            chip.key !== 'all' && stainCounts[chip.key] === 0,
+                    }))}
+                    isActive={key => stainFilter === key}
+                    onSelect={key => {
+                        if (reselects(stainFilter, key)) onFilterChange(key);
+                    }}
+                />
+                <WsiFilterChipGroup
+                    label="Filter slides by match level"
+                    testId="wsi-match-filter-row"
+                    chipTestIdPrefix="wsi-match-filter"
                     style={{ marginTop: 6 }}
-                    aria-label="Filter slides by match level"
-                >
-                    {matchChips
+                    chips={matchChips
                         .filter(
                             chip =>
                                 chip.key === 'all' || matchCounts[chip.key] > 0
                         )
-                        .map(chip => {
-                            const count =
+                        .map(chip => ({
+                            ...chip,
+                            count:
                                 chip.key === 'all'
                                     ? undefined
-                                    : matchCounts[chip.key];
-                            const active = matchFilter === chip.key;
-                            return (
-                                <button
-                                    key={chip.key}
-                                    data-testid={`wsi-match-filter-${chip.key}`}
-                                    className={`btn btn-xs ${
-                                        active ? 'btn-primary' : 'btn-default'
-                                    }`}
-                                    disabled={count === 0}
-                                    onClick={() => {
-                                        if (
-                                            count === 0 ||
-                                            (active &&
-                                                !(
-                                                    chip.key === 'all' &&
-                                                    linkoutScopeActive
-                                                ))
-                                        ) {
-                                            return;
-                                        }
-                                        onMatchFilterChange?.(chip.key);
-                                    }}
-                                >
-                                    {chip.label}
-                                    {count !== undefined && (
-                                        <span
-                                            style={{
-                                                marginLeft: 4,
-                                                opacity: 0.8,
-                                            }}
-                                        >
-                                            ({count})
-                                        </span>
-                                    )}
-                                </button>
-                            );
-                        })}
-                </div>
+                                    : matchCounts[chip.key],
+                        }))}
+                    isActive={key => matchFilter === key}
+                    onSelect={key => {
+                        if (reselects(matchFilter, key)) {
+                            onMatchFilterChange?.(key);
+                        }
+                    }}
+                />
                 {sampleIdFilter && linkoutScopeActive && (
                     <div
                         data-testid="wsi-sample-scope"

@@ -1,11 +1,7 @@
 import * as React from 'react';
 
 import { WSI_SECTION_TITLE_STYLE, WSI_THEME } from './wsiTheme';
-import {
-    readWsiPanelFlag,
-    WsiPanelHideButton,
-    writeWsiPanelFlag,
-} from './wsiPanelChrome';
+import { useWsiPanelFlag, WsiPanelHideButton } from './wsiPanelChrome';
 
 const SIDEBAR_COLORS = WSI_THEME;
 const sectionTitleStyle = WSI_SECTION_TITLE_STYLE;
@@ -66,16 +62,10 @@ function SbSection({
     action?: React.ReactNode;
     children: React.ReactNode;
 }) {
-    const storageKey = wsiSidebarSectionCollapsedKey(id);
-    const [collapsed, setCollapsed] = React.useState(() =>
-        readWsiPanelFlag(storageKey)
+    const [collapsed, setCollapsed] = useWsiPanelFlag(
+        wsiSidebarSectionCollapsedKey(id)
     );
-    const toggle = React.useCallback(() => {
-        setCollapsed(current => {
-            writeWsiPanelFlag(storageKey, !current);
-            return !current;
-        });
-    }, [storageKey]);
+    const toggle = () => setCollapsed(!collapsed);
     const contentId = `wsi-sidebar-section-${id}`;
 
     return (
@@ -216,16 +206,10 @@ function ExpandableMetaTable({
     id: string;
     rows: ReadonlyArray<MetaRow>;
 }) {
-    const storageKey = wsiSidebarSectionExpandedKey(id);
-    const [expanded, setExpanded] = React.useState(() =>
-        readWsiPanelFlag(storageKey)
+    const [expanded, setExpanded] = useWsiPanelFlag(
+        wsiSidebarSectionExpandedKey(id)
     );
-    const toggle = React.useCallback(() => {
-        setExpanded(current => {
-            writeWsiPanelFlag(storageKey, !current);
-            return !current;
-        });
-    }, [storageKey]);
+    const toggle = () => setExpanded(!expanded);
     const moreCount = rows.filter(row => row.more).length;
     const visibleRows = expanded ? rows : rows.filter(row => !row.more);
 
