@@ -199,29 +199,16 @@ function toWireHierarchy(hierarchy: PatientHierarchy): any {
     };
 }
 
-function viewerPropsForUrl(url: string) {
-    const parsed = new URL(url);
-    const patientId = decodeURIComponent(
-        parsed.pathname
-            .split('/')
-            .filter(Boolean)
-            .pop()!
-    );
-    return {
-        tileServerUrl: `${parsed.origin}${parsed.pathname.replace(
-            /\/patient\/[^/]+\/?$/,
-            ''
-        )}`.replace(/\/$/, ''),
-        patientId,
-    };
-}
+const TILE_SERVER_URL = 'https://tiles.example.com';
 
 /** Create an unattached WSIViewer instance (no DOM, lifecycle not started). */
-function makeInstance(url: string, props: Record<string, unknown> = {}): any {
-    // Bypass React's constructor warning by calling via super
+function makeInstance(
+    patientId = 'P-1',
+    props: Record<string, unknown> = {}
+): any {
     return new (WSIViewer as any)({
-        ...viewerPropsForUrl(url),
-        url,
+        tileServerUrl: TILE_SERVER_URL,
+        patientId,
         height: 500,
         studyId: 'study',
         ...props,
@@ -328,48 +315,22 @@ beforeEach(() => {
 });
 
 describe('WSIViewer — tileServerBase', () => {
-    [
-        [
-            'strips /patient/{id} with no trailing slash',
-            'https://tiles.example.com/patient/P-123456',
-            'https://tiles.example.com',
-        ],
-        [
-            'strips /patient/{id}/ with trailing slash',
-            'https://tiles.example.com/patient/P-123456/',
-            'https://tiles.example.com',
-        ],
-        [
-            'handles a path prefix before /patient/',
-            'https://tiles.example.com/api/v1/patient/P-789',
-            'https://tiles.example.com/api/v1',
-        ],
-        [
-            'returns URL unchanged when no /patient/ segment is present',
-            'https://tiles.example.com',
-            'https://tiles.example.com',
-        ],
-        [
-            'handles numeric-only patient IDs',
-            'http://localhost:8081/patient/12345',
-            'http://localhost:8081',
-        ],
-    ].forEach(([name, url, expected]) => {
-        it(name as string, () => {
-            const inst = makeInstance(url as string);
-            assert.equal(inst.tileServerBase, expected);
+    it('drops a trailing slash', () => {
+        const inst = makeInstance('P-1', {
+            tileServerUrl: 'https://tiles.example.com/api/v1/',
         });
+        assert.equal(inst.tileServerBase, 'https://tiles.example.com/api/v1');
     });
 });
 
 describe('WSIViewer — servableSlides', () => {
     it('returns empty array when hierarchy is null', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         assert.deepEqual(inst.servableSlides, []);
     });
 
     it('returns only slides with can_serve_tiles=true', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         const servable = makeSlide({ slide_key: 'A', can_serve_tiles: true });
         const notServable = makeSlide({
             slide_key: 'B',
@@ -383,7 +344,7 @@ describe('WSIViewer — servableSlides', () => {
     });
 
     it('deduplicates repeated servable entries for the same slide within a sample', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         const duplicated = makeSlide({ slide_key: 'A', can_serve_tiles: true });
         inst.hierarchy = makeHierarchy([duplicated, { ...duplicated }]);
 
@@ -393,7 +354,7 @@ describe('WSIViewer — servableSlides', () => {
     });
 
     it('returns empty array when all slides have can_serve_tiles=false', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         inst.hierarchy = makeHierarchy([
             makeSlide({ can_serve_tiles: false }),
             makeSlide({ can_serve_tiles: false }),
@@ -402,7 +363,7 @@ describe('WSIViewer — servableSlides', () => {
     });
 
     it('flattens slides across multiple samples, parts and blocks', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
 
         const slideA = makeSlide({ slide_key: 'A', can_serve_tiles: true });
         const slideB = makeSlide({ slide_key: 'B', can_serve_tiles: true });
@@ -429,7 +390,7 @@ describe('WSIViewer — servableSlides', () => {
     });
 
     it('attaches the correct sample to each slide entry', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         const slide = makeSlide({ slide_key: 'X', can_serve_tiles: true });
         inst.hierarchy = makeHierarchy([slide]);
 
@@ -438,7 +399,7 @@ describe('WSIViewer — servableSlides', () => {
     });
 
     it('includes all servable samples while preferring the requested sample', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         const preferredSample = makeSample('S-preferred', [
             makePart([
                 makeBlock([makeSlide({ slide_key: 'preferred-slide' })]),
@@ -467,7 +428,7 @@ describe('WSIViewer — servableSlides', () => {
     });
 
     it('falls back to another sample when the preferred sample has no slides', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         const preferredSample = makeSample('S-preferred', []);
         const otherSample = makeSample('S-other', [
             makePart([makeBlock([makeSlide({ slide_key: 'other-slide' })])]),
@@ -490,7 +451,7 @@ describe('WSIViewer — servableSlides', () => {
     });
 
     it('keeps explicit pathology placement filters hard during fallback', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         const matchingSample = makeSample('S-1', [
             makePart([
                 makeBlock([
@@ -648,8 +609,8 @@ describe('WSIViewer — pathology filter updates', () => {
             },
         ]);
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
         });
         inst.hierarchy = { patient_id: 'P-XYZ', samples: [sample] };
@@ -670,8 +631,8 @@ describe('WSIViewer — pathology filter updates', () => {
         jest.useFakeTimers();
         try {
             const inst = new (WSIViewer as any)({
-                ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-                url: 'https://tiles.example.com/patient/P-XYZ',
+                patientId: 'P-XYZ',
+                tileServerUrl: TILE_SERVER_URL,
                 height: 500,
             });
             const sample = makeSample('S-1', [
@@ -713,8 +674,8 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('honors a matching share-link slide when pathology filters are present', () => {
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
             pathologyFilter: { matchLevel: 'UNMATCHED' },
         });
@@ -756,8 +717,8 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('reloads the hierarchy when the pathology-filter sample id changes', () => {
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
             pathologyFilter: {
                 sampleId: 'S-1',
@@ -782,8 +743,8 @@ describe('WSIViewer — pathology filter updates', () => {
         };
 
         inst.componentDidUpdate({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
             pathologyFilter: {
                 sampleId: 'S-1',
@@ -798,8 +759,8 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('reuses the cached source hierarchy when only the pathology filter changes', () => {
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
             pathologyFilter: {
                 sampleId: 'S-1',
@@ -857,8 +818,8 @@ describe('WSIViewer — pathology filter updates', () => {
         };
 
         inst.componentDidUpdate({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
             pathologyFilter: {
                 sampleId: 'S-1',
@@ -898,8 +859,8 @@ describe('WSIViewer — pathology filter updates', () => {
         });
         const sample = makeSample('S-1', [makePart([makeBlock([hne, ihc])])]);
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
             initialStainFilter: 'all',
             pathologyFilter: {
@@ -929,8 +890,8 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('checks the current slide against the matching sample instead of scanning all hierarchy entries on local pathology-filter reuse', () => {
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
             pathologyFilter: {
                 sampleId: 'S-1',
@@ -990,8 +951,8 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('reselects from the loaded hierarchy when only the preferred sample changes', () => {
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
             preferredSampleId: 'S-1',
         });
@@ -1023,8 +984,8 @@ describe('WSIViewer — pathology filter updates', () => {
         };
 
         inst.componentDidUpdate({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
             preferredSampleId: 'S-1',
         });
@@ -1039,8 +1000,8 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('reselects a visible slide when the stain filter hides the current selection', () => {
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
         });
         const sample = makeSample('S-1', [
@@ -1088,8 +1049,8 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('loads the first visible slide when the stain filter changes', () => {
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
         });
         const sample = makeSample('S-1', [
@@ -1126,8 +1087,8 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('reselects a visible slide when the match filter hides the current selection', () => {
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
         });
         const sample = makeSample('S-1', [
@@ -1181,8 +1142,8 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('loads the first visible slide when the match filter changes', () => {
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
         });
         const sample = makeSample('S-1', [
@@ -1229,8 +1190,8 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('clears the selected slide when filters have no matches', () => {
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
         });
         const sample = makeSample('S-1', [
@@ -1268,8 +1229,8 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('does not locally reselect when the same update requires a hierarchy reload', () => {
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
             initialStainFilter: 'all',
             pathologyFilter: {
@@ -1308,8 +1269,8 @@ describe('WSIViewer — pathology filter updates', () => {
         };
 
         inst.componentDidUpdate({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
             studyId: 'previous-study',
             initialStainFilter: 'all',
@@ -1329,8 +1290,8 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('does not reselect when the requested stain or match filter is already active', () => {
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
         });
         const sample = makeSample('S-1', [
@@ -1358,8 +1319,8 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('releases a linkout scope when an already-active All filter is selected', () => {
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
             initialStainFilter: 'all',
             pathologyFilter: {
@@ -1395,8 +1356,8 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('does not remount when re-selecting the already active ready slide', async () => {
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
         });
         const sample = makeSample('S-1', [
@@ -1441,7 +1402,7 @@ describe('WSIViewer — sidebar row caching', () => {
     });
 
     it('keeps metadata row references stable across unrelated state changes', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         const hierarchy = makeHierarchy([makeSlide({ slide_key: 'A' })], 'P-1');
         const sample = hierarchy.samples[0];
         const slide = sample.parts[0].blocks[0].slides[0];
@@ -1496,7 +1457,7 @@ describe('WSIViewer — loadHierarchy', () => {
     it('sets error and clears loading when server returns a non-ok status', async () => {
         setFetchMock(jest.fn().mockResolvedValue({ ok: false, status: 502 }));
 
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         await loadHierarchyFor(inst);
 
         assert.isNotNull(inst.error, 'error should be set');
@@ -1507,7 +1468,7 @@ describe('WSIViewer — loadHierarchy', () => {
     it('sets error and clears loading when fetch rejects (network error)', async () => {
         setFetchMock(jest.fn().mockRejectedValue(new Error('Network failure')));
 
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         await loadHierarchyFor(inst);
 
         assert.include(inst.error, 'Network failure');
@@ -1528,7 +1489,7 @@ describe('WSIViewer — loadHierarchy', () => {
             })
         );
 
-        const inst = makeInstance('https://tiles.example.com/patient/P-XYZ');
+        const inst = makeInstance('P-XYZ');
         await loadHierarchyFor(inst);
 
         assert.isNull(inst.error);
@@ -1539,7 +1500,7 @@ describe('WSIViewer — loadHierarchy', () => {
     it('clears previous hierarchy and error before re-fetching', async () => {
         // First: put instance into an error state
         setFetchMock(jest.fn().mockRejectedValue(new Error('first error')));
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         await loadHierarchyFor(inst);
         assert.isNotNull(
             inst.error,
@@ -1564,7 +1525,7 @@ describe('WSIViewer — loadHierarchy', () => {
 
     it('bumps mountSeq to invalidate stale in-flight OSD mounts', async () => {
         setFetchMock(jest.fn().mockRejectedValue(new Error('ignore')));
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         const controller = controllerOf(inst);
         const seqBefore = controller.mountSeq as number;
 
@@ -1594,8 +1555,8 @@ describe('WSIViewer — loadHierarchy', () => {
         );
 
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
             studyId: 'study-1',
         });
@@ -1669,8 +1630,8 @@ describe('WSIViewer — loadHierarchy', () => {
         );
 
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
             pathologyFilter: {
                 matchLevel: 'Unmatched',
@@ -1737,10 +1698,8 @@ describe('WSIViewer — loadHierarchy', () => {
         );
 
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl(
-                'https://tiles.example.com/patient/P-XYZ?studyId=study'
-            ),
-            url: 'https://tiles.example.com/patient/P-XYZ?studyId=study',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
             studyId: 'study',
         });
@@ -1788,8 +1747,8 @@ describe('WSIViewer — loadHierarchy', () => {
         );
 
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-1'),
-            url: 'https://tiles.example.com/patient/P-1',
+            patientId: 'P-1',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
             studyId: 'study',
         });
@@ -1855,10 +1814,8 @@ describe('WSIViewer — loadHierarchy', () => {
         );
 
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl(
-                'https://tiles.example.com/patient/P-XYZ?studyId=study'
-            ),
-            url: 'https://tiles.example.com/patient/P-XYZ?studyId=study',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
             studyId: 'study',
             pathologyFilter: {
@@ -1913,7 +1870,7 @@ describe('WSIViewer — loadHierarchy', () => {
             )
         );
 
-        const inst = makeInstance('https://tiles.example.com/patient/P-XYZ');
+        const inst = makeInstance('P-XYZ');
         (inst as any).viewerContainerRef = {
             current: document.createElement('div'),
         };
@@ -1967,7 +1924,7 @@ describe('WSIViewer — loadHierarchy', () => {
             )
         );
 
-        const inst = makeInstance('https://tiles.example.com/patient/P-XYZ');
+        const inst = makeInstance('P-XYZ');
         (inst as any).viewerContainerRef = {
             current: document.createElement('div'),
         };
@@ -1991,7 +1948,7 @@ describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
     });
 
     it('deduplicates concurrent metadata fetches for the same slide', async () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         const controller = controllerOf(inst);
         const slide = makeSlide({ slide_key: 'AAA', can_serve_tiles: true });
         inst.hierarchy = makeHierarchy([slide]);
@@ -2029,7 +1986,7 @@ describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
     });
 
     it('prefetches only the selected sample, active stain first', async () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         const controller = controllerOf(inst);
         const selectedSampleSlides = [
             makeSlide({
@@ -2093,7 +2050,7 @@ describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
     });
 
     it('does not spend prefetch queue slots on duplicate servable slide keys', async () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         const controller = controllerOf(inst);
         const duplicateSlideA = makeSlide({
             slide_key: 'AAA',
@@ -2172,7 +2129,7 @@ describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
 
 describe('WSIViewer — goToCoordinates', () => {
     it('does nothing when osdViewer is null', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         inst.coordInputX = '100';
         inst.coordInputY = '200';
         // Should not throw
@@ -2180,7 +2137,7 @@ describe('WSIViewer — goToCoordinates', () => {
     });
 
     it('calls viewport.imageToViewportCoordinates and panTo with parsed coords', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         inst.coordInputX = '500';
         inst.coordInputY = '750';
 
@@ -2205,7 +2162,7 @@ describe('WSIViewer — goToCoordinates', () => {
     });
 
     it('does nothing when coord inputs are empty strings', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         inst.coordInputX = '';
         inst.coordInputY = '';
 
@@ -2222,7 +2179,7 @@ describe('WSIViewer — goToCoordinates', () => {
     });
 
     it('does nothing when coord inputs are non-numeric', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         inst.coordInputX = 'abc';
         inst.coordInputY = 'xyz';
 
@@ -2281,7 +2238,7 @@ describe('WSIViewer — URL hash state', () => {
     });
 
     it('copyViewLink copies the current viewport hash instead of the stale URL', async () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         inst.selectedSlide = makeSlide({ slide_key: '12345' });
 
         const writeText = jest.fn().mockResolvedValue(undefined);
@@ -2431,8 +2388,8 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         restoreHashViewport = true
     ): Promise<any> {
         const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
+            patientId: 'P-XYZ',
+            tileServerUrl: TILE_SERVER_URL,
             height: 500,
             studyId: 'study-1',
             ...props,
@@ -2883,7 +2840,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
     });
 
     it('dispatches the browser performance event', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const inst = makeInstance('P-1');
         const dispatchSpy = jest
             .spyOn(window, 'dispatchEvent')
             .mockReturnValue(true);
@@ -3024,7 +2981,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         };
 
         try {
-            const inst = makeInstance('https://tiles.example.com/patient/P-1');
+            const inst = makeInstance('P-1');
             await loadHierarchyFor(inst);
 
             expect(inst.selectedMeta).toMatchObject({

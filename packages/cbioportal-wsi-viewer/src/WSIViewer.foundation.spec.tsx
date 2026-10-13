@@ -12,12 +12,9 @@ jest.mock('./wsiOpenSeadragonLoader', () => ({
     loadOpenSeadragon: jest.fn(),
 }));
 
-function makeInstance(
-    url = 'https://tiles.example.com/patient/P-1',
-    extraProps: Record<string, unknown> = {}
-) {
+function makeInstance(extraProps: Record<string, unknown> = {}) {
     return new (WSIViewer as any)({
-        tileServerUrl: url.replace(/\/patient\/[^/]+\/?$/, ''),
+        tileServerUrl: 'https://tiles.example.com',
         patientId: 'P-1',
         height: 500,
         ...extraProps,
@@ -35,26 +32,6 @@ function hierarchyOf(slides: Slide[]) {
 describe('WSIViewer foundation behavior', () => {
     afterEach(() => {
         window.location.hash = '';
-    });
-
-    it.each([
-        [
-            'removes a patient suffix',
-            'https://tiles.example.com/patient/P-1',
-            'https://tiles.example.com',
-        ],
-        [
-            'preserves a path prefix',
-            'https://tiles.example.com/api/v1/patient/P-1/',
-            'https://tiles.example.com/api/v1',
-        ],
-        [
-            'leaves an unscoped URL unchanged',
-            'https://tiles.example.com',
-            'https://tiles.example.com',
-        ],
-    ])('%s', (_name, url, expected) => {
-        expect(makeInstance(url as string).tileServerBase).toBe(expected);
     });
 
     it('renders loading and failure states without a hierarchy', () => {
@@ -81,7 +58,7 @@ describe('WSIViewer foundation behavior', () => {
         ];
 
         function loadedInstance(requestedSlideKey?: string) {
-            const instance = makeInstance(undefined, { requestedSlideKey });
+            const instance = makeInstance({ requestedSlideKey });
             action(() => {
                 instance.hierarchy = hierarchyOf(slides());
                 instance.loading = false;
@@ -127,7 +104,7 @@ describe('WSIViewer foundation behavior', () => {
         });
 
         it('treats a non-servable requested slide as unavailable', () => {
-            const instance = makeInstance(undefined, {
+            const instance = makeInstance({
                 requestedSlideKey: 'slide-x',
             });
             action(() => {
@@ -147,7 +124,7 @@ describe('WSIViewer foundation behavior', () => {
 
     describe('linked sample scope', () => {
         function scopedInstance(pathologyFilter?: Record<string, string>) {
-            const instance = makeInstance(undefined, { pathologyFilter });
+            const instance = makeInstance({ pathologyFilter });
             action(() => {
                 instance.hierarchy = hierarchyOf([testSlide('slide-a')]);
                 instance.loading = false;
