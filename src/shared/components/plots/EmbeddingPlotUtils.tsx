@@ -255,6 +255,8 @@ export interface EmbeddingPlotPoint {
     isInCohort?: boolean;
     // Rendered smaller/more transparent, without changing color or label.
     isDeemphasized?: boolean;
+    // Undefined -> IconLayer falls back to the circle icon.
+    shape?: string;
 }
 
 /**
