@@ -890,7 +890,6 @@ describe('WSIViewer — pathology filter updates', () => {
     });
 
     it('keeps linkout scope when a prop-driven stain changes', () => {
-        const onStainFilterChange = jest.fn();
         const hne = makeSlide({
             slide_key: 'hne-slide',
             sample_id: 'S-1',
@@ -920,7 +919,6 @@ describe('WSIViewer — pathology filter updates', () => {
                 matchLevel: 'BLOCK',
                 specimenKey: 'block::1::A1',
             },
-            onStainFilterChange,
         });
         inst.hierarchy = {
             patient_id: 'P-XYZ',
@@ -936,7 +934,6 @@ describe('WSIViewer — pathology filter updates', () => {
 
         inst.componentDidUpdate(prevProps);
 
-        expect(onStainFilterChange).not.toHaveBeenCalled();
         expect((inst as any).linkoutScopeActive).toBe(true);
         expect(inst.stainFilter).toBe('ihc');
         expect(selectSlideSpy).toHaveBeenCalledWith(ihc, sample);
@@ -1372,7 +1369,6 @@ describe('WSIViewer — pathology filter updates', () => {
     });
 
     it('releases a linkout scope when an already-active All filter is selected', () => {
-        const onStainFilterChange = jest.fn();
         const inst = new (WSIViewer as any)({
             ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
@@ -1383,7 +1379,6 @@ describe('WSIViewer — pathology filter updates', () => {
                 matchLevel: 'BLOCK',
                 specimenKey: 'block::1::A1',
             },
-            onStainFilterChange,
         });
         const sample = makeSample('S-1', [
             makePart([
@@ -1407,7 +1402,6 @@ describe('WSIViewer — pathology filter updates', () => {
 
         (inst as any).handleFilterChange('all');
 
-        expect(onStainFilterChange).toHaveBeenCalledWith('all');
         expect((inst as any).linkoutScopeActive).toBe(false);
     });
 

@@ -55,7 +55,6 @@ The cBioPortal app does both in `src/shared/components/wsiViewer/wsiAppConfig.ts
 | `height` | Viewer height in pixels |
 | `requestedSlideKey` | Slide to open, as from a `slideKey` viewer link. A `#wsi:` hash with a viewport takes precedence |
 | `initialStainFilter`, `initialMatchFilter`, `preferredSampleId`, `pathologyFilter` | Initial slide-list filters and selection, e.g. from a table link |
-| `on…Change`, `onClearFilters` | Report filter changes back to the host, e.g. to keep them in the page URL |
 | `clinicalRows` | Rows for the sidebar's Clinical section, in display order. A row with a `sampleId` shows only for that sample's slides. Unset hides the section |
 | `navCollapsed` / `metadataCollapsed` (+ change callbacks) | Control the hideable slide list and details sidebar. Unset, the viewer remembers the user's choice in `localStorage` |
 | `showDownload`, `renderLoading` | Show the download-view control; a custom loading indicator |
