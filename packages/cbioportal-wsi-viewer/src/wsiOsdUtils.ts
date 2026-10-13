@@ -299,27 +299,6 @@ export function destroyOsdHandles({
     clearCursorPos();
 }
 
-export function scheduleOsdSpinnerHide({
-    existingTimer,
-    hideSpinner,
-    loadingStart,
-    minimumSpinnerMs,
-}: {
-    existingTimer: ReturnType<typeof setTimeout> | null;
-    hideSpinner: () => void;
-    loadingStart: number;
-    minimumSpinnerMs: number;
-}): ReturnType<typeof setTimeout> {
-    const remaining = Math.max(
-        0,
-        minimumSpinnerMs - (Date.now() - loadingStart)
-    );
-    if (existingTimer !== null) {
-        clearTimeout(existingTimer);
-    }
-    return setTimeout(hideSpinner, remaining);
-}
-
 export function createOsdMouseTracker({
     openSeadragon,
     element,

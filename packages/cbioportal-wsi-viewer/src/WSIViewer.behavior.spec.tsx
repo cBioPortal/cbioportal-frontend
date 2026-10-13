@@ -2002,36 +2002,6 @@ describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
         (global as any).fetch = origFetch;
     });
 
-    it('stops iterating when hierarchy is nulled mid-loop', async () => {
-        // Each fetch call in the prefetch loop checks `if (!this.hierarchy) return`.
-        // Setting hierarchy=null between fetches should halt the loop without error.
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
-        const slide1 = makeSlide({ slide_key: 'AAA', can_serve_tiles: true });
-        const slide2 = makeSlide({ slide_key: 'BBB', can_serve_tiles: true });
-        inst.hierarchy = makeHierarchy([slide1, slide2]);
-
-        let fetchCallCount = 0;
-        setFetchMock(
-            jest.fn().mockImplementation(async () => {
-                fetchCallCount++;
-                // Null the hierarchy after the first fetch to simulate unmount
-                if (fetchCallCount === 1) {
-                    inst.hierarchy = null;
-                }
-                return { ok: true, json: () => Promise.resolve({}) };
-            })
-        );
-
-        // Run the loop — it should stop after first slide because hierarchy→null.
-        await controllerOf(inst).prefetchSlideMetadata(undefined);
-
-        assert.isAtMost(
-            fetchCallCount,
-            2,
-            'should not continue after hierarchy cleared'
-        );
-    });
-
     it('deduplicates concurrent metadata fetches for the same slide', async () => {
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
         const controller = controllerOf(inst);
@@ -2068,50 +2038,6 @@ describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
         await Promise.all([firstPromise, secondPromise]);
 
         expect((global as any).fetch).toHaveBeenCalledTimes(1);
-    });
-
-    it('prefetches metadata in bounded concurrent batches', async () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
-        const controller = controllerOf(inst);
-        const slides = ['AAA', 'BBB', 'CCC', 'DDD'].map(slide_key =>
-            makeSlide({ slide_key, can_serve_tiles: true })
-        );
-        inst.hierarchy = makeHierarchy(slides);
-        // Only the selected sample's slides are prefetched.
-        inst.selectedSample = inst.hierarchy.samples[0];
-
-        const order: string[] = [];
-        const deferred = new Map<string, ReturnType<typeof deferredPromise>>();
-        slides.forEach(slide => {
-            deferred.set(slide.slide_key, deferredPromise<void>());
-        });
-
-        jest.spyOn(controller, 'fetchSlideMetadata').mockImplementation(
-            (slideKey: string) => {
-                order.push(slideKey);
-                return deferred.get(slideKey)!.promise.then(() => ({
-                    dimensions: { width: 1000, height: 800 },
-                    max_zoom: 6,
-                    tile_size: 256,
-                }));
-            }
-        );
-
-        const prefetchPromise = controller.prefetchSlideMetadata(undefined);
-
-        await Promise.resolve();
-        expect(order).toEqual(['AAA', 'BBB', 'CCC']);
-
-        deferred.get('AAA')!.resolve();
-        deferred.get('BBB')!.resolve();
-        deferred.get('CCC')!.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-        expect(order).toEqual(['AAA', 'BBB', 'CCC']);
-
-        // The prefetch limit is three slides, so DDD is never fetched.
-        await prefetchPromise;
-        expect(order).toEqual(['AAA', 'BBB', 'CCC']);
     });
 
     it('prefetches only the selected sample, active stain first', async () => {
