@@ -27,16 +27,14 @@ export interface WsiPatientClinicalData {
  * administrative fields that say nothing about the patient or the tissue on
  * the slide, and PATH_SLIDE_EXISTS, which the viewer itself already answers.
  */
-export const WSI_CLINICAL_EXCLUDED_ATTRIBUTE_IDS: ReadonlySet<string> = new Set(
-    [
-        'GENE_PANEL',
-        'INSTITUTE',
-        'OTHER_PATIENT_ID',
-        'PATH_SLIDE_EXISTS',
-        'SAMPLE_COVERAGE',
-        'SOMATIC_STATUS',
-    ]
-);
+const WSI_CLINICAL_EXCLUDED_ATTRIBUTE_IDS: ReadonlySet<string> = new Set([
+    'GENE_PANEL',
+    'INSTITUTE',
+    'OTHER_PATIENT_ID',
+    'PATH_SLIDE_EXISTS',
+    'SAMPLE_COVERAGE',
+    'SOMATIC_STATUS',
+]);
 
 /** Consent flags, e.g. PARTA_CONSENTED_12_245. */
 const CONSENT_ATTRIBUTE = /CONSENTED/i;
@@ -67,16 +65,20 @@ function cleanedValuesByEntity(
     return cleaned;
 }
 
-function cleanedPatientValues(
-    patientData: ReadonlyArray<ClinicalData>
-): Record<string, string> {
-    return cleanedValuesByEntity(patientData, () => '').get('') || {};
+/** A patient's clinical values with null-like values removed. */
+interface CleanedClinicalValues {
+    patient: Record<string, string>;
+    bySample: Map<string, Record<string, string>>;
 }
 
-function cleanedSampleValues(
+function cleanClinicalValues(
+    patientData: ReadonlyArray<ClinicalData>,
     sampleData: ReadonlyArray<ClinicalData>
-): Map<string, Record<string, string>> {
-    return cleanedValuesByEntity(sampleData, datum => datum.sampleId);
+): CleanedClinicalValues {
+    return {
+        patient: cleanedValuesByEntity(patientData, () => '').get('') || {},
+        bySample: cleanedValuesByEntity(sampleData, datum => datum.sampleId),
+    };
 }
 
 /**
@@ -88,16 +90,14 @@ function cleanedSampleValues(
  */
 function populatedWsiClinicalAttributes(
     attributes: ReadonlyArray<ClinicalAttribute>,
-    patientData: ReadonlyArray<ClinicalData>,
-    sampleData: ReadonlyArray<ClinicalData>
+    values: CleanedClinicalValues
 ): ClinicalAttribute[] {
-    const patientValues = cleanedPatientValues(patientData);
-    const sampleValues = Array.from(cleanedSampleValues(sampleData).values());
+    const sampleValues = Array.from(values.bySample.values());
     const hasValue = (attribute: ClinicalAttribute) => {
         const id = attribute.clinicalAttributeId;
         return attribute.patientAttribute
-            ? patientValues[id] !== undefined
-            : sampleValues.some(values => values[id] !== undefined);
+            ? values.patient[id] !== undefined
+            : sampleValues.some(sample => sample[id] !== undefined);
     };
     return attributes
         .map(attribute => ({
@@ -113,8 +113,24 @@ function populatedWsiClinicalAttributes(
         .sort(clinicalAttributeComparator);
 }
 
-function isDefaultClinicalAttribute(attribute: ClinicalAttribute): boolean {
-    return (parseInt(attribute.priority) || 0) > 0;
+/**
+ * Splits the populated attributes into the default ones, as the study view
+ * picks its default charts and Clinical Data columns (priority above 0, at
+ * most `limit`), and the rest, for "Show more".
+ */
+function splitWsiClinicalAttributes(
+    attributes: ReadonlyArray<ClinicalAttribute>,
+    values: CleanedClinicalValues,
+    limit: number
+): { shown: ClinicalAttribute[]; more: ClinicalAttribute[] } {
+    const populated = populatedWsiClinicalAttributes(attributes, values);
+    const shown = populated
+        .filter(attribute => (parseInt(attribute.priority) || 0) > 0)
+        .slice(0, limit);
+    return {
+        shown,
+        more: populated.filter(attribute => !shown.includes(attribute)),
+    };
 }
 
 /**
@@ -131,9 +147,11 @@ export function selectWsiClinicalAttributes(
     sampleData: ReadonlyArray<ClinicalData>,
     limit: number = getServerConfig().studyview_clinical_attribute_chart_count
 ): ClinicalAttribute[] {
-    return populatedWsiClinicalAttributes(attributes, patientData, sampleData)
-        .filter(isDefaultClinicalAttribute)
-        .slice(0, limit);
+    return splitWsiClinicalAttributes(
+        attributes,
+        cleanClinicalValues(patientData, sampleData),
+        limit
+    ).shown;
 }
 
 /**
@@ -147,35 +165,17 @@ export function selectWsiMoreClinicalAttributes(
     sampleData: ReadonlyArray<ClinicalData>,
     limit: number = getServerConfig().studyview_clinical_attribute_chart_count
 ): ClinicalAttribute[] {
-    const shown = new Set(
-        selectWsiClinicalAttributes(
-            attributes,
-            patientData,
-            sampleData,
-            limit
-        ).map(attribute => attribute.clinicalAttributeId)
-    );
-    return populatedWsiClinicalAttributes(
+    return splitWsiClinicalAttributes(
         attributes,
-        patientData,
-        sampleData
-    ).filter(attribute => !shown.has(attribute.clinicalAttributeId));
+        cleanClinicalValues(patientData, sampleData),
+        limit
+    ).more;
 }
 
-/**
- * Sidebar rows for the selected attributes, in their order. Patient
- * attributes give one row; sample attributes one row per sample with a
- * value, tagged with its sample ID. Null-like values ("Not Available",
- * "unknown", ...) are dropped as in the patient header.
- */
-export function buildWsiClinicalRows(
+function clinicalRowsFor(
     attributes: ReadonlyArray<ClinicalAttribute>,
-    patientData: ReadonlyArray<ClinicalData>,
-    sampleData: ReadonlyArray<ClinicalData>
+    values: CleanedClinicalValues
 ): WsiClinicalRow[] {
-    const patientValues = cleanedPatientValues(patientData);
-    const sampleValues = cleanedSampleValues(sampleData);
-
     const rows: WsiClinicalRow[] = [];
     for (const attribute of attributes) {
         const id = attribute.clinicalAttributeId;
@@ -191,18 +191,35 @@ export function buildWsiClinicalRows(
             ...(sampleId ? { sampleId } : {}),
         });
         if (attribute.patientAttribute) {
-            if (patientValues[id] !== undefined) {
-                rows.push(row(patientValues[id]));
+            if (values.patient[id] !== undefined) {
+                rows.push(row(values.patient[id]));
             }
         } else {
-            sampleValues.forEach((values, sampleId) => {
-                if (values[id] !== undefined) {
-                    rows.push(row(values[id], sampleId));
+            values.bySample.forEach((sample, sampleId) => {
+                if (sample[id] !== undefined) {
+                    rows.push(row(sample[id], sampleId));
                 }
             });
         }
     }
     return rows;
+}
+
+/**
+ * Sidebar rows for the selected attributes, in their order. Patient
+ * attributes give one row; sample attributes one row per sample with a
+ * value, tagged with its sample ID. Null-like values ("Not Available",
+ * "unknown", ...) are dropped as in the patient header.
+ */
+export function buildWsiClinicalRows(
+    attributes: ReadonlyArray<ClinicalAttribute>,
+    patientData: ReadonlyArray<ClinicalData>,
+    sampleData: ReadonlyArray<ClinicalData>
+): WsiClinicalRow[] {
+    return clinicalRowsFor(
+        attributes,
+        cleanClinicalValues(patientData, sampleData)
+    );
 }
 
 /**
@@ -214,21 +231,15 @@ export function buildWsiPatientClinicalRows({
     patientData,
     sampleData,
 }: WsiPatientClinicalData): WsiClinicalRow[] {
+    const values = cleanClinicalValues(patientData, sampleData);
+    const { shown, more } = splitWsiClinicalAttributes(
+        attributes,
+        values,
+        getServerConfig().studyview_clinical_attribute_chart_count
+    );
     return [
-        ...buildWsiClinicalRows(
-            selectWsiClinicalAttributes(attributes, patientData, sampleData),
-            patientData,
-            sampleData
-        ),
-        ...buildWsiClinicalRows(
-            selectWsiMoreClinicalAttributes(
-                attributes,
-                patientData,
-                sampleData
-            ),
-            patientData,
-            sampleData
-        ).map(row => ({ ...row, more: true })),
+        ...clinicalRowsFor(shown, values),
+        ...clinicalRowsFor(more, values).map(row => ({ ...row, more: true })),
     ];
 }
 
