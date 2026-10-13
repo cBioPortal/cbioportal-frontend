@@ -93,7 +93,6 @@ function makeAccess(slideKey: string, token: string) {
             tile_size: 256,
         },
         accessToken: token,
-        tokenType: 'Bearer',
         expiresIn: 600,
         expiresAt: Date.now() + 600_000,
     };

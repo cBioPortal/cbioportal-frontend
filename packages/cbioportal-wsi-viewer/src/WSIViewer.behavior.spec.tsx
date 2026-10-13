@@ -21,8 +21,10 @@ import {
     makePart,
     makeSample as fixtureSample,
     makeSlide,
+    makeAccessPayload,
     makeTileMetadata,
     registerTestSlideAccess,
+    toWireHierarchy,
 } from './wsiTestFixtures';
 import { configureWsiViewerRuntime, WsiViewerConfig } from './wsiViewerConfig';
 
@@ -108,95 +110,17 @@ function makeHierarchy(slides: Slide[], patientId = 'P-123'): PatientHierarchy {
     };
 }
 
-function makeWireHierarchy(slides: Slide[], patientId = 'P-123'): any {
-    const block = makeBlock(slides);
-    const part = makePart([block]);
-    const sample = makeSample('S-123456-T01', [part]);
-    return {
-        referenceSampleId: sample.sample_id,
-        sampleGroups: [
-            {
-                sampleId: sample.sample_id,
-                parts: [
-                    {
-                        partNumber: part.part_number,
-                        partType: part.part_type,
-                        partDescription: part.part_description,
-                        subspecialty: part.subspecialty,
-                        blocks: [
-                            {
-                                blockNumber: block.block_number,
-                                blockLabel: block.block_label,
-                                slides: slides.map(slide => ({
-                                    slideKey: slide.slide_key,
-                                    stainName: slide.stain_name,
-                                    stainGroup: slide.stain_group,
-                                    isHne: slide.is_hne,
-                                    isIhc: slide.is_ihc,
-                                    magnification: slide.magnification,
-                                    fileSizeBytes: Number(
-                                        slide.file_size_bytes
-                                    ),
-                                    canServeTiles: slide.can_serve_tiles,
-                                    slideType: slide.slide_type || null,
-                                    sampleId: sample.sample_id,
-                                    matchLevel: slide.match_level || 'BLOCK',
-                                    specimenKey:
-                                        slide.specimen_key || 'specimen-1',
-                                })),
-                            },
-                        ],
-                    },
-                ],
-            },
-        ],
-    };
+function makeWireHierarchy(slides: Slide[]) {
+    return toWireHierarchy({
+        ...makeHierarchy(slides),
+        reference_sample_id: 'S-123456-T01',
+    });
 }
 
 // Slide access is requested by slide key for a slide a loaded hierarchy
 // published for the patient.
 function testAccessUrl(studyId: string, patientId: string, slideKey: string) {
     return `http://localhost/api/wsi/v2/resources/${studyId}/${patientId}/access?slideKey=${slideKey}`;
-}
-
-function toWireHierarchy(hierarchy: PatientHierarchy): any {
-    return {
-        referenceSampleId: hierarchy.reference_sample_id || null,
-        sampleGroups: hierarchy.samples.map(sample => ({
-            sampleId:
-                sample.sample_id === 'UNMATCHED' ? null : sample.sample_id,
-            parts: sample.parts.map(part => ({
-                partNumber: part.part_number,
-                partType: part.part_type,
-                partDescription: part.part_description,
-                subspecialty: part.subspecialty,
-                blocks: part.blocks.map(block => ({
-                    blockNumber: block.block_number,
-                    blockLabel: block.block_label,
-                    slides: block.slides.map(slide => ({
-                        slideKey: slide.slide_key,
-                        stainName: slide.stain_name,
-                        stainGroup: slide.stain_group,
-                        isHne: slide.is_hne,
-                        isIhc: slide.is_ihc,
-                        magnification: slide.magnification,
-                        fileSizeBytes: slide.file_size_bytes
-                            ? Number(slide.file_size_bytes)
-                            : null,
-                        canServeTiles: slide.can_serve_tiles,
-                        slideType: slide.slide_type || null,
-                        sampleId: slide.sample_id ?? sample.sample_id,
-                        matchLevel:
-                            slide.match_level ||
-                            (sample.sample_id === 'UNMATCHED'
-                                ? 'UNMATCHED'
-                                : 'BLOCK'),
-                        specimenKey: slide.specimen_key || 'specimen-1',
-                    })),
-                })),
-            })),
-        })),
-    };
 }
 
 const TILE_SERVER_URL = 'https://tiles.example.com';
@@ -1478,10 +1402,9 @@ describe('WSIViewer — loadHierarchy', () => {
     it('populates hierarchy and clears loading on successful response', async () => {
         // Provide a hierarchy with no servable slides to avoid triggering
         // mountOSD (which requires a real DOM container and OSD canvas).
-        const mockHierarchy = makeWireHierarchy(
-            [makeSlide({ can_serve_tiles: false })],
-            'P-XYZ'
-        );
+        const mockHierarchy = makeWireHierarchy([
+            makeSlide({ can_serve_tiles: false }),
+        ]);
         setFetchMock(
             jest.fn().mockResolvedValue({
                 ok: true,
@@ -1543,10 +1466,9 @@ describe('WSIViewer — loadHierarchy', () => {
             cb(0);
             return 0;
         };
-        const mockHierarchy = makeWireHierarchy(
-            [makeSlide({ slide_key: 'A', can_serve_tiles: true })],
-            'P-XYZ'
-        );
+        const mockHierarchy = makeWireHierarchy([
+            makeSlide({ slide_key: 'A', can_serve_tiles: true }),
+        ]);
         setFetchMock(
             jest.fn().mockResolvedValue({
                 ok: true,
@@ -1675,15 +1597,12 @@ describe('WSIViewer — loadHierarchy', () => {
     });
 
     it('loads hierarchy data and warms metadata for the selected initial slide', async () => {
-        const hierarchy = makeWireHierarchy(
-            [
-                makeSlide({
-                    slide_key: 'bootstrap-slide',
-                    can_serve_tiles: true,
-                }),
-            ],
-            'P-XYZ'
-        );
+        const hierarchy = makeWireHierarchy([
+            makeSlide({
+                slide_key: 'bootstrap-slide',
+                can_serve_tiles: true,
+            }),
+        ]);
         setFetchMock(
             jest.fn(async (input: RequestInfo | URL) => {
                 const url = String(input);
@@ -1836,10 +1755,9 @@ describe('WSIViewer — loadHierarchy', () => {
             cb(0);
             return 0;
         };
-        const mockHierarchy = makeWireHierarchy(
-            [makeSlide({ slide_key: 'A', can_serve_tiles: true })],
-            'P-XYZ'
-        );
+        const mockHierarchy = makeWireHierarchy([
+            makeSlide({ slide_key: 'A', can_serve_tiles: true }),
+        ]);
         const metadata = makeTileMetadata({
             dimensions: { width: 1000, height: 800 },
             levels: 1,
@@ -1855,16 +1773,10 @@ describe('WSIViewer — loadHierarchy', () => {
                         Promise.resolve(
                             url.includes('/hierarchy/')
                                 ? mockHierarchy
-                                : {
-                                      accessToken: 'test-token',
+                                : makeAccessPayload({
                                       slideKey: 'A',
                                       tileMetadata: metadata,
-                                      thumbnail: {
-                                          width: 256,
-                                          height: 256,
-                                      },
-                                      expiresIn: 300,
-                                  }
+                                  })
                         ),
                 })
             )
@@ -1890,10 +1802,9 @@ describe('WSIViewer — loadHierarchy', () => {
             return 0;
         };
         mockLoadOpenSeadragon.mockRejectedValue(new Error('OSD chunk failed'));
-        const mockHierarchy = makeWireHierarchy(
-            [makeSlide({ slide_key: 'A', can_serve_tiles: true })],
-            'P-XYZ'
-        );
+        const mockHierarchy = makeWireHierarchy([
+            makeSlide({ slide_key: 'A', can_serve_tiles: true }),
+        ]);
         const metadata = makeTileMetadata({
             dimensions: { width: 1000, height: 800 },
             levels: 1,
@@ -1909,16 +1820,10 @@ describe('WSIViewer — loadHierarchy', () => {
                         Promise.resolve(
                             url.includes('/hierarchy/')
                                 ? mockHierarchy
-                                : {
-                                      accessToken: 'test-token',
+                                : makeAccessPayload({
                                       slideKey: 'A',
                                       tileMetadata: metadata,
-                                      thumbnail: {
-                                          width: 256,
-                                          height: 256,
-                                      },
-                                      expiresIn: 300,
-                                  }
+                                  })
                         ),
                 })
             )
@@ -1958,22 +1863,7 @@ describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
             jest.fn().mockResolvedValue({
                 ok: true,
                 json: () =>
-                    Promise.resolve({
-                        accessToken: 'test-token',
-                        slideKey: 'AAA',
-                        tileMetadata: makeTileMetadata({
-                            dimensions: { width: 1000, height: 800 },
-                            levels: 1,
-                            level_dimensions: [{ width: 1000, height: 800 }],
-                            max_zoom: 6,
-                            tile_size: 256,
-                        }),
-                        thumbnail: {
-                            width: 256,
-                            height: 256,
-                        },
-                        expiresIn: 300,
-                    }),
+                    Promise.resolve(makeAccessPayload({ slideKey: 'AAA' })),
             })
         );
 
@@ -2324,16 +2214,12 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         (global as any).fetch = jest.fn().mockResolvedValue({
             ok: true,
             json: () =>
-                Promise.resolve({
-                    accessToken: 'test-token',
-                    slideKey: '42',
-                    tileMetadata: metaMock,
-                    thumbnail: {
-                        width: 256,
-                        height: 256,
-                    },
-                    expiresIn: 300,
-                }),
+                Promise.resolve(
+                    makeAccessPayload({
+                        slideKey: '42',
+                        tileMetadata: metaMock,
+                    })
+                ),
         });
 
         // Fresh viewport mock — identity coordinate transforms for simplicity
@@ -2477,18 +2363,12 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         const accessResponse = {
             ok: true,
             json: () =>
-                Promise.resolve({
-                    accessToken: 'test-token',
-                    slideKey: '42',
-                    tileMetadata: metaMock,
-                    // This represents the already-published S3 artifact.
-                    thumbnail: {
-                        width: 256,
-                        height: 256,
-                        contentType: 'image/jpeg',
-                    },
-                    expiresIn: 300,
-                }),
+                Promise.resolve(
+                    makeAccessPayload({
+                        slideKey: '42',
+                        tileMetadata: metaMock,
+                    })
+                ),
         };
         const thumbnailResponse = {
             ok: true,
@@ -2612,17 +2492,12 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         const accessResponse = {
             ok: true,
             json: () =>
-                Promise.resolve({
-                    accessToken: 'test-token',
-                    slideKey: '42',
-                    tileMetadata: metaMock,
-                    thumbnail: {
-                        width: 256,
-                        height: 256,
-                        contentType: 'image/jpeg',
-                    },
-                    expiresIn: 300,
-                }),
+                Promise.resolve(
+                    makeAccessPayload({
+                        slideKey: '42',
+                        tileMetadata: metaMock,
+                    })
+                ),
         };
         const thumbnailResponse = {
             ok: true,
@@ -2905,24 +2780,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
                 return Promise.resolve({
                     ok: true,
                     json: () =>
-                        Promise.resolve({
-                            accessToken: 'test-token',
-                            slideKey: '42',
-                            tileMetadata: makeTileMetadata({
-                                dimensions: { width: 1000, height: 800 },
-                                levels: 1,
-                                level_dimensions: [
-                                    { width: 1000, height: 800 },
-                                ],
-                                max_zoom: 6,
-                                tile_size: 256,
-                            }),
-                            thumbnail: {
-                                width: 256,
-                                height: 256,
-                            },
-                            expiresIn: 300,
-                        }),
+                        Promise.resolve(makeAccessPayload({ slideKey: '42' })),
                 });
             }
             return Promise.resolve({
@@ -2950,24 +2808,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
                 return Promise.resolve({
                     ok: true,
                     json: () =>
-                        Promise.resolve({
-                            accessToken: 'test-token',
-                            slideKey: '42',
-                            tileMetadata: makeTileMetadata({
-                                dimensions: { width: 1000, height: 800 },
-                                levels: 1,
-                                level_dimensions: [
-                                    { width: 1000, height: 800 },
-                                ],
-                                max_zoom: 6,
-                                tile_size: 256,
-                            }),
-                            thumbnail: {
-                                width: 256,
-                                height: 256,
-                            },
-                            expiresIn: 300,
-                        }),
+                        Promise.resolve(makeAccessPayload({ slideKey: '42' })),
                 });
             }
             return Promise.reject(new Error('unexpected metadata fetch'));
