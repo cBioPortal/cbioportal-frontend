@@ -26,6 +26,12 @@
     color: #666;
 }
 
+/* the options scroll, keeping the match settings and Compare in view */
+.options {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
 .hint {
     margin-top: 2px;
     color: #666;
@@ -58,4 +64,41 @@
     label {
         width: 100%;
     }
+}
+
+.groupHeader {
+    display: flex;
+    align-items: baseline;
+    width: 100%;
+    margin-top: 6px;
+    padding: 2px 0;
+    border: none;
+    border-top: 1px solid #eee;
+    background: none;
+    color: #333;
+    font-weight: bold;
+    text-align: left;
+
+    &:disabled {
+        cursor: default;
+    }
+}
+
+.groupSummary {
+    margin-left: 6px;
+    overflow: hidden;
+    color: #999;
+    font-weight: normal;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.groupMessage {
+    padding: 4px 0 4px 18px;
+    color: #666;
+}
+
+.groupSections {
+    padding-left: 12px;
 }

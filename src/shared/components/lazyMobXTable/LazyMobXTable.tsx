@@ -107,6 +107,9 @@ type LazyMobXTableProps<T> = {
     showColumnVisibility?: boolean;
     columnVisibilityProps?: IColumnVisibilityControlsProps;
     columnVisibility?: { [columnId: string]: boolean };
+    // columns shown when they are added to this list; the user can hide
+    // them again
+    columnsToShow?: string[];
     storeColumnVisibility?: (
         columnVisibility:
             | {
@@ -1095,6 +1098,15 @@ export default class LazyMobXTable<T> extends React.Component<
             };
         } else {
             this.isChildTable = true;
+        }
+    }
+
+    componentDidUpdate(prevProps: LazyMobXTableProps<T>) {
+        const previous = new Set(prevProps.columnsToShow || []);
+        for (const id of this.props.columnsToShow || []) {
+            if (!previous.has(id) && !this.store.columnVisibility[id]) {
+                this.updateColumnVisibility(id, true);
+            }
         }
     }
 

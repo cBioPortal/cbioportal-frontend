@@ -154,6 +154,8 @@ export interface IMutationTableProps {
     selectedTranscriptId?: string;
     columnVisibility?: { [columnId: string]: boolean };
     columnVisibilityProps?: IColumnVisibilityControlsProps;
+    // see LazyMobXTable
+    columnsToShow?: string[];
     storeColumnVisibility?: (
         columnVisibility:
             | {
@@ -1556,6 +1558,7 @@ export default class MutationTable<
                 showCountHeader={this.props.showCountHeader}
                 columnVisibility={this.props.columnVisibility}
                 columnVisibilityProps={this.props.columnVisibilityProps}
+                columnsToShow={this.props.columnsToShow}
                 storeColumnVisibility={this.props.storeColumnVisibility}
                 onRowClick={this.props.onRowClick}
                 onRowMouseEnter={this.props.onRowMouseEnter}
