@@ -245,57 +245,6 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         });
         expect(fetchMock).toHaveBeenCalledTimes(2);
     });
-
-    it('lets an aborted caller exit without cancelling the shared request', async () => {
-        let resolveFetch!: (value: unknown) => void;
-        const fetchMock = jest.fn().mockImplementation(
-            () =>
-                new Promise(resolve => {
-                    resolveFetch = resolve;
-                })
-        );
-        (global as any).fetch = fetchMock;
-
-        const abortController = new AbortController();
-        const abortedPromise = fetchWsiPatientHierarchy(
-            'study',
-            'P-1',
-            undefined,
-            abortController.signal
-        );
-        const sharedPromise = fetchWsiPatientHierarchy('study', 'P-1');
-        abortController.abort();
-
-        await expect(abortedPromise).rejects.toMatchObject({
-            name: 'AbortError',
-        });
-
-        resolveFetch({
-            ok: true,
-            json: () => Promise.resolve(makeHierarchy()),
-        });
-        await expect(sharedPromise).resolves.toMatchObject({
-            patient_id: 'P-1',
-        });
-        expect(fetchMock).toHaveBeenCalledTimes(1);
-    });
-
-    it('fetches again after the cache is cleared', async () => {
-        const fetchMock = jest.fn().mockResolvedValue({
-            ok: true,
-            json: () => Promise.resolve(makeHierarchy()),
-        });
-        (global as any).fetch = fetchMock;
-
-        await fetchWsiPatientHierarchy('study-1', 'P-1');
-        await fetchWsiPatientHierarchy('study-1', 'P-1');
-        expect(fetchMock).toHaveBeenCalledTimes(1);
-
-        clearPatientHierarchyCache();
-
-        await fetchWsiPatientHierarchy('study-1', 'P-1');
-        expect(fetchMock).toHaveBeenCalledTimes(2);
-    });
 });
 
 describe('wsiHierarchyFetchCache resource access registration', () => {

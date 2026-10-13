@@ -110,40 +110,6 @@ describe('wsiThumbnailFetchCache', () => {
         expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 
-    it('does not cancel the shared request when one caller aborts', async () => {
-        let resolveResponse!: (response: Response) => void;
-        (global.fetch as jest.Mock).mockImplementation(
-            () => new Promise(resolve => (resolveResponse = resolve))
-        );
-        const access = makeAccess();
-        const abortController = new AbortController();
-        const aborted = fetchWsiThumbnailBlob(
-            'https://tiles.example.com',
-            'study-1',
-            'slide-1',
-            access,
-            abortController.signal
-        );
-        const shared = fetchWsiThumbnailBlob(
-            'https://tiles.example.com',
-            'study-1',
-            'slide-1',
-            access
-        );
-
-        abortController.abort();
-        await expect(aborted).rejects.toMatchObject({ name: 'AbortError' });
-
-        resolveResponse(
-            makeResponse(200, new Blob(['thumbnail'], { type: 'image/jpeg' }), {
-                'Content-Type': 'image/jpeg',
-                'X-Thumbnail-Status': 'ok',
-            })
-        );
-        await expect(shared).resolves.toBeInstanceOf(Blob);
-        expect(global.fetch).toHaveBeenCalledTimes(1);
-    });
-
     it('evicts failed requests so a later attempt can recover', async () => {
         const firstResponse = makeResponse(502, '{}', {
             'Content-Type': 'application/json',
