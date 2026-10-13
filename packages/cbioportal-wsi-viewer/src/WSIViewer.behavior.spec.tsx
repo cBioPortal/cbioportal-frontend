@@ -2262,7 +2262,7 @@ describe('WSIViewer — goToCoordinates', () => {
         inst.coordInputX = '100';
         inst.coordInputY = '200';
         // Should not throw
-        (inst as any).goToCoordinates();
+        controllerOf(inst).goToCoordinates();
     });
 
     it('calls viewport.imageToViewportCoordinates and panTo with parsed coords', () => {
@@ -2279,7 +2279,7 @@ describe('WSIViewer — goToCoordinates', () => {
         controllerOf(inst).osdSlideMounted = true;
         controllerOf(inst).openSeadragon = OSD;
 
-        (inst as any).goToCoordinates();
+        controllerOf(inst).goToCoordinates();
 
         expect(mockViewport.imageToViewportCoordinates).toHaveBeenCalledTimes(
             1
@@ -2302,7 +2302,7 @@ describe('WSIViewer — goToCoordinates', () => {
         controllerOf(inst).osdViewer = { viewport: mockViewport };
         controllerOf(inst).osdSlideMounted = true;
 
-        (inst as any).goToCoordinates();
+        controllerOf(inst).goToCoordinates();
 
         expect(mockViewport.panTo).not.toHaveBeenCalled();
     });
@@ -2319,7 +2319,7 @@ describe('WSIViewer — goToCoordinates', () => {
         controllerOf(inst).osdViewer = { viewport: mockViewport };
         controllerOf(inst).osdSlideMounted = true;
 
-        (inst as any).goToCoordinates();
+        controllerOf(inst).goToCoordinates();
 
         expect(mockViewport.panTo).not.toHaveBeenCalled();
     });
@@ -2386,7 +2386,7 @@ describe('WSIViewer — URL hash state', () => {
 
         window.history.replaceState(null, '', '/patient/P-1#old');
 
-        await (inst as any).copyViewLink();
+        await controllerOf(inst).copyViewLink();
 
         expect(writeText).toHaveBeenCalledWith(
             'http://localhost/patient/P-1#wsi:slide=12345&x=100&y=200&z=1.234560'

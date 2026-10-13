@@ -130,20 +130,6 @@ function getInitialMatchFilter(
         : 'all';
 }
 
-function getPathologyPreferredSlideKeys(
-    hierarchy: PatientHierarchy | null | undefined,
-    pathologyFilter?: PathologySlideFilter
-): Set<string> | undefined {
-    if (!hierarchy || !pathologyFilter) {
-        return undefined;
-    }
-
-    return getServableSlideIdsForPathologyFilterReadOnly(
-        hierarchy,
-        pathologyFilter
-    );
-}
-
 /**
  * Patient slide viewer: loads the patient's slide hierarchy from the portal
  * and shows the selected slide.
@@ -260,11 +246,10 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
     private readonly handleChangeY = action((v: string) => {
         this.coordInputY = v;
     });
-    private readonly handleCopyLink = () => this.copyViewLink();
-    private readonly handleDownload = () => this.downloadView();
-    private readonly handleGoToCoordinates = () => {
-        this.goToCoordinates();
-    };
+    private readonly handleCopyLink = () => this.controller.copyViewLink();
+    private readonly handleDownload = () => this.controller.downloadView();
+    private readonly handleGoToCoordinates = () =>
+        this.controller.goToCoordinates();
     private readonly handleSidebarResizeMove = (event: MouseEvent) => {
         if (!this.isResizingSidebar) return;
         const nextWidth =
@@ -432,18 +417,6 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         );
     }
 
-    goToCoordinates() {
-        this.controller.goToCoordinates();
-    }
-
-    downloadView() {
-        this.controller.downloadView();
-    }
-
-    async copyViewLink() {
-        return this.controller.copyViewLink();
-    }
-
     componentDidMount() {
         this.unsubscribeUrlState = hashUrlState.subscribe(
             this.handleHashChange
@@ -596,7 +569,6 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         return {
             studyId: this.props.studyId,
             patientId: this.props.patientId,
-            pathologyFilter: this.activePathologyFilter,
             authScope: this.props.authScope,
         };
     }
@@ -607,10 +579,13 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
 
     /** Slides the active linkout scope allows; undefined when unscoped. */
     @computed private get preferredSlideKeys(): Set<string> | undefined {
-        return getPathologyPreferredSlideKeys(
-            this.hierarchy,
-            this.activePathologyFilter
-        );
+        const filter = this.activePathologyFilter;
+        return this.hierarchy && filter
+            ? getServableSlideIdsForPathologyFilterReadOnly(
+                  this.hierarchy,
+                  filter
+              )
+            : undefined;
     }
 
     /**
@@ -1021,42 +996,21 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                             zIndex: 100,
                         }}
                     >
-                        <button
-                            id={`${this.navId}-zoom-in`}
-                            className="btn btn-default btn-sm"
-                            title="Zoom in"
-                            style={{
-                                width: 28,
-                                padding: '3px 0',
-                                lineHeight: 1,
-                            }}
-                        >
-                            <i className="fa fa-plus" />
-                        </button>
-                        <button
-                            id={`${this.navId}-zoom-out`}
-                            className="btn btn-default btn-sm"
-                            title="Zoom out"
-                            style={{
-                                width: 28,
-                                padding: '3px 0',
-                                lineHeight: 1,
-                            }}
-                        >
-                            <i className="fa fa-minus" />
-                        </button>
-                        <button
-                            id={`${this.navId}-home`}
-                            className="btn btn-default btn-sm"
-                            title="Fit to view"
-                            style={{
-                                width: 28,
-                                padding: '3px 0',
-                                lineHeight: 1,
-                            }}
-                        >
-                            <i className="fa fa-home" />
-                        </button>
+                        {ZOOM_BUTTONS.map(({ id, title, icon }) => (
+                            <button
+                                key={id}
+                                id={`${this.navId}-${id}`}
+                                className="btn btn-default btn-sm"
+                                title={title}
+                                style={{
+                                    width: 28,
+                                    padding: '3px 0',
+                                    lineHeight: 1,
+                                }}
+                            >
+                                <i className={`fa ${icon}`} />
+                            </button>
+                        ))}
                     </div>
                     {this.requestedSlideUnavailable &&
                         !this.requestedSlideNoticeDismissed && (
@@ -1166,7 +1120,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                         </div>
                     )}
                     {this.tilesReady && (
-                        <ObservedCoordBar
+                        <CoordBar
                             viewer={this}
                             onChangeX={this.handleChangeX}
                             onChangeY={this.handleChangeY}
@@ -1239,6 +1193,13 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
 
 // ---- helpers ----
 
+/** OSD adopts these by id (`zoomInButton`, `zoomOutButton`, `homeButton`). */
+const ZOOM_BUTTONS = [
+    { id: 'zoom-in', title: 'Zoom in', icon: 'fa-plus' },
+    { id: 'zoom-out', title: 'Zoom out', icon: 'fa-minus' },
+    { id: 'home', title: 'Fit to view', icon: 'fa-home' },
+];
+
 const overlayStyle: React.CSSProperties = {
     position: 'absolute',
     inset: 0,
@@ -1252,10 +1213,7 @@ const overlayStyle: React.CSSProperties = {
 // ---- CoordBar ----
 
 interface CoordBarProps {
-    inputX: string;
-    inputY: string;
-    cursorPos: { x: number; y: number } | null;
-    mpp?: { x: number; y: number };
+    viewer: CoordBarViewerState;
     onChangeX: (v: string) => void;
     onChangeY: (v: string) => void;
     onGo: () => void;
@@ -1264,7 +1222,7 @@ interface CoordBarProps {
     showDownload: boolean;
 }
 
-const ObservedCoordBar = observer(function ObservedCoordBar({
+const CoordBar = observer(function CoordBar({
     viewer,
     onChangeX,
     onChangeY,
@@ -1272,43 +1230,13 @@ const ObservedCoordBar = observer(function ObservedCoordBar({
     onCopyLink,
     onDownload,
     showDownload,
-}: {
-    viewer: CoordBarViewerState;
-    onChangeX: (v: string) => void;
-    onChangeY: (v: string) => void;
-    onGo: () => void;
-    onCopyLink: () => void;
-    onDownload: () => void;
-    showDownload: boolean;
-}) {
-    return (
-        <CoordBar
-            inputX={viewer.coordInputX}
-            inputY={viewer.coordInputY}
-            cursorPos={viewer.cursorPos}
-            mpp={viewer.selectedMpp}
-            onChangeX={onChangeX}
-            onChangeY={onChangeY}
-            onGo={onGo}
-            onCopyLink={onCopyLink}
-            onDownload={onDownload}
-            showDownload={showDownload}
-        />
-    );
-});
-
-function CoordBar({
-    inputX,
-    inputY,
-    cursorPos,
-    mpp,
-    onChangeX,
-    onChangeY,
-    onGo,
-    onCopyLink,
-    onDownload,
-    showDownload,
 }: CoordBarProps) {
+    const {
+        coordInputX: inputX,
+        coordInputY: inputY,
+        cursorPos,
+        selectedMpp: mpp,
+    } = viewer;
     const handleKey = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') onGo();
     };
@@ -1439,4 +1367,4 @@ function CoordBar({
             )}
         </div>
     );
-}
+});

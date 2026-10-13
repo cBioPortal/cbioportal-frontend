@@ -31,7 +31,6 @@ import { buildWsiRequestHeaders } from './wsiUrls';
 import { fetchWsiThumbnailBlob } from './wsiThumbnailFetchCache';
 import {
     PatientHierarchy,
-    PathologySlideFilter,
     Sample,
     Slide,
     TileMetadata,
@@ -62,7 +61,6 @@ export interface WsiViewerControllerHost {
     getProps(): {
         studyId: string;
         patientId: string;
-        pathologyFilter?: PathologySlideFilter;
         authScope: string;
     };
     resetHierarchyLoadState(): void;
