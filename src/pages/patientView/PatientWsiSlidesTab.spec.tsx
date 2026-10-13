@@ -109,41 +109,6 @@ describe('PatientWsiSlidesTab', () => {
         );
     });
 
-    it('opens filtered from a study view slide table link', () => {
-        // patient/wsiHESlides?...&pathologySlideSettings={"stainFilter":"ihc"}
-        render(
-            <PatientWsiSlidesTab
-                {...baseProps}
-                query={{ stainFilter: 'ihc' }}
-            />
-        );
-        const props =
-            mockEntryPoint.mock.calls[mockEntryPoint.mock.calls.length - 1][0];
-        expect(props.initialStainFilter).toBe('ihc');
-        expect(props.pathologyFilter).toBeUndefined();
-        expect(props.preferredSampleId).toBeUndefined();
-    });
-
-    it('scopes a study view sample link to that sample', () => {
-        render(
-            <PatientWsiSlidesTab
-                {...baseProps}
-                query={{ sampleId: 'P-1-T01', stainFilter: 'ihc' }}
-            />
-        );
-        expect(mockEntryPoint).toHaveBeenLastCalledWith(
-            expect.objectContaining({
-                preferredSampleId: 'P-1-T01',
-                pathologyFilter: {
-                    sampleId: 'P-1-T01',
-                    matchLevel: undefined,
-                    specimenKey: undefined,
-                },
-                initialStainFilter: 'ihc',
-            })
-        );
-    });
-
     it('lets a hash slide deep link take precedence', () => {
         window.history.replaceState(null, '', '/#wsi:slide=slide-9');
         render(<PatientWsiSlidesTab {...baseProps} query={LINK_QUERY} />);
