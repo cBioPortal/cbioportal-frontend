@@ -1,9 +1,4 @@
-import {
-    PatientHierarchy,
-    SlideAssociation,
-    WsiV2Hierarchy,
-    WsiV2Slide,
-} from './wsiViewerTypes';
+import { PatientHierarchy, WsiV2Hierarchy, WsiV2Slide } from './wsiViewerTypes';
 import {
     clearWsiResourceAccessTargets,
     normalizeWsiAuthScope,
@@ -18,39 +13,6 @@ const HIERARCHY_CACHE_TTL_MS = 5 * 60 * 1000;
 const hierarchyCache = createPromiseCache<PatientHierarchy>(
     () => Date.now() + HIERARCHY_CACHE_TTL_MS
 );
-
-function deriveSlideAssociations(
-    hierarchy: PatientHierarchy
-): SlideAssociation[] {
-    return hierarchy.samples.flatMap(sample =>
-        sample.parts.flatMap(part =>
-            part.blocks.flatMap(block =>
-                block.slides.map(slide => ({
-                    slide_key: slide.slide_key,
-                    sample_id:
-                        slide.sample_id ??
-                        (sample.sample_id === 'UNMATCHED'
-                            ? null
-                            : sample.sample_id),
-                    match_level:
-                        slide.match_level ??
-                        (sample.sample_id === 'UNMATCHED'
-                            ? 'UNMATCHED'
-                            : 'BLOCK'),
-                    specimen_key: slide.specimen_key ?? '',
-                    part_number: part.part_number,
-                    part_description: part.part_description,
-                    block_number: block.block_number,
-                    block_label: block.block_label,
-                    // Boolean stain flags are the canonical classification.
-                    slide_type: slide.slide_type ?? 'Unknown',
-                    stain_name: slide.stain_name,
-                    can_serve_tiles: slide.can_serve_tiles,
-                }))
-            )
-        )
-    );
-}
 
 function normalizeSlideType(
     slide: WsiV2Slide
@@ -73,7 +35,7 @@ function normalizeV2Hierarchy(
     payload: WsiV2Hierarchy,
     patientId: string
 ): PatientHierarchy {
-    const hierarchy: PatientHierarchy = {
+    return {
         patient_id: patientId,
         reference_sample_id: payload.referenceSampleId,
         samples: payload.sampleGroups.map(group => ({
@@ -106,6 +68,7 @@ function normalizeV2Hierarchy(
                         block_label: block.blockLabel,
                         block_number: block.blockNumber,
                         part_description: part.partDescription,
+                        part_number: part.partNumber,
                         sample_id: slide.sampleId ?? group.sampleId,
                         match_level: slide.matchLevel,
                         specimen_key: slide.specimenKey,
@@ -114,10 +77,7 @@ function normalizeV2Hierarchy(
                 })),
             })),
         })),
-        slide_associations: [],
     };
-    hierarchy.slide_associations = deriveSlideAssociations(hierarchy);
-    return hierarchy;
 }
 
 function normalizeHierarchyPayload(

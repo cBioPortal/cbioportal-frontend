@@ -1,10 +1,5 @@
 import { buildPathRows, buildWsiRows, stainValue } from './wsiMetaUtils';
-import {
-    Sample,
-    Slide,
-    SlideAssociation,
-    TileMetadata,
-} from './wsiViewerTypes';
+import { MatchLevel, Sample, Slide, TileMetadata } from './wsiViewerTypes';
 
 const slide: Slide = {
     slide_key: 'slide-1',
@@ -43,18 +38,17 @@ const metadata: TileMetadata = {
     vendor: 'aperio',
 };
 
-function association(
-    matchLevel: SlideAssociation['match_level'],
-    specimen: Partial<SlideAssociation> = {}
-): SlideAssociation {
+function placedSlide(
+    matchLevel: MatchLevel,
+    overrides: Partial<Slide> = {}
+): Slide {
     return {
-        slide_key: slide.slide_key,
+        ...slide,
         sample_id: 'S-1',
         match_level: matchLevel,
         specimen_key: `${matchLevel}::${slide.slide_key}`,
         slide_type: 'H&E',
-        can_serve_tiles: true,
-        ...specimen,
+        ...overrides,
     };
 }
 
@@ -64,11 +58,10 @@ describe('buildPathRows', () => {
         ['PART', 'Part-matched'],
     ] as const)('shows %s matching as %s', (matchLevel, expectedValue) => {
         const rows = buildPathRows(
-            slide,
+            placedSlide(matchLevel),
             sample,
             'P-1',
-            'study-1',
-            association(matchLevel)
+            'study-1'
         );
 
         expect(rows).toContainEqual(
@@ -84,15 +77,14 @@ describe('buildPathRows', () => {
 
     it('explains every pathology row with a tooltip', () => {
         const rows = buildPathRows(
-            slide,
-            sample,
-            'P-1',
-            'study-1',
-            association('BLOCK', {
+            placedSlide('BLOCK', {
                 part_number: '6',
                 part_description: 'Specimen 6',
                 block_label: 'Block 1',
-            })
+            }),
+            sample,
+            'P-1',
+            'study-1'
         );
 
         rows.forEach(row => expect(row.labelTip).toBeTruthy());
@@ -106,11 +98,10 @@ describe('buildPathRows', () => {
 
     it('describes the sample by block and type only', () => {
         const rows = buildPathRows(
-            slide,
+            placedSlide('BLOCK'),
             sample,
             'P-1',
-            'study-1',
-            association('BLOCK')
+            'study-1'
         );
 
         const sampleRow = rows.find(row => row.label === 'Sample');
@@ -127,11 +118,10 @@ describe('buildPathRows', () => {
 
     it('does not show a matching row for unmatched slides', () => {
         const rows = buildPathRows(
-            slide,
+            placedSlide('UNMATCHED'),
             sample,
             'P-1',
-            'study-1',
-            association('UNMATCHED')
+            'study-1'
         );
 
         expect(rows.some(row => row.label === 'Match')).toBe(false);
@@ -139,14 +129,13 @@ describe('buildPathRows', () => {
 
     it('uses the timeline specimen format', () => {
         const rows = buildPathRows(
-            slide,
-            sample,
-            'P-1',
-            'study-1',
-            association('BLOCK', {
+            placedSlide('BLOCK', {
                 part_number: '4',
                 block_label: 'A1',
-            })
+            }),
+            sample,
+            'P-1',
+            'study-1'
         );
 
         expect(rows).toContainEqual(
@@ -159,7 +148,7 @@ describe('buildPathRows', () => {
 
     it('leaves patient, study and cancer type to the page and Clinical section', () => {
         const labels = buildPathRows(
-            slide,
+            placedSlide('BLOCK'),
             {
                 ...sample,
                 cancer_type: 'Melanoma',
@@ -168,8 +157,7 @@ describe('buildPathRows', () => {
                 primary_site: 'Skin',
             },
             'P-1',
-            'study-1',
-            association('BLOCK')
+            'study-1'
         ).map(row => row.label);
 
         [
@@ -184,14 +172,12 @@ describe('buildPathRows', () => {
 
     it('shows the anatomical site and no diagnosis title', () => {
         const rows = buildPathRows(
-            {
-                ...slide,
+            placedSlide('BLOCK', {
                 part_description: 'Colon adenocarcinoma',
-            },
+            }),
             sample,
             'P-1',
-            'study-1',
-            association('BLOCK')
+            'study-1'
         );
 
         expect(rows).toContainEqual(
@@ -205,11 +191,10 @@ describe('buildPathRows', () => {
 
     it('drops a de-identified "Specimen <n>" part description as an anatomical site', () => {
         const rows = buildPathRows(
-            { ...slide, part_description: 'Specimen 5' },
+            placedSlide('BLOCK', { part_description: 'Specimen 5' }),
             sample,
             'P-1',
-            'study-1',
-            association('BLOCK')
+            'study-1'
         );
 
         expect(rows.some(row => row.label === 'Anatomical site')).toBe(false);

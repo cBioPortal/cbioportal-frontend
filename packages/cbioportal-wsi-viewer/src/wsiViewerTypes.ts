@@ -12,7 +12,10 @@ export interface Slide {
     block_number: string;
     /** Anatomical site / part description propagated from the parent Part (e.g. "Lung, left") */
     part_description?: string;
-    /** Association fields carried by the nested v2 slide placement. */
+    /** Number of the parent Part. */
+    part_number?: string;
+    /** Association fields carried by the nested v2 slide placement. A slide
+     *  belongs to exactly one sample. */
     sample_id?: string | null;
     match_level?: MatchLevel;
     specimen_key?: string;
@@ -24,20 +27,6 @@ export type WsiSlideType = 'H&E' | 'IHC' | 'Other' | 'Unknown';
 
 export type WsiStainFilter = 'all' | 'hne' | 'ihc' | 'other' | 'unknown';
 export type PathologySlideMatchFilter = 'all' | 'part' | 'block' | 'unmatched';
-export interface SlideAssociation {
-    slide_key: string;
-    sample_id: string | null;
-    match_level: MatchLevel;
-    specimen_key: string;
-    part_number?: string | null;
-    part_description?: string | null;
-    block_number?: string | null;
-    block_label?: string | null;
-    slide_type: WsiSlideType;
-    stain_name?: string | null;
-    can_serve_tiles: boolean;
-}
-
 export interface Block {
     block_number: string;
     block_label: string;
@@ -66,7 +55,6 @@ export interface Sample {
 export interface PatientHierarchy {
     patient_id: string;
     samples: Sample[];
-    slide_associations?: SlideAssociation[];
     reference_sample_id?: string | null;
 }
 

@@ -6,7 +6,6 @@ import {
     PatientHierarchy,
     Sample,
     Slide,
-    SlideAssociation,
     WsiStainFilter,
 } from './wsiViewerTypes';
 
@@ -38,82 +37,11 @@ type SampleSlideData = {
 // A normalized hierarchy is never mutated, so everything derived from it is
 // memoized by object identity.
 const sampleSlideDataCache = new WeakMap<Sample, SampleSlideData>();
-const servableAssociationsBySlideKeyCache = new WeakMap<
-    SlideAssociation[],
-    Map<string, SlideAssociation>
->();
 const pathologyFilterSlideKeysCache = new WeakMap<
-    SlideAssociation[],
+    PatientHierarchy,
     Map<string, Set<string>>
 >();
 const DUMMY_BLOCK_LABELS = new Set(['0', '']);
-const MATCH_LEVEL_PRIORITY = {
-    UNMATCHED: 0,
-    PART: 1,
-    BLOCK: 2,
-};
-
-function compareServableAssociationPreference(
-    left: Pick<
-        SlideAssociation,
-        'match_level' | 'sample_id' | 'specimen_key' | 'slide_type'
-    >,
-    right: Pick<
-        SlideAssociation,
-        'match_level' | 'sample_id' | 'specimen_key' | 'slide_type'
-    >
-): number {
-    const priorityDifference =
-        MATCH_LEVEL_PRIORITY[left.match_level] -
-        MATCH_LEVEL_PRIORITY[right.match_level];
-    if (priorityDifference !== 0) {
-        return priorityDifference;
-    }
-
-    const leftHasSampleId = left.sample_id ? 1 : 0;
-    const rightHasSampleId = right.sample_id ? 1 : 0;
-    if (leftHasSampleId !== rightHasSampleId) {
-        return leftHasSampleId - rightHasSampleId;
-    }
-
-    return (
-        (right.sample_id || '').localeCompare(left.sample_id || '') ||
-        (right.specimen_key || '').localeCompare(left.specimen_key || '') ||
-        (right.slide_type || '').localeCompare(left.slide_type || '')
-    );
-}
-
-export function getServableSlideAssociationsBySlideKeyReadOnly(
-    associations: SlideAssociation[] | undefined
-): Map<string, SlideAssociation> {
-    if (!associations) {
-        return new Map<string, SlideAssociation>();
-    }
-
-    const cached = servableAssociationsBySlideKeyCache.get(associations);
-    if (cached) {
-        return cached;
-    }
-
-    const result = new Map<string, SlideAssociation>();
-    for (const association of associations) {
-        if (!association.can_serve_tiles) {
-            continue;
-        }
-
-        const existing = result.get(association.slide_key);
-        if (
-            !existing ||
-            compareServableAssociationPreference(association, existing) > 0
-        ) {
-            result.set(association.slide_key, association);
-        }
-    }
-
-    servableAssociationsBySlideKeyCache.set(associations, result);
-    return result;
-}
-
 function uniqueSlideKey(
     sampleId: string,
     slide: Pick<Slide, 'slide_key'>
@@ -362,12 +290,12 @@ export function normalizeMatchLevel(
 }
 
 export function matchesMatchFilter(
-    association: Pick<SlideAssociation, 'match_level'> | undefined,
+    slide: Pick<Slide, 'match_level'>,
     matchFilter: PathologySlideMatchFilter
 ): boolean {
     return (
         matchFilter === 'all' ||
-        association?.match_level === normalizeMatchLevel(matchFilter)
+        slide.match_level === normalizeMatchLevel(matchFilter)
     );
 }
 
@@ -388,27 +316,24 @@ function buildPathologyFilterCacheKey(
     ].join('::');
 }
 
+function hierarchySlides(hierarchy: PatientHierarchy): Slide[] {
+    return hierarchy.samples.flatMap(sample =>
+        sample.parts.flatMap(part => part.blocks.flatMap(block => block.slides))
+    );
+}
+
 export function getServableSlideIdsForPathologyFilterReadOnly(
     hierarchy: PatientHierarchy,
     filter: PathologySlideFilter
 ): Set<string> | undefined {
-    if (!hierarchy.slide_associations?.length) {
-        return undefined;
-    }
-
     const filterKey = buildPathologyFilterCacheKey(filter);
     if (!filterKey) {
         return undefined;
     }
-    let byFilterKey = pathologyFilterSlideKeysCache.get(
-        hierarchy.slide_associations
-    );
+    let byFilterKey = pathologyFilterSlideKeysCache.get(hierarchy);
     if (!byFilterKey) {
         byFilterKey = new Map();
-        pathologyFilterSlideKeysCache.set(
-            hierarchy.slide_associations,
-            byFilterKey
-        );
+        pathologyFilterSlideKeysCache.set(hierarchy, byFilterKey);
     }
     const cachedSlideKeys = byFilterKey.get(filterKey);
     if (cachedSlideKeys) {
@@ -416,40 +341,35 @@ export function getServableSlideIdsForPathologyFilterReadOnly(
     }
 
     const normalizedMatchLevel = normalizeMatchLevel(filter.matchLevel);
+    const slides = hierarchySlides(hierarchy);
 
-    const matchesFilter = (
-        association: SlideAssociation,
-        includeSampleId: boolean
-    ): boolean => {
-        if (!association.can_serve_tiles) {
+    const matchesFilter = (slide: Slide, includeSampleId: boolean): boolean => {
+        if (!slide.can_serve_tiles) {
             return false;
         }
         if (
             includeSampleId &&
             filter.sampleId &&
-            association.sample_id !== filter.sampleId
+            slide.sample_id !== filter.sampleId
         ) {
             return false;
         }
         if (
             normalizedMatchLevel &&
-            association.match_level !== normalizedMatchLevel
+            slide.match_level !== normalizedMatchLevel
         ) {
             return false;
         }
-        if (
-            filter.specimenKey &&
-            association.specimen_key !== filter.specimenKey
-        ) {
+        if (filter.specimenKey && slide.specimen_key !== filter.specimenKey) {
             return false;
         }
         return true;
     };
 
     const matchingSlideKeys = new Set(
-        hierarchy.slide_associations
-            .filter(association => matchesFilter(association, true))
-            .map(association => association.slide_key)
+        slides
+            .filter(slide => matchesFilter(slide, true))
+            .map(slide => slide.slide_key)
     );
 
     // Older pathology linkouts can carry a source sample ID that is not a
@@ -459,15 +379,11 @@ export function getServableSlideIdsForPathologyFilterReadOnly(
         matchingSlideKeys.size === 0 &&
         filter.sampleId &&
         filter.specimenKey &&
-        !hierarchy.slide_associations.some(
-            association => association.sample_id === filter.sampleId
-        )
+        !slides.some(slide => slide.sample_id === filter.sampleId)
     ) {
-        hierarchy.slide_associations
-            .filter(association => matchesFilter(association, false))
-            .forEach(association =>
-                matchingSlideKeys.add(association.slide_key)
-            );
+        slides
+            .filter(slide => matchesFilter(slide, false))
+            .forEach(slide => matchingSlideKeys.add(slide.slide_key));
     }
 
     byFilterKey.set(filterKey, matchingSlideKeys);

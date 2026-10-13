@@ -148,17 +148,19 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         expect(hierarchy.patient_id).toBe('P-1');
         expect(hierarchy.reference_sample_id).toBe('S-1');
         expect(hierarchy.samples[0].sample_id).toBe('UNMATCHED');
-        expect(hierarchy.slide_associations).toEqual([
+        const slide = hierarchy.samples[0].parts[0].blocks[0].slides[0];
+        expect(slide).toEqual(
             expect.objectContaining({
                 slide_key: 'slide-1',
                 sample_id: null,
                 match_level: 'UNMATCHED',
-            }),
-        ]);
-        expect(Object.keys(hierarchy)).toContain('slide_associations');
-        expect(JSON.stringify(hierarchy)).toContain('slide_associations');
-        const slide = hierarchy.samples[0].parts[0].blocks[0].slides[0];
-        expect(slide.slide_key).toBe('slide-1');
+                specimen_key: 'unmatched::1::A',
+                part_number: '1',
+                part_description: 'Unmatched specimen',
+                block_label: 'A1',
+                block_number: 'A',
+            })
+        );
         expect(JSON.stringify(hierarchy)).not.toMatch(
             /image_?id|barcode|resource_?(data_?)?id/i
         );
@@ -212,7 +214,6 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         expect(
             hierarchy.samples[0].parts[0].blocks[0].slides[0].slide_type
         ).toBe('IHC');
-        expect(hierarchy.slide_associations?.[0].slide_type).toBe('IHC');
     });
 
     it('preserves Other instead of coercing it to H&E or IHC', async () => {
@@ -263,7 +264,6 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         expect(
             hierarchy.samples[0].parts[0].blocks[0].slides[0].slide_type
         ).toBe('Other');
-        expect(hierarchy.slide_associations?.[0].slide_type).toBe('Other');
     });
 
     it('rejects hierarchy payloads without a sample collection and retries cleanly', async () => {

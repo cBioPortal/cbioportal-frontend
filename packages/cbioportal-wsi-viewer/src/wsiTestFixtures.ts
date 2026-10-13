@@ -5,7 +5,6 @@ import {
     PatientHierarchy,
     Sample,
     Slide,
-    SlideAssociation,
     TileMetadata,
 } from './wsiViewerTypes';
 
@@ -61,15 +60,8 @@ export function makeSample(
     };
 }
 
-export function makeHierarchy(
-    samples: Sample[],
-    slideAssociations?: SlideAssociation[]
-): PatientHierarchy {
-    return {
-        patient_id: 'P-1',
-        samples,
-        slide_associations: slideAssociations,
-    };
+export function makeHierarchy(samples: Sample[]): PatientHierarchy {
+    return { patient_id: 'P-1', samples };
 }
 
 /** Tile metadata that passes validateWsiTileMetadata. */

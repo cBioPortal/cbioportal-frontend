@@ -1,10 +1,5 @@
 import { MetaRow } from './wsiMetaSidebar';
-import {
-    Sample,
-    Slide,
-    SlideAssociation,
-    TileMetadata,
-} from './wsiViewerTypes';
+import { Sample, Slide, TileMetadata } from './wsiViewerTypes';
 import { cleanStain, fmtFileSize, normalizeBlockLabel } from './wsiNavUtils';
 import { blockName, formatSpecimenLabel } from './wsiSpecimenUtils';
 import { wsiStainKind } from './wsiSlideUtils';
@@ -132,20 +127,18 @@ export function buildWsiRows(
     return freezeMetaRows(rows);
 }
 
-function specimenTooltip(association: {
-    part_number?: string | null;
-    part_description?: string | null;
-    block_label?: string | null;
-    block_number?: string | null;
-}): string | undefined {
-    const part = association.part_number
-        ? `part ${association.part_number}${
-              association.part_description
-                  ? ` (${association.part_description})`
-                  : ''
+function specimenTooltip(
+    slide: Pick<
+        Slide,
+        'part_number' | 'part_description' | 'block_label' | 'block_number'
+    >
+): string | undefined {
+    const part = slide.part_number
+        ? `part ${slide.part_number}${
+              slide.part_description ? ` (${slide.part_description})` : ''
           }`
-        : association.part_description;
-    const block = association.block_label || association.block_number;
+        : slide.part_description;
+    const block = slide.block_label || slide.block_number;
     if (!part && !block) {
         return undefined;
     }
@@ -166,8 +159,7 @@ export function buildPathRows(
     slide: Slide,
     sample: Sample,
     patientId: string,
-    studyId: string,
-    association?: SlideAssociation
+    studyId: string
 ): MetaRow[] {
     const isUnmatchedSample = sample.sample_id === 'UNMATCHED';
     const stainBadge = getStainBadge(slide);
@@ -194,11 +186,12 @@ export function buildPathRows(
         !/^specimen \d+$/i.test(slide.part_description.trim())
             ? slide.part_description
             : null;
+    const matchLevel = slide.match_level;
     const hasSpecimenDetails = !!(
-        association?.part_number ||
-        association?.part_description ||
-        association?.block_label ||
-        association?.block_number
+        slide.part_number ||
+        slide.part_description ||
+        slide.block_label ||
+        slide.block_number
     );
 
     const rows: MetaRow[] = [
@@ -220,28 +213,22 @@ export function buildPathRows(
             valueTip: sampleTip,
         },
     ];
-    if (association && hasSpecimenDetails) {
+    if (matchLevel && hasSpecimenDetails) {
         rows.push({
             label: 'Specimen',
             labelTip: 'Pathology specimen containing this slide',
-            value: formatSpecimenLabel(association),
-            valueTip: specimenTooltip(association),
+            value: formatSpecimenLabel({ ...slide, match_level: matchLevel }),
+            valueTip: specimenTooltip(slide),
         });
     }
-    if (
-        association?.match_level === 'BLOCK' ||
-        association?.match_level === 'PART'
-    ) {
+    if (matchLevel === 'BLOCK' || matchLevel === 'PART') {
         rows.push({
             label: 'Match',
             labelTip:
                 'How this pathology slide was matched to the sequenced sample',
-            value:
-                association.match_level === 'BLOCK'
-                    ? 'Block-matched'
-                    : 'Part-matched',
+            value: matchLevel === 'BLOCK' ? 'Block-matched' : 'Part-matched',
             valueTip:
-                association.match_level === 'BLOCK'
+                matchLevel === 'BLOCK'
                     ? 'The slide was cut from the same tissue block that was sequenced for this sample'
                     : 'The slide comes from the same specimen part as the sequenced sample; the sequenced block is not confirmed',
         });
