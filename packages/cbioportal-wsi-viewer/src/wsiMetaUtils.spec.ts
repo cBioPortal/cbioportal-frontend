@@ -91,7 +91,7 @@ describe('buildPathRows', () => {
         );
     });
 
-    it('describes the sample by block and type only', () => {
+    it('describes the sample by block only', () => {
         const rows = buildPathRows(
             placedSlide('BLOCK'),
             sample,
@@ -101,9 +101,9 @@ describe('buildPathRows', () => {
 
         const sampleRow = rows.find(row => row.label === 'Sample');
         expect(sampleRow?.labelTip).toBe(
-            'Click for cBioPortal sample view — hover for block/type info'
+            'Click for cBioPortal sample view — hover for block info'
         );
-        expect(sampleRow?.valueTip).toBe('Block: A1\nType: Primary');
+        expect(sampleRow?.valueTip).toBe('Block: A1');
         rows.forEach(row => {
             expect(`${row.labelTip} ${row.valueTip} ${row.value}`).not.toMatch(
                 /Accession|Barcode|Image ID|slide-1/

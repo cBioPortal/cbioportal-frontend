@@ -196,7 +196,7 @@ export function buildPathRows(
         {
             label: 'Sample',
             labelTip: sampleTip
-                ? 'Click for cBioPortal sample view — hover for block/type info'
+                ? 'Click for cBioPortal sample view — hover for block info'
                 : 'Tumor sample identifier',
             value: isUnmatchedSample
                 ? 'Unmatched pathology slides'
