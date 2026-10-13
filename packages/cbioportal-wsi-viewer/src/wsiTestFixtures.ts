@@ -1,4 +1,5 @@
 // Test data shared by the package specs.
+import { registerWsiResourceAccess } from './wsiAuth';
 import {
     Block,
     Part,
@@ -78,4 +79,16 @@ export function makeTileMetadata(
         safe_min_level: 0,
         ...overrides,
     };
+}
+
+/** Publishes one slide for a patient, as a loaded hierarchy would. */
+export function registerTestSlideAccess(
+    studyId: string,
+    patientId: string,
+    slideKey: string
+): void {
+    registerWsiResourceAccess(studyId, {
+        patient_id: patientId,
+        samples: [makeSample('S-1', [makeSlide({ slide_key: slideKey })])],
+    });
 }

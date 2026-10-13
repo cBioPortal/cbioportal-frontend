@@ -113,15 +113,6 @@ export function registerWsiResourceAccess(
     );
 }
 
-/** Registers one slide when a caller already has it selected. */
-export function registerWsiResourceAccessTarget(
-    studyId: string,
-    slideKey: string,
-    patientId: string
-): void {
-    slidePatients.set(registryKey(studyId, slideKey), patientId);
-}
-
 /**
  * Forgets registered slides. With no arguments every slide is forgotten; with
  * a study (and optionally a patient) only matching slides are.

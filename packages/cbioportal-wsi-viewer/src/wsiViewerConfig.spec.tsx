@@ -15,11 +15,8 @@ import {
     WsiUrlStateAdapter,
     writeSelectedSlideState,
 } from './wsiViewStateUtils';
-import {
-    clearWsiSlideAccess,
-    getWsiSlideAccess,
-    registerWsiResourceAccessTarget,
-} from './wsiAuth';
+import { clearWsiSlideAccess, getWsiSlideAccess } from './wsiAuth';
+import { registerTestSlideAccess } from './wsiTestFixtures';
 import WsiViewer from './WsiViewerEntry';
 
 const mockWsiViewer = jest.fn((_props: Record<string, unknown>) => null);
@@ -81,7 +78,7 @@ describe('WSI viewer runtime', () => {
             status: 403,
         })) as unknown) as typeof fetch;
         configureWsiViewerRuntime(makeConfig({ fetchImpl }));
-        registerWsiResourceAccessTarget('study-1', 'slide-1', 'patient 1');
+        registerTestSlideAccess('study-1', 'patient 1', 'slide-1');
 
         await expect(
             getWsiSlideAccess('study-1', 'slide-1', false, 'user-a')

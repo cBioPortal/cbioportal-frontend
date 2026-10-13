@@ -168,7 +168,6 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
     @observable cursorPos: { x: number; y: number } | null = null;
 
     private viewerContainerRef = React.createRef<HTMLDivElement>();
-    /** Stable per-instance ID prefix for OSD custom nav button elements */
     private resizeStartX = 0;
     private resizeStartWidth = 0;
     private isResizingSidebar = false;
@@ -176,6 +175,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
     @observable private requestedSlideNoticeDismissed = false;
     private slideSelectionTimer: ReturnType<typeof setTimeout> | null = null;
 
+    /** Per-instance ID prefix of the OSD zoom buttons. */
     private get navId() {
         return this.controller.navId;
     }

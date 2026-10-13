@@ -13,11 +13,7 @@ import {
     clearPatientHierarchyCache,
     fetchWsiPatientHierarchy,
 } from './wsiHierarchyFetchCache';
-import {
-    clearWsiSlideAccess,
-    getWsiSlideAccess,
-    registerWsiResourceAccessTarget,
-} from './wsiAuth';
+import { clearWsiSlideAccess, getWsiSlideAccess } from './wsiAuth';
 import { clearWsiThumbnailFetchCache } from './wsiThumbnailFetchCache';
 import { PatientHierarchy, Part, Sample, Slide } from './wsiViewerTypes';
 import {
@@ -26,6 +22,7 @@ import {
     makeSample as fixtureSample,
     makeSlide,
     makeTileMetadata,
+    registerTestSlideAccess,
 } from './wsiTestFixtures';
 import { configureWsiViewerRuntime, WsiViewerConfig } from './wsiViewerConfig';
 
@@ -160,15 +157,6 @@ function makeWireHierarchy(slides: Slide[], patientId = 'P-123'): any {
 // published for the patient.
 function testAccessUrl(studyId: string, patientId: string, slideKey: string) {
     return `http://localhost/api/wsi/v2/resources/${studyId}/${patientId}/access?slideKey=${slideKey}`;
-}
-
-/** Publishes a slide as a loaded hierarchy would. */
-function registerTestSlideAccess(
-    studyId: string,
-    patientId: string,
-    slideKey: string
-) {
-    registerWsiResourceAccessTarget(studyId, slideKey, patientId);
 }
 
 function toWireHierarchy(hierarchy: PatientHierarchy): any {
@@ -2375,8 +2363,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         };
         (window as any).cancelIdleCallback = jest.fn();
 
-        // v2 access capability mock: metadata is returned as part of the
-        // source-bound capability rather than from a legacy tile endpoint.
+        // Tile metadata comes with the slide access.
         (global as any).fetch = jest.fn().mockResolvedValue({
             ok: true,
             json: () =>

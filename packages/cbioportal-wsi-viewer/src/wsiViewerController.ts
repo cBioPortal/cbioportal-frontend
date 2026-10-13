@@ -1156,7 +1156,7 @@ export class WsiViewerController {
             if (seq !== this.mountSeq) return;
             // Reuse needs an idle viewer: tile requests of the previous slide
             // still in flight would hold loader slots ahead of this slide's
-            // cold open. A busy viewer is rebuilt, as before.
+            // cold open. A busy viewer is rebuilt.
             const reusableViewer =
                 this.osdViewer?.element === containerEl &&
                 isOsdViewerIdle(this.osdViewer)

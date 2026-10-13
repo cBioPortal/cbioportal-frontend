@@ -122,7 +122,7 @@ describe('buildPathRows', () => {
         expect(rows.some(row => row.label === 'Match')).toBe(false);
     });
 
-    it('uses the timeline specimen format', () => {
+    it('names the specimen by part and block', () => {
         const rows = buildPathRows(
             placedSlide('BLOCK', {
                 part_number: '4',

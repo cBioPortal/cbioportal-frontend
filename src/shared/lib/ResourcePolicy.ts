@@ -4,9 +4,9 @@ import { getServerConfig } from 'config/config';
 // H&E slide resources that the native viewer replaces. Every H&E resource on
 // the public and MSK portals uses one of these IDs.
 const LEGACY_HE_RESOURCE_IDS = new Set(['HE', 'MSK_HNE']);
-// Whole-slide images are stored as these resources, one row per slide (1.7M
-// for MSK-IMPACT). Files & Links and the resource tabs leave them out; slides
-// are reached through the Pathology Slides views.
+// Whole-slide images are stored as these resources, one row per slide. Files &
+// Links and the resource tabs leave them out; slides are reached through the
+// Pathology Slides views.
 const WSI_RESOURCE_IDS = new Set(['WSI_SAMPLE', 'WSI_PATIENT']);
 
 function isNonEmptyString(value: string | null | undefined): boolean {

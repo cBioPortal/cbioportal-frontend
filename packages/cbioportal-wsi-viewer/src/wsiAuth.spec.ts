@@ -3,9 +3,8 @@ import {
     clearWsiSlideAccess,
     getWsiSlideAccess,
     registerWsiResourceAccess,
-    registerWsiResourceAccessTarget,
 } from './wsiAuth';
-import { makeTileMetadata } from './wsiTestFixtures';
+import { makeTileMetadata, registerTestSlideAccess } from './wsiTestFixtures';
 import { configureWsiViewerRuntime, WsiViewerConfig } from './wsiViewerConfig';
 
 function configureRuntime(overrides: Partial<WsiViewerConfig> = {}) {
@@ -35,7 +34,7 @@ describe('WSI access capability', () => {
                 return this.values.get(key.toLowerCase()) ?? null;
             }
         } as unknown) as typeof Headers;
-        registerWsiResourceAccessTarget('study-1', 'slide-1', 'patient-1');
+        registerTestSlideAccess('study-1', 'patient-1', 'slide-1');
     });
 
     it('requests and caches access for one slide', async () => {
