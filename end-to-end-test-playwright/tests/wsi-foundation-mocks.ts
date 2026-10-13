@@ -87,6 +87,59 @@ export const pixel = Buffer.from(
     'base64'
 );
 
+/**
+ * Slide access as the backend answers it: 400 unless the key is 32 hex, 404
+ * for a slide `isPublished` rejects, else a token with `tileMetadata`.
+ */
+export async function routeSlideAccess(
+    page: Page,
+    studyId: string,
+    isPublished: (patientId: string, slideKey: string) => boolean,
+    accessRequests?: string[]
+): Promise<void> {
+    await page.route(`**/api/wsi/v2/resources/${studyId}/*/access?*`, route => {
+        const url = new URL(route.request().url());
+        accessRequests?.push(url.toString());
+        const patientId = decodeURIComponent(
+            url.pathname.split('/').slice(-2, -1)[0]
+        );
+        const slideKey = url.searchParams.get('slideKey') || '';
+        if (!/^[0-9a-f]{32}$/.test(slideKey)) {
+            return route.fulfill({ status: 400, body: '' });
+        }
+        if (!isPublished(patientId, slideKey)) {
+            return route.fulfill({ status: 404, body: '' });
+        }
+        return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                slideKey,
+                accessToken: 'wsi-foundation-smoke-token',
+                expiresIn: 300,
+                tileMetadata,
+            }),
+        });
+    });
+}
+
+/** Answers every tile and thumbnail request with one pixel. */
+export async function routeTilePixels(
+    page: Page,
+    requestHeaders?: Array<Record<string, string>>
+): Promise<void> {
+    for (const pattern of ['**/wsi/tiles/**', '**/wsi/thumbnails**']) {
+        await page.route(pattern, route => {
+            requestHeaders?.push(route.request().headers());
+            return route.fulfill({
+                status: 200,
+                contentType: 'image/png',
+                body: pixel,
+            });
+        });
+    }
+}
+
 export async function installFoundationMocks(
     page: Page,
     options: FoundationMockOptions = {}
@@ -135,58 +188,22 @@ export async function installFoundationMocks(
             body: JSON.stringify([]),
         })
     );
-    await page.route(
-        `**/api/wsi/v2/resources/${STUDY_ID}/*/access?*`,
-        route => {
-            const url = new URL(route.request().url());
-            options.accessRequests?.push(url.toString());
-            const patientId = decodeURIComponent(
-                url.pathname.split('/').slice(-2, -1)[0]
-            );
-            const slideKey = url.searchParams.get('slideKey') || '';
-            const published = hierarchy.sampleGroups.some(group =>
+    await routeSlideAccess(
+        page,
+        STUDY_ID,
+        (patientId, slideKey) =>
+            patientId === PATIENT_ID &&
+            hierarchy.sampleGroups.some(group =>
                 group.parts.some(part =>
                     part.blocks.some(block =>
                         block.slides.some(slide => slide.slideKey === slideKey)
                     )
                 )
-            );
-            // As the backend: 400 unless 32 hex, 404 for an unknown slide.
-            if (!/^[0-9a-f]{32}$/.test(slideKey)) {
-                return route.fulfill({ status: 400, body: '' });
-            }
-            if (patientId !== PATIENT_ID || !published) {
-                return route.fulfill({ status: 404, body: '' });
-            }
-            return route.fulfill({
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify({
-                    slideKey,
-                    accessToken: 'wsi-foundation-smoke-token',
-                    expiresIn: 300,
-                    tileMetadata,
-                }),
-            });
-        }
+            ),
+        options.accessRequests
     );
     await installClinicalMocks(page);
-    await page.route('**/wsi/tiles/**', route => {
-        options.tileRequestHeaders?.push(route.request().headers());
-        return route.fulfill({
-            status: 200,
-            contentType: 'image/png',
-            body: pixel,
-        });
-    });
-    await page.route('**/wsi/thumbnails**', route => {
-        options.tileRequestHeaders?.push(route.request().headers());
-        return route.fulfill({
-            status: 200,
-            contentType: 'image/png',
-            body: pixel,
-        });
-    });
+    await routeTilePixels(page, options.tileRequestHeaders);
     return enrichmentRequests;
 }
 
