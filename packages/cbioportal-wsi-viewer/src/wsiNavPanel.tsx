@@ -8,7 +8,6 @@ import {
     WsiStainFilter,
 } from './wsiViewerTypes';
 import {
-    countServableSlidesForSample,
     getOrderedServableSlidesForSampleReadOnly,
     matchesMatchFilter,
     matchesWsiStainFilter,
@@ -123,13 +122,6 @@ function thumbnailRetryDelayMs(
     return maxAgeMs + Math.round(maxAgeMs * 0.1 * Math.random());
 }
 
-function shouldShowSampleInNavigation(sample: Sample): boolean {
-    return (
-        sample.sample_id !== 'UNMATCHED' ||
-        countServableSlidesForSample(sample) > 0
-    );
-}
-
 function matchesSlideFilters(
     slide: Slide,
     stainFilter: WsiStainFilter,
@@ -147,18 +139,33 @@ type FilteredSampleEntry = {
     filteredSlideIds: Set<string>;
 };
 
-function buildSampleEntry(sample: Sample): FilteredSampleEntry | null {
-    const filteredSlides = getOrderedServableSlidesForSampleReadOnly(sample);
-    if (!filteredSlides.length) {
-        return null;
-    }
-    return {
-        sample,
-        filteredSlides,
-        filteredSlideIds: new Set(
-            filteredSlides.map(({ slide }) => slide.slide_key)
-        ),
-    };
+function sampleEntry(
+    sample: Sample,
+    filteredSlides: FilteredSampleEntry['filteredSlides']
+): FilteredSampleEntry | null {
+    return filteredSlides.length
+        ? {
+              sample,
+              filteredSlides,
+              filteredSlideIds: new Set(
+                  filteredSlides.map(({ slide }) => slide.slide_key)
+              ),
+          }
+        : null;
+}
+
+/** The entries that keep a slide matching `keep`, with only those slides. */
+function narrowSampleEntries(
+    entries: FilteredSampleEntry[],
+    keep: (slide: Slide) => boolean
+): FilteredSampleEntry[] {
+    return entries.flatMap(entry => {
+        const narrowed = sampleEntry(
+            entry.sample,
+            entry.filteredSlides.filter(({ slide }) => keep(slide))
+        );
+        return narrowed ? [narrowed] : [];
+    });
 }
 
 function WsiNavPanelComponent({
@@ -183,77 +190,33 @@ function WsiNavPanelComponent({
     const selectedSlideId = selectedSlide?.slide_key;
     const unscopedSampleEntries = React.useMemo(
         () =>
-            hierarchy.samples.reduce<FilteredSampleEntry[]>(
-                (entries, sample) => {
-                    if (!shouldShowSampleInNavigation(sample)) {
-                        return entries;
-                    }
-
-                    const entry = buildSampleEntry(sample);
-
-                    if (entry) {
-                        entries.push(entry);
-                    }
-
-                    return entries;
-                },
-                []
-            ),
+            hierarchy.samples.flatMap(sample => {
+                const entry = sampleEntry(
+                    sample,
+                    getOrderedServableSlidesForSampleReadOnly(sample)
+                );
+                return entry ? [entry] : [];
+            }),
         [hierarchy.samples]
     );
     const allSampleEntries = React.useMemo(() => {
         if (!sampleIdFilter && !slideIdFilter) {
             return unscopedSampleEntries;
         }
-
-        return unscopedSampleEntries.reduce<FilteredSampleEntry[]>(
-            (entries, entry) => {
-                if (
-                    sampleIdFilter &&
-                    entry.sample.sample_id !== sampleIdFilter
-                ) {
-                    return entries;
-                }
-
-                const filteredSlides = slideIdFilter
-                    ? entry.filteredSlides.filter(({ slide }) =>
-                          slideIdFilter.has(slide.slide_key)
-                      )
-                    : entry.filteredSlides;
-                if (!filteredSlides.length) {
-                    return entries;
-                }
-
-                entries.push({
-                    sample: entry.sample,
-                    filteredSlides,
-                    filteredSlideIds: new Set(
-                        filteredSlides.map(({ slide }) => slide.slide_key)
-                    ),
-                });
-                return entries;
-            },
-            []
+        return narrowSampleEntries(
+            sampleIdFilter
+                ? unscopedSampleEntries.filter(
+                      entry => entry.sample.sample_id === sampleIdFilter
+                  )
+                : unscopedSampleEntries,
+            slide => !slideIdFilter || slideIdFilter.has(slide.slide_key)
         );
     }, [sampleIdFilter, slideIdFilter, unscopedSampleEntries]);
     const filteredSampleEntries = React.useMemo(
         () =>
-            allSampleEntries.reduce<FilteredSampleEntry[]>((entries, entry) => {
-                const filteredSlides = entry.filteredSlides.filter(
-                    ({ slide }) =>
-                        matchesSlideFilters(slide, stainFilter, matchFilter)
-                );
-                if (filteredSlides.length) {
-                    entries.push({
-                        sample: entry.sample,
-                        filteredSlides,
-                        filteredSlideIds: new Set(
-                            filteredSlides.map(({ slide }) => slide.slide_key)
-                        ),
-                    });
-                }
-                return entries;
-            }, []),
+            narrowSampleEntries(allSampleEntries, slide =>
+                matchesSlideFilters(slide, stainFilter, matchFilter)
+            ),
         [allSampleEntries, matchFilter, stainFilter]
     );
     const sampleEntries = React.useMemo(() => {
@@ -356,15 +319,7 @@ function WsiNavPanelComponent({
                 return;
             }
             filteredCounts.all += 1;
-            const stainType = wsiStainKind(slide);
-            if (stainType === 'hne') {
-                filteredCounts.hne += 1;
-            }
-            if (stainType === 'ihc') {
-                filteredCounts.ihc += 1;
-            }
-            if (stainType === 'other') filteredCounts.other += 1;
-            if (stainType === 'unknown') filteredCounts.unknown += 1;
+            filteredCounts[wsiStainKind(slide)] += 1;
         });
 
         return filteredCounts;

@@ -1,6 +1,5 @@
 import {
     compareSlidesInSample,
-    countServableSlidesForSample,
     getOrderedServableSlidesForSampleReadOnly,
     getServableSlideIdsForPathologyFilterReadOnly,
     sampleHasMultiplePartDescriptions,
@@ -24,24 +23,6 @@ describe('wsiSlideUtils read-only slide derivation', () => {
                 ])
             )
         ).toEqual([]);
-    });
-
-    it('derives stain counts from servable slides', () => {
-        const sample = makeSample('S-1', [
-            makeSlide({ slide_key: 'slide-hne', block_label: 'A1' }),
-            makeSlide({
-                slide_key: 'slide-ihc',
-                is_hne: false,
-                is_ihc: true,
-                stain_name: 'IHC',
-                block_label: 'A1',
-            }),
-            makeSlide({ slide_key: 'slide-hne-2', block_label: 'B1' }),
-        ]);
-
-        expect(countServableSlidesForSample(sample, 'all')).toBe(3);
-        expect(countServableSlidesForSample(sample, 'hne')).toBe(2);
-        expect(countServableSlidesForSample(sample, 'ihc')).toBe(1);
     });
 
     it('orders slides by part, then block, then H&E first', () => {

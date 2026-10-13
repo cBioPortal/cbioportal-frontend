@@ -14,14 +14,6 @@ export interface ServableSlideEntry {
     sample: Sample;
 }
 
-export interface ServableSlideCounts {
-    all: number;
-    hne: number;
-    ihc: number;
-    other: number;
-    unknown: number;
-}
-
 export interface OrderedServableSlideEntry {
     slide: Slide;
     blockLabel: string | null;
@@ -29,7 +21,6 @@ export interface OrderedServableSlideEntry {
 
 type SampleSlideData = {
     orderedSlides: OrderedServableSlideEntry[];
-    slideCounts: ServableSlideCounts;
     partDescriptionCount: number;
     slideKeys: Set<string>;
 };
@@ -170,13 +161,6 @@ function buildSampleSlideData(sample: Sample): SampleSlideData {
         entry: OrderedServableSlideEntry;
         partNumber: string;
     }> = [];
-    const slideCounts: ServableSlideCounts = {
-        all: 0,
-        hne: 0,
-        ihc: 0,
-        other: 0,
-        unknown: 0,
-    };
     const partDescriptions = new Set<string>();
     const slideKeys = new Set<string>();
     for (const part of sample.parts) {
@@ -197,30 +181,9 @@ function buildSampleSlideData(sample: Sample): SampleSlideData {
                     entry: { slide, blockLabel },
                     partNumber: part.part_number,
                 });
-                slideCounts.all += 1;
                 slideKeys.add(slide.slide_key);
                 if (slide.part_description) {
                     partDescriptions.add(slide.part_description);
-                }
-                if (slide.is_hne) {
-                    slideCounts.hne += 1;
-                }
-                if (slide.is_ihc) {
-                    slideCounts.ihc += 1;
-                }
-                if (
-                    !slide.is_hne &&
-                    !slide.is_ihc &&
-                    slide.slide_type === 'Other'
-                ) {
-                    slideCounts.other += 1;
-                }
-                if (
-                    !slide.is_hne &&
-                    !slide.is_ihc &&
-                    slide.slide_type === 'Unknown'
-                ) {
-                    slideCounts.unknown += 1;
                 }
             }
         }
@@ -236,7 +199,6 @@ function buildSampleSlideData(sample: Sample): SampleSlideData {
         .map(({ entry }) => entry);
     return {
         orderedSlides,
-        slideCounts,
         partDescriptionCount: partDescriptions.size,
         slideKeys,
     };
@@ -249,13 +211,6 @@ function getCachedServableSlideData(sample: Sample): SampleSlideData {
         sampleSlideDataCache.set(sample, data);
     }
     return data;
-}
-
-export function countServableSlidesForSample(
-    sample: Sample,
-    stainFilter: Exclude<WsiStainFilter, 'all'> | 'all' = 'all'
-): number {
-    return getCachedServableSlideData(sample).slideCounts[stainFilter];
 }
 
 export function getOrderedServableSlidesForSampleReadOnly(
