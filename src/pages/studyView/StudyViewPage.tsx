@@ -30,6 +30,7 @@ import IFrameLoader from '../../shared/components/iframeLoader/IFrameLoader';
 import { StudySummaryTab } from 'pages/studyView/tabs/SummaryTab';
 import StudyPageHeader from './studyPageHeader/StudyPageHeader';
 import CNSegments from './tabs/CNSegments';
+import AscnSegments from './tabs/ascnSegments/AscnSegments';
 import { getInternalClient } from 'shared/api/cbioportalInternalClientInstance';
 import AddChartButton from './addChartButton/AddChartButton';
 import { sleep } from '../../shared/lib/TimeUtils';
@@ -817,6 +818,17 @@ export default class StudyViewPage extends React.Component<
                                     <MSKTab
                                         key={4}
                                         id={
+                                            StudyViewPageTabKeyEnum.ASCN_SEGMENTS
+                                        }
+                                        linkText={
+                                            StudyViewPageTabDescriptions.ASCN_SEGMENTS
+                                        }
+                                    >
+                                        <AscnSegments store={this.store} />
+                                    </MSKTab>
+                                    <MSKTab
+                                        key={5}
+                                        id={
                                             StudyViewPageTabKeyEnum.FILES_AND_LINKS
                                         }
                                         linkText={
@@ -836,7 +848,7 @@ export default class StudyViewPage extends React.Component<
                                         </div>
                                     </MSKTab>
                                     <MSKTab
-                                        key={5}
+                                        key={6}
                                         id={StudyViewPageTabKeyEnum.PLOTS}
                                         linkText={
                                             StudyViewPageTabDescriptions.PLOTS
@@ -848,7 +860,7 @@ export default class StudyViewPage extends React.Component<
                                         />
                                     </MSKTab>
                                     <MSKTab
-                                        key={6}
+                                        key={7}
                                         id={StudyViewPageTabKeyEnum.EMBEDDINGS}
                                         linkText={
                                             <span>

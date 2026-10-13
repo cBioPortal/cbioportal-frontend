@@ -69,3 +69,8 @@ api-e2e/validation.js
 .vs/
 .nx
 .turbo
+
+# ASCN hackathon prototype data (patient-derived; must never be
+# committed). Generate locally with
+# scripts/generate_ascn_hackathon_prototype_data.py.
+src/shared/static-data/ascnHackathonPrototypeData.json
