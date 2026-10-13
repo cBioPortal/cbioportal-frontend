@@ -35,6 +35,21 @@ function withLocaldev(url: string): string {
     return `${url}${sep}localdist=true`;
 }
 
+// Lets the public portal recognize e2e traffic. A cookie is sent on every
+// page load, reload and request to the portal, and not to other hosts
+// (OncoKB, Genome Nexus).
+const CBIOPORTAL_URL = (
+    process.env.CBIOPORTAL_URL || 'https://www.cbioportal.org'
+).replace(/\/$/, '');
+const E2E_COOKIE = { name: 'cbioportal_e2e', value: '1', url: CBIOPORTAL_URL };
+const contextsWithCookie = new WeakSet<BrowserContext>();
+
+async function addE2eCookie(context: BrowserContext): Promise<void> {
+    if (contextsWithCookie.has(context)) return;
+    contextsWithCookie.add(context);
+    await context.addCookies([E2E_COOKIE]);
+}
+
 // Idempotent: page.goto already early-returns if localdev= is present, so
 // double-patching is a no-op, but the symbol guard avoids stacking wrappers.
 const PATCHED = Symbol.for('cbio-localdev-patched');
@@ -43,8 +58,13 @@ function patchPageGoto(page: Page): Page {
     if ((page as any)[PATCHED]) return page;
     (page as any)[PATCHED] = true;
     const originalGoto = page.goto.bind(page);
-    page.goto = ((url: string, options?: Parameters<typeof originalGoto>[1]) =>
-        originalGoto(withLocaldev(url), options)) as typeof page.goto;
+    page.goto = (async (
+        url: string,
+        options?: Parameters<typeof originalGoto>[1]
+    ) => {
+        await addE2eCookie(page.context());
+        return originalGoto(withLocaldev(url), options);
+    }) as typeof page.goto;
     return page;
 }
 
