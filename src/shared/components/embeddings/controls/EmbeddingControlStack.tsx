@@ -185,18 +185,20 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
                 </div>
             )}
 
-            {showMapColorTooltipControls && shapeOptions.length > 0 && (
+            {showMapColorTooltipControls && (
                 <div style={{ width: '190px' }}>
-                    <span style={ROW_LABEL_STYLE}>Shape by</span>
-                    <InfoIcon
-                        tooltip={
-                            <span>
-                                Only clinical attributes with exactly two
-                                categories can be used for shape.
-                            </span>
-                        }
-                        style={{ fontSize: '11px', marginLeft: '4px' }}
-                    />
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <span style={ROW_LABEL_STYLE}>Shape by</span>
+                        <InfoIcon
+                            tooltip={
+                                <span>
+                                    Only clinical attributes with exactly two
+                                    categories can be used for shape.
+                                </span>
+                            }
+                            style={{ fontSize: '11px', marginLeft: '4px' }}
+                        />
+                    </div>
                     <Select
                         name="embedding-shape-select"
                         value={selectedShapeOption}
