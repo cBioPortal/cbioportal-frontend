@@ -50,11 +50,6 @@ export function makeSample(
 ): Sample {
     return {
         sample_id: sampleId,
-        cancer_type: '',
-        cancer_type_detailed: '',
-        oncotree_code: '',
-        primary_site: '',
-        sample_type: 'Primary',
         parts: [makePart([makeBlock(slides)])],
         ...overrides,
     };

@@ -16,11 +16,6 @@ const slide: Slide = {
 
 const sample: Sample = {
     sample_id: 'S-1',
-    cancer_type: '',
-    cancer_type_detailed: '',
-    oncotree_code: '',
-    primary_site: '',
-    sample_type: 'Primary',
     parts: [],
 };
 
@@ -149,13 +144,7 @@ describe('buildPathRows', () => {
     it('leaves patient, study and cancer type to the page and Clinical section', () => {
         const labels = buildPathRows(
             placedSlide('BLOCK'),
-            {
-                ...sample,
-                cancer_type: 'Melanoma',
-                cancer_type_detailed: 'Cutaneous Melanoma',
-                oncotree_code: 'SKCM',
-                primary_site: 'Skin',
-            },
+            sample,
             'P-1',
             'study-1'
         ).map(row => row.label);

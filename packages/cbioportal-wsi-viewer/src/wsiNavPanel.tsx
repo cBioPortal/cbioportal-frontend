@@ -663,20 +663,6 @@ function SampleNode({
         }
     }, [containsSelectedSlide, open]);
 
-    const stLower = (sample.sample_type || '').toLowerCase();
-    const stClass =
-        stLower === 'primary'
-            ? theme.blue
-            : stLower.includes('metastas') || stLower === 'local recurrence'
-            ? '#c05000'
-            : theme.muted;
-    const stBg =
-        stLower === 'primary'
-            ? theme.blueLight
-            : stLower.includes('metastas') || stLower === 'local recurrence'
-            ? '#fef0e8'
-            : '#f0f0f0';
-
     const multiPart = React.useMemo(
         () =>
             open || containsSelectedSlide
@@ -736,67 +722,6 @@ function SampleNode({
                     >
                         {sample.sample_id || '—'}
                     </div>
-                    <div
-                        style={{
-                            fontSize: 11,
-                            color: theme.muted,
-                            marginTop: 1,
-                        }}
-                    >
-                        {sample.sample_type && (
-                            <span
-                                style={{
-                                    display: 'inline-block',
-                                    fontSize: 10,
-                                    fontWeight: 700,
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '.4px',
-                                    padding: '1px 5px',
-                                    borderRadius: 3,
-                                    background: stBg,
-                                    color: stClass,
-                                    marginRight: 4,
-                                }}
-                            >
-                                {sample.sample_type}
-                            </span>
-                        )}
-                        {sample.oncotree_code && (
-                            <a
-                                href="https://oncotree.mskcc.org/"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                title={`${sample.oncotree_code}${
-                                    sample.cancer_type_detailed
-                                        ? ` — ${sample.cancer_type_detailed}`
-                                        : ''
-                                }\nView OncoTree`}
-                                onClick={e => e.stopPropagation()}
-                                style={{
-                                    display: 'inline-block',
-                                    background: '#f0f0f0',
-                                    border: `1px solid ${theme.border}`,
-                                    borderRadius: 3,
-                                    fontSize: 10,
-                                    fontWeight: 700,
-                                    padding: '0 4px',
-                                    color: theme.text,
-                                    marginRight: 4,
-                                    textDecoration: 'none',
-                                }}
-                            >
-                                {sample.oncotree_code}
-                            </a>
-                        )}
-                        {sample.cancer_type_detailed ||
-                            sample.cancer_type ||
-                            ''}
-                    </div>
-                    {sample.primary_site && (
-                        <div style={{ fontSize: 11, color: theme.muted }}>
-                            {sample.primary_site}
-                        </div>
-                    )}
                 </div>
                 <div
                     title="Viewable slides shown in this sample"

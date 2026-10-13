@@ -169,15 +169,7 @@ export function buildPathRows(
             ? buildSampleUrl(studyId, sample.sample_id, patientId)
             : undefined;
     const blockLbl = normalizeBlockLabel(slide.block_label, slide.block_number);
-    let sampleTip: string | undefined;
-    if (blockLbl) {
-        sampleTip = `Block: ${blockLbl}`;
-    }
-    if (sample.sample_type) {
-        sampleTip = `${sampleTip ? `${sampleTip}\n` : ''}Type: ${
-            sample.sample_type
-        }`;
-    }
+    const sampleTip = blockLbl ? `Block: ${blockLbl}` : undefined;
 
     // De-identified exports replace the part description with a "Specimen <n>" ordinal, which
     // names no anatomical site and repeats the Specimen row.
