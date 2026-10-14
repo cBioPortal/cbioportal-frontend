@@ -2401,21 +2401,45 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
 
     it('treats a loaded tile as viewer-ready when no draw event is emitted', async () => {
         window.location.hash = '';
+        // WebGL-backed renderers can load the image successfully without
+        // delivering OpenSeadragon's tile-drawn event.
+        mockViewer.drawer = { getType: () => 'webgl' };
         const slide = makeSlide({ slide_key: '42' });
         const inst = await runMount(slide);
         const controller = controllerOf(inst);
         (inst as any).spinnerVisible = true;
+        (inst as any).thumbnailPreviewUrl = 'blob:preview';
         controller.loadingStart = Date.now() - 1000;
 
         capturedOpenCb!();
         expect((inst as any).tilesReady).toBe(false);
 
-        // WebGL-backed renderers can load the image successfully without
-        // delivering OpenSeadragon's tile-drawn event.
         capturedTileLoadedCb!();
 
         expect((inst as any).tilesReady).toBe(true);
         expect((inst as any).spinnerVisible).toBe(false);
+        // The preview doesn't stay under the slide, where zooming out shows it.
+        expect((inst as any).thumbnailPreviewUrl).toBeNull();
+    });
+
+    it('drops the preview later when a canvas renderer never draws a tile', async () => {
+        window.location.hash = '';
+        const slide = makeSlide({ slide_key: '42' });
+        const inst = await runMount(slide);
+        const controller = controllerOf(inst);
+        (inst as any).thumbnailPreviewUrl = 'blob:preview';
+        controller.loadingStart = Date.now() - 1000;
+        jest.useFakeTimers();
+        try {
+            capturedOpenCb!();
+            capturedTileLoadedCb!();
+            expect((inst as any).thumbnailPreviewUrl).toBe('blob:preview');
+
+            jest.advanceTimersByTime(1500);
+            expect((inst as any).thumbnailPreviewUrl).toBeNull();
+        } finally {
+            jest.useRealTimers();
+        }
     });
 
     it('surfaces a retryable error when no tile becomes ready', async () => {

@@ -417,6 +417,38 @@ describe('WsiNavPanel', () => {
         expect(onMatchFilterChange).toHaveBeenCalledWith('all');
     });
 
+    it('keeps the stain chips when the match filter leaves only one stain', () => {
+        // As for a patient whose unmatched slides are all H&E.
+        const sample = makeSample('S-1', [
+            placedSlide('hne-unmatched', 'UNMATCHED'),
+            placedSlide('hne-block', 'BLOCK'),
+            {
+                ...placedSlide('ihc-block', 'BLOCK'),
+                stain_name: 'IHC',
+                is_hne: false,
+                is_ihc: true,
+            },
+        ]);
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([sample])}
+                selectedSlide={null}
+                stainFilter="all"
+                matchFilter="unmatched"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                {...navContext}
+            />
+        );
+
+        expect(hasTestId(renderer, 'wsi-stain-filter-row')).toBe(true);
+        expect(findButtonText(renderer, 'wsi-stain-filter-hne')).toContain('1');
+        expect(
+            renderer.root.findByProps({ 'data-testid': 'wsi-stain-filter-ihc' })
+                .props.disabled
+        ).toBe(true);
+    });
+
     it('hides a filter whose slides all share one value', () => {
         const sample = makeSample('S-1', [
             placedSlide('part-1', 'PART'),
@@ -809,8 +841,18 @@ describe('WsiNavPanel', () => {
         ).toHaveLength(0);
         expect(findButtonText(renderer, 'wsi-stain-filter-hne')).toContain('1');
         expect(findButtonText(renderer, 'wsi-stain-filter-ihc')).toContain('1');
-        // Among H&E slides only Part matches remain: no match level to pick.
-        expect(hasTestId(renderer, 'wsi-match-filter-row')).toBe(false);
+        // Among H&E slides only Part matches remain; the patient's Block
+        // slide keeps its chip, disabled.
+        expect(findButtonText(renderer, 'wsi-match-filter-part')).toContain(
+            '1'
+        );
+        const block = renderer.root.findByProps({
+            'data-testid': 'wsi-match-filter-block',
+        });
+        expect(findButtonText(renderer, 'wsi-match-filter-block')).toContain(
+            '0'
+        );
+        expect(block.props.disabled).toBe(true);
     });
 
     it('does not count unknown slides as known Other', () => {

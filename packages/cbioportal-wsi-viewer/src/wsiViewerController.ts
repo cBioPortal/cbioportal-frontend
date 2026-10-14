@@ -128,6 +128,9 @@ function scheduleIdle(
     return () => clearTimeout(timer);
 }
 
+/** How long after tiles are ready the preview goes if tile-drawn never comes. */
+const PREVIEW_CLEAR_FALLBACK_MS = 1500;
+
 export class WsiViewerController {
     private static readonly METADATA_PREFETCH_LIMIT = 3;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -146,6 +149,8 @@ export class WsiViewerController {
     private thumbnailPreviewObjectUrl: string | null = null;
     private nativeTileReadySeq: number | null = null;
     private nativeTileDrawnSeq: number | null = null;
+    /** Whether the renderer raises tile-drawn, which clears the preview. */
+    private tileDrawnClearsPreview = false;
     private mountSeq = 0;
     private loadingStart = 0;
     private spinnerTimer: ReturnType<typeof setTimeout> | null = null;
@@ -922,6 +927,20 @@ export class WsiViewerController {
         this.host.setSpinnerVisible(false);
         this.host.setTilesReady(true);
         this.host.setError(null);
+        // A renderer that never raises tile-drawn (WebGL) would otherwise
+        // keep the full-size preview under the slide, where it shows when
+        // zoomed out. The ready tiles are drawn by the next frame.
+        // A renderer that should raise it but doesn't gets a later fallback.
+        const clearPreview = () => {
+            if (seq === this.mountSeq) this.clearThumbnailPreview();
+        };
+        if (this.tileDrawnClearsPreview) {
+            setTimeout(clearPreview, PREVIEW_CLEAR_FALLBACK_MS);
+        } else if (typeof requestAnimationFrame === 'function') {
+            requestAnimationFrame(clearPreview);
+        } else {
+            clearPreview();
+        }
         promoteOsdImageLoaderLimit(this.osdViewer);
         this.ensureMouseTrackerForReadyViewer(seq);
         if (this.host.getSelectedSlide()?.slide_key === this.initialSlideKey) {
@@ -1069,9 +1088,14 @@ export class WsiViewerController {
         // OpenSeadragon rejects tile-drawn for WebGL. Use its public drawer
         // type instead of a constructor name, which is minified in production.
         const drawerType = this.osdViewer.drawer?.getType?.();
+        this.tileDrawnClearsPreview = false;
         if (drawerType !== 'webgl') {
             try {
-                this.addSlideHandler('tile-drawn', markNativeTileDrawn, true);
+                this.tileDrawnClearsPreview = !!this.addSlideHandler(
+                    'tile-drawn',
+                    markNativeTileDrawn,
+                    true
+                );
             } catch (_) {
                 // WebGL renderers rely on the tile-loaded handler below.
             }

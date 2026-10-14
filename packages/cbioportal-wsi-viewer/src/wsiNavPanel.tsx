@@ -309,40 +309,35 @@ function WsiNavPanelComponent({
         { key: 'block', label: 'Block' },
         { key: 'unmatched', label: 'Unmatched' },
     ];
-    const stainCounts = React.useMemo(() => {
-        const filteredCounts: Record<WsiStainFilter, number> = {
-            all: 0,
-            hne: 0,
-            ihc: 0,
-            other: 0,
-            unknown: 0,
-        };
-        facetSlides.forEach(slide => {
-            if (!matchesMatchFilter(slide, matchFilter)) {
-                return;
-            }
-            filteredCounts.all += 1;
-            filteredCounts[wsiStainKind(slide)] += 1;
-        });
-
-        return filteredCounts;
-    }, [facetSlides, matchFilter]);
-    const matchCounts = React.useMemo(() => {
-        const filteredCounts = { part: 0, block: 0, unmatched: 0 };
-        facetSlides.forEach(slide => {
-            if (!matchesWsiStainFilter(slide, stainFilter)) {
-                return;
-            }
-            if (slide.match_level === 'PART') filteredCounts.part += 1;
-            if (slide.match_level === 'BLOCK') filteredCounts.block += 1;
-            if (slide.match_level === 'UNMATCHED') {
-                filteredCounts.unmatched += 1;
-            }
-        });
-        return filteredCounts;
-    }, [facetSlides, stainFilter]);
-    const stainChoices = filterChoices(chips, stainCounts, stainFilter);
-    const matchChoices = filterChoices(matchChips, matchCounts, matchFilter);
+    // Counts on the chips follow the other filter; which chips there are
+    // follows the patient's slides, so selecting one filter never removes
+    // the other's chips (a chip with no slides left is disabled instead).
+    const stainCounts = React.useMemo(
+        () => countStains(facetSlides, matchFilter),
+        [facetSlides, matchFilter]
+    );
+    const stainTotals = React.useMemo(() => countStains(facetSlides, 'all'), [
+        facetSlides,
+    ]);
+    const matchCounts = React.useMemo(
+        () => countMatches(facetSlides, stainFilter),
+        [facetSlides, stainFilter]
+    );
+    const matchTotals = React.useMemo(() => countMatches(facetSlides, 'all'), [
+        facetSlides,
+    ]);
+    const stainChoices = filterChoices(
+        chips,
+        stainTotals,
+        stainCounts,
+        stainFilter
+    );
+    const matchChoices = filterChoices(
+        matchChips,
+        matchTotals,
+        matchCounts,
+        matchFilter
+    );
 
     return (
         <div
@@ -503,19 +498,71 @@ function WsiNavPanelComponent({
 
 export const WsiNavPanel = React.memo(WsiNavPanelComponent);
 
+function countStains(
+    slides: ReadonlyArray<Slide>,
+    matchFilter: PathologySlideMatchFilter
+): Record<WsiStainFilter, number> {
+    const counts: Record<WsiStainFilter, number> = {
+        all: 0,
+        hne: 0,
+        ihc: 0,
+        other: 0,
+        unknown: 0,
+    };
+    slides.forEach(slide => {
+        if (!matchesMatchFilter(slide, matchFilter)) {
+            return;
+        }
+        counts.all += 1;
+        counts[wsiStainKind(slide)] += 1;
+    });
+    return counts;
+}
+
+function countMatches(
+    slides: ReadonlyArray<Slide>,
+    stainFilter: WsiStainFilter
+): Partial<Record<PathologySlideMatchFilter, number>> {
+    const counts = { part: 0, block: 0, unmatched: 0 };
+    slides.forEach(slide => {
+        if (!matchesWsiStainFilter(slide, stainFilter)) {
+            return;
+        }
+        if (slide.match_level === 'PART') counts.part += 1;
+        if (slide.match_level === 'BLOCK') counts.block += 1;
+        if (slide.match_level === 'UNMATCHED') counts.unmatched += 1;
+    });
+    return counts;
+}
+
 /**
- * The chips worth showing in a filter: the values some slide has, plus the
- * active one. A filter whose slides all share one value offers no choice, so
- * it shows nothing unless it is active.
+ * The chips of a filter: each value the patient's slides have, plus the
+ * active one, counted under the other filter and disabled when that leaves
+ * none. A filter whose slides all share one value offers no choice, so it
+ * shows nothing unless it is active.
  */
 function filterChoices<K extends string>(
     chips: ReadonlyArray<{ key: K; label: string; color?: string }>,
+    totals: Partial<Record<K, number>>,
     counts: Partial<Record<K, number>>,
     active: K | 'all'
-): Array<{ key: K; label: string; color?: string; count: number }> {
+): Array<{
+    key: K;
+    label: string;
+    color?: string;
+    count: number;
+    disabled: boolean;
+}> {
     const shown = chips
-        .filter(chip => chip.key === active || (counts[chip.key] ?? 0) > 0)
-        .map(chip => ({ ...chip, count: counts[chip.key] ?? 0 }));
+        .filter(chip => chip.key === active || (totals[chip.key] ?? 0) > 0)
+        .map(chip => {
+            const count = counts[chip.key] ?? 0;
+            return {
+                ...chip,
+                count,
+                disabled: count === 0 && chip.key !== active,
+            };
+        });
     return shown.length > 1 || active !== 'all' ? shown : [];
 }
 
