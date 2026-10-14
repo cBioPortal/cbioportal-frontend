@@ -219,7 +219,7 @@ describe('ResourceDataTable metadata columns', () => {
     });
 
     it('keeps builtin columns visible when the backend sent no counts', () => {
-        // Older responses have no distinctValueCounts; nothing should silently disappear.
+        // Older responses have no distinctValueCounts; no column should disappear.
         assert.isTrue(!!visibilityOf('resourceType', {}));
         assert.isTrue(!!visibilityOf('description', {}));
     });

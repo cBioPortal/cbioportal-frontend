@@ -175,8 +175,7 @@ export class ResourceTableStore {
 
     /**
      * The cohort-scoped request, without paging. Both fetches start from this; only the rows
-     * fetch adds pageNumber/pageSize, which is what keeps the metadata fetch from re-running
-     * when the user turns a page.
+     * fetch adds pageNumber/pageSize, so turning a page does not re-run the metadata fetch.
      */
     @computed private get baseQuery() {
         return {

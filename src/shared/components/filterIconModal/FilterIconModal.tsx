@@ -23,10 +23,9 @@ export interface IFilterIconModalProps {
     deactivateFilter: () => void;
     setupFilter: () => void;
     menuComponent?: JSX.Element;
-    // Position the open menu against the viewport instead of its `.dropdown`
-    // parent. An absolutely positioned menu is clipped by any ancestor that
-    // establishes a scroll container, which is what a horizontally scrollable
-    // table is; a fixed one is laid out against the viewport and escapes it.
+    // Position the open menu against the viewport instead of its `.dropdown` parent. A
+    // horizontally scrollable table establishes a scroll container, which clips an absolutely
+    // positioned menu; a fixed one is laid out against the viewport and escapes it.
     escapeScrollContainer?: boolean;
 }
 

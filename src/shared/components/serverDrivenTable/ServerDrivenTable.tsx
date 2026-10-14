@@ -307,8 +307,8 @@ export default class ServerDrivenTable<T> extends React.Component<
             ];
             return { status: 'complete', text: lines.join('\n') };
         } catch (e) {
-            // Signals the control to tell the user the download did not complete, rather than
-            // silently handing them an empty or partial file.
+            // Tells the control to report a failed download instead of handing the user an
+            // empty or partial file.
             return { status: 'incomplete', text: '' };
         }
     };
