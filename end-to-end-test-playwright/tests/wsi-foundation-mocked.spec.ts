@@ -70,10 +70,14 @@ if (process.env.PW_SUITE === 'wsi') {
             await expect(
                 page.getByTestId(`wsi-slide-item-${SLIDE_KEY}`)
             ).toBeVisible();
-            await expect(page.getByTitle('Zoom in')).toBeVisible({
+            await expect(
+                page.getByRole('button', { name: 'Zoom in' })
+            ).toBeVisible({
                 timeout: 30000,
             });
-            await expect(page.getByTitle('Fit to view')).toBeVisible();
+            await expect(
+                page.getByRole('button', { name: 'Fit to view' })
+            ).toBeVisible();
             await expect
                 .poll(
                     () =>
@@ -157,7 +161,9 @@ if (process.env.PW_SUITE === 'wsi') {
                 page.getByTestId('wsi-viewer-error')
             ).toContainText('OSD init error', { timeout: 30000 });
             await page.getByRole('button', { name: 'Retry' }).click();
-            await expect(page.getByTitle('Fit to view')).toBeVisible({
+            await expect(
+                page.getByRole('button', { name: 'Fit to view' })
+            ).toBeVisible({
                 timeout: 30000,
             });
             expect(chunkRequests).toBeGreaterThanOrEqual(2);
@@ -180,7 +186,9 @@ if (process.env.PW_SUITE === 'wsi') {
             await expect(
                 page.getByTestId(`wsi-slide-item-${SECOND_SLIDE_KEY}`)
             ).toHaveAttribute('aria-current', 'true', { timeout: 30000 });
-            await expect(page.getByTitle('Fit to view')).toBeVisible({
+            await expect(
+                page.getByRole('button', { name: 'Fit to view' })
+            ).toBeVisible({
                 timeout: 30000,
             });
             await expect(
@@ -231,7 +239,9 @@ if (process.env.PW_SUITE === 'wsi') {
             await expect(
                 page.getByTestId(`wsi-slide-item-${SLIDE_KEY}`)
             ).toHaveAttribute('aria-current', 'true', { timeout: 30000 });
-            await expect(page.getByTitle('Fit to view')).toBeVisible({
+            await expect(
+                page.getByRole('button', { name: 'Fit to view' })
+            ).toBeVisible({
                 timeout: 30000,
             });
             await expect
