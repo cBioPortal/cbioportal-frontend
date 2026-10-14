@@ -2404,6 +2404,14 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         // WebGL-backed renderers can load the image successfully without
         // delivering OpenSeadragon's tile-drawn event.
         mockViewer.drawer = { getType: () => 'webgl' };
+        let updateViewportCb: (() => void) | null = null;
+        const addHandler = mockViewer.addHandler.getMockImplementation();
+        mockViewer.addHandler.mockImplementation(
+            (event: string, cb: (event?: any) => void) => {
+                if (event === 'update-viewport') updateViewportCb = cb;
+                addHandler(event, cb);
+            }
+        );
         const slide = makeSlide({ slide_key: '42' });
         const inst = await runMount(slide);
         const controller = controllerOf(inst);
@@ -2418,7 +2426,10 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
 
         expect((inst as any).tilesReady).toBe(true);
         expect((inst as any).spinnerVisible).toBe(false);
-        // The preview doesn't stay under the slide, where zooming out shows it.
+        // The preview stays until the redraw that draws the loaded tile, then
+        // goes, rather than staying under the slide where zooming out shows it.
+        expect((inst as any).thumbnailPreviewUrl).toBe('blob:preview');
+        updateViewportCb!();
         expect((inst as any).thumbnailPreviewUrl).toBeNull();
     });
 

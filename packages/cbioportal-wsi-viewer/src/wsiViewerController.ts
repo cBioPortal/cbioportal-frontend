@@ -929,17 +929,25 @@ export class WsiViewerController {
         this.host.setError(null);
         // A renderer that never raises tile-drawn (WebGL) would otherwise
         // keep the full-size preview under the slide, where it shows when
-        // zoomed out. The ready tiles are drawn by the next frame.
-        // A renderer that should raise it but doesn't gets a later fallback.
+        // zoomed out. A loaded tile is drawn on the viewer's next redraw, so
+        // the preview goes the frame after that; every renderer also gets a
+        // later fallback in case its draw event never comes.
         const clearPreview = () => {
             if (seq === this.mountSeq) this.clearThumbnailPreview();
         };
-        if (this.tileDrawnClearsPreview) {
-            setTimeout(clearPreview, PREVIEW_CLEAR_FALLBACK_MS);
-        } else if (typeof requestAnimationFrame === 'function') {
-            requestAnimationFrame(clearPreview);
-        } else {
-            clearPreview();
+        setTimeout(clearPreview, PREVIEW_CLEAR_FALLBACK_MS);
+        if (!this.tileDrawnClearsPreview) {
+            this.addSlideHandler(
+                'update-viewport',
+                () => {
+                    if (typeof requestAnimationFrame === 'function') {
+                        requestAnimationFrame(clearPreview);
+                    } else {
+                        clearPreview();
+                    }
+                },
+                true
+            );
         }
         promoteOsdImageLoaderLimit(this.osdViewer);
         this.ensureMouseTrackerForReadyViewer(seq);
