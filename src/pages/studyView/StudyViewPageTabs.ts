@@ -29,7 +29,9 @@ export function extractResourceIdFromTabId(tabId: string) {
 }
 
 export function extractResourceIdFromTableTabId(tabId: string) {
-    const match = new RegExp(`${StudyViewResourceTableTabPrefix}(.*)`).exec(tabId);
+    const match = new RegExp(`${StudyViewResourceTableTabPrefix}(.*)`).exec(
+        tabId
+    );
     if (match) {
         return match[1];
     } else {

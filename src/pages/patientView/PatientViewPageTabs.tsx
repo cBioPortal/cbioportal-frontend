@@ -77,7 +77,9 @@ export function extractResourceIdFromTabId(tabId: string) {
 }
 
 export function extractResourceIdFromTableTabId(tabId: string) {
-    const match = new RegExp(`${PatientViewResourceTableTabPrefix}(.*)`).exec(tabId);
+    const match = new RegExp(`${PatientViewResourceTableTabPrefix}(.*)`).exec(
+        tabId
+    );
     if (match) {
         return match[1];
     } else {
@@ -758,8 +760,7 @@ export function tabs(
                 id={PatientViewPageTabs.MRNA}
                 linkText={
                     <span>
-                        mRNA{' '}
-                        <strong className={'beta-text'}>Beta!</strong>
+                        mRNA <strong className={'beta-text'}>Beta!</strong>
                     </span>
                 }
             >
@@ -775,8 +776,7 @@ export function tabs(
                 id={PatientViewPageTabs.Plots}
                 linkText={
                     <span>
-                        Plots{' '}
-                        <strong className={'beta-text'}>Beta!</strong>
+                        Plots <strong className={'beta-text'}>Beta!</strong>
                     </span>
                 }
             >
@@ -784,8 +784,8 @@ export function tabs(
                     .isComplete &&
                 pageComponent.patientViewPageStore.highlightedCancerTypes
                     .isComplete &&
-                pageComponent.patientViewPageStore.highlightedDetailedCancerTypes
-                    .isComplete ? (
+                pageComponent.patientViewPageStore
+                    .highlightedDetailedCancerTypes.isComplete ? (
                     <PatientViewPlotsTabWrapper
                         store={pageComponent.patientViewPageStore}
                         urlWrapper={urlWrapper}
