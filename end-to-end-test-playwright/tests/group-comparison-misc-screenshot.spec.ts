@@ -95,8 +95,12 @@ test.describe('group comparison clinical tab categorical table', () => {
         });
         await expect(page.locator('a.tabAnchor_clinical')).toBeVisible();
         await page.locator('a.tabAnchor_clinical').click();
+        await expect(page).toHaveURL(/\/comparison\/clinical\?/);
+        // MSK-CHORD has ~25k samples: the clinical-data-enrichments request
+        // alone takes ~6s, and plotting every sample takes several more
+        // seconds of CPU, which is several times slower on CI runners.
         await expect(page.locator(CLINICAL_PLOT_DIV)).toBeVisible({
-            timeout: 20000,
+            timeout: 60000,
         });
         await page.locator(`${CLINICAL_DIV} span[data-test="Race"]`).click();
         await selectClinicalTabPlotType(page, 'Table');

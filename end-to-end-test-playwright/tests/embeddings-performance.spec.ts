@@ -77,13 +77,14 @@ async function openSummary(page: Page, query = '') {
 async function openEmbeddingsTab(page: Page) {
     const embeddingsTab = page.locator(EMBEDDINGS_TAB);
     const nextPageArrow = page.locator('#studyViewTabs .fa-chevron-right');
-    for (let i = 0; i < 10 && !(await embeddingsTab.isVisible()); i++) {
-        if (await nextPageArrow.isVisible()) {
-            await nextPageArrow.click();
-        } else {
-            await page.waitForTimeout(500);
+    // The tab bar can still be gaining tabs (and re-paginating) while this
+    // runs, so keep paging until the anchor is rendered.
+    await expect(async () => {
+        if (!(await embeddingsTab.isVisible())) {
+            await nextPageArrow.click({ timeout: 2000 });
         }
-    }
+        await expect(embeddingsTab).toBeVisible({ timeout: 2000 });
+    }).toPass({ timeout: 60000 });
     await embeddingsTab.click({ timeout: 30000 });
     await expect(page.locator(VIZ).first()).toBeVisible({ timeout: 60000 });
 }
@@ -93,13 +94,12 @@ async function backToSummary(page: Page) {
     // Summary is the first tab, so page back until it's rendered again.
     const summaryTab = page.locator(SUMMARY_TAB);
     const prevPageArrow = page.locator('#studyViewTabs .fa-chevron-left');
-    for (let i = 0; i < 10 && !(await summaryTab.isVisible()); i++) {
-        if (await prevPageArrow.isVisible()) {
-            await prevPageArrow.click();
-        } else {
-            await page.waitForTimeout(500);
+    await expect(async () => {
+        if (!(await summaryTab.isVisible())) {
+            await prevPageArrow.click({ timeout: 2000 });
         }
-    }
+        await expect(summaryTab).toBeVisible({ timeout: 2000 });
+    }).toPass({ timeout: 60000 });
     await summaryTab.click({ timeout: 30000 });
     await expect(page.locator(SUMMARY_CONTENT)).toBeVisible({
         timeout: 30000,
