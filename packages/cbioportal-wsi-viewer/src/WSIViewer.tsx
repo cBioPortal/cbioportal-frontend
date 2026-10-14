@@ -36,6 +36,11 @@ import { clearPatientHierarchyCache } from './wsiHierarchyFetchCache';
 import { clearWsiSlideAccess } from './wsiAuth';
 import { clearWsiThumbnailFetchCache } from './wsiThumbnailFetchCache';
 import {
+    chooseScaleBar,
+    formatMagnification,
+    nativeObjectivePower,
+} from './wsiScaleUtils';
+import {
     WSI_FONT_FAMILY,
     WSI_SIDEBAR_MAX_WIDTH,
     WSI_SIDEBAR_MIN_WIDTH,
@@ -44,16 +49,36 @@ import {
 } from './wsiTheme';
 import {
     readWsiPanelFlag,
+    WSI_METADATA_COLLAPSED_KEY,
+    WSI_NAV_COLLAPSED_KEY,
     WsiCollapsedRail,
+    WsiRailSection,
     writeWsiPanelFlag,
 } from './wsiPanelChrome';
+import { getStainDotColor } from './wsiMetaUtils';
 
 const SIDEBAR_HANDLE_W = 8;
 const SLIDE_SELECTION_DEBOUNCE_MS = 120;
 
-/** Browser-stored hidden state of the slide list and the details sidebar. */
-export const WSI_NAV_COLLAPSED_KEY = 'wsi.viewer.navCollapsed';
-export const WSI_METADATA_COLLAPSED_KEY = 'wsi.viewer.metadataCollapsed';
+export { WSI_METADATA_COLLAPSED_KEY, WSI_NAV_COLLAPSED_KEY };
+
+/** Keys that show or hide the slide list and the details sidebar. */
+const NAV_TOGGLE_KEY = '|';
+const METADATA_TOGGLE_KEY = '.';
+
+function isTypingTarget(target: EventTarget | null): boolean {
+    const element = target as HTMLElement | null;
+    if (!element || !element.tagName) {
+        return false;
+    }
+    const tag = element.tagName.toLowerCase();
+    return (
+        tag === 'input' ||
+        tag === 'textarea' ||
+        tag === 'select' ||
+        element.isContentEditable
+    );
+}
 
 export interface WsiViewerProps {
     /** Tile-server base URL (never a patient-scoped or resource URL). */
@@ -100,6 +125,13 @@ export interface WsiViewerProps {
      * tab). Background work such as token refresh pauses meanwhile.
      */
     hidden?: boolean;
+    /**
+     * The host's own hidden panels, shown above the slide list's when that
+     * is hidden too, so the two read as one rail.
+     */
+    leadingRailSections?: ReadonlyArray<WsiRailSection>;
+    /** The host's badge for a sample in the slide list, e.g. patient view's numbered sample icon. */
+    renderSampleLabel?: (sampleId: string) => React.ReactNode;
 }
 
 function DefaultLoadingIndicator() {
@@ -113,12 +145,14 @@ function DefaultLoadingIndicator() {
     );
 }
 
-/** What the coordinate bar reads from the viewer. */
-interface CoordBarViewerState {
+/** What the status bar reads from the viewer. */
+interface StatusBarViewerState {
     coordInputX: string;
     coordInputY: string;
     cursorPos: { x: number; y: number } | null;
+    viewScale: number | null;
     readonly selectedMpp?: { x: number; y: number };
+    readonly selectedObjectivePower?: number;
 }
 
 function getInitialMatchFilter(
@@ -166,6 +200,8 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
     @observable coordInputY = '';
     /** Current cursor position in image pixels (null when viewer not ready or cursor outside) */
     @observable cursorPos: { x: number; y: number } | null = null;
+    /** Screen pixels per image pixel at the current zoom. */
+    @observable viewScale: number | null = null;
 
     private viewerContainerRef = React.createRef<HTMLDivElement>();
     private resizeStartX = 0;
@@ -392,6 +428,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                 this.spinnerVisible = false;
                 this.tilesReady = false;
                 this.thumbnailPreviewUrl = null;
+                this.viewScale = null;
             },
             getPatientId: () => this.hierarchy?.patient_id,
             setCoordInputs: (x, y) => this.setCoordInputs(x, y),
@@ -401,6 +438,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             }),
             updateCursorPos: (x, y) => this.handleCursorMove(x, y),
             clearCursorPos: () => this.clearCursorPos(),
+            setViewScale: scale => this.setViewScale(scale),
             reportInitialSlideLoadPerformance: metric =>
                 this.reportInitialSlideLoadPerformance(metric),
         };
@@ -428,8 +466,28 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             );
         }
         this.updateControllerVisibility();
+        if (typeof document !== 'undefined') {
+            document.addEventListener('keydown', this.handlePanelKey);
+        }
         void this.controller.loadHierarchy();
     }
+
+    private readonly handlePanelKey = (event: KeyboardEvent) => {
+        if (
+            this.props.hidden ||
+            event.altKey ||
+            event.ctrlKey ||
+            event.metaKey ||
+            isTypingTarget(event.target)
+        ) {
+            return;
+        }
+        if (event.key === NAV_TOGGLE_KEY) {
+            this.setNavCollapsed(!this.navCollapsed);
+        } else if (event.key === METADATA_TOGGLE_KEY) {
+            this.setMetadataCollapsed(!this.metadataCollapsed);
+        }
+    };
 
     private readonly updateControllerVisibility = () => {
         const pageHidden =
@@ -537,6 +595,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                 'visibilitychange',
                 this.updateControllerVisibility
             );
+            document.removeEventListener('keydown', this.handlePanelKey);
         }
         this.cancelPendingSlideSelection();
         action(() => {
@@ -561,6 +620,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         this.spinnerVisible = false;
         this.thumbnailPreviewUrl = null;
         this.cursorPos = null;
+        this.viewScale = null;
         this.coordInputX = '';
         this.coordInputY = '';
     }
@@ -729,6 +789,20 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         this.cursorPos = null;
     }
 
+    /** Skips changes too small to move the scale bar or magnification. */
+    @action.bound
+    private setViewScale(scale: number | null) {
+        const current = this.viewScale;
+        if (
+            scale !== null &&
+            current !== null &&
+            Math.abs(scale - current) / current < 0.002
+        ) {
+            return;
+        }
+        this.viewScale = scale;
+    }
+
     private async reselectPreferredSampleSlide(): Promise<void> {
         if (!this.hierarchy || !this.servableSlides.length) {
             return;
@@ -823,8 +897,14 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         return this.props.tileServerUrl.replace(/\/$/, '');
     }
 
+    /** The scan's microns per pixel; a scanner that recorded none reports 0. */
     get selectedMpp(): { x: number; y: number } | undefined {
-        return this.selectedMeta?.mpp;
+        const mpp = this.selectedMeta?.mpp;
+        return mpp && mpp.x > 0 && mpp.y > 0 ? mpp : undefined;
+    }
+
+    get selectedObjectivePower(): number | undefined {
+        return nativeObjectivePower(this.selectedMeta);
     }
 
     @computed
@@ -849,6 +929,28 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
 
     // ---- render ----
 
+    /** The hidden slide list's rail, led by the host's own hidden panels. */
+    private renderNavRail() {
+        const { selectedSlide, hierarchy } = this;
+        return (
+            <WsiCollapsedRail
+                side="left"
+                title="Slides"
+                detail={
+                    hierarchy ? String(this.servableSlides.length) : undefined
+                }
+                accent={
+                    selectedSlide ? getStainDotColor(selectedSlide) : undefined
+                }
+                showLabel={`Show slide list (${NAV_TOGGLE_KEY})`}
+                onExpand={this.showNav}
+                background={C.navBg}
+                testId="wsi-nav-rail"
+                leadingSections={this.props.leadingRailSections}
+            />
+        );
+    }
+
     render() {
         const { height } = this.props;
         const {
@@ -869,37 +971,31 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             stainFilter !== 'all' ||
             matchFilter !== 'all';
 
-        if (loading) {
+        if (loading || !hierarchy) {
+            // A hidden slide list keeps its rail (and any host sections on
+            // it) while slides load or fail, so the host's controls stay put.
             return (
-                <div
-                    style={{
-                        height,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}
-                >
-                    {this.props.renderLoading ? (
-                        this.props.renderLoading()
-                    ) : (
-                        <DefaultLoadingIndicator />
-                    )}
-                </div>
-            );
-        }
-
-        if (!hierarchy) {
-            return (
-                <div
-                    style={{
-                        height,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#c00',
-                    }}
-                >
-                    {error || 'No data'}
+                <div style={{ display: 'flex', height }}>
+                    {this.navCollapsed && this.renderNavRail()}
+                    <div
+                        style={{
+                            flex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: loading ? undefined : '#c00',
+                        }}
+                    >
+                        {loading ? (
+                            this.props.renderLoading ? (
+                                this.props.renderLoading()
+                            ) : (
+                                <DefaultLoadingIndicator />
+                            )
+                        ) : (
+                            error || 'No data'
+                        )}
+                    </div>
                 </div>
             );
         }
@@ -917,14 +1013,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             >
                 {/* Left nav panel */}
                 {this.navCollapsed ? (
-                    <WsiCollapsedRail
-                        side="left"
-                        title="Slides"
-                        showLabel="Show slide list"
-                        onExpand={this.showNav}
-                        background={C.navBg}
-                        testId="wsi-nav-rail"
-                    />
+                    this.renderNavRail()
                 ) : (
                     <WsiNavPanel
                         hierarchy={hierarchy}
@@ -944,6 +1033,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                         studyId={this.props.studyId}
                         authScope={this.props.authScope}
                         onHide={this.hideNav}
+                        renderSampleLabel={this.props.renderSampleLabel}
                     />
                 )}
 
@@ -952,7 +1042,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                     style={{
                         flex: 1,
                         position: 'relative',
-                        background: '#e8e8e8',
+                        background: C.stageBg,
                     }}
                 >
                     {selectedSlide && thumbnailPreviewUrl && (
@@ -997,19 +1087,26 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                         }}
                     >
                         {ZOOM_BUTTONS.map(({ id, title, icon }) => (
-                            <button
+                            <DefaultTooltip
                                 key={id}
-                                id={`${this.navId}-${id}`}
-                                className="btn btn-default btn-sm"
-                                title={title}
-                                style={{
-                                    width: 28,
-                                    padding: '3px 0',
-                                    lineHeight: 1,
-                                }}
+                                trigger={['hover']}
+                                placement="right"
+                                overlay={<span>{title}</span>}
                             >
-                                <i className={`fa ${icon}`} />
-                            </button>
+                                <button
+                                    type="button"
+                                    id={`${this.navId}-${id}`}
+                                    aria-label={title}
+                                    className="btn btn-default btn-sm"
+                                    style={{
+                                        width: 28,
+                                        padding: '3px 0',
+                                        lineHeight: 1,
+                                    }}
+                                >
+                                    <i className={`fa ${icon}`} />
+                                </button>
+                            </DefaultTooltip>
                         ))}
                     </div>
                     {this.requestedSlideUnavailable &&
@@ -1070,22 +1167,22 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                                         padding: '7px 10px',
                                         borderRadius: 3,
                                         color: C.text,
-                                        background: 'rgba(255,255,255,0.9)',
-                                        boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
-                                        fontSize: 12,
+                                        background: 'rgba(255,255,255,0.92)',
+                                        border: `1px solid ${C.border}`,
+                                        boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                                        fontSize: 13,
                                     }}
                                 >
                                     <i
                                         className="fa fa-spinner fa-spin"
-                                        style={{ color: '#666' }}
+                                        style={{ color: C.muted }}
                                     />
                                     <span>Loading full-resolution image…</span>
                                 </div>
+                            ) : this.props.renderLoading ? (
+                                this.props.renderLoading()
                             ) : (
-                                <i
-                                    className="fa fa-spinner fa-spin fa-3x"
-                                    style={{ color: '#888' }}
-                                />
+                                <DefaultLoadingIndicator />
                             )}
                         </div>
                     )}
@@ -1120,7 +1217,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                         </div>
                     )}
                     {this.tilesReady && (
-                        <CoordBar
+                        <ViewerStatusBar
                             viewer={this}
                             onChangeX={this.handleChangeX}
                             onChangeY={this.handleChangeY}
@@ -1136,7 +1233,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                     <WsiCollapsedRail
                         side="right"
                         title="Details"
-                        showLabel="Show image details"
+                        showLabel={`Show details (${METADATA_TOGGLE_KEY})`}
                         onExpand={this.showMetadata}
                         background={C.sidebarBg}
                         testId="wsi-metadata-rail"
@@ -1210,10 +1307,10 @@ const overlayStyle: React.CSSProperties = {
     pointerEvents: 'none',
 };
 
-// ---- CoordBar ----
+// ---- ViewerStatusBar ----
 
-interface CoordBarProps {
-    viewer: CoordBarViewerState;
+interface ViewerStatusBarProps {
+    viewer: StatusBarViewerState;
     onChangeX: (v: string) => void;
     onChangeY: (v: string) => void;
     onGo: () => void;
@@ -1222,7 +1319,45 @@ interface CoordBarProps {
     showDownload: boolean;
 }
 
-const CoordBar = observer(function CoordBar({
+/** A status bar tool: a Bootstrap button with a portal tooltip. */
+function StatusBarButton({
+    label,
+    icon,
+    testId,
+    pressed,
+    onClick,
+}: {
+    label: string;
+    icon: string;
+    testId: string;
+    pressed?: boolean;
+    onClick: () => void;
+}) {
+    return (
+        <DefaultTooltip
+            trigger={['hover']}
+            placement="top"
+            overlay={<span>{label}</span>}
+        >
+            <button
+                type="button"
+                className={`btn btn-default btn-xs${pressed ? ' active' : ''}`}
+                data-testid={testId}
+                aria-label={label}
+                aria-pressed={pressed}
+                onClick={onClick}
+            >
+                <i className={`fa ${icon}`} />
+            </button>
+        </DefaultTooltip>
+    );
+}
+
+/**
+ * The strip along the bottom of the slide: the on-screen magnification and a
+ * scale bar on the left, the cursor's position and the view tools on the right.
+ */
+const ViewerStatusBar = observer(function ViewerStatusBar({
     viewer,
     onChangeX,
     onChangeY,
@@ -1230,17 +1365,21 @@ const CoordBar = observer(function CoordBar({
     onCopyLink,
     onDownload,
     showDownload,
-}: CoordBarProps) {
+}: ViewerStatusBarProps) {
     const {
         coordInputX: inputX,
         coordInputY: inputY,
         cursorPos,
+        viewScale,
         selectedMpp: mpp,
+        selectedObjectivePower,
     } = viewer;
+    const [copied, setCopied] = React.useState(false);
+    const [goToOpen, setGoToOpen] = React.useState(false);
     const handleKey = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') onGo();
+        if (e.key === 'Escape') setGoToOpen(false);
     };
-    const [copied, setCopied] = React.useState(false);
 
     const handleCopy = () => {
         onCopyLink();
@@ -1248,18 +1387,27 @@ const CoordBar = observer(function CoordBar({
         setTimeout(() => setCopied(false), 2000);
     };
 
+    const magnification =
+        viewScale !== null
+            ? formatMagnification(selectedObjectivePower, viewScale)
+            : undefined;
+    const scaleBar =
+        viewScale !== null && mpp?.x
+            ? chooseScaleBar(mpp.x / viewScale)
+            : undefined;
+
     let cursorLabel = '';
     if (cursorPos) {
-        cursorLabel = `${cursorPos.x.toLocaleString()} × ${cursorPos.y.toLocaleString()} px`;
-        if (mpp) {
-            const umX = (cursorPos.x * mpp.x).toFixed(1);
-            const umY = (cursorPos.y * mpp.y).toFixed(1);
-            cursorLabel += `  (${umX} × ${umY} μm)`;
-        }
+        cursorLabel = mpp
+            ? `${formatMicronPosition(
+                  cursorPos.x * mpp.x
+              )}, ${formatMicronPosition(cursorPos.y * mpp.y)}`
+            : `${cursorPos.x.toLocaleString()}, ${cursorPos.y.toLocaleString()} px`;
     }
 
     return (
         <div
+            data-testid="wsi-status-bar"
             style={{
                 position: 'absolute',
                 bottom: 0,
@@ -1267,104 +1415,127 @@ const CoordBar = observer(function CoordBar({
                 right: 0,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 6,
+                gap: 12,
                 padding: '4px 10px',
-                background: 'rgba(250,250,250,0.92)',
+                background: 'rgba(250,250,250,0.94)',
                 borderTop: `1px solid ${C.border}`,
-                fontSize: 11,
-                color: C.muted,
-                backdropFilter: 'blur(2px)',
+                fontSize: 12,
+                color: C.text,
+                fontVariantNumeric: 'tabular-nums',
                 zIndex: 10,
             }}
         >
-            <span style={{ fontWeight: 600, color: C.text, marginRight: 2 }}>
-                Go to:
-            </span>
-            <div
-                className="input-group input-group-sm"
-                style={{
-                    width: 'auto',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                }}
-            >
-                <span style={{ color: C.muted }}>X</span>
-                <input
-                    type="number"
-                    value={inputX}
-                    placeholder="px"
-                    className="form-control input-sm"
-                    style={{ width: 88 }}
-                    onChange={e => onChangeX(e.target.value)}
-                    onKeyDown={handleKey}
-                />
-                <span style={{ color: C.muted }}>Y</span>
-                <input
-                    type="number"
-                    value={inputY}
-                    placeholder="px"
-                    className="form-control input-sm"
-                    style={{ width: 88 }}
-                    onChange={e => onChangeY(e.target.value)}
-                    onKeyDown={handleKey}
-                />
-            </div>
-            <button className="btn btn-primary btn-sm" onClick={onGo}>
-                Go
-            </button>
-            <DefaultTooltip
-                trigger={['hover']}
-                placement="top"
-                overlay={
-                    <span>
-                        Copy a link to this exact view (slide, position, zoom)
-                    </span>
-                }
-            >
-                <button
-                    className={`btn btn-default btn-sm`}
-                    data-testid="wsi-share-button"
-                    onClick={handleCopy}
-                >
-                    {copied ? (
-                        <i className="fa fa-check" />
-                    ) : (
-                        <i className="fa fa-clipboard" />
-                    )}
-                </button>
-            </DefaultTooltip>
-            {showDownload && (
-                <DefaultTooltip
-                    trigger={['hover']}
-                    placement="top"
-                    overlay={<span>Download current viewport as JPEG</span>}
-                >
-                    <button
-                        className="btn btn-default btn-sm"
-                        data-testid="wsi-download-button"
-                        onClick={onDownload}
-                    >
-                        <i className="fa fa-cloud-download" />
-                    </button>
-                </DefaultTooltip>
-            )}
-            {cursorPos && (
+            {magnification && (
                 <span
+                    data-testid="wsi-magnification"
+                    title="Magnification on screen"
+                    style={{ minWidth: 36, fontWeight: 700 }}
+                >
+                    {magnification}
+                </span>
+            )}
+            {scaleBar && (
+                <span
+                    data-testid="wsi-scale-bar"
+                    title="Scale"
                     style={{
-                        marginLeft: 'auto',
-                        color: C.muted,
-                        fontFamily: 'monospace',
-                        fontSize: 11,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
                     }}
                 >
-                    <i
-                        className="fa fa-crosshairs"
-                        style={{ marginRight: 3 }}
+                    <span
+                        aria-hidden="true"
+                        style={{
+                            display: 'inline-block',
+                            width: scaleBar.widthPx,
+                            height: 6,
+                            borderLeft: `2px solid ${C.text}`,
+                            borderRight: `2px solid ${C.text}`,
+                            borderBottom: `2px solid ${C.text}`,
+                            transition: 'width 120ms',
+                        }}
                     />
+                    <span>{scaleBar.label}</span>
+                </span>
+            )}
+            <span style={{ flex: 1 }} />
+            {cursorPos && (
+                <span
+                    data-testid="wsi-cursor-position"
+                    style={{ color: C.muted, whiteSpace: 'nowrap' }}
+                >
                     {cursorLabel}
                 </span>
+            )}
+            {goToOpen && (
+                <span
+                    className="input-group input-group-sm"
+                    style={{
+                        width: 'auto',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                    }}
+                >
+                    <input
+                        type="number"
+                        aria-label="X in image pixels"
+                        value={inputX}
+                        placeholder="x px"
+                        autoFocus
+                        className="form-control input-sm"
+                        style={{ width: 84, height: 24 }}
+                        onChange={e => onChangeX(e.target.value)}
+                        onKeyDown={handleKey}
+                    />
+                    <input
+                        type="number"
+                        aria-label="Y in image pixels"
+                        value={inputY}
+                        placeholder="y px"
+                        className="form-control input-sm"
+                        style={{ width: 84, height: 24 }}
+                        onChange={e => onChangeY(e.target.value)}
+                        onKeyDown={handleKey}
+                    />
+                    <button
+                        type="button"
+                        className="btn btn-primary btn-xs"
+                        onClick={onGo}
+                    >
+                        Go
+                    </button>
+                </span>
+            )}
+            <StatusBarButton
+                label="Go to a position (image pixels)"
+                icon="fa-crosshairs"
+                testId="wsi-goto-button"
+                pressed={goToOpen}
+                onClick={() => setGoToOpen(open => !open)}
+            />
+            <StatusBarButton
+                label="Copy a link to this exact view (slide, position, zoom)"
+                icon={copied ? 'fa-check' : 'fa-link'}
+                testId="wsi-share-button"
+                onClick={handleCopy}
+            />
+            {showDownload && (
+                <StatusBarButton
+                    label="Download current viewport as JPEG"
+                    icon="fa-download"
+                    testId="wsi-download-button"
+                    onClick={onDownload}
+                />
             )}
         </div>
     );
 });
+
+/** A position on the tissue: µm below a millimetre, mm from there. */
+function formatMicronPosition(microns: number): string {
+    return microns >= 1000
+        ? `${(microns / 1000).toFixed(2)} mm`
+        : `${microns.toFixed(0)} µm`;
+}

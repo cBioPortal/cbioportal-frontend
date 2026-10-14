@@ -1,8 +1,12 @@
 import { TileMetadata } from './wsiViewerTypes';
 import { hasWsiHashViewport, WsiHashState } from './wsiViewStateUtils';
 import { buildWsiRequestHeaders } from './wsiUrls';
+import { WSI_THEME } from './wsiTheme';
 
 const OSD_NAVIGATOR_BOTTOM_OFFSET_PX = '48px';
+/** The navigator scales with the viewer; this keeps it small in a tall one. */
+const OSD_NAVIGATOR_MAX_WIDTH_PX = '220px';
+const OSD_NAVIGATOR_MAX_HEIGHT_PX = '180px';
 export const OSD_INITIAL_IMAGE_LOADER_LIMIT = 1;
 export const OSD_STEADY_IMAGE_LOADER_LIMIT = 4;
 export const OSD_TILE_REQUEST_TIMEOUT_MS = 120_000;
@@ -168,10 +172,10 @@ export function ensureNavigator({
         sizeRatio: 0.2,
         autoFade: true,
         navigatorRotate: true,
-        background: '#000',
-        opacity: 0.8,
-        borderColor: '#555',
-        displayRegionColor: '#900',
+        background: '#fff',
+        opacity: 0.9,
+        borderColor: '#ccc',
+        displayRegionColor: WSI_THEME.blue,
         ajaxHeaders: buildWsiRequestHeaders(accessToken),
         loadTilesWithAjax: Boolean(accessToken),
     });
@@ -195,6 +199,8 @@ export function offsetNavigatorElement(
     const navEl = osdViewer?.navigator?.element as HTMLElement | undefined;
     if (navEl) {
         navEl.style.bottom = OSD_NAVIGATOR_BOTTOM_OFFSET_PX;
+        navEl.style.maxWidth = OSD_NAVIGATOR_MAX_WIDTH_PX;
+        navEl.style.maxHeight = OSD_NAVIGATOR_MAX_HEIGHT_PX;
     }
 }
 

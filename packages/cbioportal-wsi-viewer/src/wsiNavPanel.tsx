@@ -1,4 +1,4 @@
-import { pluralize } from 'cbioportal-frontend-commons';
+import { DefaultTooltip, pluralize } from 'cbioportal-frontend-commons';
 import * as React from 'react';
 import {
     PatientHierarchy,
@@ -33,10 +33,10 @@ import {
 
 import {
     WSI_NAV_WIDTH,
-    WSI_SECTION_TITLE_STYLE,
+    WSI_STAIN_COLORS,
     WSI_THEME as theme,
 } from './wsiTheme';
-import { WsiPanelHideButton } from './wsiPanelChrome';
+import { WsiPanelHeader } from './wsiPanelChrome';
 import { WsiFilterChipGroup } from './wsiFilterChips';
 
 export interface WsiNavPanelProps {
@@ -58,11 +58,15 @@ export interface WsiNavPanelProps {
     authScope: string;
     /** Shows a header button that hides the panel. */
     onHide?: () => void;
+    /** The host's badge for a sample, e.g. patient view's numbered sample icon. */
+    renderSampleLabel?: (sampleId: string) => React.ReactNode;
 }
 
 const INITIAL_VISIBLE_SAMPLE_LIMIT = 6;
-const THUMBNAIL_WIDTH = 64;
-const THUMBNAIL_HEIGHT = 48;
+/** Height of a slide in the tray; the label end is about a third of a real slide's length. */
+/** Fits the label end's four lines (61px) with its padding and border. */
+const SLIDE_HEIGHT = 74;
+const SLIDE_LABEL_WIDTH = 128;
 const MAX_THUMBNAIL_ATTEMPTS = 3;
 const DEFAULT_THUMBNAIL_RETRY_DELAY_MS = 60_000;
 const NETWORK_THUMBNAIL_RETRY_DELAYS_MS = [5_000, 15_000];
@@ -187,6 +191,7 @@ function WsiNavPanelComponent({
     studyId,
     authScope,
     onHide,
+    renderSampleLabel,
 }: WsiNavPanelProps) {
     const selectedSlideId = selectedSlide?.slide_key;
     const unscopedSampleEntries = React.useMemo(
@@ -292,61 +297,48 @@ function WsiNavPanelComponent({
         label: string;
         color?: string;
     }> = [
-        { key: 'all', label: 'All' },
-        { key: 'hne', label: 'H&E', color: theme.blue },
-        { key: 'ihc', label: 'IHC', color: theme.orange },
-        { key: 'other', label: 'Other (known)', color: theme.muted },
-        { key: 'unknown', label: 'Unknown', color: theme.muted },
+        { key: 'hne', label: 'H&E', color: WSI_STAIN_COLORS['H&E'] },
+        { key: 'ihc', label: 'IHC', color: WSI_STAIN_COLORS.IHC },
+        { key: 'other', label: 'Other (known)', color: WSI_STAIN_COLORS.Other },
+        { key: 'unknown', label: 'Unknown', color: WSI_STAIN_COLORS.Unknown },
     ];
     const matchChips: Array<{
         key: PathologySlideMatchFilter;
         label: string;
     }> = [
-        { key: 'all', label: 'All' },
         { key: 'part', label: 'Part' },
         { key: 'block', label: 'Block' },
         { key: 'unmatched', label: 'Unmatched' },
     ];
-    const stainCounts = React.useMemo(() => {
-        const filteredCounts: Record<WsiStainFilter, number> = {
-            all: 0,
-            hne: 0,
-            ihc: 0,
-            other: 0,
-            unknown: 0,
-        };
-        facetSlides.forEach(slide => {
-            if (!matchesMatchFilter(slide, matchFilter)) {
-                return;
-            }
-            filteredCounts.all += 1;
-            filteredCounts[wsiStainKind(slide)] += 1;
-        });
-
-        return filteredCounts;
-    }, [facetSlides, matchFilter]);
-    const matchCounts = React.useMemo(() => {
-        const filteredCounts = { part: 0, block: 0, unmatched: 0 };
-        facetSlides.forEach(slide => {
-            if (!matchesWsiStainFilter(slide, stainFilter)) {
-                return;
-            }
-            if (slide.match_level === 'PART') filteredCounts.part += 1;
-            if (slide.match_level === 'BLOCK') filteredCounts.block += 1;
-            if (slide.match_level === 'UNMATCHED') {
-                filteredCounts.unmatched += 1;
-            }
-        });
-        return filteredCounts;
-    }, [facetSlides, stainFilter]);
-    /** Match levels the patient's slides have, whatever the stain filter. */
-    const matchLevelsPresent = React.useMemo(
-        () => new Set(facetSlides.map(slide => slide.match_level)),
-        [facetSlides]
+    // Counts on the chips follow the other filter; which chips there are
+    // follows the patient's slides, so selecting one filter never removes
+    // the other's chips (a chip with no slides left is disabled instead).
+    const stainCounts = React.useMemo(
+        () => countStains(facetSlides, matchFilter),
+        [facetSlides, matchFilter]
     );
-    /** A click on the active chip only matters for All, to drop a link scope. */
-    const reselects = (current: string, key: string) =>
-        current !== key || (key === 'all' && linkoutScopeActive);
+    const stainTotals = React.useMemo(() => countStains(facetSlides, 'all'), [
+        facetSlides,
+    ]);
+    const matchCounts = React.useMemo(
+        () => countMatches(facetSlides, stainFilter),
+        [facetSlides, stainFilter]
+    );
+    const matchTotals = React.useMemo(() => countMatches(facetSlides, 'all'), [
+        facetSlides,
+    ]);
+    const stainChoices = filterChoices(
+        chips,
+        stainTotals,
+        stainCounts,
+        stainFilter
+    );
+    const matchChoices = filterChoices(
+        matchChips,
+        matchTotals,
+        matchCounts,
+        matchFilter
+    );
 
     return (
         <div
@@ -360,84 +352,52 @@ function WsiNavPanelComponent({
                 overflow: 'hidden',
             }}
         >
+            <WsiPanelHeader
+                title="Slides"
+                side="left"
+                hideLabel="Hide slide list (|)"
+                onHide={onHide}
+                hideTestId="wsi-nav-hide"
+            />
             <div
                 style={{
-                    padding: '9px 12px 7px',
+                    padding: '4px 12px 8px',
                     borderBottom: `1px solid ${theme.border}`,
                     flexShrink: 0,
                 }}
             >
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                    }}
-                >
-                    <div style={WSI_SECTION_TITLE_STYLE}>Slides</div>
-                    {onHide && (
-                        <WsiPanelHideButton
-                            side="left"
-                            label="Hide slide list"
-                            onClick={onHide}
-                            testId="wsi-nav-hide"
-                        />
-                    )}
-                </div>
-                <WsiFilterChipGroup
-                    label="Filter slides by stain"
-                    testId="wsi-stain-filter-row"
-                    chipTestIdPrefix="wsi-stain-filter"
-                    style={{ marginTop: 7 }}
-                    chips={chips.map(chip => ({
-                        ...chip,
-                        count:
-                            chip.key === 'all'
-                                ? undefined
-                                : stainCounts[chip.key],
-                        disabled:
-                            chip.key !== 'all' && stainCounts[chip.key] === 0,
-                    }))}
-                    isActive={key => stainFilter === key}
-                    onSelect={key => {
-                        if (reselects(stainFilter, key)) onFilterChange(key);
-                    }}
-                />
-                <WsiFilterChipGroup
-                    label="Filter slides by match level"
-                    testId="wsi-match-filter-row"
-                    chipTestIdPrefix="wsi-match-filter"
-                    style={{ marginTop: 6 }}
-                    chips={matchChips
-                        // The chips follow the patient's slides, so a stain
-                        // filter that leaves a level empty disables its chip
-                        // instead of removing it.
-                        .filter(
-                            chip =>
-                                chip.key === 'all' ||
-                                chip.key === matchFilter ||
-                                matchLevelsPresent.has(
-                                    chip.key.toUpperCase() as Slide['match_level']
+                {stainChoices.length > 0 && (
+                    <WsiFilterRow label="Stain" style={{ marginTop: 4 }}>
+                        <WsiFilterChipGroup
+                            label="Filter slides by stain"
+                            testId="wsi-stain-filter-row"
+                            chipTestIdPrefix="wsi-stain-filter"
+                            chips={stainChoices}
+                            isActive={key => stainFilter === key}
+                            onSelect={key =>
+                                onFilterChange(
+                                    stainFilter === key ? 'all' : key
                                 )
-                        )
-                        .map(chip => ({
-                            ...chip,
-                            count:
-                                chip.key === 'all'
-                                    ? undefined
-                                    : matchCounts[chip.key],
-                            disabled:
-                                chip.key !== 'all' &&
-                                chip.key !== matchFilter &&
-                                matchCounts[chip.key] === 0,
-                        }))}
-                    isActive={key => matchFilter === key}
-                    onSelect={key => {
-                        if (reselects(matchFilter, key)) {
-                            onMatchFilterChange?.(key);
-                        }
-                    }}
-                />
+                            }
+                        />
+                    </WsiFilterRow>
+                )}
+                {matchChoices.length > 0 && (
+                    <WsiFilterRow label="Match" style={{ marginTop: 5 }}>
+                        <WsiFilterChipGroup
+                            label="Filter slides by match level"
+                            testId="wsi-match-filter-row"
+                            chipTestIdPrefix="wsi-match-filter"
+                            chips={matchChoices}
+                            isActive={key => matchFilter === key}
+                            onSelect={key =>
+                                onMatchFilterChange?.(
+                                    matchFilter === key ? 'all' : key
+                                )
+                            }
+                        />
+                    </WsiFilterRow>
+                )}
                 {sampleIdFilter && linkoutScopeActive && (
                     <div
                         data-testid="wsi-sample-scope"
@@ -487,7 +447,7 @@ function WsiNavPanelComponent({
                     style={{
                         marginTop: 6,
                         color: theme.muted,
-                        fontSize: 11,
+                        fontSize: 12,
                     }}
                     data-testid="wsi-filtered-slide-count"
                 >
@@ -516,6 +476,7 @@ function WsiNavPanelComponent({
                             tileServerBase={tileServerBase}
                             studyId={studyId}
                             authScope={authScope}
+                            renderSampleLabel={renderSampleLabel}
                         />
                     )
                 )}
@@ -523,7 +484,7 @@ function WsiNavPanelComponent({
                     <div
                         style={{
                             padding: '8px 12px 12px',
-                            fontSize: 11,
+                            fontSize: 12,
                             color: theme.muted,
                         }}
                     >
@@ -538,6 +499,108 @@ function WsiNavPanelComponent({
 
 export const WsiNavPanel = React.memo(WsiNavPanelComponent);
 
+function countStains(
+    slides: ReadonlyArray<Slide>,
+    matchFilter: PathologySlideMatchFilter
+): Record<WsiStainFilter, number> {
+    const counts: Record<WsiStainFilter, number> = {
+        all: 0,
+        hne: 0,
+        ihc: 0,
+        other: 0,
+        unknown: 0,
+    };
+    slides.forEach(slide => {
+        if (!matchesMatchFilter(slide, matchFilter)) {
+            return;
+        }
+        counts.all += 1;
+        counts[wsiStainKind(slide)] += 1;
+    });
+    return counts;
+}
+
+function countMatches(
+    slides: ReadonlyArray<Slide>,
+    stainFilter: WsiStainFilter
+): Partial<Record<PathologySlideMatchFilter, number>> {
+    const counts = { part: 0, block: 0, unmatched: 0 };
+    slides.forEach(slide => {
+        if (!matchesWsiStainFilter(slide, stainFilter)) {
+            return;
+        }
+        if (slide.match_level === 'PART') counts.part += 1;
+        if (slide.match_level === 'BLOCK') counts.block += 1;
+        if (slide.match_level === 'UNMATCHED') counts.unmatched += 1;
+    });
+    return counts;
+}
+
+/**
+ * The chips of a filter: each value the patient's slides have, plus the
+ * active one, counted under the other filter and disabled when that leaves
+ * none. A filter whose slides all share one value offers no choice, so it
+ * shows nothing unless it is active.
+ */
+function filterChoices<K extends string>(
+    chips: ReadonlyArray<{ key: K; label: string; color?: string }>,
+    totals: Partial<Record<K, number>>,
+    counts: Partial<Record<K, number>>,
+    active: K | 'all'
+): Array<{
+    key: K;
+    label: string;
+    color?: string;
+    count: number;
+    disabled: boolean;
+}> {
+    const shown = chips
+        .filter(chip => chip.key === active || (totals[chip.key] ?? 0) > 0)
+        .map(chip => {
+            const count = counts[chip.key] ?? 0;
+            return {
+                ...chip,
+                count,
+                disabled: count === 0 && chip.key !== active,
+            };
+        });
+    return shown.length > 1 || active !== 'all' ? shown : [];
+}
+
+/** A labelled line of filter chips. Clicking the active chip clears it. */
+function WsiFilterRow({
+    label,
+    style,
+    children,
+}: {
+    label: string;
+    style?: React.CSSProperties;
+    children: React.ReactNode;
+}) {
+    return (
+        <div
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                ...style,
+            }}
+        >
+            <span
+                style={{
+                    width: 40,
+                    flexShrink: 0,
+                    fontSize: 12,
+                    color: theme.muted,
+                }}
+            >
+                {label}
+            </span>
+            {children}
+        </div>
+    );
+}
+
 function SampleNode({
     sample,
     containsSelectedSlide,
@@ -548,6 +611,7 @@ function SampleNode({
     tileServerBase,
     studyId,
     authScope,
+    renderSampleLabel,
 }: {
     sample: Sample;
     containsSelectedSlide: boolean;
@@ -558,6 +622,7 @@ function SampleNode({
     tileServerBase: string;
     studyId: string;
     authScope: string;
+    renderSampleLabel?: (sampleId: string) => React.ReactNode;
 }) {
     const [open, setOpen] = React.useState(
         containsSelectedSlide || sampleIndex === 0
@@ -601,29 +666,37 @@ function SampleNode({
                 aria-label={`${sample.sample_id || 'Sample'} slides`}
                 style={{
                     display: 'flex',
-                    alignItems: 'flex-start',
+                    alignItems: 'center',
                     gap: 6,
-                    padding: '8px 12px 7px',
+                    padding: '8px 12px 6px',
                     cursor: 'pointer',
                     userSelect: 'none',
                 }}
             >
-                <span
+                <i
+                    className={`fa fa-caret-${open ? 'down' : 'right'}`}
+                    aria-hidden="true"
                     style={{
-                        fontSize: 11,
+                        fontSize: 12,
                         color: theme.muted,
-                        marginTop: 2,
                         flexShrink: 0,
-                        width: 10,
+                        width: 8,
+                    }}
+                />
+                <div
+                    style={{
+                        flex: 1,
+                        minWidth: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 5,
                     }}
                 >
-                    {open ? '▾' : '▸'}
-                </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                    {sample.sample_id && renderSampleLabel?.(sample.sample_id)}
                     <div
                         style={{
-                            fontSize: 12,
-                            fontWeight: 700,
+                            fontSize: 13,
+                            fontWeight: 600,
                             color: theme.blue,
                             ...ellipsisStyle,
                         }}
@@ -631,24 +704,25 @@ function SampleNode({
                         {sample.sample_id || '—'}
                     </div>
                 </div>
-                <div
-                    title="Viewable slides shown in this sample"
-                    style={{
-                        fontSize: 10,
-                        color: theme.muted,
-                        flexShrink: 0,
-                        textAlign: 'right',
-                        lineHeight: 1.4,
-                        cursor: 'help',
-                    }}
+                <DefaultTooltip
+                    trigger={['hover']}
+                    placement="left"
+                    overlay={<span>Viewable slides shown in this sample</span>}
                 >
-                    <span style={{ color: theme.blue, fontWeight: 600 }}>
-                        {visibleSlideCount}
+                    <span
+                        style={{
+                            fontSize: 12,
+                            color: theme.muted,
+                            flexShrink: 0,
+                        }}
+                    >
+                        {visibleSlideCount}{' '}
+                        {pluralize('slide', visibleSlideCount)}
                     </span>
-                </div>
+                </DefaultTooltip>
             </div>
             {open && (
-                <div style={{ paddingBottom: 4 }}>
+                <div style={{ padding: '0 10px 8px' }}>
                     {servableSlides.map(({ slide, blockLabel }) => (
                         <SlideItem
                             key={slide.slide_key}
@@ -680,7 +754,8 @@ const MemoSampleNode = React.memo(SampleNode, (prev, next) => {
         prev.onSelectSlide !== next.onSelectSlide ||
         prev.tileServerBase !== next.tileServerBase ||
         prev.studyId !== next.studyId ||
-        prev.authScope !== next.authScope
+        prev.authScope !== next.authScope ||
+        prev.renderSampleLabel !== next.renderSampleLabel
     ) {
         return false;
     }
@@ -718,7 +793,7 @@ function SlideItem({
 }) {
     const [hovered, setHovered] = React.useState(false);
     const isHE = wsiStainKind(slide) === 'hne';
-    const dotColor = getStainDotColor(slide, theme);
+    const dotColor = getStainDotColor(slide);
     const mag = slide.magnification || '';
     const sz = fmtFileSize(slide.file_size_bytes);
     const partDesc = multiPart
@@ -753,146 +828,173 @@ function SlideItem({
     if (mag) tooltipLines.push(`Magnification: ${mag}`);
     if (sz !== '—') tooltipLines.push(`Size: ${sz}`);
 
-    const bg = selected
-        ? theme.blueLight
-        : hovered
-        ? theme.blueLight
-        : 'transparent';
-    const borderLeft = selected
-        ? `2px solid ${theme.blue}`
-        : '2px solid transparent';
+    const borderColor = selected ? theme.blue : hovered ? '#b9b9b9' : '#d6d6d6';
 
     return (
-        <div
-            data-testid={`wsi-slide-item-${slide.slide_key}`}
-            onClick={() => {
-                if (!selected) onSelectSlide(slide, sample);
-            }}
-            onKeyDown={event => {
-                if ((event.key === 'Enter' || event.key === ' ') && !selected) {
-                    event.preventDefault();
-                    onSelectSlide(slide, sample);
-                }
-            }}
-            role="button"
-            tabIndex={0}
-            aria-current={selected ? 'true' : undefined}
-            aria-label={
-                tooltipLines.length > 0
-                    ? tooltipLines.join(', ')
-                    : primaryLabel || 'Slide'
+        <DefaultTooltip
+            trigger={['hover']}
+            placement="right"
+            mouseEnterDelay={0.4}
+            overlay={
+                <div>
+                    {tooltipLines.map(line => (
+                        <div key={line}>{line}</div>
+                    ))}
+                    {matchBadge && (
+                        <div>
+                            {matchBadge.label}-matched to this sequenced sample
+                        </div>
+                    )}
+                </div>
             }
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            title={tooltipLines.join('\n')}
-            style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '5px 8px',
-                margin: '1px 4px',
-                borderRadius: 3,
-                borderLeft,
-                background: bg,
-                cursor: 'pointer',
-            }}
         >
-            <WsiSlideThumbnail
-                tileServerBase={tileServerBase}
-                slideKey={slide.slide_key}
-                studyId={studyId}
-                authScope={authScope}
-            />
-            <span
-                style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    background: dotColor,
-                    flexShrink: 0,
-                    display: 'inline-block',
+            <div
+                data-testid={`wsi-slide-item-${slide.slide_key}`}
+                onClick={() => {
+                    if (!selected) onSelectSlide(slide, sample);
                 }}
-            />
-            <div style={{ flex: 1, minWidth: 0 }}>
+                onKeyDown={event => {
+                    if (
+                        (event.key === 'Enter' || event.key === ' ') &&
+                        !selected
+                    ) {
+                        event.preventDefault();
+                        onSelectSlide(slide, sample);
+                    }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-current={selected ? 'true' : undefined}
+                aria-label={
+                    tooltipLines.length > 0
+                        ? tooltipLines.join(', ')
+                        : primaryLabel || 'Slide'
+                }
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
+                style={{
+                    display: 'flex',
+                    height: SLIDE_HEIGHT,
+                    marginTop: 6,
+                    borderRadius: 3,
+                    border: `1px solid ${borderColor}`,
+                    boxShadow: selected
+                        ? `0 0 0 1px ${theme.blue}, 0 2px 6px rgba(55,134,194,0.25)`
+                        : hovered
+                        ? '0 2px 5px rgba(0,0,0,0.12)'
+                        : '0 1px 2px rgba(0,0,0,0.06)',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    transition: 'box-shadow 120ms, border-color 120ms',
+                }}
+            >
+                {/* The frosted label end, edged in the stain's color. */}
                 <div
                     style={{
-                        fontSize: 12,
-                        fontWeight: 600,
-                        color: theme.text,
-                        ...ellipsisStyle,
+                        width: SLIDE_LABEL_WIDTH,
+                        flexShrink: 0,
+                        padding: '5px 8px 5px 8px',
+                        background: theme.slideLabel,
+                        borderLeft: `4px solid ${dotColor}`,
+                        borderRight: `1px solid ${theme.border}`,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        minWidth: 0,
                     }}
                 >
-                    {primaryLabel}
+                    <div style={{ minWidth: 0 }}>
+                        <div
+                            style={{
+                                fontSize: 13,
+                                fontWeight: 600,
+                                color: theme.text,
+                                lineHeight: '16px',
+                                ...ellipsisStyle,
+                            }}
+                        >
+                            {primaryLabel}
+                        </div>
+                        {subStain && (
+                            <div
+                                style={{
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: dotColor,
+                                    lineHeight: '15px',
+                                    ...ellipsisStyle,
+                                }}
+                            >
+                                {subStain}
+                            </div>
+                        )}
+                        {(partDesc || blockMeaning) && (
+                            <div
+                                style={{
+                                    fontSize: 12,
+                                    color: theme.muted,
+                                    lineHeight: '15px',
+                                    fontStyle: partDesc ? 'italic' : undefined,
+                                    ...ellipsisStyle,
+                                }}
+                            >
+                                {partDesc || blockMeaning}
+                            </div>
+                        )}
+                    </div>
+                    {scanDetails && (
+                        <div
+                            style={{
+                                fontSize: 12,
+                                color: theme.muted,
+                                fontVariantNumeric: 'tabular-nums',
+                                lineHeight: '15px',
+                                ...ellipsisStyle,
+                            }}
+                        >
+                            {scanDetails}
+                        </div>
+                    )}
                 </div>
-                {partDesc && (
-                    <div
-                        style={{
-                            fontSize: 11,
-                            color: theme.blue,
-                            ...ellipsisStyle,
-                            fontStyle: 'italic',
-                        }}
-                    >
-                        {partDesc}
-                    </div>
-                )}
-                {blockMeaning && (
-                    <div
-                        style={{
-                            fontSize: 11,
-                            color: theme.blue,
-                            ...ellipsisStyle,
-                        }}
-                    >
-                        {blockMeaning}
-                    </div>
-                )}
-                {subStain && (
-                    <div
-                        style={{
-                            fontSize: 11,
-                            fontWeight: 600,
-                            color: dotColor,
-                            ...ellipsisStyle,
-                        }}
-                    >
-                        {subStain}
-                    </div>
-                )}
+                {/* The glass, with the tissue on it. */}
+                <div
+                    style={{
+                        flex: 1,
+                        minWidth: 0,
+                        position: 'relative',
+                        background: '#fff',
+                        padding: 3,
+                    }}
+                >
+                    <WsiSlideThumbnail
+                        tileServerBase={tileServerBase}
+                        slideKey={slide.slide_key}
+                        studyId={studyId}
+                        authScope={authScope}
+                    />
+                    {matchBadge && (
+                        <div
+                            data-testid={`wsi-slide-match-badge-${slide.slide_key}`}
+                            style={{
+                                position: 'absolute',
+                                right: 4,
+                                bottom: 3,
+                                padding: '0 4px',
+                                borderRadius: 2,
+                                background: 'rgba(255,255,255,0.9)',
+                                border: '1px solid #e3e3e3',
+                                color: matchBadge.color,
+                                fontSize: 11,
+                                fontWeight: 600,
+                                lineHeight: '15px',
+                            }}
+                        >
+                            {matchBadge.label}
+                        </div>
+                    )}
+                </div>
             </div>
-            <div style={{ flexShrink: 0, textAlign: 'right', lineHeight: 1.5 }}>
-                {matchBadge && (
-                    <div
-                        data-testid={`wsi-slide-match-badge-${slide.slide_key}`}
-                        title={`${matchBadge.label}-matched to this sequenced sample`}
-                        style={{
-                            display: 'inline-block',
-                            padding: '0 3px',
-                            borderRadius: 2,
-                            background: '#f0f0f0',
-                            color: matchBadge.color,
-                            fontSize: 10,
-                            fontWeight: 700,
-                            lineHeight: '14px',
-                            textTransform: 'uppercase',
-                        }}
-                    >
-                        {matchBadge.label}
-                    </div>
-                )}
-                {scanDetails && (
-                    <div
-                        style={{
-                            fontSize: 11,
-                            color: theme.muted,
-                            whiteSpace: 'nowrap',
-                        }}
-                    >
-                        {scanDetails}
-                    </div>
-                )}
-            </div>
-        </div>
+        </DefaultTooltip>
     );
 }
 
@@ -1041,16 +1143,12 @@ function WsiSlideThumbnail({
             data-testid={`wsi-slide-thumbnail-${slideKey}`}
             aria-hidden="true"
             style={{
-                width: THUMBNAIL_WIDTH,
-                height: THUMBNAIL_HEIGHT,
-                flexShrink: 0,
+                width: '100%',
+                height: '100%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 overflow: 'hidden',
-                border: '1px solid #ddd',
-                borderRadius: 2,
-                background: '#f1f1f1',
             }}
         >
             {source && (

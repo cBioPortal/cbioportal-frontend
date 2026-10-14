@@ -89,6 +89,8 @@ export interface WsiViewerControllerHost {
     getCoordInputs(): { x: string; y: string };
     updateCursorPos(x: number, y: number): void;
     clearCursorPos(): void;
+    /** Screen pixels per image pixel as the view zooms; null without a view. */
+    setViewScale?(screenPxPerImagePx: number | null): void;
     reportInitialSlideLoadPerformance(
         metric: WsiInitialSlideLoadPerformance
     ): void;
@@ -955,6 +957,21 @@ export class WsiViewerController {
         this.startBackgroundWorkIfReady(seq);
     }
 
+    private reportViewScale() {
+        if (!this.host.setViewScale) return;
+        try {
+            const viewport = this.osdViewer?.viewport;
+            const scale = viewport?.viewportToImageZoom?.(
+                viewport.getZoom(true)
+            );
+            this.host.setViewScale(
+                Number.isFinite(scale) && scale > 0 ? scale : null
+            );
+        } catch (_) {
+            // viewport not ready
+        }
+    }
+
     private ensureMouseTrackerForReadyViewer(seq: number) {
         if (
             seq !== this.mountSeq ||
@@ -1022,6 +1039,7 @@ export class WsiViewerController {
         this.addSlideHandler('animation-finish', () => {
             this.writeHashState();
         });
+        this.addSlideHandler('update-viewport', () => this.reportViewScale());
         this.terminalTileFailures.clear();
         const scheduleNavigatorAfterFullLoad = (event: any) => {
             if (event?.fullyLoaded) {

@@ -2,6 +2,7 @@
  * @jest-environment jsdom
  */
 import * as React from 'react';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import TestRenderer, { act } from 'react-test-renderer';
 import { WsiNavPanel } from './wsiNavPanel';
 import { getWsiSlideAccess } from './wsiAuth';
@@ -47,6 +48,13 @@ function findButtonText(
     return flattenRenderedText(
         renderer.root.findByProps({ 'data-testid': testId })
     );
+}
+
+function hasTestId(
+    renderer: TestRenderer.ReactTestRenderer,
+    testId: string
+): boolean {
+    return renderer.root.findAllByProps({ 'data-testid': testId }).length > 0;
 }
 
 function flattenRenderedText(value: unknown): string {
@@ -133,14 +141,49 @@ describe('WsiNavPanel', () => {
         const item = renderer.root.findByProps({
             'data-testid': `wsi-slide-item-${key}`,
         });
+        // The item's tooltip, which lists its details.
+        const tooltip = renderer.root
+            .findAllByType(DefaultTooltip)
+            .find(
+                node =>
+                    node.findAll(
+                        child =>
+                            child.props['data-testid'] ===
+                            `wsi-slide-item-${key}`
+                    ).length
+            )!;
+        const tooltipText = flattenRenderedText(
+            TestRenderer.create(tooltip.props.overlay).toJSON()
+        );
         const visible = [
-            item.props.title,
+            tooltipText,
             item.props['aria-label'],
             flattenRenderedText(item.props.children),
         ].join('\n');
         expect(visible).not.toContain(key);
         expect(visible).not.toMatch(/Barcode|Image ID|Section:|Accession/);
-        expect(item.props.title).toContain('Stain: H&E');
+        expect(tooltipText).toContain('Stain: H&E');
+    });
+
+    it("shows the host's label beside each sample", () => {
+        const sample = makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })]);
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([sample])}
+                selectedSlide={null}
+                stainFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                renderSampleLabel={sampleId => (
+                    <span data-testid={`label-${sampleId}`}>1</span>
+                )}
+                {...navContext}
+            />
+        );
+
+        expect(
+            renderer.root.findAllByProps({ 'data-testid': 'label-S-1' })
+        ).toHaveLength(1);
     });
 
     it('derives ordered slides only once per sample render', () => {
@@ -304,40 +347,60 @@ describe('WsiNavPanel', () => {
         expect(sampleHeader.props['aria-expanded']).toBe(true);
     });
 
-    it('does not re-fire the active stain filter callback', () => {
-        const sample = makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })]);
+    it('clears the stain filter when the active stain chip is clicked again', () => {
+        const sample = makeSample('S-1', [
+            makeSlide({ slide_key: 'hne-slide', is_hne: true, is_ihc: false }),
+            makeSlide({
+                slide_key: 'ihc-slide',
+                stain_name: 'IHC',
+                is_hne: false,
+                is_ihc: true,
+            }),
+        ]);
         const onFilterChange = jest.fn();
-        const renderer = TestRenderer.create(
+        const panel = (stainFilter: 'all' | 'hne') => (
             <WsiNavPanel
                 hierarchy={makeHierarchy([sample])}
                 selectedSlide={null}
-                stainFilter="all"
+                stainFilter={stainFilter}
                 onFilterChange={onFilterChange}
                 onSelectSlide={() => {}}
                 {...navContext}
             />
         );
+        const renderer = TestRenderer.create(panel('all'));
 
-        const allButton = renderer.root
-            .findAllByType('button')
-            .find(button => button.children.includes('All'))!;
+        expect(hasTestId(renderer, 'wsi-stain-filter-all')).toBe(false);
+        act(() => {
+            renderer.root
+                .findByProps({ 'data-testid': 'wsi-stain-filter-hne' })
+                .props.onClick();
+        });
+        expect(onFilterChange).toHaveBeenLastCalledWith('hne');
 
         act(() => {
-            allButton.props.onClick();
+            renderer.update(panel('hne'));
         });
-
-        expect(onFilterChange).not.toHaveBeenCalled();
+        act(() => {
+            renderer.root
+                .findByProps({ 'data-testid': 'wsi-stain-filter-hne' })
+                .props.onClick();
+        });
+        expect(onFilterChange).toHaveBeenLastCalledWith('all');
     });
 
-    it('does not re-fire the active match filter callback', () => {
-        const sample = makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })]);
+    it('clears the match filter when the active match chip is clicked again', () => {
+        const sample = makeSample('S-1', [
+            placedSlide('block-slide', 'BLOCK'),
+            placedSlide('part-slide', 'PART'),
+        ]);
         const onMatchFilterChange = jest.fn();
         const renderer = TestRenderer.create(
             <WsiNavPanel
                 hierarchy={makeHierarchy([sample])}
                 selectedSlide={null}
                 stainFilter="all"
-                matchFilter="all"
+                matchFilter="part"
                 onFilterChange={() => {}}
                 onMatchFilterChange={onMatchFilterChange}
                 onSelectSlide={() => {}}
@@ -345,13 +408,108 @@ describe('WsiNavPanel', () => {
             />
         );
 
+        expect(hasTestId(renderer, 'wsi-match-filter-all')).toBe(false);
         act(() => {
             renderer.root
-                .findByProps({ 'data-testid': 'wsi-match-filter-all' })
+                .findByProps({ 'data-testid': 'wsi-match-filter-part' })
                 .props.onClick();
         });
+        expect(onMatchFilterChange).toHaveBeenCalledWith('all');
+    });
 
-        expect(onMatchFilterChange).not.toHaveBeenCalled();
+    it('keeps the stain chips when the match filter leaves only one stain', () => {
+        // As for a patient whose unmatched slides are all H&E.
+        const sample = makeSample('S-1', [
+            placedSlide('hne-unmatched', 'UNMATCHED'),
+            placedSlide('hne-block', 'BLOCK'),
+            {
+                ...placedSlide('ihc-block', 'BLOCK'),
+                stain_name: 'IHC',
+                is_hne: false,
+                is_ihc: true,
+            },
+        ]);
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([sample])}
+                selectedSlide={null}
+                stainFilter="all"
+                matchFilter="unmatched"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                {...navContext}
+            />
+        );
+
+        expect(hasTestId(renderer, 'wsi-stain-filter-row')).toBe(true);
+        expect(findButtonText(renderer, 'wsi-stain-filter-hne')).toContain('1');
+        expect(
+            renderer.root.findByProps({ 'data-testid': 'wsi-stain-filter-ihc' })
+                .props.disabled
+        ).toBe(true);
+    });
+
+    it('keeps the match chips when the stain filter empties a level', () => {
+        // As for a patient whose IHC slides are all block-matched.
+        const sample = makeSample('S-1', [
+            placedSlide('hne-unmatched', 'UNMATCHED'),
+            {
+                ...placedSlide('ihc-block', 'BLOCK'),
+                stain_name: 'IHC',
+                is_hne: false,
+                is_ihc: true,
+            },
+        ]);
+        const panel = (stainFilter: 'all' | 'ihc') => (
+            <WsiNavPanel
+                hierarchy={makeHierarchy([sample])}
+                selectedSlide={null}
+                stainFilter={stainFilter}
+                matchFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                {...navContext}
+            />
+        );
+        const renderer = TestRenderer.create(panel('ihc'));
+
+        const unmatched = renderer.root.findByProps({
+            'data-testid': 'wsi-match-filter-unmatched',
+        });
+        expect(unmatched.props.disabled).toBe(true);
+        expect(findButtonText(renderer, 'wsi-match-filter-block')).toContain(
+            '1'
+        );
+
+        act(() => {
+            renderer.update(panel('all'));
+        });
+        expect(
+            renderer.root.findByProps({
+                'data-testid': 'wsi-match-filter-unmatched',
+            }).props.disabled
+        ).toBe(false);
+    });
+
+    it('hides a filter whose slides all share one value', () => {
+        const sample = makeSample('S-1', [
+            placedSlide('part-1', 'PART'),
+            placedSlide('part-2', 'PART'),
+        ]);
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([sample])}
+                selectedSlide={null}
+                stainFilter="all"
+                matchFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                {...navContext}
+            />
+        );
+
+        expect(hasTestId(renderer, 'wsi-stain-filter-row')).toBe(false);
+        expect(hasTestId(renderer, 'wsi-match-filter-row')).toBe(false);
     });
 
     it('shows match badges only for block- and part-matched slides', () => {
@@ -670,14 +828,8 @@ describe('WsiNavPanel', () => {
             />
         );
 
-        expect(findButtonText(renderer, 'wsi-stain-filter-hne')).toContain('0');
-        expect(findButtonText(renderer, 'wsi-stain-filter-ihc')).toContain('0');
-        expect(findButtonText(renderer, 'wsi-stain-filter-other')).toContain(
-            '1'
-        );
-        expect(findButtonText(renderer, 'wsi-stain-filter-unknown')).toContain(
-            '0'
-        );
+        // A single Other slide leaves no stain to choose between.
+        expect(hasTestId(renderer, 'wsi-stain-filter-row')).toBe(false);
         expect(findButtonText(renderer, 'wsi-filtered-slide-count')).toBe(
             'Showing 1 slide'
         );
@@ -729,60 +881,20 @@ describe('WsiNavPanel', () => {
                 'data-testid': 'wsi-slide-item-ihc-slide',
             })
         ).toHaveLength(0);
+        expect(findButtonText(renderer, 'wsi-stain-filter-hne')).toContain('1');
+        expect(findButtonText(renderer, 'wsi-stain-filter-ihc')).toContain('1');
+        // Among H&E slides only Part matches remain; the patient's Block
+        // slide keeps its chip, disabled.
         expect(findButtonText(renderer, 'wsi-match-filter-part')).toContain(
             '1'
         );
-        // The patient's Block slide keeps its chip, disabled under H&E.
+        const block = renderer.root.findByProps({
+            'data-testid': 'wsi-match-filter-block',
+        });
         expect(findButtonText(renderer, 'wsi-match-filter-block')).toContain(
             '0'
         );
-        expect(
-            renderer.root.findByProps({
-                'data-testid': 'wsi-match-filter-block',
-            }).props.disabled
-        ).toBe(true);
-    });
-
-    it('keeps the match chips when the stain filter empties a level', () => {
-        // As for a patient whose IHC slides are all block-matched.
-        const sample = makeSample('S-1', [
-            placedSlide('hne-unmatched', 'UNMATCHED'),
-            {
-                ...placedSlide('ihc-block', 'BLOCK'),
-                stain_name: 'IHC',
-                is_hne: false,
-                is_ihc: true,
-            },
-        ]);
-        const panel = (stainFilter: 'all' | 'ihc') => (
-            <WsiNavPanel
-                hierarchy={makeHierarchy([sample])}
-                selectedSlide={null}
-                stainFilter={stainFilter}
-                matchFilter="all"
-                onFilterChange={() => {}}
-                onSelectSlide={() => {}}
-                {...navContext}
-            />
-        );
-        const renderer = TestRenderer.create(panel('ihc'));
-
-        const unmatched = renderer.root.findByProps({
-            'data-testid': 'wsi-match-filter-unmatched',
-        });
-        expect(unmatched.props.disabled).toBe(true);
-        expect(findButtonText(renderer, 'wsi-match-filter-block')).toContain(
-            '1'
-        );
-
-        act(() => {
-            renderer.update(panel('all'));
-        });
-        expect(
-            renderer.root.findByProps({
-                'data-testid': 'wsi-match-filter-unmatched',
-            }).props.disabled
-        ).toBe(false);
+        expect(block.props.disabled).toBe(true);
     });
 
     it('does not count unknown slides as known Other', () => {
@@ -808,12 +920,8 @@ describe('WsiNavPanel', () => {
             />
         );
 
-        expect(findButtonText(renderer, 'wsi-stain-filter-other')).toContain(
-            '0'
-        );
-        expect(findButtonText(renderer, 'wsi-stain-filter-unknown')).toContain(
-            '1'
-        );
+        expect(hasTestId(renderer, 'wsi-stain-filter-other')).toBe(false);
+        expect(hasTestId(renderer, 'wsi-stain-filter-row')).toBe(false);
     });
 
     it('only expands the first sample by default', () => {
@@ -994,10 +1102,10 @@ describe('WsiNavPanel', () => {
 
         act(() => {
             renderer.root
-                .findByProps({ 'data-testid': 'wsi-stain-filter-all' })
+                .findByProps({ 'data-testid': 'wsi-stain-filter-ihc' })
                 .props.onClick();
         });
-        expect(onFilterChange).toHaveBeenCalledWith('all');
+        expect(onFilterChange).toHaveBeenCalledWith('ihc');
     });
 
     it('defers offscreen samples until the initial tiles are ready', () => {

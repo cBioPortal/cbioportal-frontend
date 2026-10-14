@@ -37,15 +37,16 @@ describe('WSIViewer foundation behavior', () => {
     it('renders loading and failure states without a hierarchy', () => {
         const instance = makeInstance();
         expect(
-            TestRenderer.create(instance.render()).root.findByType('div')
-        ).toBeTruthy();
+            TestRenderer.create(instance.render()).root.findAllByType('div')
+                .length
+        ).toBeGreaterThan(0);
 
         action(() => {
             instance.loading = false;
             instance.error = 'Hierarchy unavailable';
         })();
         const error = TestRenderer.create(instance.render());
-        expect(error.root.findByType('div').children.join('')).toContain(
+        expect(JSON.stringify(error.toJSON())).toContain(
             'Hierarchy unavailable'
         );
     });

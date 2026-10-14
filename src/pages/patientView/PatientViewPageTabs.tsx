@@ -41,6 +41,7 @@ import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
 import PatientWsiSlidesTab from 'pages/patientView/PatientWsiSlidesTab';
+import { capWsiViewerHeight } from 'cbioportal-wsi-viewer';
 import { PatientViewPageTabs } from './PatientViewPageTabIds';
 import { WsiPatientClinicalData } from 'shared/components/wsiViewer/wsiClinicalRows';
 import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
@@ -119,6 +120,24 @@ export function patientViewTabs(
             {tabs(pageInstance, sampleManager, urlWrapper)}
         </MSKTabs>
     );
+}
+
+/**
+ * The slide list's sample badges, one renderer per sample manager so the
+ * list's memoized rows don't re-render with every tab render.
+ */
+const wsiSampleLabelRenderers = new WeakMap<
+    SampleManager,
+    (sampleId: string) => React.ReactNode
+>();
+function wsiSampleLabelRenderer(sampleManager: SampleManager) {
+    let render = wsiSampleLabelRenderers.get(sampleManager);
+    if (!render) {
+        render = (sampleId: string) =>
+            sampleManager.getComponentForSample(sampleId);
+        wsiSampleLabelRenderers.set(sampleManager, render);
+    }
+    return render;
 }
 
 export function tabs(
@@ -629,7 +648,10 @@ export function tabs(
                     studyId={pageComponent.patientViewPageStore.studyId}
                     tileServerUrl={tileServerUrl}
                     userName={pageComponent.props.appStore.userName}
-                    height={WindowStore.size.height - 220}
+                    height={capWsiViewerHeight(
+                        WindowStore.size.height - 220,
+                        WindowStore.size.width
+                    )}
                     hidden={
                         urlWrapper.activeTabId !==
                         PatientViewPageTabs.WSIHESlides
@@ -637,6 +659,11 @@ export function tabs(
                     clinicalData={wsiPatientClinicalData(
                         pageComponent.patientViewPageStore
                     )}
+                    renderSampleLabel={
+                        sampleManager
+                            ? wsiSampleLabelRenderer(sampleManager)
+                            : undefined
+                    }
                 />
             </MSKTab>
         );

@@ -3,6 +3,7 @@ import { Sample, Slide, TileMetadata } from './wsiViewerTypes';
 import { cleanStain, fmtFileSize, normalizeBlockLabel } from './wsiNavUtils';
 import { blockName, formatSpecimenLabel } from './wsiSpecimenUtils';
 import { wsiStainKind } from './wsiSlideUtils';
+import { WSI_STAIN_COLORS } from './wsiTheme';
 
 function freezeMetaRows(rows: MetaRow[]): MetaRow[] {
     rows.forEach(row => Object.freeze(row));
@@ -54,15 +55,14 @@ export function stainValue(stainBadge: string, stainName: string): string {
 }
 
 export function getStainDotColor(
-    slide: Pick<Slide, 'is_hne' | 'is_ihc' | 'slide_type'>,
-    colors: { blue: string; orange: string }
+    slide: Pick<Slide, 'is_hne' | 'is_ihc' | 'slide_type'>
 ): string {
     const kind = wsiStainKind(slide);
     return kind === 'ihc'
-        ? colors.orange
+        ? WSI_STAIN_COLORS.IHC
         : kind === 'hne'
-        ? colors.blue
-        : '#777';
+        ? WSI_STAIN_COLORS['H&E']
+        : WSI_STAIN_COLORS.Other;
 }
 
 export function buildWsiRows(
