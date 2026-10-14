@@ -1,6 +1,7 @@
 import { TileMetadata } from './wsiViewerTypes';
 import { hasWsiHashViewport, WsiHashState } from './wsiViewStateUtils';
 import { buildWsiRequestHeaders } from './wsiUrls';
+import { WSI_THEME } from './wsiTheme';
 
 const OSD_NAVIGATOR_BOTTOM_OFFSET_PX = '48px';
 export const OSD_INITIAL_IMAGE_LOADER_LIMIT = 1;
@@ -168,10 +169,12 @@ export function ensureNavigator({
         sizeRatio: 0.2,
         autoFade: true,
         navigatorRotate: true,
-        background: '#000',
-        opacity: 0.8,
-        borderColor: '#555',
-        displayRegionColor: '#900',
+        // Matches the dark stage; the view box is a light portal blue that
+        // reads on both the glass and the tissue.
+        background: WSI_THEME.stageBg,
+        opacity: 0.9,
+        borderColor: 'rgba(255,255,255,0.3)',
+        displayRegionColor: '#6cb4e8',
         ajaxHeaders: buildWsiRequestHeaders(accessToken),
         loadTilesWithAjax: Boolean(accessToken),
     });

@@ -16,10 +16,14 @@ export * from './wsiTheme';
 export {
     readWsiPanelFlag,
     useWsiPanelFlag,
+    WSI_METADATA_COLLAPSED_KEY,
+    WSI_NAV_COLLAPSED_KEY,
     WsiCollapsedRail,
     WsiIconButton,
+    WsiPanelHeader,
     WsiPanelHideButton,
     WsiPanelSide,
+    WsiRailSection,
     writeWsiPanelFlag,
 } from './wsiPanelChrome';
 export {

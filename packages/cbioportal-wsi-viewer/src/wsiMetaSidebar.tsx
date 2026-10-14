@@ -1,10 +1,9 @@
 import * as React from 'react';
 
-import { WSI_SECTION_TITLE_STYLE, WSI_THEME } from './wsiTheme';
-import { useWsiPanelFlag, WsiPanelHideButton } from './wsiPanelChrome';
+import { WSI_THEME } from './wsiTheme';
+import { useWsiPanelFlag, WsiPanelHeader } from './wsiPanelChrome';
 
 const SIDEBAR_COLORS = WSI_THEME;
-const sectionTitleStyle = WSI_SECTION_TITLE_STYLE;
 
 const emptyStateStyle: React.CSSProperties = {
     color: SIDEBAR_COLORS.muted,
@@ -36,8 +35,11 @@ export function wsiSidebarSectionCollapsedKey(sectionId: string): string {
     return `wsi.viewer.sidebarSection.${sectionId}.collapsed`;
 }
 
+/** Sections sit under the Details header, so their titles are a step quieter. */
 const sectionToggleStyle: React.CSSProperties = {
-    ...sectionTitleStyle,
+    fontSize: 12,
+    fontWeight: 600,
+    color: SIDEBAR_COLORS.text,
     display: 'flex',
     alignItems: 'center',
     gap: 5,
@@ -97,7 +99,7 @@ function SbSection({
                             collapsed ? 'right' : 'down'
                         }`}
                         aria-hidden="true"
-                        style={{ width: 8 }}
+                        style={{ width: 8, color: SIDEBAR_COLORS.muted }}
                     />
                     {title}
                 </button>
@@ -274,20 +276,22 @@ function WsiMetaSidebarComponent({
                 flexShrink: 0,
             }}
         >
-            <SbSection
-                id="imageProperties"
-                title="Image Properties"
-                action={
-                    onHide && (
-                        <WsiPanelHideButton
-                            side="right"
-                            label="Hide image details"
-                            onClick={onHide}
-                            testId="wsi-metadata-hide"
-                        />
-                    )
-                }
+            <div
+                style={{
+                    padding: '9px 12px 8px',
+                    borderBottom: `1px solid ${SIDEBAR_COLORS.border}`,
+                    flexShrink: 0,
+                }}
             >
+                <WsiPanelHeader
+                    title="Details"
+                    side="right"
+                    hideLabel="Hide details (.)"
+                    onHide={onHide}
+                    hideTestId="wsi-metadata-hide"
+                />
+            </div>
+            <SbSection id="imageProperties" title="Image properties">
                 {showImageProperties ? (
                     <MetaTable rows={wsiRows} />
                 ) : (

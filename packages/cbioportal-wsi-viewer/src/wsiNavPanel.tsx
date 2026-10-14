@@ -34,11 +34,10 @@ import {
 import {
     WSI_MONO_FONT_FAMILY,
     WSI_NAV_WIDTH,
-    WSI_SECTION_TITLE_STYLE,
     WSI_STAIN_COLORS,
     WSI_THEME as theme,
 } from './wsiTheme';
-import { WsiPanelHideButton } from './wsiPanelChrome';
+import { WsiPanelHeader } from './wsiPanelChrome';
 import { WsiFilterChipGroup } from './wsiFilterChips';
 
 export interface WsiNavPanelProps {
@@ -362,23 +361,13 @@ function WsiNavPanelComponent({
                     flexShrink: 0,
                 }}
             >
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                    }}
-                >
-                    <div style={WSI_SECTION_TITLE_STYLE}>Slides</div>
-                    {onHide && (
-                        <WsiPanelHideButton
-                            side="left"
-                            label="Hide slide list"
-                            onClick={onHide}
-                            testId="wsi-nav-hide"
-                        />
-                    )}
-                </div>
+                <WsiPanelHeader
+                    title="Slides"
+                    side="left"
+                    hideLabel="Hide slide list (|)"
+                    onHide={onHide}
+                    hideTestId="wsi-nav-hide"
+                />
                 {stainChoices.length > 0 && (
                     <WsiFilterRow label="Stain" style={{ marginTop: 7 }}>
                         <WsiFilterChipGroup
@@ -631,17 +620,17 @@ function SampleNode({
                     userSelect: 'none',
                 }}
             >
-                <span
+                <i
+                    className={`fa fa-caret-${open ? 'down' : 'right'}`}
+                    aria-hidden="true"
                     style={{
-                        fontSize: 11,
+                        fontSize: 12,
                         color: theme.muted,
                         marginTop: 2,
                         flexShrink: 0,
-                        width: 10,
+                        width: 8,
                     }}
-                >
-                    {open ? '▾' : '▸'}
-                </span>
+                />
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                         style={{

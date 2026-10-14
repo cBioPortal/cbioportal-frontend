@@ -50,16 +50,36 @@ import {
 } from './wsiTheme';
 import {
     readWsiPanelFlag,
+    WSI_METADATA_COLLAPSED_KEY,
+    WSI_NAV_COLLAPSED_KEY,
     WsiCollapsedRail,
+    WsiRailSection,
     writeWsiPanelFlag,
 } from './wsiPanelChrome';
+import { getStainDotColor } from './wsiMetaUtils';
 
 const SIDEBAR_HANDLE_W = 8;
 const SLIDE_SELECTION_DEBOUNCE_MS = 120;
 
-/** Browser-stored hidden state of the slide list and the details sidebar. */
-export const WSI_NAV_COLLAPSED_KEY = 'wsi.viewer.navCollapsed';
-export const WSI_METADATA_COLLAPSED_KEY = 'wsi.viewer.metadataCollapsed';
+export { WSI_METADATA_COLLAPSED_KEY, WSI_NAV_COLLAPSED_KEY };
+
+/** Keys that show or hide the slide list and the details sidebar. */
+const NAV_TOGGLE_KEY = '|';
+const METADATA_TOGGLE_KEY = '.';
+
+function isTypingTarget(target: EventTarget | null): boolean {
+    const element = target as HTMLElement | null;
+    if (!element || !element.tagName) {
+        return false;
+    }
+    const tag = element.tagName.toLowerCase();
+    return (
+        tag === 'input' ||
+        tag === 'textarea' ||
+        tag === 'select' ||
+        element.isContentEditable
+    );
+}
 
 export interface WsiViewerProps {
     /** Tile-server base URL (never a patient-scoped or resource URL). */
@@ -106,6 +126,11 @@ export interface WsiViewerProps {
      * tab). Background work such as token refresh pauses meanwhile.
      */
     hidden?: boolean;
+    /**
+     * The host's own hidden panels, shown above the slide list's when that
+     * is hidden too, so the two read as one rail.
+     */
+    leadingRailSections?: ReadonlyArray<WsiRailSection>;
 }
 
 function DefaultLoadingIndicator() {
@@ -440,8 +465,28 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             );
         }
         this.updateControllerVisibility();
+        if (typeof document !== 'undefined') {
+            document.addEventListener('keydown', this.handlePanelKey);
+        }
         void this.controller.loadHierarchy();
     }
+
+    private readonly handlePanelKey = (event: KeyboardEvent) => {
+        if (
+            this.props.hidden ||
+            event.altKey ||
+            event.ctrlKey ||
+            event.metaKey ||
+            isTypingTarget(event.target)
+        ) {
+            return;
+        }
+        if (event.key === NAV_TOGGLE_KEY) {
+            this.setNavCollapsed(!this.navCollapsed);
+        } else if (event.key === METADATA_TOGGLE_KEY) {
+            this.setMetadataCollapsed(!this.metadataCollapsed);
+        }
+    };
 
     private readonly updateControllerVisibility = () => {
         const pageHidden =
@@ -549,6 +594,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                 'visibilitychange',
                 this.updateControllerVisibility
             );
+            document.removeEventListener('keydown', this.handlePanelKey);
         }
         this.cancelPendingSlideSelection();
         action(() => {
@@ -953,10 +999,17 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                     <WsiCollapsedRail
                         side="left"
                         title="Slides"
-                        showLabel="Show slide list"
+                        detail={String(this.servableSlides.length)}
+                        accent={
+                            selectedSlide
+                                ? getStainDotColor(selectedSlide)
+                                : undefined
+                        }
+                        showLabel={`Show slide list (${NAV_TOGGLE_KEY})`}
                         onExpand={this.showNav}
                         background={C.navBg}
                         testId="wsi-nav-rail"
+                        leadingSections={this.props.leadingRailSections}
                     />
                 ) : (
                     <WsiNavPanel
@@ -1032,14 +1085,11 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                         {ZOOM_BUTTONS.map(({ id, title, icon }) => (
                             <button
                                 key={id}
+                                type="button"
                                 id={`${this.navId}-${id}`}
-                                className="btn btn-default btn-sm"
                                 title={title}
-                                style={{
-                                    width: 28,
-                                    padding: '3px 0',
-                                    lineHeight: 1,
-                                }}
+                                aria-label={title}
+                                style={stageButtonStyle}
                             >
                                 <i className={`fa ${icon}`} />
                             </button>
@@ -1169,7 +1219,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                     <WsiCollapsedRail
                         side="right"
                         title="Details"
-                        showLabel="Show image details"
+                        showLabel={`Show details (${METADATA_TOGGLE_KEY})`}
                         onExpand={this.showMetadata}
                         background={C.sidebarBg}
                         testId="wsi-metadata-rail"
@@ -1255,15 +1305,17 @@ interface ViewerStatusBarProps {
     showDownload: boolean;
 }
 
-const statusIconButtonStyle: React.CSSProperties = {
+/** A button on the dark stage: the zoom buttons and the status bar's tools. */
+const stageButtonStyle: React.CSSProperties = {
     width: 26,
     height: 24,
     padding: 0,
     border: '1px solid rgba(255,255,255,0.18)',
     borderRadius: 3,
-    background: 'rgba(255,255,255,0.06)',
+    background: 'rgba(24,25,28,0.72)',
     color: C.stageText,
     lineHeight: '22px',
+    cursor: 'pointer',
 };
 
 const statusInputStyle: React.CSSProperties = {
@@ -1450,7 +1502,7 @@ const ViewerStatusBar = observer(function ViewerStatusBar({
                     aria-label="Go to a position"
                     aria-expanded={goToOpen}
                     style={{
-                        ...statusIconButtonStyle,
+                        ...stageButtonStyle,
                         ...(goToOpen
                             ? { background: 'rgba(255,255,255,0.2)' }
                             : {}),
@@ -1473,7 +1525,7 @@ const ViewerStatusBar = observer(function ViewerStatusBar({
                     type="button"
                     data-testid="wsi-share-button"
                     aria-label="Copy a link to this view"
-                    style={statusIconButtonStyle}
+                    style={stageButtonStyle}
                     onClick={handleCopy}
                 >
                     {copied ? (
@@ -1493,7 +1545,7 @@ const ViewerStatusBar = observer(function ViewerStatusBar({
                         type="button"
                         data-testid="wsi-download-button"
                         aria-label="Download this view"
-                        style={statusIconButtonStyle}
+                        style={stageButtonStyle}
                         onClick={onDownload}
                     >
                         <i className="fa fa-download" />

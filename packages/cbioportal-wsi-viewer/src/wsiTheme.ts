@@ -38,7 +38,7 @@ export const WSI_SIDEBAR_WIDTH = 320;
 export const WSI_SIDEBAR_MIN_WIDTH = 220;
 export const WSI_SIDEBAR_MAX_WIDTH = 520;
 /** Width of a hidden panel's rail. */
-export const WSI_RAIL_WIDTH = 28;
+export const WSI_RAIL_WIDTH = 32;
 
 /** Colors of the stain groups in filters and counts. */
 export const WSI_STAIN_COLORS = {

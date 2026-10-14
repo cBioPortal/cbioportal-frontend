@@ -132,6 +132,67 @@ describe('WSIViewer hideable panels', () => {
         expect(byTestId(viewer, 'wsi-nav-rail')).toHaveLength(1);
     });
 
+    it('shows the slide count on the hidden slide list rail', () => {
+        const viewer = makeViewer();
+        act(() => viewer.hideNav());
+        const rail = byTestId(viewer, 'wsi-nav-rail')[0];
+        expect(
+            rail.findAll((node: any) => node.children?.includes?.('1')).length
+        ).toBeGreaterThan(0);
+    });
+
+    it("merges the host's hidden panels into the slide list rail", () => {
+        const onExpand = jest.fn();
+        const viewer = makeViewer({
+            leadingRailSections: [
+                {
+                    title: 'Patients',
+                    detail: '12',
+                    expandLabel: 'Show patient list',
+                    onExpand,
+                    testId: 'host-rail',
+                },
+            ],
+        });
+        // Not shown while the slide list is open.
+        expect(byTestId(viewer, 'host-rail')).toHaveLength(0);
+
+        act(() => viewer.hideNav());
+        const rail = byTestId(viewer, 'wsi-nav-rail')[0];
+        const hostSection = rail.findAll(
+            (node: any) => node.props['data-testid'] === 'host-rail'
+        );
+        expect(hostSection).toHaveLength(1);
+        // A click anywhere on the section shows the host's panel.
+        act(() => hostSection[0].props.onClick());
+        expect(onExpand).toHaveBeenCalledTimes(1);
+    });
+
+    it('toggles the panels with | and . unless the user is typing', () => {
+        const viewer = makeViewer();
+        const key = (k: string, target: unknown = document.body) =>
+            act(() => viewer.handlePanelKey({ key: k, target } as any));
+
+        key('|');
+        expect(byTestId(viewer, 'wsi-nav-rail')).toHaveLength(1);
+        key('|');
+        expect(byTestId(viewer, 'wsi-nav-rail')).toHaveLength(0);
+
+        key('.');
+        expect(byTestId(viewer, 'wsi-metadata-rail')).toHaveLength(1);
+
+        key('.', document.createElement('input'));
+        expect(byTestId(viewer, 'wsi-metadata-rail')).toHaveLength(1);
+    });
+
+    it('ignores the panel keys while the host hides the viewer', () => {
+        const viewer = makeViewer({ hidden: true });
+        act(() =>
+            viewer.handlePanelKey({ key: '|', target: document.body } as any)
+        );
+        expect(byTestId(viewer, 'wsi-nav-rail')).toHaveLength(0);
+    });
+
     it('follows the host when the hidden state is controlled', () => {
         window.localStorage.setItem(WSI_NAV_COLLAPSED_KEY, '1');
         const onNavCollapsedChange = jest.fn();
