@@ -4,6 +4,9 @@ import { buildWsiRequestHeaders } from './wsiUrls';
 import { WSI_THEME } from './wsiTheme';
 
 const OSD_NAVIGATOR_BOTTOM_OFFSET_PX = '48px';
+/** The navigator scales with the viewer; this keeps it small in a tall one. */
+const OSD_NAVIGATOR_MAX_WIDTH_PX = '220px';
+const OSD_NAVIGATOR_MAX_HEIGHT_PX = '180px';
 export const OSD_INITIAL_IMAGE_LOADER_LIMIT = 1;
 export const OSD_STEADY_IMAGE_LOADER_LIMIT = 4;
 export const OSD_TILE_REQUEST_TIMEOUT_MS = 120_000;
@@ -196,6 +199,8 @@ export function offsetNavigatorElement(
     const navEl = osdViewer?.navigator?.element as HTMLElement | undefined;
     if (navEl) {
         navEl.style.bottom = OSD_NAVIGATOR_BOTTOM_OFFSET_PX;
+        navEl.style.maxWidth = OSD_NAVIGATOR_MAX_WIDTH_PX;
+        navEl.style.maxHeight = OSD_NAVIGATOR_MAX_HEIGHT_PX;
     }
 }
 

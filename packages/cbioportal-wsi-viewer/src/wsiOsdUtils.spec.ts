@@ -1,6 +1,7 @@
 import {
     buildOsdOptions,
     ensureNavigator,
+    offsetNavigatorElement,
     OSD_INITIAL_IMAGE_LOADER_LIMIT,
     OSD_STEADY_IMAGE_LOADER_LIMIT,
     OSD_TILE_RETRY_DELAY_MS,
@@ -224,5 +225,15 @@ describe('ensureNavigator', () => {
         const first = ensureNavigator(args);
         expect(ensureNavigator(args)).toBe(first);
         expect(created).toHaveLength(1);
+    });
+});
+
+describe('offsetNavigatorElement', () => {
+    it('lifts the navigator above the status bar and caps its size', () => {
+        const element = document.createElement('div');
+        offsetNavigatorElement({ navigator: { element } });
+        expect(element.style.bottom).toBe('48px');
+        expect(element.style.maxWidth).toBe('220px');
+        expect(element.style.maxHeight).toBe('180px');
     });
 });

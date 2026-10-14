@@ -33,6 +33,17 @@ export const WSI_NAV_WIDTH = 328;
 export const WSI_SIDEBAR_WIDTH = 320;
 export const WSI_SIDEBAR_MIN_WIDTH = 220;
 export const WSI_SIDEBAR_MAX_WIDTH = 520;
+/**
+ * The viewer's height for a window: at most three quarters of the window's
+ * width (and at least 480px), so a tall, narrow window doesn't stretch it.
+ */
+export function capWsiViewerHeight(
+    height: number,
+    windowWidth: number
+): number {
+    return Math.min(height, Math.max(480, Math.round(windowWidth * 0.75)));
+}
+
 /** Width of a hidden panel's rail. */
 export const WSI_RAIL_WIDTH = 32;
 

@@ -41,6 +41,7 @@ import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
 import PatientWsiSlidesTab from 'pages/patientView/PatientWsiSlidesTab';
+import { capWsiViewerHeight } from 'cbioportal-wsi-viewer';
 import { PatientViewPageTabs } from './PatientViewPageTabIds';
 import { WsiPatientClinicalData } from 'shared/components/wsiViewer/wsiClinicalRows';
 import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
@@ -629,7 +630,10 @@ export function tabs(
                     studyId={pageComponent.patientViewPageStore.studyId}
                     tileServerUrl={tileServerUrl}
                     userName={pageComponent.props.appStore.userName}
-                    height={WindowStore.size.height - 220}
+                    height={capWsiViewerHeight(
+                        WindowStore.size.height - 220,
+                        WindowStore.size.width
+                    )}
                     hidden={
                         urlWrapper.activeTabId !==
                         PatientViewPageTabs.WSIHESlides

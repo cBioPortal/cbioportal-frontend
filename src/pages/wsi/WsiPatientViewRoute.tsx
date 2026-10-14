@@ -2,6 +2,7 @@ import * as React from 'react';
 import { parse } from 'query-string';
 import { getServerConfig } from 'config/config';
 import { AppWsiViewer } from 'shared/components/wsiViewer/wsiAppConfig';
+import { capWsiViewerHeight } from 'cbioportal-wsi-viewer';
 
 interface Props {
     match: { params: { patientId: string } };
@@ -32,7 +33,10 @@ export default function WsiPatientViewRoute({ match, location }: Props) {
     const height =
         typeof window === 'undefined'
             ? 720
-            : Math.max(480, window.innerHeight - 120);
+            : capWsiViewerHeight(
+                  Math.max(480, window.innerHeight - 120),
+                  window.innerWidth
+              );
 
     return (
         <AppWsiViewer
