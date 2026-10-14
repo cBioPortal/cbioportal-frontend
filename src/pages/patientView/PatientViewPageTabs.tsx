@@ -122,6 +122,24 @@ export function patientViewTabs(
     );
 }
 
+/**
+ * The slide list's sample badges, one renderer per sample manager so the
+ * list's memoized rows don't re-render with every tab render.
+ */
+const wsiSampleLabelRenderers = new WeakMap<
+    SampleManager,
+    (sampleId: string) => React.ReactNode
+>();
+function wsiSampleLabelRenderer(sampleManager: SampleManager) {
+    let render = wsiSampleLabelRenderers.get(sampleManager);
+    if (!render) {
+        render = (sampleId: string) =>
+            sampleManager.getComponentForSample(sampleId);
+        wsiSampleLabelRenderers.set(sampleManager, render);
+    }
+    return render;
+}
+
 export function tabs(
     pageComponent: PatientViewPageInner,
     sampleManager: SampleManager | null,
@@ -643,8 +661,7 @@ export function tabs(
                     )}
                     renderSampleLabel={
                         sampleManager
-                            ? sampleId =>
-                                  sampleManager.getComponentForSample(sampleId)
+                            ? wsiSampleLabelRenderer(sampleManager)
                             : undefined
                     }
                 />

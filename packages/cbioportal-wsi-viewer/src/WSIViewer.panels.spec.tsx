@@ -168,6 +168,34 @@ describe('WSIViewer hideable panels', () => {
         expect(onExpand).toHaveBeenCalledTimes(1);
     });
 
+    it("keeps the rail and the host's sections while slides load or fail", () => {
+        const viewer = makeViewer({
+            leadingRailSections: [
+                {
+                    title: 'Patients',
+                    expandLabel: 'Show patient list',
+                    onExpand: () => {},
+                    testId: 'host-rail',
+                },
+            ],
+        });
+        act(() => viewer.hideNav());
+
+        action(() => {
+            viewer.loading = true;
+        })();
+        expect(byTestId(viewer, 'wsi-nav-rail')).toHaveLength(1);
+        expect(byTestId(viewer, 'host-rail')).toHaveLength(1);
+
+        action(() => {
+            viewer.loading = false;
+            viewer.hierarchy = null;
+            viewer.error = 'Slides could not be loaded';
+        })();
+        expect(byTestId(viewer, 'wsi-nav-rail')).toHaveLength(1);
+        expect(byTestId(viewer, 'host-rail')).toHaveLength(1);
+    });
+
     it('toggles the panels with | and . unless the user is typing', () => {
         const viewer = makeViewer();
         const key = (k: string, target: unknown = document.body) =>

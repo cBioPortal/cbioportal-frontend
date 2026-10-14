@@ -64,7 +64,8 @@ export interface WsiNavPanelProps {
 
 const INITIAL_VISIBLE_SAMPLE_LIMIT = 6;
 /** Height of a slide in the tray; the label end is about a third of a real slide's length. */
-const SLIDE_HEIGHT = 70;
+/** Fits the label end's four lines (61px) with its padding and border. */
+const SLIDE_HEIGHT = 74;
 const SLIDE_LABEL_WIDTH = 128;
 const MAX_THUMBNAIL_ATTEMPTS = 3;
 const DEFAULT_THUMBNAIL_RETRY_DELAY_MS = 60_000;

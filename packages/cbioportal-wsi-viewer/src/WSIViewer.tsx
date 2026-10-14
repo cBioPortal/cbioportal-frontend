@@ -929,6 +929,28 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
 
     // ---- render ----
 
+    /** The hidden slide list's rail, led by the host's own hidden panels. */
+    private renderNavRail() {
+        const { selectedSlide, hierarchy } = this;
+        return (
+            <WsiCollapsedRail
+                side="left"
+                title="Slides"
+                detail={
+                    hierarchy ? String(this.servableSlides.length) : undefined
+                }
+                accent={
+                    selectedSlide ? getStainDotColor(selectedSlide) : undefined
+                }
+                showLabel={`Show slide list (${NAV_TOGGLE_KEY})`}
+                onExpand={this.showNav}
+                background={C.navBg}
+                testId="wsi-nav-rail"
+                leadingSections={this.props.leadingRailSections}
+            />
+        );
+    }
+
     render() {
         const { height } = this.props;
         const {
@@ -949,37 +971,31 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             stainFilter !== 'all' ||
             matchFilter !== 'all';
 
-        if (loading) {
+        if (loading || !hierarchy) {
+            // A hidden slide list keeps its rail (and any host sections on
+            // it) while slides load or fail, so the host's controls stay put.
             return (
-                <div
-                    style={{
-                        height,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}
-                >
-                    {this.props.renderLoading ? (
-                        this.props.renderLoading()
-                    ) : (
-                        <DefaultLoadingIndicator />
-                    )}
-                </div>
-            );
-        }
-
-        if (!hierarchy) {
-            return (
-                <div
-                    style={{
-                        height,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#c00',
-                    }}
-                >
-                    {error || 'No data'}
+                <div style={{ display: 'flex', height }}>
+                    {this.navCollapsed && this.renderNavRail()}
+                    <div
+                        style={{
+                            flex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: loading ? undefined : '#c00',
+                        }}
+                    >
+                        {loading ? (
+                            this.props.renderLoading ? (
+                                this.props.renderLoading()
+                            ) : (
+                                <DefaultLoadingIndicator />
+                            )
+                        ) : (
+                            error || 'No data'
+                        )}
+                    </div>
                 </div>
             );
         }
@@ -997,21 +1013,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             >
                 {/* Left nav panel */}
                 {this.navCollapsed ? (
-                    <WsiCollapsedRail
-                        side="left"
-                        title="Slides"
-                        detail={String(this.servableSlides.length)}
-                        accent={
-                            selectedSlide
-                                ? getStainDotColor(selectedSlide)
-                                : undefined
-                        }
-                        showLabel={`Show slide list (${NAV_TOGGLE_KEY})`}
-                        onExpand={this.showNav}
-                        background={C.navBg}
-                        testId="wsi-nav-rail"
-                        leadingSections={this.props.leadingRailSections}
-                    />
+                    this.renderNavRail()
                 ) : (
                     <WsiNavPanel
                         hierarchy={hierarchy}
