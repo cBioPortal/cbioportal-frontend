@@ -339,6 +339,11 @@ function WsiNavPanelComponent({
         });
         return filteredCounts;
     }, [facetSlides, stainFilter]);
+    /** Match levels the patient's slides have, whatever the stain filter. */
+    const matchLevelsPresent = React.useMemo(
+        () => new Set(facetSlides.map(slide => slide.match_level)),
+        [facetSlides]
+    );
     /** A click on the active chip only matters for All, to drop a link scope. */
     const reselects = (current: string, key: string) =>
         current !== key || (key === 'all' && linkoutScopeActive);
@@ -404,9 +409,16 @@ function WsiNavPanelComponent({
                     chipTestIdPrefix="wsi-match-filter"
                     style={{ marginTop: 6 }}
                     chips={matchChips
+                        // The chips follow the patient's slides, so a stain
+                        // filter that leaves a level empty disables its chip
+                        // instead of removing it.
                         .filter(
                             chip =>
-                                chip.key === 'all' || matchCounts[chip.key] > 0
+                                chip.key === 'all' ||
+                                chip.key === matchFilter ||
+                                matchLevelsPresent.has(
+                                    chip.key.toUpperCase() as Slide['match_level']
+                                )
                         )
                         .map(chip => ({
                             ...chip,
@@ -414,6 +426,10 @@ function WsiNavPanelComponent({
                                 chip.key === 'all'
                                     ? undefined
                                     : matchCounts[chip.key],
+                            disabled:
+                                chip.key !== 'all' &&
+                                chip.key !== matchFilter &&
+                                matchCounts[chip.key] === 0,
                         }))}
                     isActive={key => matchFilter === key}
                     onSelect={key => {
