@@ -1178,7 +1178,8 @@ export default class StructureViewerPanel extends React.Component<
     }
 
     // Set once the PDB chain request has settled without yielding a chain.
-    @computed get pdbUnavailableMessage(): string | undefined {
+    // Deliberately not @computed: it reads a React prop, which MobX doesn't track.
+    get pdbUnavailableMessage(): string | undefined {
         if (
             this.structureSource !== StructureSource.PDB ||
             this.pdbChain ||
@@ -1189,7 +1190,7 @@ export default class StructureViewerPanel extends React.Component<
         }
 
         return this.props.pdbAlignmentStatus === 'error'
-            ? 'PDB structures could not be loaded: the structure alignment service (G2S) is unavailable.'
+            ? 'PDB structures could not be loaded. The structure alignment service may be unavailable.'
             : 'No PDB structures are available for this protein.';
     }
 
