@@ -32,8 +32,10 @@ import {
 } from './wsiThumbnailFetchCache';
 
 import {
+    WSI_MONO_FONT_FAMILY,
     WSI_NAV_WIDTH,
     WSI_SECTION_TITLE_STYLE,
+    WSI_STAIN_COLORS,
     WSI_THEME as theme,
 } from './wsiTheme';
 import { WsiPanelHideButton } from './wsiPanelChrome';
@@ -61,8 +63,9 @@ export interface WsiNavPanelProps {
 }
 
 const INITIAL_VISIBLE_SAMPLE_LIMIT = 6;
-const THUMBNAIL_WIDTH = 64;
-const THUMBNAIL_HEIGHT = 48;
+/** Height of a slide in the tray; the label end is about a third of a real slide's length. */
+const SLIDE_HEIGHT = 62;
+const SLIDE_LABEL_WIDTH = 118;
 const MAX_THUMBNAIL_ATTEMPTS = 3;
 const DEFAULT_THUMBNAIL_RETRY_DELAY_MS = 60_000;
 const NETWORK_THUMBNAIL_RETRY_DELAYS_MS = [5_000, 15_000];
@@ -293,10 +296,10 @@ function WsiNavPanelComponent({
         color?: string;
     }> = [
         { key: 'all', label: 'All' },
-        { key: 'hne', label: 'H&E', color: theme.blue },
-        { key: 'ihc', label: 'IHC', color: theme.orange },
-        { key: 'other', label: 'Other (known)', color: theme.muted },
-        { key: 'unknown', label: 'Unknown', color: theme.muted },
+        { key: 'hne', label: 'H&E', color: WSI_STAIN_COLORS['H&E'] },
+        { key: 'ihc', label: 'IHC', color: WSI_STAIN_COLORS.IHC },
+        { key: 'other', label: 'Other (known)', color: WSI_STAIN_COLORS.Other },
+        { key: 'unknown', label: 'Unknown', color: WSI_STAIN_COLORS.Unknown },
     ];
     const matchChips: Array<{
         key: PathologySlideMatchFilter;
@@ -384,15 +387,20 @@ function WsiNavPanelComponent({
                     testId="wsi-stain-filter-row"
                     chipTestIdPrefix="wsi-stain-filter"
                     style={{ marginTop: 7 }}
-                    chips={chips.map(chip => ({
-                        ...chip,
-                        count:
-                            chip.key === 'all'
-                                ? undefined
-                                : stainCounts[chip.key],
-                        disabled:
-                            chip.key !== 'all' && stainCounts[chip.key] === 0,
-                    }))}
+                    chips={chips
+                        .filter(
+                            chip =>
+                                chip.key === 'all' ||
+                                chip.key === stainFilter ||
+                                stainCounts[chip.key] > 0
+                        )
+                        .map(chip => ({
+                            ...chip,
+                            count:
+                                chip.key === 'all'
+                                    ? undefined
+                                    : stainCounts[chip.key],
+                        }))}
                     isActive={key => stainFilter === key}
                     onSelect={key => {
                         if (reselects(stainFilter, key)) onFilterChange(key);
@@ -606,7 +614,8 @@ function SampleNode({
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                         style={{
-                            fontSize: 12,
+                            fontFamily: WSI_MONO_FONT_FAMILY,
+                            fontSize: 11.5,
                             fontWeight: 700,
                             color: theme.blue,
                             ...ellipsisStyle,
@@ -632,7 +641,7 @@ function SampleNode({
                 </div>
             </div>
             {open && (
-                <div style={{ paddingBottom: 4 }}>
+                <div style={{ padding: '0 10px 8px' }}>
                     {servableSlides.map(({ slide, blockLabel }) => (
                         <SlideItem
                             key={slide.slide_key}
@@ -702,7 +711,7 @@ function SlideItem({
 }) {
     const [hovered, setHovered] = React.useState(false);
     const isHE = wsiStainKind(slide) === 'hne';
-    const dotColor = getStainDotColor(slide, theme);
+    const dotColor = getStainDotColor(slide);
     const mag = slide.magnification || '';
     const sz = fmtFileSize(slide.file_size_bytes);
     const partDesc = multiPart
@@ -737,14 +746,7 @@ function SlideItem({
     if (mag) tooltipLines.push(`Magnification: ${mag}`);
     if (sz !== '—') tooltipLines.push(`Size: ${sz}`);
 
-    const bg = selected
-        ? theme.blueLight
-        : hovered
-        ? theme.blueLight
-        : 'transparent';
-    const borderLeft = selected
-        ? `2px solid ${theme.blue}`
-        : '2px solid transparent';
+    const borderColor = selected ? theme.blue : hovered ? '#b9b9b9' : '#d6d6d6';
 
     return (
         <div
@@ -771,108 +773,126 @@ function SlideItem({
             title={tooltipLines.join('\n')}
             style={{
                 display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '5px 8px',
-                margin: '1px 4px',
+                height: SLIDE_HEIGHT,
+                marginTop: 6,
                 borderRadius: 3,
-                borderLeft,
-                background: bg,
+                border: `1px solid ${borderColor}`,
+                boxShadow: selected
+                    ? `0 0 0 1px ${theme.blue}, 0 2px 6px rgba(55,134,194,0.25)`
+                    : hovered
+                    ? '0 2px 5px rgba(0,0,0,0.12)'
+                    : '0 1px 2px rgba(0,0,0,0.06)',
+                overflow: 'hidden',
                 cursor: 'pointer',
+                transition: 'box-shadow 120ms, border-color 120ms',
             }}
         >
-            <WsiSlideThumbnail
-                tileServerBase={tileServerBase}
-                slideKey={slide.slide_key}
-                studyId={studyId}
-                authScope={authScope}
-            />
-            <span
+            {/* The frosted label end, edged in the stain's color. */}
+            <div
                 style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    background: dotColor,
+                    width: SLIDE_LABEL_WIDTH,
                     flexShrink: 0,
-                    display: 'inline-block',
+                    padding: '5px 7px 4px 8px',
+                    background: theme.slideLabel,
+                    borderLeft: `4px solid ${dotColor}`,
+                    borderRight: '1px solid #e2dfd8',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    minWidth: 0,
                 }}
-            />
-            <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                    style={{
-                        fontSize: 12,
-                        fontWeight: 600,
-                        color: theme.text,
-                        ...ellipsisStyle,
-                    }}
-                >
-                    {primaryLabel}
+            >
+                <div style={{ minWidth: 0 }}>
+                    <div
+                        style={{
+                            fontFamily: WSI_MONO_FONT_FAMILY,
+                            fontSize: 11.5,
+                            fontWeight: 700,
+                            color: theme.text,
+                            lineHeight: '14px',
+                            ...ellipsisStyle,
+                        }}
+                    >
+                        {primaryLabel}
+                    </div>
+                    {subStain && (
+                        <div
+                            style={{
+                                fontSize: 11,
+                                fontWeight: 600,
+                                color: dotColor,
+                                lineHeight: '14px',
+                                ...ellipsisStyle,
+                            }}
+                        >
+                            {subStain}
+                        </div>
+                    )}
+                    {(partDesc || blockMeaning) && (
+                        <div
+                            style={{
+                                fontSize: 11,
+                                color: theme.muted,
+                                lineHeight: '13px',
+                                fontStyle: partDesc ? 'italic' : undefined,
+                                ...ellipsisStyle,
+                            }}
+                        >
+                            {partDesc || blockMeaning}
+                        </div>
+                    )}
                 </div>
-                {partDesc && (
+                {scanDetails && (
                     <div
                         style={{
-                            fontSize: 11,
-                            color: theme.blue,
-                            ...ellipsisStyle,
-                            fontStyle: 'italic',
-                        }}
-                    >
-                        {partDesc}
-                    </div>
-                )}
-                {blockMeaning && (
-                    <div
-                        style={{
-                            fontSize: 11,
-                            color: theme.blue,
+                            fontSize: 10,
+                            color: theme.muted,
+                            fontVariantNumeric: 'tabular-nums',
+                            lineHeight: '12px',
                             ...ellipsisStyle,
                         }}
                     >
-                        {blockMeaning}
-                    </div>
-                )}
-                {subStain && (
-                    <div
-                        style={{
-                            fontSize: 11,
-                            fontWeight: 600,
-                            color: dotColor,
-                            ...ellipsisStyle,
-                        }}
-                    >
-                        {subStain}
+                        {scanDetails}
                     </div>
                 )}
             </div>
-            <div style={{ flexShrink: 0, textAlign: 'right', lineHeight: 1.5 }}>
+            {/* The glass, with the tissue on it. */}
+            <div
+                style={{
+                    flex: 1,
+                    minWidth: 0,
+                    position: 'relative',
+                    background: selected ? '#fbfdff' : '#fdfdfc',
+                    padding: 3,
+                }}
+            >
+                <WsiSlideThumbnail
+                    tileServerBase={tileServerBase}
+                    slideKey={slide.slide_key}
+                    studyId={studyId}
+                    authScope={authScope}
+                />
                 {matchBadge && (
                     <div
                         data-testid={`wsi-slide-match-badge-${slide.slide_key}`}
                         title={`${matchBadge.label}-matched to this sequenced sample`}
                         style={{
-                            display: 'inline-block',
-                            padding: '0 3px',
+                            position: 'absolute',
+                            right: 4,
+                            bottom: 3,
+                            padding: '0 4px',
                             borderRadius: 2,
-                            background: '#f0f0f0',
+                            background: 'rgba(255,255,255,0.9)',
+                            border: '1px solid #e3e3e3',
                             color: matchBadge.color,
-                            fontSize: 10,
+                            fontSize: 9.5,
                             fontWeight: 700,
-                            lineHeight: '14px',
+                            lineHeight: '13px',
+                            letterSpacing: '.3px',
                             textTransform: 'uppercase',
                         }}
                     >
                         {matchBadge.label}
-                    </div>
-                )}
-                {scanDetails && (
-                    <div
-                        style={{
-                            fontSize: 11,
-                            color: theme.muted,
-                            whiteSpace: 'nowrap',
-                        }}
-                    >
-                        {scanDetails}
                     </div>
                 )}
             </div>
@@ -1025,16 +1045,12 @@ function WsiSlideThumbnail({
             data-testid={`wsi-slide-thumbnail-${slideKey}`}
             aria-hidden="true"
             style={{
-                width: THUMBNAIL_WIDTH,
-                height: THUMBNAIL_HEIGHT,
-                flexShrink: 0,
+                width: '100%',
+                height: '100%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 overflow: 'hidden',
-                border: '1px solid #ddd',
-                borderRadius: 2,
-                background: '#f1f1f1',
             }}
         >
             {source && (

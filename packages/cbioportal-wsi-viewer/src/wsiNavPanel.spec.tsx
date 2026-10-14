@@ -49,6 +49,13 @@ function findButtonText(
     );
 }
 
+function hasTestId(
+    renderer: TestRenderer.ReactTestRenderer,
+    testId: string
+): boolean {
+    return renderer.root.findAllByProps({ 'data-testid': testId }).length > 0;
+}
+
 function flattenRenderedText(value: unknown): string {
     if (typeof value === 'string' || typeof value === 'number') {
         return String(value);
@@ -670,14 +677,12 @@ describe('WsiNavPanel', () => {
             />
         );
 
-        expect(findButtonText(renderer, 'wsi-stain-filter-hne')).toContain('0');
-        expect(findButtonText(renderer, 'wsi-stain-filter-ihc')).toContain('0');
+        expect(hasTestId(renderer, 'wsi-stain-filter-hne')).toBe(false);
+        expect(hasTestId(renderer, 'wsi-stain-filter-ihc')).toBe(false);
         expect(findButtonText(renderer, 'wsi-stain-filter-other')).toContain(
             '1'
         );
-        expect(findButtonText(renderer, 'wsi-stain-filter-unknown')).toContain(
-            '0'
-        );
+        expect(hasTestId(renderer, 'wsi-stain-filter-unknown')).toBe(false);
         expect(findButtonText(renderer, 'wsi-filtered-slide-count')).toBe(
             'Showing 1 slide'
         );
@@ -762,9 +767,7 @@ describe('WsiNavPanel', () => {
             />
         );
 
-        expect(findButtonText(renderer, 'wsi-stain-filter-other')).toContain(
-            '0'
-        );
+        expect(hasTestId(renderer, 'wsi-stain-filter-other')).toBe(false);
         expect(findButtonText(renderer, 'wsi-stain-filter-unknown')).toContain(
             '1'
         );

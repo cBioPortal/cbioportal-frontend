@@ -36,7 +36,13 @@ import { clearPatientHierarchyCache } from './wsiHierarchyFetchCache';
 import { clearWsiSlideAccess } from './wsiAuth';
 import { clearWsiThumbnailFetchCache } from './wsiThumbnailFetchCache';
 import {
+    chooseScaleBar,
+    formatMagnification,
+    nativeObjectivePower,
+} from './wsiScaleUtils';
+import {
     WSI_FONT_FAMILY,
+    WSI_MONO_FONT_FAMILY,
     WSI_SIDEBAR_MAX_WIDTH,
     WSI_SIDEBAR_MIN_WIDTH,
     WSI_SIDEBAR_WIDTH,
@@ -113,12 +119,14 @@ function DefaultLoadingIndicator() {
     );
 }
 
-/** What the coordinate bar reads from the viewer. */
-interface CoordBarViewerState {
+/** What the status bar reads from the viewer. */
+interface StatusBarViewerState {
     coordInputX: string;
     coordInputY: string;
     cursorPos: { x: number; y: number } | null;
+    viewScale: number | null;
     readonly selectedMpp?: { x: number; y: number };
+    readonly selectedObjectivePower?: number;
 }
 
 function getInitialMatchFilter(
@@ -166,6 +174,8 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
     @observable coordInputY = '';
     /** Current cursor position in image pixels (null when viewer not ready or cursor outside) */
     @observable cursorPos: { x: number; y: number } | null = null;
+    /** Screen pixels per image pixel at the current zoom. */
+    @observable viewScale: number | null = null;
 
     private viewerContainerRef = React.createRef<HTMLDivElement>();
     private resizeStartX = 0;
@@ -392,6 +402,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                 this.spinnerVisible = false;
                 this.tilesReady = false;
                 this.thumbnailPreviewUrl = null;
+                this.viewScale = null;
             },
             getPatientId: () => this.hierarchy?.patient_id,
             setCoordInputs: (x, y) => this.setCoordInputs(x, y),
@@ -401,6 +412,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             }),
             updateCursorPos: (x, y) => this.handleCursorMove(x, y),
             clearCursorPos: () => this.clearCursorPos(),
+            setViewScale: scale => this.setViewScale(scale),
             reportInitialSlideLoadPerformance: metric =>
                 this.reportInitialSlideLoadPerformance(metric),
         };
@@ -561,6 +573,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         this.spinnerVisible = false;
         this.thumbnailPreviewUrl = null;
         this.cursorPos = null;
+        this.viewScale = null;
         this.coordInputX = '';
         this.coordInputY = '';
     }
@@ -729,6 +742,20 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         this.cursorPos = null;
     }
 
+    /** Skips changes too small to move the scale bar or magnification. */
+    @action.bound
+    private setViewScale(scale: number | null) {
+        const current = this.viewScale;
+        if (
+            scale !== null &&
+            current !== null &&
+            Math.abs(scale - current) / current < 0.002
+        ) {
+            return;
+        }
+        this.viewScale = scale;
+    }
+
     private async reselectPreferredSampleSlide(): Promise<void> {
         if (!this.hierarchy || !this.servableSlides.length) {
             return;
@@ -825,6 +852,10 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
 
     get selectedMpp(): { x: number; y: number } | undefined {
         return this.selectedMeta?.mpp;
+    }
+
+    get selectedObjectivePower(): number | undefined {
+        return nativeObjectivePower(this.selectedMeta);
     }
 
     @computed
@@ -952,7 +983,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                     style={{
                         flex: 1,
                         position: 'relative',
-                        background: '#e8e8e8',
+                        background: C.stageBg,
                     }}
                 >
                     {selectedSlide && thumbnailPreviewUrl && (
@@ -1056,8 +1087,8 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                             style={{
                                 ...overlayStyle,
                                 background: thumbnailPreviewUrl
-                                    ? 'rgba(232,232,232,0.18)'
-                                    : 'rgba(232,232,232,0.75)',
+                                    ? 'rgba(43,45,49,0.12)'
+                                    : 'rgba(43,45,49,0.6)',
                             }}
                         >
                             {thumbnailPreviewUrl ? (
@@ -1069,22 +1100,22 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                                         gap: 8,
                                         padding: '7px 10px',
                                         borderRadius: 3,
-                                        color: C.text,
-                                        background: 'rgba(255,255,255,0.9)',
-                                        boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+                                        color: C.stageText,
+                                        background: 'rgba(28,30,33,0.85)',
+                                        boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
                                         fontSize: 12,
                                     }}
                                 >
                                     <i
                                         className="fa fa-spinner fa-spin"
-                                        style={{ color: '#666' }}
+                                        style={{ color: C.stageMuted }}
                                     />
                                     <span>Loading full-resolution image…</span>
                                 </div>
                             ) : (
                                 <i
                                     className="fa fa-spinner fa-spin fa-3x"
-                                    style={{ color: '#888' }}
+                                    style={{ color: C.stageMuted }}
                                 />
                             )}
                         </div>
@@ -1094,7 +1125,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                             data-testid="wsi-viewer-error"
                             style={{
                                 ...overlayStyle,
-                                background: 'rgba(232,232,232,0.92)',
+                                background: 'rgba(43,45,49,0.94)',
                                 zIndex: 110,
                                 pointerEvents: 'auto',
                                 flexDirection: 'column',
@@ -1103,7 +1134,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                                 textAlign: 'center',
                             }}
                         >
-                            <span style={{ color: C.text }}>{error}</span>
+                            <span style={{ color: C.stageText }}>{error}</span>
                             <button
                                 className="btn btn-primary btn-sm"
                                 onClick={this.handleRetryViewer}
@@ -1114,13 +1145,13 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                     )}
                     {!selectedSlide && (
                         <div style={overlayStyle}>
-                            <span style={{ color: C.muted, fontSize: 13 }}>
+                            <span style={{ color: C.stageMuted, fontSize: 13 }}>
                                 No viewable slides for this patient
                             </span>
                         </div>
                     )}
                     {this.tilesReady && (
-                        <CoordBar
+                        <ViewerStatusBar
                             viewer={this}
                             onChangeX={this.handleChangeX}
                             onChangeY={this.handleChangeY}
@@ -1210,10 +1241,10 @@ const overlayStyle: React.CSSProperties = {
     pointerEvents: 'none',
 };
 
-// ---- CoordBar ----
+// ---- ViewerStatusBar ----
 
-interface CoordBarProps {
-    viewer: CoordBarViewerState;
+interface ViewerStatusBarProps {
+    viewer: StatusBarViewerState;
     onChangeX: (v: string) => void;
     onChangeY: (v: string) => void;
     onGo: () => void;
@@ -1222,7 +1253,34 @@ interface CoordBarProps {
     showDownload: boolean;
 }
 
-const CoordBar = observer(function CoordBar({
+const statusIconButtonStyle: React.CSSProperties = {
+    width: 26,
+    height: 24,
+    padding: 0,
+    border: '1px solid rgba(255,255,255,0.18)',
+    borderRadius: 3,
+    background: 'rgba(255,255,255,0.06)',
+    color: C.stageText,
+    lineHeight: '22px',
+};
+
+const statusInputStyle: React.CSSProperties = {
+    width: 76,
+    height: 22,
+    padding: '0 5px',
+    border: '1px solid rgba(255,255,255,0.25)',
+    borderRadius: 3,
+    background: 'rgba(0,0,0,0.25)',
+    color: C.stageText,
+    fontFamily: WSI_MONO_FONT_FAMILY,
+    fontSize: 11,
+};
+
+/**
+ * The strip along the bottom of the slide: the on-screen magnification and a
+ * scale bar on the left, the cursor's position and the view tools on the right.
+ */
+const ViewerStatusBar = observer(function ViewerStatusBar({
     viewer,
     onChangeX,
     onChangeY,
@@ -1230,17 +1288,21 @@ const CoordBar = observer(function CoordBar({
     onCopyLink,
     onDownload,
     showDownload,
-}: CoordBarProps) {
+}: ViewerStatusBarProps) {
     const {
         coordInputX: inputX,
         coordInputY: inputY,
         cursorPos,
+        viewScale,
         selectedMpp: mpp,
+        selectedObjectivePower,
     } = viewer;
+    const [copied, setCopied] = React.useState(false);
+    const [goToOpen, setGoToOpen] = React.useState(false);
     const handleKey = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') onGo();
+        if (e.key === 'Escape') setGoToOpen(false);
     };
-    const [copied, setCopied] = React.useState(false);
 
     const handleCopy = () => {
         onCopyLink();
@@ -1248,18 +1310,27 @@ const CoordBar = observer(function CoordBar({
         setTimeout(() => setCopied(false), 2000);
     };
 
+    const magnification =
+        viewScale !== null
+            ? formatMagnification(selectedObjectivePower, viewScale)
+            : undefined;
+    const scaleBar =
+        viewScale !== null && mpp?.x
+            ? chooseScaleBar(mpp.x / viewScale)
+            : undefined;
+
     let cursorLabel = '';
     if (cursorPos) {
-        cursorLabel = `${cursorPos.x.toLocaleString()} × ${cursorPos.y.toLocaleString()} px`;
-        if (mpp) {
-            const umX = (cursorPos.x * mpp.x).toFixed(1);
-            const umY = (cursorPos.y * mpp.y).toFixed(1);
-            cursorLabel += `  (${umX} × ${umY} μm)`;
-        }
+        cursorLabel = mpp
+            ? `${formatMicronPosition(
+                  cursorPos.x * mpp.x
+              )}, ${formatMicronPosition(cursorPos.y * mpp.y)}`
+            : `${cursorPos.x.toLocaleString()}, ${cursorPos.y.toLocaleString()} px`;
     }
 
     return (
         <div
+            data-testid="wsi-status-bar"
             style={{
                 position: 'absolute',
                 bottom: 0,
@@ -1267,52 +1338,126 @@ const CoordBar = observer(function CoordBar({
                 right: 0,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 6,
-                padding: '4px 10px',
-                background: 'rgba(250,250,250,0.92)',
-                borderTop: `1px solid ${C.border}`,
+                gap: 12,
+                padding: '5px 10px',
+                background:
+                    'linear-gradient(to top, rgba(24,25,28,0.88), rgba(24,25,28,0.72))',
+                borderTop: '1px solid rgba(255,255,255,0.08)',
                 fontSize: 11,
-                color: C.muted,
-                backdropFilter: 'blur(2px)',
+                color: C.stageText,
+                fontFamily: WSI_MONO_FONT_FAMILY,
+                fontVariantNumeric: 'tabular-nums',
                 zIndex: 10,
             }}
         >
-            <span style={{ fontWeight: 600, color: C.text, marginRight: 2 }}>
-                Go to:
-            </span>
-            <div
-                className="input-group input-group-sm"
-                style={{
-                    width: 'auto',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                }}
+            {magnification && (
+                <span
+                    data-testid="wsi-magnification"
+                    title="Magnification on screen"
+                    style={{
+                        minWidth: 44,
+                        padding: '1px 6px',
+                        borderRadius: 3,
+                        background: 'rgba(255,255,255,0.1)',
+                        fontWeight: 700,
+                        textAlign: 'center',
+                    }}
+                >
+                    {magnification}
+                </span>
+            )}
+            {scaleBar && (
+                <span
+                    data-testid="wsi-scale-bar"
+                    title="Scale"
+                    style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                    }}
+                >
+                    <span
+                        aria-hidden="true"
+                        style={{
+                            display: 'inline-block',
+                            width: scaleBar.widthPx,
+                            height: 6,
+                            borderLeft: `2px solid ${C.stageText}`,
+                            borderRight: `2px solid ${C.stageText}`,
+                            borderBottom: `2px solid ${C.stageText}`,
+                            transition: 'width 120ms',
+                        }}
+                    />
+                    <span>{scaleBar.label}</span>
+                </span>
+            )}
+            <span style={{ flex: 1 }} />
+            {cursorPos && (
+                <span
+                    data-testid="wsi-cursor-position"
+                    style={{ color: C.stageMuted, whiteSpace: 'nowrap' }}
+                >
+                    {cursorLabel}
+                </span>
+            )}
+            {goToOpen && (
+                <span
+                    style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                    }}
+                >
+                    <input
+                        type="number"
+                        aria-label="X in image pixels"
+                        value={inputX}
+                        placeholder="x px"
+                        autoFocus
+                        style={statusInputStyle}
+                        onChange={e => onChangeX(e.target.value)}
+                        onKeyDown={handleKey}
+                    />
+                    <input
+                        type="number"
+                        aria-label="Y in image pixels"
+                        value={inputY}
+                        placeholder="y px"
+                        style={statusInputStyle}
+                        onChange={e => onChangeY(e.target.value)}
+                        onKeyDown={handleKey}
+                    />
+                    <button
+                        type="button"
+                        className="btn btn-primary btn-xs"
+                        style={{ height: 22 }}
+                        onClick={onGo}
+                    >
+                        Go
+                    </button>
+                </span>
+            )}
+            <DefaultTooltip
+                trigger={['hover']}
+                placement="top"
+                overlay={<span>Go to a position (image pixels)</span>}
             >
-                <span style={{ color: C.muted }}>X</span>
-                <input
-                    type="number"
-                    value={inputX}
-                    placeholder="px"
-                    className="form-control input-sm"
-                    style={{ width: 88 }}
-                    onChange={e => onChangeX(e.target.value)}
-                    onKeyDown={handleKey}
-                />
-                <span style={{ color: C.muted }}>Y</span>
-                <input
-                    type="number"
-                    value={inputY}
-                    placeholder="px"
-                    className="form-control input-sm"
-                    style={{ width: 88 }}
-                    onChange={e => onChangeY(e.target.value)}
-                    onKeyDown={handleKey}
-                />
-            </div>
-            <button className="btn btn-primary btn-sm" onClick={onGo}>
-                Go
-            </button>
+                <button
+                    type="button"
+                    data-testid="wsi-goto-button"
+                    aria-label="Go to a position"
+                    aria-expanded={goToOpen}
+                    style={{
+                        ...statusIconButtonStyle,
+                        ...(goToOpen
+                            ? { background: 'rgba(255,255,255,0.2)' }
+                            : {}),
+                    }}
+                    onClick={() => setGoToOpen(open => !open)}
+                >
+                    <i className="fa fa-crosshairs" />
+                </button>
+            </DefaultTooltip>
             <DefaultTooltip
                 trigger={['hover']}
                 placement="top"
@@ -1323,14 +1468,16 @@ const CoordBar = observer(function CoordBar({
                 }
             >
                 <button
-                    className={`btn btn-default btn-sm`}
+                    type="button"
                     data-testid="wsi-share-button"
+                    aria-label="Copy a link to this view"
+                    style={statusIconButtonStyle}
                     onClick={handleCopy}
                 >
                     {copied ? (
                         <i className="fa fa-check" />
                     ) : (
-                        <i className="fa fa-clipboard" />
+                        <i className="fa fa-link" />
                     )}
                 </button>
             </DefaultTooltip>
@@ -1341,30 +1488,23 @@ const CoordBar = observer(function CoordBar({
                     overlay={<span>Download current viewport as JPEG</span>}
                 >
                     <button
-                        className="btn btn-default btn-sm"
+                        type="button"
                         data-testid="wsi-download-button"
+                        aria-label="Download this view"
+                        style={statusIconButtonStyle}
                         onClick={onDownload}
                     >
-                        <i className="fa fa-cloud-download" />
+                        <i className="fa fa-download" />
                     </button>
                 </DefaultTooltip>
-            )}
-            {cursorPos && (
-                <span
-                    style={{
-                        marginLeft: 'auto',
-                        color: C.muted,
-                        fontFamily: 'monospace',
-                        fontSize: 11,
-                    }}
-                >
-                    <i
-                        className="fa fa-crosshairs"
-                        style={{ marginRight: 3 }}
-                    />
-                    {cursorLabel}
-                </span>
             )}
         </div>
     );
 });
+
+/** A position on the tissue: µm below a millimetre, mm from there. */
+function formatMicronPosition(microns: number): string {
+    return microns >= 1000
+        ? `${(microns / 1000).toFixed(2)} mm`
+        : `${microns.toFixed(0)} µm`;
+}
