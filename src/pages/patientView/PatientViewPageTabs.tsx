@@ -637,6 +637,12 @@ export function tabs(
                     clinicalData={wsiPatientClinicalData(
                         pageComponent.patientViewPageStore
                     )}
+                    renderSampleLabel={
+                        sampleManager
+                            ? sampleId =>
+                                  sampleManager.getComponentForSample(sampleId)
+                            : undefined
+                    }
                 />
             </MSKTab>
         );

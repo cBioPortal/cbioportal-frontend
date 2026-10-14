@@ -169,12 +169,10 @@ export function ensureNavigator({
         sizeRatio: 0.2,
         autoFade: true,
         navigatorRotate: true,
-        // Matches the dark stage; the view box is a light portal blue that
-        // reads on both the glass and the tissue.
-        background: WSI_THEME.stageBg,
+        background: '#fff',
         opacity: 0.9,
-        borderColor: 'rgba(255,255,255,0.3)',
-        displayRegionColor: '#6cb4e8',
+        borderColor: '#ccc',
+        displayRegionColor: WSI_THEME.blue,
         ajaxHeaders: buildWsiRequestHeaders(accessToken),
         loadTilesWithAjax: Boolean(accessToken),
     });

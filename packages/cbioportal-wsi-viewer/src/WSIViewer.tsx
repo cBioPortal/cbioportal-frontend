@@ -42,7 +42,6 @@ import {
 } from './wsiScaleUtils';
 import {
     WSI_FONT_FAMILY,
-    WSI_MONO_FONT_FAMILY,
     WSI_SIDEBAR_MAX_WIDTH,
     WSI_SIDEBAR_MIN_WIDTH,
     WSI_SIDEBAR_WIDTH,
@@ -131,6 +130,8 @@ export interface WsiViewerProps {
      * is hidden too, so the two read as one rail.
      */
     leadingRailSections?: ReadonlyArray<WsiRailSection>;
+    /** The host's badge for a sample in the slide list, e.g. patient view's numbered sample icon. */
+    renderSampleLabel?: (sampleId: string) => React.ReactNode;
 }
 
 function DefaultLoadingIndicator() {
@@ -1030,6 +1031,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                         studyId={this.props.studyId}
                         authScope={this.props.authScope}
                         onHide={this.hideNav}
+                        renderSampleLabel={this.props.renderSampleLabel}
                     />
                 )}
 
@@ -1083,16 +1085,26 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                         }}
                     >
                         {ZOOM_BUTTONS.map(({ id, title, icon }) => (
-                            <button
+                            <DefaultTooltip
                                 key={id}
-                                type="button"
-                                id={`${this.navId}-${id}`}
-                                title={title}
-                                aria-label={title}
-                                style={stageButtonStyle}
+                                trigger={['hover']}
+                                placement="right"
+                                overlay={<span>{title}</span>}
                             >
-                                <i className={`fa ${icon}`} />
-                            </button>
+                                <button
+                                    type="button"
+                                    id={`${this.navId}-${id}`}
+                                    aria-label={title}
+                                    className="btn btn-default btn-sm"
+                                    style={{
+                                        width: 28,
+                                        padding: '3px 0',
+                                        lineHeight: 1,
+                                    }}
+                                >
+                                    <i className={`fa ${icon}`} />
+                                </button>
+                            </DefaultTooltip>
                         ))}
                     </div>
                     {this.requestedSlideUnavailable &&
@@ -1139,8 +1151,8 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                             style={{
                                 ...overlayStyle,
                                 background: thumbnailPreviewUrl
-                                    ? 'rgba(43,45,49,0.12)'
-                                    : 'rgba(43,45,49,0.6)',
+                                    ? 'rgba(232,232,232,0.18)'
+                                    : 'rgba(232,232,232,0.75)',
                             }}
                         >
                             {thumbnailPreviewUrl ? (
@@ -1152,23 +1164,23 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                                         gap: 8,
                                         padding: '7px 10px',
                                         borderRadius: 3,
-                                        color: C.stageText,
-                                        background: 'rgba(28,30,33,0.85)',
-                                        boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
-                                        fontSize: 12,
+                                        color: C.text,
+                                        background: 'rgba(255,255,255,0.92)',
+                                        border: `1px solid ${C.border}`,
+                                        boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                                        fontSize: 13,
                                     }}
                                 >
                                     <i
                                         className="fa fa-spinner fa-spin"
-                                        style={{ color: C.stageMuted }}
+                                        style={{ color: C.muted }}
                                     />
                                     <span>Loading full-resolution image…</span>
                                 </div>
+                            ) : this.props.renderLoading ? (
+                                this.props.renderLoading()
                             ) : (
-                                <i
-                                    className="fa fa-spinner fa-spin fa-3x"
-                                    style={{ color: C.stageMuted }}
-                                />
+                                <DefaultLoadingIndicator />
                             )}
                         </div>
                     )}
@@ -1177,7 +1189,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                             data-testid="wsi-viewer-error"
                             style={{
                                 ...overlayStyle,
-                                background: 'rgba(43,45,49,0.94)',
+                                background: 'rgba(232,232,232,0.92)',
                                 zIndex: 110,
                                 pointerEvents: 'auto',
                                 flexDirection: 'column',
@@ -1186,7 +1198,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                                 textAlign: 'center',
                             }}
                         >
-                            <span style={{ color: C.stageText }}>{error}</span>
+                            <span style={{ color: C.text }}>{error}</span>
                             <button
                                 className="btn btn-primary btn-sm"
                                 onClick={this.handleRetryViewer}
@@ -1197,7 +1209,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                     )}
                     {!selectedSlide && (
                         <div style={overlayStyle}>
-                            <span style={{ color: C.stageMuted, fontSize: 13 }}>
+                            <span style={{ color: C.muted, fontSize: 13 }}>
                                 No viewable slides for this patient
                             </span>
                         </div>
@@ -1305,30 +1317,39 @@ interface ViewerStatusBarProps {
     showDownload: boolean;
 }
 
-/** A button on the dark stage: the zoom buttons and the status bar's tools. */
-const stageButtonStyle: React.CSSProperties = {
-    width: 26,
-    height: 24,
-    padding: 0,
-    border: '1px solid rgba(255,255,255,0.18)',
-    borderRadius: 3,
-    background: 'rgba(24,25,28,0.72)',
-    color: C.stageText,
-    lineHeight: '22px',
-    cursor: 'pointer',
-};
-
-const statusInputStyle: React.CSSProperties = {
-    width: 76,
-    height: 22,
-    padding: '0 5px',
-    border: '1px solid rgba(255,255,255,0.25)',
-    borderRadius: 3,
-    background: 'rgba(0,0,0,0.25)',
-    color: C.stageText,
-    fontFamily: WSI_MONO_FONT_FAMILY,
-    fontSize: 11,
-};
+/** A status bar tool: a Bootstrap button with a portal tooltip. */
+function StatusBarButton({
+    label,
+    icon,
+    testId,
+    pressed,
+    onClick,
+}: {
+    label: string;
+    icon: string;
+    testId: string;
+    pressed?: boolean;
+    onClick: () => void;
+}) {
+    return (
+        <DefaultTooltip
+            trigger={['hover']}
+            placement="top"
+            overlay={<span>{label}</span>}
+        >
+            <button
+                type="button"
+                className={`btn btn-default btn-xs${pressed ? ' active' : ''}`}
+                data-testid={testId}
+                aria-label={label}
+                aria-pressed={pressed}
+                onClick={onClick}
+            >
+                <i className={`fa ${icon}`} />
+            </button>
+        </DefaultTooltip>
+    );
+}
 
 /**
  * The strip along the bottom of the slide: the on-screen magnification and a
@@ -1393,13 +1414,11 @@ const ViewerStatusBar = observer(function ViewerStatusBar({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
-                padding: '5px 10px',
-                background:
-                    'linear-gradient(to top, rgba(24,25,28,0.88), rgba(24,25,28,0.72))',
-                borderTop: '1px solid rgba(255,255,255,0.08)',
-                fontSize: 11,
-                color: C.stageText,
-                fontFamily: WSI_MONO_FONT_FAMILY,
+                padding: '4px 10px',
+                background: 'rgba(250,250,250,0.94)',
+                borderTop: `1px solid ${C.border}`,
+                fontSize: 12,
+                color: C.text,
                 fontVariantNumeric: 'tabular-nums',
                 zIndex: 10,
             }}
@@ -1408,14 +1427,7 @@ const ViewerStatusBar = observer(function ViewerStatusBar({
                 <span
                     data-testid="wsi-magnification"
                     title="Magnification on screen"
-                    style={{
-                        minWidth: 44,
-                        padding: '1px 6px',
-                        borderRadius: 3,
-                        background: 'rgba(255,255,255,0.1)',
-                        fontWeight: 700,
-                        textAlign: 'center',
-                    }}
+                    style={{ minWidth: 36, fontWeight: 700 }}
                 >
                     {magnification}
                 </span>
@@ -1436,9 +1448,9 @@ const ViewerStatusBar = observer(function ViewerStatusBar({
                             display: 'inline-block',
                             width: scaleBar.widthPx,
                             height: 6,
-                            borderLeft: `2px solid ${C.stageText}`,
-                            borderRight: `2px solid ${C.stageText}`,
-                            borderBottom: `2px solid ${C.stageText}`,
+                            borderLeft: `2px solid ${C.text}`,
+                            borderRight: `2px solid ${C.text}`,
+                            borderBottom: `2px solid ${C.text}`,
                             transition: 'width 120ms',
                         }}
                     />
@@ -1449,14 +1461,16 @@ const ViewerStatusBar = observer(function ViewerStatusBar({
             {cursorPos && (
                 <span
                     data-testid="wsi-cursor-position"
-                    style={{ color: C.stageMuted, whiteSpace: 'nowrap' }}
+                    style={{ color: C.muted, whiteSpace: 'nowrap' }}
                 >
                     {cursorLabel}
                 </span>
             )}
             {goToOpen && (
                 <span
+                    className="input-group input-group-sm"
                     style={{
+                        width: 'auto',
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 4,
@@ -1468,7 +1482,8 @@ const ViewerStatusBar = observer(function ViewerStatusBar({
                         value={inputX}
                         placeholder="x px"
                         autoFocus
-                        style={statusInputStyle}
+                        className="form-control input-sm"
+                        style={{ width: 84, height: 24 }}
                         onChange={e => onChangeX(e.target.value)}
                         onKeyDown={handleKey}
                     />
@@ -1477,80 +1492,40 @@ const ViewerStatusBar = observer(function ViewerStatusBar({
                         aria-label="Y in image pixels"
                         value={inputY}
                         placeholder="y px"
-                        style={statusInputStyle}
+                        className="form-control input-sm"
+                        style={{ width: 84, height: 24 }}
                         onChange={e => onChangeY(e.target.value)}
                         onKeyDown={handleKey}
                     />
                     <button
                         type="button"
                         className="btn btn-primary btn-xs"
-                        style={{ height: 22 }}
                         onClick={onGo}
                     >
                         Go
                     </button>
                 </span>
             )}
-            <DefaultTooltip
-                trigger={['hover']}
-                placement="top"
-                overlay={<span>Go to a position (image pixels)</span>}
-            >
-                <button
-                    type="button"
-                    data-testid="wsi-goto-button"
-                    aria-label="Go to a position"
-                    aria-expanded={goToOpen}
-                    style={{
-                        ...stageButtonStyle,
-                        ...(goToOpen
-                            ? { background: 'rgba(255,255,255,0.2)' }
-                            : {}),
-                    }}
-                    onClick={() => setGoToOpen(open => !open)}
-                >
-                    <i className="fa fa-crosshairs" />
-                </button>
-            </DefaultTooltip>
-            <DefaultTooltip
-                trigger={['hover']}
-                placement="top"
-                overlay={
-                    <span>
-                        Copy a link to this exact view (slide, position, zoom)
-                    </span>
-                }
-            >
-                <button
-                    type="button"
-                    data-testid="wsi-share-button"
-                    aria-label="Copy a link to this view"
-                    style={stageButtonStyle}
-                    onClick={handleCopy}
-                >
-                    {copied ? (
-                        <i className="fa fa-check" />
-                    ) : (
-                        <i className="fa fa-link" />
-                    )}
-                </button>
-            </DefaultTooltip>
+            <StatusBarButton
+                label="Go to a position (image pixels)"
+                icon="fa-crosshairs"
+                testId="wsi-goto-button"
+                pressed={goToOpen}
+                onClick={() => setGoToOpen(open => !open)}
+            />
+            <StatusBarButton
+                label="Copy a link to this exact view (slide, position, zoom)"
+                icon={copied ? 'fa-check' : 'fa-link'}
+                testId="wsi-share-button"
+                onClick={handleCopy}
+            />
             {showDownload && (
-                <DefaultTooltip
-                    trigger={['hover']}
-                    placement="top"
-                    overlay={<span>Download current viewport as JPEG</span>}
-                >
-                    <button
-                        type="button"
-                        data-testid="wsi-download-button"
-                        aria-label="Download this view"
-                        style={stageButtonStyle}
-                        onClick={onDownload}
-                    >
-                        <i className="fa fa-download" />
-                    </button>
-                </DefaultTooltip>
+                <StatusBarButton
+                    label="Download current viewport as JPEG"
+                    icon="fa-download"
+                    testId="wsi-download-button"
+                    onClick={onDownload}
+                />
             )}
         </div>
     );

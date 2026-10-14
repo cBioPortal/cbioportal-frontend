@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { WSI_RAIL_WIDTH, WSI_SECTION_TITLE_STYLE, WSI_THEME } from './wsiTheme';
 
 /** Which edge of the layout a panel sits on. */
@@ -31,36 +32,41 @@ export function WsiIconButton({
     const [hovered, setHovered] = React.useState(false);
     const active = hovered && !disabled;
     return (
-        <button
-            type="button"
-            title={label}
-            aria-label={label}
-            aria-expanded={expanded}
-            disabled={disabled}
-            data-testid={testId}
-            onClick={onClick}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            style={{
-                width: ICON_BUTTON_SIZE,
-                height: ICON_BUTTON_SIZE,
-                flexShrink: 0,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: 0,
-                border: 'none',
-                borderRadius: 3,
-                background: active ? 'rgba(0,0,0,0.07)' : 'transparent',
-                color: active ? WSI_THEME.text : WSI_THEME.muted,
-                lineHeight: 1,
-                fontSize: 13,
-                opacity: disabled ? 0.35 : 1,
-                cursor: disabled ? 'default' : 'pointer',
-            }}
+        <DefaultTooltip
+            trigger={['hover']}
+            placement="top"
+            overlay={<span>{label}</span>}
         >
-            <i className={`fa ${icon}`} aria-hidden="true" />
-        </button>
+            <button
+                type="button"
+                aria-label={label}
+                aria-expanded={expanded}
+                disabled={disabled}
+                data-testid={testId}
+                onClick={onClick}
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
+                style={{
+                    width: ICON_BUTTON_SIZE,
+                    height: ICON_BUTTON_SIZE,
+                    flexShrink: 0,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 0,
+                    border: 'none',
+                    borderRadius: 3,
+                    background: active ? 'rgba(0,0,0,0.07)' : 'transparent',
+                    color: active ? WSI_THEME.text : WSI_THEME.muted,
+                    lineHeight: 1,
+                    fontSize: 13,
+                    opacity: disabled ? 0.35 : 1,
+                    cursor: disabled ? 'default' : 'pointer',
+                }}
+            >
+                <i className={`fa ${icon}`} aria-hidden="true" />
+            </button>
+        </DefaultTooltip>
     );
 }
 
@@ -88,8 +94,9 @@ export function WsiPanelHideButton({
 }
 
 /**
- * The title row every side panel starts with: its name, an optional detail
- * such as a count, and the button that hides it.
+ * The header bar every side panel starts with, styled like the study view's
+ * chart card headers: its name, an optional detail such as a count, and the
+ * button that hides it.
  */
 export function WsiPanelHeader({
     title,
@@ -116,7 +123,11 @@ export function WsiPanelHeader({
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: 6,
-                minHeight: ICON_BUTTON_SIZE,
+                minHeight: ICON_BUTTON_SIZE + 6,
+                padding: '2px 6px 2px 12px',
+                background: WSI_THEME.headerBg,
+                borderBottom: `1px solid ${WSI_THEME.border}`,
+                flexShrink: 0,
             }}
         >
             <div style={{ ...WSI_SECTION_TITLE_STYLE, minWidth: 0 }}>
@@ -125,9 +136,9 @@ export function WsiPanelHeader({
                     <span
                         data-testid={detailTestId}
                         style={{
-                            marginLeft: 5,
+                            marginLeft: 6,
                             fontWeight: 400,
-                            letterSpacing: 0,
+                            color: WSI_THEME.muted,
                         }}
                     >
                         {detail}
@@ -183,7 +194,6 @@ function RailSection({
             onClick={onExpand}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
-            title={expandLabel}
             style={{
                 flex: fill ? 1 : undefined,
                 display: 'flex',
@@ -199,61 +209,67 @@ function RailSection({
                 transition: 'background 120ms',
             }}
         >
-            <button
-                type="button"
-                aria-label={expandLabel}
-                aria-expanded={false}
-                data-testid={testId && `${testId}-expand`}
-                onClick={event => {
-                    event.stopPropagation();
-                    onExpand();
-                }}
-                style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '2px 0',
-                    border: 'none',
-                    background: 'transparent',
-                    color: hovered ? WSI_THEME.blueDark : WSI_THEME.muted,
-                    cursor: 'pointer',
-                }}
+            <DefaultTooltip
+                trigger={['hover']}
+                placement={side === 'left' ? 'right' : 'left'}
+                overlay={<span>{expandLabel}</span>}
             >
-                <i
-                    className={`fa fa-angle-double-${
-                        side === 'left' ? 'right' : 'left'
-                    }`}
-                    aria-hidden="true"
-                    style={{ fontSize: 14 }}
-                />
-                <span
+                <button
+                    type="button"
+                    aria-label={expandLabel}
+                    aria-expanded={false}
+                    data-testid={testId && `${testId}-expand`}
+                    onClick={event => {
+                        event.stopPropagation();
+                        onExpand();
+                    }}
                     style={{
-                        writingMode: 'vertical-rl',
-                        transform:
-                            side === 'left' ? 'rotate(180deg)' : undefined,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: '.8px',
-                        whiteSpace: 'nowrap',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '2px 0',
+                        border: 'none',
+                        background: 'transparent',
+                        color: hovered ? WSI_THEME.blueDark : WSI_THEME.muted,
+                        cursor: 'pointer',
                     }}
                 >
-                    {title}
-                    {detail && (
-                        <span
-                            style={{
-                                fontWeight: 400,
-                                letterSpacing: 0,
-                                textTransform: 'none',
-                            }}
-                        >
-                            {' · '}
-                            {detail}
-                        </span>
-                    )}
-                </span>
-            </button>
+                    <i
+                        className={`fa fa-angle-double-${
+                            side === 'left' ? 'right' : 'left'
+                        }`}
+                        aria-hidden="true"
+                        style={{ fontSize: 14 }}
+                    />
+                    <span
+                        style={{
+                            writingMode: 'vertical-rl',
+                            transform:
+                                side === 'left' ? 'rotate(180deg)' : undefined,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: hovered
+                                ? WSI_THEME.blueDark
+                                : WSI_THEME.text,
+                            whiteSpace: 'nowrap',
+                        }}
+                    >
+                        {title}
+                        {detail && (
+                            <span
+                                style={{
+                                    fontWeight: 400,
+                                    color: WSI_THEME.muted,
+                                }}
+                            >
+                                {' · '}
+                                {detail}
+                            </span>
+                        )}
+                    </span>
+                </button>
+            </DefaultTooltip>
             {section.controls && (
                 <div
                     onClick={event => event.stopPropagation()}

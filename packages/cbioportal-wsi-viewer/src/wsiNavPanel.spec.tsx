@@ -2,6 +2,7 @@
  * @jest-environment jsdom
  */
 import * as React from 'react';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import TestRenderer, { act } from 'react-test-renderer';
 import { WsiNavPanel } from './wsiNavPanel';
 import { getWsiSlideAccess } from './wsiAuth';
@@ -140,14 +141,49 @@ describe('WsiNavPanel', () => {
         const item = renderer.root.findByProps({
             'data-testid': `wsi-slide-item-${key}`,
         });
+        // The item's tooltip, which lists its details.
+        const tooltip = renderer.root
+            .findAllByType(DefaultTooltip)
+            .find(
+                node =>
+                    node.findAll(
+                        child =>
+                            child.props['data-testid'] ===
+                            `wsi-slide-item-${key}`
+                    ).length
+            )!;
+        const tooltipText = flattenRenderedText(
+            TestRenderer.create(tooltip.props.overlay).toJSON()
+        );
         const visible = [
-            item.props.title,
+            tooltipText,
             item.props['aria-label'],
             flattenRenderedText(item.props.children),
         ].join('\n');
         expect(visible).not.toContain(key);
         expect(visible).not.toMatch(/Barcode|Image ID|Section:|Accession/);
-        expect(item.props.title).toContain('Stain: H&E');
+        expect(tooltipText).toContain('Stain: H&E');
+    });
+
+    it("shows the host's label beside each sample", () => {
+        const sample = makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })]);
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([sample])}
+                selectedSlide={null}
+                stainFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                renderSampleLabel={sampleId => (
+                    <span data-testid={`label-${sampleId}`}>1</span>
+                )}
+                {...navContext}
+            />
+        );
+
+        expect(
+            renderer.root.findAllByProps({ 'data-testid': 'label-S-1' })
+        ).toHaveLength(1);
     });
 
     it('derives ordered slides only once per sample render', () => {

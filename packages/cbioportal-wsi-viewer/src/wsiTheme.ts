@@ -15,23 +15,19 @@ export const WSI_THEME = {
     text: '#333',
     muted: '#737373',
     border: '#ddd',
-    navBg: '#fafafa',
-    sidebarBg: '#f5f5f5',
-    /** The viewer's surround, dark like a light box so the glass stands out. */
-    stageBg: '#2b2d31',
-    stageText: '#e4e4e4',
-    stageMuted: '#a3a6ab',
-    /** The frosted label end of a glass slide. */
-    slideLabel: '#f3f1ec',
+    navBg: '#fff',
+    sidebarBg: '#fff',
+    /** Header bars, as on the study view's chart cards. */
+    headerBg: '#f5f5f5',
+    /** The viewer's surround around the slide. */
+    stageBg: '#e8e8e8',
+    /** The label end of a slide in the slide list. */
+    slideLabel: '#f5f5f5',
 } as const;
 
 export type WsiTheme = { [K in keyof typeof WSI_THEME]: string };
 
 export const WSI_FONT_FAMILY = '"Helvetica Neue",Helvetica,Arial,sans-serif';
-
-/** Accession-style text: sample IDs, block labels and readouts. */
-export const WSI_MONO_FONT_FAMILY =
-    'Menlo,Consolas,"DejaVu Sans Mono","Liberation Mono",monospace';
 
 export const WSI_NAV_WIDTH = 328;
 export const WSI_SIDEBAR_WIDTH = 320;
@@ -48,13 +44,11 @@ export const WSI_STAIN_COLORS = {
     Unknown: WSI_THEME.muted,
 } as const;
 
-/** Uppercase panel section title ("Slides", "Image Properties"). */
+/** A panel's title ("Slides", "Details"), bold like the study view's chart card titles. */
 export const WSI_SECTION_TITLE_STYLE: React.CSSProperties = {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 700,
-    color: WSI_THEME.muted,
-    textTransform: 'uppercase',
-    letterSpacing: '.8px',
+    color: WSI_THEME.text,
 };
 
 /** A selectable row in a panel list; matches the viewer's slide items. */

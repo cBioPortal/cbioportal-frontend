@@ -1,4 +1,4 @@
-import { pluralize } from 'cbioportal-frontend-commons';
+import { DefaultTooltip, pluralize } from 'cbioportal-frontend-commons';
 import * as React from 'react';
 import {
     PatientHierarchy,
@@ -32,7 +32,6 @@ import {
 } from './wsiThumbnailFetchCache';
 
 import {
-    WSI_MONO_FONT_FAMILY,
     WSI_NAV_WIDTH,
     WSI_STAIN_COLORS,
     WSI_THEME as theme,
@@ -59,12 +58,14 @@ export interface WsiNavPanelProps {
     authScope: string;
     /** Shows a header button that hides the panel. */
     onHide?: () => void;
+    /** The host's badge for a sample, e.g. patient view's numbered sample icon. */
+    renderSampleLabel?: (sampleId: string) => React.ReactNode;
 }
 
 const INITIAL_VISIBLE_SAMPLE_LIMIT = 6;
 /** Height of a slide in the tray; the label end is about a third of a real slide's length. */
-const SLIDE_HEIGHT = 62;
-const SLIDE_LABEL_WIDTH = 118;
+const SLIDE_HEIGHT = 70;
+const SLIDE_LABEL_WIDTH = 128;
 const MAX_THUMBNAIL_ATTEMPTS = 3;
 const DEFAULT_THUMBNAIL_RETRY_DELAY_MS = 60_000;
 const NETWORK_THUMBNAIL_RETRY_DELAYS_MS = [5_000, 15_000];
@@ -189,6 +190,7 @@ function WsiNavPanelComponent({
     studyId,
     authScope,
     onHide,
+    renderSampleLabel,
 }: WsiNavPanelProps) {
     const selectedSlideId = selectedSlide?.slide_key;
     const unscopedSampleEntries = React.useMemo(
@@ -354,22 +356,22 @@ function WsiNavPanelComponent({
                 overflow: 'hidden',
             }}
         >
+            <WsiPanelHeader
+                title="Slides"
+                side="left"
+                hideLabel="Hide slide list (|)"
+                onHide={onHide}
+                hideTestId="wsi-nav-hide"
+            />
             <div
                 style={{
-                    padding: '9px 12px 7px',
+                    padding: '4px 12px 8px',
                     borderBottom: `1px solid ${theme.border}`,
                     flexShrink: 0,
                 }}
             >
-                <WsiPanelHeader
-                    title="Slides"
-                    side="left"
-                    hideLabel="Hide slide list (|)"
-                    onHide={onHide}
-                    hideTestId="wsi-nav-hide"
-                />
                 {stainChoices.length > 0 && (
-                    <WsiFilterRow label="Stain" style={{ marginTop: 7 }}>
+                    <WsiFilterRow label="Stain" style={{ marginTop: 4 }}>
                         <WsiFilterChipGroup
                             label="Filter slides by stain"
                             testId="wsi-stain-filter-row"
@@ -449,7 +451,7 @@ function WsiNavPanelComponent({
                     style={{
                         marginTop: 6,
                         color: theme.muted,
-                        fontSize: 11,
+                        fontSize: 12,
                     }}
                     data-testid="wsi-filtered-slide-count"
                 >
@@ -478,6 +480,7 @@ function WsiNavPanelComponent({
                             tileServerBase={tileServerBase}
                             studyId={studyId}
                             authScope={authScope}
+                            renderSampleLabel={renderSampleLabel}
                         />
                     )
                 )}
@@ -485,7 +488,7 @@ function WsiNavPanelComponent({
                     <div
                         style={{
                             padding: '8px 12px 12px',
-                            fontSize: 11,
+                            fontSize: 12,
                             color: theme.muted,
                         }}
                     >
@@ -537,9 +540,9 @@ function WsiFilterRow({
         >
             <span
                 style={{
-                    width: 36,
+                    width: 40,
                     flexShrink: 0,
-                    fontSize: 11,
+                    fontSize: 12,
                     color: theme.muted,
                 }}
             >
@@ -560,6 +563,7 @@ function SampleNode({
     tileServerBase,
     studyId,
     authScope,
+    renderSampleLabel,
 }: {
     sample: Sample;
     containsSelectedSlide: boolean;
@@ -570,6 +574,7 @@ function SampleNode({
     tileServerBase: string;
     studyId: string;
     authScope: string;
+    renderSampleLabel?: (sampleId: string) => React.ReactNode;
 }) {
     const [open, setOpen] = React.useState(
         containsSelectedSlide || sampleIndex === 0
@@ -613,9 +618,9 @@ function SampleNode({
                 aria-label={`${sample.sample_id || 'Sample'} slides`}
                 style={{
                     display: 'flex',
-                    alignItems: 'flex-start',
+                    alignItems: 'center',
                     gap: 6,
-                    padding: '8px 12px 7px',
+                    padding: '8px 12px 6px',
                     cursor: 'pointer',
                     userSelect: 'none',
                 }}
@@ -626,17 +631,24 @@ function SampleNode({
                     style={{
                         fontSize: 12,
                         color: theme.muted,
-                        marginTop: 2,
                         flexShrink: 0,
                         width: 8,
                     }}
                 />
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                    style={{
+                        flex: 1,
+                        minWidth: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 5,
+                    }}
+                >
+                    {sample.sample_id && renderSampleLabel?.(sample.sample_id)}
                     <div
                         style={{
-                            fontFamily: WSI_MONO_FONT_FAMILY,
-                            fontSize: 11.5,
-                            fontWeight: 700,
+                            fontSize: 13,
+                            fontWeight: 600,
                             color: theme.blue,
                             ...ellipsisStyle,
                         }}
@@ -644,21 +656,22 @@ function SampleNode({
                         {sample.sample_id || '—'}
                     </div>
                 </div>
-                <div
-                    title="Viewable slides shown in this sample"
-                    style={{
-                        fontSize: 10,
-                        color: theme.muted,
-                        flexShrink: 0,
-                        textAlign: 'right',
-                        lineHeight: 1.4,
-                        cursor: 'help',
-                    }}
+                <DefaultTooltip
+                    trigger={['hover']}
+                    placement="left"
+                    overlay={<span>Viewable slides shown in this sample</span>}
                 >
-                    <span style={{ color: theme.blue, fontWeight: 600 }}>
-                        {visibleSlideCount}
+                    <span
+                        style={{
+                            fontSize: 12,
+                            color: theme.muted,
+                            flexShrink: 0,
+                        }}
+                    >
+                        {visibleSlideCount}{' '}
+                        {pluralize('slide', visibleSlideCount)}
                     </span>
-                </div>
+                </DefaultTooltip>
             </div>
             {open && (
                 <div style={{ padding: '0 10px 8px' }}>
@@ -693,7 +706,8 @@ const MemoSampleNode = React.memo(SampleNode, (prev, next) => {
         prev.onSelectSlide !== next.onSelectSlide ||
         prev.tileServerBase !== next.tileServerBase ||
         prev.studyId !== next.studyId ||
-        prev.authScope !== next.authScope
+        prev.authScope !== next.authScope ||
+        prev.renderSampleLabel !== next.renderSampleLabel
     ) {
         return false;
     }
@@ -769,154 +783,170 @@ function SlideItem({
     const borderColor = selected ? theme.blue : hovered ? '#b9b9b9' : '#d6d6d6';
 
     return (
-        <div
-            data-testid={`wsi-slide-item-${slide.slide_key}`}
-            onClick={() => {
-                if (!selected) onSelectSlide(slide, sample);
-            }}
-            onKeyDown={event => {
-                if ((event.key === 'Enter' || event.key === ' ') && !selected) {
-                    event.preventDefault();
-                    onSelectSlide(slide, sample);
-                }
-            }}
-            role="button"
-            tabIndex={0}
-            aria-current={selected ? 'true' : undefined}
-            aria-label={
-                tooltipLines.length > 0
-                    ? tooltipLines.join(', ')
-                    : primaryLabel || 'Slide'
-            }
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            title={tooltipLines.join('\n')}
-            style={{
-                display: 'flex',
-                height: SLIDE_HEIGHT,
-                marginTop: 6,
-                borderRadius: 3,
-                border: `1px solid ${borderColor}`,
-                boxShadow: selected
-                    ? `0 0 0 1px ${theme.blue}, 0 2px 6px rgba(55,134,194,0.25)`
-                    : hovered
-                    ? '0 2px 5px rgba(0,0,0,0.12)'
-                    : '0 1px 2px rgba(0,0,0,0.06)',
-                overflow: 'hidden',
-                cursor: 'pointer',
-                transition: 'box-shadow 120ms, border-color 120ms',
-            }}
-        >
-            {/* The frosted label end, edged in the stain's color. */}
-            <div
-                style={{
-                    width: SLIDE_LABEL_WIDTH,
-                    flexShrink: 0,
-                    padding: '5px 7px 4px 8px',
-                    background: theme.slideLabel,
-                    borderLeft: `4px solid ${dotColor}`,
-                    borderRight: '1px solid #e2dfd8',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    minWidth: 0,
-                }}
-            >
-                <div style={{ minWidth: 0 }}>
-                    <div
-                        style={{
-                            fontFamily: WSI_MONO_FONT_FAMILY,
-                            fontSize: 11.5,
-                            fontWeight: 700,
-                            color: theme.text,
-                            lineHeight: '14px',
-                            ...ellipsisStyle,
-                        }}
-                    >
-                        {primaryLabel}
-                    </div>
-                    {subStain && (
-                        <div
-                            style={{
-                                fontSize: 11,
-                                fontWeight: 600,
-                                color: dotColor,
-                                lineHeight: '14px',
-                                ...ellipsisStyle,
-                            }}
-                        >
-                            {subStain}
-                        </div>
-                    )}
-                    {(partDesc || blockMeaning) && (
-                        <div
-                            style={{
-                                fontSize: 11,
-                                color: theme.muted,
-                                lineHeight: '13px',
-                                fontStyle: partDesc ? 'italic' : undefined,
-                                ...ellipsisStyle,
-                            }}
-                        >
-                            {partDesc || blockMeaning}
+        <DefaultTooltip
+            trigger={['hover']}
+            placement="right"
+            mouseEnterDelay={0.4}
+            overlay={
+                <div>
+                    {tooltipLines.map(line => (
+                        <div key={line}>{line}</div>
+                    ))}
+                    {matchBadge && (
+                        <div>
+                            {matchBadge.label}-matched to this sequenced sample
                         </div>
                     )}
                 </div>
-                {scanDetails && (
-                    <div
-                        style={{
-                            fontSize: 10,
-                            color: theme.muted,
-                            fontVariantNumeric: 'tabular-nums',
-                            lineHeight: '12px',
-                            ...ellipsisStyle,
-                        }}
-                    >
-                        {scanDetails}
-                    </div>
-                )}
-            </div>
-            {/* The glass, with the tissue on it. */}
+            }
+        >
             <div
+                data-testid={`wsi-slide-item-${slide.slide_key}`}
+                onClick={() => {
+                    if (!selected) onSelectSlide(slide, sample);
+                }}
+                onKeyDown={event => {
+                    if (
+                        (event.key === 'Enter' || event.key === ' ') &&
+                        !selected
+                    ) {
+                        event.preventDefault();
+                        onSelectSlide(slide, sample);
+                    }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-current={selected ? 'true' : undefined}
+                aria-label={
+                    tooltipLines.length > 0
+                        ? tooltipLines.join(', ')
+                        : primaryLabel || 'Slide'
+                }
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
                 style={{
-                    flex: 1,
-                    minWidth: 0,
-                    position: 'relative',
-                    background: selected ? '#fbfdff' : '#fdfdfc',
-                    padding: 3,
+                    display: 'flex',
+                    height: SLIDE_HEIGHT,
+                    marginTop: 6,
+                    borderRadius: 3,
+                    border: `1px solid ${borderColor}`,
+                    boxShadow: selected
+                        ? `0 0 0 1px ${theme.blue}, 0 2px 6px rgba(55,134,194,0.25)`
+                        : hovered
+                        ? '0 2px 5px rgba(0,0,0,0.12)'
+                        : '0 1px 2px rgba(0,0,0,0.06)',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    transition: 'box-shadow 120ms, border-color 120ms',
                 }}
             >
-                <WsiSlideThumbnail
-                    tileServerBase={tileServerBase}
-                    slideKey={slide.slide_key}
-                    studyId={studyId}
-                    authScope={authScope}
-                />
-                {matchBadge && (
-                    <div
-                        data-testid={`wsi-slide-match-badge-${slide.slide_key}`}
-                        title={`${matchBadge.label}-matched to this sequenced sample`}
-                        style={{
-                            position: 'absolute',
-                            right: 4,
-                            bottom: 3,
-                            padding: '0 4px',
-                            borderRadius: 2,
-                            background: 'rgba(255,255,255,0.9)',
-                            border: '1px solid #e3e3e3',
-                            color: matchBadge.color,
-                            fontSize: 9.5,
-                            fontWeight: 700,
-                            lineHeight: '13px',
-                            letterSpacing: '.3px',
-                            textTransform: 'uppercase',
-                        }}
-                    >
-                        {matchBadge.label}
+                {/* The frosted label end, edged in the stain's color. */}
+                <div
+                    style={{
+                        width: SLIDE_LABEL_WIDTH,
+                        flexShrink: 0,
+                        padding: '5px 8px 5px 8px',
+                        background: theme.slideLabel,
+                        borderLeft: `4px solid ${dotColor}`,
+                        borderRight: `1px solid ${theme.border}`,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        minWidth: 0,
+                    }}
+                >
+                    <div style={{ minWidth: 0 }}>
+                        <div
+                            style={{
+                                fontSize: 13,
+                                fontWeight: 600,
+                                color: theme.text,
+                                lineHeight: '16px',
+                                ...ellipsisStyle,
+                            }}
+                        >
+                            {primaryLabel}
+                        </div>
+                        {subStain && (
+                            <div
+                                style={{
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: dotColor,
+                                    lineHeight: '15px',
+                                    ...ellipsisStyle,
+                                }}
+                            >
+                                {subStain}
+                            </div>
+                        )}
+                        {(partDesc || blockMeaning) && (
+                            <div
+                                style={{
+                                    fontSize: 12,
+                                    color: theme.muted,
+                                    lineHeight: '15px',
+                                    fontStyle: partDesc ? 'italic' : undefined,
+                                    ...ellipsisStyle,
+                                }}
+                            >
+                                {partDesc || blockMeaning}
+                            </div>
+                        )}
                     </div>
-                )}
+                    {scanDetails && (
+                        <div
+                            style={{
+                                fontSize: 12,
+                                color: theme.muted,
+                                fontVariantNumeric: 'tabular-nums',
+                                lineHeight: '15px',
+                                ...ellipsisStyle,
+                            }}
+                        >
+                            {scanDetails}
+                        </div>
+                    )}
+                </div>
+                {/* The glass, with the tissue on it. */}
+                <div
+                    style={{
+                        flex: 1,
+                        minWidth: 0,
+                        position: 'relative',
+                        background: '#fff',
+                        padding: 3,
+                    }}
+                >
+                    <WsiSlideThumbnail
+                        tileServerBase={tileServerBase}
+                        slideKey={slide.slide_key}
+                        studyId={studyId}
+                        authScope={authScope}
+                    />
+                    {matchBadge && (
+                        <div
+                            data-testid={`wsi-slide-match-badge-${slide.slide_key}`}
+                            style={{
+                                position: 'absolute',
+                                right: 4,
+                                bottom: 3,
+                                padding: '0 4px',
+                                borderRadius: 2,
+                                background: 'rgba(255,255,255,0.9)',
+                                border: '1px solid #e3e3e3',
+                                color: matchBadge.color,
+                                fontSize: 11,
+                                fontWeight: 600,
+                                lineHeight: '15px',
+                            }}
+                        >
+                            {matchBadge.label}
+                        </div>
+                    )}
+                </div>
             </div>
-        </div>
+        </DefaultTooltip>
     );
 }
 

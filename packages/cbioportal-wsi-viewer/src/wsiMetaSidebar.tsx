@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 
 import { WSI_THEME } from './wsiTheme';
 import { useWsiPanelFlag, WsiPanelHeader } from './wsiPanelChrome';
@@ -7,7 +8,7 @@ const SIDEBAR_COLORS = WSI_THEME;
 
 const emptyStateStyle: React.CSSProperties = {
     color: SIDEBAR_COLORS.muted,
-    fontSize: 12,
+    fontSize: 13,
 };
 
 const linkedValueStyle: React.CSSProperties = {
@@ -37,7 +38,7 @@ export function wsiSidebarSectionCollapsedKey(sectionId: string): string {
 
 /** Sections sit under the Details header, so their titles are a step quieter. */
 const sectionToggleStyle: React.CSSProperties = {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: 600,
     color: SIDEBAR_COLORS.text,
     display: 'flex',
@@ -89,7 +90,6 @@ function SbSection({
                     type="button"
                     aria-expanded={!collapsed}
                     aria-controls={contentId}
-                    title={collapsed ? `Show ${title}` : `Hide ${title}`}
                     data-testid={`wsi-sidebar-section-${id}-toggle`}
                     onClick={toggle}
                     style={sectionToggleStyle}
@@ -142,46 +142,69 @@ function renderMetaValue(row: MetaRow) {
     );
 }
 
+/** A cell's text with the portal tooltip when it has a tip. */
+function WithTip({
+    tip,
+    children,
+}: {
+    tip?: string;
+    children: React.ReactNode;
+}) {
+    if (!tip) {
+        return <>{children}</>;
+    }
+    return (
+        <DefaultTooltip
+            trigger={['hover']}
+            placement="left"
+            overlay={<span>{tip}</span>}
+        >
+            <span style={{ cursor: 'help' }}>{children}</span>
+        </DefaultTooltip>
+    );
+}
+
+/** Key-value rows, striped like the portal's clinical attribute tables. */
 function MetaTable({ rows }: { rows: ReadonlyArray<MetaRow> }) {
     return (
         <table
-            style={{ width: '100%', borderCollapse: 'collapse', marginTop: 6 }}
+            style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                marginTop: 6,
+                fontSize: 13,
+                lineHeight: 1.4,
+            }}
         >
             <tbody>
-                {rows.map(row => (
-                    <tr key={row.label}>
+                {rows.map((row, index) => (
+                    <tr
+                        key={row.label}
+                        style={{
+                            background: index % 2 === 0 ? '#fff' : '#f9f9f9',
+                        }}
+                    >
                         <td
-                            title={row.labelTip}
                             style={{
-                                fontSize: 12,
-                                color: SIDEBAR_COLORS.muted,
-                                width: '50%',
-                                paddingRight: 5,
-                                paddingTop: 2,
-                                paddingBottom: 2,
+                                color: SIDEBAR_COLORS.text,
+                                width: '45%',
+                                padding: '3px 6px',
                                 verticalAlign: 'top',
-                                lineHeight: 1.5,
-                                cursor: row.labelTip ? 'help' : undefined,
-                                borderBottom: row.labelTip
-                                    ? `1px dotted ${SIDEBAR_COLORS.border}`
-                                    : undefined,
                             }}
                         >
-                            {row.label}
+                            <WithTip tip={row.labelTip}>{row.label}</WithTip>
                         </td>
                         <td
-                            title={row.valueTip}
                             style={{
-                                fontSize: 12,
                                 color: SIDEBAR_COLORS.text,
-                                fontWeight: 500,
+                                padding: '3px 6px',
                                 wordBreak: 'break-word',
                                 verticalAlign: 'top',
-                                lineHeight: 1.5,
-                                cursor: row.valueTip ? 'help' : undefined,
                             }}
                         >
-                            {renderMetaValue(row)}
+                            <WithTip tip={row.valueTip}>
+                                {renderMetaValue(row)}
+                            </WithTip>
                         </td>
                     </tr>
                 ))}
@@ -195,7 +218,7 @@ const showMoreStyle: React.CSSProperties = {
     background: 'transparent',
     padding: 0,
     marginTop: 4,
-    fontSize: 12,
+    fontSize: 13,
     color: SIDEBAR_COLORS.blue,
     cursor: 'pointer',
 };
@@ -276,21 +299,13 @@ function WsiMetaSidebarComponent({
                 flexShrink: 0,
             }}
         >
-            <div
-                style={{
-                    padding: '9px 12px 8px',
-                    borderBottom: `1px solid ${SIDEBAR_COLORS.border}`,
-                    flexShrink: 0,
-                }}
-            >
-                <WsiPanelHeader
-                    title="Details"
-                    side="right"
-                    hideLabel="Hide details (.)"
-                    onHide={onHide}
-                    hideTestId="wsi-metadata-hide"
-                />
-            </div>
+            <WsiPanelHeader
+                title="Details"
+                side="right"
+                hideLabel="Hide details (.)"
+                onHide={onHide}
+                hideTestId="wsi-metadata-hide"
+            />
             <SbSection id="imageProperties" title="Image properties">
                 {showImageProperties ? (
                     <MetaTable rows={wsiRows} />
