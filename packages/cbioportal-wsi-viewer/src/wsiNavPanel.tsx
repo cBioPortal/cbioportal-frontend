@@ -295,7 +295,6 @@ function WsiNavPanelComponent({
         label: string;
         color?: string;
     }> = [
-        { key: 'all', label: 'All' },
         { key: 'hne', label: 'H&E', color: WSI_STAIN_COLORS['H&E'] },
         { key: 'ihc', label: 'IHC', color: WSI_STAIN_COLORS.IHC },
         { key: 'other', label: 'Other (known)', color: WSI_STAIN_COLORS.Other },
@@ -305,7 +304,6 @@ function WsiNavPanelComponent({
         key: PathologySlideMatchFilter;
         label: string;
     }> = [
-        { key: 'all', label: 'All' },
         { key: 'part', label: 'Part' },
         { key: 'block', label: 'Block' },
         { key: 'unmatched', label: 'Unmatched' },
@@ -342,9 +340,8 @@ function WsiNavPanelComponent({
         });
         return filteredCounts;
     }, [facetSlides, stainFilter]);
-    /** A click on the active chip only matters for All, to drop a link scope. */
-    const reselects = (current: string, key: string) =>
-        current !== key || (key === 'all' && linkoutScopeActive);
+    const stainChoices = filterChoices(chips, stainCounts, stainFilter);
+    const matchChoices = filterChoices(matchChips, matchCounts, matchFilter);
 
     return (
         <div
@@ -382,54 +379,38 @@ function WsiNavPanelComponent({
                         />
                     )}
                 </div>
-                <WsiFilterChipGroup
-                    label="Filter slides by stain"
-                    testId="wsi-stain-filter-row"
-                    chipTestIdPrefix="wsi-stain-filter"
-                    style={{ marginTop: 7 }}
-                    chips={chips
-                        .filter(
-                            chip =>
-                                chip.key === 'all' ||
-                                chip.key === stainFilter ||
-                                stainCounts[chip.key] > 0
-                        )
-                        .map(chip => ({
-                            ...chip,
-                            count:
-                                chip.key === 'all'
-                                    ? undefined
-                                    : stainCounts[chip.key],
-                        }))}
-                    isActive={key => stainFilter === key}
-                    onSelect={key => {
-                        if (reselects(stainFilter, key)) onFilterChange(key);
-                    }}
-                />
-                <WsiFilterChipGroup
-                    label="Filter slides by match level"
-                    testId="wsi-match-filter-row"
-                    chipTestIdPrefix="wsi-match-filter"
-                    style={{ marginTop: 6 }}
-                    chips={matchChips
-                        .filter(
-                            chip =>
-                                chip.key === 'all' || matchCounts[chip.key] > 0
-                        )
-                        .map(chip => ({
-                            ...chip,
-                            count:
-                                chip.key === 'all'
-                                    ? undefined
-                                    : matchCounts[chip.key],
-                        }))}
-                    isActive={key => matchFilter === key}
-                    onSelect={key => {
-                        if (reselects(matchFilter, key)) {
-                            onMatchFilterChange?.(key);
-                        }
-                    }}
-                />
+                {stainChoices.length > 0 && (
+                    <WsiFilterRow label="Stain" style={{ marginTop: 7 }}>
+                        <WsiFilterChipGroup
+                            label="Filter slides by stain"
+                            testId="wsi-stain-filter-row"
+                            chipTestIdPrefix="wsi-stain-filter"
+                            chips={stainChoices}
+                            isActive={key => stainFilter === key}
+                            onSelect={key =>
+                                onFilterChange(
+                                    stainFilter === key ? 'all' : key
+                                )
+                            }
+                        />
+                    </WsiFilterRow>
+                )}
+                {matchChoices.length > 0 && (
+                    <WsiFilterRow label="Match" style={{ marginTop: 5 }}>
+                        <WsiFilterChipGroup
+                            label="Filter slides by match level"
+                            testId="wsi-match-filter-row"
+                            chipTestIdPrefix="wsi-match-filter"
+                            chips={matchChoices}
+                            isActive={key => matchFilter === key}
+                            onSelect={key =>
+                                onMatchFilterChange?.(
+                                    matchFilter === key ? 'all' : key
+                                )
+                            }
+                        />
+                    </WsiFilterRow>
+                )}
                 {sampleIdFilter && linkoutScopeActive && (
                     <div
                         data-testid="wsi-sample-scope"
@@ -529,6 +510,56 @@ function WsiNavPanelComponent({
 }
 
 export const WsiNavPanel = React.memo(WsiNavPanelComponent);
+
+/**
+ * The chips worth showing in a filter: the values some slide has, plus the
+ * active one. A filter whose slides all share one value offers no choice, so
+ * it shows nothing unless it is active.
+ */
+function filterChoices<K extends string>(
+    chips: ReadonlyArray<{ key: K; label: string; color?: string }>,
+    counts: Partial<Record<K, number>>,
+    active: K | 'all'
+): Array<{ key: K; label: string; color?: string; count: number }> {
+    const shown = chips
+        .filter(chip => chip.key === active || (counts[chip.key] ?? 0) > 0)
+        .map(chip => ({ ...chip, count: counts[chip.key] ?? 0 }));
+    return shown.length > 1 || active !== 'all' ? shown : [];
+}
+
+/** A labelled line of filter chips. Clicking the active chip clears it. */
+function WsiFilterRow({
+    label,
+    style,
+    children,
+}: {
+    label: string;
+    style?: React.CSSProperties;
+    children: React.ReactNode;
+}) {
+    return (
+        <div
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                ...style,
+            }}
+        >
+            <span
+                style={{
+                    width: 36,
+                    flexShrink: 0,
+                    fontSize: 11,
+                    color: theme.muted,
+                }}
+            >
+                {label}
+            </span>
+            {children}
+        </div>
+    );
+}
 
 function SampleNode({
     sample,
