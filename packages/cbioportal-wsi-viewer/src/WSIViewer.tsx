@@ -850,8 +850,10 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         return this.props.tileServerUrl.replace(/\/$/, '');
     }
 
+    /** The scan's microns per pixel; a scanner that recorded none reports 0. */
     get selectedMpp(): { x: number; y: number } | undefined {
-        return this.selectedMeta?.mpp;
+        const mpp = this.selectedMeta?.mpp;
+        return mpp && mpp.x > 0 && mpp.y > 0 ? mpp : undefined;
     }
 
     get selectedObjectivePower(): number | undefined {
