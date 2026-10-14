@@ -134,6 +134,114 @@ export function breakpointToDomainAA(
 }
 
 /**
+ * Genomic interval of CDS within a single exon (UTR regions removed).
+ * Both strands: start <= end.
+ */
+export interface CdsSegment {
+    start: number;
+    end: number;
+}
+
+/**
+ * CDS-only genomic segments of a transcript in transcription order: each exon
+ * clipped against every UTR, emitted low→high coord on + strand and high→low
+ * on − strand, so walking the list accumulates coding bp in the direction of
+ * translation. Domain genomic coordinates are derived from these same
+ * segments, so the two stay consistent.
+ */
+export function codingSegments(
+    transcript: Pick<TranscriptData, 'exons' | 'utrs' | 'strand'>
+): CdsSegment[] {
+    const { strand } = transcript;
+    const utrs = transcript.utrs || [];
+    const sortedExons = [...transcript.exons].sort((a, b) =>
+        strand === '+' ? a.start - b.start : b.start - a.start
+    );
+
+    const segments: CdsSegment[] = [];
+    for (const exon of sortedExons) {
+        let parts: CdsSegment[] = [{ start: exon.start, end: exon.end }];
+        for (const utr of utrs) {
+            const next: CdsSegment[] = [];
+            for (const p of parts) {
+                if (utr.end < p.start || utr.start > p.end) {
+                    next.push(p);
+                    continue;
+                }
+                if (utr.start > p.start) {
+                    next.push({ start: p.start, end: utr.start - 1 });
+                }
+                if (utr.end < p.end) {
+                    next.push({ start: utr.end + 1, end: p.end });
+                }
+            }
+            parts = next;
+        }
+        parts.sort((a, b) =>
+            strand === '+' ? a.start - b.start : b.start - a.start
+        );
+        segments.push(...parts);
+    }
+    return segments;
+}
+
+/**
+ * Exact breakpoint position on the protein axis: the breakpoint's 0-based
+ * coding-nucleotide offset divided by 3, plus 1. Introns and UTRs add no
+ * length. A breakpoint between coding segments (intron or UTR) snaps to the
+ * last coding base kept: for the 5′ side, the last coding base before it; for
+ * the 3′ side, the first coding base after it. Splicing removes the intron, so
+ * the product keeps whole exons.
+ *
+ * Returns undefined when there is no CDS to walk.
+ */
+export function breakpointToCdsAA(
+    breakpointGenomic: number,
+    segments: CdsSegment[],
+    strand: '+' | '-',
+    side: '5p' | '3p'
+): number | undefined {
+    if (segments.length === 0) return undefined;
+    let cumulative = 0;
+    for (const seg of segments) {
+        if (breakpointGenomic >= seg.start && breakpointGenomic <= seg.end) {
+            const offset =
+                strand === '+'
+                    ? breakpointGenomic - seg.start
+                    : seg.end - breakpointGenomic;
+            return (cumulative + offset) / 3 + 1;
+        }
+        const before =
+            strand === '+'
+                ? breakpointGenomic < seg.start
+                : breakpointGenomic > seg.end;
+        if (before) {
+            const nt = side === '5p' ? cumulative - 1 : cumulative;
+            return Math.max(0, nt) / 3 + 1;
+        }
+        cumulative += seg.end - seg.start + 1;
+    }
+    return (cumulative - 1) / 3 + 1;
+}
+
+/**
+ * Breakpoint on a cut domain's AA axis: exact through the CDS when segments
+ * are given, otherwise linear interpolation over the domain's genomic span.
+ */
+function cutDomainAA(
+    domain: ProteinDomain,
+    breakpointGenomic: number,
+    strand: '+' | '-',
+    side: '5p' | '3p',
+    segments?: CdsSegment[]
+): number {
+    const exact = segments
+        ? breakpointToCdsAA(breakpointGenomic, segments, strand, side)
+        : undefined;
+    return exact ?? breakpointToDomainAA(domain, breakpointGenomic, strand);
+}
+
+/**
  * Build a RetainedDomain for a domain that is fully retained (breakpoint does
  * not intersect it).
  */
@@ -210,12 +318,15 @@ function makeTruncatedRetainedDomain(
  *
  * Domains straddling the breakpoint are clipped to the retained AA interval
  * and returned with `isTruncated = true` when the retained fraction is below
- * DOMAIN_TRUNCATION_THRESHOLD.
+ * DOMAIN_TRUNCATION_THRESHOLD. Pass the transcript's `codingSegments` to place
+ * the cut exactly through the CDS; without them the cut is interpolated over
+ * the domain's genomic span, introns included.
  */
 export function select5PrimeDomains(
     domains: ProteinDomain[],
     breakpointPos: number,
-    strand: '+' | '-'
+    strand: '+' | '-',
+    segments?: CdsSegment[]
 ): RetainedDomain[] {
     return domains
         .filter(d =>
@@ -234,7 +345,13 @@ export function select5PrimeDomains(
                 d.startGenomic < breakpointPos &&
                 breakpointPos <= d.endGenomic;
             if (straddlesFwd || straddlesRev) {
-                const bpAA = breakpointToDomainAA(d, breakpointPos, strand);
+                const bpAA = cutDomainAA(
+                    d,
+                    breakpointPos,
+                    strand,
+                    '5p',
+                    segments
+                );
                 return makeTruncatedRetainedDomain(d, '5p', bpAA);
             }
             return makeFullRetainedDomain(d, '5p');
@@ -247,12 +364,14 @@ export function select5PrimeDomains(
  *   + strand: endGenomic   >= breakpoint
  *   - strand: startGenomic <= breakpoint
  *
- * Domains straddling the breakpoint are clipped to the retained AA interval.
+ * Domains straddling the breakpoint are clipped to the retained AA interval;
+ * `segments` as for select5PrimeDomains.
  */
 export function select3PrimeDomains(
     domains: ProteinDomain[],
     breakpointPos: number,
-    strand: '+' | '-'
+    strand: '+' | '-',
+    segments?: CdsSegment[]
 ): RetainedDomain[] {
     return domains
         .filter(d =>
@@ -270,7 +389,13 @@ export function select3PrimeDomains(
                 d.startGenomic <= breakpointPos &&
                 breakpointPos < d.endGenomic;
             if (straddlesFwd || straddlesRev) {
-                const bpAA = breakpointToDomainAA(d, breakpointPos, strand);
+                const bpAA = cutDomainAA(
+                    d,
+                    breakpointPos,
+                    strand,
+                    '3p',
+                    segments
+                );
                 return makeTruncatedRetainedDomain(d, '3p', bpAA);
             }
             return makeFullRetainedDomain(d, '3p');
