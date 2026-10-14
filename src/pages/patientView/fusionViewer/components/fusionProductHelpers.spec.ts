@@ -14,6 +14,8 @@ import {
     detectPromoterSwap,
     resolveProductBreakpoints,
     breakpointToDomainAA,
+    breakpointToCdsAA,
+    codingSegments,
     ghostStubRect,
     DOMAIN_TRUNCATION_THRESHOLD,
     PRODUCT_HEIGHT,
@@ -829,6 +831,120 @@ describe('fusionProductHelpers', () => {
         it('degenerate: gSpan == 0 returns startAA', () => {
             const pointDomain = makeDomain('Point', 500, 500, 42, 42);
             assert.equal(breakpointToDomainAA(pointDomain, 500, '+'), 42);
+        });
+    });
+
+    // -------------------------------------------------------------------
+    // Exact cut through the CDS — introns add no length
+    // -------------------------------------------------------------------
+    describe('CDS-exact domain cut', () => {
+        // + strand, three exons with a ~10 kb first intron. CDS = 130-199
+        // (70 nt), 10000-10099 (100 nt), 10500-10569 (70 nt) = 240 nt.
+        const plus = {
+            strand: '+' as const,
+            exons: [
+                { number: 1, start: 100, end: 199 },
+                { number: 2, start: 10000, end: 10099 },
+                { number: 3, start: 10500, end: 10599 },
+            ],
+            utrs: [
+                { start: 100, end: 129, type: 'five_prime' as const },
+                { start: 10570, end: 10599, type: 'three_prime' as const },
+            ],
+        };
+        // AA 11 starts at CDS nt 30 (genomic 160); AA 70 starts at CDS nt 207
+        // (exon 3, offset 37 → genomic 10537).
+        const plusDomain = makeDomain('Kinase', 160, 10537, 11, 70);
+
+        // The same transcript mirrored onto the − strand (x → 20000 − x).
+        const minus = {
+            strand: '-' as const,
+            exons: [
+                { number: 1, start: 19801, end: 19900 },
+                { number: 2, start: 9901, end: 10000 },
+                { number: 3, start: 9401, end: 9500 },
+            ],
+            utrs: [
+                { start: 19871, end: 19900, type: 'five_prime' as const },
+                { start: 9401, end: 9430, type: 'three_prime' as const },
+            ],
+        };
+        const minusDomain = makeDomain('Kinase', 9463, 19840, 11, 70);
+
+        it('codingSegments clips UTRs and orders segments by transcription', () => {
+            assert.deepEqual(codingSegments(plus), [
+                { start: 130, end: 199 },
+                { start: 10000, end: 10099 },
+                { start: 10500, end: 10569 },
+            ]);
+            assert.deepEqual(codingSegments(minus), [
+                { start: 19801, end: 19870 },
+                { start: 9901, end: 10000 },
+                { start: 9431, end: 9500 },
+            ]);
+        });
+
+        it('a coding-base breakpoint maps to its codon', () => {
+            // Exon 2 offset 49 → CDS nt 70 + 49 = 119 → AA 119/3 + 1.
+            const segs = codingSegments(plus);
+            assert.closeTo(
+                breakpointToCdsAA(10049, segs, '+', '5p')!,
+                119 / 3 + 1,
+                1e-9
+            );
+        });
+
+        it('an intronic breakpoint snaps to the exon edge on the kept side', () => {
+            const segs = codingSegments(plus);
+            // 5′ keeps through the last coding base of exon 1 (CDS nt 69);
+            // 3′ starts at the first coding base of exon 2 (CDS nt 70).
+            assert.closeTo(breakpointToCdsAA(5000, segs, '+', '5p')!, 24, 1e-9);
+            assert.closeTo(
+                breakpointToCdsAA(5000, segs, '+', '3p')!,
+                70 / 3 + 1,
+                1e-9
+            );
+        });
+
+        it('returns undefined with no CDS', () => {
+            assert.isUndefined(breakpointToCdsAA(5000, [], '+', '5p'));
+        });
+
+        it('intron length does not change the retained fraction (+ strand)', () => {
+            const segs = codingSegments(plus);
+            const [r5] = select5PrimeDomains([plusDomain], 5000, '+', segs);
+            const [r3] = select3PrimeDomains([plusDomain], 5000, '+', segs);
+            // 5′ keeps AA 11–24 of 11–70; 3′ keeps AA 24.33–70.
+            assert.closeTo(r5.retainedFraction, 14 / 60, 1e-9);
+            assert.closeTo(
+                r3.retainedFraction,
+                (70 - (70 / 3 + 1) + 1) / 60,
+                1e-9
+            );
+            assert.isTrue(r5.isTruncated);
+            assert.isTrue(r3.isTruncated);
+            // The genomic interpolation puts this cut ~47% through the domain.
+            const [interp] = select5PrimeDomains([plusDomain], 5000, '+');
+            assert.isAbove(interp.retainedFraction, 0.4);
+        });
+
+        it('a − strand transcript gives the mirror-image fraction', () => {
+            const segs = codingSegments(minus);
+            const [r5] = select5PrimeDomains([minusDomain], 15000, '-', segs);
+            const [r3] = select3PrimeDomains([minusDomain], 15000, '-', segs);
+            assert.closeTo(r5.retainedFraction, 14 / 60, 1e-9);
+            assert.closeTo(
+                r3.retainedFraction,
+                (70 - (70 / 3 + 1) + 1) / 60,
+                1e-9
+            );
+        });
+
+        it('uncut domains are unaffected by the CDS segments', () => {
+            const segs = codingSegments(plus);
+            const [rd] = select5PrimeDomains([plusDomain], 10550, '+', segs);
+            assert.equal(rd.retainedFraction, 1);
+            assert.isFalse(rd.isTruncated);
         });
     });
 
