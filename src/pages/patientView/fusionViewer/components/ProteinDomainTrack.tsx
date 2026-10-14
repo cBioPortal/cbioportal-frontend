@@ -11,6 +11,7 @@ import { DomainTooltip } from './ExonTooltip';
 import {
     select5PrimeDomains,
     select3PrimeDomains,
+    codingSegments,
     retainedExonsInOrder,
     computeFusionExonLayout,
     genomicToExonX,
@@ -110,14 +111,16 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
     const domains5p: RetainedDomain[] = select5PrimeDomains(
         forteTranscript5p.domains || [],
         breakpoint5p,
-        forteTranscript5p.strand
+        forteTranscript5p.strand,
+        codingSegments(forteTranscript5p)
     );
     const domains3p: RetainedDomain[] =
         forteTranscript3p && breakpoint3p !== undefined
             ? select3PrimeDomains(
                   forteTranscript3p.domains || [],
                   breakpoint3p,
-                  forteTranscript3p.strand
+                  forteTranscript3p.strand,
+                  codingSegments(forteTranscript3p)
               )
             : [];
 
