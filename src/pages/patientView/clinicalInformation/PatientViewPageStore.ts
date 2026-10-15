@@ -1,5 +1,8 @@
 import _ from 'lodash';
-import { isWsiResourceId } from 'shared/lib/ResourcePolicy';
+import {
+    isHiddenFromResourceViews,
+    isWsiResourceId,
+} from 'shared/lib/ResourcePolicy';
 import { fetchWsiPatientHierarchy } from 'cbioportal-wsi-viewer';
 import { wsiAuthScope } from 'shared/components/wsiViewer/wsiAppConfig';
 import {
@@ -1846,7 +1849,8 @@ export class PatientViewPageStore {
     /**
      * Per-resource row counts for this patient, used to decide whether the resource tabs are
      * worth showing. The tabs endpoint answers that directly; the alternative is fetching every
-     * resource's data just to learn whether any exists.
+     * resource's data just to learn whether any exists. Slides are left out: they have their own
+     * Pathology Slides tab.
      */
     readonly resourceTableTabs = remoteData<ResourceTableTab[]>({
         await: () => [this.samples],
@@ -1860,7 +1864,9 @@ export class PatientViewPageStore {
                     studyId: this.studyId,
                     sampleId: s.sampleId,
                 })),
-            }),
+            }).then(tabs =>
+                tabs.filter(tab => !isHiddenFromResourceViews(tab.resourceId))
+            ),
         default: [],
     });
 
