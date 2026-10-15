@@ -162,10 +162,12 @@ describe('FilterIconModal', () => {
         assert.equal(th.style.zIndex, '10');
     });
 
-    it('gives the filter icon a padded click target', () => {
+    it('gives the filter icon a padded click target when asked', () => {
         // The glyph alone is a fussy ~12px target; the label cannot take the click because it
         // sorts.
-        const wrapper = mountAttached(<FilterIconModal {...defaultProps()} />);
+        const wrapper = mountAttached(
+            <FilterIconModal {...defaultProps()} largerClickTarget={true} />
+        );
 
         const icon = wrapper
             .find('.headerFilterIcon')
@@ -173,5 +175,17 @@ describe('FilterIconModal', () => {
 
         assert.equal(icon.style.padding, '3px 4px');
         assert.equal(icon.style.cursor, 'pointer');
+    });
+
+    it('leaves the icon geometry alone by default', () => {
+        // MutationTable and LazyMobXTable are laid out around the original margins.
+        const wrapper = mountAttached(<FilterIconModal {...defaultProps()} />);
+
+        const icon = wrapper
+            .find('.headerFilterIcon')
+            .getDOMNode() as HTMLElement;
+
+        assert.equal(icon.style.padding, '');
+        assert.equal(icon.style.marginLeft, '5px');
     });
 });

@@ -66,8 +66,10 @@ describe('DoubleHandleSlider', () => {
         assert.equal(upper!.style.width, 'calc(7ch + 22px)');
     });
 
-    it('never lets the two value boxes wrap onto separate lines', () => {
-        mountAttached(<DoubleHandleSlider {...defaultProps()} />);
+    it('keeps the two value boxes on one line when given a width', () => {
+        mountAttached(
+            <DoubleHandleSlider {...defaultProps()} width={'260px'} />
+        );
 
         assert.equal(
             box('test-slider-lowerValue-box')!.style.maxWidth,
@@ -76,6 +78,21 @@ describe('DoubleHandleSlider', () => {
         assert.equal(
             box('test-slider-upperValue-box')!.style.maxWidth,
             'calc(50% - 3px)'
+        );
+    });
+
+    it('lets a box fill the widget when no width was given', () => {
+        // The default widget is 135px, so half of it truncates the long values the mutation
+        // table's position columns hold. Those callers keep the original cap and wrap instead.
+        mountAttached(<DoubleHandleSlider {...defaultProps()} />);
+
+        assert.equal(
+            box('test-slider-lowerValue-box')!.style.maxWidth,
+            '135px'
+        );
+        assert.equal(
+            box('test-slider-upperValue-box')!.style.maxWidth,
+            '135px'
         );
     });
 

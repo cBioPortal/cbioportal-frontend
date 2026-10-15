@@ -27,6 +27,9 @@ export interface IFilterIconModalProps {
     // horizontally scrollable table establishes a scroll container, which clips an absolutely
     // positioned menu; a fixed one is laid out against the viewport and escapes it.
     escapeScrollContainer?: boolean;
+    // Pad the icon's clickable box. Opt-in: it changes the icon's geometry, and the tables that
+    // already use this component are laid out around the original.
+    largerClickTarget?: boolean;
 }
 
 class FilterIcon extends React.Component<any, {}> {
@@ -42,13 +45,14 @@ class FilterIcon extends React.Component<any, {}> {
                     color: this.props.isActive ? '#0000ff' : ICON_FILTER_OFF,
                     display: 'inline-block',
                     cursor: 'pointer',
-                    // The glyph is only ~12px, which is a fussy target. Pad the clickable box
-                    // and take the padding back off the margin so the icon does not visibly
-                    // move. Widening the target this way avoids putting the click on the column
-                    // label, which already belongs to sorting.
-                    padding: '3px 4px',
-                    marginLeft: 1,
-                    marginTop: -4,
+                    // The glyph is only ~12px, which is a fussy target. With largerClickTarget
+                    // the clickable box is padded and the padding taken back off the margin, so
+                    // the icon does not visibly move. Opt-in: it changes the icon's geometry,
+                    // and the tables that already use this component are laid out around the
+                    // original.
+                    ...(this.props.largerClickTarget
+                        ? { padding: '3px 4px', marginLeft: 1, marginTop: -4 }
+                        : { marginLeft: 5, marginTop: -1 }),
                 }}
             >
                 <i className="fa fa-filter"></i>
@@ -98,9 +102,7 @@ class FilterMenu extends React.Component<any, {}> {
 
         const rect = element.getBoundingClientRect();
 
-        if (rect.right > window.innerWidth) {
-            this.pullRight = true;
-        }
+        this.pullRight = rect.right > window.innerWidth;
 
         let yOffset = 0;
         const height = window.innerHeight;
@@ -258,6 +260,7 @@ export default class FilterIconModal extends React.Component<
                         isActive={this.props.filterIsActive}
                         isOpen={this.isOpen}
                         onClickFilter={this.onClickFilter}
+                        largerClickTarget={this.props.largerClickTarget}
                     />
                     <FilterMenu
                         bsRole="menu"

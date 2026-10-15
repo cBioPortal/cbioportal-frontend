@@ -573,6 +573,7 @@ export default class ServerDrivenTable<T> extends React.Component<
         return (
             <FilterIconModal
                 escapeScrollContainer={true}
+                largerClickTarget={true}
                 id={menuId}
                 label={column.name}
                 filterIsActive={this.isFilterActive(column)}
@@ -618,6 +619,7 @@ export default class ServerDrivenTable<T> extends React.Component<
         return (
             <FilterIconModal
                 escapeScrollContainer={true}
+                largerClickTarget={true}
                 id={menuId}
                 label={column.name}
                 filterIsActive={this.isFilterActive(column)}

@@ -15,6 +15,8 @@
     padding-bottom: 4px;
 }
 
+// Replaces the document.onmousemove handler that used to reveal a column's filter icon on
+// hover. Applies to every table using these classes, which is what that handler did.
 .cbioportal-frontend
     .table
     > thead

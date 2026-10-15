@@ -49,6 +49,16 @@ export default class DoubleHandleSlider extends React.Component<
         return this.props.width || DEFAULT_WIDTH;
     }
 
+    /**
+     * Half the widget, less the gap, so two boxes sit side by side -- but only where the caller
+     * sized the widget. At the default width that cap is about 64px, which truncates the 8- and
+     * 9-digit values the mutation table's position columns hold, so those keep the original cap
+     * and wrap onto two lines instead.
+     */
+    @computed get inputBoxMaxWidth() {
+        return this.props.width ? 'calc(50% - 3px)' : this.width;
+    }
+
     @computed get id() {
         return this.props.id.replace(/\s+/, '_');
     }
@@ -310,7 +320,10 @@ export default class DoubleHandleSlider extends React.Component<
                     <input
                         id={this.LBId}
                         className="form-control input-sm"
-                        style={{ float: 'left', maxWidth: 'calc(50% - 3px)' }}
+                        style={{
+                            float: 'left',
+                            maxWidth: this.inputBoxMaxWidth,
+                        }}
                         defaultValue={'' + this.state.lowerValue}
                         onChange={this.onChangeInputBox(
                             this.min,
@@ -328,7 +341,10 @@ export default class DoubleHandleSlider extends React.Component<
                     <input
                         id={this.UBId}
                         className="form-control input-sm"
-                        style={{ float: 'right', maxWidth: 'calc(50% - 3px)' }}
+                        style={{
+                            float: 'right',
+                            maxWidth: this.inputBoxMaxWidth,
+                        }}
                         defaultValue={'' + this.state.upperValue}
                         onChange={this.onChangeInputBox(
                             this.max,
