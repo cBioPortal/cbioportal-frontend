@@ -6,15 +6,15 @@ describe('Files & Links resource filtering', () => {
     let savedTileServerUrl: unknown;
 
     beforeEach(() => {
-        savedTileServerUrl = (getServerConfig() as any).msk_wsi_tile_server_url;
+        savedTileServerUrl = (getServerConfig() as any).wsi_tile_server_url;
     });
 
     afterEach(() => {
-        (getServerConfig() as any).msk_wsi_tile_server_url = savedTileServerUrl;
+        (getServerConfig() as any).wsi_tile_server_url = savedTileServerUrl;
     });
 
     it('always leaves out the slide resources', () => {
-        (getServerConfig() as any).msk_wsi_tile_server_url = '';
+        (getServerConfig() as any).wsi_tile_server_url = '';
         expect(isHiddenFromFilesAndLinks('WSI_SAMPLE')).toBe(true);
         expect(isHiddenFromFilesAndLinks('WSI_PATIENT')).toBe(true);
         expect(isHiddenFromFilesAndLinks('MSK_HNE')).toBe(false);
@@ -22,7 +22,7 @@ describe('Files & Links resource filtering', () => {
     });
 
     it('leaves out legacy H&E resources when the slide viewer is configured', () => {
-        (getServerConfig() as any).msk_wsi_tile_server_url =
+        (getServerConfig() as any).wsi_tile_server_url =
             'https://slides.example.com';
         expect(isHiddenFromFilesAndLinks('MSK_HNE')).toBe(true);
         expect(isHiddenFromFilesAndLinks('HE')).toBe(true);

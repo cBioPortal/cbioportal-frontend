@@ -368,7 +368,7 @@ export class PatientViewPageInner extends React.Component<
      */
     @computed
     get shouldShowPathologySlides(): boolean {
-        if (!getServerConfig().msk_wsi_tile_server_url) {
+        if (!getServerConfig().wsi_tile_server_url) {
             return false;
         }
         if (this.urlWrapper.activeTabId === PatientViewPageTabs.WSIHESlides) {

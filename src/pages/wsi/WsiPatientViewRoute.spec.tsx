@@ -28,7 +28,7 @@ function renderRoute(search: string, patientId = 'P-1') {
 describe('WsiPatientViewRoute', () => {
     beforeEach(() => {
         mockEntryPoint.mockClear();
-        mockServerConfig.msk_wsi_tile_server_url = '/wsi';
+        mockServerConfig.wsi_tile_server_url = '/wsi';
     });
 
     it('passes the slideKey link parameter as the requested slide', () => {

@@ -1808,7 +1808,7 @@ export class PatientViewPageStore {
      */
     readonly hasPathologySlides = remoteData<boolean>({
         invoke: async () => {
-            if (!getServerConfig().msk_wsi_tile_server_url) {
+            if (!getServerConfig().wsi_tile_server_url) {
                 return false;
             }
             try {

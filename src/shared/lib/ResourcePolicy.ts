@@ -18,7 +18,7 @@ export function isWsiResourceId(resourceId: string | undefined): boolean {
 }
 
 export function isWsiTileServerConfigured(): boolean {
-    return isNonEmptyString(getServerConfig().msk_wsi_tile_server_url);
+    return isNonEmptyString(getServerConfig().wsi_tile_server_url);
 }
 
 export function shouldHideLegacyHeResourceTab(
