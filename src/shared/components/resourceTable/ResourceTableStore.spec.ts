@@ -79,4 +79,31 @@ describe('ResourceTableStore cohort context', () => {
             { studyId: 'study_a', sampleId: 'sample_3' },
         ]);
     });
+
+    it('keeps the selected resource when the cohort changes', () => {
+        // A scoped store gets its resource before its cohort. If the cohort reset cleared the
+        // selection, activeResourceId falls back to the first tab and the tab fetches and
+        // renders another resource's rows.
+        const store = new ResourceTableStore();
+        store.setSelectedResourceId('PATHOLOGY_SLIDE');
+
+        store.setContextFromSelection(allSamples, allSamples, true);
+
+        // Asserts on the selection, not activeResourceId: that getter's fallback reads
+        // this.tabs, which starts a request.
+        assert.equal(store.selectedResourceId, 'PATHOLOGY_SLIDE');
+    });
+
+    it('resets paging, search and filters when the cohort changes', () => {
+        const store = new ResourceTableStore();
+        store.setSelectedResourceId('PATHOLOGY_SLIDE');
+        store.setPage(2);
+        store.setSearchTerm('TCGA-A1');
+
+        store.setContextFromSelection(allSamples, allSamples, true);
+
+        assert.equal(store.pageNumber, 0);
+        assert.equal(store.searchTerm, '');
+        assert.deepEqual(store.filters, []);
+    });
 });

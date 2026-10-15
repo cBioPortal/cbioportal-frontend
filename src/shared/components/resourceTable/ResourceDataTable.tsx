@@ -7,6 +7,7 @@ import {
     IReactionDisposer,
     makeObservable,
     observable,
+    reaction,
 } from 'mobx';
 import { observer } from 'mobx-react';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
@@ -103,6 +104,10 @@ export class ResourceDataTable extends React.Component<
         ServerDrivenTableNumericRange
     > = {};
     private scopedResourceDisposer: IReactionDisposer | null = null;
+    // Set once the active resource's rows and columns have both arrived. Fetches after that
+    // one — paging, sorting, filtering — keep the table mounted and dim it instead.
+    @observable private tableLoadedOnce = false;
+    private tableReadyDisposers: IReactionDisposer[] = [];
 
     constructor(props: IResourceDataTableProps) {
         super(props);
@@ -111,6 +116,21 @@ export class ResourceDataTable extends React.Component<
 
     public componentDidMount() {
         this.syncScopedResourceId();
+        this.tableReadyDisposers = [
+            reaction(
+                () => this.props.store.activeResourceId,
+                () => (this.tableLoadedOnce = false)
+            ),
+            reaction(
+                () => this.props.store.isTableReady,
+                ready => {
+                    if (ready) {
+                        this.tableLoadedOnce = true;
+                    }
+                },
+                { fireImmediately: true }
+            ),
+        ];
     }
 
     public componentDidUpdate(prevProps: IResourceDataTableProps) {
@@ -123,6 +143,8 @@ export class ResourceDataTable extends React.Component<
     public componentWillUnmount() {
         this.scopedResourceDisposer?.();
         this.scopedResourceDisposer = null;
+        this.tableReadyDisposers.forEach(dispose => dispose());
+        this.tableReadyDisposers = [];
     }
 
     @computed get rows(): IResourceTableRow[] {
@@ -571,19 +593,26 @@ export class ResourceDataTable extends React.Component<
     public render() {
         const { store } = this.props;
 
-        if (!this.props.hideTabs && store.tabs.isPending) {
+        // Keyed on the data rather than on hideTabs: a page that draws its own tab strip
+        // passes hideTabs, and that path needs the pending and error states too.
+        if (store.tabs.isError || store.tableData.isError) {
+            return (
+                <div className="alert alert-danger">
+                    Error loading resources.
+                </div>
+            );
+        }
+        // Rows and columns are awaited together so the table arrives in its final shape
+        // instead of shifting as the columns resolve.
+        if (
+            store.tabs.isPending ||
+            !(store.isTableReady || this.tableLoadedOnce)
+        ) {
             return (
                 <LoadingIndicator isLoading={true} center={true} size="big" />
             );
         }
-        if (!this.props.hideTabs && store.tabs.isError) {
-            return (
-                <div className="alert alert-danger">
-                    Error loading resource tabs.
-                </div>
-            );
-        }
-        if (!this.props.hideTabs && store.tabsForDisplay.length === 0) {
+        if (store.tabsForDisplay.length === 0) {
             return (
                 <div className="alert alert-info">
                     {this.props.emptyText || 'No resources available.'}

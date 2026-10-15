@@ -4,6 +4,10 @@ import { mount } from 'enzyme';
 import { ResourceDataTable } from './ResourceDataTable';
 import { ResourceColumnInfo } from 'shared/api/resourceTableClient';
 import { ResourceTableStore } from './ResourceTableStore';
+import { observable, runInAction } from 'mobx';
+import { act } from 'react-dom/test-utils';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import ServerDrivenTable from 'shared/components/serverDrivenTable/ServerDrivenTable';
 
 describe('ResourceDataTable metadata columns', () => {
     const metadataColumn = (
@@ -235,5 +239,99 @@ describe('ResourceDataTable metadata columns', () => {
             link!.download!({ url: 'https://example.com/slide.dcm' } as any),
             'https://example.com/slide.dcm'
         );
+    });
+});
+
+describe('ResourceDataTable loading state', () => {
+    const storeFor = (ready: boolean) =>
+        observable(
+            {
+                columns: [],
+                facets: {},
+                facetRanges: {},
+                distinctValueCounts: {},
+                rowsForDisplay: [],
+                tabsForDisplay: [{ id: 'SLIDE', label: 'Slide' }],
+                totalRowCount: 0,
+                pageNumber: 0,
+                pageSize: 25,
+                sortDirection: 'asc',
+                activeResourceId: 'SLIDE',
+                tabs: { isPending: false, isError: false, isComplete: true },
+                tableData: { isPending: !ready, isError: false },
+                isTableReady: ready,
+                setPage: () => undefined,
+                setPageSize: () => undefined,
+                setSearchTerm: () => undefined,
+            },
+            {},
+            { deep: false }
+        );
+
+    const render = (store: any) =>
+        mount(
+            <ResourceDataTable
+                store={store as ResourceTableStore}
+                hideTabs={true}
+                scopedResourceId="SLIDE"
+            />
+        );
+
+    it('waits for rows and columns before drawing the table', () => {
+        // Both pages render their own tab strip and pass hideTabs, so this is the only guard
+        // they get.
+        const wrapper = render(storeFor(false));
+
+        assert.lengthOf(wrapper.find(LoadingIndicator), 1);
+        assert.lengthOf(wrapper.find(ServerDrivenTable), 0);
+    });
+
+    it('keeps the table in place while a later page loads', () => {
+        // Paging, sorting and filtering re-fetch. Replacing the table each time would make it
+        // disappear and come back; ServerDrivenTable dims itself instead.
+        const store = storeFor(true);
+        const wrapper = render(store);
+        assert.lengthOf(wrapper.find(ServerDrivenTable), 1);
+
+        act(() =>
+            runInAction(() => {
+                store.isTableReady = false;
+                store.tableData = { isPending: true, isError: false };
+            })
+        );
+        wrapper.update();
+
+        assert.lengthOf(wrapper.find(ServerDrivenTable), 1);
+        assert.isTrue(wrapper.find(ServerDrivenTable).prop('isLoading'));
+    });
+
+    it('goes back to the loading indicator when the resource changes', () => {
+        const store = storeFor(true);
+        const wrapper = render(store);
+
+        act(() =>
+            runInAction(() => {
+                store.activeResourceId = 'REPORT';
+                store.isTableReady = false;
+            })
+        );
+        wrapper.update();
+
+        assert.lengthOf(wrapper.find(ServerDrivenTable), 0);
+        assert.lengthOf(wrapper.find(LoadingIndicator), 1);
+    });
+
+    it('reports an error from either request', () => {
+        const store = storeFor(true);
+        const wrapper = render(store);
+
+        act(() =>
+            runInAction(() => {
+                store.tableData = { isPending: false, isError: true };
+            })
+        );
+        wrapper.update();
+
+        assert.include(wrapper.text(), 'Error loading resources.');
     });
 });

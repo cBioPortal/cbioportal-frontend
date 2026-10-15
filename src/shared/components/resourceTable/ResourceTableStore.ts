@@ -74,10 +74,11 @@ export class ResourceTableStore {
         this.studyIds = studyIds;
         this.patientIdentifiers = patientIdentifiers;
         this.sampleIdentifiers = sampleIdentifiers;
-        this.selectedResourceId = undefined;
         this.pageNumber = 0;
         this.searchTerm = '';
         this.filters = [];
+        // selectedResourceId survives a cohort change: a store created for one resource stays
+        // scoped to it. Cleared here, activeResourceId falls back to the first tab instead.
     }
 
     /**
@@ -233,6 +234,11 @@ export class ResourceTableStore {
         },
         default: [],
     });
+
+    /** Rows and columns both resolved, so the table can render in its final shape. */
+    @computed get isTableReady(): boolean {
+        return this.tableData.isComplete && this.tableMetadata.isComplete;
+    }
 
     /** Display name of the resource currently shown, e.g. "Slide Microscopy". */
     @computed get activeResourceLabel(): string | undefined {
