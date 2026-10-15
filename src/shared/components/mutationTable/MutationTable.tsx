@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { action, observable, computed, makeObservable } from 'mobx';
@@ -1074,6 +1075,7 @@ export default class MutationTable<
             headerRender: (name: string) => (
                 <MutationAnnotationHeader
                     name={name}
+                    annotationSpace={this.annotationSpace}
                     mergeOncoKbIcons={this.props.mergeOncoKbIcons}
                     onOncoKbIconToggle={this.handleOncoKbIconModeToggle}
                     showRevue={!!this.props.enableRevue && this.shouldShowRevue}
@@ -1084,31 +1086,12 @@ export default class MutationTable<
             render: (d: Mutation[]) => (
                 <span
                     id="mutation-annotation"
-                    className={annotationHeaderStyles.cell}
-                >
-                    {AnnotationColumnFormatter.renderFunction(d, {
-                        hotspotData: this.props.hotspotData,
-                        oncoKbData: this.props.oncoKbData,
-                        oncoKbCancerGenes: this.props.oncoKbCancerGenes,
-                        usingPublicOncoKbInstance: this.props
-                            .usingPublicOncoKbInstance,
-                        mergeOncoKbIcons: this.props.mergeOncoKbIcons,
-                        oncoKbContentPadding: calculateOncoKbContentPadding(
-                            this.oncokbWidth
-                        ),
-                        pubMedCache: this.props.pubMedCache,
-                        civicGenes: this.props.civicGenes,
-                        civicVariants: this.props.civicVariants,
-                        enableCivic: this.props.enableCivic as boolean,
-                        enableOncoKb: this.props.enableOncoKb as boolean,
-                        enableHotspot: this.props.enableHotspot as boolean,
-                        enableRevue:
-                            !!this.props.enableRevue && this.shouldShowRevue,
-                        userDisplayName: this.props.userDisplayName,
-                        indexedVariantAnnotations: this.props
-                            .indexedVariantAnnotations,
-                        resolveTumorType: this.resolveTumorType,
+                    className={classNames(annotationHeaderStyles.cell, {
+                        [annotationHeaderStyles.cellWithFunctionalImpact]: this
+                            .showFunctionalImpact,
                     })}
+                >
+                    {this.renderAnnotation(d)}
                     {this.showFunctionalImpact && (
                         <span
                             className={
@@ -1538,6 +1521,41 @@ export default class MutationTable<
 
             return order;
         });
+    }
+
+    // the annotation icons of a cell, without the functional impact
+    protected renderAnnotation(d: Mutation[]) {
+        return AnnotationColumnFormatter.renderFunction(d, {
+            hotspotData: this.props.hotspotData,
+            oncoKbData: this.props.oncoKbData,
+            oncoKbCancerGenes: this.props.oncoKbCancerGenes,
+            usingPublicOncoKbInstance: this.props.usingPublicOncoKbInstance,
+            mergeOncoKbIcons: this.props.mergeOncoKbIcons,
+            oncoKbContentPadding: calculateOncoKbContentPadding(
+                this.oncokbWidth
+            ),
+            pubMedCache: this.props.pubMedCache,
+            civicGenes: this.props.civicGenes,
+            civicVariants: this.props.civicVariants,
+            enableCivic: this.props.enableCivic as boolean,
+            enableOncoKb: this.props.enableOncoKb as boolean,
+            enableHotspot: this.props.enableHotspot as boolean,
+            enableRevue: !!this.props.enableRevue && this.shouldShowRevue,
+            userDisplayName: this.props.userDisplayName,
+            indexedVariantAnnotations: this.props.indexedVariantAnnotations,
+            resolveTumorType: this.resolveTumorType,
+        });
+    }
+
+    // the annotation icons of a cell, as the space the header leaves before
+    // the functional impact icons, so they are over the predictions
+    @computed get annotationSpace(): JSX.Element | undefined {
+        const rows = this.props.dataStore
+            ? this.props.dataStore.allData
+            : this.props.data;
+        return rows && rows.length > 0
+            ? this.renderAnnotation(rows[0])
+            : undefined;
     }
 
     // the functional impact predictions are shown in the annotation column

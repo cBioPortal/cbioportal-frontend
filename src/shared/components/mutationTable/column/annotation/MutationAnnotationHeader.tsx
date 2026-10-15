@@ -27,6 +27,9 @@ type Source = {
 
 export interface IMutationAnnotationHeaderProps {
     name: string;
+    // annotation icons as in the cells, whose space is left before the
+    // functional impact icons, so they are over the predictions
+    annotationSpace?: React.ReactNode;
     mergeOncoKbIcons?: boolean;
     onOncoKbIconToggle?: (mergeIcons: boolean) => void;
     showRevue?: boolean;
@@ -172,7 +175,7 @@ export const AnnotationSourcesTooltip: React.FunctionComponent<IMutationAnnotati
 /**
  * Header of the mutation annotation column: its name, with the sources as
  * tooltip, and the icons of the functional impact predictors over their
- * predictions, which are at the end of the cells.
+ * predictions, which follow the other annotations in the cells.
  */
 const MutationAnnotationHeader: React.FunctionComponent<IMutationAnnotationHeaderProps> = props => (
     <span className={styles.header}>
@@ -181,17 +184,21 @@ const MutationAnnotationHeader: React.FunctionComponent<IMutationAnnotationHeade
             overlay={() => <AnnotationSourcesTooltip {...props} />}
             destroyTooltipOnHide={true}
         >
-            <span className={styles.name}>{props.name}</span>
+            <span>{props.name}</span>
         </DefaultTooltip>
         {props.showFunctionalImpact && (
             <>
-                {/* keeps a line for the icons, which are placed in the corner */}
                 <span className={styles.iconLine} />
-                <span
-                    className={styles.functionalImpactIcons}
-                    data-test="annotation-functional-impact-icons"
-                >
-                    {FunctionalImpactColumnFormatter.headerIcons()}
+                <span className={styles.iconRow}>
+                    <span className={styles.annotationSpace} aria-hidden>
+                        {props.annotationSpace}
+                    </span>
+                    <span
+                        className={styles.functionalImpactIcons}
+                        data-test="annotation-functional-impact-icons"
+                    >
+                        {FunctionalImpactColumnFormatter.headerIcons()}
+                    </span>
                 </span>
             </>
         )}

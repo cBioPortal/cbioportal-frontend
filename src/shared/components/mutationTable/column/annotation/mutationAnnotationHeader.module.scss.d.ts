@@ -1,13 +1,15 @@
 declare const styles: {
   readonly "activeSource": string;
+  readonly "annotationSpace": string;
   readonly "cell": string;
   readonly "cellFunctionalImpact": string;
+  readonly "cellWithFunctionalImpact": string;
   readonly "functionalImpactIcons": string;
   readonly "header": string;
   readonly "hint": string;
   readonly "iconLine": string;
+  readonly "iconRow": string;
   readonly "legend": string;
-  readonly "name": string;
   readonly "source": string;
   readonly "sources": string;
   readonly "tooltip": string;

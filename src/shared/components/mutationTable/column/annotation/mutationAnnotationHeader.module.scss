@@ -1,23 +1,40 @@
 .header {
+    position: relative;
     display: inline-block;
 }
 
-.name {
-    border-bottom: 1px dotted #999;
-    cursor: help;
-}
-
+/* a line for the icons, which are positioned on it so they do not widen
+   the header, keeping its filter icon next to the name */
 .iconLine {
     display: block;
     height: 14px;
 }
 
-/* in the bottom right corner of the header cell (which is positioned, as
-   it sticks), over the predictions at the end of the cells */
-.functionalImpactIcons {
+.iconRow {
     position: absolute;
-    right: 8px;
-    bottom: 8px;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.annotationSpace {
+    visibility: hidden;
+    height: 14px;
+    overflow: hidden;
+}
+
+/* the annotation icons have a minimum width, which would leave a gap
+   before the predictions */
+.annotationSpace > span:first-child,
+.cellWithFunctionalImpact > span:first-child {
+    min-width: 0 !important;
+}
+
+/* same space as before the predictions in the cells */
+.functionalImpactIcons {
+    padding-left: 8px;
     font-weight: normal;
 }
 
@@ -59,15 +76,14 @@
     border-top: 1px solid #ddd;
 }
 
-/* the functional impact predictions at the end of the cell, under their
-   icons in the header */
+/* the functional impact predictions follow the other annotations, under
+   their icons in the header */
 .cell {
-    display: flex;
+    display: inline-flex;
     align-items: center;
 }
 
 .cellFunctionalImpact {
-    margin-left: auto;
-    padding-left: 12px;
+    padding-left: 8px;
     white-space: nowrap;
 }
