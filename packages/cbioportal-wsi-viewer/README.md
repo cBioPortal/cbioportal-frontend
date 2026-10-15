@@ -22,6 +22,7 @@ OpenSeadragon is not in either entry. The viewer loads it on the first slide ope
 
    configureWsiViewerRuntime({
        buildApiUrl: path => buildCBioPortalAPIUrl(path), // adds the portal's context path
+       buildPageUrl: (path, query) => buildCBioPortalPageUrl(path, query), // optional: sidebar patient/sample links (default: root-relative)
        osdPrefixUrl: '/reactapp/osd-images/', // optional: OpenSeadragon button images
        // fetchImpl: …                  // optional (default: the global fetch)
    });

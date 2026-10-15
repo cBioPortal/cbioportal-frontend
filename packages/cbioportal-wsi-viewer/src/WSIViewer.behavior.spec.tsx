@@ -595,6 +595,40 @@ describe('WSIViewer — pathology filter updates', () => {
         }
     });
 
+    it('drops a queued slide click when the patient changes', () => {
+        jest.useFakeTimers();
+        try {
+            const inst = new (WSIViewer as any)({
+                patientId: 'P-XYZ',
+                tileServerUrl: TILE_SERVER_URL,
+                height: 500,
+            });
+            const sample = makeSample('S-1', [
+                makePart([makeBlock([makeSlide({ slide_key: 'old-slide' })])]),
+            ]);
+            const controller = controllerOf(inst);
+            const selectSlideSpy = jest
+                .spyOn(controller, 'selectSlide')
+                .mockResolvedValue(undefined);
+            jest.spyOn(controller, 'loadHierarchy').mockResolvedValue(
+                undefined
+            );
+
+            (inst as any).handleSelectSlide(
+                sample.parts[0].blocks[0].slides[0],
+                sample
+            );
+            const prevProps = inst.props;
+            inst.props = { ...inst.props, patientId: 'P-NEW' };
+            inst.componentDidUpdate(prevProps);
+            jest.advanceTimersByTime(200);
+
+            expect(selectSlideSpy).not.toHaveBeenCalled();
+        } finally {
+            jest.useRealTimers();
+        }
+    });
+
     it('honors a matching share-link slide when pathology filters are present', () => {
         const inst = new (WSIViewer as any)({
             patientId: 'P-XYZ',
@@ -1643,7 +1677,7 @@ describe('WSIViewer — loadHierarchy', () => {
         expect((global as any).fetch).toHaveBeenNthCalledWith(
             2,
             testAccessUrl('study', 'P-XYZ', 'bootstrap-slide'),
-            { cache: 'no-store', credentials: 'same-origin' }
+            { cache: 'no-store', credentials: 'include' }
         );
         expect(selectSlideSpy).toHaveBeenCalledWith(
             expect.objectContaining({ slide_key: 'bootstrap-slide' }),

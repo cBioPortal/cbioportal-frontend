@@ -154,8 +154,9 @@ function fetchSlideAccess(
             : window.location.origin
     );
     url.search = `?slideKey=${encodeURIComponent(slideKey)}`;
+    // `include`, like the hierarchy request: the API may be on another origin.
     return fetchImpl(url.toString(), {
-        credentials: 'same-origin',
+        credentials: 'include',
         cache: 'no-store',
     });
 }

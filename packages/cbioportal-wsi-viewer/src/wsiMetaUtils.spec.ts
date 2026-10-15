@@ -1,4 +1,13 @@
-import { buildPathRows, buildWsiRows, stainValue } from './wsiMetaUtils';
+import {
+    buildPathRows,
+    buildSampleUrl,
+    buildWsiRows,
+    stainValue,
+} from './wsiMetaUtils';
+import {
+    configureWsiViewerRuntime,
+    resetWsiViewerRuntime,
+} from './wsiViewerConfig';
 import { MatchLevel, Sample, Slide, TileMetadata } from './wsiViewerTypes';
 
 const slide: Slide = {
@@ -46,6 +55,30 @@ function placedSlide(
         ...overrides,
     };
 }
+
+describe('buildSampleUrl', () => {
+    afterEach(() => resetWsiViewerRuntime());
+
+    it('links root-relative when the host gives no page URL builder', () => {
+        expect(buildSampleUrl('study 1', 'S-1', 'P-1')).toBe(
+            '/patient?studyId=study%201&caseId=P-1&sampleId=S-1'
+        );
+    });
+
+    it('links through the host page URL builder, keeping its context path', () => {
+        configureWsiViewerRuntime({
+            buildApiUrl: path => `/beta/${path}`,
+            buildPageUrl: (path, query) =>
+                `https://portal.example/beta/${path}?${new URLSearchParams(
+                    query
+                )}`,
+        });
+
+        expect(buildSampleUrl('study-1', 'S-1', 'P-1')).toBe(
+            'https://portal.example/beta/patient?studyId=study-1&caseId=P-1&sampleId=S-1'
+        );
+    });
+});
 
 describe('buildPathRows', () => {
     it.each([
