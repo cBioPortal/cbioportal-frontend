@@ -89,6 +89,7 @@ import {
     buildCustomTabs,
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
+import { isHiddenFromResourceViews } from 'shared/lib/ResourcePolicy';
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
 import { PlotsTabWrapper } from 'pages/studyView/StudyViewPlotsTabWrapper';
 import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
@@ -507,9 +508,15 @@ export default class StudyViewPage extends React.Component<
         }
     }
 
+    @computed get visibleResourceDefinitions() {
+        return (this.store.resourceDefinitions.result || []).filter(
+            d => !isHiddenFromResourceViews(d.resourceId)
+        );
+    }
+
     @computed get shouldShowResources() {
         if (this.store.resourceDefinitions.isComplete) {
-            return this.store.resourceDefinitions.result.length > 0;
+            return this.visibleResourceDefinitions.length > 0;
         } else {
             return false;
         }
@@ -677,7 +684,9 @@ export default class StudyViewPage extends React.Component<
     readonly resourceTabs = MakeMobxView({
         await: () => [this.resourceTableStore.tabs],
         render: () => {
-            const apiTabs = this.resourceTableStore.tabs.result || [];
+            const apiTabs = (this.resourceTableStore.tabs.result || []).filter(
+                tab => !isHiddenFromResourceViews(tab.resourceId)
+            );
             if (apiTabs.length === 0) {
                 return [] as JSX.Element[];
             }
@@ -881,10 +890,11 @@ export default class StudyViewPage extends React.Component<
                                             StudyViewPageTabKeyEnum.FILES_AND_LINKS
                                         }
                                         linkText={
-                                            this.store.resourceDefinitions
-                                                .result?.length === 1
-                                                ? this.store.resourceDefinitions
-                                                      .result[0].displayName
+                                            this.visibleResourceDefinitions
+                                                .length === 1
+                                                ? this
+                                                      .visibleResourceDefinitions[0]
+                                                      .displayName
                                                 : RESOURCES_TAB_NAME
                                         }
                                         hide={
