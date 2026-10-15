@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { action, observable, computed, makeObservable } from 'mobx';
@@ -44,6 +45,8 @@ import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAs
 import { ILazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import { ILazyMobXTableApplicationLazyDownloadDataFetcher } from 'shared/lib/ILazyMobXTableApplicationLazyDownloadDataFetcher';
 import generalStyles from './column/styles.module.scss';
+import annotationHeaderStyles from './column/annotation/mutationAnnotationHeader.module.scss';
+import MutationAnnotationHeader from './column/annotation/MutationAnnotationHeader';
 import classnames from 'classnames';
 import { IPaginationControlsProps } from '../paginationControls/PaginationControls';
 import { IColumnVisibilityControlsProps } from '../columnVisibilityControls/ColumnVisibilityControls';
@@ -154,6 +157,8 @@ export interface IMutationTableProps {
     selectedTranscriptId?: string;
     columnVisibility?: { [columnId: string]: boolean };
     columnVisibilityProps?: IColumnVisibilityControlsProps;
+    // see LazyMobXTable
+    columnsToShow?: string[];
     storeColumnVisibility?: (
         columnVisibility:
             | {
@@ -1067,39 +1072,39 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.ANNOTATION] = {
             name: MutationTableColumnType.ANNOTATION,
-            headerRender: (name: string) =>
-                AnnotationColumnFormatter.headerRender(
-                    name,
-                    this.oncokbWidth,
-                    this.props.mergeOncoKbIcons,
-                    this.handleOncoKbIconModeToggle,
-                    this.shouldShowRevue
-                ),
+            headerRender: (name: string) => (
+                <MutationAnnotationHeader
+                    name={name}
+                    annotationSpace={this.annotationSpace}
+                    mergeOncoKbIcons={this.props.mergeOncoKbIcons}
+                    onOncoKbIconToggle={this.handleOncoKbIconModeToggle}
+                    showRevue={!!this.props.enableRevue && this.shouldShowRevue}
+                    enableFunctionalImpact={!!this.props.enableFunctionalImpact}
+                    showFunctionalImpact={this.showFunctionalImpact}
+                />
+            ),
             render: (d: Mutation[]) => (
-                <span id="mutation-annotation">
-                    {AnnotationColumnFormatter.renderFunction(d, {
-                        hotspotData: this.props.hotspotData,
-                        oncoKbData: this.props.oncoKbData,
-                        oncoKbCancerGenes: this.props.oncoKbCancerGenes,
-                        usingPublicOncoKbInstance: this.props
-                            .usingPublicOncoKbInstance,
-                        mergeOncoKbIcons: this.props.mergeOncoKbIcons,
-                        oncoKbContentPadding: calculateOncoKbContentPadding(
-                            this.oncokbWidth
-                        ),
-                        pubMedCache: this.props.pubMedCache,
-                        civicGenes: this.props.civicGenes,
-                        civicVariants: this.props.civicVariants,
-                        enableCivic: this.props.enableCivic as boolean,
-                        enableOncoKb: this.props.enableOncoKb as boolean,
-                        enableHotspot: this.props.enableHotspot as boolean,
-                        enableRevue:
-                            !!this.props.enableRevue && this.shouldShowRevue,
-                        userDisplayName: this.props.userDisplayName,
-                        indexedVariantAnnotations: this.props
-                            .indexedVariantAnnotations,
-                        resolveTumorType: this.resolveTumorType,
+                <span
+                    id="mutation-annotation"
+                    className={classNames(annotationHeaderStyles.cell, {
+                        [annotationHeaderStyles.cellWithFunctionalImpact]: this
+                            .showFunctionalImpact,
                     })}
+                >
+                    {this.renderAnnotation(d)}
+                    {this.showFunctionalImpact && (
+                        <span
+                            className={
+                                annotationHeaderStyles.cellFunctionalImpact
+                            }
+                        >
+                            {FunctionalImpactColumnFormatter.renderFunction(
+                                d,
+                                this.props.genomeNexusMutationAssessorCache,
+                                this.props.selectedTranscriptId
+                            )}
+                        </span>
+                    )}
                 </span>
             ),
             filter: (
@@ -1518,8 +1523,53 @@ export default class MutationTable<
         });
     }
 
+    // the annotation icons of a cell, without the functional impact
+    protected renderAnnotation(d: Mutation[]) {
+        return AnnotationColumnFormatter.renderFunction(d, {
+            hotspotData: this.props.hotspotData,
+            oncoKbData: this.props.oncoKbData,
+            oncoKbCancerGenes: this.props.oncoKbCancerGenes,
+            usingPublicOncoKbInstance: this.props.usingPublicOncoKbInstance,
+            mergeOncoKbIcons: this.props.mergeOncoKbIcons,
+            oncoKbContentPadding: calculateOncoKbContentPadding(
+                this.oncokbWidth
+            ),
+            pubMedCache: this.props.pubMedCache,
+            civicGenes: this.props.civicGenes,
+            civicVariants: this.props.civicVariants,
+            enableCivic: this.props.enableCivic as boolean,
+            enableOncoKb: this.props.enableOncoKb as boolean,
+            enableHotspot: this.props.enableHotspot as boolean,
+            enableRevue: !!this.props.enableRevue && this.shouldShowRevue,
+            userDisplayName: this.props.userDisplayName,
+            indexedVariantAnnotations: this.props.indexedVariantAnnotations,
+            resolveTumorType: this.resolveTumorType,
+        });
+    }
+
+    // the annotation icons of a cell, as the space the header leaves before
+    // the functional impact icons, so they are over the predictions
+    @computed get annotationSpace(): JSX.Element | undefined {
+        const rows = this.props.dataStore
+            ? this.props.dataStore.allData
+            : this.props.data;
+        return rows && rows.length > 0
+            ? this.renderAnnotation(rows[0])
+            : undefined;
+    }
+
+    // the functional impact predictions are shown in the annotation column
+    @computed get showFunctionalImpact(): boolean {
+        return (
+            !!this.table &&
+            this.table.isColumnVisible(
+                MutationTableColumnType.FUNCTIONAL_IMPACT
+            )
+        );
+    }
+
     @computed protected get columns(): Column<Mutation[]>[] {
-        return this.orderedColumns.reduce(
+        const columns = this.orderedColumns.reduce(
             (
                 columns: Column<Mutation[]>[],
                 next: ExtendedMutationTableColumnType
@@ -1536,6 +1586,17 @@ export default class MutationTable<
                 return columns;
             },
             []
+        );
+        // the functional impact is shown in the annotation column, if there
+        // is one (e.g. not for a non-canonical transcript)
+        const hasAnnotation = columns.some(
+            c => c.name === MutationTableColumnType.ANNOTATION
+        );
+        return columns.map(column =>
+            hasAnnotation &&
+            column.name === MutationTableColumnType.FUNCTIONAL_IMPACT
+                ? { ...column, renderedIn: MutationTableColumnType.ANNOTATION }
+                : column
         );
     }
 
@@ -1556,6 +1617,7 @@ export default class MutationTable<
                 showCountHeader={this.props.showCountHeader}
                 columnVisibility={this.props.columnVisibility}
                 columnVisibilityProps={this.props.columnVisibilityProps}
+                columnsToShow={this.props.columnsToShow}
                 storeColumnVisibility={this.props.storeColumnVisibility}
                 onRowClick={this.props.onRowClick}
                 onRowMouseEnter={this.props.onRowMouseEnter}

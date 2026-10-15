@@ -2,6 +2,7 @@ import { assert } from 'chai';
 import {
     formatPrediction,
     getFunctionalImpactOptionIds,
+    isFunctionalImpactOptionId,
 } from './FunctionalImpactFilter';
 import { FunctionalImpactData } from './FunctionalImpactColumnFormatter';
 
@@ -39,5 +40,12 @@ describe('FunctionalImpactFilter', () => {
             'Probably damaging'
         );
         assert.equal(formatPrediction('none'), 'No prediction');
+    });
+
+    it('tells functional impact options from annotation options', () => {
+        assert.isTrue(isFunctionalImpactOptionId('sift:deleterious'));
+        assert.isTrue(isFunctionalImpactOptionId('alphaMissense:none'));
+        assert.isFalse(isFunctionalImpactOptionId('oncogenicity:oncogenic'));
+        assert.isFalse(isFunctionalImpactOptionId('hotspot:yes'));
     });
 });

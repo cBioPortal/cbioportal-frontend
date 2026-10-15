@@ -75,6 +75,10 @@ export type Column<T> = {
     togglable?: boolean;
     resizable?: boolean;
     truncateOnResize?: boolean;
+    // name of the column that shows this column's data, e.g. as part of its
+    // cells; it is then not a column of its own, but can still be shown and
+    // hidden in the columns menu (see LazyMobXTable.isColumnVisible)
+    renderedIn?: string;
 };
 
 type LazyMobXTableProps<T> = {
@@ -107,6 +111,9 @@ type LazyMobXTableProps<T> = {
     showColumnVisibility?: boolean;
     columnVisibilityProps?: IColumnVisibilityControlsProps;
     columnVisibility?: { [columnId: string]: boolean };
+    // columns shown when they are added to this list; the user can hide
+    // them again
+    columnsToShow?: string[];
     storeColumnVisibility?: (
         columnVisibility:
             | {
@@ -604,7 +611,9 @@ export class LazyMobXTableStore<T> {
     }
 
     @computed get visibleColumns(): Column<T>[] {
-        return this.columns.filter(column => this.isVisible(column));
+        return this.columns.filter(
+            column => this.isVisible(column) && !column.renderedIn
+        );
     }
 
     @computed get colVisProp(): IColumnVisibilityDef[] {
@@ -964,6 +973,11 @@ export default class LazyMobXTable<T> extends React.Component<
         });
     }
 
+    // whether the column is shown, also for a column rendered in another one
+    public isColumnVisible(id: string): boolean {
+        return !!this.store.columnVisibility[id];
+    }
+
     protected updateColumnVisibility(id: string, visible: boolean) {
         this.store.updateColumnVisibility(id, visible);
     }
@@ -1095,6 +1109,15 @@ export default class LazyMobXTable<T> extends React.Component<
             };
         } else {
             this.isChildTable = true;
+        }
+    }
+
+    componentDidUpdate(prevProps: LazyMobXTableProps<T>) {
+        const previous = new Set(prevProps.columnsToShow || []);
+        for (const id of this.props.columnsToShow || []) {
+            if (!previous.has(id) && !this.store.columnVisibility[id]) {
+                this.updateColumnVisibility(id, true);
+            }
         }
     }
 

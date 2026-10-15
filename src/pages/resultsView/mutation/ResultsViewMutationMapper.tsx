@@ -35,15 +35,21 @@ import FilterIconModal from 'shared/components/filterIconModal/FilterIconModal';
 import DoubleHandleSlider from 'shared/components/doubleHandleSlider/DoubleHandleSlider';
 import CategoricalFilterMenu from 'shared/components/categoricalFilterMenu/CategoricalFilterMenu';
 import SectionedFilterMenu, {
+    SectionedFilterGroup,
     SectionedFilterSection,
 } from 'shared/components/sectionedFilterMenu/SectionedFilterMenu';
 import {
     countOptionIds,
+    getOptionSection,
     SectionedFilterValue,
 } from 'shared/components/sectionedFilterMenu/SectionedFilterUtils';
 import { getAnnotationFilterSections } from 'shared/components/mutationTable/column/annotation/AnnotationFilterSections';
 import { getAnnotationOptionIds } from 'shared/components/mutationTable/column/annotation/AnnotationFilterUtils';
-import { getFunctionalImpactFilterSections } from 'shared/components/mutationTable/column/FunctionalImpactFilter';
+import {
+    FUNCTIONAL_IMPACT_GROUP,
+    getFunctionalImpactFilterSections,
+    isFunctionalImpactOptionId,
+} from 'shared/components/mutationTable/column/FunctionalImpactFilter';
 import { shouldShowMutationAssessor } from 'shared/lib/genomeNexusAnnotationSourcesUtils';
 
 import styles from 'shared/components/mutationMapper/mutationMapper.module.scss';
@@ -278,6 +284,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 isCanonicalTranscript={this.props.store.isCanonicalTranscript}
                 selectedTranscriptId={this.props.store.activeTranscript.result}
                 columnVisibility={this.props.columnVisibility}
+                columnsToShow={this.columnsToShow}
                 storeColumnVisibility={this.props.storeColumnVisibility}
                 sampleIdToClinicalDataMap={
                     this.props.store.clinicalDataGroupedBySampleMap
@@ -349,7 +356,6 @@ export default class ResultsViewMutationMapper extends MutationMapper<
             ...this.props.store.numericalFilterColumns,
             ...this.props.store.categoricalFilterColumns,
             MutationTableColumnType.ANNOTATION,
-            MutationTableColumnType.FUNCTIONAL_IMPACT,
         ];
     }
 
@@ -789,11 +795,13 @@ export default class ResultsViewMutationMapper extends MutationMapper<
     }
 
     // filter menus with options in sections, per column, e.g. the annotation
-    // sources; getOptionIds gives the options of a mutation
+    // sources; getOptionIds gives the options of a mutation, including those
+    // of the given expanded groups
     @computed get sectionedFilterColumns(): {
         [columnId: string]: {
             sections: SectionedFilterSection[];
-            getOptionIds: (mutation: Mutation) => string[];
+            groups?: SectionedFilterGroup[];
+            getOptionIds: (mutation: Mutation, groups: string[]) => string[];
             isLoading: () => boolean;
             loadingMessage: () => string;
             getLoadError?: () => string | undefined;
@@ -803,13 +811,57 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         const store = this.props.store;
         return {
             [MutationTableColumnType.ANNOTATION]: {
-                sections: getAnnotationFilterSections({
-                    showOncoKb: this.props.enableOncoKb,
-                    showHotspot: this.props.enableHotspot,
-                    showCivic: this.props.enableCivic,
-                }),
-                getOptionIds: m =>
-                    getAnnotationOptionIds(store.getAnnotation(m)),
+                sections: [
+                    ...getAnnotationFilterSections({
+                        showOncoKb: this.props.enableOncoKb,
+                        showHotspot: this.props.enableHotspot,
+                        showCivic: this.props.enableCivic,
+                    }),
+                    ...(this.props.enableGenomeNexus
+                        ? getFunctionalImpactFilterSections(
+                              shouldShowMutationAssessor()
+                          )
+                        : []),
+                ],
+                groups: this.props.enableGenomeNexus
+                    ? [
+                          {
+                              id: FUNCTIONAL_IMPACT_GROUP,
+                              title: 'Functional impact',
+                              // loads the functional impact of all mutations
+                              // the first time the group is expanded
+                              isLoading: () =>
+                                  !this
+                                      .tooManyMutationsForFunctionalImpactFilter &&
+                                  store.functionalImpactDataOfAllMutations
+                                      .isPending,
+                              loadingMessage: () => {
+                                  const progress =
+                                      store.functionalImpactLoadingProgress;
+                                  return `Loading functional impact… ${progress.loaded.toLocaleString()} of ${progress.total.toLocaleString()} mutations`;
+                              },
+                              getLoadError: () => {
+                                  if (
+                                      this
+                                          .tooManyMutationsForFunctionalImpactFilter
+                                  ) {
+                                      return `Filtering by functional impact is available for queries with up to ${MAX_MUTATIONS_FOR_FUNCTIONAL_IMPACT_FILTER.toLocaleString()} mutations, as it loads the functional impact of every mutation. This query has ${store.mutationsWithGenomicLocation.length.toLocaleString()}.`;
+                                  }
+                                  return store
+                                      .functionalImpactDataOfAllMutations
+                                      .isError
+                                      ? 'The functional impact of some mutations could not be loaded from Genome Nexus. Reload the page to try again.'
+                                      : undefined;
+                              },
+                          },
+                      ]
+                    : undefined,
+                getOptionIds: (m, groups) => [
+                    ...getAnnotationOptionIds(store.getAnnotation(m)),
+                    ...(groups.includes(FUNCTIONAL_IMPACT_GROUP)
+                        ? store.getFunctionalImpactOptionIds(m)
+                        : []),
+                ],
                 isLoading: () =>
                     [
                         store.oncoKbData,
@@ -821,40 +873,20 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 loadingMessage: () => 'Loading annotations…',
                 sectionNoun: 'source',
             },
-            ...(this.props.enableGenomeNexus
-                ? {
-                      [MutationTableColumnType.FUNCTIONAL_IMPACT]: {
-                          sections: getFunctionalImpactFilterSections(
-                              shouldShowMutationAssessor()
-                          ),
-                          getOptionIds: store.getFunctionalImpactOptionIds,
-                          // loads the functional impact of all mutations the
-                          // first time the menu is opened
-                          isLoading: () =>
-                              !this.tooManyMutationsForFunctionalImpactFilter &&
-                              store.functionalImpactDataOfAllMutations
-                                  .isPending,
-                          loadingMessage: () => {
-                              const progress =
-                                  store.functionalImpactLoadingProgress;
-                              return `Loading functional impact… ${progress.loaded.toLocaleString()} of ${progress.total.toLocaleString()} mutations`;
-                          },
-                          getLoadError: () => {
-                              if (
-                                  this.tooManyMutationsForFunctionalImpactFilter
-                              ) {
-                                  return `The functional impact filter is available for queries with up to ${MAX_MUTATIONS_FOR_FUNCTIONAL_IMPACT_FILTER.toLocaleString()} mutations, as it loads the functional impact of every mutation. This query has ${store.mutationsWithGenomicLocation.length.toLocaleString()}.`;
-                              }
-                              return store.functionalImpactDataOfAllMutations
-                                  .isError
-                                  ? 'The functional impact of some mutations could not be loaded from Genome Nexus. Reload the page to try again.'
-                                  : undefined;
-                          },
-                          sectionNoun: 'predictor',
-                      },
-                  }
-                : {}),
         };
+    }
+
+    // columns to show because a filter of another column uses their data:
+    // the functional impact column when the annotation filter has a
+    // functional impact selection
+    @computed get columnsToShow(): string[] {
+        const filter = this.getFilters[MutationTableColumnType.ANNOTATION] as
+            | DataFilter<SectionedFilterValue>
+            | undefined;
+        return filter &&
+            filter.values[0].selections.some(isFunctionalImpactOptionId)
+            ? [MutationTableColumnType.FUNCTIONAL_IMPACT]
+            : [];
     }
 
     @computed get tooManyMutationsForFunctionalImpactFilter() {
@@ -873,15 +905,20 @@ export default class ResultsViewMutationMapper extends MutationMapper<
             const value: SectionedFilterValue = filter
                 ? filter.values[0]
                 : { selections: [], matchAll: true };
-            // option ids of the mutations passing the other filters
-            const getOptionIdsOfRows = () =>
+            // option ids of the mutations passing the other filters,
+            // including those of the given groups
+            const getOptionIdsOfRows = (groups: string[]) =>
                 this.getDataPassingOtherFilters(columnId).map(d => ({
                     d,
-                    ids: config.getOptionIds(d[0]),
+                    ids: config.getOptionIds(d[0], groups),
                 }));
+            const sectionGroup = _.fromPairs(
+                config.sections.map(section => [section.id, section.group])
+            );
             components[columnId] = (
                 <SectionedFilterMenu
                     sections={config.sections}
+                    groups={config.groups}
                     selections={new Set(value.selections)}
                     matchAll={value.matchAll}
                     onChange={(selections: string[], matchAll: boolean) => {
@@ -897,15 +934,28 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                             );
                         }
                     }}
-                    getOptionCounts={() =>
-                        countOptionIds(getOptionIdsOfRows().map(r => r.ids))
+                    getOptionCounts={groups =>
+                        countOptionIds(
+                            getOptionIdsOfRows(groups).map(r => r.ids)
+                        )
                     }
                     isLoading={config.isLoading}
                     loadingMessage={config.loadingMessage}
                     getLoadError={config.getLoadError}
                     sectionNoun={config.sectionNoun}
                     onCompare={options => {
-                        const rows = getOptionIdsOfRows();
+                        const rows = getOptionIdsOfRows(
+                            _.uniq(
+                                _.compact(
+                                    options.map(
+                                        option =>
+                                            sectionGroup[
+                                                getOptionSection(option.id)
+                                            ]
+                                    )
+                                )
+                            )
+                        );
                         this.compareGroups(
                             columnId,
                             options.map(option => ({

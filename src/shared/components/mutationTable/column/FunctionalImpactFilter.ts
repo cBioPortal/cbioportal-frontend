@@ -1,5 +1,8 @@
 import { FunctionalImpactData } from './FunctionalImpactColumnFormatter';
-import { optionId } from 'shared/components/sectionedFilterMenu/SectionedFilterUtils';
+import {
+    getOptionSection,
+    optionId,
+} from 'shared/components/sectionedFilterMenu/SectionedFilterUtils';
 import { SectionedFilterSection } from 'shared/components/sectionedFilterMenu/SectionedFilterMenu';
 
 /**
@@ -15,6 +18,15 @@ export enum FunctionalImpactFilterSource {
 
 // option of the mutations without a prediction of the predictor
 export const NO_PREDICTION = 'none';
+
+// group of the functional impact sections in the annotation column filter
+export const FUNCTIONAL_IMPACT_GROUP = 'functionalImpact';
+
+export function isFunctionalImpactOptionId(id: string) {
+    return (Object.values(FunctionalImpactFilterSource) as string[]).includes(
+        getOptionSection(id)
+    );
+}
 
 function normalizePrediction(prediction: string | undefined) {
     return prediction ? prediction.trim().toLowerCase() : NO_PREDICTION;
@@ -72,6 +84,7 @@ function section(
     return {
         id,
         title,
+        group: FUNCTIONAL_IMPACT_GROUP,
         options: [...predictions, NO_PREDICTION].map(prediction => ({
             id: optionId(id, prediction),
             label: formatPrediction(prediction),
@@ -81,8 +94,8 @@ function section(
 }
 
 /**
- * Sections of the functional impact column filter, one per predictor, with the
- * predictions of the column legend.
+ * Functional impact sections of the annotation column filter, one per
+ * predictor, with the predictions of the functional impact column legend.
  */
 export function getFunctionalImpactFilterSections(
     showMutationAssessor: boolean

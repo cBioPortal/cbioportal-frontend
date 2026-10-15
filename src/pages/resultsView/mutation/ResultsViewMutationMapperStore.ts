@@ -53,7 +53,10 @@ import {
     SectionedFilterValue,
 } from 'shared/components/sectionedFilterMenu/SectionedFilterUtils';
 import FunctionalImpactColumnFormatter from 'shared/components/mutationTable/column/FunctionalImpactColumnFormatter';
-import { getFunctionalImpactOptionIds } from 'shared/components/mutationTable/column/FunctionalImpactFilter';
+import {
+    getFunctionalImpactOptionIds,
+    isFunctionalImpactOptionId,
+} from 'shared/components/mutationTable/column/FunctionalImpactFilter';
 import { shouldShowMutationAssessor } from 'shared/lib/genomeNexusAnnotationSourcesUtils';
 import { queryToKey as genomeNexusQueryToKey } from 'shared/cache/GenomeNexusMutationAssessorCache';
 import NumericNamespaceColumnFormatter from 'shared/components/namespaceColumns/NumericNamespaceColumnFormatter';
@@ -127,14 +130,14 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
                     MutationTableColumnType.ANNOTATION
                 ] = (filter: DataFilter<SectionedFilterValue>, d: Mutation) =>
                     matchesSectionedFilter(
-                        getAnnotationOptionIds(this.getAnnotation(d)),
-                        filter.values[0]
-                    );
-                mutationMapperStoreConfig['filterAppliersOverride']![
-                    MutationTableColumnType.FUNCTIONAL_IMPACT
-                ] = (filter: DataFilter<SectionedFilterValue>, d: Mutation) =>
-                    matchesSectionedFilter(
-                        this.getFunctionalImpactOptionIds(d),
+                        [
+                            ...getAnnotationOptionIds(this.getAnnotation(d)),
+                            ...(filter.values[0].selections.some(
+                                isFunctionalImpactOptionId
+                            )
+                                ? this.getFunctionalImpactOptionIds(d)
+                                : []),
+                        ],
                         filter.values[0]
                     );
                 mutationMapperStoreConfig['filterAppliersOverride']![

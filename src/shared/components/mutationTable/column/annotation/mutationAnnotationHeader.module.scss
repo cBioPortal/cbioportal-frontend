@@ -1,0 +1,89 @@
+.header {
+    position: relative;
+    display: inline-block;
+}
+
+/* a line for the icons, which are positioned on it so they do not widen
+   the header, keeping its filter icon next to the name */
+.iconLine {
+    display: block;
+    height: 14px;
+}
+
+.iconRow {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.annotationSpace {
+    visibility: hidden;
+    height: 14px;
+    overflow: hidden;
+}
+
+/* the annotation icons have a minimum width, which would leave a gap
+   before the predictions */
+.annotationSpace > span:first-child,
+.cellWithFunctionalImpact > span:first-child {
+    min-width: 0 !important;
+}
+
+/* same space as before the predictions in the cells */
+.functionalImpactIcons {
+    padding-left: 8px;
+    font-weight: normal;
+}
+
+.tooltip {
+    max-width: 480px;
+}
+
+.sources {
+    th {
+        padding: 2px 10px 2px 0;
+        vertical-align: top;
+        white-space: nowrap;
+    }
+
+    td {
+        padding: 2px 0;
+    }
+}
+
+.source {
+    display: inline-block;
+    margin-right: 10px;
+    border-bottom: 1px dotted #999;
+    cursor: default;
+}
+
+.activeSource {
+    border-bottom: 2px solid #3786c2;
+}
+
+.hint {
+    margin: 4px 0 6px;
+    color: #888;
+    font-size: 11px;
+}
+
+.legend {
+    padding-top: 6px;
+    border-top: 1px solid #ddd;
+}
+
+/* the functional impact predictions follow the other annotations, under
+   their icons in the header */
+.cell {
+    display: inline-flex;
+    align-items: center;
+}
+
+.cellFunctionalImpact {
+    padding-left: 8px;
+    white-space: nowrap;
+}

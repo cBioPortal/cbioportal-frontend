@@ -28,7 +28,7 @@ type FunctionalImpactColumnTooltipProps = {
     active: FunctionalImpactColumnName;
 };
 
-enum FunctionalImpactColumnName {
+export enum FunctionalImpactColumnName {
     MUTATION_ASSESSOR = 'MUTATION_ASSESSOR',
     SIFT = 'SIFT',
     POLYPHEN2 = 'POLYPHEN2',
@@ -45,7 +45,7 @@ export interface FunctionalImpactData {
     alphaMissensePrediction: string | undefined;
 }
 
-const FunctionalImpactColumnTooltip: React.FC<FunctionalImpactColumnTooltipProps> = ({
+export const FunctionalImpactColumnTooltip: React.FC<FunctionalImpactColumnTooltipProps> = ({
     active: initialActive,
 }) => {
     const [active, setActive] = React.useState<FunctionalImpactColumnName>(
@@ -278,87 +278,27 @@ export function placeArrow(tooltipEl: any) {
 
 export default class FunctionalImpactColumnFormatter {
     public static headerRender(name: string) {
-        const arrowContent = <div className="rc-tooltip-arrow-inner" />;
-        const showMutationAssessor = shouldShowMutationAssessor();
         return (
             <div>
                 {name}
                 <br />
-                <div style={{ height: 14 }}>
-                    {showMutationAssessor && (
-                        <DefaultTooltip
-                            overlay={
-                                <FunctionalImpactColumnTooltip
-                                    active={
-                                        FunctionalImpactColumnName.MUTATION_ASSESSOR
-                                    }
-                                />
-                            }
-                            placement="topLeft"
-                            trigger={['hover', 'focus']}
-                            arrowContent={arrowContent}
-                            destroyTooltipOnHide={true}
-                            onPopupAlign={placeArrow}
-                        >
-                            <span
-                                style={{ display: 'inline-block', width: 22 }}
-                            >
-                                <img
-                                    height={14}
-                                    width={14}
-                                    src={require('./mutationAssessor.png')}
-                                    alt="Sift"
-                                />
-                            </span>
-                        </DefaultTooltip>
-                    )}
-                    <DefaultTooltip
-                        overlay={
-                            <FunctionalImpactColumnTooltip
-                                active={FunctionalImpactColumnName.SIFT}
-                            />
-                        }
-                        placement="topLeft"
-                        trigger={['hover', 'focus']}
-                        arrowContent={arrowContent}
-                        destroyTooltipOnHide={true}
-                        onPopupAlign={placeArrow}
-                    >
-                        <span style={{ display: 'inline-block', width: 22 }}>
-                            <img
-                                height={14}
-                                width={14}
-                                src={require('./siftFunnel.png')}
-                                alt="SIFT"
-                            />
-                        </span>
-                    </DefaultTooltip>
-                    <DefaultTooltip
-                        overlay={
-                            <FunctionalImpactColumnTooltip
-                                active={FunctionalImpactColumnName.POLYPHEN2}
-                            />
-                        }
-                        placement="topLeft"
-                        trigger={['hover', 'focus']}
-                        arrowContent={arrowContent}
-                        destroyTooltipOnHide={true}
-                        onPopupAlign={placeArrow}
-                    >
-                        <span style={{ display: 'inline-block', width: 22 }}>
-                            <img
-                                height={14}
-                                width={14}
-                                src={require('./polyPhen-2.png')}
-                                alt="PolyPhen-2"
-                            />
-                        </span>
-                    </DefaultTooltip>
+                {FunctionalImpactColumnFormatter.headerIcons()}
+            </div>
+        );
+    }
+
+    // an icon per predictor, with its legend as tooltip
+    public static headerIcons() {
+        const arrowContent = <div className="rc-tooltip-arrow-inner" />;
+        const showMutationAssessor = shouldShowMutationAssessor();
+        return (
+            <div style={{ height: 14 }}>
+                {showMutationAssessor && (
                     <DefaultTooltip
                         overlay={
                             <FunctionalImpactColumnTooltip
                                 active={
-                                    FunctionalImpactColumnName.ALPHAMISSENSE
+                                    FunctionalImpactColumnName.MUTATION_ASSESSOR
                                 }
                             />
                         }
@@ -372,12 +312,75 @@ export default class FunctionalImpactColumnFormatter {
                             <img
                                 height={14}
                                 width={14}
-                                src={require('./alphaMissenseGoogleDeepmind.png')}
-                                alt="alphaMissense"
+                                src={require('./mutationAssessor.png')}
+                                alt="Sift"
                             />
                         </span>
                     </DefaultTooltip>
-                </div>
+                )}
+                <DefaultTooltip
+                    overlay={
+                        <FunctionalImpactColumnTooltip
+                            active={FunctionalImpactColumnName.SIFT}
+                        />
+                    }
+                    placement="topLeft"
+                    trigger={['hover', 'focus']}
+                    arrowContent={arrowContent}
+                    destroyTooltipOnHide={true}
+                    onPopupAlign={placeArrow}
+                >
+                    <span style={{ display: 'inline-block', width: 22 }}>
+                        <img
+                            height={14}
+                            width={14}
+                            src={require('./siftFunnel.png')}
+                            alt="SIFT"
+                        />
+                    </span>
+                </DefaultTooltip>
+                <DefaultTooltip
+                    overlay={
+                        <FunctionalImpactColumnTooltip
+                            active={FunctionalImpactColumnName.POLYPHEN2}
+                        />
+                    }
+                    placement="topLeft"
+                    trigger={['hover', 'focus']}
+                    arrowContent={arrowContent}
+                    destroyTooltipOnHide={true}
+                    onPopupAlign={placeArrow}
+                >
+                    <span style={{ display: 'inline-block', width: 22 }}>
+                        <img
+                            height={14}
+                            width={14}
+                            src={require('./polyPhen-2.png')}
+                            alt="PolyPhen-2"
+                        />
+                    </span>
+                </DefaultTooltip>
+                <DefaultTooltip
+                    overlay={
+                        <FunctionalImpactColumnTooltip
+                            active={FunctionalImpactColumnName.ALPHAMISSENSE}
+                        />
+                    }
+                    placement="topLeft"
+                    trigger={['hover', 'focus']}
+                    arrowContent={arrowContent}
+                    destroyTooltipOnHide={true}
+                    onPopupAlign={placeArrow}
+                >
+                    <span style={{ display: 'inline-block', width: 22 }}>
+                        <img
+                            height={14}
+                            width={14}
+                            src={require('./alphaMissenseGoogleDeepmind.png')}
+                            alt="alphaMissense"
+                        />
+                    </span>
+                </DefaultTooltip>
             </div>
         );
     }

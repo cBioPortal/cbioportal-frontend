@@ -360,3 +360,63 @@ test.describe(
         });
     }
 );
+
+test.describe(
+    'mutation table: functional impact in the annotation filter',
+    () => {
+        test('filters by a functional impact prediction and shows the predictions', async ({
+            browser,
+        }) => {
+            const page = await browser.newPage({
+                viewport: { width: 1600, height: 1000 },
+            });
+            await page.goto(BRCA_BROAD_URL);
+            await waitForTable(page, 120000);
+            // the predictor icons are in the annotation header while the
+            // predictions are shown
+            const functionalImpactIcons = byTestHandle(
+                page,
+                'annotation-functional-impact-icons'
+            );
+            await expect(functionalImpactIcons).toHaveCount(0);
+
+            const annotationTh = page
+                .locator('.lazy-mobx-table th', { hasText: 'Annotation' })
+                .first();
+            await annotationTh.hover();
+            await annotationTh.locator('.fa-filter').click();
+
+            // collapsed until expanded, which loads the predictions
+            const group = byTestHandle(
+                page,
+                'annotation-filter-group-functionalImpact'
+            );
+            await expect(group).toContainText('SIFT');
+            await expect(
+                byTestHandle(page, 'annotation-filter-option-sift:deleterious')
+            ).toHaveCount(0);
+            await byTestHandle(
+                page,
+                'annotation-filter-group-functionalImpact-toggle'
+            ).click();
+
+            const deleterious = byTestHandle(
+                page,
+                'annotation-filter-option-sift:deleterious'
+            );
+            await expect(deleterious).toBeVisible({ timeout: 60000 });
+            await deleterious.locator('input').check();
+
+            await expect(functionalImpactIcons).toBeVisible();
+            // the group stays expanded while it has a selection
+            await expect(
+                byTestHandle(
+                    page,
+                    'annotation-filter-group-functionalImpact-toggle'
+                )
+            ).toBeDisabled();
+
+            await page.close();
+        });
+    }
+);
