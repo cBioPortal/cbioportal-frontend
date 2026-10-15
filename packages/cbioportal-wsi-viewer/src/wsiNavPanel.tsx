@@ -283,6 +283,25 @@ function WsiNavPanelComponent({
             ),
         [filteredSampleEntries]
     );
+    const totalSlideCount = React.useMemo(
+        () =>
+            unscopedSampleEntries.reduce(
+                (count, entry) => count + entry.filteredSlides.length,
+                0
+            ),
+        [unscopedSampleEntries]
+    );
+    // The count only says something when filters or a link scope narrow the
+    // list; otherwise the list shows every slide anyway.
+    const slideCountText =
+        filteredSlideCount === 0
+            ? emptyPatientMessage || 'No slides match these filters'
+            : filteredSlideCount < totalSlideCount
+            ? `Showing ${filteredSlideCount} of ${totalSlideCount} ${pluralize(
+                  'slide',
+                  totalSlideCount
+              )}`
+            : undefined;
     const hiddenSampleCount =
         filteredSampleEntries.length - sampleEntries.length;
     const facetSlides = React.useMemo(
@@ -340,6 +359,15 @@ function WsiNavPanelComponent({
         matchFilter
     );
 
+    // With no filter to offer, no scope and no count, the area under the
+    // header would be an empty bar.
+    const hasFilterBlock =
+        stainChoices.length > 0 ||
+        matchChoices.length > 0 ||
+        (!!sampleIdFilter && linkoutScopeActive) ||
+        showClearFilters ||
+        !!slideCountText;
+
     return (
         <div
             style={{
@@ -359,106 +387,105 @@ function WsiNavPanelComponent({
                 onHide={onHide}
                 hideTestId="wsi-nav-hide"
             />
-            <div
-                style={{
-                    padding: '4px 12px 8px',
-                    borderBottom: `1px solid ${theme.border}`,
-                    flexShrink: 0,
-                }}
-            >
-                {stainChoices.length > 0 && (
-                    <WsiFilterRow label="Stain" style={{ marginTop: 4 }}>
-                        <WsiFilterChipGroup
-                            label="Filter slides by stain"
-                            testId="wsi-stain-filter-row"
-                            chipTestIdPrefix="wsi-stain-filter"
-                            chips={stainChoices}
-                            isActive={key => stainFilter === key}
-                            onSelect={key =>
-                                onFilterChange(
-                                    stainFilter === key ? 'all' : key
-                                )
-                            }
-                        />
-                    </WsiFilterRow>
-                )}
-                {matchChoices.length > 0 && (
-                    <WsiFilterRow label="Match" style={{ marginTop: 5 }}>
-                        <WsiFilterChipGroup
-                            label="Filter slides by match level"
-                            testId="wsi-match-filter-row"
-                            chipTestIdPrefix="wsi-match-filter"
-                            chips={matchChoices}
-                            isActive={key => matchFilter === key}
-                            onSelect={key =>
-                                onMatchFilterChange?.(
-                                    matchFilter === key ? 'all' : key
-                                )
-                            }
-                        />
-                    </WsiFilterRow>
-                )}
-                {sampleIdFilter && linkoutScopeActive && (
-                    <div
-                        data-testid="wsi-sample-scope"
-                        style={{
-                            marginTop: 6,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            padding: '1px 6px',
-                            borderRadius: 3,
-                            background: theme.blueLight,
-                            color: theme.text,
-                            fontSize: 12,
-                        }}
-                    >
-                        <span>Sample {sampleIdFilter}</span>
+            {hasFilterBlock && (
+                <div
+                    style={{
+                        padding: '4px 12px 8px',
+                        borderBottom: `1px solid ${theme.border}`,
+                        flexShrink: 0,
+                    }}
+                >
+                    {stainChoices.length > 0 && (
+                        <WsiFilterRow label="Stain" style={{ marginTop: 4 }}>
+                            <WsiFilterChipGroup
+                                label="Filter slides by stain"
+                                testId="wsi-stain-filter-row"
+                                chipTestIdPrefix="wsi-stain-filter"
+                                chips={stainChoices}
+                                isActive={key => stainFilter === key}
+                                onSelect={key =>
+                                    onFilterChange(
+                                        stainFilter === key ? 'all' : key
+                                    )
+                                }
+                            />
+                        </WsiFilterRow>
+                    )}
+                    {matchChoices.length > 0 && (
+                        <WsiFilterRow label="Match" style={{ marginTop: 5 }}>
+                            <WsiFilterChipGroup
+                                label="Filter slides by match level"
+                                testId="wsi-match-filter-row"
+                                chipTestIdPrefix="wsi-match-filter"
+                                chips={matchChoices}
+                                isActive={key => matchFilter === key}
+                                onSelect={key =>
+                                    onMatchFilterChange?.(
+                                        matchFilter === key ? 'all' : key
+                                    )
+                                }
+                            />
+                        </WsiFilterRow>
+                    )}
+                    {sampleIdFilter && linkoutScopeActive && (
+                        <div
+                            data-testid="wsi-sample-scope"
+                            style={{
+                                marginTop: 6,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                padding: '1px 6px',
+                                borderRadius: 3,
+                                background: theme.blueLight,
+                                color: theme.text,
+                                fontSize: 12,
+                            }}
+                        >
+                            <span>Sample {sampleIdFilter}</span>
+                            <button
+                                type="button"
+                                className="btn btn-link btn-xs"
+                                data-testid="wsi-sample-scope-clear"
+                                aria-label={`Show all slides, not only sample ${sampleIdFilter}`}
+                                title="Show all slides"
+                                style={{ padding: 0, color: theme.muted }}
+                                onClick={onClearFilters}
+                            >
+                                <i className="fa fa-times" />
+                            </button>
+                        </div>
+                    )}
+                    {showClearFilters && (
                         <button
                             type="button"
                             className="btn btn-link btn-xs"
-                            data-testid="wsi-sample-scope-clear"
-                            aria-label={`Show all slides, not only sample ${sampleIdFilter}`}
-                            title="Show all slides"
-                            style={{ padding: 0, color: theme.muted }}
+                            data-testid="wsi-clear-filters"
+                            style={{
+                                display: 'block',
+                                padding: '2px 0',
+                                marginTop: 6,
+                                color: theme.blue,
+                            }}
                             onClick={onClearFilters}
                         >
-                            <i className="fa fa-times" />
+                            Show all slides
                         </button>
-                    </div>
-                )}
-                {showClearFilters && (
-                    <button
-                        type="button"
-                        className="btn btn-link btn-xs"
-                        data-testid="wsi-clear-filters"
-                        style={{
-                            display: 'block',
-                            padding: '2px 0',
-                            marginTop: 6,
-                            color: theme.blue,
-                        }}
-                        onClick={onClearFilters}
-                    >
-                        Show all slides
-                    </button>
-                )}
-                <div
-                    style={{
-                        marginTop: 6,
-                        color: theme.muted,
-                        fontSize: 12,
-                    }}
-                    data-testid="wsi-filtered-slide-count"
-                >
-                    {filteredSlideCount === 0
-                        ? emptyPatientMessage || 'No slides match these filters'
-                        : `Showing ${filteredSlideCount} ${pluralize(
-                              'slide',
-                              filteredSlideCount
-                          )}`}
+                    )}
+                    {slideCountText && (
+                        <div
+                            style={{
+                                marginTop: 6,
+                                color: theme.muted,
+                                fontSize: 12,
+                            }}
+                            data-testid="wsi-filtered-slide-count"
+                        >
+                            {slideCountText}
+                        </div>
+                    )}
                 </div>
-            </div>
+            )}
             <div style={{ flex: 1, overflowY: 'auto', padding: '6px 0' }}>
                 {sampleEntries.map(
                     ({ sample, filteredSlides, filteredSlideIds }, index) => (
@@ -630,11 +657,24 @@ function SampleNode({
     const servableSlides = open || containsSelectedSlide ? filteredSlides : [];
     const visibleSlideCount = filteredSlides.length;
 
+    // A slide selected in this sample (e.g. from a link or Back) opens it,
+    // once per selection, so a user can still collapse it afterwards.
+    const selectedSlideKey = containsSelectedSlide
+        ? selectedSlide?.slide_key
+        : undefined;
+    const openedForSlide = React.useRef(selectedSlideKey);
     React.useEffect(() => {
-        if (containsSelectedSlide && !open) {
+        if (!selectedSlideKey) {
+            // The selection left the sample: selecting one of its slides
+            // again (e.g. Back) opens it again.
+            openedForSlide.current = undefined;
+            return;
+        }
+        if (openedForSlide.current !== selectedSlideKey) {
+            openedForSlide.current = selectedSlideKey;
             setOpen(true);
         }
-    }, [containsSelectedSlide, open]);
+    }, [selectedSlideKey]);
 
     const multiPart = React.useMemo(
         () =>

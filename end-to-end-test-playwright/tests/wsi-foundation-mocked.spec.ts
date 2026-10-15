@@ -65,11 +65,12 @@ if (process.env.PW_SUITE === 'wsi') {
                 0
             );
             await expect(
-                page.getByTestId('wsi-filtered-slide-count')
-            ).toHaveText('Showing 1 slide', { timeout: 30000 });
-            await expect(
                 page.getByTestId(`wsi-slide-item-${SLIDE_KEY}`)
-            ).toBeVisible();
+            ).toBeVisible({ timeout: 30000 });
+            // Nothing is filtered, so the list shows no slide count.
+            await expect(
+                page.getByTestId('wsi-filtered-slide-count')
+            ).toHaveCount(0);
             await expect(
                 page.getByRole('button', { name: 'Zoom in' })
             ).toBeVisible({
@@ -181,11 +182,11 @@ if (process.env.PW_SUITE === 'wsi') {
             );
 
             await expect(
-                page.getByTestId('wsi-filtered-slide-count')
-            ).toHaveText('Showing 2 slides', { timeout: 30000 });
-            await expect(
                 page.getByTestId(`wsi-slide-item-${SECOND_SLIDE_KEY}`)
             ).toHaveAttribute('aria-current', 'true', { timeout: 30000 });
+            await expect(
+                page.locator('[data-testid^="wsi-slide-item-"]')
+            ).toHaveCount(2);
             await expect(
                 page.getByRole('button', { name: 'Fit to view' })
             ).toBeVisible({

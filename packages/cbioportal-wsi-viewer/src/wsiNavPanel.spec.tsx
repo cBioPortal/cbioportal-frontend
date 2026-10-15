@@ -512,6 +512,36 @@ describe('WsiNavPanel', () => {
         expect(hasTestId(renderer, 'wsi-match-filter-row')).toBe(false);
     });
 
+    it('leaves out the filter area when there is nothing to show in it', () => {
+        const sample = makeSample('S-1', [
+            placedSlide('part-1', 'PART'),
+            placedSlide('part-2', 'PART'),
+        ]);
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([sample])}
+                selectedSlide={null}
+                stainFilter="all"
+                matchFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                {...navContext}
+            />
+        );
+
+        expect(hasTestId(renderer, 'wsi-stain-filter-row')).toBe(false);
+        expect(hasTestId(renderer, 'wsi-match-filter-row')).toBe(false);
+        expect(hasTestId(renderer, 'wsi-filtered-slide-count')).toBe(false);
+        // No empty bar under the header: nothing but the header precedes the list.
+        expect(
+            renderer.root.findAll(
+                (node: any) =>
+                    node.type === 'div' &&
+                    node.props.style?.padding === '4px 12px 8px'
+            )
+        ).toHaveLength(0);
+    });
+
     it('shows match badges only for block- and part-matched slides', () => {
         const sample = makeSample('S-1', [
             placedSlide('block-slide', 'BLOCK'),
@@ -748,7 +778,7 @@ describe('WsiNavPanel', () => {
                     'data-testid': 'wsi-filtered-slide-count',
                 })
                 .children.join('')
-        ).toBe('Showing 3 slides');
+        ).toBe('Showing 3 of 4 slides');
     });
 
     it('updates stain filter counts when the match filter changes', () => {
@@ -830,9 +860,8 @@ describe('WsiNavPanel', () => {
 
         // A single Other slide leaves no stain to choose between.
         expect(hasTestId(renderer, 'wsi-stain-filter-row')).toBe(false);
-        expect(findButtonText(renderer, 'wsi-filtered-slide-count')).toBe(
-            'Showing 1 slide'
-        );
+        // Nothing is filtered, so there is no count to show.
+        expect(hasTestId(renderer, 'wsi-filtered-slide-count')).toBe(false);
     });
 
     it('classifies by the resolved stain flags, not the source stain group, for slides and facet counts', () => {
@@ -922,6 +951,64 @@ describe('WsiNavPanel', () => {
 
         expect(hasTestId(renderer, 'wsi-stain-filter-other')).toBe(false);
         expect(hasTestId(renderer, 'wsi-stain-filter-row')).toBe(false);
+    });
+
+    it('lets the sample with the selected slide be collapsed', () => {
+        const slideA = makeSlide({ slide_key: 'slide-a' });
+        const slideB = makeSlide({ slide_key: 'slide-b' });
+        const sample = makeSample('S-1', [slideA, slideB]);
+        const panel = (selected: Slide) => (
+            <WsiNavPanel
+                hierarchy={makeHierarchy([sample])}
+                selectedSlide={selected}
+                stainFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                {...navContext}
+            />
+        );
+        const renderer = TestRenderer.create(panel(slideA));
+        const toggle = () =>
+            renderer.root.findByProps({ 'aria-label': 'S-1 slides' });
+
+        act(() => toggle().props.onClick());
+        expect(toggle().props['aria-expanded']).toBe(false);
+        expect(hasTestId(renderer, 'wsi-slide-item-slide-a')).toBe(false);
+
+        // Selecting another slide of the sample opens it again.
+        act(() => renderer.update(panel(slideB)));
+        expect(toggle().props['aria-expanded']).toBe(true);
+    });
+
+    it('reopens a collapsed sample when its slide is selected again', () => {
+        const slideA = makeSlide({ slide_key: 'slide-a', sample_id: 'S-1' });
+        const slideC = makeSlide({ slide_key: 'slide-c', sample_id: 'S-2' });
+        const samples = [
+            makeSample('S-1', [slideA]),
+            makeSample('S-2', [slideC]),
+        ];
+        const panel = (selected: Slide) => (
+            <WsiNavPanel
+                hierarchy={makeHierarchy(samples)}
+                selectedSlide={selected}
+                stainFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                {...navContext}
+            />
+        );
+        const renderer = TestRenderer.create(panel(slideA));
+        const s1 = () =>
+            renderer.root.findByProps({ 'aria-label': 'S-1 slides' });
+
+        act(() => s1().props.onClick());
+        expect(s1().props['aria-expanded']).toBe(false);
+
+        // Select a slide elsewhere, then go Back to the first one.
+        act(() => renderer.update(panel(slideC)));
+        expect(s1().props['aria-expanded']).toBe(false);
+        act(() => renderer.update(panel(slideA)));
+        expect(s1().props['aria-expanded']).toBe(true);
     });
 
     it('only expands the first sample by default', () => {
@@ -1046,7 +1133,7 @@ describe('WsiNavPanel', () => {
                     'data-testid': 'wsi-filtered-slide-count',
                 }).children
             )
-        ).toContain('Showing 1 slide');
+        ).toContain('Showing 1 of 2 slides');
 
         act(() => {
             renderer.root
