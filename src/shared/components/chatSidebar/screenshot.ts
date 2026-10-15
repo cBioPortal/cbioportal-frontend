@@ -4,6 +4,9 @@ import html2canvas from 'html2canvas';
 // readability vs. token cost. ~1024 is plenty for an oncoprint at this scale.
 const MAX_LONG_SIDE = 1024;
 
+// Leaves room under the iframe's 30s budget after the network-idle wait.
+const ONCOPRINT_RASTERIZE_TIMEOUT_MS = 5000;
+
 // Track in-flight host-page network requests so we can defer the screenshot
 // until cBioPortal is quiescent. Patches fetch + XHR exactly once.
 const PATCH_FLAG = '__chatSidebarNetIdlePatched';
@@ -81,23 +84,34 @@ export async function waitForNetworkIdle(
 
 // DOM-based readiness check, complementing waitForNetworkIdle for renders
 // that land after data arrives but before paint settles.
-export async function waitForViewReady(timeoutMs = 8000): Promise<void> {
+// Indicators can flicker off between loading phases, so this needs a short
+// quiet window rather than a single empty check.
+export async function waitForViewReady(
+    timeoutMs = 8000,
+    quietMs = 500
+): Promise<void> {
     const deadline = Date.now() + timeoutMs;
+    let quietSince: number | null = null;
     while (Date.now() < deadline) {
         const indicators = document.querySelectorAll(
             '[data-test="LoadingIndicator"]'
         );
+        // Not offsetParent: it's null for the position:fixed centered spinner.
         const anyVisible = Array.from(indicators).some(el => {
-            const node = el as HTMLElement;
-            if (node.offsetParent === null) return false;
-            const rect = node.getBoundingClientRect();
-            return rect.width > 0 && rect.height > 0;
+            const rect = el.getBoundingClientRect();
+            return (
+                rect.width > 0 &&
+                rect.height > 0 &&
+                getComputedStyle(el).visibility !== 'hidden'
+            );
         });
-        if (!anyVisible) {
-            await new Promise(r => setTimeout(r, 200));
-            return;
+        if (anyVisible) {
+            quietSince = null;
+        } else {
+            quietSince = quietSince ?? Date.now();
+            if (Date.now() - quietSince >= quietMs) return;
         }
-        await new Promise(r => setTimeout(r, 150));
+        await new Promise(r => setTimeout(r, 100));
     }
 }
 
@@ -107,9 +121,23 @@ export async function waitForViewReady(timeoutMs = 8000): Promise<void> {
 // via cell_view.visible_area_width/getHorzScroll()/maxOncoprintScrollLeft() —
 // the same coordinate space toCanvas() renders from, no conversion needed.
 async function rasterizeOncoprint(): Promise<string | null> {
+    // window.donk outlives the results view, so its oncoprint may be destroyed.
     const onco = (window as any).donk?.oncoprintJs;
-    if (!onco || typeof onco.toCanvas !== 'function') return null;
-    return new Promise(resolve => {
+    if (!onco || onco.destroyed || typeof onco.toCanvas !== 'function') {
+        return null;
+    }
+    return new Promise(settle => {
+        // toCanvas() never calls back if its SVG image fails to load.
+        const timer = setTimeout(() => {
+            console.warn(
+                'chat-sidebar oncoprint rasterize timed out; capturing without it'
+            );
+            settle(null);
+        }, ONCOPRINT_RASTERIZE_TIMEOUT_MS);
+        const resolve = (dataUrl: string | null) => {
+            clearTimeout(timer);
+            settle(dataUrl);
+        };
         try {
             onco.toCanvas((fullCanvas: HTMLCanvasElement) => {
                 try {
@@ -174,12 +202,22 @@ export async function captureViewport(): Promise<string | null> {
         const launcher = document.querySelector(
             '.chat-sidebar-launcher'
         ) as HTMLElement | null;
-        const oncoprintPng = await rasterizeOncoprint();
         const liveOnco = document.querySelector(
             '.oncoprintContainer'
         ) as HTMLElement | null;
-        const oncoSize = liveOnco
-            ? { w: liveOnco.offsetWidth, h: liveOnco.offsetHeight }
+        // Inactive results tabs stay mounted but are moved offscreen
+        // (.hiddenByPosition), so check viewport overlap, not offsetParent.
+        const oncoRect = liveOnco?.getBoundingClientRect();
+        const oncoVisible =
+            !!oncoRect &&
+            oncoRect.width > 0 &&
+            oncoRect.bottom > 0 &&
+            oncoRect.right > 0 &&
+            oncoRect.top < window.innerHeight &&
+            oncoRect.left < window.innerWidth;
+        const oncoprintPng = oncoVisible ? await rasterizeOncoprint() : null;
+        const oncoSize = oncoVisible
+            ? { w: liveOnco!.offsetWidth, h: liveOnco!.offsetHeight }
             : null;
         const canvas = await html2canvas(document.body, {
             x: window.scrollX,

@@ -13,6 +13,9 @@ export function requestScreenshot(timeoutMs = 30000): Promise<string | null> {
             .slice(2);
         const timer = setTimeout(() => {
             window.removeEventListener('message', onMessage);
+            console.warn(
+                `chat-sidebar screenshot: no reply from host page within ${timeoutMs}ms`
+            );
             resolve(null);
         }, timeoutMs);
         function onMessage(e: MessageEvent) {

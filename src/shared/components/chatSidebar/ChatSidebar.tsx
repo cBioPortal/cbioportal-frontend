@@ -265,8 +265,10 @@ export default class ChatSidebar extends React.Component<{}, {}> {
 
     private async captureAndRespond(requestId: string) {
         // Waits for the page to settle before capturing — a mid-fetch or
-        // mid-paint screenshot is worse than a slightly slower one.
-        await Promise.all([waitForNetworkIdle(), waitForViewReady()]);
+        // mid-paint screenshot is worse than a slightly slower one. Sequential
+        // because spinners often only appear once data has arrived.
+        await waitForNetworkIdle(1000, 15000);
+        await waitForViewReady();
         const dataUrl = await captureViewport();
         this.iframeRef.current?.contentWindow?.postMessage(
             {
