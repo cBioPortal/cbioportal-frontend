@@ -953,6 +953,33 @@ describe('WsiNavPanel', () => {
         expect(hasTestId(renderer, 'wsi-stain-filter-row')).toBe(false);
     });
 
+    it('lets the sample with the selected slide be collapsed', () => {
+        const slideA = makeSlide({ slide_key: 'slide-a' });
+        const slideB = makeSlide({ slide_key: 'slide-b' });
+        const sample = makeSample('S-1', [slideA, slideB]);
+        const panel = (selected: Slide) => (
+            <WsiNavPanel
+                hierarchy={makeHierarchy([sample])}
+                selectedSlide={selected}
+                stainFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                {...navContext}
+            />
+        );
+        const renderer = TestRenderer.create(panel(slideA));
+        const toggle = () =>
+            renderer.root.findByProps({ 'aria-label': 'S-1 slides' });
+
+        act(() => toggle().props.onClick());
+        expect(toggle().props['aria-expanded']).toBe(false);
+        expect(hasTestId(renderer, 'wsi-slide-item-slide-a')).toBe(false);
+
+        // Selecting another slide of the sample opens it again.
+        act(() => renderer.update(panel(slideB)));
+        expect(toggle().props['aria-expanded']).toBe(true);
+    });
+
     it('only expands the first sample by default', () => {
         const sample1 = makeSample('S-1', [
             makeSlide({ slide_key: 'slide-1' }),

@@ -657,11 +657,18 @@ function SampleNode({
     const servableSlides = open || containsSelectedSlide ? filteredSlides : [];
     const visibleSlideCount = filteredSlides.length;
 
+    // A slide selected in this sample (e.g. from a link or Back) opens it,
+    // once per selection, so a user can still collapse it afterwards.
+    const selectedSlideKey = containsSelectedSlide
+        ? selectedSlide?.slide_key
+        : undefined;
+    const openedForSlide = React.useRef(selectedSlideKey);
     React.useEffect(() => {
-        if (containsSelectedSlide && !open) {
+        if (selectedSlideKey && openedForSlide.current !== selectedSlideKey) {
+            openedForSlide.current = selectedSlideKey;
             setOpen(true);
         }
-    }, [containsSelectedSlide, open]);
+    }, [selectedSlideKey]);
 
     const multiPart = React.useMemo(
         () =>
