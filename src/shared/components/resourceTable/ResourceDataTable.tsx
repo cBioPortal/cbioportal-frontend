@@ -28,10 +28,6 @@ import {
     getResourceTableMetadataKeys,
 } from 'shared/lib/ResourceTableUtils';
 import { ResourceTableStore } from './ResourceTableStore';
-import {
-    getResourceConfigById,
-    ResourceCustomConfig,
-} from 'shared/lib/ResourceConfig';
 
 export interface IResourceDataTableProps {
     store: ResourceTableStore;
@@ -245,11 +241,6 @@ export class ResourceDataTable extends React.Component<
         return this.props.scopedResourceId || this.props.store.activeResourceId;
     }
 
-    // hideUrlColumn keeps a VPN-gated or otherwise internal URL off screen and out of the export.
-    @computed private get resourceConfig(): ResourceCustomConfig {
-        return getResourceConfigById(this.activeTabId);
-    }
-
     @computed get currentSortColumn() {
         const backendSortBy = this.props.store.sortBy;
         return backendSortBy
@@ -324,30 +315,22 @@ export class ResourceDataTable extends React.Component<
                 row => row.description || NO_DESCRIPTION,
                 { visible: !this.isSingleValuedColumn('description') }
             ),
-            ...(this.resourceConfig.hideUrlColumn
-                ? []
-                : [
-                      this.createColumn(
-                          'link',
-                          'Link',
-                          row => (
-                              <a
-                                  href={row.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                              >
-                                  <i
-                                      className="fa fa-external-link fa-sm"
-                                      style={{ marginRight: 5, color: 'black' }}
-                                  />
-                                  Open in new window
-                              </a>
-                          ),
-                          // The cell renders a link; a download of it is only useful as the URL.
-                          row => row.url,
-                          { sortable: false, filterable: false }
-                      ),
-                  ]),
+            this.createColumn(
+                'link',
+                'Link',
+                row => (
+                    <a href={row.url} target="_blank" rel="noopener noreferrer">
+                        <i
+                            className="fa fa-external-link fa-sm"
+                            style={{ marginRight: 5, color: 'black' }}
+                        />
+                        Open in new window
+                    </a>
+                ),
+                // The cell renders a link; a download of it is only useful as the URL.
+                row => row.url,
+                { sortable: false, filterable: false }
+            ),
         ];
     }
 
