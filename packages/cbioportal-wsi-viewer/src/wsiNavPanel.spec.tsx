@@ -512,6 +512,36 @@ describe('WsiNavPanel', () => {
         expect(hasTestId(renderer, 'wsi-match-filter-row')).toBe(false);
     });
 
+    it('leaves out the filter area when there is nothing to show in it', () => {
+        const sample = makeSample('S-1', [
+            placedSlide('part-1', 'PART'),
+            placedSlide('part-2', 'PART'),
+        ]);
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([sample])}
+                selectedSlide={null}
+                stainFilter="all"
+                matchFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                {...navContext}
+            />
+        );
+
+        expect(hasTestId(renderer, 'wsi-stain-filter-row')).toBe(false);
+        expect(hasTestId(renderer, 'wsi-match-filter-row')).toBe(false);
+        expect(hasTestId(renderer, 'wsi-filtered-slide-count')).toBe(false);
+        // No empty bar under the header: nothing but the header precedes the list.
+        expect(
+            renderer.root.findAll(
+                (node: any) =>
+                    node.type === 'div' &&
+                    node.props.style?.padding === '4px 12px 8px'
+            )
+        ).toHaveLength(0);
+    });
+
     it('shows match badges only for block- and part-matched slides', () => {
         const sample = makeSample('S-1', [
             placedSlide('block-slide', 'BLOCK'),
