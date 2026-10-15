@@ -17,7 +17,7 @@ describe('ResourceTableStore cohort context', () => {
     it('sends no case identifiers when the whole study is selected', () => {
         const store = new ResourceTableStore();
 
-        store.setContextFromSelection(allSamples, allSamples);
+        store.setContextFromSelection(allSamples, allSamples, true);
 
         assert.deepEqual(store.studyIds, ['study_a']);
         assert.deepEqual(store.patientIdentifiers, []);
@@ -58,9 +58,25 @@ describe('ResourceTableStore cohort context', () => {
             sample('study_b', 'patient_1', 'sample_1'),
         ];
 
-        store.setContextFromSelection(samples, samples);
+        store.setContextFromSelection(samples, samples, true);
 
         assert.deepEqual(store.studyIds, ['study_a', 'study_b']);
         assert.deepEqual(store.sampleIdentifiers, []);
+    });
+
+    it('sends the selection when the query does not cover the whole study', () => {
+        // A virtual study or case list queries a subset, so `all` is that subset too and the
+        // lengths match while the cohorts do not. Taking the shortcut here would widen the
+        // request to every sample of the physical study.
+        const store = new ResourceTableStore();
+
+        store.setContextFromSelection(allSamples, allSamples, false);
+
+        assert.deepEqual(store.studyIds, ['study_a']);
+        assert.deepEqual(store.sampleIdentifiers, [
+            { studyId: 'study_a', sampleId: 'sample_1' },
+            { studyId: 'study_a', sampleId: 'sample_2' },
+            { studyId: 'study_a', sampleId: 'sample_3' },
+        ]);
     });
 });

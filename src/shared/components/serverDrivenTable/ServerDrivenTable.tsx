@@ -1,5 +1,7 @@
 import * as React from 'react';
 import classNames from 'classnames';
+import { getServerConfig } from 'config/config';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
 import { action, computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import { ButtonToolbar } from 'react-bootstrap';
@@ -136,6 +138,15 @@ export default class ServerDrivenTable<T> extends React.Component<
         if (this.searchTimeout !== undefined) {
             window.clearTimeout(this.searchTimeout);
         }
+    }
+
+    // A portal configured to hide download controls must not get one here either.
+    @computed
+    private get showDownloadControls(): boolean {
+        return (
+            getServerConfig().skin_hide_download_controls ===
+            DownloadControlOption.SHOW_ALL
+        );
     }
 
     @computed
@@ -808,17 +819,18 @@ export default class ServerDrivenTable<T> extends React.Component<
                                 onColumnToggled={this.toggleColumnVisibility}
                             />
                         )}
-                        {this.props.downloadAllRows && (
-                            <CopyDownloadControls
-                                downloadData={this.getDownloadData}
-                                downloadFilename={
-                                    this.props.downloadFilename ||
-                                    'resources.tsv'
-                                }
-                                showCopy={false}
-                                controlsStyle="BUTTON"
-                            />
-                        )}
+                        {this.props.downloadAllRows &&
+                            this.showDownloadControls && (
+                                <CopyDownloadControls
+                                    downloadData={this.getDownloadData}
+                                    downloadFilename={
+                                        this.props.downloadFilename ||
+                                        'resources.tsv'
+                                    }
+                                    showCopy={false}
+                                    controlsStyle="BUTTON"
+                                />
+                            )}
                     </div>
                 </ButtonToolbar>
             </div>

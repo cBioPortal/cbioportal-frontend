@@ -84,18 +84,23 @@ export class ResourceTableStore {
      * Sets the cohort from a study view selection.
      *
      * The backend reads a request carrying no patient or sample identifiers as the whole of
-     * `studyIds`, so when every sample is selected the identifiers describe the same cohort at a
-     * cost that grows with the study. A study view opened without filters is exactly that case,
-     * and it is also the largest: the identifiers would be sent again on every page turn, sort and
-     * filter change. Passing `all` as undefined (the sample set has not loaded yet) keeps the
-     * explicit list, which is correct either way.
+     * `studyIds`, so sending none is cheaper when the selection already is the whole study. That
+     * shortcut is only equivalent when the query covers the whole physical study: a virtual study
+     * or case list queries a subset, and `all` is then that subset too, so the counts match while
+     * the cohorts do not. `coversWholeStudy` false, or `all` not yet loaded, keeps the explicit
+     * list, which is correct either way.
      */
     @action
     setContextFromSelection(
         selected: Pick<Sample, 'studyId' | 'patientId' | 'sampleId'>[],
-        all: Pick<Sample, 'studyId'>[] | undefined
+        all: Pick<Sample, 'studyId'>[] | undefined,
+        coversWholeStudy: boolean = false
     ) {
-        if (all !== undefined && selected.length === all.length) {
+        if (
+            coversWholeStudy &&
+            all !== undefined &&
+            selected.length === all.length
+        ) {
             this.setContext(_.uniq(selected.map(s => s.studyId)));
         } else {
             this.setContextFromSamples(selected);

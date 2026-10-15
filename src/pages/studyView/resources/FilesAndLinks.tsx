@@ -27,7 +27,8 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
             if (!samples) return;
             this.resourceTableStore.setContextFromSelection(
                 samples,
-                this.props.store.samples.result
+                this.props.store.samples.result,
+                _.isEmpty(this.props.store.queriedSampleIdentifiers.result)
             );
         });
     }

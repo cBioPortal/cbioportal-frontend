@@ -322,12 +322,22 @@ export default class StudyViewPage extends React.Component<
             const samples = this.store.selectedSamples.result;
             if (!samples) return;
             const allSamples = this.store.samples.result;
+            // store.samples is itself filtered to the queried identifiers for a virtual study or
+            // case list, so "every sample is selected" does not mean "the whole study" there.
+            const coversWholeStudy = _.isEmpty(
+                this.store.queriedSampleIdentifiers.result
+            );
             this.resourceTableStore.setContextFromSelection(
                 samples,
-                allSamples
+                allSamples,
+                coversWholeStudy
             );
             this.resourceTableStores.forEach(store =>
-                store.setContextFromSelection(samples, allSamples)
+                store.setContextFromSelection(
+                    samples,
+                    allSamples,
+                    coversWholeStudy
+                )
             );
         });
 
@@ -360,7 +370,8 @@ export default class StudyViewPage extends React.Component<
             if (samples) {
                 store.setContextFromSelection(
                     samples,
-                    this.store.samples.result
+                    this.store.samples.result,
+                    _.isEmpty(this.store.queriedSampleIdentifiers.result)
                 );
             }
         }

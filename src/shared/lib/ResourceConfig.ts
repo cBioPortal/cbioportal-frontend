@@ -53,15 +53,23 @@ export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {
     },
 };
 
+/**
+ * The dictionary entry for a resource id. The server-driven resource table has the id but not
+ * the whole definition, so it uses this; getResourceConfig layers customMetaData on top.
+ */
+export function getResourceConfigById(
+    resourceId: string | undefined
+): ResourceCustomConfig {
+    return resourceId && RESOURCE_CUSTOM_CONFIGS[resourceId]
+        ? { ...RESOURCE_CUSTOM_CONFIGS[resourceId] }
+        : {};
+}
+
 export function getResourceConfig(
     def: ResourceDefinition
 ): ResourceCustomConfig {
-    let config: ResourceCustomConfig = {};
-
     // 1. Load from local dictionary
-    if (def.resourceId && RESOURCE_CUSTOM_CONFIGS[def.resourceId]) {
-        config = { ...RESOURCE_CUSTOM_CONFIGS[def.resourceId] };
-    }
+    let config: ResourceCustomConfig = getResourceConfigById(def.resourceId);
 
     // 2. Override with customMetaData
     if (def.customMetaData) {
