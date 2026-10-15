@@ -283,6 +283,25 @@ function WsiNavPanelComponent({
             ),
         [filteredSampleEntries]
     );
+    const totalSlideCount = React.useMemo(
+        () =>
+            unscopedSampleEntries.reduce(
+                (count, entry) => count + entry.filteredSlides.length,
+                0
+            ),
+        [unscopedSampleEntries]
+    );
+    // The count only says something when filters or a link scope narrow the
+    // list; otherwise the list shows every slide anyway.
+    const slideCountText =
+        filteredSlideCount === 0
+            ? emptyPatientMessage || 'No slides match these filters'
+            : filteredSlideCount < totalSlideCount
+            ? `Showing ${filteredSlideCount} of ${totalSlideCount} ${pluralize(
+                  'slide',
+                  totalSlideCount
+              )}`
+            : undefined;
     const hiddenSampleCount =
         filteredSampleEntries.length - sampleEntries.length;
     const facetSlides = React.useMemo(
@@ -443,21 +462,18 @@ function WsiNavPanelComponent({
                         Show all slides
                     </button>
                 )}
-                <div
-                    style={{
-                        marginTop: 6,
-                        color: theme.muted,
-                        fontSize: 12,
-                    }}
-                    data-testid="wsi-filtered-slide-count"
-                >
-                    {filteredSlideCount === 0
-                        ? emptyPatientMessage || 'No slides match these filters'
-                        : `Showing ${filteredSlideCount} ${pluralize(
-                              'slide',
-                              filteredSlideCount
-                          )}`}
-                </div>
+                {slideCountText && (
+                    <div
+                        style={{
+                            marginTop: 6,
+                            color: theme.muted,
+                            fontSize: 12,
+                        }}
+                        data-testid="wsi-filtered-slide-count"
+                    >
+                        {slideCountText}
+                    </div>
+                )}
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '6px 0' }}>
                 {sampleEntries.map(

@@ -748,7 +748,7 @@ describe('WsiNavPanel', () => {
                     'data-testid': 'wsi-filtered-slide-count',
                 })
                 .children.join('')
-        ).toBe('Showing 3 slides');
+        ).toBe('Showing 3 of 4 slides');
     });
 
     it('updates stain filter counts when the match filter changes', () => {
@@ -830,9 +830,8 @@ describe('WsiNavPanel', () => {
 
         // A single Other slide leaves no stain to choose between.
         expect(hasTestId(renderer, 'wsi-stain-filter-row')).toBe(false);
-        expect(findButtonText(renderer, 'wsi-filtered-slide-count')).toBe(
-            'Showing 1 slide'
-        );
+        // Nothing is filtered, so there is no count to show.
+        expect(hasTestId(renderer, 'wsi-filtered-slide-count')).toBe(false);
     });
 
     it('classifies by the resolved stain flags, not the source stain group, for slides and facet counts', () => {
@@ -1046,7 +1045,7 @@ describe('WsiNavPanel', () => {
                     'data-testid': 'wsi-filtered-slide-count',
                 }).children
             )
-        ).toContain('Showing 1 slide');
+        ).toContain('Showing 1 of 2 slides');
 
         act(() => {
             renderer.root
