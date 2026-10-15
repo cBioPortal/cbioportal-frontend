@@ -630,7 +630,7 @@ export function tabs(
         </MSKTab>
     );
 
-    const tileServerUrl = getServerConfig().msk_wsi_tile_server_url;
+    const tileServerUrl = getServerConfig().wsi_tile_server_url;
     if (tileServerUrl && pageComponent.shouldShowPathologySlides) {
         tabs.push(
             <MSKTab

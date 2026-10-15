@@ -40,13 +40,13 @@ describe('getResourceConfig', () => {
         let savedUrl: any;
 
         beforeEach(() => {
-            savedUrl = (getServerConfig() as any).msk_wsi_tile_server_url;
-            (getServerConfig() as any).msk_wsi_tile_server_url =
+            savedUrl = (getServerConfig() as any).wsi_tile_server_url;
+            (getServerConfig() as any).wsi_tile_server_url =
                 'https://slides.example.com';
         });
 
         afterEach(() => {
-            (getServerConfig() as any).msk_wsi_tile_server_url = savedUrl;
+            (getServerConfig() as any).wsi_tile_server_url = savedUrl;
         });
 
         it('returns the full MSK_HNE config', () => {

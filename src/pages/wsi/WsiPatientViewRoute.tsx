@@ -20,7 +20,7 @@ export default function WsiPatientViewRoute({ match, location }: Props) {
         typeof query.slideKey === 'string' && query.slideKey
             ? query.slideKey
             : undefined;
-    const tileServerUrl = getServerConfig().msk_wsi_tile_server_url;
+    const tileServerUrl = getServerConfig().wsi_tile_server_url;
 
     if (!studyId || !tileServerUrl) {
         return (

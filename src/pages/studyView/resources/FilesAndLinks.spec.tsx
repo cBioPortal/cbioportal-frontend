@@ -29,13 +29,13 @@ describe('FilesAndLinks WSI resource filtering', () => {
     let savedTileServerUrl: unknown;
 
     beforeEach(() => {
-        savedTileServerUrl = (getServerConfig() as any).msk_wsi_tile_server_url;
-        (getServerConfig() as any).msk_wsi_tile_server_url =
+        savedTileServerUrl = (getServerConfig() as any).wsi_tile_server_url;
+        (getServerConfig() as any).wsi_tile_server_url =
             'https://slides.example.com';
     });
 
     afterEach(() => {
-        (getServerConfig() as any).msk_wsi_tile_server_url = savedTileServerUrl;
+        (getServerConfig() as any).wsi_tile_server_url = savedTileServerUrl;
         jest.restoreAllMocks();
     });
 

@@ -51,7 +51,7 @@ The cBioPortal app does both in `src/shared/components/wsiViewer/wsiAppConfig.ts
 | Prop | Purpose |
 | --- | --- |
 | `studyId`, `patientId` | The patient whose slides are shown. Changing `patientId` reloads the viewer in place |
-| `tileServerUrl` | Tile-server base URL (e.g. the portal's `msk.wsi.tile_server.url`) |
+| `tileServerUrl` | Tile-server base URL (e.g. the portal's `wsi.tile_server.url`) |
 | `authScope` | Subject used to isolate protected in-memory caches, normally the user name |
 | `height` | Viewer height in pixels |
 | `requestedSlideKey` | Slide to open, as from a `slideKey` viewer link. A `#wsi:` hash with a viewport takes precedence |
