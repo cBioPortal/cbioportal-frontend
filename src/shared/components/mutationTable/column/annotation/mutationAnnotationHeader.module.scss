@@ -1,0 +1,73 @@
+.header {
+    display: inline-block;
+}
+
+.name {
+    border-bottom: 1px dotted #999;
+    cursor: help;
+}
+
+.iconLine {
+    display: block;
+    height: 14px;
+}
+
+/* in the bottom right corner of the header cell (which is positioned, as
+   it sticks), over the predictions at the end of the cells */
+.functionalImpactIcons {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    font-weight: normal;
+}
+
+.tooltip {
+    max-width: 480px;
+}
+
+.sources {
+    th {
+        padding: 2px 10px 2px 0;
+        vertical-align: top;
+        white-space: nowrap;
+    }
+
+    td {
+        padding: 2px 0;
+    }
+}
+
+.source {
+    display: inline-block;
+    margin-right: 10px;
+    border-bottom: 1px dotted #999;
+    cursor: default;
+}
+
+.activeSource {
+    border-bottom: 2px solid #3786c2;
+}
+
+.hint {
+    margin: 4px 0 6px;
+    color: #888;
+    font-size: 11px;
+}
+
+.legend {
+    padding-top: 6px;
+    border-top: 1px solid #ddd;
+}
+
+/* the functional impact predictions at the end of the cell, under their
+   icons in the header */
+.cell {
+    display: flex;
+    align-items: center;
+}
+
+.cellFunctionalImpact {
+    margin-left: auto;
+    padding-left: 12px;
+    white-space: nowrap;
+}

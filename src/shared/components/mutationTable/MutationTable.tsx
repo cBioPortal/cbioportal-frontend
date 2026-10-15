@@ -44,6 +44,8 @@ import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAs
 import { ILazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import { ILazyMobXTableApplicationLazyDownloadDataFetcher } from 'shared/lib/ILazyMobXTableApplicationLazyDownloadDataFetcher';
 import generalStyles from './column/styles.module.scss';
+import annotationHeaderStyles from './column/annotation/mutationAnnotationHeader.module.scss';
+import MutationAnnotationHeader from './column/annotation/MutationAnnotationHeader';
 import classnames from 'classnames';
 import { IPaginationControlsProps } from '../paginationControls/PaginationControls';
 import { IColumnVisibilityControlsProps } from '../columnVisibilityControls/ColumnVisibilityControls';
@@ -1069,16 +1071,21 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.ANNOTATION] = {
             name: MutationTableColumnType.ANNOTATION,
-            headerRender: (name: string) =>
-                AnnotationColumnFormatter.headerRender(
-                    name,
-                    this.oncokbWidth,
-                    this.props.mergeOncoKbIcons,
-                    this.handleOncoKbIconModeToggle,
-                    this.shouldShowRevue
-                ),
+            headerRender: (name: string) => (
+                <MutationAnnotationHeader
+                    name={name}
+                    mergeOncoKbIcons={this.props.mergeOncoKbIcons}
+                    onOncoKbIconToggle={this.handleOncoKbIconModeToggle}
+                    showRevue={!!this.props.enableRevue && this.shouldShowRevue}
+                    enableFunctionalImpact={!!this.props.enableFunctionalImpact}
+                    showFunctionalImpact={this.showFunctionalImpact}
+                />
+            ),
             render: (d: Mutation[]) => (
-                <span id="mutation-annotation">
+                <span
+                    id="mutation-annotation"
+                    className={annotationHeaderStyles.cell}
+                >
                     {AnnotationColumnFormatter.renderFunction(d, {
                         hotspotData: this.props.hotspotData,
                         oncoKbData: this.props.oncoKbData,
@@ -1102,6 +1109,19 @@ export default class MutationTable<
                             .indexedVariantAnnotations,
                         resolveTumorType: this.resolveTumorType,
                     })}
+                    {this.showFunctionalImpact && (
+                        <span
+                            className={
+                                annotationHeaderStyles.cellFunctionalImpact
+                            }
+                        >
+                            {FunctionalImpactColumnFormatter.renderFunction(
+                                d,
+                                this.props.genomeNexusMutationAssessorCache,
+                                this.props.selectedTranscriptId
+                            )}
+                        </span>
+                    )}
                 </span>
             ),
             filter: (
@@ -1520,8 +1540,18 @@ export default class MutationTable<
         });
     }
 
+    // the functional impact predictions are shown in the annotation column
+    @computed get showFunctionalImpact(): boolean {
+        return (
+            !!this.table &&
+            this.table.isColumnVisible(
+                MutationTableColumnType.FUNCTIONAL_IMPACT
+            )
+        );
+    }
+
     @computed protected get columns(): Column<Mutation[]>[] {
-        return this.orderedColumns.reduce(
+        const columns = this.orderedColumns.reduce(
             (
                 columns: Column<Mutation[]>[],
                 next: ExtendedMutationTableColumnType
@@ -1538,6 +1568,17 @@ export default class MutationTable<
                 return columns;
             },
             []
+        );
+        // the functional impact is shown in the annotation column, if there
+        // is one (e.g. not for a non-canonical transcript)
+        const hasAnnotation = columns.some(
+            c => c.name === MutationTableColumnType.ANNOTATION
+        );
+        return columns.map(column =>
+            hasAnnotation &&
+            column.name === MutationTableColumnType.FUNCTIONAL_IMPACT
+                ? { ...column, renderedIn: MutationTableColumnType.ANNOTATION }
+                : column
         );
     }
 

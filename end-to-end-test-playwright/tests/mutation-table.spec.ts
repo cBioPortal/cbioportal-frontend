@@ -364,7 +364,7 @@ test.describe(
 test.describe(
     'mutation table: functional impact in the annotation filter',
     () => {
-        test('filters by a functional impact prediction and shows its column', async ({
+        test('filters by a functional impact prediction and shows the predictions', async ({
             browser,
         }) => {
             const page = await browser.newPage({
@@ -372,10 +372,13 @@ test.describe(
             });
             await page.goto(BRCA_BROAD_URL);
             await waitForTable(page, 120000);
-            const functionalImpactHeader = page
-                .locator('.lazy-mobx-table')
-                .getByRole('columnheader', { name: /^Functional Impact/ });
-            await expect(functionalImpactHeader).toHaveCount(0);
+            // the predictor icons are in the annotation header while the
+            // predictions are shown
+            const functionalImpactIcons = byTestHandle(
+                page,
+                'annotation-functional-impact-icons'
+            );
+            await expect(functionalImpactIcons).toHaveCount(0);
 
             const annotationTh = page
                 .locator('.lazy-mobx-table th', { hasText: 'Annotation' })
@@ -404,7 +407,7 @@ test.describe(
             await expect(deleterious).toBeVisible({ timeout: 60000 });
             await deleterious.locator('input').check();
 
-            await expect(functionalImpactHeader).toHaveCount(1);
+            await expect(functionalImpactIcons).toBeVisible();
             // the group stays expanded while it has a selection
             await expect(
                 byTestHandle(

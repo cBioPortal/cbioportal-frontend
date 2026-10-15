@@ -278,7 +278,7 @@ function getOncokbTabs() {
     });
 }
 
-const OncokbLegendContent: React.FunctionComponent<{}> = props => {
+export const OncokbLegendContent: React.FunctionComponent<{}> = props => {
     return (
         <Tabs
             defaultActiveKey={OncokbTabs.ONCOGENIC}
@@ -290,7 +290,7 @@ const OncokbLegendContent: React.FunctionComponent<{}> = props => {
     );
 };
 
-const OncoKbControls: React.FunctionComponent<{
+export const OncoKbControls: React.FunctionComponent<{
     mergeIcons?: boolean;
     handleChange?: (mergeIcons: boolean) => void;
 }> = props => {

@@ -764,6 +764,25 @@ describe('LazyMobXTable', () => {
             );
         });
 
+        it('does not show a column rendered in another one as a column of its own', () => {
+            const rendered = { ...columns[1], renderedIn: columns[0].name };
+            const table = mount(
+                <Table
+                    columns={[columns[0], rendered, ...columns.slice(2)]}
+                    data={data}
+                />
+            );
+            const headers = table
+                .find(SimpleTable)
+                .find('th')
+                .map(x => x.text());
+            assert.notInclude(headers, rendered.name);
+            // still in the columns menu, as it can be shown and hidden
+            assert.isTrue(
+                (table.instance() as Table).isColumnVisible(rendered.name)
+            );
+        });
+
         it('should have the column resizer next to the first column', () => {
             columns[0].resizable = true;
             let table = mount(<Table columns={columns} data={data} />);
