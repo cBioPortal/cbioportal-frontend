@@ -980,6 +980,37 @@ describe('WsiNavPanel', () => {
         expect(toggle().props['aria-expanded']).toBe(true);
     });
 
+    it('reopens a collapsed sample when its slide is selected again', () => {
+        const slideA = makeSlide({ slide_key: 'slide-a', sample_id: 'S-1' });
+        const slideC = makeSlide({ slide_key: 'slide-c', sample_id: 'S-2' });
+        const samples = [
+            makeSample('S-1', [slideA]),
+            makeSample('S-2', [slideC]),
+        ];
+        const panel = (selected: Slide) => (
+            <WsiNavPanel
+                hierarchy={makeHierarchy(samples)}
+                selectedSlide={selected}
+                stainFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                {...navContext}
+            />
+        );
+        const renderer = TestRenderer.create(panel(slideA));
+        const s1 = () =>
+            renderer.root.findByProps({ 'aria-label': 'S-1 slides' });
+
+        act(() => s1().props.onClick());
+        expect(s1().props['aria-expanded']).toBe(false);
+
+        // Select a slide elsewhere, then go Back to the first one.
+        act(() => renderer.update(panel(slideC)));
+        expect(s1().props['aria-expanded']).toBe(false);
+        act(() => renderer.update(panel(slideA)));
+        expect(s1().props['aria-expanded']).toBe(true);
+    });
+
     it('only expands the first sample by default', () => {
         const sample1 = makeSample('S-1', [
             makeSlide({ slide_key: 'slide-1' }),

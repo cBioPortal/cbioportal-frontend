@@ -664,7 +664,13 @@ function SampleNode({
         : undefined;
     const openedForSlide = React.useRef(selectedSlideKey);
     React.useEffect(() => {
-        if (selectedSlideKey && openedForSlide.current !== selectedSlideKey) {
+        if (!selectedSlideKey) {
+            // The selection left the sample: selecting one of its slides
+            // again (e.g. Back) opens it again.
+            openedForSlide.current = undefined;
+            return;
+        }
+        if (openedForSlide.current !== selectedSlideKey) {
             openedForSlide.current = selectedSlideKey;
             setOpen(true);
         }
