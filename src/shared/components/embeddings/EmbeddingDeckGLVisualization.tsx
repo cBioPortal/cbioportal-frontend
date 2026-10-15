@@ -18,7 +18,7 @@ import { SelectionOverlay } from './overlays/SelectionOverlay';
 // Import utility functions
 import { dataToScreen, colorToRgb } from './utils/coordinateUtils';
 import { calculateDataBounds } from './utils/dataUtils';
-import { createScatterplotLayer } from './utils/layerUtils';
+import { createScatterplotLayer, createIconLayer } from './utils/layerUtils';
 
 interface EmbeddingDeckGLVisualizationState {
     hoveredPoint: EmbeddingPoint | null;
@@ -130,8 +130,17 @@ export class EmbeddingDeckGLVisualization extends React.Component<
 
         if (!data || data.length === 0) return [];
 
+        // shapeByEnabled is still a standalone flag (currently hardcoded on
+        // by the caller) rather than being derived from whether a shape-by
+        // attribute is actually selected. IconLayer replaces ScatterplotLayer
+        // entirely rather than running alongside it, so the common case
+        // (shape off) never pays for the icon atlas/texture setup.
+        const createLayer = this.props.shapeByEnabled
+            ? createIconLayer
+            : createScatterplotLayer;
+
         return [
-            createScatterplotLayer(
+            createLayer(
                 data,
                 selectedPoints,
                 this.props.selectedPatientIds || [],
@@ -248,6 +257,10 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 onGradientOverrideReset={this.props.onGradientOverrideReset}
                 onClipToPercentile={this.props.onClipToPercentile}
                 isFilterActive={this.props.isFilterActive}
+                shapeLegendEntries={this.props.shapeLegendEntries}
+                shapeAttributeDisplayName={
+                    this.props.shapeAttributeDisplayName
+                }
             />
         );
     }
@@ -422,7 +435,12 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 return;
             }
 
-            // Use deck.gl's built-in picking to get objects in bounding box
+            // Use deck.gl's built-in picking to get objects in bounding box.
+            // Only one of these two layer ids is actually rendered at a
+            // time (see getLayers()/layerUtils.ts), depending on
+            // shapeByEnabled - listing both means picking still works
+            // whichever one is currently active.
+            const activeLayerIds = ['embedding-scatter', 'embedding-icons'];
             let pickedObjects: any[] = [];
 
             if (typeof deck.pickObjects === 'function') {
@@ -431,7 +449,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                     y: minY,
                     width,
                     height,
-                    layerIds: ['embedding-scatter'],
+                    layerIds: activeLayerIds,
                 });
             } else if (typeof deck.pickMultipleObjects === 'function') {
                 pickedObjects = deck.pickMultipleObjects({
@@ -439,7 +457,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                     y: minY,
                     width,
                     height,
-                    layerIds: ['embedding-scatter'],
+                    layerIds: activeLayerIds,
                 });
             } else {
                 // Fallback: sample multiple points within the bounding box
@@ -451,7 +469,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                             const picked = deck.pickObject({
                                 x,
                                 y,
-                                layerIds: ['embedding-scatter'],
+                                layerIds: activeLayerIds,
                             });
                             if (picked && picked.object) {
                                 samplePoints.push(picked);
