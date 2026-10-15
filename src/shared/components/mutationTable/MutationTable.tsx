@@ -1075,6 +1075,7 @@ export default class MutationTable<
             headerRender: (name: string) => (
                 <MutationAnnotationHeader
                     name={name}
+                    oncoKbWidth={this.oncokbWidth}
                     annotationSpace={this.annotationSpace}
                     mergeOncoKbIcons={this.props.mergeOncoKbIcons}
                     onOncoKbIconToggle={this.handleOncoKbIconModeToggle}

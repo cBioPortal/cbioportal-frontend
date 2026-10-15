@@ -28,7 +28,7 @@ describe('MutationAnnotationHeader', () => {
         assert.include(tooltip.text(), 'Functional impact (hidden)');
         tooltip
             .find('[data-test="annotation-source-cancerHotspots"]')
-            .simulate('mouseenter');
+            .simulate('click');
         assert.include(tooltip.text(), 'recurrent mutational hotspots');
     });
 

@@ -419,11 +419,17 @@ const AnnotationHeader: React.FunctionComponent<{
     mergeOncoKbIcons?: boolean;
     onOncoKbIconToggle?: (mergeIcons: boolean) => void;
     showRevueIcon?: boolean;
+    // only the icons, without the name
+    iconsOnly?: boolean;
 }> = props => {
     return (
         <span>
-            {props.name}
-            <br />
+            {!props.iconsOnly && (
+                <>
+                    {props.name}
+                    <br />
+                </>
+            )}
             {getServerConfig().show_oncokb && (
                 <DefaultTooltip
                     placement="top"

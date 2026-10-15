@@ -2,7 +2,7 @@ import * as React from 'react';
 import classNames from 'classnames';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { getServerConfig } from 'config/config';
-import {
+import AnnotationHeader, {
     AnnotationHeaderTooltipCard,
     AnnotationSources,
     cancerHotspotsData,
@@ -27,6 +27,8 @@ type Source = {
 
 export interface IMutationAnnotationHeaderProps {
     name: string;
+    // width of the OncoKB icons in the cells
+    oncoKbWidth?: number;
     // annotation icons as in the cells, whose space is left before the
     // functional impact icons, so they are over the predictions
     annotationSpace?: React.ReactNode;
@@ -124,7 +126,7 @@ function getSources(props: IMutationAnnotationHeaderProps) {
 
 /**
  * Lists the annotation sources, in the order of their icons in the cells;
- * hovering a source shows its legend.
+ * clicking a source shows its legend.
  */
 export const AnnotationSourcesTooltip: React.FunctionComponent<IMutationAnnotationHeaderProps> = props => {
     const { oncogenicity, functionalImpact } = getSources(props);
@@ -134,16 +136,17 @@ export const AnnotationSourcesTooltip: React.FunctionComponent<IMutationAnnotati
     );
     const active = all.find(source => source.id === activeId);
     const sourceLink = (source: Source) => (
-        <span
+        <button
             key={source.id}
-            className={classNames(styles.source, {
+            type="button"
+            className={classNames('btn btn-link btn-xs', styles.source, {
                 [styles.activeSource]: source.id === activeId,
             })}
-            onMouseEnter={() => setActiveId(source.id)}
+            onClick={() => setActiveId(source.id)}
             data-test={`annotation-source-${source.id}`}
         >
             {source.name}
-        </span>
+        </button>
     );
     return (
         <div className={styles.tooltip} data-test="annotation-sources-tooltip">
@@ -166,7 +169,7 @@ export const AnnotationSourcesTooltip: React.FunctionComponent<IMutationAnnotati
                     )}
                 </tbody>
             </table>
-            <div className={styles.hint}>Hover a source for its legend.</div>
+            <div className={styles.hint}>Click a source for its legend.</div>
             {active && <div className={styles.legend}>{active.legend()}</div>}
         </div>
     );
@@ -174,24 +177,45 @@ export const AnnotationSourcesTooltip: React.FunctionComponent<IMutationAnnotati
 
 /**
  * Header of the mutation annotation column: its name, with the sources as
- * tooltip, and the icons of the functional impact predictors over their
- * predictions, which follow the other annotations in the cells.
+ * tooltip, and the icon of each source, with its legend as tooltip. The
+ * icons of the functional impact predictors are over their predictions,
+ * which follow the other annotations in the cells.
  */
-const MutationAnnotationHeader: React.FunctionComponent<IMutationAnnotationHeaderProps> = props => (
-    <span className={styles.header}>
-        <DefaultTooltip
-            placement="top"
-            overlay={() => <AnnotationSourcesTooltip {...props} />}
-            destroyTooltipOnHide={true}
-        >
-            <span>{props.name}</span>
-        </DefaultTooltip>
-        {props.showFunctionalImpact && (
-            <>
-                <span className={styles.iconLine} />
+const MutationAnnotationHeader: React.FunctionComponent<IMutationAnnotationHeaderProps> = props => {
+    const annotationIcons = (
+        <AnnotationHeader
+            name={props.name}
+            width={props.oncoKbWidth || 0}
+            mergeOncoKbIcons={props.mergeOncoKbIcons}
+            onOncoKbIconToggle={props.onOncoKbIconToggle}
+            showRevueIcon={props.showRevue}
+            iconsOnly={true}
+        />
+    );
+    return (
+        <span className={styles.header}>
+            {/* below the name, so the sources stay in place when the
+                legend under them changes height */}
+            <DefaultTooltip
+                placement="bottomLeft"
+                mouseLeaveDelay={0.3}
+                overlay={() => <AnnotationSourcesTooltip {...props} />}
+                destroyTooltipOnHide={true}
+            >
+                <span>{props.name}</span>
+            </DefaultTooltip>
+            <br />
+            {props.showFunctionalImpact ? (
                 <span className={styles.iconRow}>
-                    <span className={styles.annotationSpace} aria-hidden>
-                        {props.annotationSpace}
+                    {/* the annotation icons take the space of those in the
+                        cells, so the predictor icons are over the predictions */}
+                    <span className={styles.annotationIcons}>
+                        <span className={styles.annotationSpace} aria-hidden>
+                            {props.annotationSpace}
+                        </span>
+                        <span className={styles.annotationIconsOverlay}>
+                            {annotationIcons}
+                        </span>
                     </span>
                     <span
                         className={styles.functionalImpactIcons}
@@ -200,9 +224,11 @@ const MutationAnnotationHeader: React.FunctionComponent<IMutationAnnotationHeade
                         {FunctionalImpactColumnFormatter.headerIcons()}
                     </span>
                 </span>
-            </>
-        )}
-    </span>
-);
+            ) : (
+                annotationIcons
+            )}
+        </span>
+    );
+};
 
 export default MutationAnnotationHeader;

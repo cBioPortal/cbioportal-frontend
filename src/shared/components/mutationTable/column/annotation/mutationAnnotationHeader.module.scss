@@ -1,28 +1,30 @@
 .header {
-    position: relative;
     display: inline-block;
 }
 
-/* a line for the icons, which are positioned on it so they do not widen
-   the header, keeping its filter icon next to the name */
-.iconLine {
-    display: block;
-    height: 14px;
-}
-
 .iconRow {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     white-space: nowrap;
 }
 
+.annotationIcons {
+    position: relative;
+    display: inline-block;
+}
+
 .annotationSpace {
+    display: block;
     visibility: hidden;
-    height: 14px;
+    height: 16px;
     overflow: hidden;
+}
+
+.annotationIconsOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    white-space: nowrap;
 }
 
 /* the annotation icons have a minimum width, which would leave a gap
@@ -54,15 +56,26 @@
     }
 }
 
+/* bootstrap link buttons, laid out as text */
 .source {
-    display: inline-block;
-    margin-right: 10px;
-    border-bottom: 1px dotted #999;
-    cursor: default;
+    margin: 0 12px 0 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    vertical-align: baseline !important;
+    white-space: normal !important;
+    text-align: left !important;
+
+    &:focus,
+    &:active {
+        outline: none !important;
+        box-shadow: none !important;
+    }
 }
 
 .activeSource {
-    border-bottom: 2px solid #3786c2;
+    color: #333 !important;
+    font-weight: bold !important;
+    text-decoration: none !important;
 }
 
 .hint {
