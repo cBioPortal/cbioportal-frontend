@@ -40,12 +40,17 @@ function makeDefinition(
     overrides: Partial<ResourceDefinition> = {}
 ): ResourceDefinition {
     return {
-        customMetaData: '',
+        // The per-resource overrides a definition can carry. The dictionary in ResourceConfig is
+        // empty, so customMetaData is how a resource configures the viewer.
+        customMetaData: JSON.stringify({
+            openInNewTab: true,
+            iframeErrorMessage: VPN_WARNING_MESSAGE,
+        }),
         description: '',
         displayName: 'H&E Slide',
         openByDefault: false,
         priority: '1',
-        resourceId: 'MSK_HNE',
+        resourceId: 'SLIDE_VIEWER',
         resourceType: 'PATIENT',
         studyId: 'study1',
         ...overrides,
@@ -56,7 +61,7 @@ function makeResourceData(overrides: Partial<ResourceData> = {}): ResourceData {
     return {
         patientId: 'PATIENT_1',
         resourceDefinition: makeDefinition(),
-        resourceId: 'MSK_HNE',
+        resourceId: 'SLIDE_VIEWER',
         sampleId: 'SAMPLE_1',
         studyId: 'study1',
         uniquePatientKey: 'PATIENT_1',
