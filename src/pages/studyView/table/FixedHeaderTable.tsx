@@ -175,6 +175,21 @@ export default class FixedHeaderTable<T> extends React.Component<
         });
     }
 
+    public getDownloadRowsData(data?: T[]): T[] {
+        if (data === undefined) {
+            return this._store.dataStore.sortedData;
+        }
+        const fixedTopRows = this.props.fixedTopRowsData || [];
+        return [
+            ...fixedTopRows,
+            ...lazyMobXTableSort(
+                data.filter(row => !fixedTopRows.includes(row)),
+                this._store.dataStore.sortMetric || (() => 0),
+                this._store.dataStore.sortAscending !== false
+            ),
+        ];
+    }
+
     @autobind
     rowClassName({ index }: any) {
         if (
@@ -412,7 +427,9 @@ export default class FixedHeaderTable<T> extends React.Component<
             >
                 {!this.props.showControlsAtTop && (
                     <input
-                        placeholder={this.props.searchPlaceholder || 'Search...'}
+                        placeholder={
+                            this.props.searchPlaceholder || 'Search...'
+                        }
                         type="text"
                         onInput={this.onFilterTextChange()}
                         aria-label="Search table"
@@ -475,7 +492,9 @@ export default class FixedHeaderTable<T> extends React.Component<
                     ))}
                 {this.props.showControlsAtTop && (
                     <input
-                        placeholder={this.props.searchPlaceholder || 'Search...'}
+                        placeholder={
+                            this.props.searchPlaceholder || 'Search...'
+                        }
                         type="text"
                         onInput={this.onFilterTextChange()}
                         ref={this.setInputRef}
