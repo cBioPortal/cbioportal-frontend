@@ -8004,7 +8004,16 @@ export class StudyViewPageStore
             this.shouldDisplaySampleTreatmentTarget.result,
             this.shouldDisplayPatientTreatmentTarget.result
         );
-        return chartMetaSet;
+        return _.keyBy(
+            _.filter(
+                chartMetaSet,
+                chartMeta =>
+                    chartMeta.clinicalAttribute !== undefined ||
+                    chartMeta.uniqueKey ===
+                        SpecialChartsUniqueKeyEnum.CANCER_STUDIES
+            ),
+            chartMeta => chartMeta.uniqueKey
+        );
     }
 
     // all chart meta information
