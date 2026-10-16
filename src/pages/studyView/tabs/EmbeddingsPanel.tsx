@@ -23,7 +23,9 @@ import {
     EMBEDDING_DATA_PREFIX,
     preComputeEmbeddingDataColors,
     getGeneAlterationLabel,
+    ExpressionColoring,
 } from 'shared/components/plots/EmbeddingPlotUtils';
+import { interpolateReds } from 'd3-scale-chromatic';
 import {
     EmbeddingDeckGLVisualization,
     EmbeddingDataOption,
@@ -158,6 +160,7 @@ export class EmbeddingsPanel extends React.Component<
     @observable private mutationTypeEnabled = true;
     @observable private copyNumberEnabled = true;
     @observable private structuralVariantEnabled = true;
+    @observable private mrnaEnabled = false;
     @observable private selectedEmbeddingValue: string = 'msk_mosaic_2026_he';
     @observable.ref private viewState: ViewState = {
         target: [0, 0, 0],
@@ -1118,6 +1121,16 @@ export class EmbeddingsPanel extends React.Component<
                         )
                     );
                 }
+                if (this.mrnaEnabled && this.mrnaMolecularProfileId) {
+                    toAwait.push(
+                        this.store.plotsTabStore.numericGeneMolecularDataCache.get(
+                            {
+                                entrezGeneId,
+                                molecularProfileId: this.mrnaMolecularProfileId,
+                            }
+                        )
+                    );
+                }
             }
 
             return toAwait;
@@ -1146,6 +1159,94 @@ export class EmbeddingsPanel extends React.Component<
         );
     }
 
+    // undefined for clinical attributes, "Cancer Type" (-3) and "None" (-10000).
+    @computed get selectedEntrezGeneId(): number | undefined {
+        const id = this.selectedColoringOption?.info?.entrezGeneId;
+        if (!id || id === -3 || id === -10000) {
+            return undefined;
+        }
+        return id;
+    }
+
+    // Restricted to studies on screen, so another study's profile is never queried.
+    @computed get mrnaMolecularProfileId(): string | undefined {
+        if (!this.store.molecularProfiles.isComplete) {
+            return undefined;
+        }
+        const studyIds = new Set(this.currentStudyIds);
+        const profile = this.store.molecularProfiles.result!.find(
+            p =>
+                p.molecularAlterationType === 'MRNA_EXPRESSION' &&
+                studyIds.has(p.studyId)
+        );
+        return profile?.molecularProfileId;
+    }
+
+    @computed get mrnaDataExists(): boolean {
+        return !!this.mrnaMolecularProfileId;
+    }
+
+    @computed get isColoringByExpression(): boolean {
+        return (
+            this.mrnaEnabled &&
+            !!this.selectedEntrezGeneId &&
+            !!this.mrnaMolecularProfileId
+        );
+    }
+
+    // Expression per `studyId:sampleId`, log2(x+1) when the profile has no negative
+    // values: TPM spans orders of magnitude, so a few high samples would otherwise
+    // flatten the scale. Profiles with negatives (z-scores) stay linear.
+    @computed get expressionValues():
+        | { valueBySampleKey: Map<string, number>; isLog: boolean }
+        | undefined {
+        if (!this.isColoringByExpression) {
+            return undefined;
+        }
+        const entry = this.store.plotsTabStore.numericGeneMolecularDataCache.get(
+            {
+                entrezGeneId: this.selectedEntrezGeneId!,
+                molecularProfileId: this.mrnaMolecularProfileId!,
+            }
+        );
+        if (!entry.isComplete || !entry.result) {
+            return undefined;
+        }
+        const data = entry.result.filter(
+            d => d.value !== null && d.value !== undefined && !isNaN(d.value)
+        );
+        if (data.length === 0) {
+            return undefined;
+        }
+        const isLog = data.every(d => d.value >= 0);
+        const valueBySampleKey = new Map<string, number>();
+        data.forEach(d =>
+            valueBySampleKey.set(
+                `${d.studyId}:${d.sampleId}`,
+                isLog ? Math.log2(d.value + 1) : d.value
+            )
+        );
+        return { valueBySampleKey, isLog };
+    }
+
+    @computed get expressionColoring(): ExpressionColoring | undefined {
+        const expression = this.expressionValues;
+        const colorFn = this.effectiveNumericalValueToColor;
+        if (!expression || !colorFn) {
+            return undefined;
+        }
+        const geneSymbol =
+            this.genes.find(g => g.entrezGeneId === this.selectedEntrezGeneId)
+                ?.hugoGeneSymbol || 'Expression';
+        return {
+            valueBySampleKey: expression.valueBySampleKey,
+            colorFn,
+            label: `${geneSymbol} expression${
+                expression.isLog ? ' (log2)' : ''
+            }`,
+        };
+    }
+
     @computed get rawPlotData(): EmbeddingPlotPoint[] {
         if (!this.isTabActive) {
             return [];
@@ -1168,7 +1269,8 @@ export class EmbeddingsPanel extends React.Component<
             isColoringByGene &&
             (this.mutationTypeEnabled ||
                 this.copyNumberEnabled ||
-                this.structuralVariantEnabled)
+                this.structuralVariantEnabled ||
+                this.mrnaEnabled)
         ) {
             if (!this.molecularDataForColoring.isComplete) {
                 return [];
@@ -1199,7 +1301,8 @@ export class EmbeddingsPanel extends React.Component<
             this.structuralVariantEnabled,
             this.gradientOverride
                 ? this.effectiveNumericalValueToColor
-                : undefined
+                : undefined,
+            this.expressionColoring
         );
     }
 
@@ -1437,7 +1540,25 @@ export class EmbeddingsPanel extends React.Component<
         return false;
     }
 
+    // Continuous coloring of either kind; drives the gradient legend and editor.
+    @computed get isNumericColoring(): boolean {
+        return this.isNumericClinicalAttribute || this.isColoringByExpression;
+    }
+
     @computed get numericalValueRange(): [number, number] | undefined {
+        if (this.isColoringByExpression) {
+            const values = this.numericalRawValues;
+            if (!values || values.length === 0) {
+                return undefined;
+            }
+            let min = Infinity;
+            let max = -Infinity;
+            for (const value of values) {
+                min = Math.min(min, value);
+                max = Math.max(max, value);
+            }
+            return [min, max];
+        }
         if (
             this.selectedColoringOption?.info?.clinicalAttribute &&
             this.isNumericClinicalAttribute
@@ -1474,6 +1595,15 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @computed get numericalValueToColor(): ((x: number) => string) | undefined {
+        if (this.isColoringByExpression) {
+            const range = this.numericalValueRange;
+            if (!range) {
+                return undefined;
+            }
+            const [min, max] = range;
+            const span = max - min || 1;
+            return (x: number) => interpolateReds((x - min) / span);
+        }
         if (
             this.selectedColoringOption?.info?.clinicalAttribute &&
             this.isNumericClinicalAttribute
@@ -1513,6 +1643,12 @@ export class EmbeddingsPanel extends React.Component<
 
     // Raw values for the current numeric coloring attribute - basis for the histogram and percentile clipping.
     @computed get numericalRawValues(): number[] | undefined {
+        if (this.isColoringByExpression) {
+            const expression = this.expressionValues;
+            return expression
+                ? Array.from(expression.valueBySampleKey.values())
+                : undefined;
+        }
         if (
             !this.selectedColoringOption?.info?.clinicalAttribute ||
             !this.isNumericClinicalAttribute
@@ -1738,7 +1874,8 @@ export class EmbeddingsPanel extends React.Component<
             this.selectedColoringOption.info.entrezGeneId !== -3 &&
             (this.mutationTypeEnabled ||
                 this.copyNumberEnabled ||
-                this.structuralVariantEnabled) &&
+                this.structuralVariantEnabled ||
+                this.mrnaEnabled) &&
             !this.molecularDataForColoring.isComplete
         ) {
             return true;
@@ -1868,19 +2005,49 @@ export class EmbeddingsPanel extends React.Component<
         this.viewRange = [min, max];
     }
 
+    // Expression is continuous and the alteration colorings categorical, so they
+    // can't be blended: turning one kind on turns the other off.
     @action.bound
     private onMutationTypeToggle(enabled: boolean) {
         this.mutationTypeEnabled = enabled;
+        if (enabled) {
+            this.setMrnaEnabled(false);
+        }
     }
 
     @action.bound
     private onCopyNumberToggle(enabled: boolean) {
         this.copyNumberEnabled = enabled;
+        if (enabled) {
+            this.setMrnaEnabled(false);
+        }
     }
 
     @action.bound
     private onStructuralVariantToggle(enabled: boolean) {
         this.structuralVariantEnabled = enabled;
+        if (enabled) {
+            this.setMrnaEnabled(false);
+        }
+    }
+
+    @action.bound
+    private onMrnaToggle(enabled: boolean) {
+        this.setMrnaEnabled(enabled);
+        if (enabled) {
+            this.mutationTypeEnabled = false;
+            this.copyNumberEnabled = false;
+            this.structuralVariantEnabled = false;
+        }
+    }
+
+    // The gradient override is in the old scale's units, so it can't carry over.
+    private setMrnaEnabled(enabled: boolean) {
+        if (this.mrnaEnabled !== enabled) {
+            this.mrnaEnabled = enabled;
+            this.gradientOverride = undefined;
+            this.viewRange = undefined;
+        }
     }
 
     // Public - called via ref from EmbeddingsTab's status bar dropdown.
@@ -2190,7 +2357,7 @@ export class EmbeddingsPanel extends React.Component<
             totalSampleCount: this.totalSampleCount,
             visibleCategoryCount: this.visibleCategoryCount,
             totalCategoryCount: this.totalCategoryCount,
-            isNumericAttribute: this.isNumericClinicalAttribute,
+            isNumericAttribute: this.isNumericColoring,
             numericalValueRange: this.effectiveNumericalValueRange,
             numericalValueToColor: this.effectiveNumericalValueToColor,
             autoNumericalValueRange: this.viewRange ?? this.numericalValueRange,
@@ -2234,6 +2401,9 @@ export class EmbeddingsPanel extends React.Component<
                     mutationTypeEnabled={this.mutationTypeEnabled}
                     copyNumberEnabled={this.copyNumberEnabled}
                     structuralVariantEnabled={this.structuralVariantEnabled}
+                    mrnaDataExists={this.mrnaDataExists}
+                    mrnaEnabled={this.mrnaEnabled}
+                    onMrnaToggle={this.onMrnaToggle}
                     onColoringSelectionChange={this.onColoringSelectionChange}
                     onMutationTypeToggle={this.onMutationTypeToggle}
                     onCopyNumberToggle={this.onCopyNumberToggle}
