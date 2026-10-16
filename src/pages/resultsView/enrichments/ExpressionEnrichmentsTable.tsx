@@ -159,7 +159,7 @@ export default class ExpressionEnrichmentTable extends React.Component<
             name: 'q-Value',
             render: (d: ExpressionEnrichmentRow) => (
                 <span style={{ whiteSpace: 'nowrap' }}>
-                    {formatSignificanceValueWithStyle(d.qValue)}
+                    {formatSignificanceValueWithStyle(d.qValue, -10)}
                 </span>
             ),
             tooltip: <span>Derived from Benjamini-Hochberg procedure</span>,

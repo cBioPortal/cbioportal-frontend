@@ -65,16 +65,57 @@ describe('#formatLogOddsRatio()', () => {
 
 describe('#formatSignificanceValueWithStyle()', () => {
     it('returns <span>0.300</span> for 0.3', () => {
-        assert.equal(
-            renderToStaticMarkup(formatSignificanceValueWithStyle(0.3)),
-            '<span>0.300</span>'
+        expect(formatSignificanceValueWithStyle(0.3)).toEqualJSX(
+            <span>0.300</span>
         );
     });
 
     it('returns <b><span>0.030</span></b> for 0.03', () => {
+        expect(formatSignificanceValueWithStyle(0.03)).toEqualJSX(
+            <b>
+                <span>0.0300</span>
+            </b>
+        );
+    });
+
+    it.each([
+        { value: 0, markup: '<b><span>0.00</span></b>' },
+        { value: 1e-12, markup: '<b><span>1.00e-12</span></b>' },
+    ])('preserves the default precision for $value', ({ value, markup }) => {
         assert.equal(
-            renderToStaticMarkup(formatSignificanceValueWithStyle(0.03)),
-            '<b><span>0.0300</span></b>'
+            renderToStaticMarkup(formatSignificanceValueWithStyle(value)),
+            markup
+        );
+    });
+
+    it.each([0, 1e-12])('bounds %s only when requested', value => {
+        assert.equal(
+            renderToStaticMarkup(formatSignificanceValueWithStyle(value, -10)),
+            '<b><span><span>&lt; 10<sup>-10</sup></span></span></b>'
+        );
+    });
+
+    it.each([
+        { value: 1e-10, markup: '<b><span>1.00e-10</span></b>' },
+        { value: 0.03, markup: '<b><span>0.0300</span></b>' },
+        { value: 0.05, markup: '<span>0.0500</span>' },
+        { value: 0.3, markup: '<span>0.300</span>' },
+    ])(
+        'preserves formatting and emphasis for bounded $value',
+        ({ value, markup }) => {
+            assert.equal(
+                renderToStaticMarkup(
+                    formatSignificanceValueWithStyle(value, -10)
+                ),
+                markup
+            );
+        }
+    );
+
+    it('uses the requested minimum exponent', () => {
+        assert.equal(
+            renderToStaticMarkup(formatSignificanceValueWithStyle(1e-9, -8)),
+            '<b><span><span>&lt; 10<sup>-8</sup></span></span></b>'
         );
     });
 });

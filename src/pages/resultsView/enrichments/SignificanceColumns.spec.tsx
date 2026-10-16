@@ -122,32 +122,60 @@ describe.each([
             {} as ICoExpressionTableGenesetsProps
         ),
     },
-])('$name shared significance formatter', ({ table }) => {
-    it('bounds q-values while retaining correlation values, sorting and downloads', () => {
-        const element = React.Children.toArray(
-            table.render().props.children
-        ).find(
-            child => React.isValidElement(child) && child.props.columns
-        ) as React.ReactElement<{ columns: Column<CoExpressionWithQ>[] }>;
-        const qValueColumn = element.props.columns.find(
-            column => column.name === 'q-Value'
-        )!;
-        const correlationColumn = element.props.columns.find(
-            column => column.name === "Spearman's Correlation"
-        )!;
-        const row = {
-            qValue: 0,
-            pValue: 0,
-            spearmansCorrelation: 0,
-        } as CoExpressionWithQ;
+])('$name significance columns', ({ table }) => {
+    const element = React.Children.toArray(table.render().props.children).find(
+        child => React.isValidElement(child) && child.props.columns
+    ) as React.ReactElement<{ columns: Column<CoExpressionWithQ>[] }>;
 
-        expect(
-            renderToStaticMarkup(<>{qValueColumn.render!(row)}</>)
-        ).toContain('&lt; 10<sup>-10</sup>');
-        expect(
-            renderToStaticMarkup(<>{correlationColumn.render!(row)}</>)
-        ).not.toContain('&lt;');
-        expect(qValueColumn.sortBy!(row)).toEqual([0, 0]);
-        expect(qValueColumn.download!(row)).toBe('0');
+    describe.each(['p-Value', 'q-Value'])('%s', columnName => {
+        const column = element.props.columns.find(
+            candidate => candidate.name === columnName
+        )!;
+
+        it.each([
+            { value: 0, text: '0.00' },
+            { value: 1e-12, text: '1.00e-12' },
+            { value: 1e-10, text: '1.00e-10' },
+            { value: 0.03, text: '0.0300' },
+            { value: 0.3, text: '0.300' },
+        ])(
+            'preserves the precision and behavior of $value',
+            ({ value, text }) => {
+                const row = {
+                    qValue: value,
+                    pValue: value,
+                    spearmansCorrelation: 0.7,
+                } as CoExpressionWithQ;
+                const markup = renderToStaticMarkup(<>{column.render!(row)}</>);
+
+                expect(markup).toContain(text);
+                expect(markup).not.toContain('&lt;');
+                expect(markup.includes('<b>')).toBe(
+                    columnName === 'q-Value' && value < 0.05
+                );
+                expect(column.sortBy!(row)).toEqual(
+                    columnName === 'q-Value'
+                        ? [value, value]
+                        : [value, value > 0 ? 1 : 0]
+                );
+                expect(column.download!(row)).toBe(value.toString());
+                expect(row).toEqual({
+                    qValue: value,
+                    pValue: value,
+                    spearmansCorrelation: 0.7,
+                });
+            }
+        );
+    });
+
+    it('retains correlation formatting', () => {
+        const column = element.props.columns.find(
+            candidate => candidate.name === "Spearman's Correlation"
+        )!;
+        const row = { spearmansCorrelation: 0 } as CoExpressionWithQ;
+        const markup = renderToStaticMarkup(<>{column.render!(row)}</>);
+
+        expect(markup).toContain('0.00');
+        expect(markup).not.toContain('&lt;');
     });
 });

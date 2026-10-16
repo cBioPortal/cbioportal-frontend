@@ -164,7 +164,7 @@ export default class GenericAssayCategoricalEnrichmentsTable extends React.Compo
             name: 'q-Value',
             render: (d: GenericAssayCategoricalEnrichmentRow) => (
                 <span style={{ whiteSpace: 'nowrap' }}>
-                    {formatSignificanceValueWithStyle(d.qValue)}
+                    {formatSignificanceValueWithStyle(d.qValue, -10)}
                 </span>
             ),
             tooltip: <span>Derived from Benjamini-Hochberg procedure</span>,
