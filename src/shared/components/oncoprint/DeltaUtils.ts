@@ -1239,6 +1239,10 @@ function transitionGeneticTrack(
             oncoprint.setTrackData(trackId, nextSpec.data, 'uid');
         }
 
+        if (prevSpec.customOptions !== nextSpec.customOptions) {
+            oncoprint.setTrackCustomOptions(trackId, nextSpec.customOptions);
+        }
+
         if (hasGeneticTrackTooltipChanged(nextProps, prevProps)) {
             oncoprint.setTrackTooltipFn(
                 trackId,
