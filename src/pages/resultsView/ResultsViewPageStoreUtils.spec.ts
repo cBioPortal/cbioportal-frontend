@@ -6,13 +6,16 @@ import {
     Mutation,
     NumericGeneMolecularData,
     Sample,
+    StructuralVariant,
 } from 'cbioportal-ts-api-client';
 import {
     annotateMolecularDatum,
     annotateMutationPutativeDriver,
     buildResultsViewPageTitle,
     computeCustomDriverAnnotationReport,
+    compileStructuralVariants,
     fetchQueriedStudies,
+    filterAndAnnotateStructuralVariants,
     filterSubQueryData,
     getGeneAndProfileChunksForRequest,
     getMultipleGeneResultKey,
@@ -55,6 +58,124 @@ import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverN
 import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
 
 describe('ResultsViewPageStoreUtils', () => {
+    describe('structural variant germline filtering', () => {
+        const variants = [
+            {
+                sampleId: 'somatic-driver',
+                svStatus: 'Somatic',
+                driverFilter: 'driver',
+            },
+            { sampleId: 'somatic-vus', svStatus: 'Somatic' },
+            {
+                sampleId: 'germline-driver',
+                svStatus: 'GERMLINE',
+                driverFilter: 'driver',
+            },
+            { sampleId: 'germline-vus', svStatus: 'Germline' },
+        ] as StructuralVariant[];
+        const getPutativeDriverInfo = (variant: StructuralVariant) => ({
+            oncoKb: variant.driverFilter === 'driver' ? 'Oncogenic' : '',
+            hotspots: false,
+            customDriverBinary: false,
+        });
+
+        it('classifies germline drivers and VUS separately from somatic variants', () => {
+            const report = filterAndAnnotateStructuralVariants(
+                variants,
+                getPutativeDriverInfo
+            );
+
+            assert.deepEqual(
+                report.data.map(variant => variant.sampleId),
+                ['somatic-driver']
+            );
+            assert.deepEqual(
+                report.vus.map(variant => variant.sampleId),
+                ['somatic-vus']
+            );
+            assert.deepEqual(
+                report.germline.map(variant => variant.sampleId),
+                ['germline-driver']
+            );
+            assert.deepEqual(
+                report.vusAndGermline.map(variant => variant.sampleId),
+                ['germline-vus']
+            );
+            assert.isTrue(report.germline[0].putativeDriver);
+            assert.isFalse(report.vusAndGermline[0].putativeDriver);
+            assert.notProperty(variants[0], 'putativeDriver');
+        });
+
+        [
+            {
+                excludeVus: false,
+                excludeGermline: false,
+                expected: [
+                    'somatic-driver',
+                    'somatic-vus',
+                    'germline-driver',
+                    'germline-vus',
+                ],
+            },
+            {
+                excludeVus: false,
+                excludeGermline: true,
+                expected: ['somatic-driver', 'somatic-vus'],
+            },
+            {
+                excludeVus: true,
+                excludeGermline: false,
+                expected: ['somatic-driver', 'germline-driver'],
+            },
+            {
+                excludeVus: true,
+                excludeGermline: true,
+                expected: ['somatic-driver'],
+            },
+        ].forEach(({ excludeVus, excludeGermline, expected }) => {
+            it(`applies excludeVus=${excludeVus} and excludeGermline=${excludeGermline} together`, () => {
+                const report = filterAndAnnotateStructuralVariants(
+                    variants,
+                    getPutativeDriverInfo
+                );
+
+                assert.deepEqual(
+                    compileStructuralVariants(
+                        report,
+                        excludeVus,
+                        excludeGermline
+                    )
+                        .map(variant => variant.sampleId)
+                        .sort(),
+                    expected.slice().sort()
+                );
+            });
+        });
+
+        it('retains somatic and unspecified statuses when excluding germline variants', () => {
+            const statuses = ['Somatic', 'Unknown', '', undefined];
+            const report = filterAndAnnotateStructuralVariants(
+                statuses.map(
+                    (svStatus, index) =>
+                        ({
+                            sampleId: `sample-${index}`,
+                            svStatus,
+                        } as StructuralVariant)
+                ),
+                getPutativeDriverInfo
+            );
+
+            assert.deepEqual(
+                compileStructuralVariants(report, false, true).map(
+                    variant => variant.svStatus
+                ),
+                statuses
+            );
+            assert.lengthOf(report.germline, 0);
+            assert.lengthOf(report.vusAndGermline, 0);
+        });
+    });
+
     describe('computeCustomDriverAnnotationReport', () => {
         let driverFilterMutation: Mutation;
         let driverTiersFilterMutation: Mutation;

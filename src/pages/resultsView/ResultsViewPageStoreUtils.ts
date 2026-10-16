@@ -64,6 +64,7 @@ import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlter
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 import { IQueriedCaseData } from 'shared/model/IQueriedCaseData';
 import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
+import { isGermlineMutationStatus } from 'cbioportal-utils';
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
@@ -246,7 +247,7 @@ export function filterAndAnnotateStructuralVariants(
             structuralVariant,
             getPutativeDriverInfo(structuralVariant)
         ); // annotate
-        const isGermline = false;
+        const isGermline = isGermlineMutationStatus(structuralVariant.svStatus);
         const isVus = !annotatedStructuralVariant.putativeDriver;
         if (isGermline && isVus) {
             vusAndGermline.push(annotatedStructuralVariant);
