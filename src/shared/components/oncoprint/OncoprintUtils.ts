@@ -1215,89 +1215,87 @@ export function makeGeneticTrackWith({
                 },
                 {
                     gapLabelsFn: (model: OncoprintModel) => {
-                        model.data_groups.update(model);
-                        const groupsByTrackMap = model.data_groups.get();
-
-                        const label = formatGeneticTrackLabel(oql);
-
-                        const sampleMode = oncoprint.columnMode === 'sample';
-
-                        // why are there more than one gene? what happens then?
-                        const gene = label; //geneSymbolArray[0];
-
-                        //problem here is that in case of merged tracks, the name of the track is not always a gene
-                        const info = groupsByTrackMap[gene][0].map(
-                            (groupData: any) => {
-                                let sequencedPatientKeysForGroup: Record<
-                                    string,
-                                    any[]
-                                > = {};
-                                let sequencedSampleKeysForGroup: Record<
-                                    string,
-                                    any[]
-                                > = {};
-                                if (sampleMode) {
-                                    sequencedSampleKeysForGroup = _(
-                                        geneSymbolArray
-                                    )
-                                        .keyBy(gene => gene)
-                                        .mapValues(gene => {
-                                            // you want to return only the patient ids which are listed as
-                                            // sequenced for the gene(s) in this track (plural in case of merged tracks)
-                                            return _.intersection(
-                                                _.flatMap(
-                                                    geneSymbolArray,
-                                                    gene =>
-                                                        sequencedSampleKeysByGene[
-                                                            gene
-                                                        ]
-                                                ),
-                                                groupData.map((d: any) => d.uid)
-                                            );
-                                        })
-                                        .value();
-                                } else {
-                                    sequencedPatientKeysForGroup = _(
-                                        geneSymbolArray
-                                    )
-                                        .keyBy(gene => gene)
-                                        .mapValues(gene => {
-                                            // you want to return only the patient ids which are listed as
-                                            // sequenced for the gene(s) in this track (plural in case of merged tracks)
-                                            return _.intersection(
-                                                _.flatMap(
-                                                    geneSymbolArray,
-                                                    gene =>
-                                                        sequencedPatientKeysByGene[
-                                                            gene
-                                                        ]
-                                                ),
-                                                groupData.map((d: any) => d.uid)
-                                            );
-                                        })
-                                        .value();
-                                }
-
-                                const info = alterationInfoForOncoprintTrackData(
-                                    sampleMode,
-                                    {
-                                        trackData: groupData,
-                                        oql: geneSymbolArray,
-                                    },
-                                    sequencedSampleKeysForGroup,
-                                    sequencedPatientKeysForGroup
-                                );
-
-                                return {
-                                    labelFormatter: function() {
-                                        return formatPercent(info.percent);
-                                    },
-                                    tooltipFormatter: function() {
-                                        return `${info.percent} (altered / profiled = ${info.altered} / ${info.sequenced})`;
-                                    },
-                                };
-                            }
+                        const dataByUid = _.keyBy(data, datum => datum.uid);
+                        const orderedIds = model.getIdOrder(true);
+                        const groupStartIndexes = [
+                            0,
+                            ...model.getColumnIndexesAfterAGap(),
+                        ];
+                        const groups = groupStartIndexes.map((start, index) =>
+                            orderedIds
+                                .slice(start, groupStartIndexes[index + 1])
+                                .map(uid => dataByUid[uid])
+                                .filter(datum => !!datum)
                         );
+                        const sampleMode = oncoprint.columnMode === 'sample';
+                        const info = groups.map((groupData: any) => {
+                            let sequencedPatientKeysForGroup: Record<
+                                string,
+                                any[]
+                            > = {};
+                            let sequencedSampleKeysForGroup: Record<
+                                string,
+                                any[]
+                            > = {};
+                            if (sampleMode) {
+                                sequencedSampleKeysForGroup = _(geneSymbolArray)
+                                    .keyBy(gene => gene)
+                                    .mapValues(gene => {
+                                        // you want to return only the patient ids which are listed as
+                                        // sequenced for the gene(s) in this track (plural in case of merged tracks)
+                                        return _.intersection(
+                                            _.flatMap(
+                                                geneSymbolArray,
+                                                gene =>
+                                                    sequencedSampleKeysByGene[
+                                                        gene
+                                                    ]
+                                            ),
+                                            groupData.map((d: any) => d.uid)
+                                        );
+                                    })
+                                    .value();
+                            } else {
+                                sequencedPatientKeysForGroup = _(
+                                    geneSymbolArray
+                                )
+                                    .keyBy(gene => gene)
+                                    .mapValues(gene => {
+                                        // you want to return only the patient ids which are listed as
+                                        // sequenced for the gene(s) in this track (plural in case of merged tracks)
+                                        return _.intersection(
+                                            _.flatMap(
+                                                geneSymbolArray,
+                                                gene =>
+                                                    sequencedPatientKeysByGene[
+                                                        gene
+                                                    ]
+                                            ),
+                                            groupData.map((d: any) => d.uid)
+                                        );
+                                    })
+                                    .value();
+                            }
+
+                            const info = alterationInfoForOncoprintTrackData(
+                                sampleMode,
+                                {
+                                    trackData: groupData,
+                                    oql: geneSymbolArray,
+                                },
+                                sequencedSampleKeysForGroup,
+                                sequencedPatientKeysForGroup
+                            );
+
+                            return {
+                                labelFormatter: function() {
+                                    return formatPercent(info.percent);
+                                },
+                                tooltipFormatter: function() {
+                                    return `${info.percent} (altered / profiled = ${info.altered} / ${info.sequenced})`;
+                                },
+                            };
+                        });
 
                         return info;
                     },
