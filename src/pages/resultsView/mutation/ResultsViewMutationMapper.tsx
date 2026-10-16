@@ -315,9 +315,12 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         const namespaceColumnNames = extractColumnNames(
             this.props.store.namespaceColumnConfig
         );
-        return _.concat(
+        return _.union(
             ResultsViewMutationTable.defaultProps.columns,
-            namespaceColumnNames
+            namespaceColumnNames,
+            (this.props.store.mutationsTabClinicalAttributes.result || []).map(
+                attribute => attribute.clinicalAttributeId
+            )
         );
     }
 
