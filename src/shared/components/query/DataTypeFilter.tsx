@@ -15,7 +15,7 @@ export type IDataTypeFilterProps = {
     buttonText: string | JSX.Element;
     dataFilterActive?: IFilterDef[];
     store: QueryStore;
-    samplePerFilter: number[];
+    samplePerFilter: (number | null)[];
     studyPerFilter: number[];
     toggleFilter: (id: string) => void;
     isLoading?: boolean;
@@ -23,7 +23,7 @@ export type IDataTypeFilterProps = {
 
 export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => {
     const initialStudyCountsRef = useRef<number[]>([]);
-    const initialSampleCountsRef = useRef<number[]>([]);
+    const initialSampleCountsRef = useRef<(number | null)[]>([]);
 
     // Only set initial counts once
     if (
@@ -221,7 +221,14 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                                     paddingBottom: 8,
                                                 }}
                                             >
-                                                {props.samplePerFilter![i]}
+                                                {props.samplePerFilter![i] ===
+                                                null ? (
+                                                    <span title="The number of virtual study samples with this data type is unknown. Availability is based on source study metadata.">
+                                                        —
+                                                    </span>
+                                                ) : (
+                                                    props.samplePerFilter![i]
+                                                )}
                                             </td>
                                         </tr>
                                     );

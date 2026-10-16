@@ -87,6 +87,39 @@ export default class StudyListLogic {
         return map_node_filter;
     }
 
+    @cached @computed private get physicalStudiesById() {
+        return _.keyBy(this.store.cancerStudies.result, study => study.studyId);
+    }
+
+    private getDataTypeSourceStudies(study: CancerStudy): CancerStudy[] {
+        const virtualStudy = this.store.virtualStudiesMap[study.studyId];
+        return virtualStudy
+            ? virtualStudy.data.studies
+                  .filter(source => source.samples.length > 0)
+                  .map(source => this.physicalStudiesById[source.id])
+                  .filter(
+                      source =>
+                          source && source.readPermission && source.status !== 0
+                  )
+            : [this.physicalStudiesById[study.studyId]].filter(
+                  source => !!source
+              );
+    }
+
+    hasDataType(study: CancerStudy, typeId: string): boolean {
+        return this.getDataTypeSourceStudies(study).some(source => {
+            const value = source[typeId as keyof CancerStudy];
+            if (typeof value === 'number') {
+                return value > 0;
+            }
+
+            const resource = source.resourceCounts?.find(
+                resource => resource.resourceId === typeId
+            );
+            return (resource?.sampleCount || 0) > 0;
+        });
+    }
+
     @cached @computed get map_node_filtered_by_datatype() {
         // Create a map with all the studies and set all to true (no filter applied)
         let map_node_filter = new Map<CancerTreeNode, boolean>();
@@ -98,23 +131,10 @@ export default class StudyListLogic {
             if (this.store.dataTypeFilters.length == 0) {
                 map_node_dataTypeResult.set(node, true);
             } else {
-                let nodeStudy = this.store.cancerStudies.result.find(
-                    study => study.name === node.name
-                );
                 const filterToApply = this.store.dataTypeFilters;
-                const filterValue = filterToApply.map(typeId => {
-                    // try top-level fields like 'sequencedSampleCount'
-                    const value = (nodeStudy as any)?.[typeId];
-                    if (typeof value === 'number') {
-                        return value > 0;
-                    }
-
-                    // check inside resourceCounts array otherwise
-                    const resource = nodeStudy?.resourceCounts?.find(
-                        r => r.resourceId === typeId
-                    );
-                    return (resource?.sampleCount || 0) > 0;
-                });
+                const filterValue = filterToApply.map(typeId =>
+                    this.hasDataType(node as CancerStudy, typeId)
+                );
                 const filterBoolean =
                     filterValue.length == 0
                         ? false
