@@ -19,7 +19,7 @@ import {
 import { CancerStudy } from 'cbioportal-ts-api-client';
 import { IAnnotationColumnProps } from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
 import { CancerGene } from 'oncokb-ts-api-client';
-import { RemoteData } from 'cbioportal-utils';
+import { isGermlineMutationStatus, RemoteData } from 'cbioportal-utils';
 import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 import { IStructuralVariantTableWrapperProps } from '../StructuralVariantTableWrapper';
@@ -168,7 +168,8 @@ export default class AnnotationColumnFormatter {
             uniqueSampleKeyToTumorType[
                 structuralVariantData[0].uniqueSampleKey
             ],
-            deriveStructuralVariantType(structuralVariantData[0])
+            deriveStructuralVariantType(structuralVariantData[0]),
+            isGermlineMutationStatus(structuralVariantData[0].svStatus)
         );
 
         if (oncoKbData.indicatorMap[id]) {

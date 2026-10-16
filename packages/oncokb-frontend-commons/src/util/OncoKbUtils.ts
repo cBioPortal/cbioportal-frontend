@@ -4,10 +4,12 @@ import {
     AnnotateMutationByHGVScQuery,
     AnnotateMutationByProteinChangeQuery,
     AnnotateStructuralVariantQuery,
+    CuratedGene,
     LevelOfEvidence,
+    OncoKbAPI,
     TumorType,
 } from 'oncokb-ts-api-client';
-import { Mutation } from 'cbioportal-utils';
+import { isGermlineMutationStatus, Mutation } from 'cbioportal-utils';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 import {
     EvidenceType,
@@ -17,6 +19,9 @@ import {
     isGermlineIndicator,
     isSomaticIndicator,
 } from '../model/OncoKB';
+
+// OncoKB's label for an uncurated pathogenicity / biological effect
+const UNKNOWN = 'Unknown';
 
 export const LEVELS = {
     sensitivity: ['4', '3B', '3A', '2', '1', '0'],
@@ -90,11 +95,16 @@ export function generateQueryStructuralVariantId(
     site1EntrezGeneId: number,
     site2EntrezGeneId: number | undefined,
     tumorType: string | null,
-    structuralVariantType: string
+    structuralVariantType: string,
+    germline: boolean = false
 ): string {
     let id = `${site1EntrezGeneId}_${site2EntrezGeneId}_${structuralVariantType}`;
     if (tumorType) {
         id = `${id}_${tumorType}`;
+    }
+
+    if (germline) {
+        id = `${id}_germline`;
     }
 
     return id.trim().replace(/\s/g, '_');
@@ -280,6 +290,8 @@ export function deriveStructuralVariantType(
     return structuralVariantType;
 }
 
+// Only somatic structural variants are annotated through this endpoint. Callers
+// will partition germline structural variants.
 export function generateAnnotateStructuralVariantQuery(
     structuralVariant: StructuralVariant,
     tumorType: string | null,
@@ -314,9 +326,212 @@ export function generateAnnotateStructuralVariantQuery(
         },
         structuralVariantType: structuralVariantType,
         functionalFusion: genes.length > 1, // if its only one gene, it's intagenic and thus not a functional fusion
+        germline: false,
         tumorType: tumorType,
         evidenceTypes: evidenceTypes,
     } as unknown) as AnnotateStructuralVariantQuery;
+}
+
+// The gene a structural variant is annotated against: site 1 when it carries a
+// gene, otherwise site 2 (single-gene SVs are intragenic and may sit on either
+// site). Mirrors the gene ordering generateAnnotateStructuralVariantQuery uses.
+export function getStructuralVariantAnnotationGene(
+    structuralVariant: StructuralVariant
+): { entrezGeneId: number; hugoSymbol: string } {
+    return structuralVariant.site1EntrezGeneId
+        ? {
+              entrezGeneId: structuralVariant.site1EntrezGeneId,
+              hugoSymbol: structuralVariant.site1HugoSymbol,
+          }
+        : {
+              entrezGeneId: structuralVariant.site2EntrezGeneId,
+              hugoSymbol: structuralVariant.site2HugoSymbol,
+          };
+}
+
+const UNKNOWN_GENE_ALTERATION = 'Structural Variant';
+
+// The alteration label OncoKB uses for a structural variant: two genes make a
+// fusion, a single gene is intragenic. Mirrors the title the card renders.
+export function getStructuralVariantAlterationName(
+    structuralVariant: StructuralVariant
+): string {
+    const genes: string[] = [];
+
+    if (structuralVariant.site1HugoSymbol) {
+        genes.push(structuralVariant.site1HugoSymbol);
+    }
+
+    if (
+        structuralVariant.site2HugoSymbol &&
+        structuralVariant.site2HugoSymbol !== structuralVariant.site1HugoSymbol
+    ) {
+        genes.push(structuralVariant.site2HugoSymbol);
+    }
+
+    if (genes.length === 2) {
+        return `${genes[0]}-${genes[1]} Fusion`;
+    }
+
+    return genes.length === 1
+        ? `${genes[0]} intragenic`
+        : UNKNOWN_GENE_ALTERATION;
+}
+
+export const GERMLINE_CURATED_GENE_SETTING = 'Germline';
+// OncoKB doesn't have an SV germline API yet, but we still need to fetch the gene background
+// to display in the oncokb card.
+export async function fetchCuratedGenesByHugoSymbol(
+    hugoSymbols: string[],
+    client: OncoKbAPI,
+    setting?: string
+): Promise<{ [hugoSymbol: string]: CuratedGene }> {
+    const curatedGenes = await Promise.all(
+        _.uniq(hugoSymbols.filter(hugoSymbol => !!hugoSymbol)).map(
+            async hugoSymbol => {
+                try {
+                    const genes = await client.utilsAllCuratedGenesGetUsingGET_1(
+                        {
+                            hugoSymbol,
+                            includeEvidence: true,
+                        }
+                    );
+                    return genes.find(
+                        gene =>
+                            gene.hugoSymbol === hugoSymbol &&
+                            (!setting ||
+                                gene.setting?.toLowerCase() ===
+                                    setting.toLowerCase())
+                    );
+                } catch (error) {
+                    console.error(
+                        `Unable to fetch the OncoKB curated gene for ${hugoSymbol}.`,
+                        error
+                    );
+                    return undefined;
+                }
+            }
+        )
+    );
+
+    return _.keyBy(
+        curatedGenes.filter(gene => !!gene) as CuratedGene[],
+        gene => gene.hugoSymbol
+    );
+}
+
+// OncoKB has no germline structural variant curation to summarize, so the
+// variant and tumor type summaries state that absence instead. They mirror the
+// wording of the summaries the germline mutation endpoints return for a variant
+// that is not included in OncoKB.
+export function getGermlineStructuralVariantSummary(
+    alteration: string
+): string {
+    return (
+        `This ${alteration} variant is not currently included in OncoKB. ` +
+        'OncoKB germline annotation is limited to pathogenic and likely ' +
+        'pathogenic germline variants identified in patients sequenced at MSK.'
+    );
+}
+
+export function getGermlineStructuralVariantTumorTypeSummary(
+    alteration: string,
+    tumorType: string | null
+): string {
+    const patients = tumorType
+        ? `patients with ${tumorType.toLowerCase()}`
+        : 'patients';
+
+    return `There are no FDA-approved or NCCN-compendium listed treatments specifically for ${patients} harboring this ${alteration} variant.`;
+}
+
+// OncoKB does not curate germline structural variants, so the annotation
+// endpoints have nothing to return for them and the card would render empty.
+// Fall back to the gene-level curation: the curated gene summary, with the
+// pathogenicity and the biological effect left unknown.
+export function generateGermlineStructuralVariantIndicator(
+    structuralVariant: StructuralVariant,
+    tumorType: string | null,
+    curatedGene?: CuratedGene
+): IndicatorQueryResp {
+    const structuralVariantType = deriveStructuralVariantType(
+        structuralVariant
+    );
+    const gene = getStructuralVariantAnnotationGene(structuralVariant);
+    const alteration = getStructuralVariantAlterationName(structuralVariant);
+
+    return ({
+        query: {
+            id: generateQueryStructuralVariantId(
+                structuralVariant.site1EntrezGeneId,
+                structuralVariant.site2EntrezGeneId,
+                tumorType,
+                structuralVariantType,
+                true
+            ),
+            alterationType: 'STRUCTURAL_VARIANT',
+            entrezGeneId: gene.entrezGeneId,
+            hugoSymbol: gene.hugoSymbol,
+            germline: true,
+            alteration: alteration,
+            svType: structuralVariantType,
+            tumorType: tumorType,
+        },
+        geneExist: !!curatedGene,
+        variantExist: false,
+        geneSummary: curatedGene?.summary || '',
+        variantSummary: getGermlineStructuralVariantSummary(alteration),
+        tumorTypeSummary: getGermlineStructuralVariantTumorTypeSummary(
+            alteration,
+            tumorType
+        ),
+        pathogenic: UNKNOWN,
+        mutationEffect: {
+            knownEffect: UNKNOWN,
+            description: '',
+            citations: { abstracts: [], pmids: [] },
+        },
+        treatments: [],
+        diagnosticImplications: [],
+        prognosticImplications: [],
+        genomicIndicators: [],
+        vus: false,
+    } as unknown) as IndicatorQueryResp;
+}
+
+// Gene-level fallback indicators for germline structural variants, keyed the
+// same way annotated indicators are so getIndicatorData resolves them.
+export async function fetchGermlineStructuralVariantIndicators(
+    queries: {
+        structuralVariant: StructuralVariant;
+        tumorType: string | null;
+    }[],
+    client: OncoKbAPI
+): Promise<IndicatorQueryResp[]> {
+    if (queries.length === 0) {
+        return [];
+    }
+
+    const curatedGenes = await fetchCuratedGenesByHugoSymbol(
+        queries.map(
+            query =>
+                getStructuralVariantAnnotationGene(query.structuralVariant)
+                    .hugoSymbol
+        ),
+        client,
+        GERMLINE_CURATED_GENE_SETTING
+    );
+
+    return queries.map(query =>
+        generateGermlineStructuralVariantIndicator(
+            query.structuralVariant,
+            query.tumorType,
+            curatedGenes[
+                getStructuralVariantAnnotationGene(query.structuralVariant)
+                    .hugoSymbol
+            ]
+        )
+    );
 }
 
 export enum StructuralVariantType {
@@ -781,7 +996,8 @@ export function getIndicatorData(
             sv.site1EntrezGeneId,
             sv.site2EntrezGeneId,
             getTumorType(mutation),
-            structuralVariantType
+            structuralVariantType,
+            isGermlineMutationStatus(sv.svStatus)
         );
     } else {
         id = generateQueryVariantId(

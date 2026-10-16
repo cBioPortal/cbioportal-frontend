@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "description": "OncoKB, a comprehensive and curated precision oncology knowledge base, offers oncologists detailed, evidence-based information about individual somatic mutations and structural alterations present in patient tumors with the goal of supporting optimal treatment decisions.",
-    "version": "v1.6.0",
+    "version": "v1.7.0",
     "title": "OncoKB APIs",
     "contact": {
       "name": "OncoKB",
@@ -302,6 +302,29 @@
             "description": "OncoTree(http://oncotree.info) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "inheritanceMechanisms",
+            "in": "query",
+            "description": "List of inheritance mechanisms used to filter the returned genomic indicators. The special value CARRIER is matched against the genomic indicator name rather than the inheritance mechanism. Example: AUTOSOMAL_DOMINANT,CARRIER",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "AUTOSOMAL_DOMINANT",
+                "AUTOSOMAL_RECESSIVE",
+                "X_LINKED_RECESSIVE",
+                "CARRIER"
+              ]
+            },
+            "collectionFormat": "multi",
+            "enum": [
+              "AUTOSOMAL_DOMINANT",
+              "AUTOSOMAL_RECESSIVE",
+              "X_LINKED_RECESSIVE",
+              "CARRIER"
+            ]
           }
         ],
         "responses": {
@@ -1157,6 +1180,13 @@
             "required": false,
             "type": "boolean",
             "default": true
+          },
+          {
+            "name": "hugoSymbol",
+            "in": "query",
+            "description": "The gene symbol used in Human Genome Organisation. Gene aliases are accepted. The symbol is case-sensitive. When specified, only the curated gene matching this symbol is returned. Only supported for the latest data version, so it may be combined with version only when that version is the latest. Example: BRAF",
+            "required": false,
+            "type": "string"
           }
         ],
         "responses": {
@@ -1169,8 +1199,11 @@
               }
             }
           },
+          "400": {
+            "description": "Bad Request. The hugoSymbol parameter is only supported for the latest data version."
+          },
           "404": {
-            "description": "Not Found"
+            "description": "Not Found. The specified version or hugoSymbol does not exist."
           },
           "503": {
             "description": "Service Unavailable"
@@ -1403,8 +1436,7 @@
           "description": "(Nullable) Unique gene identifiers from NCBI. May be null if omitted from original query, otherwise filled in by OncoKB"
         },
         "germline": {
-          "type": "boolean",
-          "description": "Whether the query was annotated against the germline (as opposed to somatic) knowledge base"
+          "type": "boolean"
         },
         "hgvs": {
           "type": "string",
@@ -1605,6 +1637,13 @@
           "type": "string",
           "description": "Diagnostic summary. Defaulted to \"\""
         },
+        "errors": {
+          "type": "array",
+          "description": "Everything OncoKB found wrong with the query, each carrying both a reason to branch on and the same reason in words. Empty whenever there is nothing wrong, and never null. An error may mean the variant was left unannotated - a queried alteration that cannot exist against the OncoKB canonical sequence is annotated at the gene level only. See docs/validation-errors.md",
+          "items": {
+            "$ref": "#/definitions/ValidationError"
+          }
+        },
         "exon": {
           "type": "string",
           "description": "DEPRECATED. (Nullable) The affected exon of this variant, if applicable (currently only supported when annotating via HGVSg or Genomic Location)"
@@ -1624,7 +1663,7 @@
           "enum": [
             "LEVEL_Dx1",
             "LEVEL_Dx2",
-            "LEVEL_Dx3."
+            "LEVEL_Dx3"
           ]
         },
         "highestFdaLevel": {
@@ -1820,7 +1859,7 @@
           "enum": [
             "LEVEL_Dx1",
             "LEVEL_Dx2",
-            "LEVEL_Dx3."
+            "LEVEL_Dx3"
           ]
         },
         "highestPrognosticImplicationLevel": {
@@ -2045,6 +2084,26 @@
         }
       }
     },
+    "ValidationError": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "example": "BRAF A600E: The reference amino acid at position 600 is V instead of A on the OncoKB canonical transcript.",
+          "description": "The same reason in words, naming what was queried and what OncoKB has instead."
+        },
+        "type": {
+          "type": "string",
+          "description": "What is wrong with the query.",
+          "enum": [
+            "REFERENCE_ALLELE_MISMATCH",
+            "POSITION_OUT_OF_RANGE",
+            "REVERSED_POSITION_RANGE",
+            "MALFORMED_ALTERATION"
+          ]
+        }
+      }
+    },
     "ArticleAbstract": {
       "type": "object",
       "properties": {
@@ -2150,6 +2209,18 @@
         },
         "id": {
           "type": "string"
+        },
+        "inheritanceMechanisms": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "AUTOSOMAL_DOMINANT",
+              "AUTOSOMAL_RECESSIVE",
+              "X_LINKED_RECESSIVE",
+              "CARRIER"
+            ]
+          }
         },
         "referenceGenome": {
           "type": "string",
