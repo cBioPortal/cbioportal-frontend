@@ -50,6 +50,7 @@ import DelayedRender from 'shared/components/DelayedRender';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import { getServerConfig } from 'config/config';
 import { GenericAssayDataType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { MultiSelectionTableRow } from 'pages/studyView/table/MultiSelectionTable';
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore;
@@ -500,10 +501,14 @@ export class StudySummaryTab extends React.Component<
                     ChartTypeEnum.MUTATED_GENES_TABLE,
                     props.title
                 ),
-                getData: () =>
+                getData: (
+                    dataType?: DataType,
+                    rows?: MultiSelectionTableRow[]
+                ) =>
                     getMutatedGenesDownloadData(
                         this.store.mutatedGeneTableRowData,
-                        this.store.oncokbCancerGeneFilterEnabled
+                        this.store.oncokbCancerGeneFilterEnabled,
+                        rows
                     ),
                 genePanelCache: this.store.genePanelCache,
                 downloadTypes: ['Data'],
@@ -531,9 +536,13 @@ export class StudySummaryTab extends React.Component<
                 onResetSelection: this.handlers.onSetNamespaceDataValues,
                 id: 'variant-annotations-table',
                 title: chartMeta.displayName,
-                getData: () =>
+                getData: (
+                    dataType?: DataType,
+                    rows?: MultiSelectionTableRow[]
+                ) =>
                     getVariantAnnotationTypesDownloadData(
-                        this.store.getVariantAnnotationChartData(chartMeta)
+                        this.store.getVariantAnnotationChartData(chartMeta),
+                        rows
                     ),
                 downloadTypes: ['Data'],
             }),
@@ -549,9 +558,13 @@ export class StudySummaryTab extends React.Component<
                     ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE,
                     props.title
                 ),
-                getData: () =>
+                getData: (
+                    dataType?: DataType,
+                    rows?: MultiSelectionTableRow[]
+                ) =>
                     getMutationTypesDownloadData(
-                        this.store.getMutationTypeChartDataCount(chartMeta)
+                        this.store.getMutationTypeChartDataCount(chartMeta),
+                        rows
                     ),
                 downloadTypes: ['Data'],
                 onChangeCancerGeneFilter: this.store
@@ -571,10 +584,14 @@ export class StudySummaryTab extends React.Component<
                     ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE,
                     props.title
                 ),
-                getData: () =>
+                getData: (
+                    dataType?: DataType,
+                    rows?: MultiSelectionTableRow[]
+                ) =>
                     getStructuralVariantGenesDownloadData(
                         this.store.structuralVariantGeneTableRowData,
-                        this.store.oncokbCancerGeneFilterEnabled
+                        this.store.oncokbCancerGeneFilterEnabled,
+                        rows
                     ),
                 genePanelCache: this.store.genePanelCache,
                 downloadTypes: ['Data'],
@@ -637,10 +654,14 @@ export class StudySummaryTab extends React.Component<
                     ChartTypeEnum.CNA_GENES_TABLE,
                     props.title
                 ),
-                getData: () =>
+                getData: (
+                    dataType?: DataType,
+                    rows?: MultiSelectionTableRow[]
+                ) =>
                     getGenesCNADownloadData(
                         this.store.cnaGeneTableRowData,
-                        this.store.oncokbCancerGeneFilterEnabled
+                        this.store.oncokbCancerGeneFilterEnabled,
+                        rows
                     ),
                 genePanelCache: this.store.genePanelCache,
                 downloadTypes: ['Data'],

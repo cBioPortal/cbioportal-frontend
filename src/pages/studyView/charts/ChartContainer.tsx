@@ -54,6 +54,7 @@ import {
     MultiSelectionTable,
     MultiSelectionTableColumn,
     MultiSelectionTableColumnKey,
+    MultiSelectionTableRow,
 } from 'pages/studyView/table/MultiSelectionTable';
 import { FreqColumnTypeEnum } from '../TableUtils';
 import {
@@ -140,8 +141,11 @@ export interface IChartContainerProps {
     onValueSelection?: any;
     onDataBinSelection?: any;
     getData?:
-        | ((dataType?: DataType) => Promise<string | null>)
-        | ((dataType?: DataType) => string);
+        | ((
+              dataType?: DataType,
+              rows?: MultiSelectionTableRow[]
+          ) => Promise<string | null>)
+        | ((dataType?: DataType, rows?: MultiSelectionTableRow[]) => string);
     downloadTypes?: DownloadControlsButton[];
     onResetSelection?: any;
     onDeleteChart: (chartMeta: ChartMeta) => void;
@@ -208,6 +212,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     private handlers: any;
     private plot: AbstractChart;
     private genericAssayFrequencyTableRef: GenericAssayFrequencyTable | null = null;
+    private multiSelectionTableRef: MultiSelectionTable | null = null;
 
     private mouseLeaveTimeout: any;
 
@@ -352,7 +357,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             );
         }
 
-        const downloadData = this.props.getData?.(dataType);
+        const downloadData = this.props.getData?.(
+            dataType,
+            this.multiSelectionTableRef?.getDownloadRowsData()
+        );
         if (downloadData === undefined || downloadData === null) {
             return null;
         }
@@ -752,6 +760,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     }
                     return (
                         <MultiSelectionTable
+                            ref={ref => {
+                                this.multiSelectionTableRef = ref;
+                            }}
                             tableType={FreqColumnTypeEnum.MUTATION}
                             promise={this.props.promise}
                             width={getWidthByDimension(
@@ -848,6 +859,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
                     return (
                         <MultiSelectionTable
+                            ref={ref => {
+                                this.multiSelectionTableRef = ref;
+                            }}
                             tableType={FreqColumnTypeEnum.MUTATION}
                             promise={this.props.promise}
                             width={getWidthByDimension(
@@ -914,6 +928,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     }
                     return (
                         <MultiSelectionTable
+                            ref={ref => {
+                                this.multiSelectionTableRef = ref;
+                            }}
                             tableType={FreqColumnTypeEnum.STRUCTURAL_VARIANT}
                             promise={this.props.promise}
                             width={getWidthByDimension(
@@ -1113,6 +1130,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     }
                     return (
                         <MultiSelectionTable
+                            ref={ref => {
+                                this.multiSelectionTableRef = ref;
+                            }}
                             tableType={FreqColumnTypeEnum.CNA}
                             promise={this.props.promise}
                             width={getWidthByDimension(
@@ -1201,6 +1221,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case ChartTypeEnum.VARIANT_ANNOTATIONS_TABLE: {
                 return () => (
                     <MultiSelectionTable
+                        ref={ref => {
+                            this.multiSelectionTableRef = ref;
+                        }}
                         tableType={FreqColumnTypeEnum.VA}
                         promise={this.props.promise}
                         width={getWidthByDimension(
