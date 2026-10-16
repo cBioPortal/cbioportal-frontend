@@ -94,6 +94,54 @@ export interface PatientViewUrlParams extends QueryParams {
     sampleId?: string;
 }
 
+const PATIENT_VIEW_COLUMN_VISIBILITY_SESSION_KEYS = {
+    mutation: 'patient_view_mutation_table_column_visibility',
+    cna: 'patient_view_cna_table_column_visibility',
+    structuralVariant:
+        'patient_view_structural_variant_table_column_visibility',
+};
+
+type ColumnVisibilityState = { [columnId: string]: boolean } | undefined;
+
+function readColumnVisibilityFromSession(key: string): ColumnVisibilityState {
+    try {
+        const rawValue = getBrowserWindow().sessionStorage.getItem(key);
+        if (!rawValue) {
+            return undefined;
+        }
+        const parsedValue = JSON.parse(rawValue);
+        if (parsedValue && typeof parsedValue === 'object') {
+            return parsedValue;
+        }
+    } catch (error) {
+        console.error(
+            'Error occurred while reading from session storage:',
+            error
+        );
+        return undefined;
+    }
+    return undefined;
+}
+
+function writeColumnVisibilityToSession(
+    key: string,
+    value: ColumnVisibilityState
+) {
+    try {
+        const sessionStorage = getBrowserWindow().sessionStorage;
+        if (!value || Object.keys(value).length === 0) {
+            sessionStorage.removeItem(key);
+        } else {
+            sessionStorage.setItem(key, JSON.stringify(value));
+        }
+    } catch (error) {
+        console.error(
+            'Error occurred while writing to session storage:',
+            error
+        );
+    }
+}
+
 /*
  * The wrapper and the inner component were instituted so that
  * because we needed a component to remount (and create a new patient view store)
@@ -150,6 +198,9 @@ export class PatientViewPageInner extends React.Component<
         | { [columnId: string]: boolean }
         | undefined;
     @observable cnaTableColumnVisibility:
+        | { [columnId: string]: boolean }
+        | undefined;
+    @observable structuralVariantTableColumnVisibility:
         | { [columnId: string]: boolean }
         | undefined;
     @observable genePanelModal: IGenePanelModal = {
@@ -211,6 +262,15 @@ export class PatientViewPageInner extends React.Component<
         this.setOpenResourceTabs();
 
         this.mergeMutationTableOncoKbIcons = getOncoKbIconStyleFromLocalStorage().mergeIcons;
+        this.mutationTableColumnVisibility = readColumnVisibilityFromSession(
+            PATIENT_VIEW_COLUMN_VISIBILITY_SESSION_KEYS.mutation
+        );
+        this.cnaTableColumnVisibility = readColumnVisibilityFromSession(
+            PATIENT_VIEW_COLUMN_VISIBILITY_SESSION_KEYS.cna
+        );
+        this.structuralVariantTableColumnVisibility = readColumnVisibilityFromSession(
+            PATIENT_VIEW_COLUMN_VISIBILITY_SESSION_KEYS.structuralVariant
+        );
     }
 
     setOpenResourceTabs() {
@@ -340,6 +400,10 @@ export class PatientViewPageInner extends React.Component<
             columnId,
             columnVisibility
         );
+        writeColumnVisibilityToSession(
+            PATIENT_VIEW_COLUMN_VISIBILITY_SESSION_KEYS.cna,
+            this.cnaTableColumnVisibility
+        );
     }
 
     @action.bound
@@ -351,6 +415,26 @@ export class PatientViewPageInner extends React.Component<
             this.mutationTableColumnVisibility,
             columnId,
             columnVisibility
+        );
+        writeColumnVisibilityToSession(
+            PATIENT_VIEW_COLUMN_VISIBILITY_SESSION_KEYS.mutation,
+            this.mutationTableColumnVisibility
+        );
+    }
+
+    @action.bound
+    onStructuralVariantTableColumnVisibilityToggled(
+        columnId: string,
+        columnVisibility?: IColumnVisibilityDef[]
+    ) {
+        this.structuralVariantTableColumnVisibility = toggleColumnVisibility(
+            this.structuralVariantTableColumnVisibility,
+            columnId,
+            columnVisibility
+        );
+        writeColumnVisibilityToSession(
+            PATIENT_VIEW_COLUMN_VISIBILITY_SESSION_KEYS.structuralVariant,
+            this.structuralVariantTableColumnVisibility
         );
     }
 
