@@ -157,6 +157,10 @@ const msktargetTsneData = msktargetEmbeddingLoader(
     'msktarget_rna_tsne.json',
     'MSK-TARGET RNA t-SNE'
 );
+const msktargetMpathTsneData = msktargetEmbeddingLoader(
+    'msktarget_rna_tsne_mpath.json',
+    'MSK-TARGET RNA t-SNE (MPath)'
+);
 
 @observer
 export class EmbeddingsPanel extends React.Component<
@@ -1013,6 +1017,17 @@ export class EmbeddingsPanel extends React.Component<
             });
         }
 
+        if (
+            msktargetMpathTsneData.isComplete &&
+            msktargetMpathTsneData.result
+        ) {
+            options.push({
+                value: 'msktarget_rna_tsne_mpath',
+                label: msktargetMpathTsneData.result.title,
+                data: msktargetMpathTsneData.result,
+            });
+        }
+
         return options;
     }
 
@@ -1036,7 +1051,8 @@ export class EmbeddingsPanel extends React.Component<
         return (
             boehmHeData.isPending ||
             msktargetRnaData.isPending ||
-            msktargetTsneData.isPending
+            msktargetTsneData.isPending ||
+            msktargetMpathTsneData.isPending
         );
     }
 
@@ -1046,7 +1062,9 @@ export class EmbeddingsPanel extends React.Component<
     // studies, for whom a missing msktarget embedding is simply irrelevant.
     @computed get isTargetRnaEmbeddingUnreachable(): boolean {
         return (
-            (msktargetRnaData.isError || msktargetTsneData.isError) &&
+            (msktargetRnaData.isError ||
+                msktargetTsneData.isError ||
+                msktargetMpathTsneData.isError) &&
             this.currentStudyIds.includes(MSKTARGET_STUDY_ID)
         );
     }
@@ -1871,7 +1889,8 @@ export class EmbeddingsPanel extends React.Component<
         if (
             boehmHeData.isPending ||
             msktargetRnaData.isPending ||
-            msktargetTsneData.isPending
+            msktargetTsneData.isPending ||
+            msktargetMpathTsneData.isPending
         ) {
             return true;
         }
