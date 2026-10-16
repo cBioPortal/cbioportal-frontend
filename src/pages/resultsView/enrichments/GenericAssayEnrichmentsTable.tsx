@@ -5,7 +5,10 @@ import LazyMobXTable, {
 } from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import { observer } from 'mobx-react';
 import { computed, makeObservable } from 'mobx';
-import { formatSignificanceValueWithStyle } from 'shared/lib/FormatUtils';
+import {
+    formatSignificanceValueWithStyle,
+    toConditionalPrecisionWithMinimum,
+} from 'shared/lib/FormatUtils';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import styles from './styles.module.scss';
 import autobind from 'autobind-decorator';
@@ -117,7 +120,7 @@ export default class GenericAssayEnrichmentsTable extends React.Component<
             name: 'p-Value',
             render: (d: GenericAssayEnrichmentRow) => (
                 <span style={{ whiteSpace: 'nowrap' }}>
-                    {toConditionalPrecision(d.pValue, 3, 0.01)}
+                    {toConditionalPrecisionWithMinimum(d.pValue, 3, 0.01, -10)}
                 </span>
             ),
             tooltip: (

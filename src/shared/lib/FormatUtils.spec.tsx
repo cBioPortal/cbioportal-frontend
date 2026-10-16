@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { assert } from 'chai';
 import {
     toFixedWithThreshold,
@@ -64,16 +65,16 @@ describe('#formatLogOddsRatio()', () => {
 
 describe('#formatSignificanceValueWithStyle()', () => {
     it('returns <span>0.300</span> for 0.3', () => {
-        expect(formatSignificanceValueWithStyle(0.3)).toEqualJSX(
-            <span>0.300</span>
+        assert.equal(
+            renderToStaticMarkup(formatSignificanceValueWithStyle(0.3)),
+            '<span>0.300</span>'
         );
     });
 
     it('returns <b><span>0.030</span></b> for 0.03', () => {
-        expect(formatSignificanceValueWithStyle(0.03)).toEqualJSX(
-            <b>
-                <span>0.0300</span>
-            </b>
+        assert.equal(
+            renderToStaticMarkup(formatSignificanceValueWithStyle(0.03)),
+            '<b><span>0.0300</span></b>'
         );
     });
 });
