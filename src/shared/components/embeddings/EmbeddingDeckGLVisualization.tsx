@@ -17,7 +17,7 @@ import { SelectionOverlay } from './overlays/SelectionOverlay';
 
 // Import utility functions
 import { dataToScreen, colorToRgb } from './utils/coordinateUtils';
-import { calculateDataBounds } from './utils/dataUtils';
+import { calculateDataBounds, calculatePointScale } from './utils/dataUtils';
 import { createScatterplotLayer } from './utils/layerUtils';
 
 interface EmbeddingDeckGLVisualizationState {
@@ -124,6 +124,18 @@ export class EmbeddingDeckGLVisualization extends React.Component<
         return this.cachedView;
     }
 
+    // Cached by data reference: getLayers runs on every render and a 50k-point scan each time adds up.
+    private pointScaleData?: EmbeddingPoint[];
+    private pointScale = 1;
+
+    private getPointScale(data: EmbeddingPoint[]): number {
+        if (data !== this.pointScaleData) {
+            this.pointScaleData = data;
+            this.pointScale = calculatePointScale(data);
+        }
+        return this.pointScale;
+    }
+
     private getLayers() {
         const { data } = this.props;
         const { selectedPoints } = this.state;
@@ -136,7 +148,8 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 selectedPoints,
                 this.props.selectedPatientIds || [],
                 this.onHover,
-                this.onClick
+                this.onClick,
+                this.getPointScale(data)
             ),
         ];
     }
