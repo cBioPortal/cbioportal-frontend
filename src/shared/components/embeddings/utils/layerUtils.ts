@@ -10,7 +10,8 @@ export function createScatterplotLayer(
     selectedPoints: EmbeddingPoint[],
     selectedPatientIds: string[] = [],
     onHover: (info: any) => void,
-    onClick: (info: any) => void
+    onClick: (info: any) => void,
+    pointScale: number = 1
 ) {
     // Convert to Sets for O(1) lookup performance (computed once per layer creation)
     const localSelectedSet = new Set(selectedPoints.map(p => p.patientId));
@@ -115,6 +116,8 @@ export function createScatterplotLayer(
             // Make all other points have a very thin consistent stroke width as in plots tab
             return 0.003; // Small consistent border width for most points
         },
+        radiusScale: pointScale,
+        lineWidthScale: pointScale,
         filled: true,
         stroked: true,
         pickable: true,
