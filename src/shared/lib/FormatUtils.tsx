@@ -72,8 +72,22 @@ export function getPercentage(proportion: number) {
     }
 }
 
-export function formatSignificanceValueWithStyle(value: number): JSX.Element {
-    let formattedValue = <span>{toConditionalPrecision(value, 3, 0.01)}</span>;
+export function formatSignificanceValueWithStyle(
+    value: number,
+    minimumExponent?: number
+): JSX.Element {
+    let formattedValue = (
+        <span>
+            {minimumExponent === undefined
+                ? toConditionalPrecision(value, 3, 0.01)
+                : toConditionalPrecisionWithMinimum(
+                      value,
+                      3,
+                      0.01,
+                      minimumExponent
+                  )}
+        </span>
+    );
     if (value < 0.05) {
         formattedValue = <b>{formattedValue}</b>;
     }
