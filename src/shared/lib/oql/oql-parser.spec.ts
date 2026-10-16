@@ -1181,6 +1181,72 @@ describe('OQL parser', () => {
     ]);
 
     // Tests for Structural Variants
+    doTest('-::RET', [
+        {
+            gene: 'RET',
+            alterations: [
+                {
+                    alteration_type: STUCTVARUpstreamFusionStr,
+                    gene: '-',
+                    modifiers: [],
+                },
+            ],
+        } as SingleGeneQuery,
+    ]);
+    doTest('-::RET: DRIVER_SOMATIC', [
+        {
+            gene: 'RET',
+            alterations: [
+                {
+                    alteration_type: STUCTVARUpstreamFusionStr,
+                    gene: '-',
+                    modifiers: [{ type: 'DRIVER' }, { type: 'SOMATIC' }],
+                },
+            ],
+        } as SingleGeneQuery,
+    ]);
+    doTest('KIF5B::-', [
+        {
+            gene: 'KIF5B',
+            alterations: [
+                {
+                    alteration_type: STUCTVARDownstreamFusionStr,
+                    gene: '-',
+                    modifiers: [],
+                },
+            ],
+        } as SingleGeneQuery,
+    ]);
+    doTest('KIF5B::-: DRIVER_SOMATIC', [
+        {
+            gene: 'KIF5B',
+            alterations: [
+                {
+                    alteration_type: STUCTVARDownstreamFusionStr,
+                    gene: '-',
+                    modifiers: [{ type: 'DRIVER' }, { type: 'SOMATIC' }],
+                },
+            ],
+        } as SingleGeneQuery,
+    ]);
+    doTest('-RET::KIF5B', [
+        {
+            gene: '-RET',
+            alterations: [
+                {
+                    alteration_type: STUCTVARDownstreamFusionStr,
+                    gene: 'KIF5B',
+                    modifiers: [],
+                },
+            ],
+        } as SingleGeneQuery,
+    ]);
+    it.each(['-:::RET', '-::RET:', '-::RET: INVALID', '-::RET::KIF5B'])(
+        'rejects malformed structural variant query %s',
+        query => {
+            assert.throws(() => oql_parser.parse(query));
+        }
+    );
     doTest('KIF5B::RET', [
         {
             gene: 'KIF5B',
