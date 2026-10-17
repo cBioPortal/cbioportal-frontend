@@ -1,5 +1,11 @@
 import _ from 'lodash';
 import {
+    isHiddenFromResourceViews,
+    isWsiResourceId,
+} from 'shared/lib/ResourcePolicy';
+import { fetchWsiPatientHierarchy } from 'cbioportal-wsi-viewer';
+import { wsiAuthScope } from 'shared/components/wsiViewer/wsiAppConfig';
+import {
     CBioPortalAPIInternal,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
@@ -1794,11 +1800,42 @@ export class PatientViewPageStore {
         []
     );
 
+    /**
+     * Whether the patient has pathology slides, from the WSI hierarchy that
+     * the backend builds from resource_data. False when slides aren't served
+     * or the hierarchy can't be read. The request goes through the viewer's
+     * hierarchy cache, so opening the Pathology Slides tab reuses it.
+     */
+    readonly hasPathologySlides = remoteData<boolean>({
+        invoke: async () => {
+            if (!getServerConfig().wsi_tile_server_url) {
+                return false;
+            }
+            try {
+                const hierarchy = await fetchWsiPatientHierarchy(
+                    this.studyId,
+                    this.patientId,
+                    wsiAuthScope(this.appStore.userName)
+                );
+                return hierarchy.samples.length > 0;
+            } catch (e) {
+                return false;
+            }
+        },
+        default: false,
+    });
+
+    // Pathology slides are shown in the Pathology Slides tab, so their
+    // resources are left out of Files & Links and the resource tabs.
     readonly resourceDefinitions = remoteData({
         invoke: () =>
-            internalClient.getAllResourceDefinitionsInStudyUsingGET({
-                studyId: this.studyId,
-            }),
+            internalClient
+                .getAllResourceDefinitionsInStudyUsingGET({
+                    studyId: this.studyId,
+                })
+                .then(defs =>
+                    defs.filter(def => !isWsiResourceId(def.resourceId))
+                ),
         onResult: defs => {
             // open resources which have `openByDefault` set to true
             if (defs) {
@@ -1812,7 +1849,8 @@ export class PatientViewPageStore {
     /**
      * Per-resource row counts for this patient, used to decide whether the resource tabs are
      * worth showing. The tabs endpoint answers that directly; the alternative is fetching every
-     * resource's data just to learn whether any exists.
+     * resource's data just to learn whether any exists. Slides are left out: they have their own
+     * Pathology Slides tab.
      */
     readonly resourceTableTabs = remoteData<ResourceTableTab[]>({
         await: () => [this.samples],
@@ -1826,7 +1864,9 @@ export class PatientViewPageStore {
                     studyId: this.studyId,
                     sampleId: s.sampleId,
                 })),
-            }),
+            }).then(tabs =>
+                tabs.filter(tab => !isHiddenFromResourceViews(tab.resourceId))
+            ),
         default: [],
     });
 
@@ -2006,30 +2046,6 @@ export class PatientViewPageStore {
         },
         {}
     );
-
-    readonly getWholeSlideViewerIds = remoteData({
-        await: () => [this.clinicalDataGroupedBySample],
-        invoke: () => {
-            const clinicalData = this.clinicalDataGroupedBySample.result!;
-            const clinicalAttributeId = 'MSK_SLIDE_ID';
-            if (clinicalData) {
-                const ids = _.chain(clinicalData)
-                    .map(data => data.clinicalData)
-                    .flatten()
-                    .filter(attribute => {
-                        return (
-                            attribute.clinicalAttributeId ===
-                            clinicalAttributeId
-                        );
-                    })
-                    .map(attribute => attribute.value)
-                    .value();
-
-                return Promise.resolve(ids);
-            }
-            return Promise.resolve([]);
-        },
-    });
 
     readonly studyMetaData = remoteData({
         invoke: async () =>

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { isHiddenFromResourceViews } from 'shared/lib/ResourcePolicy';
 import _ from 'lodash';
 import { DiscreteCopyNumberData, ResourceData } from 'cbioportal-ts-api-client';
 import { PaginationControls } from '../../shared/components/paginationControls/PaginationControls';
@@ -32,7 +33,6 @@ import './patient.scss';
 import {
     buildCBioPortalPageUrl,
     getPatientViewUrl,
-    getWholeSlideViewerUrl,
 } from '../../shared/api/urls';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import Helmet from 'react-helmet';
@@ -42,7 +42,6 @@ import { showCustomTab } from '../../shared/lib/customTabs';
 import { StudyLink } from '../../shared/components/StudyLink/StudyLink';
 import { QueryParams } from 'url';
 import { AppStore } from '../../AppStore';
-import request from 'superagent';
 import { remoteData, getBrowserWindow } from 'cbioportal-frontend-commons';
 import 'react-mutation-mapper/dist/styles.css';
 import 'react-table/react-table.css';
@@ -165,7 +164,9 @@ export class PatientViewPageInner extends React.Component<
 
     public patientViewPageStore: PatientViewPageStore;
 
-    readonly resourceTableStore = new ResourceTableStore();
+    readonly resourceTableStore = new ResourceTableStore({
+        hideResource: isHiddenFromResourceViews,
+    });
     private readonly resourceTableStores = new Map<
         string,
         ResourceTableStore
@@ -277,8 +278,7 @@ export class PatientViewPageInner extends React.Component<
     }
 
     @computed get hasNewResourceTabs(): boolean {
-        const tabs = this.resourceTableStore.tabs.result;
-        return !!tabs && tabs.length > 0;
+        return this.resourceTableStore.visibleTabs.length > 0;
     }
 
     @action.bound
@@ -321,15 +321,6 @@ export class PatientViewPageInner extends React.Component<
         saveOncoKbIconStyleToLocalStorage({ mergeIcons });
     }
 
-    @computed get showWholeSlideViewerTab() {
-        return (
-            this.pageStore.clinicalDataForSamples.isComplete &&
-            _.some(this.pageStore.clinicalDataForSamples.result, s => {
-                return s.clinicalAttributeId === 'MSK_SLIDE_ID';
-            })
-        );
-    }
-
     @action.bound
     onCnaTableColumnVisibilityToggled(
         columnId: string,
@@ -370,6 +361,25 @@ export class PatientViewPageInner extends React.Component<
         }
     }
 
+    /**
+     * The Pathology Slides tab is shown for patients whose WSI hierarchy has
+     * slides, and always when it is the active tab so a link to it never
+     * lands elsewhere.
+     */
+    @computed
+    get shouldShowPathologySlides(): boolean {
+        if (!getServerConfig().wsi_tile_server_url) {
+            return false;
+        }
+        if (this.urlWrapper.activeTabId === PatientViewPageTabs.WSIHESlides) {
+            return true;
+        }
+        return (
+            this.pageStore.hasPathologySlides.isComplete &&
+            this.pageStore.hasPathologySlides.result
+        );
+    }
+
     @computed
     get shouldShowPathologyReport(): boolean {
         return (
@@ -401,27 +411,6 @@ export class PatientViewPageInner extends React.Component<
     customTabMountCallback(div: HTMLDivElement, tab: any) {
         showCustomTab(div, tab, this.props.routing.location, this.pageStore);
     }
-
-    wholeSlideViewerUrl = remoteData<string | undefined>({
-        await: () => [this.pageStore.getWholeSlideViewerIds],
-        invoke: async () => {
-            if (!_.isEmpty(this.pageStore.getWholeSlideViewerIds.result)) {
-                const url = getWholeSlideViewerUrl(
-                    this.pageStore.getWholeSlideViewerIds.result!,
-                    this.props.appStore.userName!
-                );
-                //if request succeeds then we return the url because we know request works.
-                try {
-                    await request.get(url);
-                    return url;
-                } catch (er) {
-                    //but if request fails, we will return undefined.
-                    return undefined;
-                }
-            }
-            return undefined;
-        },
-    });
 
     @autobind
     onFilterGenesMutationTable(option: GeneFilterOption): void {
@@ -544,7 +533,7 @@ export class PatientViewPageInner extends React.Component<
     readonly resourceTabs = MakeMobxView({
         await: () => [this.resourceTableStore.tabs],
         render: () => {
-            const apiTabs = this.resourceTableStore.tabs.result || [];
+            const apiTabs = this.resourceTableStore.visibleTabs;
             if (apiTabs.length === 0) {
                 return [] as JSX.Element[];
             }

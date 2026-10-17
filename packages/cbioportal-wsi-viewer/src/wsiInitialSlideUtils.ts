@@ -1,0 +1,96 @@
+import { Sample, Slide, WsiStainFilter } from './wsiViewerTypes';
+import { matchesWsiStainFilter } from './wsiSlideUtils';
+
+export interface InitialSlideEntry {
+    slide: Slide;
+    sample: Sample;
+}
+
+export interface InitialSlideOptions {
+    preferredSampleId?: string;
+    /** Slide restored from the URL hash; takes precedence over all others. */
+    preferredSlideId?: string;
+    /** Slide named by a `slideKey` link; used when no hash slide matches. */
+    requestedSlideKey?: string;
+    stainFilter: WsiStainFilter;
+    /** Only slides it accepts are considered. */
+    matchesEntry?: (entry: InitialSlideEntry) => boolean;
+}
+
+/**
+ * Picks the initial slide. Precedence: the hash slide, then the requested
+ * link slide, then the default ranking (preferred sample and stain, H&E,
+ * first). Unknown IDs fall through to the next level.
+ */
+export function chooseInitialServableSlide(
+    allSlides: Iterable<InitialSlideEntry>,
+    options: InitialSlideOptions
+): InitialSlideEntry | undefined {
+    let requested: InitialSlideEntry | undefined;
+    let preferredSampleMatchingStain: InitialSlideEntry | undefined;
+    let preferredSampleHne: InitialSlideEntry | undefined;
+    let preferredSampleAny: InitialSlideEntry | undefined;
+    let matchingStain: InitialSlideEntry | undefined;
+    let hne: InitialSlideEntry | undefined;
+    let first: InitialSlideEntry | undefined;
+
+    for (const entry of allSlides) {
+        if (options.matchesEntry && !options.matchesEntry(entry)) {
+            continue;
+        }
+
+        if (!first) {
+            first = entry;
+        }
+
+        if (
+            options.preferredSlideId &&
+            entry.slide.slide_key === options.preferredSlideId
+        ) {
+            return entry;
+        }
+
+        if (
+            options.requestedSlideKey &&
+            entry.slide.slide_key === options.requestedSlideKey
+        ) {
+            requested = requested ?? entry;
+        }
+
+        const inPreferredSample =
+            !!options.preferredSampleId &&
+            entry.sample.sample_id === options.preferredSampleId;
+        const matchesRequestedStain = matchesWsiStainFilter(
+            entry.slide,
+            options.stainFilter
+        );
+
+        if (inPreferredSample) {
+            preferredSampleAny = preferredSampleAny ?? entry;
+            if (matchesRequestedStain) {
+                preferredSampleMatchingStain =
+                    preferredSampleMatchingStain ?? entry;
+            }
+            if (entry.slide.is_hne) {
+                preferredSampleHne = preferredSampleHne ?? entry;
+            }
+        }
+
+        if (matchesRequestedStain) {
+            matchingStain = matchingStain ?? entry;
+        }
+        if (entry.slide.is_hne) {
+            hne = hne ?? entry;
+        }
+    }
+
+    return (
+        requested ??
+        preferredSampleMatchingStain ??
+        preferredSampleHne ??
+        preferredSampleAny ??
+        matchingStain ??
+        hne ??
+        first
+    );
+}
