@@ -32,16 +32,14 @@ describe('WsiPatientViewRoute', () => {
     });
 
     it('passes the slideKey link parameter as the requested slide', () => {
-        renderRoute(
-            '?studyId=study-1&slideKey=0123456789abcdef0123456789abcdef'
-        );
+        renderRoute('?studyId=study-1&slideKey=0123456789ab');
 
         expect(mockEntryPoint).toHaveBeenCalledTimes(1);
         expect(mockEntryPoint.mock.calls[0][0]).toEqual(
             expect.objectContaining({
                 patientId: 'P-1',
                 studyId: 'study-1',
-                requestedSlideKey: '0123456789abcdef0123456789abcdef',
+                requestedSlideKey: '0123456789ab',
                 tileServerUrl: '/wsi',
             })
         );
@@ -90,9 +88,7 @@ describe('WsiPatientViewRoute', () => {
     });
 
     it('reports unavailable configuration without a study', () => {
-        const rendered = renderRoute(
-            '?slideKey=0123456789abcdef0123456789abcdef'
-        );
+        const rendered = renderRoute('?slideKey=0123456789ab');
 
         expect(mockEntryPoint).not.toHaveBeenCalled();
         expect(

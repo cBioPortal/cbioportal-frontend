@@ -2,9 +2,9 @@ import { Page } from '../fixtures';
 
 export const STUDY_ID = 'wsi-foundation-smoke-study';
 export const PATIENT_ID = 'wsi-foundation-smoke-patient';
-/** Opaque 32-hex slide keys, as the backend publishes them. */
-export const SLIDE_KEY = '0123456789abcdef0123456789abcdef';
-export const SECOND_SLIDE_KEY = 'fedcba9876543210fedcba9876543210';
+/** Opaque 12-hex slide keys, as the backend publishes them. */
+export const SLIDE_KEY = '0123456789ab';
+export const SECOND_SLIDE_KEY = 'fedcba987654';
 export const SAMPLE_ID = 'wsi-foundation-smoke-sample';
 /** A sample attribute value the sidebar's Clinical section shows. */
 export const CLINICAL_CANCER_TYPE = 'Lung Adenocarcinoma';
@@ -88,7 +88,7 @@ export const pixel = Buffer.from(
 );
 
 /**
- * Slide access as the backend answers it: 400 unless the key is 32 hex, 404
+ * Slide access as the backend answers it: 400 unless the key is 12 hex, 404
  * for a slide `isPublished` rejects, else a token with `tileMetadata`.
  */
 export async function routeSlideAccess(
@@ -104,7 +104,7 @@ export async function routeSlideAccess(
             url.pathname.split('/').slice(-2, -1)[0]
         );
         const slideKey = url.searchParams.get('slideKey') || '';
-        if (!/^[0-9a-f]{32}$/.test(slideKey)) {
+        if (!/^[0-9a-f]{12}$/.test(slideKey)) {
             return route.fulfill({ status: 400, body: '' });
         }
         if (!isPublished(patientId, slideKey)) {

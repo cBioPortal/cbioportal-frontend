@@ -122,7 +122,7 @@ describe('WsiNavPanel', () => {
     });
 
     it('never shows the slide key, a barcode or an image ID in a slide item', () => {
-        const key = '0123456789abcdef0123456789abcdef';
+        const key = '0123456789ab';
         const sample = makeSample('S-1', [
             makeSlide({ slide_key: key, block_label: '' }),
         ]);

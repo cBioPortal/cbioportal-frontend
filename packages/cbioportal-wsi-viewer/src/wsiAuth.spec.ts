@@ -202,7 +202,7 @@ describe('WSI access capability', () => {
         });
 
         it('names the slide by its opaque slide key', async () => {
-            const key = '0123456789abcdef0123456789abcdef';
+            const key = '0123456789ab';
             registerWsiResourceAccess('study-1', hierarchy([key]));
             jest.spyOn(global, 'fetch').mockResolvedValue({
                 ok: true,

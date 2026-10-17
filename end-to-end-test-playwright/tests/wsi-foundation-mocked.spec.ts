@@ -9,7 +9,7 @@ import {
 } from './wsi-foundation-mocks';
 
 /** A well-formed slide key that the hierarchy does not publish. */
-const MISSING_SLIDE_KEY = '00000000000000000000000000000000';
+const MISSING_SLIDE_KEY = '000000000000';
 
 /** "{study}/{patient}/{slideKey}" of a slide access request. */
 function slideAccessTarget(url: string): string {

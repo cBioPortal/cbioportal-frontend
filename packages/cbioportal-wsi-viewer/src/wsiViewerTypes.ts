@@ -1,5 +1,5 @@
 export interface Slide {
-    /** Opaque 32-hex de-identified slide key (never the source image id). */
+    /** Opaque 12-hex de-identified slide key (never the source image id). */
     slide_key: string;
     stain_name: string;
     stain_group: string;
@@ -54,7 +54,7 @@ export interface PatientHierarchy {
 
 /** Wire format returned by the normalized WSI v2 hierarchy endpoint. */
 export interface WsiV2Slide {
-    /** Opaque 32-hex de-identified slide key. */
+    /** Opaque 12-hex de-identified slide key. */
     slideKey: string;
     stainName: string;
     stainGroup: string;
