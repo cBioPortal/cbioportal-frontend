@@ -8,12 +8,14 @@ import {
     excludePatients,
     excludeSamples,
     finalizeStudiesAttr,
+    getNonOverlappingGroupStudiesAttr,
     getNumPatients,
     getNumSamples,
     getOrdinals,
     getOverlapComputations,
     getOverlapFilteredGroups,
     getOverlappingPatients,
+    getOverlappingGroupStudiesAttr,
     getOverlappingSamples,
     getPatientIdentifiers,
     getSampleIdentifiers,
@@ -3415,6 +3417,238 @@ describe('GroupComparisonUtils', () => {
                     'sample1\tpatient3\tstudy2\tNo\tYes\tYes\n' +
                     'sample2\tpatient3\tstudy2\tYes\tYes\tYes'
             );
+        });
+    });
+
+    function makeSampleMap(
+        entries: { studyId: string; sampleId: string; patientId: string }[]
+    ) {
+        const map = new ComplexKeyMap<Pick<Sample, 'patientId'>>();
+        for (const e of entries) {
+            map.set({ studyId: e.studyId, sampleId: e.sampleId }, {
+                patientId: e.patientId,
+            } as Pick<Sample, 'patientId'>);
+        }
+        return map;
+    }
+
+    function makeComplexKeySet(
+        entries: { studyId: string; sampleId?: string; patientId?: string }[]
+    ) {
+        const set = new ComplexKeySet();
+        for (const e of entries) {
+            set.add(e);
+        }
+        return set;
+    }
+
+    describe('getNonOverlappingGroupStudiesAttr', () => {
+        it('no overlap - returns all samples unchanged', () => {
+            const groupStudies = [
+                { id: 'study1', samples: ['s1', 's2'] },
+            ];
+            const overlappingSamplesSet = makeComplexKeySet([]);
+            const overlappingPatientsSet = makeComplexKeySet([]);
+            const sampleMap = makeSampleMap([
+                { studyId: 'study1', sampleId: 's1', patientId: 'p1' },
+                { studyId: 'study1', sampleId: 's2', patientId: 'p2' },
+            ]);
+            const result = getNonOverlappingGroupStudiesAttr(
+                groupStudies,
+                overlappingSamplesSet,
+                overlappingPatientsSet,
+                sampleMap
+            );
+            assertDeepEqualInAnyOrder(result, [
+                { id: 'study1', samples: ['s1', 's2'] },
+            ]);
+        });
+
+        it('sample-level overlap - removes directly overlapping samples', () => {
+            const groupStudies = [
+                { id: 'study1', samples: ['s1', 's2', 's3'] },
+            ];
+            const overlappingSamplesSet = makeComplexKeySet([
+                { studyId: 'study1', sampleId: 's2' },
+            ]);
+            const overlappingPatientsSet = makeComplexKeySet([]);
+            const sampleMap = makeSampleMap([
+                { studyId: 'study1', sampleId: 's1', patientId: 'p1' },
+                { studyId: 'study1', sampleId: 's2', patientId: 'p2' },
+                { studyId: 'study1', sampleId: 's3', patientId: 'p3' },
+            ]);
+            const result = getNonOverlappingGroupStudiesAttr(
+                groupStudies,
+                overlappingSamplesSet,
+                overlappingPatientsSet,
+                sampleMap
+            );
+            assertDeepEqualInAnyOrder(result, [
+                { id: 'study1', samples: ['s1', 's3'] },
+            ]);
+        });
+
+        it('patient-level overlap - removes samples of overlapping patients', () => {
+            // Patient p2 has sample s2 in group A and sample s3 in group B
+            // s2 should be removed from group A (and s3 from group B)
+            const groupStudies = [
+                { id: 'study1', samples: ['s1', 's2'] },
+            ];
+            const overlappingSamplesSet = makeComplexKeySet([]);
+            const overlappingPatientsSet = makeComplexKeySet([
+                { studyId: 'study1', patientId: 'p2' },
+            ]);
+            const sampleMap = makeSampleMap([
+                { studyId: 'study1', sampleId: 's1', patientId: 'p1' },
+                { studyId: 'study1', sampleId: 's2', patientId: 'p2' },
+            ]);
+            const result = getNonOverlappingGroupStudiesAttr(
+                groupStudies,
+                overlappingSamplesSet,
+                overlappingPatientsSet,
+                sampleMap
+            );
+            assertDeepEqualInAnyOrder(result, [
+                { id: 'study1', samples: ['s1'] },
+            ]);
+        });
+
+        it('patient-level overlap - all samples of a study removed, study excluded', () => {
+            const groupStudies = [
+                { id: 'study1', samples: ['s1'] },
+            ];
+            const overlappingSamplesSet = makeComplexKeySet([]);
+            const overlappingPatientsSet = makeComplexKeySet([
+                { studyId: 'study1', patientId: 'p1' },
+            ]);
+            const sampleMap = makeSampleMap([
+                { studyId: 'study1', sampleId: 's1', patientId: 'p1' },
+            ]);
+            const result = getNonOverlappingGroupStudiesAttr(
+                groupStudies,
+                overlappingSamplesSet,
+                overlappingPatientsSet,
+                sampleMap
+            );
+            assert.deepEqual(result, []);
+        });
+
+        it('multi-study: removes overlap from each study', () => {
+            const groupStudies = [
+                { id: 'study1', samples: ['s1', 's2'] },
+                { id: 'study2', samples: ['s3', 's4'] },
+            ];
+            const overlappingSamplesSet = makeComplexKeySet([
+                { studyId: 'study1', sampleId: 's2' },
+            ]);
+            const overlappingPatientsSet = makeComplexKeySet([
+                { studyId: 'study2', patientId: 'p3' },
+            ]);
+            const sampleMap = makeSampleMap([
+                { studyId: 'study1', sampleId: 's1', patientId: 'p1' },
+                { studyId: 'study1', sampleId: 's2', patientId: 'p2' },
+                { studyId: 'study2', sampleId: 's3', patientId: 'p3' },
+                { studyId: 'study2', sampleId: 's4', patientId: 'p4' },
+            ]);
+            const result = getNonOverlappingGroupStudiesAttr(
+                groupStudies,
+                overlappingSamplesSet,
+                overlappingPatientsSet,
+                sampleMap
+            );
+            assertDeepEqualInAnyOrder(result, [
+                { id: 'study1', samples: ['s1'] },
+                { id: 'study2', samples: ['s4'] },
+            ]);
+        });
+    });
+
+    describe('getOverlappingGroupStudiesAttr', () => {
+        it('no patient overlap - returns empty', () => {
+            const groupStudies = [
+                { id: 'study1', samples: ['s1', 's2'] },
+            ];
+            const overlappingPatientsSet = makeComplexKeySet([]);
+            const sampleMap = makeSampleMap([
+                { studyId: 'study1', sampleId: 's1', patientId: 'p1' },
+                { studyId: 'study1', sampleId: 's2', patientId: 'p2' },
+            ]);
+            const result = getOverlappingGroupStudiesAttr(
+                groupStudies,
+                overlappingPatientsSet,
+                sampleMap
+            );
+            assert.deepEqual(result, []);
+        });
+
+        it('patient overlap - keeps only samples of overlapping patients', () => {
+            const groupStudies = [
+                { id: 'study1', samples: ['s1', 's2', 's3'] },
+            ];
+            const overlappingPatientsSet = makeComplexKeySet([
+                { studyId: 'study1', patientId: 'p2' },
+            ]);
+            const sampleMap = makeSampleMap([
+                { studyId: 'study1', sampleId: 's1', patientId: 'p1' },
+                { studyId: 'study1', sampleId: 's2', patientId: 'p2' },
+                { studyId: 'study1', sampleId: 's3', patientId: 'p3' },
+            ]);
+            const result = getOverlappingGroupStudiesAttr(
+                groupStudies,
+                overlappingPatientsSet,
+                sampleMap
+            );
+            assertDeepEqualInAnyOrder(result, [
+                { id: 'study1', samples: ['s2'] },
+            ]);
+        });
+
+        it('multi-study: keeps overlapping patients in each study', () => {
+            const groupStudies = [
+                { id: 'study1', samples: ['s1', 's2'] },
+                { id: 'study2', samples: ['s3', 's4'] },
+            ];
+            const overlappingPatientsSet = makeComplexKeySet([
+                { studyId: 'study1', patientId: 'p1' },
+                { studyId: 'study2', patientId: 'p3' },
+            ]);
+            const sampleMap = makeSampleMap([
+                { studyId: 'study1', sampleId: 's1', patientId: 'p1' },
+                { studyId: 'study1', sampleId: 's2', patientId: 'p2' },
+                { studyId: 'study2', sampleId: 's3', patientId: 'p3' },
+                { studyId: 'study2', sampleId: 's4', patientId: 'p4' },
+            ]);
+            const result = getOverlappingGroupStudiesAttr(
+                groupStudies,
+                overlappingPatientsSet,
+                sampleMap
+            );
+            assertDeepEqualInAnyOrder(result, [
+                { id: 'study1', samples: ['s1'] },
+                { id: 'study2', samples: ['s3'] },
+            ]);
+        });
+
+        it('patient with multiple samples - keeps all their samples', () => {
+            const groupStudies = [
+                { id: 'study1', samples: ['s1', 's2', 's3'] },
+            ];
+            const overlappingPatientsSet = makeComplexKeySet([
+                { studyId: 'study1', patientId: 'p1' },
+            ]);
+            const sampleMap = makeSampleMap([
+                { studyId: 'study1', sampleId: 's1', patientId: 'p1' },
+                { studyId: 'study1', sampleId: 's2', patientId: 'p1' },
+                { studyId: 'study1', sampleId: 's3', patientId: 'p2' },
+            ]);
+            const result = getOverlappingGroupStudiesAttr(
+                groupStudies,
+                overlappingPatientsSet,
+                sampleMap
+            );
+            assertDeepEqualInAnyOrder(result, [
+                { id: 'study1', samples: ['s1', 's2'] },
+            ]);
         });
     });
 });
