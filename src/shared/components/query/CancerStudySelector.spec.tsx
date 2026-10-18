@@ -192,6 +192,27 @@ describe('CancerStudySelector virtual cohort datatype dropdown', () => {
         ).toEqual(['virtual']);
     });
 
+    it('keeps a genome-matching virtual-only search usable through datatype selection', () => {
+        const { selector, store } = createSelector({
+            search: 'Saved cohort reference-genome:hg19',
+        });
+        mountDropdown(selector, store);
+
+        expect(selector.showStudiesPerFilterType).toEqual([1, 1]);
+        expect(selector.showSamplesPerFilterType).toEqual([null, null]);
+        toggle('Mutations');
+        toggle('CNA');
+        expect(
+            store.studyListLogic.mainView
+                .getSelectionReport()
+                .shownStudies.map(study => study.studyId)
+        ).toEqual(['virtual']);
+        toggle('CNA');
+        toggle('Mutations');
+        expect(store.dataTypeFilters).toEqual([]);
+        expect(selector.showStudiesPerFilterType).toEqual([1, 1]);
+    });
+
     it.each([
         ['Mutations', 'CNA'],
         ['CNA', 'Mutations'],

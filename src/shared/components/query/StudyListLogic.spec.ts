@@ -285,16 +285,16 @@ describe('StudyListLogic data type filtering', () => {
         );
     });
 
-    it('does not inherit source tags or change reference-genome search behavior', () => {
+    it('does not inherit source tags while matching the virtual cohort reference genome', () => {
         assert.deepEqual(
             createStudyList({ search: 'tagged' }).visibleStudyIds(),
             ['mutations']
         );
-        assert.deepEqual(
+        assert.sameMembers(
             createStudyList({
                 search: 'reference-genome:hg19',
             }).visibleStudyIds(),
-            ['mutations']
+            ['mutations', 'virtual']
         );
     });
 
@@ -312,5 +312,215 @@ describe('StudyListLogic data type filtering', () => {
         createStudyList({ studies, virtualStudies }).visibleStudyIds();
 
         assert.equal(JSON.stringify({ studies, virtualStudies }), original);
+    });
+});
+
+describe('StudyListLogic virtual cohort reference-genome search', () => {
+    function genomeSearch({
+        studies = [physicalStudy('source')],
+        sources = [{ id: 'source', samples: ['sample1'] }],
+        search = 'reference-genome:hg19',
+        publicCohort = false,
+    }: {
+        studies?: CancerStudy[];
+        sources?: { id: string; samples: string[] }[];
+        search?: string;
+        publicCohort?: boolean;
+    } = {}) {
+        const cohort = virtualStudy('virtual', sources, 'Saved cohort');
+        return createStudyList({
+            studies,
+            virtualStudies: publicCohort ? [] : [cohort],
+            publicVirtualStudies: publicCohort ? [cohort] : [],
+            filters: [],
+            search,
+        });
+    }
+
+    it.each([false, true])(
+        'matches a uniform-build virtual cohort (public: %s)',
+        publicCohort => {
+            assert.sameMembers(
+                genomeSearch({ publicCohort }).visibleStudyIds(),
+                ['source', 'virtual']
+            );
+        }
+    );
+
+    it('combines cohort-name, genome, and datatype filters', () => {
+        const { visibleStudyIds } = createStudyList({
+            search: 'cohort reference-genome:hg19',
+        });
+        assert.deepEqual(visibleStudyIds(), ['virtual']);
+    });
+
+    it('matches a shared build case-insensitively across contributing sources', () => {
+        assert.sameMembers(
+            genomeSearch({
+                studies: [
+                    physicalStudy('source'),
+                    physicalStudy('other', { referenceGenome: 'HG19' }),
+                ],
+                sources: [
+                    { id: 'source', samples: ['sample1'] },
+                    { id: 'other', samples: ['sample2'] },
+                ],
+            }).visibleStudyIds(),
+            ['source', 'other', 'virtual']
+        );
+    });
+
+    it.each([
+        ['hg38', 'reference-genome:hg19,hg38'],
+        ['GRCh37', 'reference-genome:hg19,grch37'],
+    ])('does not infer one build from hg19 and %s', (otherBuild, search) => {
+        assert.sameMembers(
+            genomeSearch({
+                studies: [
+                    physicalStudy('source'),
+                    physicalStudy('other', { referenceGenome: otherBuild }),
+                ],
+                sources: [
+                    { id: 'source', samples: ['sample1'] },
+                    { id: 'other', samples: ['sample2'] },
+                ],
+                search,
+            }).visibleStudyIds(),
+            ['source', 'other']
+        );
+    });
+
+    it.each(['GRCh37', 'custom-build'])(
+        'preserves exact matching for %s',
+        referenceGenome => {
+            const studies = [physicalStudy('source', { referenceGenome })];
+            assert.sameMembers(
+                genomeSearch({
+                    studies,
+                    search: `reference-genome:${referenceGenome}`,
+                }).visibleStudyIds(),
+                ['source', 'virtual']
+            );
+            assert.deepEqual(genomeSearch({ studies }).visibleStudyIds(), []);
+        }
+    );
+
+    it.each([
+        ['missing', undefined],
+        ['private', { readPermission: false }],
+        ['unavailable', { status: 0 }],
+        ['non-ready-positive-status', { status: 2 }],
+        ['non-ready-negative-status', { status: -1 }],
+        ['unknown', { referenceGenome: undefined }],
+        ['empty', { referenceGenome: '' }],
+        ['whitespace', { referenceGenome: '  ' }],
+    ] as [string, Partial<CancerStudy> | undefined][])(
+        'does not drop a nonempty %s constituent to infer a build',
+        (sourceId, properties) => {
+            const studies = [physicalStudy('source')];
+            if (properties) {
+                studies.push(physicalStudy(sourceId, properties));
+            }
+            const { treeData, logic } = genomeSearch({
+                studies,
+                sources: [
+                    { id: 'source', samples: ['sample1'] },
+                    { id: sourceId, samples: ['sample2'] },
+                ],
+            });
+            assert.isFalse(
+                logic.mainView.nodeFilter(
+                    treeData.map_studyId_cancerStudy.get('virtual')!
+                )
+            );
+        }
+    );
+
+    it('accepts a source with unspecified availability status', () => {
+        assert.sameMembers(
+            genomeSearch({
+                studies: [physicalStudy('source', { status: undefined })],
+            }).visibleStudyIds(),
+            ['source', 'virtual']
+        );
+    });
+
+    it.each([false, true])(
+        'does not infer a build without contributing samples (empty source: %s)',
+        hasEmptySource => {
+            const sources = hasEmptySource
+                ? [{ id: 'source', samples: [] }]
+                : [];
+            assert.deepEqual(genomeSearch({ sources }).visibleStudyIds(), [
+                'source',
+            ]);
+        }
+    );
+
+    it('ignores empty constituents, including missing metadata and other builds', () => {
+        assert.sameMembers(
+            genomeSearch({
+                studies: [
+                    physicalStudy('source'),
+                    physicalStudy('other', { referenceGenome: 'hg38' }),
+                ],
+                sources: [
+                    { id: 'source', samples: ['sample1'] },
+                    { id: 'other', samples: [] },
+                    { id: 'missing', samples: [] },
+                ],
+            }).visibleStudyIds(),
+            ['source', 'virtual']
+        );
+    });
+
+    it('retains OR and negation semantics', () => {
+        assert.sameMembers(
+            genomeSearch({
+                search: 'reference-genome:hg19 or absent',
+            }).visibleStudyIds(),
+            ['source', 'virtual']
+        );
+        assert.deepEqual(
+            genomeSearch({
+                search: '- reference-genome:hg19',
+            }).visibleStudyIds(),
+            []
+        );
+        assert.sameMembers(
+            genomeSearch({
+                search: '- reference-genome:hg38',
+            }).visibleStudyIds(),
+            ['source', 'virtual']
+        );
+    });
+
+    it('keeps unknown cohorts under existing negative-only search semantics', () => {
+        assert.sameMembers(
+            genomeSearch({
+                sources: [{ id: 'missing', samples: ['sample1'] }],
+                search: '- reference-genome:hg19',
+            }).visibleStudyIds(),
+            ['virtual']
+        );
+    });
+
+    it('does not mutate physical or virtual study metadata or saved samples', () => {
+        const studies = [physicalStudy('source')];
+        const cohort = virtualStudy('virtual', [
+            { id: 'source', samples: ['sample1'] },
+        ]);
+        const original = JSON.stringify({ studies, cohort });
+        const { treeData, visibleStudyIds } = createStudyList({
+            studies,
+            virtualStudies: [cohort],
+            filters: [],
+            search: 'reference-genome:hg19',
+        });
+        assert.sameMembers(visibleStudyIds(), ['source', 'virtual']);
+        assert.isUndefined(
+            treeData.map_studyId_cancerStudy.get('virtual')!.referenceGenome
+        );
+        assert.equal(JSON.stringify({ studies, cohort }), original);
     });
 });

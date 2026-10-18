@@ -48,7 +48,13 @@ export default class StudyListLogic {
             study,
             meta,
         ] of this.store.treeData.map_node_meta.entries()) {
-            const fullTextSearchNode = { ...(study as CancerStudy), ...meta };
+            const fullTextSearchNode = {
+                ...(study as CancerStudy),
+                ...meta,
+                referenceGenome:
+                    this.getReferenceGenomeForSearch(study as CancerStudy) ||
+                    '',
+            };
             map_node_searchResult.set(
                 study,
                 performSearchSingle(
@@ -89,6 +95,34 @@ export default class StudyListLogic {
 
     @cached @computed private get physicalStudiesById() {
         return _.keyBy(this.store.cancerStudies.result, study => study.studyId);
+    }
+
+    private getReferenceGenomeForSearch(
+        study: CancerStudy
+    ): string | undefined {
+        const virtualStudy = this.store.virtualStudiesMap[study.studyId];
+        if (!virtualStudy) {
+            return study.referenceGenome;
+        }
+        const sources = virtualStudy.data.studies
+            .filter(source => source.samples.length > 0)
+            .map(source => this.physicalStudiesById[source.id]);
+        if (
+            sources.length === 0 ||
+            sources.some(
+                source =>
+                    !source ||
+                    !source.readPermission ||
+                    (source.status !== undefined && source.status !== 1) ||
+                    !source.referenceGenome?.trim()
+            )
+        ) {
+            return undefined;
+        }
+        const referenceGenomes = _.uniq(
+            sources.map(source => source.referenceGenome.toLowerCase())
+        );
+        return referenceGenomes.length === 1 ? referenceGenomes[0] : undefined;
     }
 
     private getDataTypeSourceStudies(study: CancerStudy): CancerStudy[] {
