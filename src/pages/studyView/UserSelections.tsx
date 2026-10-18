@@ -52,7 +52,6 @@ import {
     STRUCTURAL_VARIANT_COLOR,
 } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
-import { structVarFilterQueryToOql } from 'pages/studyView/StructVarUtils';
 import classNames from 'classnames';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import {
@@ -73,7 +72,10 @@ export interface IUserSelectionsProps {
     ) => void;
     updateCustomChartFilter: (uniqueKey: string, values: string[]) => void;
     removeGeneFilter: (uniqueKey: string, oql: string) => void;
-    removeStructVarFilter: (uniqueKey: string, oql: string) => void;
+    removeStructVarFilter: (
+        uniqueKey: string,
+        query: StructuralVariantFilterQuery
+    ) => void;
     updateGenomicDataFilter: (
         uniqueKey: string,
         values: DataFilterValue[]
@@ -475,15 +477,14 @@ export default class UserSelections extends React.Component<
                                                 components={rowKeyGroup.map(
                                                     rowKey => (
                                                         <PillTag
-                                                            content={
-                                                                this.props.store.getGenericAssayFrequencyTableFilterDisplayName(
-                                                                    uniqueKey,
-                                                                    rowKey
-                                                                )
-                                                            }
+                                                            content={this.props.store.getGenericAssayFrequencyTableFilterDisplayName(
+                                                                uniqueKey,
+                                                                rowKey
+                                                            )}
                                                             backgroundColor={
                                                                 STUDY_VIEW_CONFIG
-                                                                    .colors.theme
+                                                                    .colors
+                                                                    .theme
                                                                     .clinicalFilterContent
                                                             }
                                                             onDelete={() =>
@@ -535,7 +536,9 @@ export default class UserSelections extends React.Component<
                             <GroupLogic
                                 components={[
                                     <span
-                                        className={styles.filterClinicalAttrName}
+                                        className={
+                                            styles.filterClinicalAttrName
+                                        }
                                     >
                                         {displayName}
                                     </span>,
@@ -1137,7 +1140,7 @@ export default class UserSelections extends React.Component<
                     onDelete={() =>
                         this.props.removeStructVarFilter(
                             chartMeta.uniqueKey,
-                            structVarFilterQueryToOql(structVarQuery)
+                            structVarQuery
                         )
                     }
                     store={this.props.store}

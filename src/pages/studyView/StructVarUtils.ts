@@ -212,6 +212,24 @@ export function generateStructVarTableCellKey(
     return `${gene1HugoSymbol || STRUCTVARNullGeneStr}::${gene2HugoSymbol ||
         STRUCTVARNullGeneStr}`;
 }
+
+export function structVarFilterQueryToRowKey(
+    query: StructuralVariantFilterQuery
+): string | undefined {
+    const getLabel = (gene: StructuralVariantGeneSubQuery) =>
+        gene.hugoSymbol ||
+        (gene.specialValue === 'ANY_GENE'
+            ? STRUCTVARAnyGeneStr
+            : gene.specialValue === 'NO_GENE'
+            ? STRUCTVARNullGeneStr
+            : undefined);
+    const gene1 = getLabel(query.gene1Query);
+    const gene2 = getLabel(query.gene2Query);
+    return gene1 && gene2
+        ? generateStructVarTableCellKey(gene1, gene2)
+        : undefined;
+}
+
 export function oqlQueryToStructVarGenePair(
     query: SingleGeneQuery
 ): StructVarGenePair[] | undefined {

@@ -217,9 +217,7 @@ import {
 } from 'pages/studyView/StudyViewUtils';
 import { generateDownloadFilenamePrefixByStudies } from 'shared/lib/FilenameUtils';
 import {
-    convertToGene1Gene2String,
     createStructuralVariantQuery,
-    parseOQLQuery,
     queryContainsStructVarAlteration,
     unparseOQLQueryLine,
 } from 'shared/lib/oql/oqlfilter';
@@ -349,7 +347,7 @@ import {
     generateStructVarTableCellKey,
     oqlQueryToStructVarGenePair,
     StructuralVariantFilterQueryFromOql,
-    structVarFilterQueryToOql,
+    structVarFilterQueryToRowKey,
     StructVarGenePair,
     updateStructuralVariantQuery,
 } from 'pages/studyView/StructVarUtils';
@@ -2709,7 +2707,8 @@ export class StudyViewPageStore
         if (!_.isEmpty(filters.structuralVariantFilters)) {
             filters.structuralVariantFilters!.forEach(structVarFilter => {
                 const key = getUniqueKeyFromMolecularProfileIds(
-                    structVarFilter.molecularProfileIds
+                    structVarFilter.molecularProfileIds,
+                    ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
                 );
                 this._structVarFilterSet.set(
                     key,
@@ -4276,24 +4275,19 @@ export class StudyViewPageStore
     }
 
     @action.bound
-    removeStructVarFilter(chartUniqueKey: string, toBeRemoved: string): void {
-        const oqlQuery = parseOQLQuery(toBeRemoved + ';')[0];
-        const gene1Gene2Str = convertToGene1Gene2String(oqlQuery)[0];
-        const [
-            gene1HugoSymbol,
-            gene2HugoSymbol,
-        ]: string[] = gene1Gene2Str.split('::');
+    removeStructVarFilter(
+        chartUniqueKey: string,
+        toBeRemoved: StructuralVariantFilterQuery
+    ): void {
         let structVarFilters: StructuralVariantFilterQuery[][] =
             toJS(this._structVarFilterSet.get(chartUniqueKey)) || [];
         structVarFilters = _.reduce(
             structVarFilters,
             (acc, next) => {
                 const newGroup = next.filter(
-                    StructuralVariantFilterQuery =>
-                        StructuralVariantFilterQuery.gene1Query.hugoSymbol !==
-                            gene1HugoSymbol &&
-                        StructuralVariantFilterQuery.gene2Query.hugoSymbol !==
-                            gene2HugoSymbol
+                    query =>
+                        !_.isEqual(query.gene1Query, toBeRemoved.gene1Query) ||
+                        !_.isEqual(query.gene2Query, toBeRemoved.gene2Query)
                 );
                 if (newGroup.length > 0) {
                     acc.push(newGroup);
@@ -4550,9 +4544,11 @@ export class StudyViewPageStore
                     break;
                 case ChartTypeEnum.MUTATED_GENES_TABLE:
                 case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
-                case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
                 case ChartTypeEnum.CNA_GENES_TABLE:
                     this.resetGeneFilter(chartUniqueKey);
+                    break;
+                case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
+                    this.resetStructVarFilter(chartUniqueKey);
                     break;
                 case ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE:
                     this.updateMutationDataFilters(chartUniqueKey, [[]]);
@@ -5171,7 +5167,10 @@ export class StudyViewPageStore
     public getStructVarFiltersByUniqueKey(uniqueKey: string): string[][] {
         const filters = _.map(
             this._structVarFilterSet.get(uniqueKey),
-            filterSet => _.map(filterSet, structVarFilterQueryToOql)
+            filterSet =>
+                filterSet
+                    .map(structVarFilterQueryToRowKey)
+                    .filter((key): key is string => key !== undefined)
         );
         return toJS(filters);
     }
