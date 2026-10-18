@@ -5913,28 +5913,34 @@ export class StudyViewPageStore
                                 },
                             }
                         );
-                        const values = result
-                            .map(
-                                item =>
-                                    ({
-                                        start: item.start
-                                            ? item.start
-                                            : undefined,
-                                        end: item.end ? item.end : undefined,
-                                    } as DataFilterValue)
-                            )
-                            .filter(item => {
-                                if (
-                                    item.start !== undefined ||
-                                    item.end !== undefined
-                                ) {
-                                    return item;
-                                }
-                            });
-                        // Update the initial filter (when the new chart is added)
-                        this.setCustomChartNumericalFilters(
-                            chartMeta.uniqueKey,
-                            values
+                        if (this._newlyCreatedCustomChartSet.has(uniqueKey)) {
+                            const values = result
+                                .map(
+                                    item =>
+                                        ({
+                                            start: item.start
+                                                ? item.start
+                                                : undefined,
+                                            end: item.end
+                                                ? item.end
+                                                : undefined,
+                                        } as DataFilterValue)
+                                )
+                                .filter(item => {
+                                    if (
+                                        item.start !== undefined ||
+                                        item.end !== undefined
+                                    ) {
+                                        return item;
+                                    }
+                                });
+                            this.setCustomChartNumericalFilters(
+                                chartMeta.uniqueKey,
+                                values
+                            );
+                        }
+                        resultDataBins = convertClinicalDataBinsToDataBins(
+                            result
                         );
                         this._customDataBinFilterSet.set(
                             chartMeta.uniqueKey,
