@@ -1014,8 +1014,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     this._selectedGeneOption === undefined &&
                     geneOptions.length
                 ) {
-                    // if no queried genes, default is undefined, else default is first gene option
-                    if (self.props.hasNoQueriedGenes) {
+                    if (
+                        self.props.hasNoQueriedGenes &&
+                        geneOptions[0].value !==
+                            SAME_SELECTED_OPTION_NUMERICAL_VALUE
+                    ) {
                         return undefined;
                     } else {
                         return getOption(
