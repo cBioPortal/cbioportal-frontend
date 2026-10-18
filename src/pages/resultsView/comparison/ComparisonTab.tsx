@@ -181,9 +181,9 @@ export default class ComparisonTab extends React.Component<
                                 : ''
                         }
                     >
-                        {(this.store.activeGroups.isComplete &&
+                        {this.store.activeGroups.isComplete &&
                             this.store.activeGroups.result!.length > 1 &&
-                            getServerConfig().skin_show_settings_menu && (
+                            ((getServerConfig().skin_show_settings_menu && (
                                 <AlterationFilterMenuSection
                                     store={this.store}
                                     updateSelectedEnrichmentEventTypes={
@@ -192,24 +192,24 @@ export default class ComparisonTab extends React.Component<
                                     }
                                 />
                             )) || (
-                            <AlterationEnrichmentTypeSelector
-                                classNames={
-                                    styles.inlineAlterationTypeSelectorMenu
-                                }
-                                store={this.store}
-                                updateSelectedEnrichmentEventTypes={
-                                    this.store
-                                        .updateSelectedEnrichmentEventTypes
-                                }
-                                showMutations={
-                                    this.store.hasMutationEnrichmentData
-                                }
-                                showCnas={this.store.hasCnaEnrichmentData}
-                                showStructuralVariants={
-                                    this.store.hasStructuralVariantData
-                                }
-                            />
-                        )}
+                                <AlterationEnrichmentTypeSelector
+                                    classNames={
+                                        styles.inlineAlterationTypeSelectorMenu
+                                    }
+                                    store={this.store}
+                                    updateSelectedEnrichmentEventTypes={
+                                        this.store
+                                            .updateSelectedEnrichmentEventTypes
+                                    }
+                                    showMutations={
+                                        this.store.hasMutationEnrichmentData
+                                    }
+                                    showCnas={this.store.hasCnaEnrichmentData}
+                                    showStructuralVariants={
+                                        this.store.hasStructuralVariantData
+                                    }
+                                />
+                            ))}
                         <AlterationEnrichments
                             store={this.store}
                             resultsViewStore={this.props.store}

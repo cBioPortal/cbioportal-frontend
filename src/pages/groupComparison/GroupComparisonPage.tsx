@@ -184,40 +184,44 @@ export default class GroupComparisonPage extends React.Component<
                                 : ''
                         }
                     >
-                        {(getServerConfig().skin_show_settings_menu && (
-                            <AlterationFilterMenuSection
-                                store={this.store}
-                                updateSelectedEnrichmentEventTypes={
-                                    this.store
-                                        .updateSelectedEnrichmentEventTypes
-                                }
-                            />
-                        )) ||
-                            (this.store.alterationEnrichmentProfiles
-                                .isComplete ? (
-                                <AlterationEnrichmentTypeSelector
-                                    classNames={
-                                        styles.inlineAlterationTypeSelectorMenu
-                                    }
+                        {this.store.activeGroups.isComplete &&
+                            this.store.activeGroups.result!.length > 1 &&
+                            ((getServerConfig().skin_show_settings_menu && (
+                                <AlterationFilterMenuSection
                                     store={this.store}
                                     updateSelectedEnrichmentEventTypes={
                                         this.store
                                             .updateSelectedEnrichmentEventTypes
                                     }
-                                    showMutations={
-                                        this.store.hasMutationEnrichmentData
-                                    }
-                                    showCnas={this.store.hasCnaEnrichmentData}
-                                    showStructuralVariants={
-                                        this.store.hasStructuralVariantData
-                                    }
                                 />
-                            ) : (
-                                <LoadingIndicator
-                                    isLoading={true}
-                                    size={'small'}
-                                />
-                            ))}
+                            )) ||
+                                (this.store.alterationEnrichmentProfiles
+                                    .isComplete ? (
+                                    <AlterationEnrichmentTypeSelector
+                                        classNames={
+                                            styles.inlineAlterationTypeSelectorMenu
+                                        }
+                                        store={this.store}
+                                        updateSelectedEnrichmentEventTypes={
+                                            this.store
+                                                .updateSelectedEnrichmentEventTypes
+                                        }
+                                        showMutations={
+                                            this.store.hasMutationEnrichmentData
+                                        }
+                                        showCnas={
+                                            this.store.hasCnaEnrichmentData
+                                        }
+                                        showStructuralVariants={
+                                            this.store.hasStructuralVariantData
+                                        }
+                                    />
+                                ) : (
+                                    <LoadingIndicator
+                                        isLoading={true}
+                                        size={'small'}
+                                    />
+                                )))}
                         <AlterationEnrichments store={this.store} />
                     </MSKTab>
                     <MSKTab
