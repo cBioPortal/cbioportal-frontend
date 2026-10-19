@@ -936,6 +936,11 @@ jobs:
             corepack enable
             pnpm run build
       - run:
+          name: Check OpenSeadragon stays out of the initial bundle
+          command: |
+            cd cbioportal-frontend
+            pnpm run checkWsiBundle
+      - run:
           name: Build frontend tests
           command: |
             cd cbioportal-frontend/end-to-end-test
