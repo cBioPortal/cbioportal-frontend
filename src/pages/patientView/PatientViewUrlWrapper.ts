@@ -1,6 +1,5 @@
 import URLWrapper from 'shared/lib/URLWrapper';
 import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
-import { MapValues } from 'shared/lib/TypeScriptUtils';
 import { PagePath } from 'shared/enums/PagePaths';
 import { computed, makeObservable } from 'mobx';
 import _ from 'lodash';
@@ -23,31 +22,6 @@ const PATHOLOGY_SLIDE_SETTINGS_KEYS: (keyof PathologySlideSettings)[] = [
     'matchLevel',
     'specimenKey',
 ];
-
-/**
- * Older pathology slide links (including clinical event LINKOUT values in
- * imported data) set the Pathology Slides tab scope as top-level params,
- * e.g. `?stainFilter=hne&matchLevel=PART`. When the URL has no
- * `pathologySlideSettings` node, those params are read into it instead.
- */
-export function pathologySlideSettingsBackwardsCompatibility(oldParams: {
-    [key: string]: string | undefined;
-}): { [key: string]: string | undefined } {
-    if (!oldParams || oldParams.pathologySlideSettings !== undefined) {
-        return oldParams;
-    }
-    const legacySettings = _.pickBy(
-        _.pick(oldParams, PATHOLOGY_SLIDE_SETTINGS_KEYS),
-        value => _.isString(value) && value !== ''
-    );
-    if (_.isEmpty(legacySettings)) {
-        return oldParams;
-    }
-    return {
-        ...oldParams,
-        pathologySlideSettings: JSON.stringify(legacySettings),
-    };
-}
 
 export type PatientViewUrlQuery = {
     studyId: string;
@@ -79,48 +53,39 @@ export default class PatientViewUrlWrapper extends URLWrapper<
     PatientViewUrlQuery
 > {
     constructor(routing: ExtendedRouterStore) {
-        super(
-            routing,
-            {
-                studyId: { isSessionProp: false, isHashedProp: true },
-                caseId: { isSessionProp: false, isHashedProp: true },
-                sampleId: { isSessionProp: false, isHashedProp: true },
-                resourceUrl: { isSessionProp: false },
-                pathologySlideSettings: {
-                    isSessionProp: false,
-                    nestedObjectProps: {
-                        stainFilter: '',
-                        matchLevel: '',
-                        specimenKey: '',
-                    },
+        super(routing, {
+            studyId: { isSessionProp: false, isHashedProp: true },
+            caseId: { isSessionProp: false, isHashedProp: true },
+            sampleId: { isSessionProp: false, isHashedProp: true },
+            resourceUrl: { isSessionProp: false },
+            pathologySlideSettings: {
+                isSessionProp: false,
+                nestedObjectProps: {
+                    stainFilter: '',
+                    matchLevel: '',
+                    specimenKey: '',
                 },
-                genomicEvolutionSettings: {
-                    isSessionProp: false,
-                    nestedObjectProps: {
-                        showTimeline: '',
-
-                        clusterHeatmap: '',
-                        transposeHeatmap: '',
-                        showMutationLabelsInHeatmap: '',
-
-                        showOnlySelectedMutationsInChart: '',
-                        logScaleChart: '',
-                        yAxisDataRangeInChart: '',
-
-                        showOnlySelectedMutationsInTable: '',
-                    },
-                },
-                ...PLOTS_TAB_URL_PARAMS,
-                geneset_list: { isSessionProp: true },
-                generic_assay_groups: { isSessionProp: false },
             },
-            undefined,
-            undefined,
-            params =>
-                pathologySlideSettingsBackwardsCompatibility(
-                    params
-                ) as MapValues<PatientViewUrlQuery, string | undefined>
-        );
+            genomicEvolutionSettings: {
+                isSessionProp: false,
+                nestedObjectProps: {
+                    showTimeline: '',
+
+                    clusterHeatmap: '',
+                    transposeHeatmap: '',
+                    showMutationLabelsInHeatmap: '',
+
+                    showOnlySelectedMutationsInChart: '',
+                    logScaleChart: '',
+                    yAxisDataRangeInChart: '',
+
+                    showOnlySelectedMutationsInTable: '',
+                },
+            },
+            ...PLOTS_TAB_URL_PARAMS,
+            geneset_list: { isSessionProp: true },
+            generic_assay_groups: { isSessionProp: false },
+        });
         makeObservable(this);
     }
 
@@ -132,10 +97,7 @@ export default class PatientViewUrlWrapper extends URLWrapper<
         return this.pathName.split('/').pop() || PatientViewPageTabs.Summary;
     }
 
-    /**
-     * Pathology Slides tab scope from the `pathologySlideSettings` node, or
-     * from legacy top-level params when the node is absent.
-     */
+    /** Pathology Slides tab scope from the `pathologySlideSettings` node. */
     @computed public get pathologySlideScope(): PathologySlideSettings {
         return _.pick(
             this.query.pathologySlideSettings,
