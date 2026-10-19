@@ -165,19 +165,50 @@ describe('ResourceViewer', () => {
             (global as any).fetch = originalFetch;
         });
 
-        it('does not probe at all without a configured message', async () => {
-            const fetchMock = jest.fn();
-            (global as any).fetch = fetchMock;
+        it('frames immediately for a resource with no configured message', async () => {
+            // The check still runs, but nothing waits for it: making every resource pay a round
+            // trip before anything appears would be worse than a brief frame.
+            let settle: (v?: any) => void = () => undefined;
+            (global as any).fetch = jest.fn(
+                () => new Promise(resolve => (settle = resolve))
+            );
 
             renderViewer();
 
             await waitFor(() =>
                 assert.isNotNull(screen.queryByTestId('iframe-loader'))
             );
-            assert.equal(fetchMock.mock.calls.length, 0);
+            settle();
         });
 
-        it('warns instead of framing when the host cannot be reached', async () => {
+        it('waits for the check when the resource names its own message', async () => {
+            // A resource known to be gated should not flash a broken frame first.
+            let settle: (v?: any) => void = () => undefined;
+            (global as any).fetch = jest.fn(
+                () => new Promise(resolve => (settle = resolve))
+            );
+
+            renderViewer({ iframeErrorMessage: VPN_MESSAGE });
+
+            assert.isNull(screen.queryByTestId('iframe-loader'));
+            assert.isNotNull(screen.queryByTestId('loading-indicator'));
+            settle();
+        });
+
+        it('shows a general message when an unnamed resource cannot be reached', async () => {
+            (global as any).fetch = jest.fn(() =>
+                Promise.reject(new Error('unreachable'))
+            );
+
+            renderViewer();
+
+            await waitFor(() =>
+                assert.isNotNull(screen.queryByText(/could not be reached/))
+            );
+            assert.isNull(screen.queryByTestId('iframe-loader'));
+        });
+
+        it('prefers the resource own message over the general one', async () => {
             (global as any).fetch = jest.fn(() =>
                 Promise.reject(new Error('unreachable'))
             );

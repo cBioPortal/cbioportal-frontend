@@ -42,12 +42,18 @@ export interface ResourceCustomConfig {
 }
 
 /**
- * Per-resource overrides keyed by resource id. Empty: the entry that lived here configured the
- * table that the server-driven resource table replaced, and a curator now sets a resource's
- * display name on resource_definition and its metadata columns through CUSTOM_METADATA.
- * A resource can still supply overrides through its own customMetaData.
+ * Per-resource overrides keyed by resource id. A resource can also supply them through its own
+ * customMetaData, which wins; that column currently also carries the metadata contract, so a
+ * resource setting an option there must declare `fields` as well. Options that only apply to a
+ * resource the portal already knows about are easier to keep here until the contract has a place
+ * for them.
  */
-export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {};
+export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {
+    MSK_HNE: {
+        iframeErrorMessage:
+            'This resource requires VPN access. Please connect to VPN and refresh the page.',
+    },
+};
 
 export function getResourceConfig(
     def: ResourceDefinition
