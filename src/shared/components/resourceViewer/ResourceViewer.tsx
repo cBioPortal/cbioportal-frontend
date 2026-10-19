@@ -18,6 +18,11 @@ import { applyCustomUrlTransforms } from './resourceUrlTransforms';
 import { buildPDFUrl, getFileExtension } from './resourceUrlUtils';
 import styles from './styles.module.scss';
 
+/** Shown when a resource's host does not answer and the resource names no message of its own. */
+const DEFAULT_UNREACHABLE_MESSAGE =
+    'This resource could not be reached. It may need a network connection the portal does ' +
+    'not have, or it may be temporarily unavailable. The link below opens it directly.';
+
 export interface IResourceViewerProps {
     /** The items this viewer can step through, in display order. */
     rows: IResourceTableRow[];
@@ -27,8 +32,9 @@ export interface IResourceViewerProps {
     resourceDisplayName: string;
     resourceDescription?: string;
     /**
-     * Shown instead of the frame when the resource host cannot be reached, e.g. a host that
-     * needs a VPN. Supplying it is also what enables the reachability check.
+     * Replaces the general message when the resource host cannot be reached, for a resource
+     * whose reason is known, e.g. one behind a VPN. Supplying it also makes the viewer wait for
+     * the check before framing, since a failure is expected rather than exceptional.
      */
     iframeErrorMessage?: string;
     height?: number;
@@ -149,11 +155,15 @@ export default class ResourceViewer extends React.Component<
         );
     }
 
+    @computed private get warningMessage() {
+        return this.props.iframeErrorMessage || DEFAULT_UNREACHABLE_MESSAGE;
+    }
+
     @action.bound
     private startUrlAccessibilityCheck() {
         const url = this.currentRow?.url;
 
-        if (!this.props.iframeErrorMessage || !url) {
+        if (!url) {
             this.urlIsAccessible = true;
             this.urlCheckComplete = true;
             return;
@@ -190,16 +200,17 @@ export default class ResourceViewer extends React.Component<
         });
     }
 
+    /**
+     * Only a resource that names its own message waits for the check. Everything else frames
+     * straight away and is replaced if the check fails, so the common case does not pay for a
+     * round trip before anything appears.
+     */
     @computed get isCheckingUrlAccessibility() {
         return !!this.props.iframeErrorMessage && !this.urlCheckComplete;
     }
 
     @computed get shouldShowWarning() {
-        return (
-            !!this.props.iframeErrorMessage &&
-            this.urlCheckComplete &&
-            !this.urlIsAccessible
-        );
+        return this.urlCheckComplete && !this.urlIsAccessible;
     }
 
     private renderBody() {
@@ -233,7 +244,7 @@ export default class ResourceViewer extends React.Component<
                         <i className="fa fa-exclamation-triangle" />
                     </div>
                     <div className={styles.warningText}>
-                        {this.props.iframeErrorMessage}
+                        {this.warningMessage}
                     </div>
                     <button
                         className={styles.refreshButton}
