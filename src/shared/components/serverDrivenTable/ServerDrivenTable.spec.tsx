@@ -507,3 +507,60 @@ describe('ServerDrivenTable', () => {
         assert.equal(data.text, '');
     });
 });
+
+describe('ServerDrivenTable row identity', () => {
+    const columns: ServerDrivenTableColumn<TestRow>[] = [
+        { id: 'name', name: 'Name', render: row => row.name },
+    ];
+
+    const props = (rows: TestRow[]) => ({
+        rows,
+        columns,
+        totalRowCount: 100,
+        currentPage: 0,
+        pageSize: 2,
+        onPageChange: () => undefined,
+        onPageSizeChange: () => undefined,
+        onSortChange: () => undefined,
+        onSearchChange: () => undefined,
+        onFilterChange: () => undefined,
+        onFilterDeactivate: () => undefined,
+    });
+
+    const keysOf = (table: any) =>
+        table
+            .find('tbody tr')
+            .map((node: any) => node.key())
+            .filter((k: string) => k !== null);
+
+    it('keys rows by position when no rowKey is given', () => {
+        // Existing behaviour, kept for callers that render only text.
+        const table = mount(
+            <ServerDrivenTable<TestRow>
+                {...props([{ name: 'Alpha', type: 'A' }])}
+            />
+        );
+        assert.deepEqual(keysOf(table), ['0']);
+    });
+
+    it('gives a row the same key on whatever page it appears', () => {
+        // Keyed by position, page 2's first row reuses page 1's first row's DOM, so anything
+        // stateful in a cell - an iframe - keeps the previous row's content.
+        const page1 = mount(
+            <ServerDrivenTable<TestRow>
+                {...props([{ name: 'Alpha', type: 'A' }])}
+                rowKey={row => row.name}
+            />
+        );
+        const page2 = mount(
+            <ServerDrivenTable<TestRow>
+                {...props([{ name: 'Beta', type: 'B' }])}
+                rowKey={row => row.name}
+            />
+        );
+
+        assert.deepEqual(keysOf(page1), ['Alpha']);
+        assert.deepEqual(keysOf(page2), ['Beta']);
+        assert.notDeepEqual(keysOf(page1), keysOf(page2));
+    });
+});

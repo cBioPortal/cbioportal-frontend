@@ -89,6 +89,11 @@ export interface ServerDrivenTableProps<T> {
     columnVisibilityButtonText?: string;
     isLoading?: boolean;
     headerContent?: React.ReactNode;
+    /**
+     * Identity of a row across pages. Without it rows are keyed by position, so React reuses
+     * page 1's first row for page 2's first row — which only matters once a row holds state.
+     */
+    rowKey?: (row: T) => string;
     testId?: string;
     // Bounds the scrollable viewport the table is shown in. Sticky headers stick
     // to the top of this viewport, so without it a long table scrolls its headers
@@ -721,7 +726,7 @@ export default class ServerDrivenTable<T> extends React.Component<
         }
 
         return this.props.rows.map((row, rowIndex) => (
-            <tr key={rowIndex}>
+            <tr key={this.props.rowKey ? this.props.rowKey(row) : rowIndex}>
                 {this.visibleColumns.map(column => (
                     <td key={column.id}>{column.render(row)}</td>
                 ))}

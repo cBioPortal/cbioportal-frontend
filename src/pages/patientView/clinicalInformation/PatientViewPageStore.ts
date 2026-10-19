@@ -14,6 +14,7 @@ import {
     NumericGeneMolecularData,
     ReferenceGenomeGene,
     ResourceData,
+    ResourceDefinition,
     Sample,
     SampleMolecularIdentifier,
     GenericAssayData,
@@ -1794,20 +1795,29 @@ export class PatientViewPageStore {
         []
     );
 
-    readonly resourceDefinitions = remoteData({
+    /**
+     * Curator-set configuration for the study's resources. The resource-table endpoints return
+     * counts and rows but no per-resource configuration, so the viewer reads it from here.
+     *
+     * Deliberately does not act on `openByDefault`: every study currently ships it as true, so
+     * honouring it would open a viewer for every resource on every patient.
+     */
+    readonly resourceDefinitions = remoteData<ResourceDefinition[]>({
         invoke: () =>
             internalClient.getAllResourceDefinitionsInStudyUsingGET({
                 studyId: this.studyId,
             }),
-        onResult: defs => {
-            // open resources which have `openByDefault` set to true
-            if (defs) {
-                for (const def of defs)
-                    if (def.openByDefault)
-                        this.setResourceTabOpen(def.resourceId, true);
-            }
-        },
+        default: [],
     });
+
+    @computed get resourceIdToDefinition(): {
+        [resourceId: string]: ResourceDefinition;
+    } {
+        return _.keyBy(
+            this.resourceDefinitions.result || [],
+            d => d.resourceId
+        );
+    }
 
     /**
      * Per-resource row counts for this patient, used to decide whether the resource tabs are

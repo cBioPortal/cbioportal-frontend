@@ -654,6 +654,7 @@ export class ResourceDataTable extends React.Component<
                     onRangeFilterDeactivate={this.onRangeFilterDeactivate}
                     showColumnVisibility={true}
                     columnVisibilityButtonText="Add columns"
+                    rowKey={row => row.key}
                     isLoading={store.tableData.isPending}
                     headerContent={this.headerContent}
                     tableMaxHeight={RESOURCE_TABLE_MAX_HEIGHT}

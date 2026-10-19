@@ -58,7 +58,6 @@ import {
     patientViewTabs,
 } from './PatientViewPageTabs';
 import { MakeMobxView } from '../../shared/components/MobxView';
-import ResourceTab from '../../shared/components/resources/ResourceTab';
 import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
 import ResourceDataTable from 'shared/components/resourceTable/ResourceDataTable';
 import { isFusion } from '../../shared/lib/MutationUtils';
