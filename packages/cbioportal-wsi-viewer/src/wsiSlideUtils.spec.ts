@@ -5,7 +5,6 @@ import {
     sampleHasMultiplePartDescriptions,
     sampleHasServableSlide,
     selectMetadataPrefetchSlides,
-    wsiStainKind,
 } from './wsiSlideUtils';
 import { makeSample, makeSlide } from './wsiTestFixtures';
 import { PatientHierarchy, Sample, Slide } from './wsiViewerTypes';
@@ -31,8 +30,7 @@ describe('wsiSlideUtils read-only slide derivation', () => {
                 slide_key: key,
                 block_number: blockNumber,
                 stain_name: isHne ? 'H&E' : 'CD3',
-                is_hne: isHne,
-                is_ihc: !isHne,
+                stain_kind: isHne ? 'hne' : 'ihc',
             });
         const part = (partNumber: string, slides: Slide[]) => ({
             ...makeSample('unused', []).parts[0],
@@ -96,9 +94,13 @@ describe('wsiSlideUtils read-only slide derivation', () => {
             makeSlide({
                 slide_key: 'ki67',
                 stain_name: 'Ki-67',
-                is_hne: false,
+                stain_kind: 'unknown',
             }),
-            makeSlide({ slide_key: 'cd3', stain_name: 'CD3', is_hne: false }),
+            makeSlide({
+                slide_key: 'cd3',
+                stain_name: 'CD3',
+                stain_kind: 'unknown',
+            }),
             makeSlide({ slide_key: 'he', stain_name: 'H&E' }),
         ]
             .map(slide => ({ slide, partNumber: '1' }))
@@ -223,8 +225,7 @@ describe('wsiSlideUtils read-only slide derivation', () => {
 
 describe('selectMetadataPrefetchSlides', () => {
     const hne = (id: string) => makeSlide({ slide_key: id });
-    const ihc = (id: string) =>
-        makeSlide({ slide_key: id, is_hne: false, is_ihc: true });
+    const ihc = (id: string) => makeSlide({ slide_key: id, stain_kind: 'ihc' });
 
     function entries(sample: Sample) {
         return sample.parts[0].blocks[0].slides.map(slide => ({
@@ -290,29 +291,5 @@ describe('selectMetadataPrefetchSlides', () => {
                 limit: 5,
             })
         ).toEqual([]);
-    });
-});
-
-describe('wsiStainKind', () => {
-    it('prefers the resolved flags', () => {
-        expect(
-            wsiStainKind({ is_hne: true, is_ihc: false, slide_type: 'IHC' })
-        ).toBe('hne');
-        expect(
-            wsiStainKind({ is_hne: false, is_ihc: true, slide_type: 'H&E' })
-        ).toBe('ihc');
-    });
-
-    it('keeps Other and Unknown distinct', () => {
-        expect(
-            wsiStainKind({ is_hne: false, is_ihc: false, slide_type: 'Other' })
-        ).toBe('other');
-        expect(
-            wsiStainKind({
-                is_hne: false,
-                is_ihc: false,
-                slide_type: 'Unknown',
-            })
-        ).toBe('unknown');
     });
 });

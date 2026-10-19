@@ -4,10 +4,10 @@ import {
     Slide,
     TileMetadata,
     UNMATCHED_SAMPLE_ID,
+    WsiStainKind,
 } from './wsiViewerTypes';
 import { cleanStain, fmtFileSize, normalizeBlockLabel } from './wsiNavUtils';
 import { blockName, formatSpecimenLabel } from './wsiSpecimenUtils';
-import { wsiStainKind } from './wsiSlideUtils';
 import { WSI_STAIN_COLORS } from './wsiTheme';
 import { nativeObjectivePower } from './wsiScaleUtils';
 import { getWsiViewerRuntime } from './wsiViewerConfig';
@@ -29,17 +29,15 @@ export function buildSampleUrl(
     });
 }
 
-export function getStainBadge(
-    slide: Pick<Slide, 'is_hne' | 'is_ihc' | 'slide_type'>
-): string {
-    const kind = wsiStainKind(slide);
-    return kind === 'ihc'
-        ? 'IHC'
-        : kind === 'hne'
-        ? 'H&E'
-        : kind === 'other'
-        ? 'Other'
-        : 'Unknown';
+const STAIN_BADGES: Record<WsiStainKind, string> = {
+    hne: 'H&E',
+    ihc: 'IHC',
+    other: 'Other',
+    unknown: 'Unknown',
+};
+
+export function getStainBadge(slide: Pick<Slide, 'stain_kind'>): string {
+    return STAIN_BADGES[slide.stain_kind];
 }
 
 function stainKey(name: string): string {
@@ -56,15 +54,16 @@ export function stainValue(stainBadge: string, stainName: string): string {
         : `${stainBadge} — ${stainName}`;
 }
 
-export function getStainDotColor(
-    slide: Pick<Slide, 'is_hne' | 'is_ihc' | 'slide_type'>
-): string {
-    const kind = wsiStainKind(slide);
-    return kind === 'ihc'
-        ? WSI_STAIN_COLORS.IHC
-        : kind === 'hne'
-        ? WSI_STAIN_COLORS['H&E']
-        : WSI_STAIN_COLORS.Other;
+// Unknown shares Other's dot.
+const STAIN_DOT_COLORS: Record<WsiStainKind, string> = {
+    hne: WSI_STAIN_COLORS['H&E'],
+    ihc: WSI_STAIN_COLORS.IHC,
+    other: WSI_STAIN_COLORS.Other,
+    unknown: WSI_STAIN_COLORS.Other,
+};
+
+export function getStainDotColor(slide: Pick<Slide, 'stain_kind'>): string {
+    return STAIN_DOT_COLORS[slide.stain_kind];
 }
 
 export function buildWsiRows(

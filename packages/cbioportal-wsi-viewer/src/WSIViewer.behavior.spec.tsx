@@ -516,9 +516,7 @@ describe('WSIViewer — pathology filter updates', () => {
                 block_number: blockNumber,
                 block_label: `A${blockNumber}`,
                 stain_name: isHne ? 'H&E' : 'CD3',
-                is_hne: isHne,
-                is_ihc: !isHne,
-                slide_type: isHne ? 'H&E' : 'IHC',
+                stain_kind: isHne ? 'hne' : 'ihc',
             });
         // Hierarchy order differs from the expected display order.
         const sample = makeSample('S-1', [
@@ -807,8 +805,7 @@ describe('WSIViewer — pathology filter updates', () => {
             sample_id: 'S-1',
             match_level: 'BLOCK',
             specimen_key: 'block::1::A1',
-            is_hne: true,
-            is_ihc: false,
+            stain_kind: 'hne',
         });
         const ihc = makeSlide({
             slide_key: 'ihc-slide',
@@ -817,8 +814,7 @@ describe('WSIViewer — pathology filter updates', () => {
             specimen_key: 'block::1::A1',
             stain_name: 'IHC',
             stain_group: 'IHC',
-            is_hne: false,
-            is_ihc: true,
+            stain_kind: 'ihc',
         });
         const sample = makeSample('S-1', [makePart([makeBlock([hne, ihc])])]);
         const inst = new (WSIViewer as any)({
@@ -974,8 +970,7 @@ describe('WSIViewer — pathology filter updates', () => {
                         makeSlide({ slide_key: 'hne-slide' }),
                         makeSlide({
                             slide_key: 'ihc-slide',
-                            is_hne: false,
-                            is_ihc: true,
+                            stain_kind: 'ihc',
                             stain_name: 'IHC',
                             stain_group: 'IHC',
                         }),
@@ -1927,13 +1922,12 @@ describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
             makeSlide({
                 slide_key: 'BBB',
                 can_serve_tiles: true,
-                is_hne: true,
+                stain_kind: 'hne',
             }),
             makeSlide({
                 slide_key: 'CCC',
                 can_serve_tiles: true,
-                is_hne: false,
-                is_ihc: true,
+                stain_kind: 'ihc',
                 stain_name: 'IHC',
             }),
         ];
@@ -1941,13 +1935,12 @@ describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
             makeSlide({
                 slide_key: 'AAA',
                 can_serve_tiles: true,
-                is_hne: true,
+                stain_kind: 'hne',
             }),
             makeSlide({
                 slide_key: 'DDD',
                 can_serve_tiles: true,
-                is_hne: false,
-                is_ihc: true,
+                stain_kind: 'ihc',
                 stain_name: 'IHC',
             }),
         ];

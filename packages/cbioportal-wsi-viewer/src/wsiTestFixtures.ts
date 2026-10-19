@@ -7,6 +7,7 @@ import {
     Sample,
     Slide,
     TileMetadata,
+    WsiStainKind,
     WsiV2Hierarchy,
 } from './wsiViewerTypes';
 
@@ -15,8 +16,7 @@ export function makeSlide(overrides: Partial<Slide> = {}): Slide {
         slide_key: '1000',
         stain_name: 'H&E',
         stain_group: 'Histology',
-        is_hne: true,
-        is_ihc: false,
+        stain_kind: 'hne',
         magnification: '20x',
         file_size_bytes: '100000000',
         can_serve_tiles: true,
@@ -105,6 +105,13 @@ export function registerTestSlideAccess(
     });
 }
 
+const WIRE_SLIDE_TYPES: Record<WsiStainKind, string> = {
+    hne: 'H&E',
+    ihc: 'IHC',
+    other: 'Other',
+    unknown: 'Unknown',
+};
+
 /** A hierarchy as the v2 endpoint sends it: the normalizer's inverse. */
 export function toWireHierarchy(hierarchy: PatientHierarchy): WsiV2Hierarchy {
     return {
@@ -124,14 +131,14 @@ export function toWireHierarchy(hierarchy: PatientHierarchy): WsiV2Hierarchy {
                         slideKey: slide.slide_key,
                         stainName: slide.stain_name,
                         stainGroup: slide.stain_group,
-                        isHne: slide.is_hne,
-                        isIhc: slide.is_ihc,
+                        isHne: slide.stain_kind === 'hne',
+                        isIhc: slide.stain_kind === 'ihc',
                         magnification: slide.magnification,
                         fileSizeBytes: slide.file_size_bytes
                             ? Number(slide.file_size_bytes)
                             : null,
                         canServeTiles: slide.can_serve_tiles,
-                        slideType: slide.slide_type || null,
+                        slideType: WIRE_SLIDE_TYPES[slide.stain_kind],
                         sampleId: slide.sample_id ?? sample.sample_id,
                         matchLevel:
                             slide.match_level ||

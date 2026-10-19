@@ -349,12 +349,11 @@ describe('WsiNavPanel', () => {
 
     it('clears the stain filter when the active stain chip is clicked again', () => {
         const sample = makeSample('S-1', [
-            makeSlide({ slide_key: 'hne-slide', is_hne: true, is_ihc: false }),
+            makeSlide({ slide_key: 'hne-slide', stain_kind: 'hne' }),
             makeSlide({
                 slide_key: 'ihc-slide',
                 stain_name: 'IHC',
-                is_hne: false,
-                is_ihc: true,
+                stain_kind: 'ihc',
             }),
         ]);
         const onFilterChange = jest.fn();
@@ -425,8 +424,7 @@ describe('WsiNavPanel', () => {
             {
                 ...placedSlide('ihc-block', 'BLOCK'),
                 stain_name: 'IHC',
-                is_hne: false,
-                is_ihc: true,
+                stain_kind: 'ihc',
             },
         ]);
         const renderer = TestRenderer.create(
@@ -456,8 +454,7 @@ describe('WsiNavPanel', () => {
             {
                 ...placedSlide('ihc-block', 'BLOCK'),
                 stain_name: 'IHC',
-                is_hne: false,
-                is_ihc: true,
+                stain_kind: 'ihc',
             },
         ]);
         const panel = (stainFilter: 'all' | 'ihc') => (
@@ -736,8 +733,7 @@ describe('WsiNavPanel', () => {
                 specimen_key: 'BLOCK::block-ihc',
                 stain_name: 'IHC',
                 stain_group: 'IHC',
-                is_hne: false,
-                is_ihc: true,
+                stain_kind: 'ihc',
             }),
             makeSlide({
                 slide_key: 'part-hne',
@@ -796,8 +792,7 @@ describe('WsiNavPanel', () => {
                 specimen_key: 'BLOCK::block-ihc',
                 stain_name: 'IHC',
                 stain_group: 'IHC',
-                is_hne: false,
-                is_ihc: true,
+                stain_kind: 'ihc',
             }),
             makeSlide({
                 slide_key: 'part-hne',
@@ -841,9 +836,7 @@ describe('WsiNavPanel', () => {
                 specimen_key: 'PART::other-slide',
                 stain_name: 'Other',
                 stain_group: 'Other',
-                slide_type: 'Other',
-                is_hne: false,
-                is_ihc: false,
+                stain_kind: 'other',
             }),
         ]);
         const renderer = TestRenderer.create(
@@ -873,9 +866,7 @@ describe('WsiNavPanel', () => {
                 specimen_key: 'PART::submitted-hne',
                 stain_name: 'SLIDES SUBMITTED',
                 stain_group: 'Surgical Submitted',
-                slide_type: 'H&E',
-                is_hne: true,
-                is_ihc: false,
+                stain_kind: 'hne',
             }),
             makeSlide({
                 slide_key: 'ihc-slide',
@@ -884,8 +875,7 @@ describe('WsiNavPanel', () => {
                 specimen_key: 'BLOCK::ihc-slide',
                 stain_name: 'PD-L1',
                 stain_group: 'IHC',
-                is_hne: false,
-                is_ihc: true,
+                stain_kind: 'ihc',
             }),
         ]);
         const renderer = TestRenderer.create(
@@ -933,8 +923,7 @@ describe('WsiNavPanel', () => {
                 sample_id: 'S-1',
                 match_level: 'PART',
                 specimen_key: 'PART::unknown-slide',
-                is_hne: false,
-                is_ihc: false,
+                stain_kind: 'unknown',
             }),
         ]);
         const renderer = TestRenderer.create(
@@ -1158,14 +1147,12 @@ describe('WsiNavPanel', () => {
                     makeSample('S-1', [
                         makeSlide({
                             slide_key: 'hne-slide',
-                            is_hne: true,
-                            is_ihc: false,
+                            stain_kind: 'hne',
                         }),
                         makeSlide({
                             slide_key: 'ihc-slide',
                             stain_name: 'IHC',
-                            is_hne: false,
-                            is_ihc: true,
+                            stain_kind: 'ihc',
                         }),
                     ]),
                 ])}

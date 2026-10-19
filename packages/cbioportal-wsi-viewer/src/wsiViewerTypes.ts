@@ -3,8 +3,7 @@ export interface Slide {
     slide_key: string;
     stain_name: string;
     stain_group: string;
-    is_hne: boolean;
-    is_ihc: boolean;
+    stain_kind: WsiStainKind;
     magnification: string;
     file_size_bytes: string;
     can_serve_tiles: boolean;
@@ -19,16 +18,16 @@ export interface Slide {
     sample_id?: string | null;
     match_level?: MatchLevel;
     specimen_key?: string;
-    slide_type?: WsiSlideType;
 }
 
 export type MatchLevel = 'PART' | 'BLOCK' | 'UNMATCHED';
 
 /** The sample that holds slides not matched to any sample. */
 export const UNMATCHED_SAMPLE_ID = 'UNMATCHED';
-export type WsiSlideType = 'H&E' | 'IHC' | 'Other' | 'Unknown';
+/** A slide's stain, classified once when the hierarchy is normalized. */
+export type WsiStainKind = 'hne' | 'ihc' | 'other' | 'unknown';
 
-export type WsiStainFilter = 'all' | 'hne' | 'ihc' | 'other' | 'unknown';
+export type WsiStainFilter = 'all' | WsiStainKind;
 export type PathologySlideMatchFilter = 'all' | 'part' | 'block' | 'unmatched';
 export interface Block {
     block_number: string;

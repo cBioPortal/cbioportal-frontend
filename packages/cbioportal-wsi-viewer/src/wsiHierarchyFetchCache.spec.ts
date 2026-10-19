@@ -171,57 +171,40 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         );
     });
 
-    it('derives an IHC slide type from the authoritative flag when slideType is null', async () => {
-        const payload = toWireHierarchy({
-            patient_id: 'P-1',
-            samples: [
-                makeSample('S-1', [
-                    makeSlide({
-                        is_hne: false,
-                        is_ihc: true,
-                        stain_group: 'IHC',
-                    }),
-                ]),
-            ],
-        });
-        expect(
-            payload.sampleGroups[0].parts[0].blocks[0].slides[0].slideType
-        ).toBeNull();
-        (global as any).fetch = jest.fn().mockResolvedValue({
-            ok: true,
-            json: () => Promise.resolve(payload),
-        });
+    it.each([
+        // The resolved flags win over the stored type.
+        [true, false, 'IHC', 'hne'],
+        [false, true, 'H&E', 'ihc'],
+        [true, true, null, 'ihc'],
+        [false, true, null, 'ihc'],
+        [false, false, 'Other', 'other'],
+        [false, false, null, 'other'],
+        // A stored stain type the flags don't confirm is unknown.
+        [false, false, ' unknown ', 'unknown'],
+        [false, false, 'he', 'unknown'],
+        [false, false, 'IHC', 'unknown'],
+    ] as const)(
+        'classifies isHne=%s isIhc=%s slideType=%p as %s',
+        async (isHne, isIhc, slideType, expected) => {
+            const payload = toWireHierarchy({
+                patient_id: 'P-1',
+                samples: [makeSample('S-1', [makeSlide()])],
+            });
+            Object.assign(
+                payload.sampleGroups[0].parts[0].blocks[0].slides[0],
+                { isHne, isIhc, slideType }
+            );
+            (global as any).fetch = jest.fn().mockResolvedValue({
+                ok: true,
+                json: () => Promise.resolve(payload),
+            });
 
-        const hierarchy = await fetchWsiPatientHierarchy('study', 'P-1');
-        expect(
-            hierarchy.samples[0].parts[0].blocks[0].slides[0].slide_type
-        ).toBe('IHC');
-    });
-
-    it('preserves Other instead of coercing it to H&E or IHC', async () => {
-        const payload = toWireHierarchy({
-            patient_id: 'P-other',
-            samples: [
-                makeSample('UNMATCHED', [
-                    makeSlide({
-                        is_hne: false,
-                        is_ihc: false,
-                        stain_group: 'Other',
-                        slide_type: 'Other',
-                    }),
-                ]),
-            ],
-        });
-        (global as any).fetch = jest.fn().mockResolvedValue({
-            ok: true,
-            json: () => Promise.resolve(payload),
-        });
-
-        const hierarchy = await fetchWsiPatientHierarchy('study', 'P-other');
-        expect(
-            hierarchy.samples[0].parts[0].blocks[0].slides[0].slide_type
-        ).toBe('Other');
-    });
+            const hierarchy = await fetchWsiPatientHierarchy('study', 'P-1');
+            expect(
+                hierarchy.samples[0].parts[0].blocks[0].slides[0].stain_kind
+            ).toBe(expected);
+        }
+    );
 
     it('rejects hierarchy payloads without a sample collection and retries cleanly', async () => {
         const fetchMock = jest

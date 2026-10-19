@@ -13,7 +13,6 @@ import {
     matchesMatchFilter,
     matchesWsiStainFilter,
     sampleHasMultiplePartDescriptions,
-    wsiStainKind,
 } from './wsiSlideUtils';
 import {
     abbreviatePartDesc,
@@ -532,7 +531,7 @@ function countStains(
             return;
         }
         counts.all += 1;
-        counts[wsiStainKind(slide)] += 1;
+        counts[slide.stain_kind] += 1;
     });
     return counts;
 }
@@ -821,7 +820,7 @@ function SlideItem({
     authScope: string;
 }) {
     const [hovered, setHovered] = React.useState(false);
-    const isHE = wsiStainKind(slide) === 'hne';
+    const isHE = slide.stain_kind === 'hne';
     const dotColor = getStainDotColor(slide);
     const mag = slide.magnification || '';
     const sz = fmtFileSize(slide.file_size_bytes);

@@ -14,8 +14,7 @@ const slide: Slide = {
     slide_key: 'slide-1',
     stain_name: 'H&E',
     stain_group: 'Histology',
-    is_hne: true,
-    is_ihc: false,
+    stain_kind: 'hne',
     magnification: '20x',
     file_size_bytes: '100000000',
     can_serve_tiles: true,
@@ -51,7 +50,6 @@ function placedSlide(
         sample_id: 'S-1',
         match_level: matchLevel,
         specimen_key: `${matchLevel}::${slide.slide_key}`,
-        slide_type: 'H&E',
         ...overrides,
     };
 }

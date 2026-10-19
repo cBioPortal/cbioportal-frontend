@@ -71,7 +71,7 @@ export function chooseInitialServableSlide(
                 preferredSampleMatchingStain =
                     preferredSampleMatchingStain ?? entry;
             }
-            if (entry.slide.is_hne) {
+            if (entry.slide.stain_kind === 'hne') {
                 preferredSampleHne = preferredSampleHne ?? entry;
             }
         }
@@ -79,7 +79,7 @@ export function chooseInitialServableSlide(
         if (matchesRequestedStain) {
             matchingStain = matchingStain ?? entry;
         }
-        if (entry.slide.is_hne) {
+        if (entry.slide.stain_kind === 'hne') {
             hne = hne ?? entry;
         }
     }

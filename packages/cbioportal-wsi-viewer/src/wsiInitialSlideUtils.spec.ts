@@ -23,8 +23,7 @@ describe('chooseInitialServableSlide', () => {
             {
                 slide: makeSlide({
                     slide_key: 'B',
-                    is_hne: false,
-                    is_ihc: true,
+                    stain_kind: 'ihc',
                     stain_name: 'IHC',
                 }),
                 sample: preferred,
@@ -45,8 +44,7 @@ describe('chooseInitialServableSlide', () => {
             {
                 slide: makeSlide({
                     slide_key: 'B',
-                    is_hne: false,
-                    is_ihc: true,
+                    stain_kind: 'ihc',
                     stain_name: 'IHC',
                 }),
                 sample,
@@ -68,8 +66,7 @@ describe('chooseInitialServableSlide', () => {
             {
                 slide: makeSlide({
                     slide_key: 'global-ihc',
-                    is_hne: false,
-                    is_ihc: true,
+                    stain_kind: 'ihc',
                     stain_name: 'IHC',
                 }),
                 sample: other,
@@ -129,8 +126,7 @@ describe('chooseInitialServableSlide', () => {
         const accepted = {
             slide: makeSlide({
                 slide_key: 'accepted',
-                is_hne: false,
-                is_ihc: true,
+                stain_kind: 'ihc',
                 stain_name: 'IHC',
             }),
             sample,
@@ -153,8 +149,7 @@ describe('chooseInitialServableSlide requested image', () => {
     const encoded = {
         slide: makeSlide({
             slide_key: 'slide id/2 #x',
-            is_hne: false,
-            is_ihc: true,
+            stain_kind: 'ihc',
             stain_name: 'IHC',
         }),
         sample: other,

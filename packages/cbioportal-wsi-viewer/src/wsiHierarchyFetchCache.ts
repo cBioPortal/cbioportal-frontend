@@ -2,6 +2,7 @@ import {
     PatientHierarchy,
     UNMATCHED_SAMPLE_ID,
     WsiV2Hierarchy,
+    WsiStainKind,
     WsiV2Slide,
 } from './wsiViewerTypes';
 import {
@@ -19,21 +20,17 @@ const hierarchyCache = createPromiseCache<PatientHierarchy>(
     () => Date.now() + HIERARCHY_CACHE_TTL_MS
 );
 
-function normalizeSlideType(
-    slide: WsiV2Slide
-): 'H&E' | 'IHC' | 'Other' | 'Unknown' {
+// A stored type naming a stain the flags don't confirm is unknown.
+const UNCONFIRMED_SLIDE_TYPES = new Set(['IHC', 'H&E', 'HE', 'UNKNOWN']);
+
+function normalizeStainKind(slide: WsiV2Slide): WsiStainKind {
     // The resolved boolean flags are the authoritative classification fields.
-    if (slide.isIhc === true) {
-        return 'IHC';
-    }
-    if (slide.isHne === true) {
-        return 'H&E';
-    }
+    if (slide.isIhc) return 'ihc';
+    if (slide.isHne) return 'hne';
     const stored = slide.slideType?.trim().toUpperCase();
-    if (stored === 'IHC') return 'IHC';
-    if (stored === 'H&E' || stored === 'HE') return 'H&E';
-    if (stored === 'UNKNOWN') return 'Unknown';
-    return 'Other';
+    return stored !== undefined && UNCONFIRMED_SLIDE_TYPES.has(stored)
+        ? 'unknown'
+        : 'other';
 }
 
 function normalizeV2Hierarchy(
@@ -57,8 +54,7 @@ function normalizeV2Hierarchy(
                         slide_key: slide.slideKey,
                         stain_name: slide.stainName,
                         stain_group: slide.stainGroup,
-                        is_hne: slide.isHne,
-                        is_ihc: slide.isIhc,
+                        stain_kind: normalizeStainKind(slide),
                         magnification: slide.magnification,
                         file_size_bytes:
                             slide.fileSizeBytes === null
@@ -72,7 +68,6 @@ function normalizeV2Hierarchy(
                         sample_id: slide.sampleId ?? group.sampleId,
                         match_level: slide.matchLevel,
                         specimen_key: slide.specimenKey,
-                        slide_type: normalizeSlideType(slide),
                     })),
                 })),
             })),

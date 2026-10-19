@@ -39,23 +39,11 @@ export function isServableDiagnosticSlide(
     return !!(slide.can_serve_tiles && slide.slide_key);
 }
 
-/**
- * Classifies a slide's stain. The resolved flags are authoritative; the
- * importer guarantees `slide_type` agrees with them.
- */
-export function wsiStainKind(
-    slide: Pick<Slide, 'is_hne' | 'is_ihc' | 'slide_type'>
-): Exclude<WsiStainFilter, 'all'> {
-    if (slide.is_ihc) return 'ihc';
-    if (slide.is_hne) return 'hne';
-    return slide.slide_type === 'Other' ? 'other' : 'unknown';
-}
-
 export function matchesWsiStainFilter(
-    slide: Pick<Slide, 'is_hne' | 'is_ihc' | 'slide_type'>,
+    slide: Pick<Slide, 'stain_kind'>,
     stainFilter: WsiStainFilter
 ): boolean {
-    return stainFilter === 'all' || wsiStainKind(slide) === stainFilter;
+    return stainFilter === 'all' || slide.stain_kind === stainFilter;
 }
 
 /**
@@ -121,7 +109,7 @@ function compareSpecimenNumbers(
 }
 
 export interface SampleSlideOrderEntry {
-    slide: Pick<Slide, 'block_number' | 'is_hne' | 'stain_name'>;
+    slide: Pick<Slide, 'block_number' | 'stain_kind' | 'stain_name'>;
     /** Number of the part holding the slide. */
     partNumber?: string | null;
 }
@@ -141,7 +129,8 @@ export function compareSlidesInSample(
             left.slide.block_number,
             right.slide.block_number
         ) ||
-        Number(!!right.slide.is_hne) - Number(!!left.slide.is_hne) ||
+        Number(right.slide.stain_kind === 'hne') -
+            Number(left.slide.stain_kind === 'hne') ||
         (left.slide.stain_name || '').localeCompare(
             right.slide.stain_name || ''
         )
