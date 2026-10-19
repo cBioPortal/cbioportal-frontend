@@ -31,6 +31,8 @@ export class ResourceViewerStore {
     @observable.ref private patientIdentifiers: PatientIdentifier[] = [];
     @observable.ref private sampleIdentifiers: SampleIdentifier[] = [];
     @observable private resourceId: string | undefined;
+    /** Read every resource of the cohort rather than one. */
+    @observable private allResources = false;
     /** Total rows the tabs endpoint reports, so the cap can be applied before fetching. */
     @observable private totalCount = 0;
 
@@ -46,6 +48,14 @@ export class ResourceViewerStore {
 
     @action setResource(resourceId: string | undefined, totalCount: number) {
         this.resourceId = resourceId;
+        this.allResources = false;
+        this.totalCount = totalCount;
+    }
+
+    /** Every resource of the cohort in one list, for a viewer that crosses resources. */
+    @action setAllResources(totalCount: number) {
+        this.resourceId = undefined;
+        this.allResources = true;
         this.totalCount = totalCount;
     }
 
@@ -56,7 +66,7 @@ export class ResourceViewerStore {
     readonly rows = remoteData<IResourceTableRow[]>({
         invoke: async () => {
             if (
-                !this.resourceId ||
+                (!this.resourceId && !this.allResources) ||
                 this.studyIds.length === 0 ||
                 this.totalCount === 0 ||
                 this.exceedsViewerLimit

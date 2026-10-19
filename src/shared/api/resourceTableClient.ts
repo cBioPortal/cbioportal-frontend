@@ -13,6 +13,8 @@ export interface ResourceTableTab {
 }
 
 export interface ResourceTableRow {
+    /** Identity of the row, stable across requests. */
+    internalId: number;
     studyId: string;
     resourceId: string;
     resourceDisplayName: string;
@@ -82,7 +84,8 @@ export interface ResourceColumnFilter {
 
 export interface ResourceTableQuery {
     studyIds: string[];
-    resourceId: string;
+    /** Omit to read every resource the cohort has, in one ordered list grouped by resource. */
+    resourceId?: string;
     patientIdentifiers: PatientIdentifier[];
     sampleIdentifiers: SampleIdentifier[];
     search?: string;

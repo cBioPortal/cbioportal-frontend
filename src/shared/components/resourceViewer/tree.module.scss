@@ -1,0 +1,38 @@
+.tree {
+    width: 240px;
+    flex: 0 0 240px;
+    overflow-y: auto;
+    border-right: 1px solid #ddd;
+    padding-right: 8px;
+}
+
+.group {
+    margin-bottom: 12px;
+}
+
+.groupLabel {
+    font-weight: bold;
+    padding: 4px 6px;
+}
+
+.count {
+    color: #888;
+    font-weight: normal;
+}
+
+.leaf {
+    padding: 3px 6px 3px 18px;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &:hover {
+        background-color: #f3f6f9;
+    }
+}
+
+.selected {
+    background-color: #e3f2fd;
+    box-shadow: inset 3px 0 0 0 #2986e2;
+}

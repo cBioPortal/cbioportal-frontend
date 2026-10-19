@@ -60,6 +60,8 @@ import {
 import { MakeMobxView } from '../../shared/components/MobxView';
 import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
 import ResourceDataTable from 'shared/components/resourceTable/ResourceDataTable';
+import ResourceBrowser from 'shared/components/resourceViewer/ResourceBrowser';
+import { ResourceViewerStore } from 'shared/components/resourceViewer/ResourceViewerStore';
 import { isFusion } from '../../shared/lib/MutationUtils';
 import { Mutation } from 'cbioportal-ts-api-client';
 import {
@@ -170,6 +172,8 @@ export class PatientViewPageInner extends React.Component<
         ResourceTableStore
     >();
     private resourceTableStoreDisposer: IReactionDisposer | null = null;
+    // One list holding every resource of this patient, for the browser tab.
+    readonly allResourcesStore = new ResourceViewerStore();
 
     constructor(props: IPatientViewPageProps) {
         super(props);
@@ -246,6 +250,11 @@ export class PatientViewPageInner extends React.Component<
                     sampleIdentifiers
                 )
             );
+            this.allResourcesStore.setContext(
+                studyIds,
+                patientIdentifiers,
+                sampleIdentifiers
+            );
         });
     }
 
@@ -274,6 +283,22 @@ export class PatientViewPageInner extends React.Component<
         }
         return store;
     }
+
+    readonly resourceBrowser = MakeMobxView({
+        await: () => [this.resourceTableStore.tabs],
+        render: () => {
+            const tabs = this.resourceTableStore.tabs.result || [];
+            this.allResourcesStore.setAllResources(
+                _.sumBy(tabs, tab => tab.totalCount)
+            );
+            return (
+                <ResourceBrowser
+                    store={this.allResourcesStore}
+                    resourceDefinitions={this.pageStore.resourceIdToDefinition}
+                />
+            );
+        },
+    });
 
     @computed get hasNewResourceTabs(): boolean {
         const tabs = this.resourceTableStore.tabs.result;

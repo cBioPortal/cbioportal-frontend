@@ -54,6 +54,7 @@ export enum PatientViewPageTabs {
     PathwayMapper = 'pathways',
     MRNA = 'mrna',
     Plots = 'plots',
+    ResourceBrowser = 'resourceBrowser',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -800,6 +801,19 @@ export function tabs(
             </MSKTab>
         );
     }
+
+    if (pageComponent.hasNewResourceTabs)
+        tabs.push(
+            <MSKTab
+                key={PatientViewPageTabs.ResourceBrowser}
+                id={PatientViewPageTabs.ResourceBrowser}
+                linkText={'Resources'}
+                // Holds its frame while the user reads another tab.
+                unmountOnHide={false}
+            >
+                {pageComponent.resourceBrowser.component}
+            </MSKTab>
+        );
 
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */
