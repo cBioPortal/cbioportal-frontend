@@ -179,10 +179,6 @@ export class WsiViewerController {
         private readonly loadOpenSeadragon: () => Promise<any>
     ) {}
 
-    forceResize() {
-        this.osdViewer?.forceResize?.();
-    }
-
     /** The viewer, while it holds the current mount's slide. */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private get mountedViewer(): any {
@@ -492,10 +488,14 @@ export class WsiViewerController {
     /**
      * Whether the viewer is on screen. Token refresh pauses while it is
      * hidden and, once shown, runs at once if the refresh is due.
+     * OpenSeadragon ignores container size changes while hidden: a hidden
+     * tab collapses the container, and resizing to that and back rescales
+     * the view.
      */
     setVisible(visible: boolean): void {
         if (visible === this.viewerVisible) return;
         this.viewerVisible = visible;
+        if (this.osdViewer) this.osdViewer.autoResize = visible;
         if (!visible) {
             this.clearWsiTokenRefreshTimer();
             return;
@@ -1205,6 +1205,7 @@ export class WsiViewerController {
                         prefixUrl: getWsiViewerRuntime().osdPrefixUrl,
                     })
                 );
+                this.osdViewer.autoResize = this.viewerVisible;
                 // OpenSeadragon replaces the custom home button title with its
                 // generic "Go home" label. Keep the viewer's public keyboard and
                 // screen-reader wording stable after OSD has wired the button.

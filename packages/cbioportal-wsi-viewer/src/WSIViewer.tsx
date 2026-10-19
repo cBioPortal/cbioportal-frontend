@@ -296,7 +296,6 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             writeWsiPanelFlag(WSI_NAV_COLLAPSED_KEY, collapsed);
         }
         this.props.onNavCollapsedChange?.(collapsed);
-        this.resizeAfterLayout();
     }
 
     @action.bound
@@ -306,22 +305,12 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             writeWsiPanelFlag(WSI_METADATA_COLLAPSED_KEY, collapsed);
         }
         this.props.onMetadataCollapsedChange?.(collapsed);
-        this.resizeAfterLayout();
     }
 
     private readonly hideNav = () => this.setNavCollapsed(true);
     private readonly showNav = () => this.setNavCollapsed(false);
     private readonly hideMetadata = () => this.setMetadataCollapsed(true);
     private readonly showMetadata = () => this.setMetadataCollapsed(false);
-
-    /** Lets OpenSeadragon pick up the viewer's new size after a panel toggles. */
-    private resizeAfterLayout() {
-        if (typeof window.requestAnimationFrame === 'function') {
-            window.requestAnimationFrame(() => this.controller.forceResize());
-        } else {
-            this.controller.forceResize();
-        }
-    }
 
     @action.bound
     private setSidebarWidth(width: number) {
@@ -330,7 +319,6 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             Math.min(WSI_SIDEBAR_MAX_WIDTH, width)
         );
         this.sidebarWidth = clamped;
-        this.controller.forceResize();
     }
 
     private beginSidebarResize = (event: React.MouseEvent<HTMLDivElement>) => {

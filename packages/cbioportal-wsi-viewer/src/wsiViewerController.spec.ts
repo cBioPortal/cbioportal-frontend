@@ -204,6 +204,21 @@ describe('WsiViewerController viewer lifecycle', () => {
         expect(viewer.destroy).toHaveBeenCalledTimes(1);
     });
 
+    it('ignores container resizes while the viewer is hidden', async () => {
+        const { controller, viewers } = makeHarness();
+        controller.setVisible(false);
+
+        await controller.selectSlide(makeSlide('slide-a'), sample);
+        const viewer = viewers[0] as any;
+        expect(viewer.autoResize).toBe(false);
+
+        controller.setVisible(true);
+        expect(viewer.autoResize).toBe(true);
+        controller.setVisible(false);
+        expect(viewer.autoResize).toBe(false);
+        controller.dispose();
+    });
+
     it('rebuilds the viewer while the previous slide still has tile requests', async () => {
         const { controller, openSeadragon, viewers } = makeHarness();
 

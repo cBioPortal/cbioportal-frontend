@@ -51,7 +51,6 @@ function makeViewer(extraProps: Record<string, unknown> = {}) {
         height: 500,
         ...extraProps,
     });
-    instance.controller.forceResize = jest.fn();
     action(() => {
         instance.viewerState.hierarchy = hierarchy;
         instance.viewerState.loading = false;
@@ -95,7 +94,6 @@ describe('WSIViewer hideable panels', () => {
         expect(byTestId(viewer, 'wsi-nav-rail')).toHaveLength(1);
         expect(byTestId(viewer, 'wsi-nav-hide')).toHaveLength(0);
         expect(window.localStorage.getItem(WSI_NAV_COLLAPSED_KEY)).toBe('1');
-        expect(viewer.controller.forceResize).toHaveBeenCalled();
         // A new viewer, such as the next patient, opens with the list hidden.
         expect(byTestId(makeViewer(), 'wsi-nav-rail')).toHaveLength(1);
 
@@ -114,7 +112,6 @@ describe('WSIViewer hideable panels', () => {
         expect(window.localStorage.getItem(WSI_METADATA_COLLAPSED_KEY)).toBe(
             '1'
         );
-        expect(viewer.controller.forceResize).toHaveBeenCalled();
     });
 
     it('renders expanded when browser storage is blocked', () => {
