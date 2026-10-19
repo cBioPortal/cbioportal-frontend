@@ -9,12 +9,15 @@ interface Props {
     location: { search?: string };
 }
 
-/** Minimal standalone route used by the foundation smoke flow. */
+/**
+ * The full-page slide viewer that slide permalinks open:
+ * `/wsi/patient/{patient}?studyId=..&slideKey=..`. cbioportal-core writes
+ * these links as the WSI_SAMPLE resource URLs, and the backend serves this
+ * path to the app.
+ */
 export default function WsiPatientViewRoute({ match, location }: Props) {
     const query = parse(location.search || '');
     const studyId = typeof query.studyId === 'string' ? query.studyId : '';
-    // Viewer links name one slide by its opaque key:
-    // /wsi/patient/{patient}?studyId=..&slideKey=..
     // The router basename supplies any deployment context path.
     const requestedSlideKey =
         typeof query.slideKey === 'string' && query.slideKey
