@@ -1,0 +1,12 @@
+.clickableRow {
+    cursor: pointer;
+}
+
+.selectedRow {
+    // Wins over the alternating background that table-striped also sets on the row.
+    background-color: #e3f2fd !important;
+
+    td:first-child {
+        box-shadow: inset 3px 0 0 0 #2986e2;
+    }
+}

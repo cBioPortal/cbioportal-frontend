@@ -564,3 +564,71 @@ describe('ServerDrivenTable row identity', () => {
         assert.notDeepEqual(keysOf(page1), keysOf(page2));
     });
 });
+
+describe('ServerDrivenTable row selection', () => {
+    const rows: TestRow[] = [
+        { name: 'Alpha', type: 'A' },
+        { name: 'Beta', type: 'B' },
+    ];
+    const columns: ServerDrivenTableColumn<TestRow>[] = [
+        { id: 'name', name: 'Name', render: row => row.name },
+    ];
+
+    const props = () => ({
+        rows,
+        columns,
+        totalRowCount: 2,
+        currentPage: 0,
+        pageSize: 25,
+        rowKey: (row: TestRow) => row.name,
+        onPageChange: () => undefined,
+        onPageSizeChange: () => undefined,
+        onSortChange: () => undefined,
+        onSearchChange: () => undefined,
+        onFilterChange: () => undefined,
+        onFilterDeactivate: () => undefined,
+    });
+
+    it('reports the clicked row', () => {
+        const clicked: TestRow[] = [];
+        const table = mount(
+            <ServerDrivenTable<TestRow>
+                {...props()}
+                onRowClick={row => clicked.push(row)}
+            />
+        );
+
+        table
+            .find('tbody tr')
+            .at(1)
+            .simulate('click');
+
+        assert.deepEqual(clicked, [{ name: 'Beta', type: 'B' }]);
+    });
+
+    it('marks only the selected row', () => {
+        const table = mount(
+            <ServerDrivenTable<TestRow>
+                {...props()}
+                onRowClick={() => undefined}
+                selectedRowKey="Beta"
+            />
+        );
+
+        const selected = table
+            .find('tbody tr')
+            .map((node: any) => node.prop('data-test-selected'));
+        assert.deepEqual(selected, [undefined, 'true']);
+    });
+
+    it('stays unclickable when the caller does not opt in', () => {
+        // The study view keeps the plain table, so rows must not look interactive there.
+        const table = mount(<ServerDrivenTable<TestRow> {...props()} />);
+        assert.isUndefined(
+            table
+                .find('tbody tr')
+                .at(0)
+                .prop('onClick')
+        );
+    });
+});

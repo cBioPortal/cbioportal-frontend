@@ -60,6 +60,7 @@ import {
 import { MakeMobxView } from '../../shared/components/MobxView';
 import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
 import ResourceDataTable from 'shared/components/resourceTable/ResourceDataTable';
+import { ResourceViewerStore } from 'shared/components/resourceViewer/ResourceViewerStore';
 import { isFusion } from '../../shared/lib/MutationUtils';
 import { Mutation } from 'cbioportal-ts-api-client';
 import {
@@ -170,6 +171,11 @@ export class PatientViewPageInner extends React.Component<
         ResourceTableStore
     >();
     private resourceTableStoreDisposer: IReactionDisposer | null = null;
+    // One viewer list per resource, kept for the page lifetime alongside the table stores.
+    private readonly resourceViewerStores = new Map<
+        string,
+        ResourceViewerStore
+    >();
 
     constructor(props: IPatientViewPageProps) {
         super(props);
@@ -246,6 +252,13 @@ export class PatientViewPageInner extends React.Component<
                     sampleIdentifiers
                 )
             );
+            this.resourceViewerStores.forEach(store =>
+                store.setContext(
+                    studyIds,
+                    patientIdentifiers,
+                    sampleIdentifiers
+                )
+            );
         });
     }
 
@@ -272,6 +285,29 @@ export class PatientViewPageInner extends React.Component<
                 );
             }
         }
+        return store;
+    }
+
+    private getOrCreateViewerStore(
+        resourceId: string,
+        totalCount: number
+    ): ResourceViewerStore {
+        let store = this.resourceViewerStores.get(resourceId);
+        if (!store) {
+            store = new ResourceViewerStore();
+            this.resourceViewerStores.set(resourceId, store);
+
+            const samples = this.pageStore.samples.result;
+            if (samples) {
+                const studyId = this.pageStore.studyId;
+                store.setContext(
+                    [studyId],
+                    [{ studyId, patientId: this.pageStore.patientId }],
+                    samples.map(s => ({ studyId, sampleId: s.sampleId }))
+                );
+            }
+        }
+        store.setResource(resourceId, totalCount);
         return store;
     }
 
@@ -557,6 +593,14 @@ export class PatientViewPageInner extends React.Component<
                         store={this.getOrCreateResourceStore(tab.resourceId)}
                         scopedResourceId={tab.resourceId}
                         hideTabs={true}
+                        showViewer={true}
+                        viewerStore={this.getOrCreateViewerStore(
+                            tab.resourceId,
+                            tab.totalCount
+                        )}
+                        resourceDefinitions={
+                            this.pageStore.resourceIdToDefinition
+                        }
                     />
                 </MSKTab>
             ));

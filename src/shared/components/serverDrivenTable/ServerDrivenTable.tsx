@@ -19,6 +19,7 @@ import {
     ICopyDownloadData,
 } from 'shared/components/copyDownloadControls/CopyDownloadControls';
 import 'shared/components/lazyMobXTable/styles.scss';
+import styles from './styles.module.scss';
 
 const NUMERIC_FILTER_SLIDER_WIDTH = '190px';
 
@@ -94,6 +95,9 @@ export interface ServerDrivenTableProps<T> {
      * page 1's first row for page 2's first row — which only matters once a row holds state.
      */
     rowKey?: (row: T) => string;
+    /** Marks a row as selected and makes every row clickable. Needs rowKey. */
+    selectedRowKey?: string;
+    onRowClick?: (row: T) => void;
     testId?: string;
     // Bounds the scrollable viewport the table is shown in. Sticky headers stick
     // to the top of this viewport, so without it a long table scrolls its headers
@@ -725,13 +729,33 @@ export default class ServerDrivenTable<T> extends React.Component<
             );
         }
 
-        return this.props.rows.map((row, rowIndex) => (
-            <tr key={this.props.rowKey ? this.props.rowKey(row) : rowIndex}>
-                {this.visibleColumns.map(column => (
-                    <td key={column.id}>{column.render(row)}</td>
-                ))}
-            </tr>
-        ));
+        return this.props.rows.map((row, rowIndex) => {
+            const key = this.props.rowKey
+                ? this.props.rowKey(row)
+                : `${rowIndex}`;
+            const onRowClick = this.props.onRowClick;
+            return (
+                <tr
+                    key={key}
+                    className={classNames({
+                        [styles.clickableRow]: !!onRowClick,
+                        [styles.selectedRow]:
+                            !!this.props.selectedRowKey &&
+                            this.props.selectedRowKey === key,
+                    })}
+                    onClick={
+                        onRowClick ? () => onRowClick(row) : undefined
+                    }
+                    data-test-selected={
+                        this.props.selectedRowKey === key ? 'true' : undefined
+                    }
+                >
+                    {this.visibleColumns.map(column => (
+                        <td key={column.id}>{column.render(row)}</td>
+                    ))}
+                </tr>
+            );
+        });
     }
 
     private renderTopToolbar() {

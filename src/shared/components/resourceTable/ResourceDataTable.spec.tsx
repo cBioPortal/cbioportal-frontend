@@ -335,3 +335,114 @@ describe('ResourceDataTable loading state', () => {
         assert.include(wrapper.text(), 'Error loading resources.');
     });
 });
+
+describe('ResourceDataTable viewer pane', () => {
+    const viewerRow = (key: string, url: string) =>
+        ({
+            key,
+            studyId: 'study',
+            patientId: 'P-1',
+            sampleId: `S-${key}`,
+            resourceType: 'Slide Microscopy',
+            resourceScope: 'SAMPLE',
+            resourceId: 'SLIDE',
+            description: '',
+            url,
+            metadata: {},
+        } as any);
+
+    const viewerRows = [
+        viewerRow('a', 'https://example.com/a.html'),
+        viewerRow('b', 'https://example.com/b.html'),
+        viewerRow('c', 'https://example.com/c.html'),
+    ];
+
+    const tableWithViewer = (overrides: any = {}) =>
+        new ResourceDataTable({
+            store: {
+                columns: [],
+                facets: {},
+                facetRanges: {},
+                distinctValueCounts: {},
+                rowsForDisplay: viewerRows,
+            } as any,
+            showViewer: true,
+            viewerStore: { rows: { result: viewerRows } } as any,
+            ...overrides,
+        });
+
+    it('frames nothing until a row is picked', () => {
+        const table: any = tableWithViewer();
+        assert.isNull(table.renderViewer());
+    });
+
+    it('frames the row that was clicked', () => {
+        const table: any = tableWithViewer();
+        table.onRowClick(viewerRows[1]);
+
+        assert.equal(table.selectedRowKey, 'b');
+        assert.equal(table.viewerIndex, 1);
+        assert.equal(table.selectedRow.url, 'https://example.com/b.html');
+    });
+
+    it('clicking the open row closes the viewer', () => {
+        const table: any = tableWithViewer();
+        table.onRowClick(viewerRows[1]);
+        table.onRowClick(viewerRows[1]);
+
+        assert.isUndefined(table.selectedRowKey);
+        assert.isNull(table.renderViewer());
+    });
+
+    it('steps the selection with the viewer chevrons', () => {
+        // The chevrons walk the viewer's own list, which is the whole resource rather than
+        // the page on screen.
+        const table: any = tableWithViewer();
+        table.onRowClick(viewerRows[0]);
+
+        table.onViewerIndexChange(2);
+
+        assert.equal(table.selectedRowKey, 'c');
+        assert.equal(table.selectedRow.url, 'https://example.com/c.html');
+    });
+
+    it('ignores a step past the end of the list', () => {
+        const table: any = tableWithViewer();
+        table.onRowClick(viewerRows[0]);
+
+        table.onViewerIndexChange(99);
+
+        assert.equal(table.selectedRowKey, 'a');
+    });
+
+    it("takes the error message from the row's own resource definition", () => {
+        const table: any = tableWithViewer({
+            resourceDefinitions: {
+                SLIDE: {
+                    resourceId: 'SLIDE',
+                    customMetaData: JSON.stringify({
+                        iframeErrorMessage: 'Needs VPN',
+                    }),
+                } as any,
+            },
+        });
+        table.onRowClick(viewerRows[0]);
+
+        assert.equal(table.viewerErrorMessage, 'Needs VPN');
+    });
+
+    it('leaves the table alone when the page does not opt in', () => {
+        const table: any = new ResourceDataTable({
+            store: {
+                columns: [],
+                facets: {},
+                facetRanges: {},
+                distinctValueCounts: {},
+                rowsForDisplay: viewerRows,
+            } as any,
+        });
+        table.onRowClick(viewerRows[0]);
+
+        assert.isNull(table.renderViewer());
+    });
+});

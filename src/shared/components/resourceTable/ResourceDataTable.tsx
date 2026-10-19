@@ -29,9 +29,24 @@ import {
     getResourceTableMetadataKeys,
 } from 'shared/lib/ResourceTableUtils';
 import { ResourceTableStore } from './ResourceTableStore';
+import ResourceViewer from 'shared/components/resourceViewer/ResourceViewer';
+import { ResourceViewerStore } from 'shared/components/resourceViewer/ResourceViewerStore';
+import { getResourceConfig } from 'shared/lib/ResourceConfig';
+import { ResourceDefinition } from 'cbioportal-ts-api-client';
 
 export interface IResourceDataTableProps {
     store: ResourceTableStore;
+    /**
+     * Shows a viewer under the table: clicking a row frames that resource, and the chevrons
+     * step through the rows of the same resource. Off unless a page opts in, because a cohort
+     * table can list thousands of rows across resources.
+     */
+    showViewer?: boolean;
+    viewerStore?: ResourceViewerStore;
+    /** Per-resource configuration the viewer needs, keyed by resource id. */
+    resourceDefinitions?: { [resourceId: string]: ResourceDefinition };
+    /** Rendered in the viewer header, e.g. a link to the whole patient in sample mode. */
+    viewerHeaderExtra?: React.ReactNode;
     resourceLabel?: string;
     emptyText?: string;
     searchPlaceholder?: string;
@@ -42,6 +57,10 @@ export interface IResourceDataTableProps {
 // Matches the study view's Clinical Data tab, so a wide or long resource table
 // scrolls inside its own viewport rather than pushing the page.
 const RESOURCE_TABLE_MAX_HEIGHT = 'calc(100vh - 220px)';
+// With a viewer below it the table yields most of the viewport and keeps a few rows, so the
+// user can still see what they are stepping through.
+const RESOURCE_TABLE_STRIP_HEIGHT = '180px';
+const VIEWER_HEIGHT = 520;
 const NOT_AVAILABLE = '';
 const NO_DESCRIPTION = 'No description provided';
 const SORT_FIELD_MAP: Record<string, string> = {
@@ -108,6 +127,8 @@ export class ResourceDataTable extends React.Component<
     // one — paging, sorting, filtering — keep the table mounted and dim it instead.
     @observable private tableLoadedOnce = false;
     private tableReadyDisposers: IReactionDisposer[] = [];
+    /** Row the viewer is showing, by `IResourceTableRow.key`. */
+    @observable private selectedRowKey: string | undefined = undefined;
 
     constructor(props: IResourceDataTableProps) {
         super(props);
@@ -120,6 +141,16 @@ export class ResourceDataTable extends React.Component<
             reaction(
                 () => this.props.store.activeResourceId,
                 () => (this.tableLoadedOnce = false)
+            ),
+            // The selection is a row of one resource, so it cannot survive a change of
+            // resource, nor a filter or search that may remove the row from the result set.
+            reaction(
+                () => [
+                    this.props.store.activeResourceId,
+                    this.props.store.searchTerm,
+                    this.props.store.filters,
+                ],
+                () => (this.selectedRowKey = undefined)
             ),
             reaction(
                 () => this.props.store.isTableReady,
@@ -590,6 +621,72 @@ export class ResourceDataTable extends React.Component<
         this.syncStoreFilters();
     }
 
+    @action.bound
+    private onRowClick(row: IResourceTableRow) {
+        this.selectedRowKey =
+            this.selectedRowKey === row.key ? undefined : row.key;
+    }
+
+    /** The row the viewer frames, taken from the viewer's own list rather than the page. */
+    @computed private get viewerRows(): IResourceTableRow[] {
+        return this.props.viewerStore?.rows.result || [];
+    }
+
+    @computed private get viewerIndex(): number {
+        const index = this.viewerRows.findIndex(
+            row => row.key === this.selectedRowKey
+        );
+        return index === -1 ? 0 : index;
+    }
+
+    @action.bound
+    private onViewerIndexChange(index: number) {
+        const row = this.viewerRows[index];
+        if (row) {
+            this.selectedRowKey = row.key;
+        }
+    }
+
+    @computed private get selectedRow(): IResourceTableRow | undefined {
+        return this.viewerRows.find(row => row.key === this.selectedRowKey);
+    }
+
+    @computed private get viewerErrorMessage(): string | undefined {
+        const resourceId = this.selectedRow?.resourceId;
+        const definition =
+            resourceId && this.props.resourceDefinitions
+                ? this.props.resourceDefinitions[resourceId]
+                : undefined;
+        return definition
+            ? getResourceConfig(definition).iframeErrorMessage
+            : undefined;
+    }
+
+    private renderViewer() {
+        const row = this.selectedRow;
+        if (!this.props.showViewer || !row) {
+            return null;
+        }
+
+        return (
+            <div
+                style={{ marginTop: 15 }}
+                data-test="resource-data-table-viewer"
+            >
+                <ResourceViewer
+                    rows={this.viewerRows}
+                    index={this.viewerIndex}
+                    onIndexChange={this.onViewerIndexChange}
+                    resourceDisplayName={row.resourceType}
+                    resourceDescription={row.description || undefined}
+                    iframeErrorMessage={this.viewerErrorMessage}
+                    height={VIEWER_HEIGHT}
+                    headerExtra={this.props.viewerHeaderExtra}
+                />
+            </div>
+        );
+    }
+
     public render() {
         const { store } = this.props;
 
@@ -655,13 +752,24 @@ export class ResourceDataTable extends React.Component<
                     showColumnVisibility={true}
                     columnVisibilityButtonText="Add columns"
                     rowKey={row => row.key}
+                    selectedRowKey={
+                        this.props.showViewer ? this.selectedRowKey : undefined
+                    }
+                    onRowClick={
+                        this.props.showViewer ? this.onRowClick : undefined
+                    }
                     isLoading={store.tableData.isPending}
                     headerContent={this.headerContent}
-                    tableMaxHeight={RESOURCE_TABLE_MAX_HEIGHT}
+                    tableMaxHeight={
+                        this.props.showViewer && this.selectedRowKey
+                            ? RESOURCE_TABLE_STRIP_HEIGHT
+                            : RESOURCE_TABLE_MAX_HEIGHT
+                    }
                     downloadAllRows={this.downloadAllRows}
                     downloadFilename={this.downloadFilename}
                     testId="resource-data-table"
                 />
+                {this.renderViewer()}
             </TabbedTableLayout>
         );
     }
