@@ -42,8 +42,8 @@ describe('WSIViewer foundation behavior', () => {
         ).toBeGreaterThan(0);
 
         action(() => {
-            instance.loading = false;
-            instance.error = 'Hierarchy unavailable';
+            instance.viewerState.loading = false;
+            instance.viewerState.error = 'Hierarchy unavailable';
         })();
         const error = TestRenderer.create(instance.render());
         expect(JSON.stringify(error.toJSON())).toContain(
@@ -61,8 +61,8 @@ describe('WSIViewer foundation behavior', () => {
         function loadedInstance(requestedSlideKey?: string) {
             const instance = makeInstance({ requestedSlideKey });
             action(() => {
-                instance.hierarchy = hierarchyOf(slides());
-                instance.loading = false;
+                instance.viewerState.hierarchy = hierarchyOf(slides());
+                instance.viewerState.loading = false;
             })();
             return instance;
         }
@@ -109,7 +109,7 @@ describe('WSIViewer foundation behavior', () => {
                 requestedSlideKey: 'slide-x',
             });
             action(() => {
-                instance.hierarchy = hierarchyOf([
+                instance.viewerState.hierarchy = hierarchyOf([
                     testSlide('slide-a'),
                     testSlide('slide-x', false),
                 ]);
@@ -127,8 +127,10 @@ describe('WSIViewer foundation behavior', () => {
         function scopedInstance(pathologyFilter?: Record<string, string>) {
             const instance = makeInstance({ pathologyFilter });
             action(() => {
-                instance.hierarchy = hierarchyOf([testSlide('slide-a')]);
-                instance.loading = false;
+                instance.viewerState.hierarchy = hierarchyOf([
+                    testSlide('slide-a'),
+                ]);
+                instance.viewerState.loading = false;
             })();
             return instance;
         }

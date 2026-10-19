@@ -37,7 +37,7 @@ describe('WSIViewer clinical rows', () => {
         ]);
 
         mobxAction(() => {
-            inst.selectedSample = { sample_id: 'S-2' };
+            inst.viewerState.selectedSample = { sample_id: 'S-2' };
         })();
         expect(inst.selectedClinicalRows.map((r: any) => r.value)).toEqual([
             'Glioma',

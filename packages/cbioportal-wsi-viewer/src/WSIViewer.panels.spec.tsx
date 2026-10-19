@@ -54,8 +54,8 @@ function makeViewer(extraProps: Record<string, unknown> = {}) {
     });
     instance.controller.forceResize = jest.fn();
     action(() => {
-        instance.hierarchy = hierarchy;
-        instance.loading = false;
+        instance.viewerState.hierarchy = hierarchy;
+        instance.viewerState.loading = false;
     })();
     return instance;
 }
@@ -182,15 +182,15 @@ describe('WSIViewer hideable panels', () => {
         act(() => viewer.hideNav());
 
         action(() => {
-            viewer.loading = true;
+            viewer.viewerState.loading = true;
         })();
         expect(byTestId(viewer, 'wsi-nav-rail')).toHaveLength(1);
         expect(byTestId(viewer, 'host-rail')).toHaveLength(1);
 
         action(() => {
-            viewer.loading = false;
-            viewer.hierarchy = null;
-            viewer.error = 'Slides could not be loaded';
+            viewer.viewerState.loading = false;
+            viewer.viewerState.hierarchy = null;
+            viewer.viewerState.error = 'Slides could not be loaded';
         })();
         expect(byTestId(viewer, 'wsi-nav-rail')).toHaveLength(1);
         expect(byTestId(viewer, 'host-rail')).toHaveLength(1);

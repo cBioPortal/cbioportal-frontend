@@ -7,6 +7,7 @@ import {
 } from './wsiViewerController';
 import { getWsiSlideAccess } from './wsiAuth';
 import { configureWsiViewerRuntime } from './wsiViewerConfig';
+import { WsiViewerState } from './wsiViewerState';
 import { Sample, Slide, TileMetadata } from './wsiViewerTypes';
 
 jest.mock('./wsiAuth', () => ({
@@ -100,43 +101,19 @@ function makeAccess(slideKey: string, token: string) {
 
 function makeHarness() {
     let container: HTMLDivElement = document.createElement('div');
-    let selected: Slide | null = null;
-    let meta: TileMetadata | null = null;
+    const state = new WsiViewerState();
+    state.selectedSample = { sample_id: 'S-1' } as Sample;
     const host: WsiViewerControllerHost = {
         getProps: () => ({
             studyId: 'study',
             patientId: 'P-1',
             authScope: 'user',
         }),
-        resetHierarchyLoadState: jest.fn(),
-        setHierarchy: jest.fn(),
-        setLoading: jest.fn(),
-        setError: jest.fn(),
-        getHierarchy: () => null,
         getServableSlides: () => [],
         getStainFilter: () => 'all' as any,
         getTileServerBase: () => 'https://tiles.example.com',
         getViewerContainerElement: () => container,
         chooseInitialServableSlide: () => undefined,
-        beginSlideSelection: slide => {
-            selected = slide;
-            meta = null;
-        },
-        setSelectedMeta: value => {
-            meta = value;
-        },
-        setSpinnerVisible: jest.fn(),
-        setTilesReady: jest.fn(),
-        setThumbnailPreview: jest.fn(),
-        getSelectedSlide: () => selected,
-        getSelectedSample: () => ({ sample_id: 'S-1' } as Sample),
-        getSelectedMeta: () => meta,
-        clearSelectedSlide: jest.fn(),
-        getPatientId: () => 'P-1',
-        setCoordInputs: jest.fn(),
-        getCoordInputs: () => ({ x: '', y: '' }),
-        updateCursorPos: jest.fn(),
-        clearCursorPos: jest.fn(),
         reportInitialSlideLoadPerformance: jest.fn(),
     };
     const viewers: FakeViewer[] = [];
@@ -145,7 +122,7 @@ function makeHarness() {
         viewers.push(viewer);
         return viewer;
     });
-    const controller = new WsiViewerController(host, () =>
+    const controller = new WsiViewerController(host, state, () =>
         Promise.resolve(openSeadragon)
     );
     return {
