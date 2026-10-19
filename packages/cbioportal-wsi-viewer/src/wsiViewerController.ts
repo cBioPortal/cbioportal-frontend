@@ -75,6 +75,8 @@ export interface WsiViewerControllerHost {
     reportInitialSlideLoadPerformance(
         metric: WsiInitialSlideLoadPerformance
     ): void;
+    /** The patient's hierarchy starts (re)loading; the shared state is reset. */
+    onHierarchyLoadStarted?(): void;
     onSlideSelectionStarted?(slide: Slide): void;
     onSelectionCleared?(): void;
     onViewerOpened?(viewer: any, openSeadragon: any, slide: Slide): void;
@@ -557,6 +559,7 @@ export class WsiViewerController {
         this.cancelNavigatorSchedule();
         this.initialSlideLoadStartedAt = Date.now();
         this.state.resetForHierarchyLoad();
+        this.host.onHierarchyLoadStarted?.();
         void this.primeOpenSeadragonLoad().catch(() => {});
 
         try {
