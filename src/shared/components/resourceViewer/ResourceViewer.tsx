@@ -233,6 +233,15 @@ export default class ResourceViewer extends React.Component<
                     <div className={styles.warningText}>
                         {this.warningMessage}
                     </div>
+                    <a
+                        href={row.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ marginBottom: 10 }}
+                        data-testid="ResourceViewerWarningLink"
+                    >
+                        Open in new window <i className="fa fa-external-link" />
+                    </a>
                     <button
                         className={styles.refreshButton}
                         onClick={() => getBrowserWindow().location.reload()}
@@ -284,18 +293,11 @@ export default class ResourceViewer extends React.Component<
                             this.props.rows.length
                         }`}
                     </p>
-                    {/* Always offered: a host can answer and still refuse to be framed, which
-                        the portal cannot detect. */}
-                    <a
-                        href={row.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ marginLeft: 'auto', marginBottom: 10 }}
-                        data-testid="ResourceViewerOpenInNewWindow"
-                    >
-                        Open in new window <i className="fa fa-external-link" />
-                    </a>
-                    {this.props.headerExtra}
+                    {this.props.headerExtra && (
+                        <div style={{ marginLeft: 'auto', marginBottom: 10 }}>
+                            {this.props.headerExtra}
+                        </div>
+                    )}
                 </div>
                 <div
                     style={{
