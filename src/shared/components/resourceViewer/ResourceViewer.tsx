@@ -12,7 +12,6 @@ import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import FeatureTitle from '../featureTitle/FeatureTitle';
 import WindowStore from '../window/WindowStore';
 import IFrameLoader from 'shared/components/iframeLoader/IFrameLoader';
-import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { IResourceTableRow } from 'shared/lib/ResourceTableUtils';
 import { applyCustomUrlTransforms } from './resourceUrlTransforms';
 import { buildPDFUrl, getFileExtension } from './resourceUrlUtils';
@@ -33,8 +32,7 @@ export interface IResourceViewerProps {
     resourceDescription?: string;
     /**
      * Replaces the general message when the resource host cannot be reached, for a resource
-     * whose reason is known, e.g. one behind a VPN. Supplying it also makes the viewer wait for
-     * the check before framing, since a failure is expected rather than exceptional.
+     * whose reason is known, e.g. one behind a VPN.
      */
     iframeErrorMessage?: string;
     height?: number;
@@ -201,14 +199,9 @@ export default class ResourceViewer extends React.Component<
     }
 
     /**
-     * Only a resource that names its own message waits for the check. Everything else frames
-     * straight away and is replaced if the check fails, so the common case does not pay for a
-     * round trip before anything appears.
+     * The frame is shown straight away and replaced if the host turns out to be unreachable, so
+     * no resource waits on the check before anything appears.
      */
-    @computed get isCheckingUrlAccessibility() {
-        return !!this.props.iframeErrorMessage && !this.urlCheckComplete;
-    }
-
     @computed get shouldShowWarning() {
         return this.urlCheckComplete && !this.urlIsAccessible;
     }
@@ -228,12 +221,6 @@ export default class ResourceViewer extends React.Component<
                         {row.url}
                     </a>
                 </div>
-            );
-        }
-
-        if (this.isCheckingUrlAccessibility) {
-            return (
-                <LoadingIndicator isLoading={true} center={true} size="big" />
             );
         }
 
