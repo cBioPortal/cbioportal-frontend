@@ -26,12 +26,13 @@ export const enum CLINICAL_ATTRIBUTE_ID_ENUM {
     CANCER_TYPE_DETAILED = 'CANCER_TYPE_DETAILED',
     ASCN_PURITY = 'ASCN_PURITY',
     ASCN_WGD = 'ASCN_WGD',
+    // TRUE / FALSE, used by studies that do not have ASCN_WGD
+    FACETS_WGD = 'FACETS_WGD',
     MSI_SCORE = 'MSI_SCORE',
     MSI_TYPE = 'MSI_TYPE',
     TMB_SCORE = 'CVR_TMB_SCORE',
     TMB_NONSYNONYMOUS = 'TMB_NONSYNONYMOUS',
 }
-
 
 export const enum MIS_TYPE_VALUE {
     INSTABLE = 'Instable',

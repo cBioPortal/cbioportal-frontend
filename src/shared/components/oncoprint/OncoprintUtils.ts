@@ -68,6 +68,7 @@ import {
     RESERVED_CLINICAL_VALUE_COLORS,
 } from 'shared/lib/Colors';
 import { ISelectOption } from './controls/OncoprintControls';
+import { makeUniqueColorGetter } from '../plots/PlotUtils';
 import ifNotDefined from '../../lib/ifNotDefined';
 import {
     getGenericAssayTrackCacheQueries,
@@ -629,11 +630,27 @@ export function getCategoricalTrackRuleSetParams(
         type: RuleSetType.CATEGORICAL,
         legend_label: track.molecularProfileName,
         category_key: 'attr_val',
-        category_to_color: _.mapValues(
-            RESERVED_CLINICAL_VALUE_COLORS,
-            hexToRGBA
-        ),
+        category_to_color:
+            track.category_to_color ||
+            _.mapValues(RESERVED_CLINICAL_VALUE_COLORS, hexToRGBA),
     };
+}
+
+// Colors are assigned in sorted category order so that every track of a
+// profile gets the same colors regardless of which track renders first.
+export function getCategoricalTrackCategoryToColor(categories: string[]) {
+    const colorGetter = makeUniqueColorGetter(
+        _.values(RESERVED_CLINICAL_VALUE_COLORS)
+    );
+    const categoryToColor: { [category: string]: string } = {
+        ...RESERVED_CLINICAL_VALUE_COLORS,
+    };
+    for (const category of _.sortBy(_.uniq(categories))) {
+        if (!(category in categoryToColor)) {
+            categoryToColor[category] = colorGetter();
+        }
+    }
+    return _.mapValues(categoryToColor, hexToRGBA);
 }
 
 /**
@@ -1781,7 +1798,21 @@ export function makeGenericAssayProfileCategoricalTracksMobxPromise(
                     }),
                 };
             });
-            return tracks;
+            const categoriesByProfile = _.mapValues(
+                _.groupBy(tracks, track => track.molecularProfileId),
+                profileTracks =>
+                    _.flatMap(profileTracks, track =>
+                        track.data
+                            .map(d => d.attr_val)
+                            .filter((v): v is string => _.isString(v))
+                    )
+            );
+            return tracks.map(track => ({
+                ...track,
+                category_to_color: getCategoricalTrackCategoryToColor(
+                    categoriesByProfile[track.molecularProfileId]
+                ),
+            }));
         },
         default: [],
     });

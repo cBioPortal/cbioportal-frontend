@@ -41,27 +41,22 @@ export interface ResourceCustomConfig {
     iframeErrorMessage?: string;
 }
 
-export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {
-    MSK_HNE: {
-        customizedDisplayName: 'Samples with H&E Slides',
-        hidePerPatientColumn: true,
-        columnNameMapping: { 'Type Of Resource': 'View' },
-        hideUrlColumn: true,
-        openInNewTab: true,
-        iframeErrorMessage:
-            'This resource requires VPN access. Please connect to VPN and refresh the page.',
-    },
-};
+/**
+ * Per-resource overrides keyed by resource id. Empty: the entry that lived here configured the
+ * table that the server-driven resource table replaced, and a curator now sets a resource's
+ * display name on resource_definition and its metadata columns through CUSTOM_METADATA.
+ * A resource can still supply overrides through its own customMetaData.
+ */
+export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {};
 
 export function getResourceConfig(
     def: ResourceDefinition
 ): ResourceCustomConfig {
-    let config: ResourceCustomConfig = {};
-
     // 1. Load from local dictionary
-    if (def.resourceId && RESOURCE_CUSTOM_CONFIGS[def.resourceId]) {
-        config = { ...RESOURCE_CUSTOM_CONFIGS[def.resourceId] };
-    }
+    let config: ResourceCustomConfig =
+        def.resourceId && RESOURCE_CUSTOM_CONFIGS[def.resourceId]
+            ? { ...RESOURCE_CUSTOM_CONFIGS[def.resourceId] }
+            : {};
 
     // 2. Override with customMetaData
     if (def.customMetaData) {

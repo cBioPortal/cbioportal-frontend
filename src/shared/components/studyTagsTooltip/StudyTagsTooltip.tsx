@@ -24,8 +24,8 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { observable, makeObservable } from 'mobx';
-import { JsonToTable } from 'react-json-to-table';
 import './StudyTagsTooltip.scss';
+import JsonTable from './JsonTable';
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
 import client from 'shared/api/cbioportalClientInstance';
 import Loader from '../loadingIndicator/LoadingIndicator';
@@ -114,7 +114,7 @@ class StudyInfoOverlay extends React.Component<
                                   <br />,
                                   <div className="studyTagsTooltip">
                                       {' '}
-                                      <JsonToTable
+                                      <JsonTable
                                           json={this.studyMetadata.result}
                                       />
                                   </div>,

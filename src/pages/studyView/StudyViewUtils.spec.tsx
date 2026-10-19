@@ -42,6 +42,7 @@ import {
     getDefaultChartTypeByClinicalAttribute,
     getExponent,
     getFilteredMolecularProfilesByAlterationType,
+    getProfiledSamplesCount,
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
     getFrequencyStr,
@@ -89,6 +90,7 @@ import {
     ClinicalAttribute,
     ClinicalData,
     DataFilterValue,
+    MolecularProfile,
     Sample,
     StudyViewFilter,
 } from 'cbioportal-ts-api-client';
@@ -5406,6 +5408,45 @@ describe('StudyViewUtils', () => {
             ];
 
             assert.deepEqual(actual.sort(), expected.sort());
+        });
+    });
+
+    describe('getProfiledSamplesCount', () => {
+        const profile = (studyId: string, suffix: string) =>
+            ({
+                studyId,
+                molecularProfileId: `${studyId}_${suffix}`,
+            } as MolecularProfile);
+
+        it('adds up counts for studies using different profile suffixes', () => {
+            assert.equal(
+                getProfiledSamplesCount(
+                    [
+                        profile('lgg_tcga_pan_can_atlas_2018', 'gistic'),
+                        profile('glioma_msk_2018', 'cna'),
+                    ],
+                    { cna: 91, gistic: 511, log2CNA: 511 }
+                ),
+                602
+            );
+        });
+
+        it('counts a suffix shared by several studies once', () => {
+            assert.equal(
+                getProfiledSamplesCount(
+                    [profile('study_1', 'cna'), profile('study_2', 'cna')],
+                    { cna: 300 }
+                ),
+                300
+            );
+        });
+
+        it('returns 0 when there are no profiles or counts', () => {
+            assert.equal(getProfiledSamplesCount([], { cna: 10 }), 0);
+            assert.equal(
+                getProfiledSamplesCount([profile('study_1', 'cna')], {}),
+                0
+            );
         });
     });
 

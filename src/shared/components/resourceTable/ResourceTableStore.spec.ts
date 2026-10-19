@@ -1,0 +1,109 @@
+import { assert } from 'chai';
+import { ResourceTableStore } from './ResourceTableStore';
+
+describe('ResourceTableStore cohort context', () => {
+    const sample = (studyId: string, patientId: string, sampleId: string) => ({
+        studyId,
+        patientId,
+        sampleId,
+    });
+
+    const allSamples = [
+        sample('study_a', 'patient_1', 'sample_1'),
+        sample('study_a', 'patient_1', 'sample_2'),
+        sample('study_a', 'patient_2', 'sample_3'),
+    ];
+
+    it('sends no case identifiers when the whole study is selected', () => {
+        const store = new ResourceTableStore();
+
+        store.setContextFromSelection(allSamples, allSamples, true);
+
+        assert.deepEqual(store.studyIds, ['study_a']);
+        assert.deepEqual(store.patientIdentifiers, []);
+        assert.deepEqual(store.sampleIdentifiers, []);
+    });
+
+    it('sends the selection when it is a subset of the study', () => {
+        const store = new ResourceTableStore();
+
+        store.setContextFromSelection(allSamples.slice(0, 2), allSamples);
+
+        assert.deepEqual(store.studyIds, ['study_a']);
+        assert.deepEqual(store.patientIdentifiers, [
+            { studyId: 'study_a', patientId: 'patient_1' },
+        ]);
+        assert.deepEqual(store.sampleIdentifiers, [
+            { studyId: 'study_a', sampleId: 'sample_1' },
+            { studyId: 'study_a', sampleId: 'sample_2' },
+        ]);
+    });
+
+    it('sends the selection while the full sample set is still loading', () => {
+        const store = new ResourceTableStore();
+
+        store.setContextFromSelection(allSamples, undefined);
+
+        assert.deepEqual(store.sampleIdentifiers, [
+            { studyId: 'study_a', sampleId: 'sample_1' },
+            { studyId: 'study_a', sampleId: 'sample_2' },
+            { studyId: 'study_a', sampleId: 'sample_3' },
+        ]);
+    });
+
+    it('keeps every study of a fully selected multi-study cohort', () => {
+        const store = new ResourceTableStore();
+        const samples = [
+            sample('study_a', 'patient_1', 'sample_1'),
+            sample('study_b', 'patient_1', 'sample_1'),
+        ];
+
+        store.setContextFromSelection(samples, samples, true);
+
+        assert.deepEqual(store.studyIds, ['study_a', 'study_b']);
+        assert.deepEqual(store.sampleIdentifiers, []);
+    });
+
+    it('sends the selection when the query does not cover the whole study', () => {
+        // A virtual study or case list queries a subset, so `all` is that subset too and the
+        // lengths match while the cohorts do not. Taking the shortcut here would widen the
+        // request to every sample of the physical study.
+        const store = new ResourceTableStore();
+
+        store.setContextFromSelection(allSamples, allSamples, false);
+
+        assert.deepEqual(store.studyIds, ['study_a']);
+        assert.deepEqual(store.sampleIdentifiers, [
+            { studyId: 'study_a', sampleId: 'sample_1' },
+            { studyId: 'study_a', sampleId: 'sample_2' },
+            { studyId: 'study_a', sampleId: 'sample_3' },
+        ]);
+    });
+
+    it('keeps the selected resource when the cohort changes', () => {
+        // A scoped store gets its resource before its cohort. If the cohort reset cleared the
+        // selection, activeResourceId falls back to the first tab and the tab fetches and
+        // renders another resource's rows.
+        const store = new ResourceTableStore();
+        store.setSelectedResourceId('PATHOLOGY_SLIDE');
+
+        store.setContextFromSelection(allSamples, allSamples, true);
+
+        // Asserts on the selection, not activeResourceId: that getter's fallback reads
+        // this.tabs, which starts a request.
+        assert.equal(store.selectedResourceId, 'PATHOLOGY_SLIDE');
+    });
+
+    it('resets paging, search and filters when the cohort changes', () => {
+        const store = new ResourceTableStore();
+        store.setSelectedResourceId('PATHOLOGY_SLIDE');
+        store.setPage(2);
+        store.setSearchTerm('TCGA-A1');
+
+        store.setContextFromSelection(allSamples, allSamples, true);
+
+        assert.equal(store.pageNumber, 0);
+        assert.equal(store.searchTerm, '');
+        assert.deepEqual(store.filters, []);
+    });
+});

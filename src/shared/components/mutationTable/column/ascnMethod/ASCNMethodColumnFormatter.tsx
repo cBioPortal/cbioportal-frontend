@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { hasASCNProperty } from 'shared/lib/MutationUtils';
 import { MutationTableColumnType } from '../../MutationTable';
+import ColumnLegend from 'shared/components/mutationTable/ColumnLegend';
 
 /**
  * @author Avery Wang
@@ -16,7 +17,16 @@ export function getASCNMethodValue(mutation: Mutation): string {
 export const getDefaultASCNMethodColumnDefinition = () => {
     return {
         name: MutationTableColumnType.ASCN_METHOD,
-        tooltip: <span>Allele Specific Copy Number Method</span>,
+        tooltip: (
+            <ColumnLegend
+                description={
+                    <span>
+                        Method used for allele-specific copy number (ASCN)
+                        analysis, e.g. FACETS.
+                    </span>
+                }
+            />
+        ),
         render: (d: Mutation[]) => (
             <>
                 <span>{getASCNMethodValue(d[0])}</span>

@@ -1430,11 +1430,13 @@ export function groupBySampleId(
     sampleIds: Array<string>,
     clinicalDataArray: Array<ClinicalData>
 ) {
+    const clinicalDataBySampleId = _.groupBy(
+        clinicalDataArray,
+        (cd: ClinicalData) => cd.sampleId
+    );
     return _.map(sampleIds, (k: string) => ({
         id: k,
-        clinicalData: clinicalDataArray.filter(
-            (cd: ClinicalData) => cd.sampleId === k
-        ),
+        clinicalData: clinicalDataBySampleId[k] || [],
     }));
 }
 

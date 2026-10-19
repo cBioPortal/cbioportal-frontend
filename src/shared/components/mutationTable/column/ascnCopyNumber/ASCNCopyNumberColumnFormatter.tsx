@@ -1,93 +1,28 @@
 import * as React from 'react';
-import _ from 'lodash';
 import { Mutation, ClinicalData } from 'cbioportal-ts-api-client';
 import { hasASCNProperty } from 'shared/lib/MutationUtils';
 import SampleManager from 'pages/patientView/SampleManager';
 import { MutationTableColumnType } from '../../MutationTable';
 import ASCNCopyNumberElement from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberElement';
+import ColumnLegend from 'shared/components/mutationTable/ColumnLegend';
 import { ASCNCopyNumberValueEnum } from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberElement';
-import { ASCN_BLACK } from 'shared/lib/Colors';
-import { getASCNCopyNumberColor } from 'shared/lib/ASCNUtils';
 import {
     CLINICAL_ATTRIBUTE_ID_ENUM,
     MUTATION_DATA_FIELD_ENUM,
 } from 'shared/constants';
 import { MobxPromise } from 'cbioportal-frontend-commons';
 import { errorIcon, loaderIcon } from 'oncokb-frontend-commons';
+import styles from 'shared/components/mutationTable/column/ascnCopyNumber/ascnCopyNumber.module.scss';
 
 /**
  * @author Avery Wang
  */
 
-// gets value displayed in table cell - "NA" if missing attributes needed for calculation
-function getAscnCopyNumberData(
-    mutation: Mutation,
-    sampleIdToClinicalDataMap:
-        | { [sampleId: string]: ClinicalData[] }
-        | undefined
-) {
-    return hasASCNProperty(
-        mutation,
-        MUTATION_DATA_FIELD_ENUM.ASCN_INTEGER_COPY_NUMBER
-    )
-        ? mutation.alleleSpecificCopyNumber.ascnIntegerCopyNumber
-        : ASCNCopyNumberValueEnum.NA;
-}
-
-// sort by total copy number (since that is the number displayed in the icon
-function getAllTotalCopyNumberForMutation(
-    data: Mutation[],
-    sampleIdToClinicalDataMap: { [key: string]: ClinicalData[] } | undefined,
-    sampleIds: string[]
-) {
-    const sampleToCNA: { [key: string]: string } = _.chain(data)
-        .keyBy('sampleId')
-        .mapValues(function(mutation) {
-            let ascnCopyNumberValue = getAscnCopyNumberData(
-                mutation,
-                sampleIdToClinicalDataMap
-            );
-            if (
-                ascnCopyNumberValue !== ASCNCopyNumberValueEnum.NA &&
-                hasASCNProperty(mutation, 'totalCopyNumber') &&
-                getWGD(sampleIdToClinicalDataMap, mutation.sampleId) !==
-                    ASCNCopyNumberValueEnum.NA &&
-                getASCNCopyNumberColor(ascnCopyNumberValue.toString()) !==
-                    ASCN_BLACK
-            ) {
-                return mutation.alleleSpecificCopyNumber.totalCopyNumber.toString();
-            }
-            return ASCNCopyNumberValueEnum.NA;
-        })
-        .value();
-    return sampleToCNA;
-}
-
-function getSortValue(
-    data: Mutation[],
-    sampleIdToClinicalDataMap:
-        | MobxPromise<{ [key: string]: ClinicalData[] }>
-        | undefined,
-    sampleIds: string[]
-) {
-    const displayValuesBySample: {
-        [key: string]: string;
-    } = getAllTotalCopyNumberForMutation(
-        data,
-        sampleIdToClinicalDataMap !== undefined
-            ? sampleIdToClinicalDataMap.result
-            : undefined,
-        sampleIds
-    );
-    const sampleIdsWithValues = sampleIds.filter(
-        sampleId => displayValuesBySample[sampleId]
-    );
-    const displayValuesAsString = sampleIdsWithValues.map(
-        (sampleId: string) => {
-            return displayValuesBySample[sampleId];
-        }
-    );
-    return displayValuesAsString.join(';');
+// total copy number, the number shown in the icon
+export function getTotalCopyNumber(mutation: Mutation): number | null {
+    return hasASCNProperty(mutation, 'totalCopyNumber')
+        ? mutation.alleleSpecificCopyNumber.totalCopyNumber
+        : null;
 }
 
 export function getWGD(
@@ -96,16 +31,44 @@ export function getWGD(
         | undefined,
     sampleId: string
 ) {
-    let wgdData =
+    const clinicalData =
         sampleIdToClinicalDataMap && sampleId in sampleIdToClinicalDataMap
-            ? sampleIdToClinicalDataMap[sampleId].find(
-                  (cd: ClinicalData) =>
-                      cd.clinicalAttributeId ===
-                      CLINICAL_ATTRIBUTE_ID_ENUM.ASCN_WGD
-              )
-            : undefined;
-    return wgdData !== undefined ? wgdData.value : ASCNCopyNumberValueEnum.NA;
+            ? sampleIdToClinicalDataMap[sampleId]
+            : [];
+    const wgdData = clinicalData.find(
+        (cd: ClinicalData) =>
+            cd.clinicalAttributeId === CLINICAL_ATTRIBUTE_ID_ENUM.ASCN_WGD
+    );
+    if (wgdData !== undefined) {
+        return wgdData.value;
+    }
+    const facetsWgdData = clinicalData.find(
+        (cd: ClinicalData) =>
+            cd.clinicalAttributeId === CLINICAL_ATTRIBUTE_ID_ENUM.FACETS_WGD
+    );
+    if (facetsWgdData !== undefined) {
+        switch (facetsWgdData.value.toUpperCase()) {
+            case 'TRUE':
+                return ASCNCopyNumberValueEnum.WGD;
+            case 'FALSE':
+                return 'no WGD';
+        }
+    }
+    return ASCNCopyNumberValueEnum.NA;
 }
+
+export const ASCNCopyNumberColumnLegend: React.FunctionComponent = () => (
+    <ColumnLegend
+        description={
+            <span>
+                Total integer copy number at the mutated locus from
+                allele-specific copy number analysis. A <b>WGD</b> tag marks a
+                sample with whole genome doubling. Hover over a value for the
+                allele-specific call (e.g. CNLOH) and the minor copy number.
+            </span>
+        }
+    />
+);
 
 export const getDefaultASCNCopyNumberColumnDefinition = (
     sampleIds?: string[],
@@ -116,6 +79,7 @@ export const getDefaultASCNCopyNumberColumnDefinition = (
 ) => {
     return {
         name: MutationTableColumnType.ASCN_COPY_NUM,
+        tooltip: <ASCNCopyNumberColumnLegend />,
         render: (d: Mutation[]) =>
             ASCNCopyNumberColumnFormatter.renderFunction(
                 d,
@@ -123,12 +87,7 @@ export const getDefaultASCNCopyNumberColumnDefinition = (
                 sampleIdToClinicalDataMap,
                 sampleManager
             ),
-        sortBy: (d: Mutation[]) =>
-            getSortValue(
-                d,
-                sampleIdToClinicalDataMap,
-                sampleIds ? sampleIds : d.length > 0 ? [d[0].sampleId] : []
-            ),
+        sortBy: (d: Mutation[]) => d.map(getTotalCopyNumber),
         visible: false,
     };
 };
@@ -184,21 +143,27 @@ export default class ASCNCopyNumberColumnFormatter {
             return errorIcon('Error fetching data');
         } else if (sampleIdToClinicalDataMap.isComplete) {
             return (
-                <span data-test="ascn-copy-number-cell">
-                    {sampleIds.map((sampleId: string, index: number) => {
+                <span
+                    data-test="ascn-copy-number-cell"
+                    className={styles.slots}
+                >
+                    {sampleIds.map((sampleId: string) => {
+                        const wgdValue = getWGD(
+                            sampleIdToClinicalDataMap.result,
+                            sampleId
+                        );
                         return (
                             <span
                                 key={sampleId}
-                                style={
-                                    index === 0 ? undefined : { marginLeft: 5 }
+                                className={
+                                    wgdValue === ASCNCopyNumberValueEnum.WGD
+                                        ? styles.totalCopyNumberSlotWithWgd
+                                        : styles.totalCopyNumberSlot
                                 }
                             >
                                 <ASCNCopyNumberElement
                                     sampleId={sampleId}
-                                    wgdValue={getWGD(
-                                        sampleIdToClinicalDataMap.result,
-                                        sampleId
-                                    )}
+                                    wgdValue={wgdValue}
                                     totalCopyNumberValue={
                                         sampleToTotalCopyNumber[sampleId]
                                             ? sampleToTotalCopyNumber[sampleId]

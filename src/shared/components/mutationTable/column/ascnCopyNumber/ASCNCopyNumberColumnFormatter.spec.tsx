@@ -6,7 +6,10 @@ import { initClinicalData } from 'test/ClinicalDataMockUtils';
 import { CLINICAL_ATTRIBUTE_ID_ENUM } from 'shared/constants';
 import SampleManager from 'pages/patientView/SampleManager';
 import { MobxPromise } from 'cbioportal-frontend-commons';
-import { getDefaultASCNCopyNumberColumnDefinition } from './ASCNCopyNumberColumnFormatter';
+import {
+    getDefaultASCNCopyNumberColumnDefinition,
+    getWGD,
+} from './ASCNCopyNumberColumnFormatter';
 
 /* Test design
     This column formatter renders a complex element which includes a hoverover tooltip popup.
@@ -980,5 +983,19 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const cellWrapper = mount(s1NoWgdErrorColDef.render(mutations_s1Amp));
         const elementsWrapper = cellWrapper.find('.fa-exclamation-triangle');
         expect(elementsWrapper.length).to.equal(1); // one error icon
+    });
+
+    it('falls back to FACETS_WGD for the WGD status', () => {
+        const facetsWgd = (value: string) =>
+            initClinicalData({
+                clinicalAttributeId: CLINICAL_ATTRIBUTE_ID_ENUM.FACETS_WGD,
+                value,
+            });
+        expect(getWGD({ S1: [facetsWgd('TRUE')] }, 'S1')).to.equal('WGD');
+        expect(getWGD({ S1: [facetsWgd('FALSE')] }, 'S1')).to.equal('no WGD');
+        expect(
+            getWGD({ S1: [clinicalDataWgd, facetsWgd('FALSE')] }, 'S1')
+        ).to.equal('WGD');
+        expect(getWGD({ S1: [] }, 'S1')).to.equal('NA');
     });
 });

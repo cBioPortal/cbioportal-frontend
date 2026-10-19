@@ -57,13 +57,29 @@ export enum PatientViewPageTabs {
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
+export const PatientViewResourceTableTabPrefix = 'resourceTable_';
 
 export function getPatientViewResourceTabId(resourceId: string) {
     return `${PatientViewResourceTabPrefix}${resourceId}`;
 }
 
+export function getPatientViewResourceTableTabId(resourceId: string) {
+    return `${PatientViewResourceTableTabPrefix}${resourceId}`;
+}
+
 export function extractResourceIdFromTabId(tabId: string) {
     const match = new RegExp(`${PatientViewResourceTabPrefix}(.*)`).exec(tabId);
+    if (match) {
+        return match[1];
+    } else {
+        return undefined;
+    }
+}
+
+export function extractResourceIdFromTableTabId(tabId: string) {
+    const match = new RegExp(`${PatientViewResourceTableTabPrefix}(.*)`).exec(
+        tabId
+    );
     if (match) {
         return match[1];
     } else {
@@ -583,7 +599,7 @@ export function tabs(
         </MSKTab>
     );
 
-    if (pageComponent.shouldShowResources)
+    if (pageComponent.shouldShowResources && !pageComponent.hasNewResourceTabs)
         tabs.push(
             <MSKTab
                 key={4}
@@ -744,8 +760,7 @@ export function tabs(
                 id={PatientViewPageTabs.MRNA}
                 linkText={
                     <span>
-                        mRNA{' '}
-                        <strong className={'beta-text'}>Beta!</strong>
+                        mRNA <strong className={'beta-text'}>Beta!</strong>
                     </span>
                 }
             >
@@ -761,8 +776,7 @@ export function tabs(
                 id={PatientViewPageTabs.Plots}
                 linkText={
                     <span>
-                        Plots{' '}
-                        <strong className={'beta-text'}>Beta!</strong>
+                        Plots <strong className={'beta-text'}>Beta!</strong>
                     </span>
                 }
             >
@@ -770,8 +784,8 @@ export function tabs(
                     .isComplete &&
                 pageComponent.patientViewPageStore.highlightedCancerTypes
                     .isComplete &&
-                pageComponent.patientViewPageStore.highlightedDetailedCancerTypes
-                    .isComplete ? (
+                pageComponent.patientViewPageStore
+                    .highlightedDetailedCancerTypes.isComplete ? (
                     <PatientViewPlotsTabWrapper
                         store={pageComponent.patientViewPageStore}
                         urlWrapper={urlWrapper}

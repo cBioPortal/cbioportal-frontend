@@ -632,6 +632,20 @@ test.describe('patient view page', () => {
             ]);
         });
 
+        test('displays mutant / total copy number column tooltip on mouseover element', async () => {
+            // a real hover: a dispatched mouseover doesn't open this tooltip
+            // once another one has been opened that way
+            await page
+                .locator('span[data-test=mutant-total-copy-number-cell] svg')
+                .first()
+                .hover();
+            await page
+                .locator(
+                    'div[role=tooltip] div[data-test=mutant-total-copy-number-tooltip]'
+                )
+                .waitFor({ state: 'attached' });
+        });
+
         test('displays clonal column tooltip on mouseover element', async () => {
             await page
                 .locator('span[data-test=clonal-cell] span span svg circle')
@@ -644,7 +658,7 @@ test.describe('patient view page', () => {
 
         test('displays expected alt copies column tooltip on mouseover element', async () => {
             await page
-                .locator('span[data-test=eac-cell] span span svg g rect')
+                .locator('span[data-test=eac-cell] span[data-test=eac-value]')
                 .first()
                 .dispatchEvent('mouseover');
             await page
@@ -655,7 +669,7 @@ test.describe('patient view page', () => {
         test('displays integer copy number column tooltip on mouseover element', async () => {
             await page
                 .locator(
-                    'span[data-test=ascn-copy-number-cell] span span svg g rect'
+                    'span[data-test=ascn-copy-number-cell] span[data-test=ascn-copy-number-value]'
                 )
                 .first()
                 .dispatchEvent('mouseover');

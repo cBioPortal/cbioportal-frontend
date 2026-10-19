@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as path from 'path';
 import { expect, Locator, Page, Route } from '@playwright/test';
 
@@ -203,9 +204,12 @@ export async function setCheckboxChecked(
  * hang from CI's network path rather than erroring, stalling IGV's
  * initialization forever (cBioPortal/cbioportal#12314). A missing RefSeq
  * track also makes igv.js fall back to resolving gene-symbol loci (e.g.
- * "TP53") via igv.org/genomes/locus.php, which hangs the same way. Serve
- * both files from static fixtures, under either host, so tests don't
- * depend on third-party hosts being reachable from CI.
+ * "TP53") via igv.org/genomes/locus.php, which hangs the same way. It also
+ * does that when it searches for the gene before the RefSeq track has
+ * loaded. Serve both files from static fixtures, under either host, and
+ * answer locus.php with igv.org's recorded answers for the genes the tests
+ * use (fixtures/igvLocus.hg19.json; add a gene there when a test needs
+ * it), so tests don't depend on third-party hosts being reachable from CI.
  * Must be called before whatever navigation/interaction triggers IGV
  * to load the 'hg19' genome.
  */
@@ -225,6 +229,20 @@ export async function stubHg19GenomeFetches(page: Page): Promise<void> {
     ]) {
         await page.route(refSeqUrl, serveFixture('ncbiRefSeq.hg19.txt.gz'));
     }
+    const loci: { [gene: string]: string } = JSON.parse(
+        fs.readFileSync(
+            path.join(__dirname, 'fixtures', 'igvLocus.hg19.json'),
+            'utf8'
+        )
+    );
+    await page.route('**/genomes/locus.php*', route => {
+        const gene = new URL(route.request().url()).searchParams.get('name');
+        const locus = gene && loci[gene.toUpperCase()];
+        return route.fulfill({
+            contentType: 'text/plain',
+            body: locus ? `${gene}\t${locus}\thgnc\n` : '',
+        });
+    });
 }
 
 /**
@@ -268,6 +286,22 @@ export async function waitForIgvRendered(
         null,
         { polling: 500, timeout }
     );
+}
+
+/**
+ * Wait until the patient view summary tab has rendered its mutation and
+ * copy number tables and no loading indicators remain.
+ */
+export async function waitForPatientView(page: Page, timeoutMs = 30000) {
+    await expect(byTestHandle(page, 'patientview-mutation-table')).toBeVisible({
+        timeout: timeoutMs,
+    });
+    await expect(
+        byTestHandle(page, 'patientview-copynumber-table')
+    ).toBeVisible({ timeout: timeoutMs });
+    await expect(byTestHandle(page, 'LoadingIndicator')).toHaveCount(0, {
+        timeout: timeoutMs,
+    });
 }
 
 /** Wait for the comparison-tab overlap chart to render. */

@@ -143,4 +143,16 @@ describe('ClonalColumnFormatter', () => {
             'NA'
         );
     });
+
+    it('sorts mutations without ASCN data as empty values', () => {
+        const withoutAscn = initMutation({ sampleId: 'S1' });
+        delete (withoutAscn as any).alleleSpecificCopyNumber;
+        const withAscn = initMutation({
+            sampleId: 'S2',
+            alleleSpecificCopyNumber: { ccfExpectedCopiesUpper: 0.8 },
+        });
+        const sortBy = getDefaultClonalColumnDefinition().sortBy;
+        assert.deepEqual(sortBy([withoutAscn]), [null]);
+        assert.deepEqual(sortBy([withAscn]), [0.8]);
+    });
 });
