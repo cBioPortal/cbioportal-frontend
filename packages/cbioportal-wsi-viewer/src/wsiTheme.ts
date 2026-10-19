@@ -25,8 +25,6 @@ export const WSI_THEME = {
     slideLabel: '#f5f5f5',
 } as const;
 
-export type WsiTheme = { [K in keyof typeof WSI_THEME]: string };
-
 export const WSI_FONT_FAMILY = '"Helvetica Neue",Helvetica,Arial,sans-serif';
 
 export const WSI_NAV_WIDTH = 328;

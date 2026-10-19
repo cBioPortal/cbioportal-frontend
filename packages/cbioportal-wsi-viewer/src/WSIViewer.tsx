@@ -176,13 +176,12 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
     @observable private selectedMeta: TileMetadata | null = null;
     @observable private loading = true;
     @observable private error: string | null = null;
-    @observable private viewerReady = false;
     /** True once OSD has loaded the first tile; used to release deferred
      *  sidebar content after the initial viewer work settles. */
     @observable private tilesReady = false;
     /** Separate flag that controls spinner visibility; set true on slide select,
-     *  set false after viewerReady AND at least MIN_SPINNER_MS have elapsed.
-     *  Decoupled from viewerReady so viewport setup isn't delayed. */
+     *  set false once the viewer opens AND at least MIN_SPINNER_MS have elapsed,
+     *  so viewport setup isn't delayed by the spinner. */
     @observable private spinnerVisible = false;
     @observable private thumbnailPreviewUrl: string | null = null;
     @observable private stainFilter: WsiStainFilter = 'all';
@@ -232,33 +231,30 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         return true;
     });
 
-    private readonly handleFilterChange = action((f: WsiStainFilter) => {
-        const releasedScope = this.releaseLinkoutScope();
-        if (this.stainFilter === f && !releasedScope) {
-            return;
-        }
-        this.cancelPendingSlideSelection();
-        this.stainFilter = f;
-        void this.reselectSlideForCurrentFilters();
-    });
-    private readonly handleMatchFilterChange = action(
-        (f: PathologySlideMatchFilter) => {
+    private readonly applyFilters = action(
+        (
+            stainFilter: WsiStainFilter,
+            matchFilter: PathologySlideMatchFilter
+        ) => {
             const releasedScope = this.releaseLinkoutScope();
-            if (this.matchFilter === f && !releasedScope) {
+            if (
+                this.stainFilter === stainFilter &&
+                this.matchFilter === matchFilter &&
+                !releasedScope
+            ) {
                 return;
             }
             this.cancelPendingSlideSelection();
-            this.matchFilter = f;
+            this.stainFilter = stainFilter;
+            this.matchFilter = matchFilter;
             void this.reselectSlideForCurrentFilters();
         }
     );
-    private readonly handleClearFilters = action(() => {
-        this.cancelPendingSlideSelection();
-        this.linkoutScopeActive = false;
-        this.stainFilter = 'all';
-        this.matchFilter = 'all';
-        void this.reselectSlideForCurrentFilters();
-    });
+    private readonly handleFilterChange = (f: WsiStainFilter) =>
+        this.applyFilters(f, this.matchFilter);
+    private readonly handleMatchFilterChange = (f: PathologySlideMatchFilter) =>
+        this.applyFilters(this.stainFilter, f);
+    private readonly handleClearFilters = () => this.applyFilters('all', 'all');
     private readonly handleSelectSlide = (slide: Slide, sample: Sample) => {
         this.controller.cancelSlideSelection();
         if (this.slideSelectionTimer !== null) {
@@ -405,9 +401,6 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             setSelectedMeta: meta => {
                 this.selectedMeta = meta;
             },
-            setViewerReady: viewerReady => {
-                this.viewerReady = viewerReady;
-            },
             setSpinnerVisible: spinnerVisible => {
                 this.spinnerVisible = spinnerVisible;
             },
@@ -420,16 +413,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             getSelectedSlide: () => this.selectedSlide,
             getSelectedSample: () => this.selectedSample,
             getSelectedMeta: () => this.selectedMeta,
-            clearSelectedSlide: () => {
-                this.selectedSlide = null;
-                this.selectedSample = null;
-                this.selectedMeta = null;
-                this.viewerReady = false;
-                this.spinnerVisible = false;
-                this.tilesReady = false;
-                this.thumbnailPreviewUrl = null;
-                this.viewScale = null;
-            },
+            clearSelectedSlide: () => this.clearSelection(),
             getPatientId: () => this.hierarchy?.patient_id,
             setCoordInputs: (x, y) => this.setCoordInputs(x, y),
             getCoordInputs: () => ({
@@ -615,17 +599,21 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         this.loading = true;
         this.error = null;
         this.hierarchy = null;
+        this.clearSelection();
+        this.coordInputX = '';
+        this.coordInputY = '';
+    }
+
+    @action.bound
+    private clearSelection() {
         this.selectedSlide = null;
         this.selectedSample = null;
         this.selectedMeta = null;
-        this.viewerReady = false;
         this.tilesReady = false;
         this.spinnerVisible = false;
         this.thumbnailPreviewUrl = null;
         this.cursorPos = null;
         this.viewScale = null;
-        this.coordInputX = '';
-        this.coordInputY = '';
     }
 
     private get controllerProps() {
@@ -773,6 +761,8 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
 
     @action.bound
     private handleCursorMove(x: number, y: number) {
+        // Zoomed in, many mouse moves land on the same image pixel.
+        if (this.cursorPos?.x === x && this.cursorPos.y === y) return;
         this.cursorPos = { x, y };
     }
 
@@ -781,7 +771,6 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         this.selectedSlide = slide;
         this.selectedSample = sample;
         this.selectedMeta = null;
-        this.viewerReady = false;
         this.tilesReady = false;
         this.spinnerVisible = true;
         this.error = null;

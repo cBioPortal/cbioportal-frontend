@@ -1,4 +1,9 @@
-import { PatientHierarchy, WsiV2Hierarchy, WsiV2Slide } from './wsiViewerTypes';
+import {
+    PatientHierarchy,
+    UNMATCHED_SAMPLE_ID,
+    WsiV2Hierarchy,
+    WsiV2Slide,
+} from './wsiViewerTypes';
 import {
     clearWsiResourceAccessTargets,
     normalizeWsiAuthScope,
@@ -39,7 +44,7 @@ function normalizeV2Hierarchy(
         patient_id: patientId,
         reference_sample_id: payload.referenceSampleId,
         samples: payload.sampleGroups.map(group => ({
-            sample_id: group.sampleId ?? 'UNMATCHED',
+            sample_id: group.sampleId ?? UNMATCHED_SAMPLE_ID,
             parts: group.parts.map(part => ({
                 part_number: part.partNumber,
                 part_type: part.partType,

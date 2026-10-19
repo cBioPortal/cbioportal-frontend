@@ -28,6 +28,7 @@ import {
 import { getWsiSlideAccess } from './wsiAuth';
 import { buildWsiRequestHeaders } from './wsiUrls';
 import { fetchWsiThumbnailBlob } from './wsiThumbnailFetchCache';
+import { revokeObjectUrl } from './wsiCacheUtils';
 import {
     PatientHierarchy,
     Sample,
@@ -76,7 +77,6 @@ export interface WsiViewerControllerHost {
     ): { slide: Slide; sample: Sample } | undefined;
     beginSlideSelection(slide: Slide, sample: Sample): void;
     setSelectedMeta(meta: TileMetadata | null): void;
-    setViewerReady(viewerReady: boolean): void;
     setSpinnerVisible(spinnerVisible: boolean): void;
     setTilesReady(tilesReady: boolean): void;
     setThumbnailPreview(objectUrl: string | null): void;
@@ -237,13 +237,11 @@ export class WsiViewerController {
      */
     private failMount(
         error: string,
-        outcome: WsiInitialSlideLoadOutcome,
-        viewerFailed = false
+        outcome: WsiInitialSlideLoadOutcome
     ): void {
         this.clearMountTimers();
         this.host.setError(error);
         this.clearThumbnailPreview();
-        if (viewerFailed) this.host.setViewerReady(false);
         this.host.setSpinnerVisible(false);
         this.host.setTilesReady(true);
         this.finishInitialSlideLoad(outcome);
@@ -380,13 +378,7 @@ export class WsiViewerController {
     }
 
     private revokeThumbnailPreviewObjectUrl(): void {
-        if (
-            this.thumbnailPreviewObjectUrl &&
-            typeof URL !== 'undefined' &&
-            typeof URL.revokeObjectURL === 'function'
-        ) {
-            URL.revokeObjectURL(this.thumbnailPreviewObjectUrl);
-        }
+        revokeObjectUrl(this.thumbnailPreviewObjectUrl);
         this.thumbnailPreviewObjectUrl = null;
     }
 
@@ -432,9 +424,7 @@ export class WsiViewerController {
                     this.nativeTileReadySeq === seq ||
                     this.nativeTileDrawnSeq === seq;
                 if (stale) {
-                    if (typeof URL.revokeObjectURL === 'function') {
-                        URL.revokeObjectURL(objectUrl);
-                    }
+                    revokeObjectUrl(objectUrl);
                     return;
                 }
                 this.revokeThumbnailPreviewObjectUrl();
@@ -1004,7 +994,6 @@ export class WsiViewerController {
         if (seq !== this.mountSeq) return;
         this.clearTimer('osdOpenTimer');
         this.clearTimer('selectionTimeoutTimer');
-        this.host.setViewerReady(true);
         const hashState = restoreHashViewport ? hashUrlState.read() : null;
         const applyInitialView = () => {
             try {
@@ -1122,15 +1111,12 @@ export class WsiViewerController {
         console.error('[WSIViewer] OSD open-failed', event);
         this.failMount(
             `OSD open failed: ${event?.message ?? JSON.stringify(event)}`,
-            'osd_open_failed',
-            true
+            'osd_open_failed'
         );
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private handleOsdTileLoadFailed(seq: number, event: any) {
-        // eslint-disable-next-line no-console
-        console.warn('[WSIViewer] tile-load-failed', event?.tile?.url);
         if (seq !== this.mountSeq) return;
         if (
             typeof event?.tries === 'number' &&
@@ -1145,6 +1131,8 @@ export class WsiViewerController {
             `tile-failure-${failures.size + 1}`;
         if (failures.has(tileKey)) return;
         failures.add(tileKey);
+        // eslint-disable-next-line no-console
+        console.warn('[WSIViewer] tile-load-failed', tileKey);
         if (failures.size < 3) return;
         this.failMount(
             'Slide tiles could not be loaded. The slide server may be unavailable.',
@@ -1252,7 +1240,7 @@ export class WsiViewerController {
             if (seq !== this.mountSeq) return;
             // eslint-disable-next-line no-console
             console.error('[WSIViewer] OSD init error:', err);
-            this.failMount(`OSD init error: ${err}`, 'osd_init_failed', true);
+            this.failMount(`OSD init error: ${err}`, 'osd_init_failed');
             return;
         }
 

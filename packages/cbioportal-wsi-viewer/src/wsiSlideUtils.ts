@@ -33,15 +33,8 @@ const pathologyFilterSlideKeysCache = new WeakMap<
     Map<string, Set<string>>
 >();
 const DUMMY_BLOCK_LABELS = new Set(['0', '']);
-function uniqueSlideKey(
-    sampleId: string,
-    slide: Pick<Slide, 'slide_key'>
-): string {
-    return `${sampleId}::${slide.slide_key}`;
-}
-
 export function isServableDiagnosticSlide(
-    slide: Pick<Slide, 'can_serve_tiles' | 'slide_key' | 'is_hne' | 'is_ihc'>
+    slide: Pick<Slide, 'can_serve_tiles' | 'slide_key'>
 ): boolean {
     return !!(slide.can_serve_tiles && slide.slide_key);
 }
@@ -156,7 +149,6 @@ export function compareSlidesInSample(
 }
 
 function buildSampleSlideData(sample: Sample): SampleSlideData {
-    const seen = new Set<string>();
     const unorderedSlides: Array<{
         entry: OrderedServableSlideEntry;
         partNumber: string;
@@ -174,9 +166,7 @@ function buildSampleSlideData(sample: Sample): SampleSlideData {
                 : normalizedBlockLabel;
             for (const slide of block.slides) {
                 if (!isServableDiagnosticSlide(slide)) continue;
-                const key = uniqueSlideKey(sample.sample_id, slide);
-                if (seen.has(key)) continue;
-                seen.add(key);
+                if (slideKeys.has(slide.slide_key)) continue;
                 unorderedSlides.push({
                     entry: { slide, blockLabel },
                     partNumber: part.part_number,
@@ -271,7 +261,7 @@ function buildPathologyFilterCacheKey(
     ].join('::');
 }
 
-function hierarchySlides(hierarchy: PatientHierarchy): Slide[] {
+export function hierarchySlides(hierarchy: PatientHierarchy): Slide[] {
     return hierarchy.samples.flatMap(sample =>
         sample.parts.flatMap(part => part.blocks.flatMap(block => block.slides))
     );

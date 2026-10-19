@@ -2,6 +2,7 @@ import _ from 'lodash';
 import {
     isHiddenFromResourceViews,
     isWsiResourceId,
+    isWsiTileServerConfigured,
 } from 'shared/lib/ResourcePolicy';
 import { fetchWsiPatientHierarchy } from 'cbioportal-wsi-viewer';
 import { wsiAuthScope } from 'shared/components/wsiViewer/wsiAppConfig';
@@ -1808,7 +1809,7 @@ export class PatientViewPageStore {
      */
     readonly hasPathologySlides = remoteData<boolean>({
         invoke: async () => {
-            if (!getServerConfig().wsi_tile_server_url) {
+            if (!isWsiTileServerConfigured()) {
                 return false;
             }
             try {

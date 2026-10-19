@@ -32,6 +32,17 @@ export function withAbort<T>(
     });
 }
 
+/** Revokes a blob URL; a no-op where the URL API lacks it (e.g. jsdom). */
+export function revokeObjectUrl(url: string | null | undefined): void {
+    if (
+        url &&
+        typeof URL !== 'undefined' &&
+        typeof URL.revokeObjectURL === 'function'
+    ) {
+        URL.revokeObjectURL(url);
+    }
+}
+
 /** Deletes the entries of a TTL cache whose `expiresAt` has passed. */
 export function deleteExpiredEntries(
     cache: Map<string, { expiresAt?: number }>,

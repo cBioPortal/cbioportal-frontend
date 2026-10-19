@@ -125,7 +125,6 @@ function makeHarness() {
         setSelectedMeta: value => {
             meta = value;
         },
-        setViewerReady: jest.fn(),
         setSpinnerVisible: jest.fn(),
         setTilesReady: jest.fn(),
         setThumbnailPreview: jest.fn(),

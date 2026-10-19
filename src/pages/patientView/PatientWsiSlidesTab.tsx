@@ -8,14 +8,10 @@ import {
     AppWsiViewer,
     AppWsiViewerProps,
 } from 'shared/components/wsiViewer/wsiAppConfig';
+import { PathologySlideSettings } from './PatientViewUrlWrapper';
 
 /** Patient view query params that scope the Pathology Slides tab. */
-export interface WsiSlidesTabQuery {
-    sampleId?: string;
-    stainFilter?: string;
-    matchLevel?: string;
-    specimenKey?: string;
-}
+export type WsiSlidesTabQuery = PathologySlideSettings & { sampleId?: string };
 
 export type WsiSlidesTabScope = Pick<
     AppWsiViewerProps,

@@ -1,6 +1,7 @@
 import { getWsiViewerRuntime } from './wsiViewerConfig';
 import { PatientHierarchy, WsiSlideAccess } from './wsiViewerTypes';
 import { createPromiseCache } from './wsiCacheUtils';
+import { hierarchySlides } from './wsiSlideUtils';
 
 const CURRENT_WSI_DECODE_POLICY =
     'geometry-v2;tile-max=16777216;thumbnail-max=16777216';
@@ -99,16 +100,10 @@ export function registerWsiResourceAccess(
     hierarchy: PatientHierarchy
 ): void {
     clearWsiResourceAccessTargets(studyId, hierarchy.patient_id);
-    hierarchy.samples.forEach(sample =>
-        sample.parts.forEach(part =>
-            part.blocks.forEach(block =>
-                block.slides.forEach(slide => {
-                    slidePatients.set(
-                        registryKey(studyId, slide.slide_key),
-                        hierarchy.patient_id
-                    );
-                })
-            )
+    hierarchySlides(hierarchy).forEach(slide =>
+        slidePatients.set(
+            registryKey(studyId, slide.slide_key),
+            hierarchy.patient_id
         )
     );
 }

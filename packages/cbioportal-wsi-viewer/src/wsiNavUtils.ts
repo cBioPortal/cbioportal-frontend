@@ -1,12 +1,12 @@
-import { Sample } from './wsiViewerTypes';
+import { Sample, UNMATCHED_SAMPLE_ID } from './wsiViewerTypes';
 
 /**
  * Orders samples for the slide list: matched samples in hierarchy order (as
  * the backend sends them), then the unmatched group. Use with a stable sort.
  */
 export function compareSamplesForNavigation(a: Sample, b: Sample): number {
-    const aIsUnmatched = a.sample_id === 'UNMATCHED';
-    const bIsUnmatched = b.sample_id === 'UNMATCHED';
+    const aIsUnmatched = a.sample_id === UNMATCHED_SAMPLE_ID;
+    const bIsUnmatched = b.sample_id === UNMATCHED_SAMPLE_ID;
     if (aIsUnmatched !== bIsUnmatched) {
         return aIsUnmatched ? 1 : -1;
     }
@@ -95,9 +95,6 @@ export function decodeBlockCode(
     if (!m) return null;
     return BLOCK_CODE_MAP[m[1]] || null;
 }
-
-export const BLOCK_LABEL_TIP =
-    'Block label: number = block within case; letter code = tissue region (P=Proximal, D=Distal, M=Margin, RS=Rep. Section, LN=Lymph Node, RLN=Right Lymph Node, …)';
 
 export function stainQualifier(group: string | null | undefined): string {
     const g = (group || '').toLowerCase();

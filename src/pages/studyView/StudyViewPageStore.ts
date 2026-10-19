@@ -1,8 +1,5 @@
 import _ from 'lodash';
-import {
-    isWsiResourceId,
-    shouldHideLegacyHeResourceTab,
-} from 'shared/lib/ResourcePolicy';
+import { isWsiResourceId } from 'shared/lib/ResourcePolicy';
 import { getClient } from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
 import {
@@ -6868,10 +6865,7 @@ export class StudyViewPageStore
         onResult: defs => {
             if (defs) {
                 for (const def of defs)
-                    if (
-                        def.openByDefault &&
-                        !shouldHideLegacyHeResourceTab(def.resourceId)
-                    )
+                    if (def.openByDefault)
                         this.setResourceTabOpen(def.resourceId, true);
             }
         },

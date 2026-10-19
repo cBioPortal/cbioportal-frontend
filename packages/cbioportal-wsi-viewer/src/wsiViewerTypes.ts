@@ -23,6 +23,9 @@ export interface Slide {
 }
 
 export type MatchLevel = 'PART' | 'BLOCK' | 'UNMATCHED';
+
+/** The sample that holds slides not matched to any sample. */
+export const UNMATCHED_SAMPLE_ID = 'UNMATCHED';
 export type WsiSlideType = 'H&E' | 'IHC' | 'Other' | 'Unknown';
 
 export type WsiStainFilter = 'all' | 'hne' | 'ihc' | 'other' | 'unknown';

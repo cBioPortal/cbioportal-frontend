@@ -1,21 +1,20 @@
 import { MetaRow } from './wsiMetaSidebar';
-import { Sample, Slide, TileMetadata } from './wsiViewerTypes';
+import {
+    Sample,
+    Slide,
+    TileMetadata,
+    UNMATCHED_SAMPLE_ID,
+} from './wsiViewerTypes';
 import { cleanStain, fmtFileSize, normalizeBlockLabel } from './wsiNavUtils';
 import { blockName, formatSpecimenLabel } from './wsiSpecimenUtils';
 import { wsiStainKind } from './wsiSlideUtils';
 import { WSI_STAIN_COLORS } from './wsiTheme';
+import { nativeObjectivePower } from './wsiScaleUtils';
 import { getWsiViewerRuntime } from './wsiViewerConfig';
 
 function freezeMetaRows(rows: MetaRow[]): MetaRow[] {
     rows.forEach(row => Object.freeze(row));
     return Object.freeze(rows) as MetaRow[];
-}
-
-export function buildPatientUrl(studyId: string, patientId: string): string {
-    return getWsiViewerRuntime().buildPageUrl('patient', {
-        studyId,
-        caseId: patientId,
-    });
 }
 
 export function buildSampleUrl(
@@ -77,7 +76,8 @@ export function buildWsiRows(
     const mppX = meta.mpp?.x || 0;
     const mppY = meta.mpp?.y || 0;
     const mpp = mppX && mppY ? (mppX + mppY) / 2 : 0;
-    const objNum = meta.objective_power || (mpp ? Math.round(10 / mpp) : 0);
+    const nativePower = nativeObjectivePower(meta);
+    const objNum = nativePower ? Math.round(nativePower) : 0;
     const magnification =
         slide?.magnification?.trim() || (objNum ? `${objNum}×` : '');
 
@@ -164,7 +164,7 @@ export function buildPathRows(
     patientId: string,
     studyId: string
 ): MetaRow[] {
-    const isUnmatchedSample = sample.sample_id === 'UNMATCHED';
+    const isUnmatchedSample = sample.sample_id === UNMATCHED_SAMPLE_ID;
     const stainBadge = getStainBadge(slide);
     const stainName = cleanStain(slide.stain_name);
     const sampleUrl =
