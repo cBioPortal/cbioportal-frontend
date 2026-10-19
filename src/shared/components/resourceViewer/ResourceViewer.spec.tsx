@@ -165,34 +165,25 @@ describe('ResourceViewer', () => {
             (global as any).fetch = originalFetch;
         });
 
-        it('frames immediately for a resource with no configured message', async () => {
-            // The check still runs, but nothing waits for it: making every resource pay a round
-            // trip before anything appears would be worse than a brief frame.
-            let settle: (v?: any) => void = () => undefined;
-            (global as any).fetch = jest.fn(
-                () => new Promise(resolve => (settle = resolve))
-            );
+        // Every resource takes the same path: frame at once, check the host, and replace the
+        // frame with a message if the host does not answer. Only the message differs.
+        [
+            ['no configured message', {}],
+            ['its own message', { iframeErrorMessage: VPN_MESSAGE }],
+        ].forEach(([name, props]) => {
+            it(`frames before the check finishes, for a resource with ${name}`, async () => {
+                let settle: (v?: any) => void = () => undefined;
+                (global as any).fetch = jest.fn(
+                    () => new Promise(resolve => (settle = resolve))
+                );
 
-            renderViewer();
+                renderViewer(props as any);
 
-            await waitFor(() =>
-                assert.isNotNull(screen.queryByTestId('iframe-loader'))
-            );
-            settle();
-        });
-
-        it('waits for the check when the resource names its own message', async () => {
-            // A resource known to be gated should not flash a broken frame first.
-            let settle: (v?: any) => void = () => undefined;
-            (global as any).fetch = jest.fn(
-                () => new Promise(resolve => (settle = resolve))
-            );
-
-            renderViewer({ iframeErrorMessage: VPN_MESSAGE });
-
-            assert.isNull(screen.queryByTestId('iframe-loader'));
-            assert.isNotNull(screen.queryByTestId('loading-indicator'));
-            settle();
+                assert.isNotNull(screen.queryByTestId('iframe-loader'));
+                assert.isNull(screen.queryByTestId('loading-indicator'));
+                assert.equal((global as any).fetch.mock.calls.length, 1);
+                settle();
+            });
         });
 
         it('shows a general message when an unnamed resource cannot be reached', async () => {
