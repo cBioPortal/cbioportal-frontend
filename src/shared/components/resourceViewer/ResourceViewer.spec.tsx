@@ -125,14 +125,20 @@ describe('ResourceViewer', () => {
         assert.isNull(screen.queryByTestId('ResourceViewerPrev'));
     });
 
-    it('always offers the link out, because a framed host can still refuse', () => {
-        renderViewer({ index: 1 });
-        assert.equal(
-            screen
-                .getByTestId('ResourceViewerOpenInNewWindow')
-                .getAttribute('href'),
-            'https://example.com/2.html'
-        );
+    it('leaves the link out to the frame, as the other framed views do', async () => {
+        // IFrameLoader draws Open in new window itself; a second one in the header doubled it.
+        const originalFetch = (global as any).fetch;
+        (global as any).fetch = jest.fn(() => Promise.resolve({} as any));
+        try {
+            renderViewer({ index: 1 });
+            await waitFor(() =>
+                assert.equal((global as any).fetch.mock.calls.length, 1)
+            );
+            assert.isNotNull(screen.queryByTestId('iframe-loader'));
+            assert.isNull(screen.queryByText(/Open in new window/));
+        } finally {
+            (global as any).fetch = originalFetch;
+        }
     });
 
     it('renders a PDF through the Google viewer', async () => {
@@ -197,6 +203,28 @@ describe('ResourceViewer', () => {
                 assert.isNotNull(screen.queryByText(/could not be reached/))
             );
             assert.isNull(screen.queryByTestId('iframe-loader'));
+        });
+
+        it('offers the link out in the warning, where no frame is drawn', async () => {
+            // The frame normally carries the link; without one the user would have no way out.
+            (global as any).fetch = jest.fn(() =>
+                Promise.reject(new Error('unreachable'))
+            );
+
+            renderViewer({ index: 1 });
+
+            await waitFor(() =>
+                assert.isNotNull(
+                    screen.queryByTestId('ResourceViewerWarningLink')
+                )
+            );
+            assert.equal(
+                screen
+                    .getByTestId('ResourceViewerWarningLink')
+                    .getAttribute('href'),
+                'https://example.com/2.html'
+            );
+            assert.lengthOf(screen.getAllByText(/Open in new window/), 1);
         });
 
         it('prefers the resource own message over the general one', async () => {
