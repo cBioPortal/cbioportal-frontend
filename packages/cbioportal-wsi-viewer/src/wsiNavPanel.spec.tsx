@@ -7,6 +7,10 @@ import TestRenderer, { act } from 'react-test-renderer';
 import { WsiNavPanel } from './wsiNavPanel';
 import { getWsiSlideAccess } from './wsiAuth';
 import { clearWsiThumbnailFetchCache } from './wsiThumbnailFetchCache';
+import {
+    scheduleThumbnailRequest,
+    THUMBNAIL_REQUEST_CONCURRENCY,
+} from './thumbnailRequestLimiter';
 import * as wsiSlideUtils from './wsiSlideUtils';
 import {
     makeHierarchy,
@@ -17,6 +21,7 @@ import {
 import { MatchLevel, PatientHierarchy, Sample, Slide } from './wsiViewerTypes';
 
 jest.mock('./wsiAuth', () => ({
+    ...jest.requireActual('./wsiAuth'),
     getWsiSlideAccess: jest.fn(() =>
         Promise.resolve({ accessToken: 'test-token' })
     ),
@@ -1180,6 +1185,87 @@ describe('WsiNavPanel', () => {
                 .props.onClick();
         });
         expect(onFilterChange).toHaveBeenCalledWith('ihc');
+    });
+
+    it('requests slide access without waiting for a thumbnail slot', async () => {
+        Object.defineProperty(URL, 'createObjectURL', {
+            configurable: true,
+            value: jest.fn(() => 'blob:thumbnail'),
+        });
+        Object.defineProperty(URL, 'revokeObjectURL', {
+            configurable: true,
+            value: jest.fn(),
+        });
+        mockGetWsiSlideAccess.mockResolvedValue({
+            accessToken: 'test-token',
+            tileMetadata: makeTileMetadata(),
+            slideKey: '1000',
+            expiresIn: 300,
+            expiresAt: Date.now() + 300_000,
+        });
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            headers: new Headers({
+                'X-Thumbnail-Status': 'ok',
+                'Content-Type': 'image/jpeg',
+            }),
+            blob: async () => new Blob(['thumbnail'], { type: 'image/jpeg' }),
+        } as Response) as typeof fetch;
+        // Fill every thumbnail slot until the test releases them.
+        let releaseSlots: () => void = () => {};
+        const slotsReleased = new Promise<void>(resolve => {
+            releaseSlots = resolve;
+        });
+        const blockers = Array.from(
+            { length: THUMBNAIL_REQUEST_CONCURRENCY },
+            () =>
+                scheduleThumbnailRequest(
+                    () => slotsReleased,
+                    new AbortController().signal
+                )
+        );
+        const tileServerBase = 'https://slot-tiles.example.com';
+        const sample = makeSample('S-1', [
+            makeSlide({ slide_key: 'slide-1' }),
+            makeSlide({ slide_key: 'slide-2' }),
+        ]);
+
+        let renderer!: TestRenderer.ReactTestRenderer;
+        await act(async () => {
+            renderer = TestRenderer.create(
+                <WsiNavPanel
+                    hierarchy={makeHierarchy([sample])}
+                    selectedSlide={null}
+                    stainFilter="all"
+                    onFilterChange={() => {}}
+                    onSelectSlide={() => {}}
+                    {...navContext}
+                    tileServerBase={tileServerBase}
+                    studyId="slot-study"
+                />
+            );
+        });
+        const thumbnailRequests = () =>
+            (global.fetch as jest.Mock).mock.calls.filter(([url]) =>
+                String(url).startsWith(tileServerBase)
+            );
+
+        // Earlier panels may still retry, so only this panel's calls count.
+        expect(
+            mockGetWsiSlideAccess.mock.calls
+                .filter(([studyId]) => studyId === 'slot-study')
+                .map(([, slideKey]) => slideKey)
+        ).toEqual(['slide-1', 'slide-2']);
+        expect(thumbnailRequests()).toHaveLength(0);
+
+        await act(async () => {
+            releaseSlots();
+            await Promise.all(blockers);
+        });
+
+        expect(thumbnailRequests()).toHaveLength(2);
+        renderer.unmount();
     });
 
     it('defers offscreen samples until the initial tiles are ready', () => {

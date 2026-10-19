@@ -25,7 +25,7 @@ import {
 import { getStainDotColor } from './wsiMetaUtils';
 import { scheduleThumbnailRequest } from './thumbnailRequestLimiter';
 import { getWsiSlideAccess } from './wsiAuth';
-import { revokeObjectUrl } from './wsiCacheUtils';
+import { revokeObjectUrl, withAbort } from './wsiCacheUtils';
 import {
     fetchWsiThumbnailBlob,
     parseMaxAgeMs,
@@ -1077,24 +1077,28 @@ function WsiSlideThumbnail({
             const requestAttempt = attempt;
             const requestController = new AbortController();
             controller = requestController;
-            void scheduleThumbnailRequest(async () => {
-                const access = await getWsiSlideAccess(
-                    studyId,
-                    slideKey,
-                    false,
-                    authScope
-                );
-                const blob = await fetchWsiThumbnailBlob(
-                    tileServerBase,
-                    studyId,
-                    slideKey,
-                    access,
-                    requestController.signal,
-                    requestAttempt > 1 ? 'reload' : 'default',
-                    authScope
-                );
-                return blob;
-            }, requestController.signal)
+            const signal = requestController.signal;
+            // Access is a shared portal request, so only the tile-server
+            // download waits for one of the limited thumbnail slots.
+            void withAbort(
+                getWsiSlideAccess(studyId, slideKey, false, authScope),
+                signal
+            )
+                .then(access =>
+                    scheduleThumbnailRequest(
+                        () =>
+                            fetchWsiThumbnailBlob(
+                                tileServerBase,
+                                studyId,
+                                slideKey,
+                                access,
+                                signal,
+                                requestAttempt > 1 ? 'reload' : 'default',
+                                authScope
+                            ),
+                        signal
+                    )
+                )
                 .then(blob => {
                     const nextObjectUrl = URL.createObjectURL(blob);
                     if (cancelled) {

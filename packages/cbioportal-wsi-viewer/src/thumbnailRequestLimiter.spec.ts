@@ -4,7 +4,7 @@ import {
 } from './thumbnailRequestLimiter';
 
 describe('scheduleThumbnailRequest', () => {
-    it('limits concurrent thumbnail access and fetch work', async () => {
+    it('limits concurrent thumbnail fetch work', async () => {
         let active = 0;
         let peak = 0;
 
