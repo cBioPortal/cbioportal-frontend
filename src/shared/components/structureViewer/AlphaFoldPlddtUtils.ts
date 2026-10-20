@@ -9,21 +9,20 @@ export const ALPHAFOLD_PLDDT_LEGEND = [
     { label: 'Very low (<50)', color: '#FF7D45', min: 0, max: 50 },
 ] as const;
 
-/** 3Dmol.js colorscheme: color protein by B-factor (= pLDDT in AlphaFold models). */
-export function getAlphaFoldPlddtColorscheme(): {
-    prop: string;
-    gradient: string;
-    min: number;
-    max: number;
-    colors: string[];
-} {
-    return {
-        prop: 'b',
-        gradient: 'linear',
-        min: 0,
-        max: 100,
-        colors: ['0xFF7D45', '0xFFDB13', '0x65CBF3', '0x0053D6'],
-    };
+/** Color of the AlphaFold DB pLDDT band a score falls in; a boundary belongs to the higher band. */
+export function getAlphaFoldPlddtColor(plddt: number): string {
+    const band = ALPHAFOLD_PLDDT_LEGEND.find(item => plddt >= item.min);
+
+    return (band ?? ALPHAFOLD_PLDDT_LEGEND[ALPHAFOLD_PLDDT_LEGEND.length - 1])
+        .color;
+}
+
+/**
+ * 3Dmol.js colorfunc: colors each atom by the pLDDT band of its B-factor
+ * (= pLDDT in AlphaFold models), so the structure matches the legend.
+ */
+export function getAlphaFoldPlddtColorfunc(): (atom: { b: number }) => string {
+    return atom => getAlphaFoldPlddtColor(atom.b);
 }
 
 export function isLowPlddt(plddt: number): boolean {
