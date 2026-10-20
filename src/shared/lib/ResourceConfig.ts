@@ -39,6 +39,14 @@ export interface ResourceCustomConfig {
      * Used in: Patient View (resource iframe)
      */
     iframeErrorMessage?: string;
+
+    /**
+     * False when the display name is not something a row is one of, such as a technique
+     * (CyCIF) whose rows are regions of one slide. The count then reads "1-12 of 12 · CyCIF"
+     * rather than "1-12 of 12 CyCIFs".
+     * Used in: resource table count summary
+     */
+    pluralizeDisplayName?: boolean;
 }
 
 /**
@@ -53,10 +61,14 @@ export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {
         iframeErrorMessage:
             'This resource requires VPN access. Please connect to VPN and refresh the page.',
     },
+    CYCIF: {
+        pluralizeDisplayName: false,
+    },
 };
 
 export function getResourceConfig(
-    def: ResourceDefinition
+    def: Pick<ResourceDefinition, 'resourceId'> &
+        Partial<Pick<ResourceDefinition, 'customMetaData'>>
 ): ResourceCustomConfig {
     // 1. Load from local dictionary
     let config: ResourceCustomConfig =
