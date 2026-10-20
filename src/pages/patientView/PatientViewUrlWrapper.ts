@@ -85,7 +85,7 @@ export default class PatientViewUrlWrapper extends URLWrapper<
         return this.pathName.split('/').pop() || PatientViewPageTabs.Summary;
     }
 
-    public setResourceUrl(resourceUrl: string) {
-        this.updateURL({ resourceUrl });
+    public setResourceUrl(resourceUrl: string, replace = false) {
+        this.updateURL({ resourceUrl }, undefined, false, replace);
     }
 }

@@ -277,13 +277,16 @@ export class ResourceDataTable extends React.Component<
     private renderViewAction = (row: IResourceTableRow) => {
         const onOpenResource = this.props.onOpenResource!;
         return (
-            <a
+            <button
+                type="button"
+                className="btn btn-link"
+                style={{ padding: 0, border: 0, verticalAlign: 'baseline' }}
                 onClick={() => onOpenResource(row)}
                 data-test="resource-view-in-portal"
             >
                 <i className="fa fa-eye" style={{ marginRight: 4 }} />
                 View
-            </a>
+            </button>
         );
     };
 

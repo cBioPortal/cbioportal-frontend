@@ -74,6 +74,65 @@ describe('ResourceViewerTab', () => {
         assert.equal(lastIndex(), 1);
     });
 
+    it('returns to the first item when Back leaves the URL naming none', () => {
+        const { rerender } = render(
+            tab({ isActive: true, urlItem: 'https://example.com/b' })
+        );
+        rerender(tab({ isActive: true, urlItem: undefined }));
+        assert.equal(lastIndex(), 0);
+    });
+
+    it('writes its item back to the URL when it comes into view', () => {
+        // Another viewer's item is in the URL, so a reload or a shared link would open this
+        // viewer on its first item.
+        const selected: [string, boolean | undefined][] = [];
+        const onSelect = (u: string, replace?: boolean) =>
+            selected.push([u, replace]);
+        const { rerender } = render(
+            tab({ isActive: true, urlItem: 'https://example.com/b', onSelect })
+        );
+        rerender(
+            tab({ isActive: false, urlItem: 'https://other.org/x', onSelect })
+        );
+        rerender(
+            tab({ isActive: true, urlItem: 'https://other.org/x', onSelect })
+        );
+
+        assert.deepEqual(selected, [['https://example.com/b', true]]);
+        assert.equal(lastIndex(), 1);
+    });
+
+    it('takes the URL item when it comes into view on one of its rows', () => {
+        const selected: string[] = [];
+        const onSelect = (u: string) => selected.push(u);
+        const { rerender } = render(
+            tab({ isActive: true, urlItem: 'https://example.com/b', onSelect })
+        );
+        rerender(tab({ isActive: false, urlItem: undefined, onSelect }));
+        rerender(
+            tab({ isActive: true, urlItem: 'https://example.com/c', onSelect })
+        );
+
+        assert.deepEqual(selected, []);
+        assert.equal(lastIndex(), 2);
+    });
+
+    it('shows a linked item once its rows arrive', () => {
+        const selected: string[] = [];
+        const onSelect = (u: string) => selected.push(u);
+        const loading = { rows: { result: undefined } } as any;
+        const props = {
+            isActive: true,
+            urlItem: 'https://example.com/c',
+            onSelect,
+        };
+        const { rerender } = render(tab({ ...props, store: loading }));
+        rerender(tab({ ...props, store }));
+
+        assert.deepEqual(selected, []);
+        assert.equal(lastIndex(), 2);
+    });
+
     it('starts on the first item when nothing names one', () => {
         render(tab({ isActive: true }));
         assert.equal(lastIndex(), 0);

@@ -746,7 +746,9 @@ export class PatientViewPageInner extends React.Component<
                         getPatientViewResourceTabId(resourceId)
                     }
                     urlItem={this.urlWrapper.query.resourceUrl}
-                    onSelect={url => this.urlWrapper.setResourceUrl(url)}
+                    onSelect={(url, replace) =>
+                        this.urlWrapper.setResourceUrl(url, replace)
+                    }
                 />
             </MSKTab>
         );

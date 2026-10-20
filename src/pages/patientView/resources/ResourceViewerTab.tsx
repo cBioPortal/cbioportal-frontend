@@ -12,7 +12,8 @@ export interface IResourceViewerTabProps {
     isActive: boolean;
     /** The item the URL names; it belongs to this viewer only while this tab is in view. */
     urlItem?: string;
-    onSelect: (url: string) => void;
+    /** Names an item in the URL; replace writes it without adding a history entry. */
+    onSelect: (url: string, replace?: boolean) => void;
 }
 
 /**
@@ -53,8 +54,26 @@ export default class ResourceViewerTab extends React.Component<
         this.rememberUrlItem();
     }
 
-    componentDidUpdate() {
+    componentDidUpdate(prevProps: IResourceViewerTabProps) {
+        this.syncWithUrl(prevProps);
         this.rememberUrlItem();
+    }
+
+    // While this tab is in view the URL decides the item. Coming into view, the URL may name
+    // another viewer's item or none, so this viewer's item is written back. In view, a URL change
+    // that names none of its items is Back or Forward, so the viewer returns to its first item.
+    @action
+    private syncWithUrl(prevProps: IResourceViewerTabProps) {
+        if (!this.props.isActive || this.urlRowUrl) {
+            return;
+        }
+        if (!prevProps.isActive) {
+            if (this.lastShownUrl) {
+                this.props.onSelect(this.lastShownUrl, true);
+            }
+        } else if (prevProps.urlItem !== this.props.urlItem) {
+            this.lastShownUrl = undefined;
+        }
     }
 
     // Covers every way the URL can name an item: a shared link, the remount between patient and

@@ -407,4 +407,14 @@ describe('ResourceDataTable view action', () => {
 
         assert.deepEqual(opened, [row]);
     });
+
+    it('renders View as a button, so the keyboard can reach it', () => {
+        const column = table({
+            onOpenResource: () => undefined,
+        }).tableColumns.find(c => c.id === 'view');
+        const cell: any = column!.render(row);
+
+        assert.equal(cell.type, 'button');
+        assert.equal(cell.props.type, 'button');
+    });
 });
