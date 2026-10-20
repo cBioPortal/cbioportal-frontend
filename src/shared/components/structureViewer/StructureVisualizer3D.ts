@@ -21,7 +21,7 @@ import {
     IMutationLabelSpec,
 } from './StructureVisualizer';
 import { fetchAlphaFoldModelText } from './AlphaFoldUtils';
-import { getAlphaFoldPlddtColorscheme } from './AlphaFoldPlddtUtils';
+import { getAlphaFoldPlddtColorfunc } from './AlphaFoldPlddtUtils';
 import {
     verifyPdbStructureAvailable,
     viewerHasStructureAtoms,
@@ -46,6 +46,7 @@ export type StyleSpec = {
     colors?: string[];
     opacity?: number;
     colorscheme?: any;
+    colorfunc?: (atom: any) => string;
 };
 export type LineStyleSpec = StyleSpec;
 export type CrossStyleSpec = StyleSpec;
@@ -653,12 +654,14 @@ export default class StructureVisualizer3D extends StructureVisualizer {
     protected applyPlddtColor(chainId: string, baseStyle: AtomStyleSpec) {
         const selector = this.selectChain(chainId);
         const style = _.cloneDeep(baseStyle);
-        const colorscheme = getAlphaFoldPlddtColorscheme();
+        const colorfunc = getAlphaFoldPlddtColorfunc();
 
         _.each(style, (spec: StyleSpec) => {
             delete spec.color;
             delete spec.colors;
-            spec.colorscheme = colorscheme;
+            // 3Dmol ignores colorfunc while a colorscheme is set
+            delete spec.colorscheme;
+            spec.colorfunc = colorfunc;
         });
 
         this.applyStyleForSelector(selector, style);
@@ -1612,11 +1615,12 @@ export default class StructureVisualizer3D extends StructureVisualizer {
                     props.proteinScheme
                 ]
             );
-            const colorscheme = getAlphaFoldPlddtColorscheme();
+            const colorfunc = getAlphaFoldPlddtColorfunc();
             _.each(style, (spec: StyleSpec) => {
                 delete spec.color;
                 delete spec.colors;
-                spec.colorscheme = colorscheme;
+                delete spec.colorscheme;
+                spec.colorfunc = colorfunc;
             });
             this._3dMolViewer.setStyle(selector, style);
             return;
