@@ -26,12 +26,16 @@ import {
 } from 'shared/api/resourceTableClient';
 import {
     IResourceTableRow,
+    getFileExtension,
     getResourceTableMetadataKeys,
 } from 'shared/lib/ResourceTableUtils';
 import { ResourceTableStore } from './ResourceTableStore';
+import { getResourceConfig } from 'shared/lib/ResourceConfig';
 
 export interface IResourceDataTableProps {
     store: ResourceTableStore;
+    /** Opens the row in an in-portal viewer. Omitted by pages that only link out. */
+    onOpenResource?: (row: IResourceTableRow) => void;
     resourceLabel?: string;
     emptyText?: string;
     searchPlaceholder?: string;
@@ -57,16 +61,6 @@ const SORT_COLUMN_MAP: Record<string, string> = {
     resourceDisplayName: 'resourceType',
     displayName: 'description',
 };
-
-function getFileExtension(url: string): string | undefined {
-    try {
-        const urlObj = new URL(url, 'https://www.cbioportal.org');
-        const match = urlObj.pathname.match(/.+\.(.+)/);
-        return match ? match[1].toLowerCase() : undefined;
-    } catch {
-        return undefined;
-    }
-}
 
 function icon(url: string) {
     const ext = getFileExtension(url);
@@ -280,6 +274,19 @@ export class ResourceDataTable extends React.Component<
         return this.props.store.facetRanges;
     }
 
+    private renderViewAction = (row: IResourceTableRow) => {
+        const onOpenResource = this.props.onOpenResource!;
+        return (
+            <a
+                onClick={() => onOpenResource(row)}
+                data-test="resource-view-in-portal"
+            >
+                <i className="fa fa-eye" style={{ marginRight: 4 }} />
+                View
+            </a>
+        );
+    };
+
     @computed
     get tableColumns(): ServerDrivenTableColumn<IResourceTableRow>[] {
         return [
@@ -337,6 +344,17 @@ export class ResourceDataTable extends React.Component<
                 row => row.description || NO_DESCRIPTION,
                 { visible: !this.isSingleValuedColumn('description') }
             ),
+            ...(this.props.onOpenResource
+                ? [
+                      this.createColumn(
+                          'view',
+                          'View',
+                          this.renderViewAction,
+                          () => '',
+                          { filterable: false, sortable: false }
+                      ),
+                  ]
+                : []),
             this.createColumn(
                 'link',
                 'Link',
@@ -363,9 +381,19 @@ export class ResourceDataTable extends React.Component<
      */
     @computed get itemsLabel(): string {
         const resourceName = this.props.store.activeResourceLabel;
-        return resourceName
-            ? pluralize(resourceName, this.props.store.totalRowCount)
-            : this.props.resourceLabel || 'items';
+        if (!resourceName || !this.labelNamesItsRows) {
+            return this.props.resourceLabel || 'items';
+        }
+        return pluralize(resourceName, this.props.store.totalRowCount);
+    }
+
+    /** Whether "N <label>s" is a true description of the rows; see pluralizeDisplayName. */
+    @computed get labelNamesItsRows(): boolean {
+        const resourceId = this.props.store.activeResourceId;
+        return (
+            !resourceId ||
+            getResourceConfig({ resourceId }).pluralizeDisplayName !== false
+        );
     }
 
     private downloadAllRows = () => this.props.store.fetchAllRowsForDownload();
@@ -402,8 +430,17 @@ export class ResourceDataTable extends React.Component<
                 }}
             >
                 <span>
-                    {startRow}-{endRow} of {totalRowCount} {this.itemsLabel}
+                    {startRow}-{endRow} of {totalRowCount}
+                    {this.labelNamesItsRows && ` ${this.itemsLabel}`}
                 </span>
+                {!this.labelNamesItsRows && (
+                    <>
+                        <span style={{ color: '#666', fontWeight: 'normal' }}>
+                            ·
+                        </span>
+                        <span>{this.props.store.activeResourceLabel}</span>
+                    </>
+                )}
                 <span style={{ color: '#666', fontWeight: 'normal' }}>·</span>
                 <span>
                     {filteredPatientCount}{' '}
