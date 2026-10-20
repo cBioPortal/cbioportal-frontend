@@ -394,9 +394,19 @@ export class ResourceDataTable extends React.Component<
      */
     @computed get itemsLabel(): string {
         const resourceName = this.props.store.activeResourceLabel;
-        return resourceName
-            ? pluralize(resourceName, this.props.store.totalRowCount)
-            : this.props.resourceLabel || 'items';
+        if (!resourceName || !this.labelNamesItsRows) {
+            return this.props.resourceLabel || 'items';
+        }
+        return pluralize(resourceName, this.props.store.totalRowCount);
+    }
+
+    /** Whether "N <label>s" is a true description of the rows; see pluralizeDisplayName. */
+    @computed get labelNamesItsRows(): boolean {
+        const resourceId = this.props.store.activeResourceId;
+        return (
+            !resourceId ||
+            getResourceConfig({ resourceId }).pluralizeDisplayName !== false
+        );
     }
 
     private downloadAllRows = () => this.props.store.fetchAllRowsForDownload();
@@ -432,9 +442,21 @@ export class ResourceDataTable extends React.Component<
                     gap: 6,
                 }}
             >
-                <span>
-                    {startRow}-{endRow} of {totalRowCount} {this.itemsLabel}
-                </span>
+                {this.labelNamesItsRows ? (
+                    <span>
+                        {startRow}-{endRow} of {totalRowCount} {this.itemsLabel}
+                    </span>
+                ) : (
+                    <>
+                        <span>
+                            {startRow}-{endRow} of {totalRowCount}
+                        </span>
+                        <span style={{ color: '#666', fontWeight: 'normal' }}>
+                            ·
+                        </span>
+                        <span>{this.props.store.activeResourceLabel}</span>
+                    </>
+                )}
                 <span style={{ color: '#666', fontWeight: 'normal' }}>·</span>
                 <span>
                     {filteredPatientCount}{' '}

@@ -143,6 +143,31 @@ describe('ResourceDataTable metadata columns', () => {
         );
     });
 
+    it('names the resource without pluralizing it when its rows are not instances of it', () => {
+        // CyCIF is a technique; its 12 rows are regions of one slide, not twelve "CyCIFs".
+        const text = headerText({
+            activeResourceId: 'CYCIF',
+            activeResourceLabel: 'CyCIF',
+            totalRowCount: 12,
+            filteredPatientCount: 1,
+            filteredSampleCount: 12,
+        } as any);
+        // The fixture has no rows on the page, so only the total is asserted, not the range.
+        assert.include(text, 'of 12·CyCIF·');
+        assert.notInclude(text, 'CyCIFs');
+        assert.include(text, '1 patient / 12 samples');
+    });
+
+    it('still pluralizes a resource with no such setting', () => {
+        assert.include(
+            headerText({
+                activeResourceId: 'IDC_SLIM',
+                activeResourceLabel: 'Slide Microscopy',
+            } as any),
+            '3074 Slide Microscopies'
+        );
+    });
+
     it('uses the singular form when there is one row', () => {
         assert.include(
             headerText({
