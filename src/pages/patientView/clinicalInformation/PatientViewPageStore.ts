@@ -1293,14 +1293,6 @@ export class PatientViewPageStore {
     @observable
     public patientIdsInCohort: string[] = [];
 
-    readonly allGenes = remoteData({
-        invoke: () => {
-            return getClient().getAllGenesUsingGET({
-                projection: 'SUMMARY',
-            });
-        },
-    });
-
     readonly allEntrezGeneIdsToGene = remoteData<{
         [entrezGeneId: number]: {
             hugoGeneSymbol: string;
