@@ -4,6 +4,7 @@ import { mount, ReactWrapper } from 'enzyme';
 import CustomCaseSelection from './CustomCaseSelection';
 import { DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT } from './CustomCaseSelectionUtils';
 import { Sample } from 'cbioportal-ts-api-client';
+import { act } from 'react-dom/test-utils';
 
 function makeSample(
     studyId: string,
@@ -99,6 +100,43 @@ describe('CustomCaseSelection', () => {
     });
 
     describe('multi-study mode', () => {
+        it('shows actionable guidance for an ID shared by two studies', async () => {
+            wrapper = mount(
+                <CustomCaseSelection
+                    allSamples={[
+                        s1,
+                        makeSample('study2', 'sample1', 'patient1'),
+                    ]}
+                    selectedSamples={[]}
+                    queriedStudies={['study1', 'study2']}
+                    onSubmit={() => {}}
+                />
+            );
+
+            await act(async () => {
+                (wrapper.instance() as CustomCaseSelection).onChange('sample1');
+            });
+            wrapper.update();
+
+            const warning = wrapper.find(
+                '[data-test="ValidationResultWarning"]'
+            );
+            assert.lengthOf(warning, 1);
+            assert.include(
+                warning.text(),
+                'By default, these samples will be included in all the studies in which they exist.'
+            );
+            assert.include(
+                warning.text(),
+                'study_id:sample_id. Sample IDs: sample1'
+            );
+            assert.isFalse(
+                wrapper
+                    .find('[data-test="CustomCaseSetSubmitButton"]')
+                    .prop('disabled')
+            );
+        });
+
         it('auto-populates selected cases with study prefix', () => {
             wrapper = mount(
                 <CustomCaseSelection
