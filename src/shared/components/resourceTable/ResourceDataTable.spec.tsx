@@ -138,9 +138,28 @@ describe('ResourceDataTable metadata columns', () => {
 
     it('names the rows after the resource, pluralized', () => {
         assert.include(
-            headerText({ activeResourceLabel: 'Slide Microscopy' } as any),
+            headerText({
+                // A resource with no override, so the default is what is under test.
+                activeResourceId: 'IDC_SLIM',
+                activeResourceLabel: 'Slide Microscopy',
+            } as any),
             '3074 Slide Microscopies'
         );
+    });
+
+    it('names the resource without pluralizing it when its rows are not instances of it', () => {
+        // CyCIF is a technique; its 12 rows are regions of one slide, not twelve "CyCIFs".
+        const text = headerText({
+            activeResourceId: 'CYCIF',
+            activeResourceLabel: 'CyCIF',
+            totalRowCount: 12,
+            filteredPatientCount: 1,
+            filteredSampleCount: 12,
+        } as any);
+        // The fixture has no rows on the page, so only the total is asserted, not the range.
+        assert.include(text, 'of 12·CyCIF·');
+        assert.notInclude(text, 'CyCIFs');
+        assert.include(text, '1 patient / 12 samples');
     });
 
     it('uses the singular form when there is one row', () => {
@@ -333,5 +352,69 @@ describe('ResourceDataTable loading state', () => {
         wrapper.update();
 
         assert.include(wrapper.text(), 'Error loading resources.');
+    });
+});
+
+describe('ResourceDataTable view action', () => {
+    const row = {
+        key: 'k',
+        studyId: 'study',
+        resourceId: 'CYCIF',
+        patientId: 'Pt-8',
+        patientStableId: 'Pt-8',
+        sampleId: 'S1',
+        sampleStableId: 'S1',
+        resourceType: 'CyCIF',
+        resourceScope: 'SAMPLE',
+        description: '',
+        url: 'https://example.com/a',
+        metadata: {},
+    } as any;
+
+    const table = (props: any = {}) =>
+        new ResourceDataTable({
+            store: {
+                columns: [],
+                facets: {},
+                facetRanges: {},
+                distinctValueCounts: {},
+                rowsForDisplay: [row],
+            } as any,
+            ...props,
+        });
+
+    it('offers no view action on a page that only links out', () => {
+        // The study view keeps the plain table.
+        const ids = table().tableColumns.map(c => c.id);
+        assert.notInclude(ids, 'view');
+    });
+
+    it('places it immediately left of the link out', () => {
+        const ids = table({ onOpenResource: () => undefined }).tableColumns.map(
+            c => c.id
+        );
+        assert.equal(ids[ids.indexOf('link') - 1], 'view');
+    });
+
+    it('hands the clicked row to the page', () => {
+        const opened: any[] = [];
+        const column = table({
+            onOpenResource: (r: any) => opened.push(r),
+        }).tableColumns.find(c => c.id === 'view');
+
+        const cell: any = column!.render(row);
+        cell.props.onClick();
+
+        assert.deepEqual(opened, [row]);
+    });
+
+    it('renders View as a button, so the keyboard can reach it', () => {
+        const column = table({
+            onOpenResource: () => undefined,
+        }).tableColumns.find(c => c.id === 'view');
+        const cell: any = column!.render(row);
+
+        assert.equal(cell.type, 'button');
+        assert.equal(cell.props.type, 'button');
     });
 });
