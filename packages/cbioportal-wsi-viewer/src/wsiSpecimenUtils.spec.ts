@@ -20,13 +20,25 @@ describe('wsiSpecimenUtils', () => {
         ).toBe('Biopsy');
     });
 
-    it('falls back to a generic specimen label when no part details exist', () => {
+    it('falls back to a generic part label when no part details exist', () => {
         expect(
             formatSpecimenLabel({
                 match_level: 'UNMATCHED',
             })
-        ).toBe('Specimen');
+        ).toBe('Part');
     });
+
+    it.each(['Specimen 3', 'Part 3'])(
+        'does not show a generated "%s" description without a part number',
+        partDescription => {
+            expect(
+                formatSpecimenLabel({
+                    match_level: 'UNMATCHED',
+                    part_description: partDescription,
+                })
+            ).toBe('Part');
+        }
+    );
 
     it('uses block number when block label is unavailable', () => {
         expect(

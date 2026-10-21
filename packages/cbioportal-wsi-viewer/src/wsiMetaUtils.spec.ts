@@ -97,7 +97,7 @@ describe('buildPathRows', () => {
         expect(match?.valueTip).toContain(
             matchLevel === 'BLOCK'
                 ? 'same tissue block that was sequenced'
-                : 'same specimen part as the sequenced sample'
+                : 'same part as the sequenced sample'
         );
     });
 
@@ -117,8 +117,8 @@ describe('buildPathRows', () => {
         expect(rows.find(row => row.label === 'Stain')?.valueTip).toContain(
             'Stain group:'
         );
-        expect(rows.find(row => row.label === 'Specimen')?.valueTip).toBe(
-            'Cut from block 1 of specimen part 6 (Specimen 6)'
+        expect(rows.find(row => row.label === 'Part')?.valueTip).toBe(
+            'Cut from block 1 of part 6'
         );
     });
 
@@ -166,7 +166,7 @@ describe('buildPathRows', () => {
 
         expect(rows).toContainEqual(
             expect.objectContaining({
-                label: 'Specimen',
+                label: 'Part',
                 value: 'Part 4 / Block A1',
             })
         );
@@ -209,15 +209,35 @@ describe('buildPathRows', () => {
         expect(rows.some(row => row.label === 'Path Dx')).toBe(false);
     });
 
-    it('drops a de-identified "Specimen <n>" part description as an anatomical site', () => {
+    it.each(['Specimen 5', 'Part 5'])(
+        'drops a de-identified "%s" part description as an anatomical site',
+        partDescription => {
+            const rows = buildPathRows(
+                placedSlide('BLOCK', { part_description: partDescription }),
+                sample,
+                'P-1',
+                'study-1'
+            );
+
+            expect(rows.some(row => row.label === 'Anatomical site')).toBe(
+                false
+            );
+        }
+    );
+
+    it('never says "specimen" in the pathology rows', () => {
         const rows = buildPathRows(
-            placedSlide('BLOCK', { part_description: 'Specimen 5' }),
+            placedSlide('BLOCK', {
+                part_number: '6',
+                part_description: 'Specimen 6',
+                block_label: 'Block 1',
+            }),
             sample,
             'P-1',
             'study-1'
         );
 
-        expect(rows.some(row => row.label === 'Anatomical site')).toBe(false);
+        expect(JSON.stringify(rows)).not.toMatch(/specimen/i);
     });
 });
 

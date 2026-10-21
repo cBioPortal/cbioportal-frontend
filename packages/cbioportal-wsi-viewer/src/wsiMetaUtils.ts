@@ -7,7 +7,11 @@ import {
     WsiStainKind,
 } from './wsiViewerTypes';
 import { cleanStain, fmtFileSize, normalizeBlockLabel } from './wsiNavUtils';
-import { blockName, formatSpecimenLabel } from './wsiSpecimenUtils';
+import {
+    blockName,
+    formatSpecimenLabel,
+    realPartDescription,
+} from './wsiSpecimenUtils';
 import { WSI_STAIN_COLORS } from './wsiTheme';
 import { nativeObjectivePower } from './wsiScaleUtils';
 import { getWsiViewerRuntime } from './wsiViewerConfig';
@@ -135,19 +139,15 @@ function specimenTooltip(
         'part_number' | 'part_description' | 'block_label' | 'block_number'
     >
 ): string | undefined {
+    const description = realPartDescription(slide.part_description);
     const part = slide.part_number
-        ? `part ${slide.part_number}${
-              slide.part_description ? ` (${slide.part_description})` : ''
-          }`
-        : slide.part_description;
+        ? `part ${slide.part_number}${description ? ` (${description})` : ''}`
+        : description;
     const block = slide.block_label || slide.block_number;
     if (!part && !block) {
         return undefined;
     }
-    return `Cut from ${[
-        block ? `block ${blockName(block)}` : null,
-        part ? `specimen ${part}` : null,
-    ]
+    return `Cut from ${[block ? `block ${blockName(block)}` : null, part]
         .filter(Boolean)
         .join(' of ')}`;
 }
@@ -173,13 +173,8 @@ export function buildPathRows(
     const blockLbl = normalizeBlockLabel(slide.block_label, slide.block_number);
     const sampleTip = blockLbl ? `Block: ${blockLbl}` : undefined;
 
-    // De-identified exports replace the part description with a "Specimen <n>" ordinal, which
-    // names no anatomical site and repeats the Specimen row.
-    const partDesc =
-        slide.part_description &&
-        !/^specimen \d+$/i.test(slide.part_description.trim())
-            ? slide.part_description
-            : null;
+    // A generated "Part <n>" description names no anatomical site and repeats the Part row.
+    const partDesc = realPartDescription(slide.part_description);
     const matchLevel = slide.match_level;
     const hasSpecimenDetails = !!(
         slide.part_number ||
@@ -209,8 +204,8 @@ export function buildPathRows(
     ];
     if (matchLevel && hasSpecimenDetails) {
         rows.push({
-            label: 'Specimen',
-            labelTip: 'Pathology specimen containing this slide',
+            label: 'Part',
+            labelTip: 'Pathology part containing this slide',
             value: formatSpecimenLabel({ ...slide, match_level: matchLevel }),
             valueTip: specimenTooltip(slide),
         });
@@ -224,14 +219,14 @@ export function buildPathRows(
             valueTip:
                 matchLevel === 'BLOCK'
                     ? 'The slide was cut from the same tissue block that was sequenced for this sample'
-                    : 'The slide comes from the same specimen part as the sequenced sample; the sequenced block is not confirmed',
+                    : 'The slide comes from the same part as the sequenced sample; the sequenced block is not confirmed',
         });
     }
     if (partDesc) {
         rows.push({
             label: 'Anatomical site',
             labelTip:
-                'Pathology part description — which anatomical specimen this slide was cut from',
+                'Pathology part description — which anatomical site this slide was cut from',
             value: partDesc,
         });
     }
