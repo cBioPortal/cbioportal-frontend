@@ -180,30 +180,37 @@ export const ImmuneSignatureTab: React.FC<IImmuneSignatureTabProps> = observer(
                 <h2>Immune Microenvironment Signature Profile</h2>
                 <div style={{ color: '#666', marginBottom: 20 }}>
                     {sampleIds.length > 1 ? (
-                        <div className="btn-group" role="group">
+                        <span>
+                            Sample:
                             {sampleIds.map(id => (
-                                <button
+                                <a
                                     key={id}
-                                    type="button"
-                                    className={`btn btn-default btn-sm${
-                                        id === sampleId ? ' active' : ''
-                                    }`}
+                                    role="button"
                                     data-test={`immune-signature-sample-${id}`}
                                     onClick={() => setSelected(id)}
+                                    style={{
+                                        marginLeft: 12,
+                                        cursor: 'pointer',
+                                        textDecoration: 'none',
+                                        color:
+                                            id === sampleId ? '#333' : '#999',
+                                        fontWeight:
+                                            id === sampleId ? 'bold' : 'normal',
+                                    }}
                                 >
                                     {sampleManager &&
                                         sampleManager.getComponentForSample(
                                             id,
-                                            1,
+                                            id === sampleId ? 1 : 0.5,
                                             '',
                                             null,
                                             undefined,
                                             true
                                         )}{' '}
                                     {id}
-                                </button>
+                                </a>
                             ))}
-                        </div>
+                        </span>
                     ) : (
                         <span>
                             Sample: <strong>{sampleId}</strong>
