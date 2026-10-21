@@ -23,10 +23,14 @@ const PatientViewPageHeader: React.FC<IPatientPageHeaderProps> = observer(
         const sampleManager = props.pageStore.sampleManager.result;
         const immuneSignatureBySample =
             props.pageStore.immuneSignatureBySample.result;
-        const immuneSignatureSampleIds =
-            sampleManager && props.pageStore.immuneSignatureBySample.isComplete
-                ? sampleManager.getActiveSampleIdsInOrder()
-                : [];
+        const activeSampleIds = sampleManager
+            ? sampleManager.getActiveSampleIdsInOrder()
+            : [];
+        const immuneSignatureSampleIds = activeSampleIds.some(
+            id => id in immuneSignatureBySample
+        )
+            ? activeSampleIds
+            : [];
         return (
             <div className="patientDataTable">
                 <table>
