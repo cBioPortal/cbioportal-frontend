@@ -5,6 +5,7 @@ import SampleSummaryList from 'pages/patientView/sampleHeader/SampleSummaryList'
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
 import { IGenePanelModal } from 'pages/patientView/PatientViewPage';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
+import ImmuneSignatureClassBar from 'pages/patientView/immuneSignature/ImmuneSignatureClassBar';
 
 interface IPatientPageHeaderProps {
     handlePatientClick: (id: string) => void;
@@ -19,6 +20,13 @@ interface IPatientPageHeaderProps {
 
 const PatientViewPageHeader: React.FC<IPatientPageHeaderProps> = observer(
     function(props) {
+        const sampleManager = props.pageStore.sampleManager.result;
+        const immuneSignatureBySample =
+            props.pageStore.immuneSignatureBySample.result;
+        const immuneSignatureSampleIds =
+            sampleManager && props.pageStore.immuneSignatureBySample.isComplete
+                ? sampleManager.getActiveSampleIdsInOrder()
+                : [];
         return (
             <div className="patientDataTable">
                 <table>
@@ -73,6 +81,39 @@ const PatientViewPageHeader: React.FC<IPatientPageHeaderProps> = observer(
                             </div>
                         </td>
                     </tr>
+                    {immuneSignatureSampleIds.length > 0 && (
+                        <tr>
+                            <td>Immune Signature:</td>
+                            <td>
+                                {immuneSignatureSampleIds.map(sampleId => (
+                                    <span
+                                        key={sampleId}
+                                        style={{ marginRight: 16 }}
+                                    >
+                                        {sampleManager!.getComponentForSample(
+                                            sampleId
+                                        )}{' '}
+                                        {immuneSignatureBySample[sampleId] ? (
+                                            <ImmuneSignatureClassBar
+                                                signature={
+                                                    immuneSignatureBySample[
+                                                        sampleId
+                                                    ]
+                                                }
+                                            />
+                                        ) : (
+                                            <span
+                                                data-test="immune-signature-header-no-data"
+                                                style={{ color: '#999' }}
+                                            >
+                                                No data
+                                            </span>
+                                        )}
+                                    </span>
+                                ))}
+                            </td>
+                        </tr>
+                    )}
                 </table>
             </div>
         );
