@@ -29,6 +29,8 @@ export type PatientViewUrlQuery = {
     sampleId?: string;
     resourceUrl?: string;
     pathologySlideSettings: PathologySlideSettings;
+    /** Resources whose viewer tab is open beside their table tab, comma separated. */
+    openResources?: string;
     genomicEvolutionSettings: {
         showTimeline?: string;
 
@@ -66,6 +68,7 @@ export default class PatientViewUrlWrapper extends URLWrapper<
                     specimenKey: '',
                 },
             },
+            openResources: { isSessionProp: false },
             genomicEvolutionSettings: {
                 isSessionProp: false,
                 nestedObjectProps: {
@@ -89,8 +92,16 @@ export default class PatientViewUrlWrapper extends URLWrapper<
         makeObservable(this);
     }
 
-    public setActiveTab(tab: string): void {
-        this.updateURL({}, `${PagePath.Patient}/${tab}`);
+    public setActiveTab(tab: string, replace = false): void {
+        this.updateURL({}, `${PagePath.Patient}/${tab}`, false, replace);
+    }
+
+    /** Changes tab and query together, so one user action leaves one history entry. */
+    public setActiveTabWith(
+        tab: string,
+        params: Partial<PatientViewUrlQuery>
+    ): void {
+        this.updateURL(params, `${PagePath.Patient}/${tab}`);
     }
 
     @computed public get activeTabId() {
@@ -105,7 +116,7 @@ export default class PatientViewUrlWrapper extends URLWrapper<
         );
     }
 
-    public setResourceUrl(resourceUrl: string) {
-        this.updateURL({ resourceUrl });
+    public setResourceUrl(resourceUrl: string, replace = false) {
+        this.updateURL({ resourceUrl }, undefined, false, replace);
     }
 }

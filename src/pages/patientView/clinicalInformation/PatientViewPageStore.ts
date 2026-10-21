@@ -21,6 +21,7 @@ import {
     NumericGeneMolecularData,
     ReferenceGenomeGene,
     ResourceData,
+    ResourceDefinition,
     Sample,
     SampleMolecularIdentifier,
     GenericAssayData,
@@ -246,7 +247,6 @@ import {
 } from 'shared/components/plots/PlotsTabStore';
 
 type PageMode = 'patient' | 'sample';
-type ResourceId = string;
 
 type NamespaceColumnConfigMap = {
     cna: NamespaceColumnConfig;
@@ -1188,16 +1188,6 @@ export class PatientViewPageStore {
 
     @observable _sampleId = '';
 
-    private openResourceTabMap = observable.map<ResourceId, boolean>();
-    @autobind
-    public isResourceTabOpen(resourceId: string) {
-        return !!this.openResourceTabMap.get(resourceId);
-    }
-    @action.bound
-    public setResourceTabOpen(resourceId: string, open: boolean) {
-        this.openResourceTabMap.set(resourceId, open);
-    }
-
     @action.bound
     public onFilterGenesStructuralVariantTable(option: GeneFilterOption): void {
         this.structuralVariantTableGeneFilterOption = option;
@@ -1826,9 +1816,10 @@ export class PatientViewPageStore {
         default: false,
     });
 
+    // Per-resource configuration, which the resource-table endpoints do not return.
     // Pathology slides are shown in the Pathology Slides tab, so their
     // resources are left out of Files & Links and the resource tabs.
-    readonly resourceDefinitions = remoteData({
+    readonly resourceDefinitions = remoteData<ResourceDefinition[]>({
         invoke: () =>
             internalClient
                 .getAllResourceDefinitionsInStudyUsingGET({
@@ -1837,15 +1828,17 @@ export class PatientViewPageStore {
                 .then(defs =>
                     defs.filter(def => !isWsiResourceId(def.resourceId))
                 ),
-        onResult: defs => {
-            // open resources which have `openByDefault` set to true
-            if (defs) {
-                for (const def of defs)
-                    if (def.openByDefault)
-                        this.setResourceTabOpen(def.resourceId, true);
-            }
-        },
+        default: [],
     });
+
+    @computed get resourceIdToDefinition(): {
+        [resourceId: string]: ResourceDefinition;
+    } {
+        return _.keyBy(
+            this.resourceDefinitions.result || [],
+            d => d.resourceId
+        );
+    }
 
     /**
      * Per-resource row counts for this patient, used to decide whether the resource tabs are

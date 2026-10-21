@@ -68,7 +68,6 @@ import { BookmarkModal } from 'pages/resultsView/bookmark/BookmarkModal';
 import { ShareUrls } from 'pages/resultsView/querySummary/ShareUI';
 import { getBitlyShortenedUrl } from '../../shared/lib/bitly';
 import { MakeMobxView } from '../../shared/components/MobxView';
-import ResourceTab from '../../shared/components/resources/ResourceTab';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
 import { ResourceData } from 'cbioportal-ts-api-client';
