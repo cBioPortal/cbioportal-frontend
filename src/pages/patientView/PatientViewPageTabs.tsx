@@ -40,6 +40,7 @@ import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
+import ImmuneSignatureTab from './immuneSignature/ImmuneSignatureTab';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -54,6 +55,7 @@ export enum PatientViewPageTabs {
     PathwayMapper = 'pathways',
     MRNA = 'mrna',
     Plots = 'plots',
+    ImmuneSignature = 'immuneSignature',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -810,6 +812,25 @@ export function tabs(
             </MSKTab>
         );
     }
+
+    const immuneSignatureBySample =
+        pageComponent.patientViewPageStore.immuneSignatureBySample;
+    tabs.push(
+        <MSKTab
+            key={11}
+            id={PatientViewPageTabs.ImmuneSignature}
+            linkText="Immune Signature"
+        >
+            {immuneSignatureBySample.isComplete ? (
+                <ImmuneSignatureTab
+                    immuneSignatureBySample={immuneSignatureBySample.result}
+                    sampleManager={sampleManager}
+                />
+            ) : (
+                <LoadingIndicator isLoading={true} size={'big'} center={true} />
+            )}
+        </MSKTab>
+    );
 
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */
