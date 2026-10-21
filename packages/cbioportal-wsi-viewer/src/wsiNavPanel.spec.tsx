@@ -170,6 +170,31 @@ describe('WsiNavPanel', () => {
         expect(tooltipText).toContain('Stain: H&E');
     });
 
+    it('draws no stain color bar on a slide item', () => {
+        const key = '0123456789ab';
+        const sample = makeSample('S-1', [makeSlide({ slide_key: key })]);
+
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([sample])}
+                selectedSlide={null}
+                stainFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                {...navContext}
+            />
+        );
+
+        const item = renderer.root.findByProps({
+            'data-testid': `wsi-slide-item-${key}`,
+        });
+        const borders = item
+            .findAll(node => typeof node.type === 'string')
+            .map(node => node.props.style?.borderLeft)
+            .filter(Boolean);
+        expect(borders).toEqual([]);
+    });
+
     it("shows the host's label beside each sample", () => {
         const sample = makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })]);
         const renderer = TestRenderer.create(

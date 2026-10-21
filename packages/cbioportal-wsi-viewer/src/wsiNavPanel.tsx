@@ -918,14 +918,13 @@ function SlideItem({
                     transition: 'box-shadow 120ms, border-color 120ms',
                 }}
             >
-                {/* The frosted label end, edged in the stain's color. */}
+                {/* The frosted label end. */}
                 <div
                     style={{
                         width: SLIDE_LABEL_WIDTH,
                         flexShrink: 0,
                         padding: '5px 8px 5px 8px',
                         background: theme.slideLabel,
-                        borderLeft: `4px solid ${dotColor}`,
                         borderRight: `1px solid ${theme.border}`,
                         display: 'flex',
                         flexDirection: 'column',
