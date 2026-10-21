@@ -813,24 +813,35 @@ export function tabs(
         );
     }
 
+    // Shown only when some sample has immune signature data. A deep-linked
+    // tab stays visible while the data loads so the page doesn't fall back to
+    // Summary in the meantime.
     const immuneSignatureBySample =
         pageComponent.patientViewPageStore.immuneSignatureBySample;
-    tabs.push(
-        <MSKTab
-            key={11}
-            id={PatientViewPageTabs.ImmuneSignature}
-            linkText="Immune Signature"
-        >
-            {immuneSignatureBySample.isComplete ? (
-                <ImmuneSignatureTab
-                    immuneSignatureBySample={immuneSignatureBySample.result}
-                    sampleManager={sampleManager}
-                />
-            ) : (
-                <LoadingIndicator isLoading={true} size={'big'} center={true} />
-            )}
-        </MSKTab>
-    );
+    const showImmuneSignatureTab = immuneSignatureBySample.isComplete
+        ? Object.keys(immuneSignatureBySample.result).length > 0
+        : urlWrapper.activeTabId === PatientViewPageTabs.ImmuneSignature;
+    showImmuneSignatureTab &&
+        tabs.push(
+            <MSKTab
+                key={11}
+                id={PatientViewPageTabs.ImmuneSignature}
+                linkText="Immune Signature"
+            >
+                {immuneSignatureBySample.isComplete ? (
+                    <ImmuneSignatureTab
+                        immuneSignatureBySample={immuneSignatureBySample.result}
+                        sampleManager={sampleManager}
+                    />
+                ) : (
+                    <LoadingIndicator
+                        isLoading={true}
+                        size={'big'}
+                        center={true}
+                    />
+                )}
+            </MSKTab>
+        );
 
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */
