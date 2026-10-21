@@ -297,6 +297,35 @@ test.describe('treatment feature', () => {
             expect(await options.count()).toBe(9);
         });
 
+        test('keeps previously selected treatments after clearing a search', async ({
+            page,
+        }) => {
+            await goToTreatmentTab(page);
+            const selector = page.locator(GENERIC_ASSAY_ENTITY_SELECTOR);
+            const options = selector.locator('div[class$="option"]');
+            const selectedOptions = selector.locator(
+                'div[class$="multiValue"]'
+            );
+            await selector.click();
+            await setInputText(
+                page,
+                '[data-test="GenericAssayEntitySelection"] input >> nth=0',
+                'AZD'
+            );
+            await expect(options).toHaveCount(3);
+            await options.nth(1).click();
+            await expect(selectedOptions).toHaveCount(1);
+
+            await setInputText(
+                page,
+                '[data-test="GenericAssayEntitySelection"] input >> nth=0',
+                ''
+            );
+            await expect(options).toHaveCount(9);
+            await options.first().click();
+            await expect(selectedOptions).toHaveCount(2);
+        });
+
         test('initializes from `generic_assay_groups` URL parameter', async ({
             page,
         }) => {
@@ -321,6 +350,32 @@ test.describe('treatment feature', () => {
             expect(await selectedOptions.first().innerText()).toBe(
                 'Name of 17-AAG (17-AAG): Desc of 17-AAG'
             );
+        });
+
+        test('only shows url-selected treatments for the matching profile', async ({
+            page,
+        }) => {
+            await goToUrlAndSetLocalStorage(
+                page,
+                oncoprintTabUrl.concat(
+                    '&generic_assay_groups=study_es_0_treatment_ic50,17-AAG'
+                ),
+                true
+            );
+            await waitForOncoprint(page);
+            await goToTreatmentTab(page);
+            const selectedOptions = page
+                .locator(GENERIC_ASSAY_ENTITY_SELECTOR)
+                .locator('div[class$="multiValue"]');
+            await expect(selectedOptions).toHaveCount(1);
+
+            await page.locator(GENERIC_ASSAY_PROFILE_SELECTOR).click();
+            await page
+                .locator(
+                    `//*[text()="${TREATMENT_EC50_PROFILE_NAME}"] >> nth=0`
+                )
+                .click();
+            await expect(selectedOptions).toHaveCount(0);
         });
 
         test('sets `generic_assay_groups` URL parameter', async ({ page }) => {
