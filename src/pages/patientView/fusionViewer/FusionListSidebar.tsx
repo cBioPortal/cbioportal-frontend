@@ -1,0 +1,250 @@
+import * as React from 'react';
+import { observer } from 'mobx-react';
+import classNames from 'classnames';
+import { FusionViewerStore } from './FusionViewerStore';
+import { FusionEvent } from './data/types';
+import { filterFusions } from './data/fusionSearch';
+import { orientByDescriptions } from './data/partnerResolution';
+import moduleStyles from './styles.module.scss';
+
+interface IFusionListSidebarProps {
+    store: FusionViewerStore;
+}
+
+const SIDEBAR_WIDTH = 280;
+
+const styles = {
+    container: {
+        width: SIDEBAR_WIDTH,
+        minWidth: SIDEBAR_WIDTH,
+        maxWidth: SIDEBAR_WIDTH,
+        borderRight: '1px solid #ddd',
+        backgroundColor: '#f8f8f8',
+        overflowY: 'auto' as const,
+        display: 'flex',
+        flexDirection: 'column' as const,
+    },
+    header: {
+        padding: '10px 12px',
+        fontSize: 13,
+        fontWeight: 600 as const,
+        color: '#555',
+        borderBottom: '1px solid #ddd',
+        backgroundColor: '#fff',
+    },
+    search: {
+        width: '100%',
+        fontSize: 12,
+        fontWeight: 400 as const,
+        marginTop: 6,
+    },
+    empty: {
+        padding: '8px 12px',
+        fontSize: 12,
+        color: '#999',
+    },
+    list: {
+        listStyle: 'none' as const,
+        margin: 0,
+        padding: 0,
+    },
+    item: {
+        padding: '8px 12px',
+        borderBottom: '1px solid #eee',
+        cursor: 'pointer',
+        fontSize: 12,
+        lineHeight: 1.45,
+        borderLeft: '3px solid transparent',
+    },
+    fusionName: {
+        fontWeight: 600 as const,
+        fontSize: 13,
+        marginBottom: 2,
+        display: 'flex',
+        alignItems: 'baseline' as const,
+        gap: 6,
+    },
+    sample: {
+        marginLeft: 'auto',
+        minWidth: 0,
+        fontWeight: 400 as const,
+        fontStyle: 'normal' as const,
+        fontSize: 11,
+        color: '#777',
+        whiteSpace: 'nowrap' as const,
+        overflow: 'hidden' as const,
+        textOverflow: 'ellipsis' as const,
+    },
+    coordinates: {
+        color: '#777',
+        fontSize: 11,
+    },
+    metaRow: {
+        marginTop: 3,
+        display: 'flex',
+        alignItems: 'center' as const,
+        gap: 6,
+        flexWrap: 'wrap' as const,
+    },
+    badge: {
+        display: 'inline-block',
+        fontSize: 10,
+        padding: '1px 5px',
+        borderRadius: 3,
+        fontWeight: 600 as const,
+    },
+    significanceBadge: {
+        backgroundColor: '#dff0d8',
+        color: '#3c763d',
+        border: '1px solid #d6e9c6',
+    },
+    readsBadge: {
+        backgroundColor: '#eee',
+        color: '#555',
+    },
+    callerBadge: {
+        backgroundColor: '#eee',
+        color: '#555',
+    },
+    intergenicName: {
+        fontStyle: 'italic' as const,
+        color: '#999',
+    },
+};
+
+function formatFusionName(fusion: FusionEvent): string {
+    const gene1 = fusion.gene1.symbol;
+    const gene2 = fusion.gene2 ? fusion.gene2.symbol : 'IGR';
+    return `${gene1}::${gene2}`;
+}
+
+function formatBreakpoint(fusion: FusionEvent): string {
+    const bp1 = `chr${
+        fusion.gene1.chromosome
+    }:${fusion.gene1.position.toLocaleString()}`;
+    if (!fusion.gene2) {
+        return bp1;
+    }
+    const bp2 = `chr${
+        fusion.gene2.chromosome
+    }:${fusion.gene2.position.toLocaleString()}`;
+    return `${bp1} \u2192 ${bp2}`;
+}
+
+@observer
+export class FusionListSidebar extends React.Component<
+    IFusionListSidebarProps,
+    { query: string }
+> {
+    public state = { query: '' };
+
+    private handleClick = (fusionId: string) => {
+        this.props.store.selectFusion(fusionId);
+    };
+
+    public render() {
+        const { store } = this.props;
+        const isIntergenic = (f: FusionEvent) => f.gene2 === null;
+        const shown = filterFusions(store.fusions, this.state.query);
+        const filtered = shown.length !== store.fusions.length;
+
+        return (
+            <div style={styles.container}>
+                <div style={styles.header}>
+                    Fusions (
+                    {filtered
+                        ? `${shown.length} of ${store.fusions.length}`
+                        : store.fusions.length}
+                    )
+                    <input
+                        type="search"
+                        className="form-control input-sm"
+                        style={styles.search}
+                        placeholder="Gene, TMPRSS2::ERG, sample, class, or chr7:55,000,000-56,000,000"
+                        aria-label="Filter fusions"
+                        data-testid="fusion-search"
+                        value={this.state.query}
+                        onChange={e => this.setState({ query: e.target.value })}
+                    />
+                </div>
+                {shown.length === 0 && (
+                    <div style={styles.empty}>No fusions match.</div>
+                )}
+                <ul style={styles.list}>
+                    {shown.map(rawFusion => {
+                        const selected =
+                            rawFusion.id === store.selectedFusionId;
+                        // Only the selected fusion has its transcripts loaded, so
+                        // it uses the transcript-based canonical 5'->3' order.
+                        // Every other row is oriented from its site descriptions,
+                        // so a row's label does not change when it is selected.
+                        const fusion =
+                            selected && store.canonicalFusion
+                                ? store.canonicalFusion
+                                : orientByDescriptions(rawFusion);
+                        const intergenic = isIntergenic(fusion);
+
+                        const nameStyle = {
+                            ...styles.fusionName,
+                            ...(intergenic ? styles.intergenicName : {}),
+                        };
+
+                        return (
+                            <li
+                                key={rawFusion.id}
+                                className={classNames(
+                                    moduleStyles.fusionItem,
+                                    selected && moduleStyles.fusionItemSelected
+                                )}
+                                style={styles.item}
+                                onClick={() => this.handleClick(rawFusion.id)}
+                            >
+                                <div style={nameStyle}>
+                                    <span>{formatFusionName(fusion)}</span>
+                                    <span
+                                        style={styles.sample}
+                                        title={fusion.tumorId}
+                                        data-testid="fusion-sample"
+                                    >
+                                        {fusion.tumorId}
+                                    </span>
+                                </div>
+                                <div style={styles.coordinates}>
+                                    {formatBreakpoint(fusion)}
+                                </div>
+                                <div style={styles.metaRow}>
+                                    {fusion.significance !== 'NA' && (
+                                        <span
+                                            style={{
+                                                ...styles.badge,
+                                                ...styles.significanceBadge,
+                                            }}
+                                        >
+                                            {fusion.significance}
+                                        </span>
+                                    )}
+                                    <span
+                                        style={{
+                                            ...styles.badge,
+                                            ...styles.readsBadge,
+                                        }}
+                                    >
+                                        {fusion.totalReadSupport} reads
+                                    </span>
+                                    <span
+                                        style={{
+                                            ...styles.badge,
+                                            ...styles.callerBadge,
+                                        }}
+                                    >
+                                        {fusion.callMethod}
+                                    </span>
+                                </div>
+                            </li>
+                        );
+                    })}
+                </ul>
+            </div>
+        );
+    }
+}
