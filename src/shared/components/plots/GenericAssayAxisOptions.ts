@@ -357,14 +357,15 @@ export class GenericAssayAxisOptions {
     @action.bound
     onSelect(option: GenericAssayPlotsOption | undefined) {
         if (option && option.value) {
-            this.pickedOptions = {
-                ...this.pickedOptions,
-                [option.value]: option,
-            };
             const meta =
                 this.searchPage.result?.items.find(
                     m => m.stableId === option.value
                 ) || this.metaById[option.value];
+            // callers may pass a partial option, so prefer one built from meta
+            this.pickedOptions = {
+                ...this.pickedOptions,
+                [option.value]: meta ? this.makeOptions([meta])[0] : option,
+            };
             if (meta) {
                 this.pickedMeta = {
                     ...this.pickedMeta,

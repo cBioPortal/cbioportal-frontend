@@ -227,6 +227,19 @@ describe('GenericAssayAxisOptions', () => {
         assert.strictEqual(store.resolveOption('cg_only_in_search'), picked);
     });
 
+    it('builds the picked option from meta when given a partial option', async () => {
+        await when(() => !store.isLoading);
+        store.onSelect({
+            value: 'cg1',
+            label: 'cg1',
+        } as GenericAssayPlotsOption);
+        assert.deepEqual(store.resolveOption('cg1'), {
+            value: 'cg1',
+            label: 'TP53 (cg1)',
+            plotAxisLabel: 'TP53 (cg1)',
+        });
+    });
+
     it('fetches a deep-linked selection that is not in the default options', async () => {
         runInAction(() => (context.urlOptionValue = 'cg_deep'));
         await when(() => !!store.metaById['cg_deep']);
