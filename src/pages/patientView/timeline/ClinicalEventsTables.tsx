@@ -14,7 +14,12 @@ function makeColumns(data: string[][]) {
             name: item,
             render: (data: string[]) => <span>{data[i]}</span>,
             download: (data: string[]) => data[i],
-            sortBy: (data: string[]) => data[i],
+            sortBy: (data: string[]) => {
+                if (item === 'START_DATE' || item === 'STOP_DATE') {
+                    return data[i] === '' ? null : Number(data[i]);
+                }
+                return data[i];
+            },
             filter: (
                 txt: string,
                 filterString: string,
