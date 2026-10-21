@@ -45,6 +45,7 @@ import { capWsiViewerHeight } from 'cbioportal-wsi-viewer';
 import { PatientViewPageTabs } from './PatientViewPageTabIds';
 import { WsiPatientClinicalData } from 'shared/components/wsiViewer/wsiClinicalRows';
 import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
+import ImmuneSignatureTab from './immuneSignature/ImmuneSignatureTab';
 
 export {
     PatientViewPageTabs,
@@ -865,6 +866,25 @@ export function tabs(
             </MSKTab>
         );
     }
+
+    const immuneSignatureBySample =
+        pageComponent.patientViewPageStore.immuneSignatureBySample;
+    tabs.push(
+        <MSKTab
+            key={11}
+            id={PatientViewPageTabs.ImmuneSignature}
+            linkText="Immune Signature"
+        >
+            {immuneSignatureBySample.isComplete ? (
+                <ImmuneSignatureTab
+                    immuneSignatureBySample={immuneSignatureBySample.result}
+                    sampleManager={sampleManager}
+                />
+            ) : (
+                <LoadingIndicator isLoading={true} size={'big'} center={true} />
+            )}
+        </MSKTab>
+    );
 
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */

@@ -35,6 +35,11 @@ import {
 } from 'cbioportal-ts-api-client';
 import { getClient } from '../../../shared/api/cbioportalClientInstance';
 import { PatientViewPlotsStore } from './PatientViewPlotsStore';
+import { addMockImmuneSignatureClinicalData } from '../immuneSignature/mockImmuneSignatureClinicalData';
+import {
+    getImmuneSignature,
+    ImmuneSignature,
+} from '../immuneSignature/ImmuneSignatureUtils';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
 import oncokbClient from '../../../shared/api/oncokbClientInstance';
 import { computed, observable, action, makeObservable } from 'mobx';
@@ -1986,7 +1991,7 @@ export class PatientViewPageStore {
 
     readonly clinicalDataForAllSamplesForPatient = remoteData({
         await: () => [this.allSamplesForPatient],
-        invoke: () => {
+        invoke: async () => {
             const identifiers = this.allSamplesForPatient.result.map(
                 sample => ({
                     entityId: sample.sampleId,
@@ -1996,14 +2001,20 @@ export class PatientViewPageStore {
             const clinicalDataMultiStudyFilter = {
                 identifiers,
             } as ClinicalDataMultiStudyFilter;
-            return fetchClinicalData(clinicalDataMultiStudyFilter);
+            const clinicalData = await fetchClinicalData(
+                clinicalDataMultiStudyFilter
+            );
+            return addMockImmuneSignatureClinicalData(
+                clinicalData,
+                this.allSamplesForPatient.result
+            );
         },
     });
 
     readonly clinicalDataForSamples = remoteData(
         {
             await: () => [this.samples],
-            invoke: () => {
+            invoke: async () => {
                 const identifiers = this.sampleIds.map((sampleId: string) => ({
                     entityId: sampleId,
                     studyId: this.studyId,
@@ -2011,7 +2022,13 @@ export class PatientViewPageStore {
                 const clinicalDataMultiStudyFilter = {
                     identifiers,
                 } as ClinicalDataMultiStudyFilter;
-                return fetchClinicalData(clinicalDataMultiStudyFilter);
+                const clinicalData = await fetchClinicalData(
+                    clinicalDataMultiStudyFilter
+                );
+                return addMockImmuneSignatureClinicalData(
+                    clinicalData,
+                    this.samples.result
+                );
             },
         },
         []
@@ -2027,6 +2044,25 @@ export class PatientViewPageStore {
                 ),
         },
         []
+    );
+
+    readonly immuneSignatureBySample = remoteData<
+        Record<string, ImmuneSignature>
+    >(
+        {
+            await: () => [this.clinicalDataGroupedBySample],
+            invoke: async () => {
+                const result: Record<string, ImmuneSignature> = {};
+                this.clinicalDataGroupedBySample.result.forEach(sample => {
+                    const signature = getImmuneSignature(sample.clinicalData);
+                    if (signature) {
+                        result[sample.id] = signature;
+                    }
+                });
+                return result;
+            },
+        },
+        {}
     );
 
     readonly clinicalDataGroupedBySampleMap = remoteData(
