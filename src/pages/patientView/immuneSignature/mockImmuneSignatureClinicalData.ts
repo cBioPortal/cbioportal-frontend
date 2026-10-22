@@ -87,12 +87,19 @@ export function addClinicalDataFromFile(
     return clinicalData.concat(fileData);
 }
 
+// The portal database now serves the immune signature attributes, so the
+// placeholder file is not merged in. Set to true to re-enable it.
+const USE_MOCK_IMMUNE_SIGNATURE_DATA = false;
+
 let mockFile: ParsedClinicalSampleFile | undefined;
 
 export function addMockImmuneSignatureClinicalData(
     clinicalData: ClinicalData[],
     samples: Sample[]
 ): ClinicalData[] {
+    if (!USE_MOCK_IMMUNE_SIGNATURE_DATA) {
+        return clinicalData;
+    }
     if (!mockFile) {
         mockFile = parseClinicalSampleFile(MOCK_CLINICAL_SAMPLE_FILE);
     }

@@ -21,7 +21,7 @@ const FILE = [
     '#Sample Identifier\tclass\tagree\td\tf\tie\tief',
     '#STRING\tSTRING\tSTRING\tNUMBER\tNUMBER\tNUMBER\tNUMBER',
     '#1\t1\t1\t1\t1\t1\t1',
-    'SAMPLE_ID\tMFP_KNN_CLASS\tMFP_METHODS_AGREE\tMFP_SCORE_D\tMFP_SCORE_F\tMFP_SCORE_IE\tMFP_SCORE_IE_F',
+    'SAMPLE_ID\tISIG_KNN_CLASS\tISIG_METHODS_AGREE\tISIG_PROB_D\tISIG_PROB_F\tISIG_PROB_IE\tISIG_PROB_IE_F',
     'S1\tF\tTrue\t0.25\t0.75\t0.0\t0.0',
     'S2\tIE\tFalse\t0.0\t0.0\t1.0\t0.0',
     'S2\tD\tFalse\t1.0\t0.0\t0.0\t0.0',
@@ -33,7 +33,7 @@ describe('ImmuneSignatureUtils', () => {
 
     it('parses the clinical sample file header rows', () => {
         assert.deepEqual(file.attributes[6], {
-            clinicalAttributeId: 'MFP_SCORE_IE_F',
+            clinicalAttributeId: 'ISIG_PROB_IE_F',
             displayName: 'MFP Score IE/F',
             description: 'ief',
             datatype: 'NUMBER',
