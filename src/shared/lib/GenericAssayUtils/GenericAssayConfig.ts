@@ -14,6 +14,7 @@ export const GenericAssayTypeConstants: { [s: string]: string } = {
     ARMLEVEL_CNA: 'ARMLEVEL_CNA',
     LOH_HLA: 'LOH_HLA',
     METHYLATION: 'METHYLATION',
+    ISIG_PROBABILITY: 'ISIG_PROBABILITY',
 };
 
 export type GenericAssayTypeConfig = {

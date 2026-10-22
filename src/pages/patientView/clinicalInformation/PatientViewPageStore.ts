@@ -2005,15 +2005,62 @@ export class PatientViewPageStore {
         []
     );
 
+    readonly immuneSignatureGenericAssayData = remoteData<GenericAssayData[]>(
+        {
+            await: () => [this.samples, this.molecularProfilesInStudy],
+            invoke: async () => {
+                const profileIds = this.molecularProfilesInStudy.result
+                    .filter(
+                        profile =>
+                            profile.genericAssayType ===
+                            GenericAssayTypeConstants.ISIG_PROBABILITY
+                    )
+                    .map(profile => profile.molecularProfileId);
+                if (profileIds.length === 0) {
+                    return [];
+                }
+                const sampleMolecularIdentifiers = _.flatMap(
+                    profileIds,
+                    molecularProfileId =>
+                        this.samples.result.map(
+                            sample =>
+                                ({
+                                    molecularProfileId,
+                                    sampleId: sample.sampleId,
+                                } as SampleMolecularIdentifier)
+                        )
+                );
+                return getClient().fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(
+                    {
+                        genericAssayDataMultipleStudyFilter: {
+                            sampleMolecularIdentifiers,
+                        } as GenericAssayDataMultipleStudyFilter,
+                    }
+                );
+            },
+        },
+        []
+    );
+
     readonly immuneSignatureBySample = remoteData<
         Record<string, ImmuneSignature>
     >(
         {
-            await: () => [this.clinicalDataGroupedBySample],
+            await: () => [
+                this.clinicalDataGroupedBySample,
+                this.immuneSignatureGenericAssayData,
+            ],
             invoke: async () => {
+                const genericAssayDataBySampleId = _.groupBy(
+                    this.immuneSignatureGenericAssayData.result,
+                    d => d.sampleId
+                );
                 const result: Record<string, ImmuneSignature> = {};
                 this.clinicalDataGroupedBySample.result.forEach(sample => {
-                    const signature = getImmuneSignature(sample.clinicalData);
+                    const signature = getImmuneSignature(
+                        sample.clinicalData,
+                        genericAssayDataBySampleId[sample.id]
+                    );
                     if (signature) {
                         result[sample.id] = signature;
                     }
