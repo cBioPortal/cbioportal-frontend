@@ -1,22 +1,22 @@
 import { ClinicalData } from 'cbioportal-ts-api-client';
 
 export enum ImmuneSignatureAttribute {
-    KNN_CLASS = 'MFP_KNN_CLASS',
-    KNN_PROBABILITY = 'MFP_KNN_PROBABILITY',
-    KNN_CONFIDENCE = 'MFP_KNN_CONFIDENCE',
-    CENTROID_CLASS = 'MFP_CENTROID_CLASS',
-    CENTROID_CORR = 'MFP_CENTROID_CORR',
-    METHODS_AGREE = 'MFP_METHODS_AGREE',
-    SCALING_MODE = 'MFP_SCALING_MODE',
+    KNN_CLASS = 'ISIG_KNN_CLASS',
+    KNN_PROBABILITY = 'ISIG_KNN_PROBABILITY',
+    KNN_CONFIDENCE = 'ISIG_KNN_CONFIDENCE',
+    CENTROID_CLASS = 'ISIG_CENTROID_CLASS',
+    CENTROID_CORR = 'ISIG_CENTROID_CORR',
+    METHODS_AGREE = 'ISIG_METHODS_AGREE',
+    SCALING_MODE = 'ISIG_SCALING_MODE',
 }
 
 export const MFP_CLASSES = ['D', 'F', 'IE', 'IE/F'];
 
 export const MFP_CLASS_SCORE_ATTRIBUTES: Record<string, string> = {
-    D: 'MFP_SCORE_D',
-    F: 'MFP_SCORE_F',
-    IE: 'MFP_SCORE_IE',
-    'IE/F': 'MFP_SCORE_IE_F',
+    D: 'ISIG_PROB_D',
+    F: 'ISIG_PROB_F',
+    IE: 'ISIG_PROB_IE',
+    'IE/F': 'ISIG_PROB_IE_F',
 };
 
 export const MFP_CLASS_COLORS: Record<string, string> = {
