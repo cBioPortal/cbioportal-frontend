@@ -841,11 +841,12 @@ function SlideItem({
     const scanDetails = [mag, sz !== '—' ? sz : null]
         .filter(Boolean)
         .join(' · ');
+    // "Part match", not "Part": the item already names its part ("Part 9").
     const matchBadge =
         slide.match_level === 'BLOCK'
-            ? { label: 'Block', color: '#2f7d32' }
+            ? { label: 'Block match', level: 'Block', color: '#2f7d32' }
             : slide.match_level === 'PART'
-            ? { label: 'Part', color: '#476f9e' }
+            ? { label: 'Part match', level: 'Part', color: '#476f9e' }
             : undefined;
 
     const tooltipLines: string[] = [];
@@ -872,7 +873,7 @@ function SlideItem({
                     ))}
                     {matchBadge && (
                         <div>
-                            {matchBadge.label}-matched to this sequenced sample
+                            {matchBadge.level}-matched to this sequenced sample
                         </div>
                     )}
                 </div>

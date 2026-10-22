@@ -590,12 +590,12 @@ describe('WsiNavPanel', () => {
             renderer.root.findByProps({
                 'data-testid': 'wsi-slide-match-badge-block-slide',
             }).children
-        ).toEqual(['Block']);
+        ).toEqual(['Block match']);
         expect(
             renderer.root.findByProps({
                 'data-testid': 'wsi-slide-match-badge-part-slide',
             }).children
-        ).toEqual(['Part']);
+        ).toEqual(['Part match']);
         expect(
             renderer.root.findAllByProps({
                 'data-testid': 'wsi-slide-match-badge-unmatched-slide',
