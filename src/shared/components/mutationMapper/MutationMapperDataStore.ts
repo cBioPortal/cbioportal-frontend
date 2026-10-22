@@ -12,6 +12,7 @@ import {
 } from 'react-mutation-mapper';
 import { SimpleLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import { Mutation } from 'cbioportal-ts-api-client';
+import { getLollipopPosition } from 'cbioportal-utils';
 import {
     ANNOTATED_PROTEIN_IMPACT_TYPE_FILTER_ID,
     countDuplicateMutations,
@@ -287,7 +288,7 @@ export default class MutationMapperDataStore
             // by default only filter by position
             return (
                 filter.type !== DataFilterType.POSITION ||
-                filter.values.includes(mutation.proteinPosStart)
+                filter.values.includes(getLollipopPosition(mutation))
             );
         }
     }
