@@ -117,12 +117,9 @@ describe('buildPathRows', () => {
         expect(rows.find(row => row.label === 'Stain')?.valueTip).toContain(
             'Stain group:'
         );
-        expect(rows.find(row => row.label === 'Part')?.valueTip).toBe(
-            'Cut from block 1 of part 6'
-        );
     });
 
-    it('describes the sample by block only', () => {
+    it('links the sample and leaves the block to its own row', () => {
         const rows = buildPathRows(
             placedSlide('BLOCK'),
             sample,
@@ -131,10 +128,8 @@ describe('buildPathRows', () => {
         );
 
         const sampleRow = rows.find(row => row.label === 'Sample');
-        expect(sampleRow?.labelTip).toBe(
-            'Click for cBioPortal sample view — hover for block info'
-        );
-        expect(sampleRow?.valueTip).toBe('Block: A1');
+        expect(sampleRow?.labelTip).toBe('Click for cBioPortal sample view');
+        expect(sampleRow?.valueTip).toBeUndefined();
         rows.forEach(row => {
             expect(`${row.labelTip} ${row.valueTip} ${row.value}`).not.toMatch(
                 /Accession|Barcode|Image ID/
@@ -172,11 +167,36 @@ describe('buildPathRows', () => {
         expect(rows.some(row => row.label === 'Match')).toBe(false);
     });
 
-    it('names the specimen by part and block', () => {
+    it.each(['BLOCK', 'PART'] as const)(
+        'shows the part and block of a %s-matched slide once each, without repeating their names',
+        matchLevel => {
+            const rows = buildPathRows(
+                placedSlide(matchLevel, {
+                    part_number: '4',
+                    block_label: 'Block 2',
+                }),
+                sample,
+                'P-1',
+                'study-1'
+            );
+
+            expect(rows).toContainEqual(
+                expect.objectContaining({ label: 'Part', value: '4' })
+            );
+            expect(rows).toContainEqual(
+                expect.objectContaining({ label: 'Block', value: '2' })
+            );
+            expect(
+                rows.filter(row => /\b(Part|Block) \d/.test(String(row.value)))
+            ).toHaveLength(0);
+        }
+    );
+
+    it('names a part with no number by its real description', () => {
         const rows = buildPathRows(
-            placedSlide('BLOCK', {
-                part_number: '4',
-                block_label: 'A1',
+            placedSlide('PART', {
+                part_number: undefined,
+                part_description: 'Lung, left',
             }),
             sample,
             'P-1',
@@ -184,10 +204,7 @@ describe('buildPathRows', () => {
         );
 
         expect(rows).toContainEqual(
-            expect.objectContaining({
-                label: 'Part',
-                value: 'Part 4 / Block A1',
-            })
+            expect.objectContaining({ label: 'Part', value: 'Lung, left' })
         );
     });
 
