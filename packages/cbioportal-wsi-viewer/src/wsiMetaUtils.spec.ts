@@ -11,7 +11,7 @@ import {
 import { MatchLevel, Sample, Slide, TileMetadata } from './wsiViewerTypes';
 
 const slide: Slide = {
-    slide_key: 'slide-1',
+    slide_key: '0a1b2c3d4e5f',
     stain_name: 'H&E',
     stain_group: 'Histology',
     stain_kind: 'hne',
@@ -137,9 +137,28 @@ describe('buildPathRows', () => {
         expect(sampleRow?.valueTip).toBe('Block: A1');
         rows.forEach(row => {
             expect(`${row.labelTip} ${row.valueTip} ${row.value}`).not.toMatch(
-                /Accession|Barcode|Image ID|slide-1/
+                /Accession|Barcode|Image ID/
             );
         });
+    });
+
+    it('shows the de-identified slide ID last, and only in its own row', () => {
+        const rows = buildPathRows(
+            placedSlide('BLOCK', { part_number: '4' }),
+            sample,
+            'P-1',
+            'study-1'
+        );
+
+        expect(rows[rows.length - 1]).toEqual(
+            expect.objectContaining({
+                label: 'Slide ID',
+                value: '0a1b2c3d4e5f',
+            })
+        );
+        expect(
+            rows.filter(row => JSON.stringify(row).includes('0a1b2c3d4e5f'))
+        ).toHaveLength(1);
     });
 
     it('does not show a matching row for unmatched slides', () => {

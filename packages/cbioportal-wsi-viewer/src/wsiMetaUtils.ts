@@ -230,6 +230,14 @@ export function buildPathRows(
             value: partDesc,
         });
     }
+    if (slide.slide_key) {
+        rows.push({
+            label: 'Slide ID',
+            labelTip:
+                'De-identified slide ID, the same one shown in the study slide table and used in slide links',
+            value: slide.slide_key,
+        });
+    }
 
     return freezeMetaRows(rows);
 }
