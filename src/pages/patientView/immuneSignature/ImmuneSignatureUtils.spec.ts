@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { Sample } from 'cbioportal-ts-api-client';
+import { GenericAssayData, Sample } from 'cbioportal-ts-api-client';
 import { getImmuneSignature } from './ImmuneSignatureUtils';
 import {
     addClinicalDataFromFile,
@@ -61,10 +61,8 @@ describe('ImmuneSignatureUtils', () => {
         );
         assert.deepEqual(getImmuneSignature(clinicalData), {
             knnClass: 'F',
-            knnProbability: undefined,
             knnConfidence: undefined,
             centroidClass: undefined,
-            centroidCorr: undefined,
             methodsAgree: true,
             scalingMode: undefined,
             classScores: { D: 0.25, F: 0.75, IE: 0, 'IE/F': 0 },
@@ -77,6 +75,29 @@ describe('ImmuneSignatureUtils', () => {
             addClinicalDataFromFile(existing, [makeSample('S1')], file).length,
             existing.length
         );
+    });
+
+    it('reads only the probability fields from generic assay data', () => {
+        const clinicalData = addClinicalDataFromFile(
+            [],
+            [makeSample('S1')],
+            file
+        );
+        const genericAssayData = [
+            { stableId: 'ISIG_PROB_F', value: '0.6' },
+            { stableId: 'ISIG_PROB_IE_F', value: '0.4' },
+            { stableId: 'ISIG_KNN_CLASS', value: 'IE' },
+            { stableId: 'ISIG_KNN_CONFIDENCE', value: 'low' },
+        ] as GenericAssayData[];
+        const signature = getImmuneSignature(clinicalData, genericAssayData)!;
+        assert.equal(signature.knnClass, 'F');
+        assert.isUndefined(signature.knnConfidence);
+        assert.deepEqual(signature.classScores, {
+            D: 0.25,
+            F: 0.6,
+            IE: 0,
+            'IE/F': 0.4,
+        });
     });
 
     it('returns undefined when the sample has no MFP class', () => {

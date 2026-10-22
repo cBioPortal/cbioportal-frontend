@@ -1,11 +1,9 @@
-import { ClinicalData } from 'cbioportal-ts-api-client';
+import { ClinicalData, GenericAssayData } from 'cbioportal-ts-api-client';
 
 export enum ImmuneSignatureAttribute {
     KNN_CLASS = 'ISIG_KNN_CLASS',
-    KNN_PROBABILITY = 'ISIG_KNN_PROBABILITY',
     KNN_CONFIDENCE = 'ISIG_KNN_CONFIDENCE',
     CENTROID_CLASS = 'ISIG_CENTROID_CLASS',
-    CENTROID_CORR = 'ISIG_CENTROID_CORR',
     METHODS_AGREE = 'ISIG_METHODS_AGREE',
     SCALING_MODE = 'ISIG_SCALING_MODE',
 }
@@ -18,6 +16,12 @@ export const MFP_CLASS_SCORE_ATTRIBUTES: Record<string, string> = {
     IE: 'ISIG_PROB_IE',
     'IE/F': 'ISIG_PROB_IE_F',
 };
+
+// Entities read from the ISIG_PROBABILITY generic assay profile. All other
+// fields, including the KNN confidence, are read from sample clinical data.
+const GENERIC_ASSAY_ATTRIBUTES = new Set<string>(
+    Object.values(MFP_CLASS_SCORE_ATTRIBUTES)
+);
 
 export const MFP_CLASS_COLORS: Record<string, string> = {
     D: '#c8b631',
@@ -35,10 +39,8 @@ export const MFP_CLASS_LABELS: Record<string, string> = {
 
 export type ImmuneSignature = {
     knnClass: string;
-    knnProbability?: number;
     knnConfidence?: string;
     centroidClass?: string;
-    centroidCorr?: number;
     methodsAgree?: boolean;
     scalingMode?: string;
     classScores: Record<string, number>;
@@ -59,13 +61,21 @@ function toBoolean(value: string | undefined): boolean | undefined {
     return value.toLowerCase() === 'true';
 }
 
+// Generic assay values take precedence over clinical data for the
+// GENERIC_ASSAY_ATTRIBUTES, whose entity stable ids match the attribute ids.
 // Returns undefined when the sample has no MFP class.
 export function getImmuneSignature(
-    sampleClinicalData: ClinicalData[]
+    sampleClinicalData: ClinicalData[],
+    sampleGenericAssayData: GenericAssayData[] = []
 ): ImmuneSignature | undefined {
     const values: Record<string, string> = {};
     sampleClinicalData.forEach(d => {
         values[d.clinicalAttributeId] = d.value;
+    });
+    sampleGenericAssayData.forEach(d => {
+        if (GENERIC_ASSAY_ATTRIBUTES.has(d.stableId)) {
+            values[d.stableId] = d.value;
+        }
     });
 
     const knnClass = values[ImmuneSignatureAttribute.KNN_CLASS];
@@ -81,12 +91,8 @@ export function getImmuneSignature(
 
     return {
         knnClass,
-        knnProbability: toNumber(
-            values[ImmuneSignatureAttribute.KNN_PROBABILITY]
-        ),
         knnConfidence: values[ImmuneSignatureAttribute.KNN_CONFIDENCE],
         centroidClass: values[ImmuneSignatureAttribute.CENTROID_CLASS],
-        centroidCorr: toNumber(values[ImmuneSignatureAttribute.CENTROID_CORR]),
         methodsAgree: toBoolean(values[ImmuneSignatureAttribute.METHODS_AGREE]),
         scalingMode: values[ImmuneSignatureAttribute.SCALING_MODE],
         classScores,
