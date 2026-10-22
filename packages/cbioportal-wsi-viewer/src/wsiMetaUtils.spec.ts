@@ -153,11 +153,11 @@ describe('buildPathRows', () => {
         expect(rows[rows.length - 1]).toEqual(
             expect.objectContaining({
                 label: 'Slide ID',
-                value: '0a1b2c3d4e5f',
+                value: '0a1b-2c3d-4e5f',
             })
         );
         expect(
-            rows.filter(row => JSON.stringify(row).includes('0a1b2c3d4e5f'))
+            rows.filter(row => JSON.stringify(row).includes('0a1b-2c3d-4e5f'))
         ).toHaveLength(1);
     });
 
