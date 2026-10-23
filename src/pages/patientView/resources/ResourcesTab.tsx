@@ -4,14 +4,12 @@ import { autorun, IReactionDisposer } from 'mobx';
 import FeatureTitle from '../../../shared/components/featureTitle/FeatureTitle';
 import SampleManager from '../SampleManager';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
-import { ResourceData } from 'cbioportal-ts-api-client';
 import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
 import ResourceDataTable from 'shared/components/resourceTable/ResourceDataTable';
 
 export interface IResourcesTabProps {
     sampleManager: SampleManager | null;
     store: PatientViewPageStore;
-    openResource: (resource: ResourceData) => void;
 }
 
 export const RESOURCES_TAB_NAME = 'Files & Links';
