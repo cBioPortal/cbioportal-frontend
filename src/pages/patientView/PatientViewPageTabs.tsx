@@ -87,13 +87,12 @@ export function extractResourceIdFromTableTabId(tabId: string) {
     }
 }
 
-export function isPatientViewResourceTabId(tabId: string | undefined) {
-    return (
-        !!tabId &&
-        (tabId.startsWith(PatientViewResourceTabPrefix) ||
-            tabId.startsWith(PatientViewResourceTableTabPrefix))
-    );
-}
+/** The tabs that show Patient Page Help. */
+const TABS_WITH_HELP: string[] = [
+    PatientViewPageTabs.Summary,
+    PatientViewPageTabs.PathwayMapper,
+    PatientViewPageTabs.ClinicalData,
+];
 
 export function patientViewTabs(
     pageInstance: PatientViewPageInner,
@@ -109,11 +108,10 @@ export function patientViewTabs(
             className="mainTabs"
             getPaginationWidth={WindowStore.getWindowWidth}
             contentWindowExtra={
-                // Patient Page Help does not cover resources, and would sit over an embedded one.
-                isPatientViewResourceTabId(urlWrapper.activeTabId) ? (
-                    undefined
-                ) : (
+                TABS_WITH_HELP.includes(urlWrapper.activeTabId) ? (
                     <HelpWidget path={urlWrapper.routing.location.pathname} />
+                ) : (
+                    undefined
                 )
             }
         >
