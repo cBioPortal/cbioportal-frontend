@@ -7,6 +7,7 @@ declare const styles: {
   readonly "description": string;
   readonly "editableSpanStyles": string;
   readonly "filterClinicalAttrName": string;
+  readonly "fullWidthTab": string;
   readonly "hesitateControls": string;
   readonly "hesitateControlsAlign": string;
   readonly "mainTabs": string;

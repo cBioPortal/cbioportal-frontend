@@ -95,8 +95,29 @@ describe('ResourceViewer', () => {
         });
         assert.equal(
             screen.getByTestId('ResourceViewerCaption').textContent,
-            'TCGA-4Z-AA7M | 1 of 1'
+            'TCGA-4Z-AA7M'
         );
+    });
+
+    it('leaves the position out of the caption when there is one item', () => {
+        renderViewer({
+            rows: [
+                row({
+                    sampleId: 'Study-wide',
+                    sampleStableId: undefined,
+                    patientStableId: undefined,
+                }),
+            ],
+        });
+        assert.equal(
+            screen.getByTestId('ResourceViewerCaption').textContent,
+            ''
+        );
+    });
+
+    it('leaves out the title and caption when asked to', () => {
+        renderViewer({ hideHeader: true });
+        assert.isNull(screen.queryByTestId('ResourceViewerCaption'));
     });
 
     it('counts from one in the caption', () => {

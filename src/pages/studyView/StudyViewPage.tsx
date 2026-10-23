@@ -747,6 +747,7 @@ export default class StudyViewPage extends React.Component<
                 key={tabId}
                 id={tabId}
                 linkText={tab.label}
+                className={styles.fullWidthTab}
                 // Keeps the frame alive while the user looks at another tab.
                 unmountOnHide={false}
             >
@@ -756,6 +757,7 @@ export default class StudyViewPage extends React.Component<
                         tab.totalCount
                     )}
                     resourceDisplayName={tab.label}
+                    hideHeader={true}
                     iframeErrorMessage={
                         definition
                             ? getResourceConfig(definition).iframeErrorMessage
@@ -768,6 +770,15 @@ export default class StudyViewPage extends React.Component<
                     }
                 />
             </MSKTab>
+        );
+    }
+
+    @computed get isStudyWideViewerTabActive(): boolean {
+        return (this.resourceTableStore.tabs.result || []).some(
+            tab =>
+                isStudyWideResource(tab) &&
+                (this.store.currentTab as string) ===
+                    getStudyViewResourceTableTabId(tab.resourceId)
         );
     }
 
@@ -877,9 +888,10 @@ export default class StudyViewPage extends React.Component<
                                         return this.toolbarLeft;
                                     }} // dont run into other study view UI
                                     contentWindowExtra={
-                                        // Study Page Help doesn't cover Similarity Maps (cast: StudyViewPageTabKey has no EMBEDDINGS).
+                                        // Study Page Help covers neither Similarity Maps (cast: StudyViewPageTabKey has no EMBEDDINGS) nor an embedded resource, which would sit under it.
                                         (this.store.currentTab as string) !==
-                                        StudyViewPageTabKeyEnum.EMBEDDINGS ? (
+                                            StudyViewPageTabKeyEnum.EMBEDDINGS &&
+                                        !this.isStudyWideViewerTabActive ? (
                                             <HelpWidget
                                                 path={
                                                     this.props.routing.location

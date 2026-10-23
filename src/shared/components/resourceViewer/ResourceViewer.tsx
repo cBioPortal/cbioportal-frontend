@@ -37,6 +37,8 @@ export interface IResourceViewerProps {
      * whose reason is known, e.g. one behind a VPN.
      */
     iframeErrorMessage?: string;
+    /** Leaves out the title and caption, for a page whose tab already names the resource. */
+    hideHeader?: boolean;
 }
 
 /** Frames one resource and steps through the rest. The caller owns which item is shown. */
@@ -249,27 +251,30 @@ export default class ResourceViewer extends React.Component<
 
         return (
             <div data-test="ResourceViewer">
-                <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                    <FeatureTitle
-                        title={this.props.resourceDisplayName}
-                        isLoading={false}
-                        className="pull-left"
-                        style={{ marginBottom: 10 }}
-                    />
-                    <p
-                        style={{ marginLeft: 10 }}
-                        data-testid="ResourceViewerCaption"
-                    >
-                        {[
-                            row.sampleStableId || row.patientStableId,
-                            `${this.currentIndex + 1} of ${
-                                this.props.rows.length
-                            }`,
-                        ]
-                            .filter(Boolean)
-                            .join(' | ')}
-                    </p>
-                </div>
+                {!this.props.hideHeader && (
+                    <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                        <FeatureTitle
+                            title={this.props.resourceDisplayName}
+                            isLoading={false}
+                            className="pull-left"
+                            style={{ marginBottom: 10 }}
+                        />
+                        <p
+                            style={{ marginLeft: 10 }}
+                            data-testid="ResourceViewerCaption"
+                        >
+                            {[
+                                row.sampleStableId || row.patientStableId,
+                                multipleRows &&
+                                    `${this.currentIndex + 1} of ${
+                                        this.props.rows.length
+                                    }`,
+                            ]
+                                .filter(Boolean)
+                                .join(' | ')}
+                        </p>
+                    </div>
+                )}
                 <div
                     style={{
                         width: '100%',

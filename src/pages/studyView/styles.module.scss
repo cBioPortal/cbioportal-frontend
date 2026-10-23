@@ -37,6 +37,12 @@
     position: relative;
 }
 
+// An embedded page brings its own margins, so it gets the full window width.
+:global(.mainTabs > .tab-content > .msk-tab).fullWidthTab {
+    padding-left: 0;
+    padding-right: 0;
+}
+
 .studyViewSurvivalPlot {
     float: left;
     margin: 5px;
