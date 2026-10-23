@@ -122,6 +122,10 @@ export interface FusionProductStripProps {
     // Gene mode Partner column: drawn right of the frame/reads text. In
     // compact mode only the hover <title> carries it.
     partnerLabel?: PartnerLabel;
+    // Retained-exon fills; default to COLOR_5PRIME / COLOR_3PRIME. Gene mode
+    // passes the partner's lollipop color for the non-anchor side.
+    color5p?: string;
+    color3p?: string;
 }
 
 export interface PartnerLabel {
@@ -180,6 +184,8 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
     exonMode = 'retained',
     onExonHover,
     partnerLabel,
+    color5p = COLOR_5PRIME,
+    color3p = COLOR_3PRIME,
 }) => {
     const [hovered, setHovered] = React.useState(false);
     const full = exonMode === 'full';
@@ -396,7 +402,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                                 width={retainedW}
                                 height={h}
                                 rx={2}
-                                fill={COLOR_5PRIME}
+                                fill={color5p}
                                 {...hoverProps(
                                     transcript5p!.gene,
                                     exon,
@@ -435,7 +441,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                         width={w}
                         height={h}
                         rx={2}
-                        fill={retained ? COLOR_5PRIME : COLOR_EXON_LOST}
+                        fill={retained ? color5p : COLOR_EXON_LOST}
                         {...hoverProps(transcript5p!.gene, exon, n, retained)}
                     />
                 );
@@ -485,7 +491,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                                 width={w - lostW}
                                 height={ph}
                                 rx={2}
-                                fill={COLOR_3PRIME}
+                                fill={color3p}
                                 {...hoverProps(
                                     transcript3p!.gene,
                                     exon,
@@ -507,7 +513,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                         width={w}
                         height={ph}
                         rx={2}
-                        fill={retained ? COLOR_3PRIME : COLOR_EXON_LOST}
+                        fill={retained ? color3p : COLOR_EXON_LOST}
                         {...hoverProps(transcript3p!.gene, exon, n, retained)}
                     />
                 );

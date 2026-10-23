@@ -2,7 +2,7 @@ import { NO_PARTNER, INTRAGENIC } from './comparisonRows';
 
 /** Categorical palette for the top partners (Tableau 10, minus greys). */
 export const PARTNER_PALETTE = [
-    '#4e79a7',
+    '#d35400',
     '#f28e2b',
     '#59a14f',
     '#e15759',

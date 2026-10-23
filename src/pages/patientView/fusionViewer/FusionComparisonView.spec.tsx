@@ -8,6 +8,7 @@ import FusionComparisonView, {
 import { sampleFusionViewerHref } from './data/cohortLinks';
 import { FusionCohortStore } from './FusionCohortStore';
 import { TranscriptData } from './data/types';
+import { colorFor } from './data/partnerPalette';
 import { frameStatusStyle } from './components/frameStatusStyle';
 import AnchorGeneTrackRuler from './components/AnchorGeneTrackRuler';
 import FusionStripList from './components/FusionStripList';
@@ -1227,6 +1228,60 @@ describe('FusionComparisonView partner column', () => {
         ]);
         return store;
     }
+
+    it('Gene mode: each strip’s partner half matches its lollipop color', () => {
+        const store = partnerStore();
+        store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
+        runInAction(() => store.setStripMode('sample'));
+        const w = mount(<FusionComparisonView store={store} />);
+        const strips = w.find('FusionProductStrip');
+        assert.isAbove(strips.length, 0);
+        strips.forEach(s => {
+            const partner = (s.prop('transcript3p') as any).gene;
+            assert.equal(
+                s.prop('color3p'),
+                colorFor(store.partnerColorMap, partner)
+            );
+        });
+        // ERG and ETV1 get different colors
+        assert.lengthOf(
+            Array.from(new Set(strips.map(s => s.prop('color3p')))),
+            2
+        );
+    });
+
+    it('strips stay partner-colored when the lollipop colors by frame or SV type', () => {
+        const store = partnerStore();
+        store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
+        runInAction(() => store.setStripMode('sample'));
+        const w = mount(<FusionComparisonView store={store} />);
+        (['frame', 'svType'] as const).forEach(by => {
+            runInAction(() => store.setLollipopColorBy(by));
+            w.update();
+            assert.isAbove(w.find('FusionProductStrip').length, 0);
+            w.find('FusionProductStrip').forEach(s => {
+                const partner = (s.prop('transcript3p') as any).gene;
+                assert.equal(
+                    s.prop('color3p'),
+                    colorFor(store.partnerColorMap, partner)
+                );
+            });
+        });
+    });
+
+    it('lollipop dropdown uses US spelling', () => {
+        const store = partnerStore();
+        store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
+        runInAction(() => store.setTrackMode('lollipop'));
+        const w = mount(<FusionComparisonView store={store} />);
+        const sel = w.find('select[data-testid="lollipop-colorby"]');
+        assert.isTrue(sel.exists());
+        assert.equal(sel.prop('aria-label'), 'Color lollipop by');
+        assert.deepEqual(
+            sel.find('option').map(o => o.text()),
+            ['Color: partner', 'Color: frame', 'Color: SV type']
+        );
+    });
 
     it('Gene mode: header plus a coloured partner label per sample strip', () => {
         const store = partnerStore();

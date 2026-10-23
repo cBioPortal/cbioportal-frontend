@@ -6,7 +6,12 @@ import FusionStripList, {
     visibleWindow,
     ladderTranscript,
 } from './FusionStripList';
-import { TranscriptData, FusionEvent } from '../data/types';
+import {
+    TranscriptData,
+    FusionEvent,
+    COLOR_5PRIME,
+    COLOR_3PRIME,
+} from '../data/types';
 import { ComparisonRow } from '../data/comparisonRows';
 
 function tx(gene: string): TranscriptData {
@@ -525,5 +530,57 @@ describe('FusionStripList rows sharing a sample', () => {
             errors.some(e => /same key/i.test(e)),
             'duplicate React keys'
         );
+    });
+});
+
+describe('FusionStripList partner-colored products', () => {
+    const rows: ComparisonRow[] = [makeRow('S1')];
+    const transcriptForRow = (row: ComparisonRow, is5p: boolean) =>
+        is5p ? tx(row.fivePrimeSymbol) : tx(row.threePrimeSymbol || '');
+    const PARTNER = '#4e79a7';
+    const labelFor = () => ({ text: 'ERG', color: PARTNER });
+
+    function list(extra: Record<string, any>) {
+        return mount(
+            <FusionStripList
+                rows={rows}
+                transcriptForRow={transcriptForRow}
+                width={900}
+                pxPerBp5p={0.5}
+                pxPerBp3p={0.5}
+                alignment="junction"
+                mode="sample"
+                {...extra}
+            />
+        );
+    }
+
+    it('5′ anchor: the 3′ half takes the partner color', () => {
+        const s = list({ anchorSide: '5p', partnerLabelFor: labelFor })
+            .find('FusionProductStrip')
+            .first();
+        assert.equal(s.prop('color3p'), PARTNER);
+        assert.isUndefined(s.prop('color5p'));
+    });
+
+    it('3′ anchor: the 5′ half takes the partner color', () => {
+        const s = list({ anchorSide: '3p', partnerLabelFor: labelFor })
+            .find('FusionProductStrip')
+            .first();
+        assert.equal(s.prop('color5p'), PARTNER);
+        assert.isUndefined(s.prop('color3p'));
+    });
+
+    it('no partnerLabelFor (Pair mode): default 5′/3′ fills', () => {
+        const w = list({});
+        const s = w.find('FusionProductStrip').first();
+        assert.isUndefined(s.prop('color5p'));
+        assert.isUndefined(s.prop('color3p'));
+        const fills = w
+            .find('rect[data-testid="strip-exon"]')
+            .hostNodes()
+            .map(r => r.prop('fill'));
+        assert.include(fills, COLOR_5PRIME);
+        assert.include(fills, COLOR_3PRIME);
     });
 });

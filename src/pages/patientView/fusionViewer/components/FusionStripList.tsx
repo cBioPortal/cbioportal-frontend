@@ -214,6 +214,11 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
                             useReference
                         );
                         if (lone3p ? !t3 : !t5) return null;
+                        const partnerLabel = partnerLabelFor
+                            ? partnerLabelFor(row, group)
+                            : undefined;
+                        // Gene mode: the partner half wears its lollipop color.
+                        const partnerColor = partnerLabel?.color;
                         return (
                             <FusionProductStrip
                                 // A sample can carry several events (and the
@@ -243,9 +248,15 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
                                     group ? `×${group.count}` : undefined
                                 }
                                 frameSummary={group ? group.frames : undefined}
-                                partnerLabel={
-                                    partnerLabelFor
-                                        ? partnerLabelFor(row, group)
+                                partnerLabel={partnerLabel}
+                                color5p={
+                                    anchorSide === '3p'
+                                        ? partnerColor
+                                        : undefined
+                                }
+                                color3p={
+                                    anchorSide === '5p'
+                                        ? partnerColor
                                         : undefined
                                 }
                                 leftX={leftX}
