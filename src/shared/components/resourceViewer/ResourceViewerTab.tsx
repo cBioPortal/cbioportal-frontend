@@ -17,7 +17,7 @@ export interface IResourceViewerTabProps {
 }
 
 /**
- * One resource's viewer on the patient page. It stays mounted while another tab is in view, so
+ * One resource's viewer as a page tab. It stays mounted while another tab is in view, so
  * it remembers the item it last showed: the URL names an item only for the tab in view, and
  * without this a hidden viewer would fall back to its first item and its frame would reload.
  *

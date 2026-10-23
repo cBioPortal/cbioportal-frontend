@@ -60,7 +60,7 @@ import {
 import { MakeMobxView } from '../../shared/components/MobxView';
 import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
 import ResourceDataTable from 'shared/components/resourceTable/ResourceDataTable';
-import ResourceViewerTab from './resources/ResourceViewerTab';
+import ResourceViewerTab from 'shared/components/resourceViewer/ResourceViewerTab';
 import {
     fetchResourceTableMetadata,
     ResourceTableTab,
