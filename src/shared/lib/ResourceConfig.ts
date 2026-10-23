@@ -39,18 +39,36 @@ export interface ResourceCustomConfig {
      * Used in: Patient View (resource iframe)
      */
     iframeErrorMessage?: string;
+
+    /**
+     * False when the display name is not something a row is one of, such as a technique
+     * (CyCIF) whose rows are regions of one slide. The count then reads "1-12 of 12 · CyCIF"
+     * rather than "1-12 of 12 CyCIFs".
+     * Used in: resource table count summary
+     */
+    pluralizeDisplayName?: boolean;
 }
 
 /**
- * Per-resource overrides keyed by resource id. Empty: the entry that lived here configured the
- * table that the server-driven resource table replaced, and a curator now sets a resource's
- * display name on resource_definition and its metadata columns through CUSTOM_METADATA.
- * A resource can still supply overrides through its own customMetaData.
+ * Per-resource overrides keyed by resource id. A resource can also supply them through its own
+ * customMetaData, which wins; that column currently also carries the metadata contract, so a
+ * resource setting an option there must declare `fields` as well. Options that only apply to a
+ * resource the portal already knows about are easier to keep here until the contract has a place
+ * for them.
  */
-export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {};
+export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {
+    MSK_HNE: {
+        iframeErrorMessage:
+            'This resource requires VPN access. Please connect to VPN and refresh the page.',
+    },
+    CYCIF: {
+        pluralizeDisplayName: false,
+    },
+};
 
 export function getResourceConfig(
-    def: ResourceDefinition
+    def: Pick<ResourceDefinition, 'resourceId'> &
+        Partial<Pick<ResourceDefinition, 'customMetaData'>>
 ): ResourceCustomConfig {
     // 1. Load from local dictionary
     let config: ResourceCustomConfig =
