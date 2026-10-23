@@ -41,6 +41,10 @@
 :global(.mainTabs > .tab-content > .msk-tab).fullWidthTab {
     padding-left: 0;
     padding-right: 0;
+
+    :global(.iframeLoaderNewWindowLink) {
+        right: 10px !important;
+    }
 }
 
 .studyViewSurvivalPlot {
