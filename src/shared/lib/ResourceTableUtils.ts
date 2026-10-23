@@ -1,5 +1,8 @@
 import _ from 'lodash';
-import { ResourceTableRow } from 'shared/api/resourceTableClient';
+import {
+    ResourceTableRow,
+    ResourceTableTab,
+} from 'shared/api/resourceTableClient';
 
 /**
  * A row as the table renders it. `patientId` and `sampleId` are display labels and fall back to
@@ -100,4 +103,13 @@ export function getFileExtension(url: string): string | undefined {
     } catch {
         return undefined;
     }
+}
+
+/** True when every row of the resource applies to the study as a whole rather than to a case. */
+export function isStudyWideResource(
+    tab: Pick<ResourceTableTab, 'totalCount' | 'patientCount' | 'sampleCount'>
+): boolean {
+    return (
+        tab.totalCount > 0 && tab.patientCount === 0 && tab.sampleCount === 0
+    );
 }

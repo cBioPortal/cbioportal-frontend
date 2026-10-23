@@ -87,6 +87,13 @@ export function extractResourceIdFromTableTabId(tabId: string) {
     }
 }
 
+/** The tabs that show Patient Page Help. */
+const TABS_WITH_HELP: string[] = [
+    PatientViewPageTabs.Summary,
+    PatientViewPageTabs.PathwayMapper,
+    PatientViewPageTabs.ClinicalData,
+];
+
 export function patientViewTabs(
     pageInstance: PatientViewPageInner,
     urlWrapper: PatientViewUrlWrapper,
@@ -101,7 +108,11 @@ export function patientViewTabs(
             className="mainTabs"
             getPaginationWidth={WindowStore.getWindowWidth}
             contentWindowExtra={
-                <HelpWidget path={urlWrapper.routing.location.pathname} />
+                TABS_WITH_HELP.includes(urlWrapper.activeTabId) ? (
+                    <HelpWidget path={urlWrapper.routing.location.pathname} />
+                ) : (
+                    undefined
+                )
             }
         >
             {tabs(pageInstance, sampleManager, urlWrapper)}

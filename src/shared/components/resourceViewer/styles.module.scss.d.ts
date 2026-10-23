@@ -1,6 +1,8 @@
 declare const styles: {
   readonly "active": string;
   readonly "carouselButton": string;
+  readonly "fullWidthTab": string;
+  readonly "header": string;
   readonly "refreshButton": string;
   readonly "warningBanner": string;
   readonly "warningIcon": string;

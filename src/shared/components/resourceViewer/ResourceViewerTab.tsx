@@ -8,6 +8,8 @@ export interface IResourceViewerTabProps {
     store: ResourceViewerStore;
     resourceDisplayName: string;
     iframeErrorMessage?: string;
+    hideHeader?: boolean;
+    fillWindowHeight?: boolean;
     /** Whether this viewer's tab is the one in view. */
     isActive: boolean;
     /** The item the URL names; it belongs to this viewer only while this tab is in view. */
@@ -17,7 +19,7 @@ export interface IResourceViewerTabProps {
 }
 
 /**
- * One resource's viewer on the patient page. It stays mounted while another tab is in view, so
+ * One resource's viewer as a page tab. It stays mounted while another tab is in view, so
  * it remembers the item it last showed: the URL names an item only for the tab in view, and
  * without this a hidden viewer would fall back to its first item and its frame would reload.
  *
@@ -110,6 +112,8 @@ export default class ResourceViewerTab extends React.Component<
                 onIndexChange={this.onIndexChange}
                 resourceDisplayName={this.props.resourceDisplayName}
                 iframeErrorMessage={this.props.iframeErrorMessage}
+                hideHeader={this.props.hideHeader}
+                fillWindowHeight={this.props.fillWindowHeight}
             />
         );
     }
