@@ -2185,6 +2185,19 @@ export function buildProteinChange(sv: StructuralVariant) {
 
     if (genes.length === 2) {
         return `${genes[0]}-${genes[1]} Fusion`;
+    } else if (
+        genes.length === 1 &&
+        (!sv.site1HugoSymbol || !sv.site2HugoSymbol)
+    ) {
+        const variantClass = sv.variantClass?.toUpperCase();
+        const isIntergenic =
+            variantClass === 'INTERGENIC' ||
+            ((!variantClass ||
+                variantClass === 'UNKNOWN' ||
+                variantClass === 'NA') &&
+                sv.eventInfo?.toUpperCase() ===
+                    `${genes[0].toUpperCase()}-INTERGENIC`);
+        return `${genes[0]} ${isIntergenic ? 'intergenic' : 'intragenic'}`;
     } else {
         return `${genes[0]} intragenic`;
     }

@@ -1,6 +1,6 @@
 {
   "name": "oncoprintjs",
-  "version": "6.1.7",
+  "version": "6.1.8",
   "description": "A data visualization for cancer genomic data.",
   "types": "./dist/js/oncoprint.d.ts",
   "main": "dist/index.js",
@@ -44,7 +44,7 @@
       "email": "fedde@thehyve.nl"
     }
   ],
-  "license": "ISC",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/cBioPortal/cbioportal-frontend/issues"
   },
