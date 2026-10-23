@@ -307,7 +307,10 @@ export default class ResourceViewer extends React.Component<
             <div data-test="ResourceViewer" ref={this.containerRef}>
                 {/* With one item the tab already names everything the header would. */}
                 {!this.props.hideHeader && multipleRows && (
-                    <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                    <div
+                        className={styles.header}
+                        style={{ display: 'flex', alignItems: 'flex-end' }}
+                    >
                         <FeatureTitle
                             title={this.props.resourceDisplayName}
                             isLoading={false}

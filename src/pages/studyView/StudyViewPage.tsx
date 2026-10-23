@@ -94,6 +94,7 @@ import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTabl
 import ResourceDataTable from 'shared/components/resourceTable/ResourceDataTable';
 import { ResourceViewerStore } from 'shared/components/resourceViewer/ResourceViewerStore';
 import ResourceViewerTab from 'shared/components/resourceViewer/ResourceViewerTab';
+import resourceViewerStyles from 'shared/components/resourceViewer/styles.module.scss';
 import { ResourceTableTab } from 'shared/api/resourceTableClient';
 import { isStudyWideResource } from 'shared/lib/ResourceTableUtils';
 
@@ -747,7 +748,7 @@ export default class StudyViewPage extends React.Component<
                 key={tabId}
                 id={tabId}
                 linkText={tab.label}
-                className={styles.fullWidthTab}
+                className={resourceViewerStyles.fullWidthTab}
                 // Keeps the frame alive while the user looks at another tab.
                 unmountOnHide={false}
             >

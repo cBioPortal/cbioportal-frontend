@@ -37,26 +37,6 @@
     position: relative;
 }
 
-// An embedded page brings its own margins, so it gets the full window width.
-:global(.mainTabs > .tab-content > .msk-tab).fullWidthTab {
-    padding-left: 0;
-    padding-right: 0;
-
-    :global(.iframeLoaderNewWindowLink) {
-        right: 10px !important;
-    }
-
-    iframe {
-        display: block;
-    }
-}
-
-// The embedded page runs to the bottom of the window, so nothing is left to scroll to.
-:global(.mainTabs
-        > .tab-content):has(> .fullWidthTab:not(:global(.hiddenByPosition))) {
-    padding-bottom: 0;
-}
-
 .studyViewSurvivalPlot {
     float: left;
     margin: 5px;
