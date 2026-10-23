@@ -758,6 +758,7 @@ export default class StudyViewPage extends React.Component<
                     )}
                     resourceDisplayName={tab.label}
                     hideHeader={true}
+                    fillWindowHeight={true}
                     iframeErrorMessage={
                         definition
                             ? getResourceConfig(definition).iframeErrorMessage

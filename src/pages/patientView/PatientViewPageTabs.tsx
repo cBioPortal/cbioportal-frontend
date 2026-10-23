@@ -87,6 +87,14 @@ export function extractResourceIdFromTableTabId(tabId: string) {
     }
 }
 
+export function isPatientViewResourceTabId(tabId: string | undefined) {
+    return (
+        !!tabId &&
+        (tabId.startsWith(PatientViewResourceTabPrefix) ||
+            tabId.startsWith(PatientViewResourceTableTabPrefix))
+    );
+}
+
 export function patientViewTabs(
     pageInstance: PatientViewPageInner,
     urlWrapper: PatientViewUrlWrapper,
@@ -101,7 +109,12 @@ export function patientViewTabs(
             className="mainTabs"
             getPaginationWidth={WindowStore.getWindowWidth}
             contentWindowExtra={
-                <HelpWidget path={urlWrapper.routing.location.pathname} />
+                // Patient Page Help does not cover resources, and would sit over an embedded one.
+                isPatientViewResourceTabId(urlWrapper.activeTabId) ? (
+                    undefined
+                ) : (
+                    <HelpWidget path={urlWrapper.routing.location.pathname} />
+                )
             }
         >
             {tabs(pageInstance, sampleManager, urlWrapper)}

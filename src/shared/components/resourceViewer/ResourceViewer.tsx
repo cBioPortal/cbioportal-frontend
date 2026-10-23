@@ -25,6 +25,10 @@ const DEFAULT_UNREACHABLE_MESSAGE =
     'This resource could not be reached. It may need a network connection the portal does ' +
     'not have, or it may be temporarily unavailable. The link below opens it directly.';
 
+/** Space IFrameLoader puts above the frame (its wrapper's and the frame's top margins). */
+const IFRAME_TOP_MARGINS = 10;
+const MIN_FILLED_IFRAME_HEIGHT = 300;
+
 export interface IResourceViewerProps {
     /** The items this viewer can step through, in display order. */
     rows: IResourceTableRow[];
@@ -37,8 +41,13 @@ export interface IResourceViewerProps {
      * whose reason is known, e.g. one behind a VPN.
      */
     iframeErrorMessage?: string;
-    /** Leaves out the title and caption, for a page whose tab already names the resource. */
+    /**
+     * Leaves out the title and caption, for a page whose tab already names the resource. They
+     * are left out regardless when there is a single item.
+     */
     hideHeader?: boolean;
+    /** Sizes the frame to reach the bottom of the window from wherever the viewer starts. */
+    fillWindowHeight?: boolean;
 }
 
 /** Frames one resource and steps through the rest. The caller owns which item is shown. */
@@ -57,11 +66,47 @@ export default class ResourceViewer extends React.Component<
     // Identifies the check in flight, so a slow answer for an earlier row is discarded.
     private latestUrlCheckRequestId = 0;
 
+    private readonly containerRef = React.createRef<HTMLDivElement>();
+    /** Distance from the top of the document to the viewer, while the viewer is displayed. */
+    @observable private containerTop: number | undefined = undefined;
+    private resizeObserver: ResizeObserver | undefined;
+
     componentDidMount() {
         this.startUrlAccessibilityCheck();
+        this.observeContainer();
+    }
+
+    /** The container only exists once there is a row to show, so this runs after updates too. */
+    private observeContainer() {
+        if (
+            this.resizeObserver ||
+            !this.props.fillWindowHeight ||
+            !this.containerRef.current ||
+            typeof ResizeObserver === 'undefined'
+        ) {
+            return;
+        }
+        // Also fires when a hidden tab is shown, which is when its position becomes known.
+        this.resizeObserver = new ResizeObserver(this.measureContainerTop);
+        this.resizeObserver.observe(this.containerRef.current);
+    }
+
+    @action.bound
+    private measureContainerTop() {
+        const el = this.containerRef.current;
+        if (!el) {
+            return;
+        }
+        const rect = el.getBoundingClientRect();
+        // A hidden tab has no layout, so its position says nothing.
+        if (rect.width === 0 && rect.height === 0) {
+            return;
+        }
+        this.containerTop = rect.top + getBrowserWindow().scrollY;
     }
 
     componentDidUpdate(prevProps: IResourceViewerProps) {
+        this.observeContainer();
         if (prevProps.rows[prevProps.index]?.url !== this.currentRow?.url) {
             this.startUrlAccessibilityCheck();
         }
@@ -69,6 +114,7 @@ export default class ResourceViewer extends React.Component<
 
     componentWillUnmount() {
         this.latestUrlCheckRequestId += 1;
+        this.resizeObserver?.disconnect();
     }
 
     @computed get currentIndex() {
@@ -102,6 +148,14 @@ export default class ResourceViewer extends React.Component<
     }
 
     @computed get iframeHeight() {
+        if (this.props.fillWindowHeight && this.containerTop !== undefined) {
+            return Math.max(
+                WindowStore.size.height -
+                    this.containerTop -
+                    IFRAME_TOP_MARGINS,
+                MIN_FILLED_IFRAME_HEIGHT
+            );
+        }
         return WindowStore.size.height - 275;
     }
 
@@ -250,8 +304,9 @@ export default class ResourceViewer extends React.Component<
         const multipleRows = this.props.rows.length > 1;
 
         return (
-            <div data-test="ResourceViewer">
-                {!this.props.hideHeader && (
+            <div data-test="ResourceViewer" ref={this.containerRef}>
+                {/* With one item the tab already names everything the header would. */}
+                {!this.props.hideHeader && multipleRows && (
                     <div style={{ display: 'flex', alignItems: 'flex-end' }}>
                         <FeatureTitle
                             title={this.props.resourceDisplayName}
@@ -265,10 +320,9 @@ export default class ResourceViewer extends React.Component<
                         >
                             {[
                                 row.sampleStableId || row.patientStableId,
-                                multipleRows &&
-                                    `${this.currentIndex + 1} of ${
-                                        this.props.rows.length
-                                    }`,
+                                `${this.currentIndex + 1} of ${
+                                    this.props.rows.length
+                                }`,
                             ]
                                 .filter(Boolean)
                                 .join(' | ')}

@@ -91,28 +91,19 @@ describe('ResourceViewer', () => {
                     sampleStableId: undefined,
                     patientStableId: 'TCGA-4Z-AA7M',
                 }),
+                row({ url: 'https://example.com/b.html' }),
             ],
         });
         assert.equal(
             screen.getByTestId('ResourceViewerCaption').textContent,
-            'TCGA-4Z-AA7M'
+            'TCGA-4Z-AA7M | 1 of 2'
         );
     });
 
-    it('leaves the position out of the caption when there is one item', () => {
-        renderViewer({
-            rows: [
-                row({
-                    sampleId: 'Study-wide',
-                    sampleStableId: undefined,
-                    patientStableId: undefined,
-                }),
-            ],
-        });
-        assert.equal(
-            screen.getByTestId('ResourceViewerCaption').textContent,
-            ''
-        );
+    it('leaves out the title and caption when there is one item', () => {
+        renderViewer({ rows: [row()] });
+        assert.isNull(screen.queryByTestId('ResourceViewerCaption'));
+        assert.isNull(screen.queryByText('Slide Microscopy'));
     });
 
     it('leaves out the title and caption when asked to', () => {

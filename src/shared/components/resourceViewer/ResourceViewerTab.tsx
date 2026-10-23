@@ -9,6 +9,7 @@ export interface IResourceViewerTabProps {
     resourceDisplayName: string;
     iframeErrorMessage?: string;
     hideHeader?: boolean;
+    fillWindowHeight?: boolean;
     /** Whether this viewer's tab is the one in view. */
     isActive: boolean;
     /** The item the URL names; it belongs to this viewer only while this tab is in view. */
@@ -112,6 +113,7 @@ export default class ResourceViewerTab extends React.Component<
                 resourceDisplayName={this.props.resourceDisplayName}
                 iframeErrorMessage={this.props.iframeErrorMessage}
                 hideHeader={this.props.hideHeader}
+                fillWindowHeight={this.props.fillWindowHeight}
             />
         );
     }
