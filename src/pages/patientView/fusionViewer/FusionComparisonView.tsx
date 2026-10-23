@@ -1046,7 +1046,7 @@ export default class FusionComparisonView extends React.Component<
                     {this.lollipopOn && (
                         <select
                             data-testid="lollipop-colorby"
-                            aria-label="Colour lollipop by"
+                            aria-label="Color lollipop by"
                             value={store.lollipopColorBy}
                             onChange={e =>
                                 store.setLollipopColorBy(
@@ -1056,9 +1056,9 @@ export default class FusionComparisonView extends React.Component<
                             }
                             style={{ fontSize: 11 }}
                         >
-                            <option value="partner">Colour: partner</option>
-                            <option value="frame">Colour: frame</option>
-                            <option value="svType">Colour: SV type</option>
+                            <option value="partner">Color: partner</option>
+                            <option value="frame">Color: frame</option>
+                            <option value="svType">Color: SV type</option>
                         </select>
                     )}
                     {this.lollipopOn && this.lollipopLegend.length > 0 && (

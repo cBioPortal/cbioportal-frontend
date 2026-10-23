@@ -7,7 +7,12 @@ import {
     computeJunctionAlignedLayout,
     genomicToExonX,
 } from './fusionProductHelpers';
-import { TranscriptData } from '../data/types';
+import {
+    TranscriptData,
+    COLOR_5PRIME,
+    COLOR_3PRIME,
+    COLOR_EXON_LOST,
+} from '../data/types';
 
 function tx(gene: string, strand: '+' | '-' = '+'): TranscriptData {
     return {
@@ -674,5 +679,78 @@ describe('stripExonIsAllUtr', () => {
     it('returns false for a coding exon with no UTRs', () => {
         const exon = { start: 200, end: 300 };
         assert.isFalse(stripExonIsAllUtr(exon, []));
+    });
+});
+
+describe('FusionProductStrip fill overrides', () => {
+    function strip(extra: Record<string, any> = {}) {
+        return mount(
+            <svg>
+                <FusionProductStrip
+                    sampleId="S1"
+                    label="S1"
+                    transcript5p={tx('TMPRSS2')}
+                    transcript3p={tx('ERG')}
+                    breakpoint5p={250}
+                    breakpoint3p={250}
+                    frame="inFrame"
+                    reads={12}
+                    y={0}
+                    leftX={170}
+                    junctionX={400}
+                    rightX={700}
+                    pxPerBp5p={0.5}
+                    pxPerBp3p={0.5}
+                    {...extra}
+                />
+            </svg>
+        );
+    }
+    const fills = (w: any) =>
+        w
+            .find('rect[data-testid="strip-exon"]')
+            .hostNodes()
+            .map((r: any) => r.prop('fill'));
+
+    it('defaults to the 5′/3′ colors', () => {
+        const f = fills(strip());
+        assert.include(f, COLOR_5PRIME);
+        assert.include(f, COLOR_3PRIME);
+    });
+
+    it('color3p recolors only the retained 3′ exons', () => {
+        const f = fills(strip({ color3p: '#4e79a7' }));
+        assert.include(f, '#4e79a7');
+        assert.include(f, COLOR_5PRIME);
+        assert.notInclude(f, COLOR_3PRIME);
+    });
+
+    it('color5p recolors only the retained 5′ exons', () => {
+        const f = fills(strip({ color5p: '#f28e2b' }));
+        assert.include(f, '#f28e2b');
+        assert.include(f, COLOR_3PRIME);
+        assert.notInclude(f, COLOR_5PRIME);
+    });
+
+    it('lost exons stay grey under an override (full mode)', () => {
+        const w = strip({ color3p: '#4e79a7', exonMode: 'full' });
+        const lost = w
+            .find('rect[data-testid="strip-exon"][data-lost="true"]')
+            .hostNodes();
+        assert.isAbove(lost.length, 0);
+        lost.forEach((r: any) => assert.equal(r.prop('fill'), COLOR_EXON_LOST));
+    });
+
+    it('a split exon gives the partner color to its retained part only', () => {
+        // breakpoints 250 sit inside exon 2 (200-300) on both genes
+        const w = strip({
+            color3p: '#4e79a7',
+            color5p: '#f28e2b',
+            exonMode: 'full',
+        });
+        const f = fills(w);
+        assert.include(f, '#4e79a7');
+        assert.include(f, '#f28e2b');
+        assert.include(f, COLOR_EXON_LOST);
     });
 });
