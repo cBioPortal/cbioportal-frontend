@@ -107,6 +107,29 @@ async function waitForPatientView(page: Page, timeout = 20000) {
     ).toBeVisible({ timeout });
 }
 
+// Tabs visited earlier stay mounted and are moved off-screen with hiddenByPosition, which
+// Playwright still counts as visible, so match only elements outside such a tab.
+function inTabInView(dataTest: string, descendant = '') {
+    return `xpath=//*[@data-test="${dataTest}"][not(ancestor::*[contains(concat(" ", normalize-space(@class), " "), " hiddenByPosition ")])]${descendant}`;
+}
+
+async function expectResourceViewer(page: Page) {
+    await expect(
+        page.locator(inTabInView('ResourceViewer')).first()
+    ).toBeVisible({ timeout: 30000 });
+}
+
+// Wait for a row so the check runs on a loaded table, not on its loading indicator.
+async function expectResourceTableRows(page: Page) {
+    await expect(
+        page
+            .locator(
+                inTabInView('resource-data-table', '//tbody//td//a[@href]')
+            )
+            .first()
+    ).toBeVisible({ timeout: 30000 });
+}
+
 async function studyViewChartHoverHamburgerIcon(
     page: Page,
     chartDataTest: string,
@@ -521,10 +544,9 @@ test.describe('hide download controls feature', () => {
             'Summary',
             'Pathways',
             'Clinical Data',
-            'Files & Links',
             'Tissue Image',
             'Pathology Slide',
-            'Study Sponsors',
+            'Patient Notes',
         ];
         let page: Page;
 
@@ -576,16 +598,6 @@ test.describe('hide download controls feature', () => {
                 await globalCheck(page);
             });
         });
-        test.describe('files and links tab', () => {
-            test('global check for icon and occurrence of "Download" as a word', async () => {
-                await page.locator('.tabAnchor_filesAndLinks').click();
-                await page
-                    .locator('.resourcesSection')
-                    .first()
-                    .waitFor({ state: 'attached' });
-                await globalCheck(page);
-            });
-        });
         test.describe('tissue image tab', () => {
             test('global check for icon and occurrence of "Download" as a word', async () => {
                 await page.locator('.tabAnchor_tissueImage').click();
@@ -598,22 +610,16 @@ test.describe('hide download controls feature', () => {
                 await page
                     .locator('.tabAnchor_openResource_PATHOLOGY_SLIDE')
                     .click();
-                await page
-                    .locator('h2')
-                    .first()
-                    .waitFor({ state: 'attached' });
+                await expectResourceViewer(page);
                 await globalCheck(page);
             });
         });
-        test.describe('study sponsors tab', () => {
+        test.describe('patient notes tab', () => {
             test('global check for icon and occurrence of "Download" as a word', async () => {
                 await page
-                    .locator('.tabAnchor_openResource_STUDY_SPONSORS')
+                    .locator('.tabAnchor_openResource_PATIENT_NOTES')
                     .click();
-                await page
-                    .locator('h2')
-                    .first()
-                    .waitFor({ state: 'attached' });
+                await expectResourceViewer(page);
                 await globalCheck(page);
             });
         });
@@ -624,8 +630,9 @@ test.describe('hide download controls feature', () => {
             'Summary',
             'Clinical Data',
             'CN Segments',
-            'Files & Links',
             'Plots',
+            'Pathology Slide',
+            'Patient Notes',
             'Study Sponsors',
         ];
         let page: Page;
@@ -713,28 +720,21 @@ test.describe('hide download controls feature', () => {
                 await globalCheck(page);
             });
         });
-        test.describe('files and links tab', () => {
-            test('global check for icon and occurrence of "Download" as a word', async () => {
-                await page.locator('.tabAnchor_filesAndLinks').click();
-                await page
-                    .locator('.resourcesSection')
-                    .first()
-                    .waitFor({ state: 'attached' });
-                await globalCheck(page);
+        for (const [resourceId, name] of [
+            ['PATHOLOGY_SLIDE', 'pathology slide'],
+            ['PATIENT_NOTES', 'patient notes'],
+            ['STUDY_SPONSORS', 'study sponsors'],
+        ]) {
+            test.describe(`${name} tab`, () => {
+                test('global check for icon and occurrence of "Download" as a word', async () => {
+                    await page
+                        .locator(`.tabAnchor_resourceTable_${resourceId}`)
+                        .click();
+                    await expectResourceTableRows(page);
+                    await globalCheck(page);
+                });
             });
-        });
-        test.describe('study sponsors tab', () => {
-            test('global check for icon and occurrence of "Download" as a word', async () => {
-                await page
-                    .locator('.tabAnchor_openResource_STUDY_SPONSORS')
-                    .click();
-                await page
-                    .locator('h2')
-                    .first()
-                    .waitFor({ state: 'attached' });
-                await globalCheck(page);
-            });
-        });
+        }
     });
 
     test.describe.serial('group comparison', () => {
