@@ -320,3 +320,7 @@ If you may be working with the git repo via the Windows system, then make sure y
 # from the repo folder
 git config core.autocrlf false
 ```
+
+## License
+
+cBioPortal is licensed under the [Apache License 2.0](./LICENSE). Versions released before October 2026 were licensed under AGPL-3.0.

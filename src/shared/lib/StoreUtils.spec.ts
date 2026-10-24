@@ -1,4 +1,5 @@
 import {
+    buildProteinChange,
     evaluatePutativeDriverInfo,
     fetchGermlineConsentedSamples,
     fetchOncoKbData,
@@ -30,6 +31,7 @@ import {
     Gene,
     Mutation,
     Sample,
+    StructuralVariant,
 } from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
 import {
@@ -43,6 +45,208 @@ import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumeric
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 
 describe('StoreUtils', () => {
+    describe('buildProteinChange', () => {
+        it.each(['', undefined, null])(
+            'labels a missing downstream gene (%s) as intergenic',
+            missingSymbol => {
+                const structuralVariant = (Object.freeze({
+                    site1HugoSymbol: 'ATM',
+                    site2HugoSymbol: missingSymbol,
+                    variantClass: 'INTERGENIC',
+                    eventInfo: 'ATM-intergenic',
+                }) as unknown) as StructuralVariant;
+
+                assert.equal(
+                    buildProteinChange(structuralVariant),
+                    'ATM intergenic'
+                );
+            }
+        );
+
+        it.each(['', undefined, null])(
+            'labels a missing upstream gene (%s) as intergenic',
+            missingSymbol => {
+                const structuralVariant = (Object.freeze({
+                    site1HugoSymbol: missingSymbol,
+                    site2HugoSymbol: 'ATM',
+                    variantClass: 'INTERGENIC',
+                    eventInfo: 'ATM-intergenic',
+                }) as unknown) as StructuralVariant;
+
+                assert.equal(
+                    buildProteinChange(structuralVariant),
+                    'ATM intergenic'
+                );
+            }
+        );
+
+        it.each(['INTRAGENIC', 'INTERGENIC'])(
+            'preserves intragenic labeling when both sites have the same gene (%s)',
+            variantClass => {
+                const structuralVariant = Object.freeze({
+                    site1HugoSymbol: 'ATM',
+                    site2HugoSymbol: 'ATM',
+                    variantClass,
+                    eventInfo: 'ATM-intragenic',
+                }) as StructuralVariant;
+
+                assert.equal(
+                    buildProteinChange(structuralVariant),
+                    'ATM intragenic'
+                );
+            }
+        );
+
+        it.each(['intergenic', 'Intergenic'])(
+            'recognizes case-insensitive intergenic annotation (%s)',
+            variantClass => {
+                const structuralVariant = Object.freeze({
+                    site1HugoSymbol: 'ATM',
+                    variantClass,
+                    eventInfo: 'ATM-intergenic',
+                }) as StructuralVariant;
+
+                assert.equal(
+                    buildProteinChange(structuralVariant),
+                    'ATM intergenic'
+                );
+            }
+        );
+
+        it('preserves the single-partner INTRAGENIC shape used by download data', () => {
+            const structuralVariant = Object.freeze({
+                site1EntrezGeneId: 1956,
+                site1HugoSymbol: 'EGFR',
+                site1Chromosome: 'NA',
+                site1Position: -1,
+                eventInfo: 'EGFR-intragenic',
+                variantClass: 'INTRAGENIC',
+                comments: 'EGFR EGFR-intragenic',
+            }) as StructuralVariant;
+
+            assert.equal(
+                buildProteinChange(structuralVariant),
+                'EGFR intragenic'
+            );
+        });
+
+        it.each([
+            ['DELETION', 'EGFR truncation'],
+            ['INTRAGENIC', 'EGFR-INTERGENIC'],
+            ['DELETION', 'EGFR-INTERGENIC'],
+            ['OTHER', 'EGFR-intergenic'],
+            ['custom intergenic class', 'EGFR-intergenic'],
+            ['', 'possible EGFR-intergenic event'],
+            [undefined, 'possible EGFR-intergenic event'],
+            [null, 'possible EGFR-intergenic event'],
+        ])(
+            'preserves single-partner labels without recognized intergenic annotation (%s)',
+            (variantClass, eventInfo) => {
+                const structuralVariant = (Object.freeze({
+                    site1HugoSymbol: 'EGFR',
+                    variantClass,
+                    eventInfo,
+                }) as unknown) as StructuralVariant;
+                const reversedStructuralVariant = (Object.freeze({
+                    ...structuralVariant,
+                    site1HugoSymbol: undefined,
+                    site2HugoSymbol: 'EGFR',
+                }) as unknown) as StructuralVariant;
+
+                assert.equal(
+                    buildProteinChange(structuralVariant),
+                    'EGFR intragenic'
+                );
+                assert.equal(
+                    buildProteinChange(reversedStructuralVariant),
+                    'EGFR intragenic'
+                );
+            }
+        );
+
+        it.each(['UNKNOWN', 'unknown', 'NA', '', undefined, null])(
+            'recognizes the exact gene-specific intergenic event marker with uninformative class (%s)',
+            variantClass => {
+                const structuralVariant = (Object.freeze({
+                    site1HugoSymbol: 'ATM',
+                    variantClass,
+                    eventInfo: 'ATM-INTERGENIC',
+                }) as unknown) as StructuralVariant;
+                const reversedStructuralVariant = (Object.freeze({
+                    ...structuralVariant,
+                    site1HugoSymbol: undefined,
+                    site2HugoSymbol: 'ATM',
+                    eventInfo: 'atm-intergenic',
+                }) as unknown) as StructuralVariant;
+
+                assert.equal(
+                    buildProteinChange(structuralVariant),
+                    'ATM intergenic'
+                );
+                assert.equal(
+                    buildProteinChange(reversedStructuralVariant),
+                    'ATM intergenic'
+                );
+            }
+        );
+
+        it.each([
+            'BRCA1-INTERGENIC',
+            'possible ATM-INTERGENIC event',
+            'ATM-INTERGENIC additional description',
+            ' ATM-INTERGENIC',
+            '',
+            undefined,
+            null,
+        ])(
+            'preserves unknown events without the exact gene-specific marker (%s)',
+            eventInfo => {
+                const structuralVariant = (Object.freeze({
+                    site1HugoSymbol: 'ATM',
+                    variantClass: 'UNKNOWN',
+                    eventInfo,
+                }) as unknown) as StructuralVariant;
+
+                assert.equal(
+                    buildProteinChange(structuralVariant),
+                    'ATM intragenic'
+                );
+            }
+        );
+
+        it.each([
+            ['TMPRSS2', 'ERG', 'TMPRSS2-ERG Fusion'],
+            ['ERG', 'TMPRSS2', 'ERG-TMPRSS2 Fusion'],
+        ])(
+            'preserves the order of distinct genes %s and %s',
+            (first, second, expected) => {
+                const structuralVariant = Object.freeze({
+                    site1HugoSymbol: first,
+                    site2HugoSymbol: second,
+                    variantClass: 'FUSION',
+                    eventInfo: 'curator event description',
+                }) as StructuralVariant;
+
+                assert.equal(buildProteinChange(structuralVariant), expected);
+            }
+        );
+
+        it.each(['', undefined, null])(
+            'preserves the existing fallback when both genes are missing (%s)',
+            missingSymbol => {
+                const structuralVariant = (Object.freeze({
+                    site1HugoSymbol: missingSymbol,
+                    site2HugoSymbol: missingSymbol,
+                }) as unknown) as StructuralVariant;
+
+                assert.equal(
+                    buildProteinChange(structuralVariant),
+                    'undefined intragenic'
+                );
+            }
+        );
+    });
+
     let emptyMutationData: MobxPromise<Mutation[]>;
     let emptyUncalledMutationData: MobxPromise<Mutation[]>;
     let mutationDataWithNoKeyword: MobxPromise<Mutation[]>;

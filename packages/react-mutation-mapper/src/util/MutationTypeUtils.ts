@@ -11,13 +11,15 @@ import {
     STRUCTURAL_VARIANT_COLOR,
     MUT_COLOR_OTHER,
     MUT_COLOR_OTHER_PASSENGER,
+    MUT_COLOR_PROMOTER,
+    MUT_COLOR_PROMOTER_PASSENGER,
     MUT_COLOR_MISSENSE_PASSENGER,
     MUT_COLOR_INFRAME_PASSENGER,
     MUT_COLOR_TRUNC_PASSENGER,
     MUT_COLOR_SPLICE_PASSENGER,
     STRUCTURAL_VARIANT_PASSENGER_COLOR,
 } from 'cbioportal-frontend-commons';
-import { Mutation } from 'cbioportal-utils';
+import { isPromoterMutation, Mutation } from 'cbioportal-utils';
 import _ from 'lodash';
 
 import { IProteinImpactTypeColors } from '../model/ProteinImpact';
@@ -35,6 +37,8 @@ export const DEFAULT_PROTEIN_IMPACT_TYPE_COLORS: IProteinImpactTypeColors = {
     fusionVusColor: STRUCTURAL_VARIANT_PASSENGER_COLOR,
     otherColor: MUT_COLOR_OTHER,
     otherVusColor: MUT_COLOR_OTHER_PASSENGER,
+    promoterColor: MUT_COLOR_PROMOTER,
+    promoterVusColor: MUT_COLOR_PROMOTER_PASSENGER,
 };
 
 export const MUTATION_TYPE_PRIORITY: {
@@ -78,6 +82,12 @@ export function getColorForProteinImpactType<T extends Mutation>(
     getMutationCount: (mutation: Partial<T>) => number = () => 1,
     isPutativeDriver?: (mutation: Partial<T>) => boolean
 ): string {
+    if (mutations.length > 0 && mutations.every(isPromoterMutation)) {
+        return mutations.some(m => !isPutativeDriver || isPutativeDriver(m))
+            ? colors.promoterColor || MUT_COLOR_PROMOTER
+            : colors.promoterVusColor || MUT_COLOR_PROMOTER_PASSENGER;
+    }
+
     const processedMutations = mutations.map(m => {
         return {
             count: Math.ceil(getMutationCount(m)),
