@@ -2,8 +2,14 @@ import * as React from 'react';
 import { assert } from 'chai';
 import { mount, ReactWrapper } from 'enzyme';
 import CustomCaseSelection from './CustomCaseSelection';
-import { DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT } from './CustomCaseSelectionUtils';
+import {
+    DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT,
+    normalizeCustomCaseSelection,
+} from './CustomCaseSelectionUtils';
 import { Sample } from 'cbioportal-ts-api-client';
+import { CustomChartData } from 'shared/api/session-service/sessionServiceModels';
+import { act } from 'react-dom/test-utils';
+import $ from 'jquery';
 
 function makeSample(
     studyId: string,
@@ -139,5 +145,197 @@ describe('CustomCaseSelection', () => {
                 'multi-study placeholder should contain study_id:'
             );
         });
+    });
+
+    describe('custom selection delimiters', () => {
+        let jqueryDescriptor: PropertyDescriptor | undefined;
+
+        beforeEach(() => {
+            jqueryDescriptor = Object.getOwnPropertyDescriptor(global, '$');
+            Object.defineProperty(global, '$', {
+                configurable: true,
+                writable: true,
+                value: $,
+            });
+            jest.useFakeTimers();
+        });
+
+        afterEach(() => {
+            jest.useRealTimers();
+            if (jqueryDescriptor) {
+                Object.defineProperty(global, '$', jqueryDescriptor);
+            } else {
+                Reflect.deleteProperty(global, '$');
+            }
+        });
+
+        function renderSelection(samples: Sample[] = [s1, s2, s3]) {
+            const onSubmit = jest.fn<void, [CustomChartData]>();
+            wrapper = mount(
+                <CustomCaseSelection
+                    allSamples={samples}
+                    selectedSamples={[]}
+                    queriedStudies={Array.from(
+                        new Set(samples.map(sample => sample.studyId))
+                    )}
+                    disableGrouping={true}
+                    contentNormalizer={normalizeCustomCaseSelection}
+                    onSubmit={onSubmit}
+                />
+            );
+            return onSubmit;
+        }
+
+        function enterContent(content: string) {
+            act(() => {
+                const textarea = wrapper.find(
+                    '[data-test="CustomCaseSetInput"]'
+                );
+                textarea.getDOMNode<HTMLTextAreaElement>().value = content;
+                textarea.simulate('change');
+                jest.runOnlyPendingTimers();
+            });
+            wrapper.update();
+        }
+
+        function submitSelection() {
+            wrapper
+                .find('[data-test="CustomCaseSetSubmitButton"]')
+                .simulate('click');
+        }
+
+        it.each([' ', ',', '\n', '\t', '\t\t'])(
+            'submits every sample separated by %j',
+            delimiter => {
+                const onSubmit = renderSelection([s1, s2]);
+                enterContent(['sample1', 'sample2'].join(delimiter));
+                submitSelection();
+
+                expect(onSubmit).toHaveBeenCalledTimes(1);
+                expect(
+                    onSubmit.mock.calls[0][0].data.map(row => row.sampleId)
+                ).toEqual(['sample1', 'sample2']);
+            }
+        );
+
+        it('submits study-qualified samples with mixed delimiters', () => {
+            const onSubmit = renderSelection();
+            enterContent(
+                '  study1:sample1,\tstudy2:sample3\tstudy1:sample2 \n study1:sample1  '
+            );
+            submitSelection();
+
+            expect(
+                onSubmit.mock.calls[0][0].data.map(row => [
+                    row.studyId,
+                    row.sampleId,
+                ])
+            ).toEqual([
+                ['study1', 'sample1'],
+                ['study2', 'sample3'],
+                ['study1', 'sample2'],
+            ]);
+        });
+
+        it('ignores empty entries and duplicate identifiers in mixed input', () => {
+            const onSubmit = renderSelection([s1, s2]);
+            enterContent('sample1\t\t, sample1 \n sample2');
+            submitSelection();
+
+            expect(
+                onSubmit.mock.calls[0][0].data.map(row => row.sampleId)
+            ).toEqual(['sample1', 'sample2']);
+        });
+
+        it('submits all samples belonging to tab-separated patient IDs', () => {
+            const secondPatientSample = makeSample(
+                'study1',
+                'sample4',
+                'patient1'
+            );
+            const onSubmit = renderSelection([s1, s2, secondPatientSample]);
+            const patientInput = wrapper.find('input[data-value="PATIENT"]');
+            patientInput.simulate('change', {
+                target: patientInput.getDOMNode(),
+            });
+            enterContent('patient1\tpatient2');
+            submitSelection();
+
+            expect(onSubmit.mock.calls[0][0].patientAttribute).toBe(true);
+            expect(
+                onSubmit.mock.calls[0][0].data.map(row => row.sampleId)
+            ).toEqual(['sample1', 'sample4', 'sample2']);
+        });
+
+        it('respects study qualification for tab-separated patient IDs', () => {
+            const sharedPatient = makeSample('study2', 'sample4', 'patient1');
+            const onSubmit = renderSelection([s1, s2, s3, sharedPatient]);
+            const patientInput = wrapper.find('input[data-value="PATIENT"]');
+            patientInput.simulate('change', {
+                target: patientInput.getDOMNode(),
+            });
+            enterContent('study2:patient1\tstudy1:patient2');
+            submitSelection();
+
+            expect(
+                onSubmit.mock.calls[0][0].data.map(row => [
+                    row.studyId,
+                    row.sampleId,
+                ])
+            ).toEqual([
+                ['study2', 'sample4'],
+                ['study1', 'sample2'],
+            ]);
+        });
+
+        it('warns about an invalid ID after a tab and submits the valid sample', () => {
+            const onSubmit = renderSelection([s1, s2]);
+            enterContent('sample1\tmissing');
+
+            expect(
+                wrapper
+                    .find('[data-test="ValidationResultWarning"]')
+                    .map(warning => warning.text())
+                    .join(' ')
+            ).toContain('missing');
+            submitSelection();
+            expect(
+                onSubmit.mock.calls[0][0].data.map(row => row.sampleId)
+            ).toEqual(['sample1']);
+        });
+
+        it.each(['Group1', '0'])(
+            'preserves tab-separated custom data values without the selection normalizer: %s',
+            value => {
+                const onSubmit = jest.fn<void, [CustomChartData]>();
+                wrapper = mount(
+                    <CustomCaseSelection
+                        allSamples={[s1, s2]}
+                        selectedSamples={[]}
+                        queriedStudies={['study1']}
+                        onSubmit={onSubmit}
+                    />
+                );
+                if (value === '0') {
+                    const numericalInput = wrapper.find(
+                        'input[data-value="NUMERICAL"]'
+                    );
+                    numericalInput.simulate('change', {
+                        target: numericalInput.getDOMNode(),
+                    });
+                }
+                enterContent(
+                    `study1:sample1\t${value}\nstudy1:sample2\t${value}`
+                );
+                submitSelection();
+
+                expect(
+                    onSubmit.mock.calls[0][0].data.map(row => row.value)
+                ).toEqual([value, value]);
+                expect(onSubmit.mock.calls[0][0].datatype).toBe(
+                    value === '0' ? 'NUMBER' : 'STRING'
+                );
+            }
+        );
     });
 });

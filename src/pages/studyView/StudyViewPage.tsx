@@ -43,6 +43,7 @@ import AddChartButton from './addChartButton/AddChartButton';
 import { sleep } from '../../shared/lib/TimeUtils';
 import { Else, If, Then } from 'react-if';
 import CustomCaseSelection from './addChartButton/customCaseSelection/CustomCaseSelection';
+import { normalizeCustomCaseSelection } from './addChartButton/customCaseSelection/CustomCaseSelectionUtils';
 import { AppStore } from '../../AppStore';
 import ActionButtons from './studyPageHeader/ActionButtons';
 import {
@@ -1132,24 +1133,9 @@ export default class StudyViewPage extends React.Component<
                                                                         .samples
                                                                         .result
                                                                 }
-                                                                contentNormalizer={content => {
-                                                                    return content
-                                                                        .split(
-                                                                            /[, ]+/
-                                                                        ) // Split the content by either commas or spaces
-                                                                        .map(
-                                                                            line =>
-                                                                                line.trim()
-                                                                        ) // Remove extra spaces around each line
-                                                                        .filter(
-                                                                            line =>
-                                                                                line.length >
-                                                                                0
-                                                                        ) // Remove empty lines
-                                                                        .join(
-                                                                            '\n'
-                                                                        ); // Use newline as the final delimiter
-                                                                }}
+                                                                contentNormalizer={
+                                                                    normalizeCustomCaseSelection
+                                                                }
                                                                 selectedSamples={
                                                                     this.store
                                                                         .selectedSamples
