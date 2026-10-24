@@ -1076,7 +1076,10 @@ export class ResultsViewPageStore extends AnalysisStore
     });
 
     readonly comparisonTabComparisonSession = remoteData<ComparisonSession>({
-        await: () => [this.studyIds],
+        await: () =>
+            this.urlWrapper.query.comparison_createdGroupsSessionId
+                ? [this.studyIds]
+                : [this.studyIds, this.queriedStudies],
         invoke: () => {
             const sessionId = this.urlWrapper.query
                 .comparison_createdGroupsSessionId;
@@ -1088,7 +1091,9 @@ export class ResultsViewPageStore extends AnalysisStore
                 return Promise.resolve({
                     id: '',
                     groups: [],
-                    origin: this.studyIds.result!,
+                    origin: this.queriedStudies.result!.map(
+                        study => study.studyId
+                    ),
                 });
             }
         },
