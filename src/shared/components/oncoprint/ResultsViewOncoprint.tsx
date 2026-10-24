@@ -98,6 +98,11 @@ import {
 import { buildCBioPortalPageUrl } from '../../api/urls';
 import '../../../globalStyles/oncoprintStyles.scss';
 import { GenericAssayTrackInfo } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
+import {
+    GenericAssayOncoprintChartType,
+    getGenericAssayCategories,
+    getGenericAssayChartTypes,
+} from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { toDirectionString } from './SortUtils';
 import { RestoreClinicalTracksMenu } from 'pages/resultsView/oncoprint/RestoreClinicalTracksMenu';
 import { Modal } from 'react-bootstrap';
@@ -987,22 +992,26 @@ export default class ResultsViewOncoprint extends React.Component<
                 // (should be refactored)
                 if (info.length === 0) return;
                 const profileId = info[0].profileId;
+                // Apply the chart type picked in the Add Tracks dialog, or
+                // else the first one configured for the generic assay type.
+                const chartType =
+                    info[0].chartType ||
+                    getGenericAssayChartTypes(info[0].genericAssayType)[0];
+                // Stacked bar and dominant category tracks of a type with
+                // configured categories always show all of them.
+                const categories = getGenericAssayCategories(
+                    info[0].genericAssayType
+                );
                 this.setGenericAssayTracks(
                     profileId,
-                    info.map(d => d.genericAssayEntityId)
+                    categories &&
+                        (chartType === 'composition' ||
+                            chartType === 'dominant')
+                        ? categories.map(c => c.stableId)
+                        : info.map(d => d.genericAssayEntityId)
                 );
-                // Apply the chart type picked in the Add Tracks dialog. Map
-                // the selection-component values to the setter the track
-                // menu uses; 'heatmap' is the default so no call is needed.
-                const chartType = info[0].chartType;
-                if (chartType && chartType !== 'heatmap') {
-                    const mapped =
-                        chartType === 'stacked_composition'
-                            ? 'composition'
-                            : chartType === 'stacked_absolute'
-                            ? 'absolute'
-                            : 'bars';
-                    this.setGenericAssayChartType(profileId, mapped);
+                if (chartType !== 'heatmap') {
+                    this.setGenericAssayChartType(profileId, chartType);
                 }
             },
             onClickNGCHM: () => {
@@ -1366,6 +1375,14 @@ export default class ResultsViewOncoprint extends React.Component<
                     _.omit(this.genericAssayBarProfiles, molecularProfileId)
                 ).join(';');
             }
+            if (this.genericAssayDominantProfiles[molecularProfileId]) {
+                updates.generic_assay_dominant_profiles = _.keys(
+                    _.omit(
+                        this.genericAssayDominantProfiles,
+                        molecularProfileId
+                    )
+                ).join(';');
+            }
         }
 
         this.urlWrapper.updateURL(updates);
@@ -1451,6 +1468,20 @@ export default class ResultsViewOncoprint extends React.Component<
             .value();
     }
 
+    // Profiles rendered as a single row colored by each case's highest-valued
+    // entity.
+    @computed get genericAssayDominantProfiles(): {
+        [profileId: string]: true;
+    } {
+        const raw = this.urlWrapper.query.generic_assay_dominant_profiles;
+        if (!raw) return {};
+        return _.chain(raw.split(';'))
+            .filter(x => x.length > 0)
+            .keyBy(x => x)
+            .mapValues(() => true as true)
+            .value();
+    }
+
     @action.bound
     public setGenericAssayBarMode(molecularProfileId: string, asBar: boolean) {
         const next = { ...this.genericAssayBarProfiles };
@@ -1470,17 +1501,20 @@ export default class ResultsViewOncoprint extends React.Component<
     @action.bound
     public setGenericAssayChartType(
         molecularProfileId: string,
-        type: 'heatmap' | 'bars' | 'composition' | 'absolute'
+        type: GenericAssayOncoprintChartType
     ) {
         const comp = { ...this.genericAssayStackedProfiles };
         const abs = { ...this.genericAssayStackedAbsoluteProfiles };
         const bar = { ...this.genericAssayBarProfiles };
+        const dominant = { ...this.genericAssayDominantProfiles };
         delete comp[molecularProfileId];
         delete abs[molecularProfileId];
         delete bar[molecularProfileId];
+        delete dominant[molecularProfileId];
         if (type === 'composition') comp[molecularProfileId] = true;
         else if (type === 'absolute') abs[molecularProfileId] = true;
         else if (type === 'bars') bar[molecularProfileId] = true;
+        else if (type === 'dominant') dominant[molecularProfileId] = true;
         // Force the loading spinner to show during the chart-type swap.
         // Even when data is cached, swapping 30 per-entity tracks for 1
         // stacked track (or vice versa) causes a noticeable re-render pause.
@@ -1493,6 +1527,7 @@ export default class ResultsViewOncoprint extends React.Component<
                 abs
             ),
             generic_assay_bar_profiles: _.keys(bar).join(';'),
+            generic_assay_dominant_profiles: _.keys(dominant).join(';'),
         });
     }
 
@@ -2150,6 +2185,7 @@ export default class ResultsViewOncoprint extends React.Component<
                     this.genericAssayStackedProfiles,
                     this.genericAssayStackedAbsoluteProfiles,
                     this.genericAssayBarProfiles,
+                    this.genericAssayDominantProfiles,
                     this.setGenericAssayChartType
                 )
             );

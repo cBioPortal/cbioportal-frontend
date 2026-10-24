@@ -1,4 +1,9 @@
+import _ from 'lodash';
 import { ClinicalData, GenericAssayData } from 'cbioportal-ts-api-client';
+import {
+    GenericAssayTypeConstants,
+    getGenericAssayCategories,
+} from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 
 export enum ImmuneSignatureAttribute {
     KNN_CLASS = 'ISIG_KNN_CLASS',
@@ -23,19 +28,21 @@ const GENERIC_ASSAY_ATTRIBUTES = new Set<string>(
     Object.values(MFP_CLASS_SCORE_ATTRIBUTES)
 );
 
-export const MFP_CLASS_COLORS: Record<string, string> = {
-    D: '#c8b631',
-    F: '#c4375b',
-    IE: '#3b4fb8',
-    'IE/F': '#2a9d8f',
-};
+// Colors and labels are shared with the oncoprint's immune signature tracks.
+const MFP_CATEGORIES = _.keyBy(
+    getGenericAssayCategories(GenericAssayTypeConstants.ISIG_PROBABILITY),
+    c => c.stableId
+);
 
-export const MFP_CLASS_LABELS: Record<string, string> = {
-    D: 'Desert (D)',
-    F: 'Fibrotic (F)',
-    IE: 'Immune Enriched (IE)',
-    'IE/F': 'Immune Enriched / Fibrotic (IE/F)',
-};
+export const MFP_CLASS_COLORS: Record<string, string> = _.mapValues(
+    MFP_CLASS_SCORE_ATTRIBUTES,
+    stableId => MFP_CATEGORIES[stableId].color
+);
+
+export const MFP_CLASS_LABELS: Record<string, string> = _.mapValues(
+    MFP_CLASS_SCORE_ATTRIBUTES,
+    stableId => MFP_CATEGORIES[stableId].label
+);
 
 export type ImmuneSignature = {
     knnClass: string;
@@ -63,7 +70,8 @@ function toBoolean(value: string | undefined): boolean | undefined {
 
 // Generic assay values take precedence over clinical data for the
 // GENERIC_ASSAY_ATTRIBUTES, whose entity stable ids match the attribute ids.
-// Returns undefined when the sample has no MFP class.
+// The class is the clinical KNN class, or else the most probable class.
+// Returns undefined when the sample has neither a class nor probabilities.
 export function getImmuneSignature(
     sampleClinicalData: ClinicalData[],
     sampleGenericAssayData: GenericAssayData[] = []
@@ -78,16 +86,25 @@ export function getImmuneSignature(
         }
     });
 
-    const knnClass = values[ImmuneSignatureAttribute.KNN_CLASS];
+    const scores = MFP_CLASSES.map(cls =>
+        toNumber(values[MFP_CLASS_SCORE_ATTRIBUTES[cls]])
+    );
+    const hasScores = scores.some(score => score !== undefined);
+    const classScores: Record<string, number> = {};
+    MFP_CLASSES.forEach((cls, i) => {
+        classScores[cls] = scores[i] || 0;
+    });
+
+    const knnClass =
+        values[ImmuneSignatureAttribute.KNN_CLASS] ||
+        (hasScores
+            ? MFP_CLASSES.reduce((best, cls) =>
+                  classScores[cls] > classScores[best] ? cls : best
+              )
+            : undefined);
     if (!knnClass) {
         return undefined;
     }
-
-    const classScores: Record<string, number> = {};
-    MFP_CLASSES.forEach(cls => {
-        classScores[cls] =
-            toNumber(values[MFP_CLASS_SCORE_ATTRIBUTES[cls]]) || 0;
-    });
 
     return {
         knnClass,
