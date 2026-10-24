@@ -150,6 +150,11 @@
     background: #eee;
     border-radius: 4px;
     padding: 10px;
+
+    + span {
+        display: block;
+        margin-left: 244px;
+    }
 }
 
 .buttonAlterationTypeSelectorMenu {
