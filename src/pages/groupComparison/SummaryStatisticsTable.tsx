@@ -45,6 +45,17 @@ export const SummaryStatisticsTable: FunctionComponent<SummaryStatisticsTablePro
                 <tr>
                     <td>Maximum</td>
                     {props.data.map(d => (
+                        <td>
+                            {_.round(
+                                d.sortedVector[d.sortedVector.length - 1],
+                                2
+                            )}
+                        </td>
+                    ))}
+                </tr>
+                <tr>
+                    <td>Upper whisker</td>
+                    {props.data.map(d => (
                         <td>{_.round(d.max, 2)}</td>
                     ))}
                 </tr>
@@ -67,9 +78,15 @@ export const SummaryStatisticsTable: FunctionComponent<SummaryStatisticsTablePro
                     ))}
                 </tr>
                 <tr>
-                    <td>Minimum</td>
+                    <td>Lower whisker</td>
                     {props.data.map(d => (
                         <td>{_.round(d.min, 2)}</td>
+                    ))}
+                </tr>
+                <tr>
+                    <td>Minimum</td>
+                    {props.data.map(d => (
+                        <td>{_.round(d.sortedVector[0], 2)}</td>
                     ))}
                 </tr>
             </tbody>
