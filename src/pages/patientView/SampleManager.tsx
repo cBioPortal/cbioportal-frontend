@@ -97,7 +97,7 @@ export function getSpecimenCollectionDayMap(
         // should probably have some config to allow people to choose what
         // timeline tracks get labels
         const specimenEvents = events.filter((e: ClinicalEvent) => {
-            return /SPECIMEN|Sample Acquisition|sample_acquisition'/i.test(
+            return /SPECIMEN|Sample Acquisition|sample_acquisition/i.test(
                 e.eventType
             );
         });
