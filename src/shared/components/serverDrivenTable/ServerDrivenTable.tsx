@@ -746,9 +746,8 @@ export default class ServerDrivenTable<T> extends React.Component<
 
         return (
             <div className="clearfix">
-                <ButtonToolbar
+                <div
                     style={{
-                        marginLeft: 0,
                         display: 'flex',
                         width: '100%',
                         justifyContent: 'space-between',
@@ -834,7 +833,7 @@ export default class ServerDrivenTable<T> extends React.Component<
                                 />
                             )}
                     </div>
-                </ButtonToolbar>
+                </div>
             </div>
         );
     }

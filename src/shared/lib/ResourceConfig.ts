@@ -47,6 +47,9 @@ export interface ResourceCustomConfig {
      * Used in: resource table count summary
      */
     pluralizeDisplayName?: boolean;
+
+    /** Name for one row in the resource table count, pluralized by count. */
+    itemsLabel?: string;
 }
 
 /**
@@ -63,6 +66,9 @@ export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {
     },
     CYCIF: {
         pluralizeDisplayName: false,
+    },
+    IDC_SLIM: {
+        itemsLabel: 'Slide',
     },
 };
 
