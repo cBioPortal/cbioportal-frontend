@@ -640,6 +640,26 @@ describe('Oncoprint DeltaUtils', () => {
                 'right priority order'
             );
         });
+        it('should sort generic assay categorical track groups before the genetic tracks', () => {
+            transitionTrackGroupSortPriority(
+                {
+                    heatmapTracks: [{ trackGroupIndex: 2 }],
+                    genesetHeatmapTracks: [],
+                    categoricalTracks: [{ trackGroupIndex: 3 }],
+                },
+                {
+                    heatmapTracks: [{ trackGroupIndex: 2 }],
+                    genesetHeatmapTracks: [],
+                },
+                oncoprint
+            );
+            assert.deepEqual(oncoprint.setTrackGroupSortPriority.args[0][0], [
+                CLINICAL_TRACK_GROUP_INDEX,
+                2,
+                3,
+                GENETIC_TRACK_GROUP_INDEX,
+            ]);
+        });
         it('should set the track group sort priority on initialisation if only a gene set heatmap is present', () => {
             transitionTrackGroupSortPriority(
                 {

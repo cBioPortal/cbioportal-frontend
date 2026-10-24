@@ -100,7 +100,22 @@ describe('ImmuneSignatureUtils', () => {
         });
     });
 
-    it('returns undefined when the sample has no MFP class', () => {
+    it('uses the most probable class when there is no clinical class', () => {
+        const signature = getImmuneSignature([], [
+            { stableId: 'ISIG_PROB_D', value: '0.1' },
+            { stableId: 'ISIG_PROB_IE', value: '0.7' },
+            { stableId: 'ISIG_PROB_IE_F', value: '0.2' },
+        ] as GenericAssayData[])!;
+        assert.equal(signature.knnClass, 'IE');
+        assert.isUndefined(signature.knnConfidence);
+    });
+
+    it('returns undefined when the sample has no class or probabilities', () => {
         assert.isUndefined(getImmuneSignature([]));
+        assert.isUndefined(
+            getImmuneSignature([], [
+                { stableId: 'ISIG_PROB_D', value: 'NA' },
+            ] as GenericAssayData[])
+        );
     });
 });

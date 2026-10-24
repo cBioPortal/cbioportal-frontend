@@ -28,9 +28,38 @@ export type GenericAssayTypeConfig = {
     downloadTabConfig?: DownloadTabConfig;
 };
 
+export type GenericAssayOncoprintChartType =
+    | 'heatmap'
+    | 'bars'
+    | 'composition'
+    | 'absolute'
+    | 'dominant';
+
+export const GENERIC_ASSAY_CHART_TYPE_LABELS: {
+    [type in GenericAssayOncoprintChartType]: string;
+} = {
+    heatmap: 'Separate rows (heatmap)',
+    bars: 'Separate rows (bar chart)',
+    composition: 'Stacked bar (composition)',
+    absolute: 'Stacked bar (absolute)',
+    dominant: 'Dominant category',
+};
+
+export type GenericAssayCategory = {
+    stableId: string;
+    label: string;
+    color: string;
+};
+
 export type OncoprintTrackConfig = {
     formatNameUsingCompactLabel?: boolean;
     formatDescriptionUsingCommonLabel?: boolean;
+    // Chart types offered for the profile, in menu order. The first one is
+    // used when tracks are added. Defaults to every type except 'dominant'.
+    chartTypes?: GenericAssayOncoprintChartType[];
+    // Entities shown in the stacked bar and dominant category tracks, in
+    // stacking order, with their legend labels and colors.
+    categories?: GenericAssayCategory[];
 };
 
 export type PlotsTabConfig = {
@@ -147,6 +176,34 @@ const DEFAULT_GENERIC_ASSAY_CONFIG: GenericAssayConfig = {
                 formatDownloadHeaderUsingCompactLabel: true,
             },
         },
+        [GenericAssayTypeConstants.ISIG_PROBABILITY]: {
+            displayTitleText: 'Immune Signature',
+            oncoprintTrackConfig: {
+                chartTypes: ['composition', 'dominant'],
+                categories: [
+                    {
+                        stableId: 'ISIG_PROB_D',
+                        label: 'Desert (D)',
+                        color: '#c8b631',
+                    },
+                    {
+                        stableId: 'ISIG_PROB_F',
+                        label: 'Fibrotic (F)',
+                        color: '#c4375b',
+                    },
+                    {
+                        stableId: 'ISIG_PROB_IE',
+                        label: 'Immune Enriched (IE)',
+                        color: '#3b4fb8',
+                    },
+                    {
+                        stableId: 'ISIG_PROB_IE_F',
+                        label: 'Immune Enriched / Fibrotic (IE/F)',
+                        color: '#2a9d8f',
+                    },
+                ],
+            },
+        },
     },
 };
 
@@ -154,6 +211,34 @@ export const GENERIC_ASSAY_CONFIG: GenericAssayConfig = _.merge(
     DEFAULT_GENE_RELATED_CONFIG,
     DEFAULT_GENERIC_ASSAY_CONFIG
 );
+
+// 'absolute' is left out for fraction-like data, where every stacked bar
+// would be full height.
+export function getGenericAssayChartTypes(
+    genericAssayType: string | undefined,
+    isFractionLike: boolean = false
+): GenericAssayOncoprintChartType[] {
+    const configured = genericAssayType
+        ? GENERIC_ASSAY_CONFIG.genericAssayConfigByType[genericAssayType]
+              ?.oncoprintTrackConfig?.chartTypes
+        : undefined;
+    const types: GenericAssayOncoprintChartType[] = configured || [
+        'heatmap',
+        'bars',
+        'composition',
+        'absolute',
+    ];
+    return isFractionLike ? types.filter(t => t !== 'absolute') : types;
+}
+
+export function getGenericAssayCategories(
+    genericAssayType: string | undefined
+): GenericAssayCategory[] | undefined {
+    return genericAssayType
+        ? GENERIC_ASSAY_CONFIG.genericAssayConfigByType[genericAssayType]
+              ?.oncoprintTrackConfig?.categories
+        : undefined;
+}
 
 export function getFrequencyTableCategoryPriority(
     genericAssayType?: string

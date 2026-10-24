@@ -208,7 +208,21 @@ export function transitionShowSublabels(
 type TrackSpecsWithDynamicGroups = {
     heatmapTracks: { trackGroupIndex: number }[];
     genesetHeatmapTracks: { trackGroupIndex: number }[];
+    categoricalTracks?: { trackGroupIndex: number }[];
 };
+
+// Groups added below the genetic tracks (heatmaps, generic assay categorical
+// and stacked bar tracks) sort before the genetic tracks, in display order.
+function getDynamicTrackGroups(props: Partial<TrackSpecsWithDynamicGroups>) {
+    return _.sortBy(
+        _.uniq(
+            (props.heatmapTracks || [])
+                .concat(props.genesetHeatmapTracks || [])
+                .concat(props.categoricalTracks || [])
+                .map(x => x.trackGroupIndex)
+        )
+    );
+}
 
 type GenericAssayProfileToTrackIdMap = {
     [molecularProfileId: string]: undefined | TrackId;
@@ -219,20 +233,8 @@ export function transitionTrackGroupSortPriority(
     prevProps: Partial<TrackSpecsWithDynamicGroups>,
     oncoprint: OncoprintJS
 ) {
-    const prevHeatmapTrackGroups = _.sortBy(
-        _.uniq(
-            (prevProps.heatmapTracks || [])
-                .concat(prevProps.genesetHeatmapTracks || [])
-                .map(x => x.trackGroupIndex)
-        )
-    );
-    const nextHeatmapTrackGroups = _.sortBy(
-        _.uniq(
-            nextProps.heatmapTracks
-                .concat(nextProps.genesetHeatmapTracks)
-                .map(x => x.trackGroupIndex)
-        )
-    );
+    const prevHeatmapTrackGroups = getDynamicTrackGroups(prevProps);
+    const nextHeatmapTrackGroups = getDynamicTrackGroups(nextProps);
     if (_.xor(nextHeatmapTrackGroups, prevHeatmapTrackGroups).length) {
         // if track groups have changed
         oncoprint.setTrackGroupSortPriority(
