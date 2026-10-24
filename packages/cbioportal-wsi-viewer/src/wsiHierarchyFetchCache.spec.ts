@@ -1,0 +1,354 @@
+/**
+ * @jest-environment jsdom
+ */
+import {
+    clearPatientHierarchyCache,
+    fetchWsiPatientHierarchy,
+} from './wsiHierarchyFetchCache';
+import {
+    clearWsiResourceAccessTargets,
+    clearWsiSlideAccess,
+    getWsiSlideAccess,
+} from './wsiAuth';
+import {
+    makeAccessPayload,
+    makeSample,
+    makeSlide,
+    toWireHierarchy,
+} from './wsiTestFixtures';
+import { configureWsiViewerRuntime } from './wsiViewerConfig';
+
+configureWsiViewerRuntime({
+    buildApiUrl: (path: string) => `/${path}`,
+});
+
+function makeHierarchy() {
+    return {
+        referenceSampleId: 'S-1',
+        sampleGroups: [
+            {
+                sampleId: 'S-1',
+                parts: [],
+            },
+        ],
+    };
+}
+
+describe('wsiHierarchyFetchCache read-only contract', () => {
+    let originalFetch: typeof globalThis.fetch;
+
+    beforeEach(() => {
+        originalFetch = (global as any).fetch;
+        clearPatientHierarchyCache();
+    });
+
+    afterEach(() => {
+        (global as any).fetch = originalFetch;
+        clearPatientHierarchyCache();
+    });
+
+    it('deduplicates concurrent requests and reuses the cached hierarchy', async () => {
+        const fetchMock = jest.fn().mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve(makeHierarchy()),
+        });
+        (global as any).fetch = fetchMock;
+
+        const [first, second] = await Promise.all([
+            fetchWsiPatientHierarchy('study', 'P 1', 'user-a'),
+            fetchWsiPatientHierarchy('study', 'P 1', 'user-a'),
+        ]);
+        const third = await fetchWsiPatientHierarchy('study', 'P 1', 'user-a');
+
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        expect(fetchMock).toHaveBeenCalledWith(
+            '/api/wsi/v2/hierarchy/study/P%201',
+            {
+                credentials: 'include',
+            }
+        );
+        expect(second).toBe(first);
+        expect(third).toBe(first);
+        expect(first.patient_id).toBe('P 1');
+    });
+
+    it('isolates cached hierarchy data by authenticated subject', async () => {
+        const fetchMock = jest
+            .fn()
+            .mockResolvedValueOnce({
+                ok: true,
+                json: () => Promise.resolve(makeHierarchy()),
+            })
+            .mockResolvedValueOnce({
+                ok: true,
+                json: () =>
+                    Promise.resolve({
+                        ...makeHierarchy(),
+                        referenceSampleId: 'S-2',
+                    }),
+            });
+        (global as any).fetch = fetchMock;
+
+        const first = await fetchWsiPatientHierarchy('study', 'P-1', 'user-a');
+        const second = await fetchWsiPatientHierarchy('study', 'P-1', 'user-b');
+        const firstAgain = await fetchWsiPatientHierarchy(
+            'study',
+            'P-1',
+            'user-a'
+        );
+
+        expect(first.reference_sample_id).toBe('S-1');
+        expect(second.reference_sample_id).toBe('S-2');
+        expect(firstAgain).toBe(first);
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('normalizes the v2 nested payload for the existing viewer state', async () => {
+        (global as any).fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: () =>
+                Promise.resolve({
+                    referenceSampleId: 'S-1',
+                    sampleGroups: [
+                        {
+                            sampleId: null,
+                            parts: [
+                                {
+                                    partNumber: '1',
+                                    partType: 'SPECIMEN',
+                                    partDescription: 'Unmatched specimen',
+                                    subspecialty: '',
+                                    blocks: [
+                                        {
+                                            blockNumber: 'A',
+                                            blockLabel: 'A1',
+                                            slides: [
+                                                {
+                                                    slideKey: 'slide-1',
+                                                    stainName: 'H&E',
+                                                    stainGroup: 'H&E',
+                                                    isHne: true,
+                                                    isIhc: false,
+                                                    magnification: '20x',
+                                                    fileSizeBytes: null,
+                                                    canServeTiles: false,
+                                                    slideType: 'H&E',
+                                                    sampleId: null,
+                                                    matchLevel: 'UNMATCHED',
+                                                    specimenKey:
+                                                        'unmatched::1::A',
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                }),
+        });
+
+        const hierarchy = await fetchWsiPatientHierarchy('study', 'P-1');
+
+        expect(hierarchy.patient_id).toBe('P-1');
+        expect(hierarchy.reference_sample_id).toBe('S-1');
+        expect(hierarchy.samples[0].sample_id).toBe('UNMATCHED');
+        const slide = hierarchy.samples[0].parts[0].blocks[0].slides[0];
+        expect(slide).toEqual(
+            expect.objectContaining({
+                slide_key: 'slide-1',
+                sample_id: null,
+                match_level: 'UNMATCHED',
+                specimen_key: 'unmatched::1::A',
+                part_number: '1',
+                part_description: 'Unmatched specimen',
+                block_label: 'A1',
+                block_number: 'A',
+            })
+        );
+        expect(JSON.stringify(hierarchy)).not.toMatch(
+            /image_?id|barcode|resource_?(data_?)?id/i
+        );
+    });
+
+    it.each([
+        // The resolved flags win over the stored type.
+        [true, false, 'IHC', 'hne'],
+        [false, true, 'H&E', 'ihc'],
+        [true, true, null, 'ihc'],
+        [false, true, null, 'ihc'],
+        [false, false, 'Other', 'other'],
+        [false, false, null, 'other'],
+        // A stored stain type the flags don't confirm is unknown.
+        [false, false, ' unknown ', 'unknown'],
+        [false, false, 'he', 'unknown'],
+        [false, false, 'IHC', 'unknown'],
+    ] as const)(
+        'classifies isHne=%s isIhc=%s slideType=%p as %s',
+        async (isHne, isIhc, slideType, expected) => {
+            const payload = toWireHierarchy({
+                patient_id: 'P-1',
+                samples: [makeSample('S-1', [makeSlide()])],
+            });
+            Object.assign(
+                payload.sampleGroups[0].parts[0].blocks[0].slides[0],
+                { isHne, isIhc, slideType }
+            );
+            (global as any).fetch = jest.fn().mockResolvedValue({
+                ok: true,
+                json: () => Promise.resolve(payload),
+            });
+
+            const hierarchy = await fetchWsiPatientHierarchy('study', 'P-1');
+            expect(
+                hierarchy.samples[0].parts[0].blocks[0].slides[0].stain_kind
+            ).toBe(expected);
+        }
+    );
+
+    it('rejects hierarchy payloads without a sample collection and retries cleanly', async () => {
+        const fetchMock = jest
+            .fn()
+            .mockResolvedValueOnce({
+                ok: true,
+                json: () => Promise.resolve({ referenceSampleId: 'S-1' }),
+            })
+            .mockResolvedValueOnce({
+                ok: true,
+                json: () => Promise.resolve(makeHierarchy()),
+            });
+        (global as any).fetch = fetchMock;
+        await expect(fetchWsiPatientHierarchy('study', 'P-1')).rejects.toThrow(
+            'Invalid WSI hierarchy: expected the v2 sampleGroups contract'
+        );
+        await expect(
+            fetchWsiPatientHierarchy('study', 'P-1')
+        ).resolves.toMatchObject({
+            samples: [expect.objectContaining({ sample_id: 'S-1' })],
+        });
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+});
+
+describe('wsiHierarchyFetchCache resource access registration', () => {
+    const STUDY = 'study-1';
+    const PATIENT = 'P-1';
+    const URL_P1 = '/api/wsi/v2/hierarchy/study-1/P-1';
+    let originalFetch: typeof globalThis.fetch;
+    let hierarchyResponses: Record<string, unknown[]>;
+    let accessStatuses: number[];
+    let fetchMock: jest.Mock;
+
+    function v2Hierarchy(slideKeys: string[]) {
+        return toWireHierarchy({
+            patient_id: PATIENT,
+            samples: [
+                makeSample(
+                    'S-1',
+                    slideKeys.map(slideKey =>
+                        makeSlide({ slide_key: slideKey })
+                    )
+                ),
+            ],
+        });
+    }
+
+    const accessPayload = makeAccessPayload({ slideKey: 'slide' });
+
+    function hierarchyCalls(url: string): number {
+        return fetchMock.mock.calls.filter(([called]) => called === url).length;
+    }
+
+    function accessCalls(): string[] {
+        return fetchMock.mock.calls
+            .map(([called]) => String(called))
+            .filter(called => called.includes('/access?'))
+            .map(called => {
+                const parsed = new URL(called);
+                return `${parsed.pathname.replace(
+                    '/api/wsi/v2/resources/',
+                    ''
+                )}${parsed.search}`;
+            });
+    }
+
+    beforeEach(() => {
+        originalFetch = (global as any).fetch;
+        clearPatientHierarchyCache();
+        clearWsiSlideAccess();
+        hierarchyResponses = {};
+        accessStatuses = [];
+        fetchMock = jest.fn((url: string) => {
+            if (String(url).includes('/access?')) {
+                const status = accessStatuses.shift() ?? 200;
+                const slideKey = new URL(String(url)).searchParams.get(
+                    'slideKey'
+                );
+                return Promise.resolve({
+                    ok: status >= 200 && status < 300,
+                    status,
+                    json: () => Promise.resolve({ ...accessPayload, slideKey }),
+                });
+            }
+            const queue = hierarchyResponses[url] || [];
+            const payload = queue.length > 1 ? queue.shift() : queue[0];
+            return Promise.resolve({
+                ok: true,
+                status: 200,
+                json: () => Promise.resolve(payload),
+            });
+        });
+        (global as any).fetch = fetchMock;
+    });
+
+    afterEach(() => {
+        (global as any).fetch = originalFetch;
+        clearPatientHierarchyCache();
+    });
+
+    it('registers the slides of a network hierarchy', async () => {
+        hierarchyResponses[URL_P1] = [v2Hierarchy(['slide-1'])];
+
+        await fetchWsiPatientHierarchy(STUDY, PATIENT, 'user-a');
+        await getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a');
+
+        expect(accessCalls()).toEqual(['study-1/P-1/access?slideKey=slide-1']);
+    });
+
+    it('re-registers the slides on a cache hit', async () => {
+        hierarchyResponses[URL_P1] = [v2Hierarchy(['slide-1'])];
+        await fetchWsiPatientHierarchy(STUDY, PATIENT, 'user-a');
+        clearWsiResourceAccessTargets(STUDY);
+
+        await fetchWsiPatientHierarchy(STUDY, PATIENT, 'user-a');
+        await getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a');
+
+        expect(hierarchyCalls(URL_P1)).toBe(1);
+        expect(accessCalls()).toEqual(['study-1/P-1/access?slideKey=slide-1']);
+    });
+
+    it('surfaces a 404 without reloading the hierarchy', async () => {
+        hierarchyResponses[URL_P1] = [v2Hierarchy(['slide-1'])];
+        await fetchWsiPatientHierarchy(STUDY, PATIENT, 'user-a');
+        accessStatuses = [404];
+
+        await expect(
+            getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a')
+        ).rejects.toThrow('WSI authorization failed (404)');
+
+        expect(hierarchyCalls(URL_P1)).toBe(1);
+        expect(accessCalls()).toHaveLength(1);
+    });
+
+    it('forgets the slides with the whole hierarchy cache', async () => {
+        hierarchyResponses[URL_P1] = [v2Hierarchy(['slide-1'])];
+        await fetchWsiPatientHierarchy(STUDY, PATIENT, 'user-a');
+
+        clearPatientHierarchyCache();
+
+        await expect(
+            getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a')
+        ).rejects.toThrow('WSI resource selection is unavailable');
+        expect(accessCalls()).toEqual([]);
+    });
+});

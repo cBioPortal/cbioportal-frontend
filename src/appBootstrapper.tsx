@@ -46,6 +46,8 @@ import eventBus from 'shared/events/eventBus';
 import { SiteError } from 'shared/model/appMisc';
 import load from 'little-loader';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
+import { configureWsiViewerRuntime } from 'cbioportal-wsi-viewer';
+import { buildWsiViewerConfig } from 'shared/components/wsiViewer/wsiAppConfig';
 
 export interface ICBioWindow {
     globalStores: {
@@ -382,6 +384,8 @@ $(document).ready(async () => {
     initializeAPIClients();
 
     initializeAppStore(stores.appStore);
+
+    configureWsiViewerRuntime(buildWsiViewerConfig());
 
     await loadCustomJs();
 
