@@ -9,6 +9,7 @@ import {
     getLines,
     InputLine,
     LineTypeEnum,
+    parseContent,
     ValidationResult,
     validateLines,
 } from './CustomCaseSelectionUtils';
@@ -222,6 +223,95 @@ describe('CustomCaseSelectionUtils', () => {
                     undefined
             );
         });
+
+        it.each([
+            [ClinicalDataTypeEnum.SAMPLE, 's1', 'sample'],
+            [ClinicalDataTypeEnum.PATIENT, 'p1', 'patient'],
+        ] as const)(
+            'explains ambiguous %s IDs while retaining cases from both studies',
+            (caseType, caseId, caseName) => {
+                const result = parseContent(
+                    caseId,
+                    true,
+                    ['chol_nus_2012', 'lgg_tcga'],
+                    caseType,
+                    st1.concat(st2),
+                    false
+                );
+
+                assert.lengthOf(result.validationResult.error, 0);
+                assert.lengthOf(result.validationResult.warning, 1);
+                assert.equal(
+                    result.validationResult.warning[0].code,
+                    CodeEnum.INVALID_CASE_ID
+                );
+                assert.equal(
+                    result.validationResult.warning[0].message.message,
+                    `The ${caseName} IDs below exist in multiple studies. By default, these ${caseName}s will be included in all the studies in which they exist. To limit to a ${caseName} in a specific study, update the list to include the study ID in the format: study_id:${caseName}_id. ${
+                        caseName === 'sample' ? 'Sample' : 'Patient'
+                    } IDs: ${caseId}`
+                );
+                assert.sameDeepMembers(
+                    result.data.map(datum => [
+                        datum.studyId,
+                        datum.sampleId,
+                        datum.patientId,
+                        datum.value,
+                    ]),
+                    [
+                        [
+                            'chol_nus_2012',
+                            's1',
+                            'p1',
+                            DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT,
+                        ],
+                        [
+                            'lgg_tcga',
+                            's1',
+                            'p1',
+                            DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT,
+                        ],
+                    ]
+                );
+            }
+        );
+
+        it.each([
+            [ClinicalDataTypeEnum.SAMPLE, 's1', 'unique_sample'],
+            [ClinicalDataTypeEnum.PATIENT, 'p1', 'unique_patient'],
+        ] as const)(
+            'does not warn for qualified or unique %s IDs',
+            (caseType, caseId, uniqueCaseId) => {
+                const uniqueSample = {
+                    ...st1[0],
+                    sampleId: 'unique_sample',
+                    patientId: 'unique_patient',
+                    uniqueSampleKey: 'chol_nus_2012_unique_sample',
+                    uniquePatientKey: 'chol_nus_2012_unique_patient',
+                };
+                for (const input of [`chol_nus_2012:${caseId}`, uniqueCaseId]) {
+                    const result = parseContent(
+                        input,
+                        true,
+                        ['chol_nus_2012', 'lgg_tcga'],
+                        caseType,
+                        st1.concat(st2, [uniqueSample]),
+                        false
+                    );
+
+                    assert.lengthOf(result.validationResult.error, 0);
+                    assert.lengthOf(result.validationResult.warning, 0);
+                    assert.lengthOf(result.data, 1);
+                    assert.equal(result.data[0].studyId, 'chol_nus_2012');
+                    assert.equal(
+                        caseType === ClinicalDataTypeEnum.SAMPLE
+                            ? result.data[0].sampleId
+                            : result.data[0].patientId,
+                        input === uniqueCaseId ? uniqueCaseId : caseId
+                    );
+                }
+            }
+        );
 
         it('Give error for unknown study ids', () => {
             const lines: InputLine[] = [

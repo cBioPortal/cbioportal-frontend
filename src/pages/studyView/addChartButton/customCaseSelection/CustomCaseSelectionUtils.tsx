@@ -208,12 +208,13 @@ export function validateLines(
     );
 
     if (!isSingleStudy && !_.isEmpty(multiStudyCases)) {
+        const caseName = caseType.toLowerCase();
         warningMessages.push({
             code: CodeEnum.INVALID_CASE_ID,
             message: new Error(
-                `The ${caseType} ID's below belong to multiple studies. All of them in the different studies will be selected. 
-                To select specific ${caseType}, please specify study_id, Example: study_id:sample_id. 
-                ${caseType} ID's: ${multiStudyCases.join(', ')}`
+                `The ${caseName} IDs below exist in multiple studies. By default, these ${caseName}s will be included in all the studies in which they exist. To limit to a ${caseName} in a specific study, update the list to include the study ID in the format: study_id:${caseName}_id. ${
+                    caseName === 'sample' ? 'Sample' : 'Patient'
+                } IDs: ${multiStudyCases.join(', ')}`
             ),
         });
     }
