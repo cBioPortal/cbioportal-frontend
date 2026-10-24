@@ -5,7 +5,10 @@ import LazyMobXTable, {
 } from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import { observer } from 'mobx-react';
 import { computed, makeObservable } from 'mobx';
-import { formatSignificanceValueWithStyle } from 'shared/lib/FormatUtils';
+import {
+    formatSignificanceValueWithStyle,
+    toConditionalPrecisionWithMinimum,
+} from 'shared/lib/FormatUtils';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import styles from './styles.module.scss';
 import autobind from 'autobind-decorator';
@@ -146,7 +149,7 @@ export default class GenericAssayCategoricalEnrichmentsTable extends React.Compo
             name: 'p-Value',
             render: (d: GenericAssayCategoricalEnrichmentRow) => (
                 <span style={{ whiteSpace: 'nowrap' }}>
-                    {toConditionalPrecision(d.pValue, 3, 0.01)}
+                    {toConditionalPrecisionWithMinimum(d.pValue, 3, 0.01, -10)}
                 </span>
             ),
             tooltip: (
@@ -161,7 +164,7 @@ export default class GenericAssayCategoricalEnrichmentsTable extends React.Compo
             name: 'q-Value',
             render: (d: GenericAssayCategoricalEnrichmentRow) => (
                 <span style={{ whiteSpace: 'nowrap' }}>
-                    {formatSignificanceValueWithStyle(d.qValue)}
+                    {formatSignificanceValueWithStyle(d.qValue, -10)}
                 </span>
             ),
             tooltip: <span>Derived from Benjamini-Hochberg procedure</span>,
