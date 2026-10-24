@@ -140,7 +140,7 @@ describe('ResourceDataTable metadata columns', () => {
         assert.include(
             headerText({
                 // A resource with no override, so the default is what is under test.
-                activeResourceId: 'IDC_SLIM',
+                activeResourceId: 'PATHOLOGY_SLIDE',
                 activeResourceLabel: 'Slide Microscopy',
             } as any),
             '3074 Slide Microscopies'
@@ -160,6 +160,27 @@ describe('ResourceDataTable metadata columns', () => {
         assert.include(text, 'of 12·CyCIF·');
         assert.notInclude(text, 'CyCIFs');
         assert.include(text, '1 patient / 12 samples');
+    });
+
+    it('names the rows with the configured items label', () => {
+        const text = headerText({
+            activeResourceId: 'IDC_SLIM',
+            activeResourceLabel: 'Slide Microscopy',
+            totalRowCount: 1251,
+        } as any);
+        assert.include(text, 'of 1251 Slides');
+        assert.notInclude(text, 'Microscop');
+    });
+
+    it('uses the singular configured label when there is one row', () => {
+        assert.include(
+            headerText({
+                activeResourceId: 'IDC_SLIM',
+                activeResourceLabel: 'Slide Microscopy',
+                totalRowCount: 1,
+            } as any),
+            'of 1 Slide·'
+        );
     });
 
     it('uses the singular form when there is one row', () => {
