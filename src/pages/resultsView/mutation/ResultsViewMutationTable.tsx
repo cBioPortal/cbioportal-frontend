@@ -140,13 +140,6 @@ export default class ResultsViewMutationTable extends MutationTable<
             this.props.mutationsTabClinicalAttributes.result || [];
         for (let i = 0; i < clinicalAttributes.length; i++) {
             const attributeId = clinicalAttributes[i].clinicalAttributeId;
-            if (
-                this.props.columns &&
-                !this.props.columns.includes(attributeId)
-            ) {
-                this.props.columns.push(attributeId);
-            }
-
             this._columns[attributeId] = {
                 id: attributeId,
                 name: clinicalAttributes[i].displayName,
