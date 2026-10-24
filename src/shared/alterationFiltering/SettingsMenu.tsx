@@ -30,6 +30,7 @@ export interface SettingsMenuProps {
     annotationTitleComponent?: JSX.Element;
     showOnckbAnnotationControls?: boolean;
     showFilterControls?: boolean;
+    hasExpressionProfileSelected?: boolean;
     showExcludeUnprofiledSamplesControl?: boolean;
     disabled?: boolean;
 }
@@ -158,6 +159,14 @@ export default class SettingsMenu extends React.Component<
                                     />
                                 </label>
                             </div>
+                            {this.props.hasExpressionProfileSelected &&
+                                !this.props.store.driverAnnotationSettings
+                                    .includeVUS && (
+                                    <div data-test="DriverExpressionFilterInfo">
+                                        Driver filtering does not apply to mRNA
+                                        or protein expression data.
+                                    </div>
+                                )}
                             <div className="checkbox">
                                 <label>
                                     <input

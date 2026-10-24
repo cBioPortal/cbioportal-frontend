@@ -28,6 +28,7 @@ import _ from 'lodash';
 import { mixedReferenceGenomeWarning } from 'shared/lib/referenceGenomeUtils';
 import SettingsMenuButton from 'shared/components/driverAnnotations/SettingsMenuButton';
 import { PatientSampleSummary } from './PatientSampleSummary';
+import { AlterationTypeConstants } from 'shared/constants';
 
 interface QuerySummaryProps {
     routingStore: ExtendedRouterStore;
@@ -285,6 +286,21 @@ export default class QuerySummary extends React.Component<
         );
     }
 
+    @computed get hasExpressionProfileSelected() {
+        const selectedMolecularProfiles = this.props.store
+            .selectedMolecularProfiles;
+        return (
+            selectedMolecularProfiles.isComplete &&
+            (selectedMolecularProfiles.result || []).some(
+                profile =>
+                    profile.molecularAlterationType ===
+                        AlterationTypeConstants.MRNA_EXPRESSION ||
+                    profile.molecularAlterationType ===
+                        AlterationTypeConstants.PROTEIN_LEVEL
+            )
+        );
+    }
+
     render() {
         if (
             !this.cohortAndGeneSummary.isError &&
@@ -317,6 +333,9 @@ export default class QuerySummary extends React.Component<
                                         disableInfoIcon={false}
                                         showOnckbAnnotationControls={true}
                                         showFilterControls={true}
+                                        hasExpressionProfileSelected={
+                                            this.hasExpressionProfileSelected
+                                        }
                                         showExcludeUnprofiledSamplesControl={
                                             true
                                         }

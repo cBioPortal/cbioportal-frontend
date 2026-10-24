@@ -17,6 +17,7 @@ export interface SettingsButtonProps {
     disableInfoIcon?: boolean;
     showOnckbAnnotationControls?: boolean;
     showFilterControls?: boolean;
+    hasExpressionProfileSelected?: boolean;
     showExcludeUnprofiledSamplesControl: boolean;
     disabled?: boolean;
     inFilterPanel?: boolean;
@@ -91,6 +92,9 @@ export default class SettingsMenuButton extends React.Component<
                     this.props.showOnckbAnnotationControls
                 }
                 showFilterControls={this.props.showFilterControls}
+                hasExpressionProfileSelected={
+                    this.props.hasExpressionProfileSelected
+                }
                 showExcludeUnprofiledSamplesControl={
                     this.props.showExcludeUnprofiledSamplesControl
                 }
