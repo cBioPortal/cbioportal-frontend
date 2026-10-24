@@ -2,7 +2,7 @@ import autobind from 'autobind-decorator';
 import _ from 'lodash';
 import { action, computed, observable, makeObservable } from 'mobx';
 
-import { Mutation } from 'cbioportal-utils';
+import { getLollipopPosition, Mutation } from 'cbioportal-utils';
 
 import { DataFilter, DataFilterType } from '../model/DataFilter';
 import DataStore from '../model/DataStore';
@@ -179,7 +179,7 @@ export class DefaultMutationMapperDataStore implements DataStore {
             // by default only filter by position
             return (
                 filter.type !== DataFilterType.POSITION ||
-                filter.values.includes(mutation.proteinPosStart)
+                filter.values.includes(getLollipopPosition(mutation))
             );
         }
     }

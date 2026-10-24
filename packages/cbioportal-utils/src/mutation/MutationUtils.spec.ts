@@ -10,6 +10,7 @@ import {
     normalizeChromosome,
     generateHgvsgByMutation,
     hasValidGenomicLocation,
+    PROMOTER_PROTEIN_POSITION,
 } from './MutationUtils';
 
 import { Mutation } from '../model/Mutation';
@@ -126,6 +127,18 @@ describe('MutationUtils', () => {
                 { proteinPosStart: 666, proteinChange: 'D666F' },
                 'second mutation at pos 666 should be D666F'
             );
+        });
+
+        it('groups promoter mutations at the promoter position', () => {
+            const grouped = groupMutationsByProteinStartPos([
+                { proteinPosStart: -1, proteinChange: 'Promoter' },
+                { proteinPosStart: -1, proteinChange: 'promoter' },
+                { proteinPosStart: 66, proteinChange: 'D66B' },
+            ] as Mutation[]);
+
+            assert.equal(grouped[PROMOTER_PROTEIN_POSITION].length, 2);
+            assert.equal(grouped[66].length, 1);
+            assert.isUndefined(grouped[-1]);
         });
     });
 
