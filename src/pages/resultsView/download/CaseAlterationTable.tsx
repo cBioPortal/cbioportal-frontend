@@ -133,6 +133,15 @@ export function generateOqlValue(
     alterationType: string,
     forDownload?: boolean
 ): PseudoOqlSummary | undefined {
+    if (alterationType === 'ANY') {
+        return getPseudoOqlSummaryByAlterationTypes(
+            { [data.geneSymbol]: data },
+            data.geneSymbol,
+            ['ANY'],
+            forDownload
+        );
+    }
+
     // helper functions to map the display value for different alteration types
     const stringMapper = (alterationData: (string | ISubAlteration)[]) =>
         alterationData as string[];
@@ -270,7 +279,9 @@ export function getPseudoOqlSummaryByAlterationTypes(
 ): PseudoOqlSummary {
     // tracks/genes with no alteration-type profile selected (e.g. studies
     // with only an mRNA profile) have no entry in the alteration types map
-    alterationTypes = alterationTypes || [];
+    alterationTypes = alterationTypes?.includes('ANY')
+        ? ['MUT', 'FUSION', 'CNA', 'EXP', 'PROT']
+        : alterationTypes || [];
     const pseudoOqlSummaries = _.map(alterationTypes, type =>
         generatePseudoOqlSummary(oqlData, oqlLine, type, forDownload)
     );
