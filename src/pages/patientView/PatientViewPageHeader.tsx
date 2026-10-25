@@ -22,7 +22,7 @@ const PatientViewPageHeader: React.FC<IPatientPageHeaderProps> = observer(
     function(props) {
         const sampleManager = props.pageStore.sampleManager.result;
         const immuneSignatureBySample =
-            props.pageStore.immuneSignatureBySample.result;
+            props.pageStore.immuneSignatureStore.immuneSignatureBySample.result;
         const activeSampleIds = sampleManager
             ? sampleManager.getActiveSampleIdsInOrder()
             : [];
