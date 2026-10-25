@@ -36,7 +36,7 @@ import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import MethylationEnrichments from './MethylationEnrichments';
 import AlterationEnrichments from './AlterationEnrichments';
 import AlterationEnrichmentTypeSelector from '../../shared/lib/comparison/AlterationEnrichmentTypeSelector';
-import { AlterationFilterMenuSection } from 'pages/groupComparison/GroupComparisonUtils';
+import { AlterationFilterMenuSection, getOverlapStrategyOptionLabels } from 'pages/groupComparison/GroupComparisonUtils';
 import { getServerConfig } from 'config/config';
 import {
     buildCustomTabs,
@@ -441,22 +441,37 @@ export default class GroupComparisonPage extends React.Component<
     readonly overlapStrategySelector = MakeMobxView({
         await: () => [this.store.overlapComputations],
         render: () => {
+            const overlapInfo = this.store.overlapComputations.result!;
             if (
-                !this.store.overlapComputations.result!.totalSampleOverlap &&
-                !this.store.overlapComputations.result!.totalPatientOverlap
+                !overlapInfo.totalSampleOverlap &&
+                !overlapInfo.totalPatientOverlap
             ) {
                 return null;
             } else {
-                const includeLabel = 'Include overlapping samples and patients';
-                const excludeLabel = 'Exclude overlapping samples and patients';
+                const hasSampleOverlap = overlapInfo.totalSampleOverlap > 0;
+                const hasPatientOverlap = overlapInfo.totalPatientOverlap > 0;
+                const {
+                    includeLabel,
+                    excludeLabel,
+                    overlapOnlyLabel,
+                } = getOverlapStrategyOptionLabels(
+                    hasSampleOverlap,
+                    hasPatientOverlap
+                );
+                const currentStrategy = this.store.overlapStrategy;
+                const currentLabel =
+                    currentStrategy === OverlapStrategy.EXCLUDE
+                        ? excludeLabel
+                        : currentStrategy === OverlapStrategy.OVERLAP_ONLY
+                        ? overlapOnlyLabel
+                        : includeLabel;
                 return (
                     <div style={{ minWidth: 355, width: 355, zIndex: 20 }}>
                         <ReactSelect
                             name="select overlap strategy"
                             onChange={(option: any | null) => {
-                                if (option) {
-                                    this.onOverlapStrategySelect(option);
-                                }
+                                if (!option) return;
+                                this.onOverlapStrategySelect(option);
                             }}
                             options={[
                                 {
@@ -467,16 +482,21 @@ export default class GroupComparisonPage extends React.Component<
                                     label: excludeLabel,
                                     value: OverlapStrategy.EXCLUDE,
                                 },
+                                ...(hasPatientOverlap
+                                    ? [
+                                          {
+                                              label: overlapOnlyLabel,
+                                              value:
+                                                  OverlapStrategy.OVERLAP_ONLY,
+                                          },
+                                      ]
+                                    : []),
                             ]}
                             clearable={false}
                             searchable={false}
                             value={{
-                                label:
-                                    this.store.overlapStrategy ===
-                                    OverlapStrategy.EXCLUDE
-                                        ? excludeLabel
-                                        : includeLabel,
-                                value: this.store.overlapStrategy,
+                                label: currentLabel,
+                                value: currentStrategy,
                             }}
                         />
                     </div>
