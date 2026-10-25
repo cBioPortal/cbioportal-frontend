@@ -42,7 +42,7 @@ const ProbabilityBar: React.FC<{ cls: string; probability: number }> = ({
     </div>
 );
 
-const ClassificationCard: React.FC<{ signature: ImmuneSignature }> = ({
+const ProbabilityTable: React.FC<{ signature: ImmuneSignature }> = ({
     signature,
 }) => (
     <div data-test="immune-signature-classification">
@@ -155,16 +155,7 @@ export const ImmuneSignatureTab: React.FC<IImmuneSignatureTabProps> = observer(
                     )}
                 </div>
                 {signature ? (
-                    <div
-                        style={{
-                            display: 'flex',
-                            gap: 20,
-                            marginBottom: 30,
-                            flexWrap: 'wrap',
-                        }}
-                    >
-                        <ClassificationCard signature={signature} />
-                    </div>
+                    <ProbabilityTable signature={signature} />
                 ) : (
                     <div
                         className="alert alert-info"

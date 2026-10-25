@@ -28,11 +28,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import { getClient } from '../../../shared/api/cbioportalClientInstance';
 import { PatientViewPlotsStore } from './PatientViewPlotsStore';
-import { addMockImmuneSignatureClinicalData } from '../immuneSignature/mockImmuneSignatureClinicalData';
-import {
-    getImmuneSignature,
-    ImmuneSignature,
-} from '../immuneSignature/ImmuneSignatureUtils';
+import { ImmuneSignatureStore } from '../immuneSignature/ImmuneSignatureStore';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
 import oncokbClient from '../../../shared/api/oncokbClientInstance';
 import { computed, observable, action, makeObservable } from 'mobx';
@@ -402,6 +398,7 @@ export class PatientViewPageStore {
         this.studyId = studyId;
 
         this.plotsStore = new PatientViewPlotsStore(this);
+        this.immuneSignatureStore = new ImmuneSignatureStore(this);
         this.plotsTabStore = new PlotsTabStore({
             molecularProfiles: this.molecularProfilesInCohortStudies,
             plotsSelectedGenes: this.plotsSelectedGenes,
@@ -462,6 +459,8 @@ export class PatientViewPageStore {
 
     // Sub-store for the patient view plots (e.g. the mRNA tab).
     public readonly plotsStore: PatientViewPlotsStore;
+    // Sub-store for the immune signature tab and header row.
+    public readonly immuneSignatureStore: ImmuneSignatureStore;
     public readonly plotsTabStore: PlotsTabStore;
     public clinicalDataCache: ClinicalDataCache;
 
@@ -1950,7 +1949,7 @@ export class PatientViewPageStore {
 
     readonly clinicalDataForAllSamplesForPatient = remoteData({
         await: () => [this.allSamplesForPatient],
-        invoke: async () => {
+        invoke: () => {
             const identifiers = this.allSamplesForPatient.result.map(
                 sample => ({
                     entityId: sample.sampleId,
@@ -1960,20 +1959,14 @@ export class PatientViewPageStore {
             const clinicalDataMultiStudyFilter = {
                 identifiers,
             } as ClinicalDataMultiStudyFilter;
-            const clinicalData = await fetchClinicalData(
-                clinicalDataMultiStudyFilter
-            );
-            return addMockImmuneSignatureClinicalData(
-                clinicalData,
-                this.allSamplesForPatient.result
-            );
+            return fetchClinicalData(clinicalDataMultiStudyFilter);
         },
     });
 
     readonly clinicalDataForSamples = remoteData(
         {
             await: () => [this.samples],
-            invoke: async () => {
+            invoke: () => {
                 const identifiers = this.sampleIds.map((sampleId: string) => ({
                     entityId: sampleId,
                     studyId: this.studyId,
@@ -1981,13 +1974,7 @@ export class PatientViewPageStore {
                 const clinicalDataMultiStudyFilter = {
                     identifiers,
                 } as ClinicalDataMultiStudyFilter;
-                const clinicalData = await fetchClinicalData(
-                    clinicalDataMultiStudyFilter
-                );
-                return addMockImmuneSignatureClinicalData(
-                    clinicalData,
-                    this.samples.result
-                );
+                return fetchClinicalData(clinicalDataMultiStudyFilter);
             },
         },
         []
@@ -2003,72 +1990,6 @@ export class PatientViewPageStore {
                 ),
         },
         []
-    );
-
-    readonly immuneSignatureGenericAssayData = remoteData<GenericAssayData[]>(
-        {
-            await: () => [this.samples, this.molecularProfilesInStudy],
-            invoke: async () => {
-                const profileIds = this.molecularProfilesInStudy.result
-                    .filter(
-                        profile =>
-                            profile.genericAssayType ===
-                            GenericAssayTypeConstants.ISIG_PROBABILITY
-                    )
-                    .map(profile => profile.molecularProfileId);
-                if (profileIds.length === 0) {
-                    return [];
-                }
-                const sampleMolecularIdentifiers = _.flatMap(
-                    profileIds,
-                    molecularProfileId =>
-                        this.samples.result.map(
-                            sample =>
-                                ({
-                                    molecularProfileId,
-                                    sampleId: sample.sampleId,
-                                } as SampleMolecularIdentifier)
-                        )
-                );
-                return getClient().fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(
-                    {
-                        genericAssayDataMultipleStudyFilter: {
-                            sampleMolecularIdentifiers,
-                        } as GenericAssayDataMultipleStudyFilter,
-                    }
-                );
-            },
-        },
-        []
-    );
-
-    readonly immuneSignatureBySample = remoteData<
-        Record<string, ImmuneSignature>
-    >(
-        {
-            await: () => [
-                this.clinicalDataGroupedBySample,
-                this.immuneSignatureGenericAssayData,
-            ],
-            invoke: async () => {
-                const genericAssayDataBySampleId = _.groupBy(
-                    this.immuneSignatureGenericAssayData.result,
-                    d => d.sampleId
-                );
-                const result: Record<string, ImmuneSignature> = {};
-                this.clinicalDataGroupedBySample.result.forEach(sample => {
-                    const signature = getImmuneSignature(
-                        sample.clinicalData,
-                        genericAssayDataBySampleId[sample.id]
-                    );
-                    if (signature) {
-                        result[sample.id] = signature;
-                    }
-                });
-                return result;
-            },
-        },
-        {}
     );
 
     readonly clinicalDataGroupedBySampleMap = remoteData(

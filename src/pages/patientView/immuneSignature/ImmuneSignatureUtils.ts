@@ -8,9 +8,6 @@ import {
 export enum ImmuneSignatureAttribute {
     KNN_CLASS = 'ISIG_KNN_CLASS',
     KNN_CONFIDENCE = 'ISIG_KNN_CONFIDENCE',
-    CENTROID_CLASS = 'ISIG_CENTROID_CLASS',
-    METHODS_AGREE = 'ISIG_METHODS_AGREE',
-    SCALING_MODE = 'ISIG_SCALING_MODE',
 }
 
 export const MFP_CLASSES = ['D', 'F', 'IE', 'IE/F'];
@@ -47,9 +44,6 @@ export const MFP_CLASS_LABELS: Record<string, string> = _.mapValues(
 export type ImmuneSignature = {
     knnClass: string;
     knnConfidence?: string;
-    centroidClass?: string;
-    methodsAgree?: boolean;
-    scalingMode?: string;
     classScores: Record<string, number>;
 };
 
@@ -59,13 +53,6 @@ function toNumber(value: string | undefined): number | undefined {
     }
     const n = parseFloat(value);
     return isNaN(n) ? undefined : n;
-}
-
-function toBoolean(value: string | undefined): boolean | undefined {
-    if (value === undefined) {
-        return undefined;
-    }
-    return value.toLowerCase() === 'true';
 }
 
 // Generic assay values take precedence over clinical data for the
@@ -109,9 +96,6 @@ export function getImmuneSignature(
     return {
         knnClass,
         knnConfidence: values[ImmuneSignatureAttribute.KNN_CONFIDENCE],
-        centroidClass: values[ImmuneSignatureAttribute.CENTROID_CLASS],
-        methodsAgree: toBoolean(values[ImmuneSignatureAttribute.METHODS_AGREE]),
-        scalingMode: values[ImmuneSignatureAttribute.SCALING_MODE],
         classScores,
     };
 }

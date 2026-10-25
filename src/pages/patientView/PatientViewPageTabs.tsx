@@ -817,7 +817,8 @@ export function tabs(
     // tab stays visible while the data loads so the page doesn't fall back to
     // Summary in the meantime.
     const immuneSignatureBySample =
-        pageComponent.patientViewPageStore.immuneSignatureBySample;
+        pageComponent.patientViewPageStore.immuneSignatureStore
+            .immuneSignatureBySample;
     const showImmuneSignatureTab = immuneSignatureBySample.isComplete
         ? Object.keys(immuneSignatureBySample.result).length > 0
         : urlWrapper.activeTabId === PatientViewPageTabs.ImmuneSignature;
