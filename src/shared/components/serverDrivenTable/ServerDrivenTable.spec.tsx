@@ -61,6 +61,28 @@ describe('ServerDrivenTable', () => {
         jest.useRealTimers();
     });
 
+    it('starts the header at the toolbar edge', () => {
+        const table = mount(
+            <ServerDrivenTable<TestRow>
+                {...defaultProps()}
+                headerContent={<span data-test="header">header</span>}
+            />
+        );
+        const toolbar = table
+            .find('.tableMainToolbar')
+            .hostNodes()
+            .first();
+
+        assert.isFalse(toolbar.hasClass('btn-toolbar'));
+        assert.equal(
+            toolbar
+                .childAt(0)
+                .find('[data-test="header"]')
+                .exists(),
+            true
+        );
+    });
+
     it('renders empty state when not loading and there are no rows', () => {
         const table = mount(
             <ServerDrivenTable<TestRow>
