@@ -1,5 +1,6 @@
 import { assert } from 'chai';
 import {
+    chartTypeShowsAllCategories,
     GenericAssayTypeConstants,
     getGenericAssayCategories,
     getGenericAssayChartTypes,
@@ -7,7 +8,7 @@ import {
 
 describe('GenericAssayConfig', () => {
     describe('getGenericAssayChartTypes', () => {
-        it('offers all chart types except dominant by default', () => {
+        it('offers the single-track chart types except dominant by default', () => {
             assert.deepEqual(getGenericAssayChartTypes('UNCONFIGURED_TYPE'), [
                 'heatmap',
                 'bars',
@@ -28,8 +29,18 @@ describe('GenericAssayConfig', () => {
                 getGenericAssayChartTypes(
                     GenericAssayTypeConstants.ISIG_PROBABILITY
                 ),
-                ['composition', 'dominant']
+                ['composition_dominant']
             );
+        });
+    });
+
+    describe('chartTypeShowsAllCategories', () => {
+        it('is true for the stacked bar and dominant category types', () => {
+            assert.isTrue(chartTypeShowsAllCategories('composition'));
+            assert.isTrue(chartTypeShowsAllCategories('dominant'));
+            assert.isTrue(chartTypeShowsAllCategories('composition_dominant'));
+            assert.isFalse(chartTypeShowsAllCategories('absolute'));
+            assert.isFalse(chartTypeShowsAllCategories('heatmap'));
         });
     });
 
