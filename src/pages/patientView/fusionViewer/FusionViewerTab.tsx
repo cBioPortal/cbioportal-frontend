@@ -58,8 +58,9 @@ export class FusionViewerTab extends React.Component<IFusionViewerTabProps> {
             );
         }
 
-        const showLoading =
-            this.store.transcriptsLoading && !this.store.forteTranscript5p;
+        // A pending request still exposes the previous fusion's result, so any
+        // pending side means loading -- never draw stale transcripts.
+        const showLoading = this.store.transcriptsLoading;
 
         return (
             <div className={styles.fusionViewerTab}>
