@@ -2368,8 +2368,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         },
     });
 
-    // Each profile's entities followed by the derived entities of its generic
-    // assay type.
+    // The derived entities of each profile's generic assay type, followed by
+    // the profile's own entities, so a derived entity is the default option.
     readonly genericAssayEntitiesWithDerivedByProfileId = remoteData<{
         [profileId: string]: GenericAssayMeta[];
     }>({
@@ -2387,11 +2387,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     this.props.genericAssayEntitiesGroupByMolecularProfileId
                         .result!,
                     (entities, profileId) =>
-                        entities.concat(
-                            makeDerivedGenericAssayMetas(
-                                profileById[profileId]?.genericAssayType
-                            )
-                        )
+                        makeDerivedGenericAssayMetas(
+                            profileById[profileId]?.genericAssayType
+                        ).concat(entities)
                 )
             );
         },
