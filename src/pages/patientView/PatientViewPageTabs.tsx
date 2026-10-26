@@ -23,6 +23,7 @@ import _ from 'lodash';
 import MutationalSignaturesContainer from 'pages/patientView/mutationalSignatures/MutationalSignaturesContainer';
 import MrnaTabContent from 'pages/patientView/mrna/MrnaTabContent';
 import { FeatureFlagEnum } from 'shared/featureFlags';
+import { isFusionViewerEnabled } from './fusionViewer/data/fusionViewerStudies';
 import { buildCustomTabs } from 'shared/lib/customTabs/customTabHelpers';
 import * as React from 'react';
 import SampleManager from 'pages/patientView/SampleManager';
@@ -817,29 +818,24 @@ export function tabs(
         /* @ts-ignore */
         tabs.push(...pageComponent.resourceTabs.component);
 
-    tabs.push(
-        <MSKTab
-            key={9}
-            id={PatientViewPageTabs.FusionViewer}
-            linkText={patientSvTabLabel(hasRnaFusion(svData.result || []))}
-            hide={hideFusionViewer}
-        >
-            <FusionViewerTab
-                structuralVariants={svData.result || []}
-                referenceGenome={
-                    pageComponent.patientViewPageStore.studies.result[0]
-                        ?.referenceGenome
-                }
-            />
-        </MSKTab>
-        buildFusionViewerTab(
-            PatientViewPageTabs.FusionViewer,
-            pageComponent.patientViewPageStore.structuralVariantData,
-            urlWrapper.activeTabId,
-            pageComponent.patientViewPageStore.studies.result[0]
-                ?.referenceGenome
+    if (
+        isFusionViewerEnabled(
+            (pageComponent.patientViewPageStore.studies.result || []).map(
+                s => s.studyId
+            ),
+            getServerConfig().fusion_viewer_study_ids
         )
-    );
+    ) {
+        tabs.push(
+            buildFusionViewerTab(
+                PatientViewPageTabs.FusionViewer,
+                pageComponent.patientViewPageStore.structuralVariantData,
+                urlWrapper.activeTabId,
+                pageComponent.patientViewPageStore.studies.result[0]
+                    ?.referenceGenome
+            )
+        );
+    }
 
     tabs.push(...buildCustomTabs(pageComponent.customTabs));
 
