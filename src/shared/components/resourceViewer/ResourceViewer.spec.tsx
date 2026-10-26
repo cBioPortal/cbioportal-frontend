@@ -91,12 +91,24 @@ describe('ResourceViewer', () => {
                     sampleStableId: undefined,
                     patientStableId: 'TCGA-4Z-AA7M',
                 }),
+                row({ url: 'https://example.com/b.html' }),
             ],
         });
         assert.equal(
             screen.getByTestId('ResourceViewerCaption').textContent,
-            'TCGA-4Z-AA7M | 1 of 1'
+            'TCGA-4Z-AA7M | 1 of 2'
         );
+    });
+
+    it('leaves out the title and caption when there is one item', () => {
+        renderViewer({ rows: [row()] });
+        assert.isNull(screen.queryByTestId('ResourceViewerCaption'));
+        assert.isNull(screen.queryByText('Slide Microscopy'));
+    });
+
+    it('leaves out the title and caption when asked to', () => {
+        renderViewer({ hideHeader: true });
+        assert.isNull(screen.queryByTestId('ResourceViewerCaption'));
     });
 
     it('counts from one in the caption', () => {

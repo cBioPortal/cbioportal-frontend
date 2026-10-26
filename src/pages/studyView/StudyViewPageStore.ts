@@ -11479,6 +11479,16 @@ export class StudyViewPageStore
                     );
                 }
 
+                // Add counts for gene-specific violin charts
+                this._geneSpecificViolinChartMap.forEach(
+                    (violinChart, uniqueChartKey) => {
+                        ret[uniqueChartKey] =
+                            molecularProfileSamplesSet[
+                                violinChart.profileType
+                            ] || 0;
+                    }
+                );
+
                 // Add counts generic assay data charts
                 if (this._genericAssayChartMap.size > 0) {
                     _.reduce(

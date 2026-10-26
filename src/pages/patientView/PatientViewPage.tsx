@@ -62,7 +62,8 @@ import {
 import { MakeMobxView } from '../../shared/components/MobxView';
 import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
 import ResourceDataTable from 'shared/components/resourceTable/ResourceDataTable';
-import ResourceViewerTab from './resources/ResourceViewerTab';
+import ResourceViewerTab from 'shared/components/resourceViewer/ResourceViewerTab';
+import resourceViewerStyles from 'shared/components/resourceViewer/styles.module.scss';
 import {
     fetchResourceTableMetadata,
     ResourceTableTab,
@@ -718,6 +719,7 @@ export class PatientViewPageInner extends React.Component<
                 id={getPatientViewResourceTabId(resourceId)}
                 linkText={closable ? `${tab.label} Viewer` : tab.label}
                 onClickClose={closable ? this.closeResourceTab : undefined}
+                className={resourceViewerStyles.fullWidthTab}
                 // Keeps the frame alive while the user looks at another tab, so a slide keeps
                 // its zoom and a Minerva story its channel group.
                 unmountOnHide={false}
@@ -728,6 +730,7 @@ export class PatientViewPageInner extends React.Component<
                         tab.totalCount
                     )}
                     resourceDisplayName={tab.label}
+                    fillWindowHeight={true}
                     iframeErrorMessage={
                         definition
                             ? getResourceConfig(definition).iframeErrorMessage

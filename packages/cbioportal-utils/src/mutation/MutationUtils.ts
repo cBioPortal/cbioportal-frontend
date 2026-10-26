@@ -23,13 +23,31 @@ export function countMutationsByProteinChange(
     );
 }
 
+// Promoter mutations (e.g. TERT C228T/C250T) lie upstream of the coding
+// sequence and have no protein position, so they are placed right before codon 1.
+export const PROMOTER_PROTEIN_POSITION = 0;
+
+export function isPromoterMutation(
+    mutation: Partial<Pick<Mutation, 'proteinChange'>>
+): boolean {
+    return (mutation.proteinChange || '').toLowerCase() === 'promoter';
+}
+
+export function getLollipopPosition(
+    mutation: Partial<Pick<Mutation, 'proteinChange' | 'proteinPosStart'>>
+): number {
+    return isPromoterMutation(mutation)
+        ? PROMOTER_PROTEIN_POSITION
+        : mutation.proteinPosStart!;
+}
+
 export function groupMutationsByProteinStartPos<T extends Mutation>(
     mutations: T[]
 ): { [pos: number]: T[] } {
     const map: { [pos: number]: T[] } = {};
 
     for (const mutation of mutations) {
-        const codon = mutation.proteinPosStart;
+        const codon = getLollipopPosition(mutation);
 
         if (codon !== undefined && codon !== null) {
             map[codon] = map[codon] || [];

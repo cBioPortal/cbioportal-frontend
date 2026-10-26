@@ -93,6 +93,11 @@ import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModa
 import { PlotsTabWrapper } from 'pages/studyView/StudyViewPlotsTabWrapper';
 import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
 import ResourceDataTable from 'shared/components/resourceTable/ResourceDataTable';
+import { ResourceViewerStore } from 'shared/components/resourceViewer/ResourceViewerStore';
+import ResourceViewerTab from 'shared/components/resourceViewer/ResourceViewerTab';
+import resourceViewerStyles from 'shared/components/resourceViewer/styles.module.scss';
+import { ResourceTableTab } from 'shared/api/resourceTableClient';
+import { isStudyWideResource } from 'shared/lib/ResourceTableUtils';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -156,6 +161,10 @@ export default class StudyViewPage extends React.Component<
     private readonly resourceTableStores = new Map<
         string,
         ResourceTableStore
+    >();
+    private readonly resourceViewerStores = new Map<
+        string,
+        ResourceViewerStore
     >();
     private resourceTableStoreDisposer: IReactionDisposer | null = null;
     private legacyTabRedirectDisposer: IReactionDisposer | null = null;
@@ -341,6 +350,9 @@ export default class StudyViewPage extends React.Component<
                     coversWholeStudy
                 )
             );
+            this.resourceViewerStores.forEach(store =>
+                this.setViewerStoreContext(store)
+            );
         });
 
         // Redirect from legacy filesAndLinks tab to first new resource table tab
@@ -377,6 +389,28 @@ export default class StudyViewPage extends React.Component<
                 );
             }
         }
+        return store;
+    }
+
+    private setViewerStoreContext(store: ResourceViewerStore) {
+        store.setContext(
+            this.resourceTableStore.studyIds,
+            this.resourceTableStore.patientIdentifiers,
+            this.resourceTableStore.sampleIdentifiers
+        );
+    }
+
+    private getOrCreateViewerStore(
+        resourceId: string,
+        totalCount: number
+    ): ResourceViewerStore {
+        let store = this.resourceViewerStores.get(resourceId);
+        if (!store) {
+            store = new ResourceViewerStore();
+            this.resourceViewerStores.set(resourceId, store);
+            this.setViewerStoreContext(store);
+        }
+        store.setResource(resourceId, totalCount);
         return store;
     }
 
@@ -689,21 +723,75 @@ export default class StudyViewPage extends React.Component<
             if (apiTabs.length === 0) {
                 return [] as JSX.Element[];
             }
-            return apiTabs.map(tab => (
-                <MSKTab
-                    key={getStudyViewResourceTableTabId(tab.resourceId)}
-                    id={getStudyViewResourceTableTabId(tab.resourceId)}
-                    linkText={tab.label}
-                >
-                    <ResourceDataTable
-                        store={this.getOrCreateResourceStore(tab.resourceId)}
-                        scopedResourceId={tab.resourceId}
-                        hideTabs={true}
-                    />
-                </MSKTab>
-            ));
+            return apiTabs.map(tab =>
+                isStudyWideResource(tab) ? (
+                    this.renderViewerTab(tab)
+                ) : (
+                    <MSKTab
+                        key={getStudyViewResourceTableTabId(tab.resourceId)}
+                        id={getStudyViewResourceTableTabId(tab.resourceId)}
+                        linkText={tab.label}
+                    >
+                        <ResourceDataTable
+                            store={this.getOrCreateResourceStore(
+                                tab.resourceId
+                            )}
+                            scopedResourceId={tab.resourceId}
+                            hideTabs={true}
+                        />
+                    </MSKTab>
+                )
+            );
         },
     });
+
+    /** A table of study-wide links has nothing to compare, so the resource itself is the tab. */
+    private renderViewerTab(tab: ResourceTableTab) {
+        const tabId = getStudyViewResourceTableTabId(tab.resourceId);
+        const definition = _.find(
+            this.store.resourceDefinitions.result,
+            d => d.resourceId === tab.resourceId
+        );
+        return (
+            <MSKTab
+                key={tabId}
+                id={tabId}
+                linkText={tab.label}
+                className={resourceViewerStyles.fullWidthTab}
+                // Keeps the frame alive while the user looks at another tab.
+                unmountOnHide={false}
+            >
+                <ResourceViewerTab
+                    store={this.getOrCreateViewerStore(
+                        tab.resourceId,
+                        tab.totalCount
+                    )}
+                    resourceDisplayName={tab.label}
+                    hideHeader={true}
+                    fillWindowHeight={true}
+                    iframeErrorMessage={
+                        definition
+                            ? getResourceConfig(definition).iframeErrorMessage
+                            : undefined
+                    }
+                    isActive={this.urlWrapper.tabId === tabId}
+                    urlItem={this.urlWrapper.query.resourceUrl}
+                    onSelect={(url, replace) =>
+                        this.urlWrapper.setResourceUrl(url, replace)
+                    }
+                />
+            </MSKTab>
+        );
+    }
+
+    @computed get isStudyWideViewerTabActive(): boolean {
+        return (this.resourceTableStore.tabs.result || []).some(
+            tab =>
+                isStudyWideResource(tab) &&
+                (this.store.currentTab as string) ===
+                    getStudyViewResourceTableTabId(tab.resourceId)
+        );
+    }
 
     @computed get hasNewResourceTabs(): boolean {
         return this.resourceTableStore.visibleTabs.length > 0;
@@ -810,9 +898,10 @@ export default class StudyViewPage extends React.Component<
                                         return this.toolbarLeft;
                                     }} // dont run into other study view UI
                                     contentWindowExtra={
-                                        // Study Page Help doesn't cover Similarity Maps (cast: StudyViewPageTabKey has no EMBEDDINGS).
+                                        // Study Page Help covers neither Similarity Maps (cast: StudyViewPageTabKey has no EMBEDDINGS) nor an embedded resource, which would sit under it.
                                         (this.store.currentTab as string) !==
-                                        StudyViewPageTabKeyEnum.EMBEDDINGS ? (
+                                            StudyViewPageTabKeyEnum.EMBEDDINGS &&
+                                        !this.isStudyWideViewerTabActive ? (
                                             <HelpWidget
                                                 path={
                                                     this.props.routing.location

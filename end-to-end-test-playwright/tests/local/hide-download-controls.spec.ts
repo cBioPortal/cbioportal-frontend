@@ -723,7 +723,6 @@ test.describe('hide download controls feature', () => {
         for (const [resourceId, name] of [
             ['PATHOLOGY_SLIDE', 'pathology slide'],
             ['PATIENT_NOTES', 'patient notes'],
-            ['STUDY_SPONSORS', 'study sponsors'],
         ]) {
             test.describe(`${name} tab`, () => {
                 test('global check for icon and occurrence of "Download" as a word', async () => {
@@ -735,6 +734,16 @@ test.describe('hide download controls feature', () => {
                 });
             });
         }
+        // A study-level resource opens straight into its viewer rather than a table.
+        test.describe('study sponsors tab', () => {
+            test('global check for icon and occurrence of "Download" as a word', async () => {
+                await page
+                    .locator('.tabAnchor_resourceTable_STUDY_SPONSORS')
+                    .click();
+                await expectResourceViewer(page);
+                await globalCheck(page);
+            });
+        });
     });
 
     test.describe.serial('group comparison', () => {
