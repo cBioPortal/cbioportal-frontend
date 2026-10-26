@@ -33,7 +33,8 @@ export type GenericAssayOncoprintChartType =
     | 'bars'
     | 'composition'
     | 'absolute'
-    | 'dominant';
+    | 'dominant'
+    | 'composition_dominant';
 
 export const GENERIC_ASSAY_CHART_TYPE_LABELS: {
     [type in GenericAssayOncoprintChartType]: string;
@@ -43,6 +44,7 @@ export const GENERIC_ASSAY_CHART_TYPE_LABELS: {
     composition: 'Stacked bar (composition)',
     absolute: 'Stacked bar (absolute)',
     dominant: 'Dominant category',
+    composition_dominant: 'Dominant category + stacked bar',
 };
 
 export type GenericAssayCategory = {
@@ -55,7 +57,8 @@ export type OncoprintTrackConfig = {
     formatNameUsingCompactLabel?: boolean;
     formatDescriptionUsingCommonLabel?: boolean;
     // Chart types offered for the profile, in menu order. The first one is
-    // used when tracks are added. Defaults to every type except 'dominant'.
+    // used when tracks are added. Defaults to every type except 'dominant'
+    // and 'composition_dominant'.
     chartTypes?: GenericAssayOncoprintChartType[];
     // Entities shown in the stacked bar and dominant category tracks, in
     // stacking order, with their legend labels and colors.
@@ -179,7 +182,7 @@ const DEFAULT_GENERIC_ASSAY_CONFIG: GenericAssayConfig = {
         [GenericAssayTypeConstants.ISIG_PROBABILITY]: {
             displayTitleText: 'Immune Signature',
             oncoprintTrackConfig: {
-                chartTypes: ['composition', 'dominant'],
+                chartTypes: ['composition_dominant'],
                 categories: [
                     {
                         stableId: 'ISIG_PROB_D',
@@ -229,6 +232,18 @@ export function getGenericAssayChartTypes(
         'absolute',
     ];
     return isFractionLike ? types.filter(t => t !== 'absolute') : types;
+}
+
+// Chart types whose tracks show all of a type's configured categories, so
+// the entities are fixed rather than picked by the user.
+export function chartTypeShowsAllCategories(
+    chartType: GenericAssayOncoprintChartType
+): boolean {
+    return (
+        chartType === 'composition' ||
+        chartType === 'dominant' ||
+        chartType === 'composition_dominant'
+    );
 }
 
 export function getGenericAssayCategories(

@@ -103,6 +103,8 @@ describe('GenericAssaySelection', () => {
             submitted.map(d => d.genericAssayEntityId),
             ['ISIG_PROB_D', 'ISIG_PROB_F', 'ISIG_PROB_IE', 'ISIG_PROB_IE_F']
         );
-        assert.isTrue(submitted.every(d => d.chartType === 'composition'));
+        assert.isTrue(
+            submitted.every(d => d.chartType === 'composition_dominant')
+        );
     });
 });
