@@ -76,4 +76,67 @@ describe('AlleleFreqColumnFormatter', () => {
             '0.09090909090909091'
         );
     });
+    it('calculates the normal allele frequency for a mutation', () => {
+        const mutation: Mutation[] = [
+            initMutation({
+                tumorAltCount: 1,
+                tumorRefCount: 10,
+                normalAltCount: 0,
+                normalRefCount: 20,
+            }),
+        ];
+        assert.equal(
+            AlleleFreqColumnFormatter.getFrequency(mutation, 'normal'),
+            '0'
+        );
+    });
+    it('returns empty normal allele frequency when normal counts are missing', () => {
+        const mutation: Mutation[] = [
+            initMutation({
+                tumorAltCount: 1,
+                tumorRefCount: 10,
+                normalAltCount: -1,
+                normalRefCount: -1,
+            }),
+        ];
+        assert.equal(
+            AlleleFreqColumnFormatter.getFrequency(mutation, 'normal'),
+            ''
+        );
+    });
+    it('sampleElement uses normal read counts in normal mode', () => {
+        const mutation = {
+            sampleId: '1',
+            molecularProfileId: `study_${MOLECULAR_PROFILE_MUTATIONS_SUFFIX}`,
+            tumorAltCount: 5,
+            tumorRefCount: 5,
+            normalAltCount: 1,
+            normalRefCount: 3,
+        };
+        const res = AlleleFreqColumnFormatter.convertMutationToSampleElement(
+            mutation,
+            'red',
+            5,
+            {},
+            'normal'
+        );
+        assert(res && res.freq === 0.25);
+    });
+    it('sampleElement is null in normal mode without normal read counts', () => {
+        const mutation = {
+            sampleId: '1',
+            molecularProfileId: `study_${MOLECULAR_PROFILE_MUTATIONS_SUFFIX}`,
+            tumorAltCount: 5,
+            tumorRefCount: 5,
+        };
+        assert.isNull(
+            AlleleFreqColumnFormatter.convertMutationToSampleElement(
+                mutation,
+                'red',
+                5,
+                {},
+                'normal'
+            )
+        );
+    });
 });

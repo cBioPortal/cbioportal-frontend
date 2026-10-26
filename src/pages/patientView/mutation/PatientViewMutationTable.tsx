@@ -54,6 +54,10 @@ export const defaultAlleleFrequencyHeaderTooltip = (
     />
 );
 
+export const defaultNormalAlleleFrequencyHeaderTooltip = (
+    <span>Variant allele frequency in the matched normal sample</span>
+);
+
 export default class PatientViewMutationTable extends MutationTable<
     IPatientViewMutationTableProps
 > {
@@ -99,6 +103,7 @@ export default class PatientViewMutationTable extends MutationTable<
             MutationTableColumnType.MUTANT_TOTAL_COPY_NUM,
             MutationTableColumnType.FUNCTIONAL_IMPACT,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
+            MutationTableColumnType.NORMAL_ALLELE_FREQ,
             MutationTableColumnType.SAMPLES,
             MutationTableColumnType.EXON,
             MutationTableColumnType.HGVSC,
@@ -145,6 +150,39 @@ export default class PatientViewMutationTable extends MutationTable<
                     ? this.props.dataStore.allData
                     : this.props.data
             ),
+        };
+
+        this._columns[MutationTableColumnType.NORMAL_ALLELE_FREQ] = {
+            name: 'Normal Allele Freq',
+            headerRender: (name: string) => (
+                <span style={{ display: 'inline-block', maxWidth: 55 }}>
+                    {name}
+                </span>
+            ),
+            render: (d: Mutation[]) =>
+                AlleleFreqColumnFormatter.renderFunction(
+                    d,
+                    this.props.sampleManager,
+                    'normal'
+                ),
+            sortBy: (d: Mutation[]) =>
+                AlleleFreqColumnFormatter.getSortValue(
+                    d,
+                    this.props.sampleManager,
+                    'normal'
+                ),
+            download: (d: Mutation[]) =>
+                AlleleFreqColumnFormatter.getFrequency(d, 'normal'),
+            tooltip: defaultNormalAlleleFrequencyHeaderTooltip,
+            visible: true,
+            shouldExclude: () =>
+                !AlleleFreqColumnFormatter.isVisible(
+                    this.props.sampleManager,
+                    this.props.dataStore
+                        ? this.props.dataStore.allData
+                        : this.props.data,
+                    'normal'
+                ),
         };
 
         this._columns[MutationTableColumnType.SAMPLES] = {
@@ -368,6 +406,7 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.ASCN_COPY_NUM].order = 119;
         this._columns[MutationTableColumnType.CENTER].order = 120;
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ].order = 130;
+        this._columns[MutationTableColumnType.NORMAL_ALLELE_FREQ].order = 135;
         this._columns[MutationTableColumnType.VAR_READS].order = 140;
         this._columns[MutationTableColumnType.REF_READS].order = 150;
         this._columns[MutationTableColumnType.VAR_READS_N].order = 170;
