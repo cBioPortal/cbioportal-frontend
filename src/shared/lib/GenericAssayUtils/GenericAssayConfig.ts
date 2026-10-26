@@ -20,6 +20,13 @@ export const GenericAssayTypeConstants: { [s: string]: string } = {
 export type GenericAssayTypeConfig = {
     // Add more Generic Assay type specific config at here
     displayTitleText?: string;
+    // Entities whose values are categories of one classification, in display
+    // order, with their labels and colors. Used by the stacked bar and
+    // dominant category oncoprint tracks and by derived entities.
+    categories?: GenericAssayCategory[];
+    // Entities computed in the frontend from the profile's data, offered in
+    // the plots tab next to the profile's own entities.
+    derivedEntities?: GenericAssayDerivedEntity[];
     globalConfig?: GlobalConfig;
     oncoprintTrackConfig?: OncoprintTrackConfig;
     plotsTabConfig?: PlotsTabConfig;
@@ -53,6 +60,17 @@ export type GenericAssayCategory = {
     color: string;
 };
 
+export type GenericAssayDerivedEntity = {
+    // Must start with DERIVED_GENERIC_ASSAY_ENTITY_PREFIX.
+    stableId: string;
+    name: string;
+    description?: string;
+    // dominantCategory: the label of the category with the highest value.
+    derivation: 'dominantCategory';
+};
+
+export const DERIVED_GENERIC_ASSAY_ENTITY_PREFIX = 'DERIVED_';
+
 export type OncoprintTrackConfig = {
     formatNameUsingCompactLabel?: boolean;
     formatDescriptionUsingCommonLabel?: boolean;
@@ -60,9 +78,6 @@ export type OncoprintTrackConfig = {
     // used when tracks are added. Defaults to every type except 'dominant'
     // and 'composition_dominant'.
     chartTypes?: GenericAssayOncoprintChartType[];
-    // Entities shown in the stacked bar and dominant category tracks, in
-    // stacking order, with their legend labels and colors.
-    categories?: GenericAssayCategory[];
 };
 
 export type PlotsTabConfig = {
@@ -181,30 +196,39 @@ const DEFAULT_GENERIC_ASSAY_CONFIG: GenericAssayConfig = {
         },
         [GenericAssayTypeConstants.ISIG_PROBABILITY]: {
             displayTitleText: 'Immune Signature',
+            categories: [
+                {
+                    stableId: 'ISIG_PROB_D',
+                    label: 'Desert (D)',
+                    color: '#c8b631',
+                },
+                {
+                    stableId: 'ISIG_PROB_F',
+                    label: 'Fibrotic (F)',
+                    color: '#c4375b',
+                },
+                {
+                    stableId: 'ISIG_PROB_IE',
+                    label: 'Immune Enriched (IE)',
+                    color: '#3b4fb8',
+                },
+                {
+                    stableId: 'ISIG_PROB_IE_F',
+                    label: 'Immune Enriched / Fibrotic (IE/F)',
+                    color: '#2a9d8f',
+                },
+            ],
+            derivedEntities: [
+                {
+                    stableId: 'DERIVED_ISIG_DOMINANT',
+                    name: 'Dominant immune signature',
+                    description:
+                        'Immune signature class with the highest probability',
+                    derivation: 'dominantCategory',
+                },
+            ],
             oncoprintTrackConfig: {
                 chartTypes: ['composition_dominant'],
-                categories: [
-                    {
-                        stableId: 'ISIG_PROB_D',
-                        label: 'Desert (D)',
-                        color: '#c8b631',
-                    },
-                    {
-                        stableId: 'ISIG_PROB_F',
-                        label: 'Fibrotic (F)',
-                        color: '#c4375b',
-                    },
-                    {
-                        stableId: 'ISIG_PROB_IE',
-                        label: 'Immune Enriched (IE)',
-                        color: '#3b4fb8',
-                    },
-                    {
-                        stableId: 'ISIG_PROB_IE_F',
-                        label: 'Immune Enriched / Fibrotic (IE/F)',
-                        color: '#2a9d8f',
-                    },
-                ],
             },
         },
     },
@@ -251,8 +275,27 @@ export function getGenericAssayCategories(
 ): GenericAssayCategory[] | undefined {
     return genericAssayType
         ? GENERIC_ASSAY_CONFIG.genericAssayConfigByType[genericAssayType]
-              ?.oncoprintTrackConfig?.categories
+              ?.categories
         : undefined;
+}
+
+export function getGenericAssayDerivedEntities(
+    genericAssayType: string | undefined
+): GenericAssayDerivedEntity[] {
+    return (
+        (genericAssayType &&
+            GENERIC_ASSAY_CONFIG.genericAssayConfigByType[genericAssayType]
+                ?.derivedEntities) ||
+        []
+    );
+}
+
+export function isDerivedGenericAssayEntityId(
+    stableId: string | undefined
+): boolean {
+    return (
+        !!stableId && stableId.startsWith(DERIVED_GENERIC_ASSAY_ENTITY_PREFIX)
+    );
 }
 
 export function getFrequencyTableCategoryPriority(

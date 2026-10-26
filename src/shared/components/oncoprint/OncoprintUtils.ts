@@ -84,6 +84,7 @@ import {
     getGenericAssayCategories,
     getGenericAssayChartTypes,
 } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import { getDominantCategory } from 'shared/lib/GenericAssayUtils/GenericAssayDerivedEntityUtils';
 import { CaseAggregatedData } from 'shared/model/CaseAggregatedData';
 import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
 import { IQueriedCaseData } from 'shared/model/IQueriedCaseData';
@@ -2064,10 +2065,18 @@ export function makeDominantCategoryTrackData(
         if (datum.na || !datum.attr_val) {
             return datum;
         }
-        const values = datum.attr_val as { [category: string]: number };
-        const dominant = categories.reduce((best, category) =>
-            (values[category] || 0) > (values[best] || 0) ? category : best
+        const dominant = getDominantCategory(
+            datum.attr_val as { [category: string]: number },
+            categories
         );
+        if (!dominant) {
+            return {
+                ...datum,
+                attr_val: undefined,
+                attr_val_counts: {},
+                na: true,
+            };
+        }
         return {
             ...datum,
             attr_val: dominant,
