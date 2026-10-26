@@ -12,6 +12,7 @@ import {
     GENERIC_ASSAY_CHART_TYPE_LABELS,
     GENERIC_ASSAY_CONFIG,
     GenericAssayOncoprintChartType,
+    chartTypeShowsAllCategories,
     getGenericAssayCategories,
     getGenericAssayChartTypes,
 } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
@@ -260,8 +261,7 @@ export default class GenericAssaySelection extends React.Component<
         return (
             !!this.props.showChartTypeSelector &&
             !!getGenericAssayCategories(this.props.genericAssayType) &&
-            (this._chartType === 'composition' ||
-                this._chartType === 'dominant')
+            chartTypeShowsAllCategories(this._chartType)
         );
     }
 
@@ -535,51 +535,61 @@ export default class GenericAssaySelection extends React.Component<
                         </button>
                     )}
                 </div>
-                {this.props.showChartTypeSelector && (
-                    <div
-                        style={{
-                            marginTop: 12,
-                            fontSize: 12,
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            alignItems: 'center',
-                            columnGap: 14,
-                            rowGap: 4,
-                        }}
-                        data-test="GenericAssayChartTypeSelector"
-                    >
-                        <span style={{ fontWeight: 600 }}>Chart type:</span>
-                        {getGenericAssayChartTypes(this.props.genericAssayType)
-                            .map(type => ({
-                                value: type,
-                                label: GENERIC_ASSAY_CHART_TYPE_LABELS[type],
-                            }))
-                            .map(opt => (
-                                <label
-                                    key={opt.value}
-                                    style={{
-                                        fontWeight: 'normal',
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        marginBottom: 0,
-                                        cursor: 'pointer',
-                                    }}
-                                >
-                                    <input
-                                        type="radio"
-                                        name="ga-chart-type"
-                                        value={opt.value}
-                                        checked={this._chartType === opt.value}
-                                        onChange={action(() => {
-                                            this._chartType = opt.value;
-                                        })}
-                                        style={{ marginRight: 5, marginTop: 0 }}
-                                    />
-                                    {opt.label}
-                                </label>
-                            ))}
-                    </div>
-                )}
+                {this.props.showChartTypeSelector &&
+                    getGenericAssayChartTypes(this.props.genericAssayType)
+                        .length > 1 && (
+                        <div
+                            style={{
+                                marginTop: 12,
+                                fontSize: 12,
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                alignItems: 'center',
+                                columnGap: 14,
+                                rowGap: 4,
+                            }}
+                            data-test="GenericAssayChartTypeSelector"
+                        >
+                            <span style={{ fontWeight: 600 }}>Chart type:</span>
+                            {getGenericAssayChartTypes(
+                                this.props.genericAssayType
+                            )
+                                .map(type => ({
+                                    value: type,
+                                    label:
+                                        GENERIC_ASSAY_CHART_TYPE_LABELS[type],
+                                }))
+                                .map(opt => (
+                                    <label
+                                        key={opt.value}
+                                        style={{
+                                            fontWeight: 'normal',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            marginBottom: 0,
+                                            cursor: 'pointer',
+                                        }}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="ga-chart-type"
+                                            value={opt.value}
+                                            checked={
+                                                this._chartType === opt.value
+                                            }
+                                            onChange={action(() => {
+                                                this._chartType = opt.value;
+                                            })}
+                                            style={{
+                                                marginRight: 5,
+                                                marginTop: 0,
+                                            }}
+                                        />
+                                        {opt.label}
+                                    </label>
+                                ))}
+                        </div>
+                    )}
                 <div style={{ display: 'flex', marginTop: 12 }}>
                     <button
                         disabled={this.buttonDisabled}

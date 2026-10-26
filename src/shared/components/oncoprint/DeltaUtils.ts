@@ -228,6 +228,25 @@ type GenericAssayProfileToTrackIdMap = {
     [molecularProfileId: string]: undefined | TrackId;
 };
 
+// The track whose rule set each generic assay profile's categorical tracks
+// share. Stacked bar tracks have their own rule sets, which a single-category
+// track of the same profile must not share.
+export function getGenericAssayCategoricalRuleSetTrackIds(
+    categoricalTracks: ICategoricalTrackSpec[],
+    trackSpecKeyToTrackId: { [key: string]: TrackId }
+): GenericAssayProfileToTrackIdMap {
+    return _.chain(categoricalTracks)
+        .filter(
+            (s: ICategoricalTrackSpec) =>
+                s.molecularAlterationType ===
+                    AlterationTypeConstants.GENERIC_ASSAY && !s.stackedBar
+        )
+        .groupBy((track: ICategoricalTrackSpec) => track.molecularProfileId)
+        .mapValues((o: ICategoricalTrackSpec[]) => _.last(o))
+        .mapValues((o: ICategoricalTrackSpec) => trackSpecKeyToTrackId[o.key])
+        .value();
+}
+
 export function transitionTrackGroupSortPriority(
     nextProps: TrackSpecsWithDynamicGroups,
     prevProps: Partial<TrackSpecsWithDynamicGroups>,
@@ -706,18 +725,10 @@ function transitionTracks(
         .mapValues((o: IHeatmapTrackSpec) => trackSpecKeyToTrackId[o.key])
         .value();
 
-    trackIdForRuleSetSharing.genericAssayCategorical = _.chain(
-        prevProps.categoricalTracks
-    )
-        .filter(
-            (s: ICategoricalTrackSpec) =>
-                s.molecularAlterationType ===
-                AlterationTypeConstants.GENERIC_ASSAY
-        )
-        .groupBy((track: ICategoricalTrackSpec) => track.molecularProfileId)
-        .mapValues((o: ICategoricalTrackSpec[]) => _.last(o))
-        .mapValues((o: ICategoricalTrackSpec) => trackSpecKeyToTrackId[o.key])
-        .value();
+    trackIdForRuleSetSharing.genericAssayCategorical = getGenericAssayCategoricalRuleSetTrackIds(
+        prevProps.categoricalTracks || [],
+        trackSpecKeyToTrackId
+    );
 
     const genericAssayProfilesMap = _.chain(nextProps.heatmapTracks)
         .filter(

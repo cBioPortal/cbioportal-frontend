@@ -637,6 +637,7 @@ export function getCategoricalTrackRuleSetParams(
     return {
         type: RuleSetType.CATEGORICAL,
         legend_label: track.molecularProfileName,
+        exclude_from_legend: track.categoricalExcludeFromLegend,
         category_key: 'attr_val',
         category_to_color:
             track.category_to_color ||
@@ -1982,17 +1983,13 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                         molecularProfileId
                     ]!.trackGroupIndex,
                     showAsBar: !!barProfiles[molecularProfileId],
-                    customOptions: [
-                        makeGenericAssayChartTypeOption(
-                            oncoprint,
-                            molecularProfileId,
-                            genericAssayType,
-                            barProfiles[molecularProfileId]
-                                ? 'bars'
-                                : 'heatmap',
-                            isFractionLikeByProfile[molecularProfileId]
-                        ),
-                    ],
+                    customOptions: makeGenericAssayChartTypeOptions(
+                        oncoprint,
+                        molecularProfileId,
+                        genericAssayType,
+                        barProfiles[molecularProfileId] ? 'bars' : 'heatmap',
+                        isFractionLikeByProfile[molecularProfileId]
+                    ),
                     onClickRemoveInTrackMenu: action(() => {
                         const trackGroup = oncoprint
                             .molecularProfileIdToAdditionalTracks[
@@ -2024,30 +2021,37 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
     });
 }
 
-function makeGenericAssayChartTypeOption(
+// Empty when the type offers a single chart type, so there is nothing to pick.
+function makeGenericAssayChartTypeOptions(
     oncoprint: ResultsViewOncoprint,
     molecularProfileId: string,
     genericAssayType: string,
     currentType: GenericAssayOncoprintChartType,
     isFractionLike: boolean
-): CustomTrackOption {
-    return {
-        label: 'Chart type',
-        children: getGenericAssayChartTypes(
-            genericAssayType,
-            isFractionLike
-        ).map(chartType => ({
-            label:
-                (currentType === chartType ? '\u2713 ' : '') +
-                GENERIC_ASSAY_CHART_TYPE_LABELS[chartType],
-            onClick: action(() => {
-                oncoprint.setGenericAssayChartType(
-                    molecularProfileId,
-                    chartType
-                );
-            }),
-        })),
-    };
+): CustomTrackOption[] {
+    const chartTypes = getGenericAssayChartTypes(
+        genericAssayType,
+        isFractionLike
+    );
+    if (chartTypes.length < 2) {
+        return [];
+    }
+    return [
+        {
+            label: 'Chart type',
+            children: chartTypes.map(chartType => ({
+                label:
+                    (currentType === chartType ? '\u2713 ' : '') +
+                    GENERIC_ASSAY_CHART_TYPE_LABELS[chartType],
+                onClick: action(() => {
+                    oncoprint.setGenericAssayChartType(
+                        molecularProfileId,
+                        chartType
+                    );
+                }),
+            })),
+        },
+    ];
 }
 
 // Turns stacked bar data into single-category data holding each case's
@@ -2101,6 +2105,8 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
             // state but doesn't re-run the promise.
             const stackedSortBy = { ...oncoprint.genericAssayStackedSortBy };
             const dominantProfiles = oncoprint.genericAssayDominantProfiles;
+            const stackedAndDominantProfiles =
+                oncoprint.genericAssayStackedAndDominantProfiles;
             // Generic-assay profile IDs in track-group order, for Move up/down
             // adjacency. Filtered to generic-assay profiles so a move never
             // targets a gene/clinical heatmap group.
@@ -2250,9 +2256,9 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                 }
             }
 
-            const tracks: ICategoricalTrackSpec[] = _.map(
+            const tracksByProfile = _.map(
                 queriesByProfile,
-                (queries, molecularProfileId) => {
+                (queries, molecularProfileId): ICategoricalTrackSpec[] => {
                     const profile =
                         molecularProfileIdToMolecularProfile[
                             molecularProfileId
@@ -2442,11 +2448,16 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                         { label: 'Sort by', children: sortChildren },
                     ];
                     const isDominant = !!dominantProfiles[molecularProfileId];
-                    const chartTypeOption = makeGenericAssayChartTypeOption(
+                    const isStackedAndDominant = !!stackedAndDominantProfiles[
+                        molecularProfileId
+                    ];
+                    const chartTypeOptions = makeGenericAssayChartTypeOptions(
                         oncoprint,
                         molecularProfileId,
                         profile.genericAssayType,
-                        isDominant
+                        isStackedAndDominant
+                            ? 'composition_dominant'
+                            : isDominant
                             ? 'dominant'
                             : isAbsolute
                             ? 'absolute'
@@ -2499,10 +2510,6 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                         moveUpDisabled: !profileAbove,
                         moveDownDisabled: !profileBelow,
                         onClickRemoveInTrackMenu: action(() => {
-                            oncoprint.setGenericAssayStackedMode(
-                                molecularProfileId,
-                                'off'
-                            );
                             oncoprint.setGenericAssayTracks(
                                 molecularProfileId,
                                 []
@@ -2510,26 +2517,28 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                         }),
                     };
 
+                    const dominantTrack: ICategoricalTrackSpec = {
+                        ...commonFields,
+                        // Include trackGroupIndex so a swap (which changes
+                        // the index) re-adds the track in its new group.
+                        key: `GENERICASSAYDOMINANTTRACK_${molecularProfileId}_grp${trackGroupIndex}`,
+                        label: isStackedAndDominant
+                            ? `${profile.name} (dominant)`
+                            : profile.name,
+                        data: makeDominantCategoryTrackData(data, categories),
+                        category_to_color: _.pick(
+                            colorByProfile[molecularProfileId],
+                            categories
+                        ),
+                        // The stacked bar track below shows the same legend.
+                        categoricalExcludeFromLegend: isStackedAndDominant,
+                        customOptions: chartTypeOptions,
+                    };
                     if (isDominant) {
-                        return {
-                            ...commonFields,
-                            // Include trackGroupIndex so a swap (which changes
-                            // the index) re-adds the track in its new group.
-                            key: `GENERICASSAYDOMINANTTRACK_${molecularProfileId}_grp${trackGroupIndex}`,
-                            label: profile.name,
-                            data: makeDominantCategoryTrackData(
-                                data,
-                                categories
-                            ),
-                            category_to_color: _.pick(
-                                colorByProfile[molecularProfileId],
-                                categories
-                            ),
-                            customOptions: [chartTypeOption],
-                        };
+                        return [dominantTrack];
                     }
 
-                    return {
+                    const stackedTrack: ICategoricalTrackSpec = {
                         ...commonFields,
                         // Include trackGroupIndex so a swap (which changes the
                         // index) causes DeltaUtils to remove + re-add the
@@ -2552,16 +2561,22 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                         ],
                         stackedBarMaxTotal,
                         stackedBarSortByCategory: currentSortBy,
-                        customOptions: [
-                            ...sortOptions,
-                            { separator: true },
-                            chartTypeOption,
-                        ],
+                        customOptions: chartTypeOptions.length
+                            ? [
+                                  ...sortOptions,
+                                  { separator: true },
+                                  ...chartTypeOptions,
+                              ]
+                            : sortOptions,
                     };
+                    // The dominant category track goes above the stacked bar.
+                    return isStackedAndDominant
+                        ? [dominantTrack, stackedTrack]
+                        : [stackedTrack];
                 }
             );
 
-            return tracks;
+            return _.flatten(tracksByProfile);
         },
         default: [],
     });

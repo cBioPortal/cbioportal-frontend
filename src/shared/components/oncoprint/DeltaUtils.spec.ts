@@ -7,6 +7,7 @@ import {
     transitionTrackGroupSortPriority,
     transitionHeatmapTrack,
     transitionCategoricalTrack,
+    getGenericAssayCategoricalRuleSetTrackIds,
 } from './DeltaUtils';
 
 import { spy, SinonStub, match, createStubInstance } from 'sinon';
@@ -1282,6 +1283,24 @@ describe('Oncoprint DeltaUtils', () => {
             assert.equal(
                 trackIdForRuleSetSharing.genericAssayCategorical['profile_1'],
                 2
+            );
+        });
+
+        it('does not share the rule set of a stacked bar track of the same profile', () => {
+            const dominantSpec = { ...nextSpec, key: 'DOMINANT' };
+            const stackedSpec = {
+                ...nextSpec,
+                key: 'STACKED',
+                stackedBar: true,
+                stackedBarCategories: [],
+                stackedBarFills: [],
+            } as ICategoricalTrackSpec;
+            assert.deepEqual(
+                getGenericAssayCategoricalRuleSetTrackIds(
+                    [dominantSpec, stackedSpec],
+                    { DOMINANT: 1, STACKED: 2 }
+                ),
+                { profile_1: 1 }
             );
         });
     });
