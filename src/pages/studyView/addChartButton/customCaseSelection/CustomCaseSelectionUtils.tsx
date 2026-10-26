@@ -59,6 +59,14 @@ export type ValidationResult = {
     updatedLines?: InputLine[];
 };
 
+export function normalizeCustomCaseSelection(content: string): string {
+    return content
+        .split(/[, \t]+/)
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .join('\n');
+}
+
 export function getLine(line: string): InputLine {
     let parsedResult: InputLine = {
         line: line,
