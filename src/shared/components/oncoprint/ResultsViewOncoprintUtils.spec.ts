@@ -1,7 +1,10 @@
 import { assert } from 'chai';
 import { GenePanelData, MolecularProfile } from 'cbioportal-ts-api-client';
 import { AlterationTypeConstants } from 'shared/constants';
-import { makeProfiledInClinicalAttributes } from './ResultsViewOncoprintUtils';
+import {
+    makeProfiledInClinicalAttributes,
+    makeTrackGroupHeaders,
+} from './ResultsViewOncoprintUtils';
 import { SpecialAttribute } from '../../cache/ClinicalDataCache';
 import { AlterationTypeText } from 'shared/constants';
 
@@ -342,6 +345,59 @@ describe('ResultsViewOncoprintUtils', () => {
                 } as any,
                 'multiple study, mrna attribute'
             );
+        });
+    });
+
+    describe('makeTrackGroupHeaders', () => {
+        const profile = {
+            molecularProfileId: 'isig',
+            name: 'Immune Signature',
+            molecularAlterationType: AlterationTypeConstants.GENERIC_ASSAY,
+            datatype: 'LIMIT-VALUE',
+            genericAssayType: 'ISIG_PROBABILITY',
+        } as MolecularProfile;
+        const tracks = {
+            isig: {
+                trackGroupIndex: 2,
+                molecularAlterationType: AlterationTypeConstants.GENERIC_ASSAY,
+                entities: { ISIG_PROB_D: true },
+                molecularProfileId: 'isig',
+                molecularProfile: profile,
+            },
+        };
+        const makeHeaders = (
+            stacked: { [p: string]: true },
+            stackedAndDominant: { [p: string]: true }
+        ) =>
+            makeTrackGroupHeaders(
+                { isig: profile },
+                tracks,
+                undefined,
+                () => undefined,
+                () => {},
+                () => {},
+                () => {},
+                false,
+                false,
+                () => {},
+                stacked,
+                {},
+                {},
+                {},
+                stackedAndDominant
+            );
+
+        it('names a dominant category and stacked bar group with only a Delete option', () => {
+            const header = makeHeaders({ isig: true }, { isig: true })[2];
+            assert.equal(header.label.text, 'Immune Signature');
+            assert.deepEqual(
+                header.options.map(o => (o as any).label),
+                ['Delete']
+            );
+        });
+
+        it('gives a stacked bar group alone no header', () => {
+            assert.isUndefined(makeHeaders({ isig: true }, {})[2]);
         });
     });
 });

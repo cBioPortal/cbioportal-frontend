@@ -350,6 +350,7 @@ export function makeTrackGroupHeaders(
     genericAssayStackedAbsoluteProfiles?: { [profileId: string]: true },
     genericAssayBarProfiles?: { [profileId: string]: true },
     genericAssayDominantProfiles?: { [profileId: string]: true },
+    genericAssayStackedAndDominantProfiles?: { [profileId: string]: true },
     onSetGenericAssayChartType?: (
         profileId: string,
         type: GenericAssayOncoprintChartType
@@ -358,6 +359,23 @@ export function makeTrackGroupHeaders(
     var headers = _.reduce(
         molecularProfileIdToAdditionalTracks,
         (headerMap, nextEntry) => {
+            // A dominant category track above a stacked bar track gets a
+            // header naming the profile, with only the Delete option.
+            if (
+                genericAssayStackedAndDominantProfiles &&
+                genericAssayStackedAndDominantProfiles[
+                    nextEntry.molecularProfileId
+                ]
+            ) {
+                headerMap[nextEntry.trackGroupIndex] = makeTrackGroupHeader(
+                    'categorical',
+                    nextEntry.molecularProfile.name,
+                    nextEntry.trackGroupIndex,
+                    onClickDeleteCallback,
+                    getClusteredTrackGroupIndex
+                );
+                return headerMap;
+            }
             // Stacked-bar and dominant category tracks are single-row tracks
             // that already carry their profile name in the track label — the
             // big group header (and its Cluster/Don't cluster options) is
