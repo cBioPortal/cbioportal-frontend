@@ -29,11 +29,18 @@ function partnerMatchesCoord(p: GenePartner, m: RegExpMatchArray): boolean {
         const lo = toInt(m[2]);
         // `chr7:1000-` is open-ended; a reversed range is read as written.
         const hi = m[4] ? toInt(m[4]) : Infinity;
-        return p.position >= Math.min(lo, hi) && p.position <= Math.max(lo, hi);
+        return (
+            p.position !== undefined &&
+            p.position >= Math.min(lo, hi) &&
+            p.position <= Math.max(lo, hi)
+        );
     }
     // A single position matches as a digit prefix, so `chr7:5501` finds
     // breakpoints while the user is still typing.
-    return String(p.position).startsWith(String(toInt(m[2])));
+    return (
+        p.position !== undefined &&
+        String(p.position).startsWith(String(toInt(m[2])))
+    );
 }
 
 /** `A::B` and `A-B` in both orders, so a pasted fusion name finds the row. */

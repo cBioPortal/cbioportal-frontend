@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import { FusionEvent } from '../data/types';
+import { FusionEvent, formatPosition } from '../data/types';
 import { GenomeBuild } from '../data/genomeNexusTranscriptService';
 import {
     CHROM_LABELS,
@@ -40,11 +40,11 @@ interface Breakpoint {
 
 function breakpointFor(
     chromosome: string,
-    position: number,
+    position: number | undefined,
     lengths: number[]
 ): Breakpoint | null {
     const idx = chromIndex(chromosome);
-    if (idx === -1) {
+    if (idx === -1 || position === undefined) {
         return null;
     }
     return { chromIdx: idx, angle: angleFor(idx, position, lengths, GAP_DEG) };
@@ -145,9 +145,9 @@ export function FusionCircos(props: FusionCircosProps) {
                 </div>
                 <div>
                     chr{fusion.gene1.chromosome}:
-                    {fusion.gene1.position.toLocaleString()} {'→'} chr
+                    {formatPosition(fusion.gene1.position)} {'→'} chr
                     {fusion.gene2!.chromosome}:
-                    {fusion.gene2!.position.toLocaleString()}
+                    {formatPosition(fusion.gene2!.position)}
                 </div>
                 <div>{fusion.svIdiom}</div>
             </div>

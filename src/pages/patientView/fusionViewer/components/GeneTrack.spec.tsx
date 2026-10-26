@@ -9,6 +9,7 @@ import {
     segmentRetainedFraction,
     applyUpstreamExtension,
 } from './GeneTrack';
+import { BreakpointTooltip } from './ExonTooltip';
 import { TranscriptData } from '../data/types';
 
 describe('computeRetainedShadeX', () => {
@@ -1251,5 +1252,56 @@ describe('GeneTrack — tiny exon split into UTR and CDS', () => {
         // Minus strand, mirrored to read 5'->3': the UTR (5' end of the exon)
         // is left of the CDS, and the CDS ends at the breakpoint line.
         assert.isBelow(u.l, c.l);
+    });
+});
+
+describe('GeneTrack — missing breakpoint coordinate', () => {
+    function mountMissing(is5Prime: boolean) {
+        const forte = makeTranscript({
+            transcriptId: 'ENST_FORTE',
+            isForteSelected: true,
+            exons: [
+                { number: 1, start: 100, end: 199 },
+                { number: 2, start: 500, end: 700 },
+            ],
+        });
+        return mount(
+            <svg>
+                <GeneTrack
+                    symbol="GENE_A"
+                    chromosome="1"
+                    position={undefined}
+                    strand="+"
+                    siteDescription=""
+                    forteTranscript={forte}
+                    color={GENE_COLOR}
+                    x={0}
+                    y={0}
+                    width={400}
+                    is5Prime={is5Prime}
+                    retainedExonNumbers={new Set([1, 2])}
+                />
+            </svg>
+        );
+    }
+
+    [true, false].forEach(is5Prime => {
+        it(`draws no breakpoint line or coordinate label (${
+            is5Prime ? '5′' : '3′'
+        } partner)`, () => {
+            const w = mountMissing(is5Prime);
+            assert.equal(w.find(BreakpointTooltip).length, 0);
+            assert.notMatch(w.text(), /chr1:/);
+        });
+
+        it(`draws no kept/lost exon split (${
+            is5Prime ? '5′' : '3′'
+        } partner)`, () => {
+            const w = mountMissing(is5Prime);
+            assert.equal(w.find('[data-testid="exon-lost-rect"]').length, 0);
+            w.find('[data-testid="exon-cds-rect"]').forEach(r =>
+                assert.equal(r.prop('fill'), GENE_COLOR)
+            );
+        });
     });
 });

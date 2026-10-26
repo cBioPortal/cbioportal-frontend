@@ -10,13 +10,13 @@ export type MismatchStatus =
     | 'unknown'; // not enough data to decide (a transcript list is empty)
 
 interface MismatchInput {
-    gene1Position: number;
-    gene2Position: number;
+    gene1Position: number | undefined;
+    gene2Position: number | undefined;
     gene1Transcripts: TranscriptData[];
     gene2Transcripts: TranscriptData[];
 }
 
-function anyOverlap(txs: TranscriptData[], pos: number): boolean {
+function anyOverlap(txs: TranscriptData[], pos: number | undefined): boolean {
     if (!txs.length || !pos) return false;
     return txs.some(
         t =>
@@ -208,7 +208,10 @@ export function resolveFusionPartners(input: ResolveInput): ResolvedFusion {
     }
 
     // Position-sort
-    const leftIsLow = leftPartner.position <= rightPartner.position;
+    // A missing position sorts as 0, as it did before positions could be
+    // missing; the resolver's ordering rules are out of scope here.
+    const leftIsLow =
+        (leftPartner.position ?? 0) <= (rightPartner.position ?? 0);
     const low = leftIsLow ? leftPartner : rightPartner;
     const high = leftIsLow ? rightPartner : leftPartner;
     const lowTxs = leftIsLow ? leftTxs : rightTxs;

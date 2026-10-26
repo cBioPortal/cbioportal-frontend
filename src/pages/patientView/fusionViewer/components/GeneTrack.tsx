@@ -41,12 +41,14 @@ export function genomicToSvgX(
  */
 export function computeGeneTrackRange(
     exons: Exon[],
-    breakpointPos: number
+    breakpointPos: number | undefined
 ): { gMin: number; gMax: number } {
+    // A missing breakpoint must not stretch the range (e.g. out to 0).
+    const bp = breakpointPos === undefined ? [] : [breakpointPos];
     const allStarts = exons.map(e => e.start);
     const allEnds = exons.map(e => e.end);
-    const genomeMin = Math.min(...allStarts, breakpointPos);
-    const genomeMax = Math.max(...allEnds, breakpointPos);
+    const genomeMin = Math.min(...allStarts, ...bp);
+    const genomeMax = Math.max(...allEnds, ...bp);
     const padBp = Math.max(1, Math.round((genomeMax - genomeMin) * 0.03));
     return { gMin: genomeMin - padBp, gMax: genomeMax + padBp };
 }
@@ -168,7 +170,11 @@ export function getGeneTrackHeight(
 export interface GeneTrackProps {
     symbol: string;
     chromosome: string;
-    position: number;
+    /**
+     * Breakpoint coordinate; undefined when the caller reported none. A
+     * missing breakpoint draws no line/label and no kept/lost split.
+     */
+    position: number | undefined;
     strand: '+' | '-';
     siteDescription: string;
     forteTranscript: TranscriptData;
@@ -304,11 +310,18 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
     width,
     is5Prime,
     trackHeight,
-    retainedExonNumbers,
+    retainedExonNumbers: retainedExonNumbersProp,
     activeTranscriptId,
     onActivateTranscript,
     showPromoter = true,
 }) => {
+    // No coordinate → no kept/lost split anywhere below. NaN (not 0) makes
+    // any stray numeric comparison against it false instead of plausible.
+    const hasBreakpoint = position !== undefined;
+    const retainedExonNumbers = hasBreakpoint
+        ? retainedExonNumbersProp
+        : undefined;
+    const bp = hasBreakpoint ? position! : NaN;
     // Resolve: prefer array prop, fall back to single
     const userTranscripts: TranscriptData[] = userTranscriptsProp
         ? userTranscriptsProp
@@ -360,7 +373,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
     const pointsRight = true;
     const strandLabel = ` (${strand})`;
     const pillText = 'TRANSCRIBED \u25B6';
-    const bpX = toSvg(position);
+    const bpX = toSvg(bp);
 
     // ---- Outermost exon X-coords across all rendered transcripts ----
     // Used for the 5\u2032/3\u2032 end caps so they remain anchored to the overall
@@ -475,11 +488,11 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                 ? true
                 : is5Prime
                 ? strand === '+'
-                    ? coord <= position
-                    : coord >= position
+                    ? coord <= bp
+                    : coord >= bp
                 : strand === '+'
-                ? coord >= position
-                : coord <= position;
+                ? coord >= bp
+                : coord <= bp;
 
         for (let i = 0; i < exons.length - 1; i++) {
             const x1 = toSvg(exons[i].end);
@@ -680,11 +693,11 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                     ? true
                     : is5Prime
                     ? strand === '+'
-                        ? exon.start <= position
-                        : exon.end >= position
+                        ? exon.start <= bp
+                        : exon.end >= bp
                     : strand === '+'
-                    ? exon.end >= position
-                    : exon.start <= position;
+                    ? exon.end >= bp
+                    : exon.start <= bp;
 
             // Split the exon into CDS and 5′-UTR segments so UTR portions
             // render at half height (UCSC/IGV convention). Always on.
@@ -698,13 +711,14 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
             const exonFrac =
                 retainedExonNumbers === undefined
                     ? 1
-                    : segmentRetainedFraction(exon, position, is5Prime, strand);
+                    : segmentRetainedFraction(exon, bp, is5Prime, strand);
             // Inflation can also push a tiny exon across the breakpoint line
             // although its true extent is wholly on one side. Keep the box on
             // that side: kept exons end at the line (5′) or start at it (3′);
             // lost exons are the mirror image.
             let boxL = ex;
             if (
+                hasBreakpoint &&
                 (exonFrac >= 1 || exonFrac <= 0) &&
                 ex < bpX &&
                 ex + ewFull > bpX
@@ -742,7 +756,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                                     ? 1
                                     : segmentRetainedFraction(
                                           seg,
-                                          position,
+                                          bp,
                                           is5Prime,
                                           strand
                                       );
@@ -1107,39 +1121,44 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                 </g>
             )}
 
-            {/* Breakpoint dashed line */}
-            <BreakpointTooltip
-                chromosome={chromosome}
-                position={position}
-                siteDescription={siteDescription}
-            >
-                <line
-                    x1={bpX}
-                    y1={bpLineTop}
-                    x2={bpX}
-                    y2={bpLineBottom}
-                    stroke={COLOR_BREAKPOINT}
-                    strokeWidth={1.5}
-                    strokeDasharray="4 3"
-                />
-            </BreakpointTooltip>
+            {/* Breakpoint dashed line + coordinate label (omitted when the
+                coordinate is missing) */}
+            {hasBreakpoint && (
+                <>
+                    <BreakpointTooltip
+                        chromosome={chromosome}
+                        position={bp}
+                        siteDescription={siteDescription}
+                    >
+                        <line
+                            x1={bpX}
+                            y1={bpLineTop}
+                            x2={bpX}
+                            y2={bpLineBottom}
+                            stroke={COLOR_BREAKPOINT}
+                            strokeWidth={1.5}
+                            strokeDasharray="4 3"
+                        />
+                    </BreakpointTooltip>
 
-            {/* Breakpoint coordinate label — clamp anchor to avoid clipping */}
-            <text
-                x={bpX}
-                y={bpLineBottom + 10}
-                textAnchor={
-                    bpX - x < width * 0.15
-                        ? 'start'
-                        : x + width - bpX < width * 0.15
-                        ? 'end'
-                        : 'middle'
-                }
-                fontSize={COORD_FONT_SIZE}
-                fill={COLOR_BREAKPOINT}
-            >
-                chr{chromosome}:{position.toLocaleString()}
-            </text>
+                    {/* Breakpoint coordinate label — clamp anchor to avoid clipping */}
+                    <text
+                        x={bpX}
+                        y={bpLineBottom + 10}
+                        textAnchor={
+                            bpX - x < width * 0.15
+                                ? 'start'
+                                : x + width - bpX < width * 0.15
+                                ? 'end'
+                                : 'middle'
+                        }
+                        fontSize={COORD_FONT_SIZE}
+                        fill={COLOR_BREAKPOINT}
+                    >
+                        chr{chromosome}:{bp.toLocaleString()}
+                    </text>
+                </>
+            )}
 
             {/* 5′ / 3′ end caps — direction cue C.
                 Anchored to the outermost exon extents across all rendered

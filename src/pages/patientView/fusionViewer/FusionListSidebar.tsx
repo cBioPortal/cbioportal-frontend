@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import classNames from 'classnames';
 import { FusionViewerStore } from './FusionViewerStore';
-import { FusionEvent } from './data/types';
+import { FusionEvent, formatPosition } from './data/types';
 import { filterFusions } from './data/fusionSearch';
 import { orientByDescriptions } from './data/partnerResolution';
 import moduleStyles from './styles.module.scss';
@@ -119,15 +119,15 @@ function formatFusionName(fusion: FusionEvent): string {
 }
 
 function formatBreakpoint(fusion: FusionEvent): string {
-    const bp1 = `chr${
-        fusion.gene1.chromosome
-    }:${fusion.gene1.position.toLocaleString()}`;
+    const bp1 = `chr${fusion.gene1.chromosome}:${formatPosition(
+        fusion.gene1.position
+    )}`;
     if (!fusion.gene2) {
         return bp1;
     }
-    const bp2 = `chr${
-        fusion.gene2.chromosome
-    }:${fusion.gene2.position.toLocaleString()}`;
+    const bp2 = `chr${fusion.gene2.chromosome}:${formatPosition(
+        fusion.gene2.position
+    )}`;
     return `${bp1} \u2192 ${bp2}`;
 }
 

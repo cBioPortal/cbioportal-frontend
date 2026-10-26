@@ -129,15 +129,21 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
         // consumer keeps the gene tracks consistent with the product. The
         // strand/idiom-aware 5′/3′ assignment (esp. minus-strand intragenic
         // del/dup) lives in resolveProductBreakpoints — see its JSDoc.
-        const {
-            breakpoint5p: productBp5,
-            breakpoint3p: productBp3,
-        } = resolveProductBreakpoints(
-            fusion.svIdiom,
-            forteTranscript5p.strand,
-            gene1.position,
-            gene2 ? gene2.position : undefined
-        );
+        // A missing coordinate stays undefined: no breakpoint line, kept/lost
+        // split, arc or product is drawn against it.
+        const pos1 = gene1.position;
+        const pos2 = gene2 ? gene2.position : undefined;
+        const breakpointsKnown =
+            pos1 !== undefined && (!gene2 || pos2 !== undefined);
+        const { breakpoint5p: productBp5, breakpoint3p: productBp3 } =
+            pos1 !== undefined
+                ? resolveProductBreakpoints(
+                      fusion.svIdiom,
+                      forteTranscript5p.strand,
+                      pos1,
+                      pos2
+                  )
+                : { breakpoint5p: undefined, breakpoint3p: pos2 };
 
         // Filter out user transcripts that match the FORTE transcript
         const filtered5p = userTranscripts5p.filter(
@@ -156,15 +162,18 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
         // Sorted by exon.number (biological order) before calling the helpers.
         // The helpers filter by genomic position so sort order doesn't affect
         // which exons are selected, but consistent order avoids confusion.
-        const retained5pNums = new Set(
-            select5PrimeExons(
-                [...forteTranscript5p.exons].sort(
-                    (a, b) => a.number - b.number
-                ),
-                productBp5,
-                forteTranscript5p.strand
-            ).map(e => e.number)
-        );
+        const retained5pNums =
+            productBp5 !== undefined
+                ? new Set(
+                      select5PrimeExons(
+                          [...forteTranscript5p.exons].sort(
+                              (a, b) => a.number - b.number
+                          ),
+                          productBp5,
+                          forteTranscript5p.strand
+                      ).map(e => e.number)
+                  )
+                : undefined;
 
         const retained3pNums =
             gene2 && forteTranscript3p && productBp3 !== undefined
@@ -210,7 +219,8 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
         // still shows the annotated frame (with that caveat in its tooltip).
         // Gates the protein + domain render and the promoter-swap badge.
         // See data/svClassification.ts.
-        const renderChimeric = shouldRenderChimericProtein(fusion.svIdiom);
+        const renderChimeric =
+            shouldRenderChimericProtein(fusion.svIdiom) && breakpointsKnown;
 
         // ---- Promoter-swap detection ----
         // True when the 5′ partner contributes promoter/5′UTR only (no coding)
@@ -227,12 +237,13 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
             // (intragenic / IGR / insertion), even when the breakpoint geometry
             // alone would say "swap".
             renderChimeric &&
+            pos1 !== undefined &&
             detectPromoterSwap({
                 transcript5p: activeTranscript5p,
-                breakpoint5p: gene1.position,
+                breakpoint5p: pos1,
                 siteDescription5p: gene1.siteDescription,
                 transcript3p: activeTranscript3p,
-                breakpoint3p: gene2.position,
+                breakpoint3p: pos2,
                 siteDescription3p: gene2.siteDescription,
             });
         const SWAP_BAND_H = 30;
@@ -303,14 +314,17 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
             );
         };
 
-        const bp5pX = computeBreakpointX(
-            forteTranscript5p,
-            has5pUser ? filtered5p : [],
-            productBp5,
-            gene5pX,
-            GENE_TRACK_WIDTH,
-            forteTranscript5p.strand
-        );
+        const bp5pX =
+            productBp5 !== undefined
+                ? computeBreakpointX(
+                      forteTranscript5p,
+                      has5pUser ? filtered5p : [],
+                      productBp5,
+                      gene5pX,
+                      GENE_TRACK_WIDTH,
+                      forteTranscript5p.strand
+                  )
+                : gene5pX + GENE_TRACK_WIDTH / 2;
 
         const bp3pX =
             gene2 && forteTranscript3p && productBp3 !== undefined
@@ -424,6 +438,7 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                 {/* Promoter-swap annotation: arc from the 5′ promoter to the
                     3′ gene, indicating the 3′ ORF is driven by the 5′ promoter. */}
                 {isPromoterSwap &&
+                    pos1 !== undefined &&
                     (() => {
                         const promoterX = gene5pX + 24;
                         const targetX = gene3pX + 24;
@@ -453,7 +468,7 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                                     gene5p={gene1.symbol}
                                     gene3p={gene2 ? gene2.symbol : ''}
                                     chromosome={gene1.chromosome}
-                                    position={gene1.position}
+                                    position={pos1}
                                 >
                                     <g style={{ cursor: 'help' }}>
                                         <rect
@@ -483,7 +498,7 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                     })()}
 
                 {/* Connecting arcs */}
-                {gene2 && forteTranscript3p && (
+                {gene2 && forteTranscript3p && breakpointsKnown && (
                     <ConnectingArcs
                         breakpoint5pX={bp5pX}
                         breakpoint3pX={bp3pX}
@@ -545,14 +560,15 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                             fontStyle="italic"
                             fill="#999"
                         >
-                            No protein product shown (intragenic inversion, IGR,
-                            or insertion)
+                            {breakpointsKnown
+                                ? 'No protein product shown (intragenic inversion, IGR, or insertion)'
+                                : 'No protein product shown (breakpoint coordinate missing)'}
                         </text>
                     </g>
                 )}
 
                 {/* Protein domain track */}
-                {hasDomains && renderChimeric && (
+                {hasDomains && renderChimeric && productBp5 !== undefined && (
                     <ProteinDomainTrack
                         forteTranscript5p={activeTranscript5p}
                         forteTranscript3p={activeTranscript3p}

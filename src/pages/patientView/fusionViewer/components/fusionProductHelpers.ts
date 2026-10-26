@@ -582,7 +582,12 @@ export function computeJunctionX(
     x: number,
     width: number
 ): number {
-    if (!gene2 || !forteTranscript3p) {
+    if (
+        !gene2 ||
+        !forteTranscript3p ||
+        gene1.position === undefined ||
+        gene2.position === undefined
+    ) {
         return x + width / 2;
     }
 

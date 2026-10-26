@@ -110,16 +110,13 @@ function computeLayout(
         forteTranscript3p.strand
     );
 
-    const retained5p = retainedExonsInOrder(
-        forteTranscript5p,
-        breakpoint5p ?? gene1.position,
-        true
-    );
-    const retained3p = retainedExonsInOrder(
-        forteTranscript3p,
-        breakpoint3p ?? gene2.position,
-        false
-    );
+    const bp5 = breakpoint5p ?? gene1.position;
+    const bp3 = breakpoint3p ?? gene2.position;
+    // No product layout against a missing breakpoint coordinate.
+    if (bp5 === undefined || bp3 === undefined) return null;
+
+    const retained5p = retainedExonsInOrder(forteTranscript5p, bp5, true);
+    const retained3p = retainedExonsInOrder(forteTranscript3p, bp3, false);
 
     const total5p = retained5p.length;
     const total3p = retained3p.length;

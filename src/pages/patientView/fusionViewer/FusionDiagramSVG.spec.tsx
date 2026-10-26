@@ -6,6 +6,7 @@ import { FusionProduct } from './components/FusionProduct';
 import { ProteinDomainTrack } from './components/ProteinDomainTrack';
 import { GeneTrack } from './components/GeneTrack';
 import { PromoterSwapTooltip } from './components/ExonTooltip';
+import { ConnectingArcs } from './components/ConnectingArcs';
 import { FusionEvent, GenePartner, TranscriptData } from './data/types';
 
 function makeTranscript(
@@ -302,5 +303,67 @@ describe('FusionDiagramSVG', () => {
         assert.equal(tracks.at(0).prop('onActivateTranscript'), spy5);
         assert.equal(tracks.at(1).prop('activeTranscriptId'), 'ENST_3P_FORTE');
         assert.equal(tracks.at(1).prop('onActivateTranscript'), spy3);
+    });
+});
+
+describe('FusionDiagramSVG — missing breakpoint coordinate', () => {
+    const t5 = makeTranscript({ transcriptId: 'M5', gene: 'A' });
+    const t3 = makeTranscript({ transcriptId: 'M3', gene: 'B' });
+
+    function renderWith(fusion: FusionEvent) {
+        return shallow(
+            <FusionDiagramSVG
+                fusion={fusion}
+                forteTranscript5p={t5}
+                forteTranscript3p={t3}
+                activeTranscript5p={t5}
+                activeTranscript3p={t3}
+                onActivate5p={() => {}}
+                onActivate3p={() => {}}
+            />
+        );
+    }
+
+    const base = makeFusion();
+    const cases: Array<[string, FusionEvent]> = [
+        ['5′', makeFusion({ gene1: { ...base.gene1, position: undefined } })],
+        ['3′', makeFusion({ gene2: { ...base.gene2!, position: undefined } })],
+    ];
+
+    cases.forEach(([side, fusion]) => {
+        it(`draws no ${side} breakpoint/split and no arcs or product when the ${side} position is missing`, () => {
+            const w = renderWith(fusion);
+            const tracks = w.find(GeneTrack);
+            assert.equal(tracks.length, 2);
+            const missingTrack = side === '5′' ? tracks.at(0) : tracks.at(1);
+            assert.isUndefined(missingTrack.prop('position'));
+            assert.isUndefined(missingTrack.prop('retainedExonNumbers'));
+            assert.equal(w.find(ConnectingArcs).length, 0);
+            assert.equal(w.find(FusionProduct).length, 0);
+            assert.equal(w.find(ProteinDomainTrack).length, 0);
+            assert.equal(
+                w.find('[data-testid="no-chimeric-orf-strip"]').length,
+                1
+            );
+        });
+    });
+
+    it('still draws breakpoints and the product when both positions are present', () => {
+        const w = renderWith(makeFusion());
+        assert.equal(
+            w
+                .find(GeneTrack)
+                .at(0)
+                .prop('position'),
+            350
+        );
+        assert.isDefined(
+            w
+                .find(GeneTrack)
+                .at(0)
+                .prop('retainedExonNumbers')
+        );
+        assert.equal(w.find(ConnectingArcs).length, 1);
+        assert.equal(w.find(FusionProduct).length, 1);
     });
 });

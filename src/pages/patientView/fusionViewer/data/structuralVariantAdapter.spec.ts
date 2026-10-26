@@ -244,6 +244,30 @@ describe('structuralVariantAdapter', () => {
             assert.isNull(fe.gene2);
         });
 
+        // --- Missing coordinates stay missing ---
+
+        it('maps a -1 site1Position to a missing (undefined) position, not 0', () => {
+            const fe = convertStructuralVariantToFusionEvent(
+                makeSV({ site1Position: -1 })
+            );
+            assert.isUndefined(fe.gene1.position);
+        });
+
+        it('maps a null site2Position to a missing (undefined) position, not 0', () => {
+            const fe = convertStructuralVariantToFusionEvent(
+                makeSV({ site2Position: null as any })
+            );
+            assert.isNotNull(fe.gene2);
+            assert.isUndefined(fe.gene2!.position);
+        });
+
+        it('keeps the event ID stable when a position is missing', () => {
+            const fe = convertStructuralVariantToFusionEvent(
+                makeSV({ site1Position: -1, site2Position: null as any })
+            );
+            assert.equal(fe.id, 'SAMPLE_001_GENE_A_GENE_B_0_0');
+        });
+
         // --- ID generation ---
 
         it('generates a deterministic ID from sample, genes, positions', () => {

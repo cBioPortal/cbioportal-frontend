@@ -23,6 +23,17 @@ function safeNumber(value: number | null | undefined): number {
 }
 
 /**
+ * Extract a genomic coordinate, keeping a missing one (null, undefined, -1,
+ * NaN) missing instead of coercing it to a plausible-looking 0.
+ */
+function safePosition(value: number | null | undefined): number | undefined {
+    if (value == null || value === -1 || isNaN(value)) {
+        return undefined;
+    }
+    return value;
+}
+
+/**
  * Classify whether a structural-variant record represents an RNA-derived
  * fusion call (the caller chose the transcripts) or a DNA-level SV.
  *
@@ -134,7 +145,7 @@ export function convertStructuralVariantToFusionEvent(
     const gene1: GenePartner = {
         symbol: safeString(sv.site1HugoSymbol),
         chromosome: safeString(sv.site1Chromosome),
-        position: safeNumber(sv.site1Position),
+        position: safePosition(sv.site1Position),
         selectedTranscriptId: stripTranscriptVersion(
             safeString(sv.site1EnsemblTranscriptId)
         ),
@@ -145,7 +156,7 @@ export function convertStructuralVariantToFusionEvent(
         ? {
               symbol: safeString(sv.site2HugoSymbol),
               chromosome: safeString(sv.site2Chromosome),
-              position: safeNumber(sv.site2Position),
+              position: safePosition(sv.site2Position),
               selectedTranscriptId: stripTranscriptVersion(
                   safeString(sv.site2EnsemblTranscriptId)
               ),

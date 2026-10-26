@@ -2,7 +2,12 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { FusionViewerStore } from './FusionViewerStore';
-import { TranscriptData, COLOR_5PRIME, COLOR_3PRIME } from './data/types';
+import {
+    TranscriptData,
+    COLOR_5PRIME,
+    COLOR_3PRIME,
+    formatPosition,
+} from './data/types';
 import { inlineStyles } from './FusionInfoBarStyles';
 import { FusionCircos } from './components/FusionCircos';
 
@@ -120,13 +125,13 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
         const gene2 = fusion.gene2 ? fusion.gene2.symbol : 'IGR';
         const isIntergenic = fusion.gene2 === null;
 
-        const bp1 = `chr${
-            fusion.gene1.chromosome
-        }:${fusion.gene1.position.toLocaleString()}`;
+        const bp1 = `chr${fusion.gene1.chromosome}:${formatPosition(
+            fusion.gene1.position
+        )}`;
         const bp2 = fusion.gene2
-            ? `chr${
-                  fusion.gene2.chromosome
-              }:${fusion.gene2.position.toLocaleString()}`
+            ? `chr${fusion.gene2.chromosome}:${formatPosition(
+                  fusion.gene2.position
+              )}`
             : '';
 
         const selected5pIds = store.effectiveSelected5pIds;

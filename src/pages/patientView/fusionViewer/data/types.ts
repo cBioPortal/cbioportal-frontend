@@ -45,10 +45,16 @@ export interface TranscriptData {
     utrs: { start: number; end: number; type: 'five_prime' | 'three_prime' }[];
 }
 
+/** Display a breakpoint coordinate; a missing one shows as "?". */
+export function formatPosition(position: number | undefined): string {
+    return position === undefined ? '?' : position.toLocaleString();
+}
+
 export interface GenePartner {
     symbol: string;
     chromosome: string;
-    position: number;
+    /** Breakpoint coordinate; undefined when the source reported none (-1/null). */
+    position: number | undefined;
     selectedTranscriptId: string;
     siteDescription: string;
 }
