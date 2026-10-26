@@ -40,11 +40,7 @@ import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
-import { FusionViewerTab } from './fusionViewer/FusionViewerTab';
-import {
-    hasRnaFusion,
-    patientSvTabLabel,
-} from './fusionViewer/data/svTabLabels';
+import { buildFusionViewerTab } from './fusionViewer/fusionViewerPatientTab';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -821,10 +817,6 @@ export function tabs(
         /* @ts-ignore */
         tabs.push(...pageComponent.resourceTabs.component);
 
-    const svData = pageComponent.patientViewPageStore.structuralVariantData;
-    const hideFusionViewer =
-        svData.isPending || !svData.result || svData.result.length === 0;
-
     tabs.push(
         <MSKTab
             key={9}
@@ -840,6 +832,13 @@ export function tabs(
                 }
             />
         </MSKTab>
+        buildFusionViewerTab(
+            PatientViewPageTabs.FusionViewer,
+            pageComponent.patientViewPageStore.structuralVariantData,
+            urlWrapper.activeTabId,
+            pageComponent.patientViewPageStore.studies.result[0]
+                ?.referenceGenome
+        )
     );
 
     tabs.push(...buildCustomTabs(pageComponent.customTabs));
