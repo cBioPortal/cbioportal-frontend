@@ -48,6 +48,11 @@ export async function expectElementScreenshot(
 ) {
     const target = page.locator(selector);
     await target.waitFor({ state: 'visible' });
+    // With CSS animations disabled a spinner is a still image, so
+    // toHaveScreenshot would accept a capture taken mid-fetch as stable.
+    await expect(
+        target.locator('[data-test="LoadingIndicator"]')
+    ).toHaveCount(0, { timeout: 30000 });
 
     if (opts.hide?.length) {
         await page.addStyleTag({
