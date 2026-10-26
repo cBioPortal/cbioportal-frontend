@@ -2522,8 +2522,10 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                         // Include trackGroupIndex so a swap (which changes
                         // the index) re-adds the track in its new group.
                         key: `GENERICASSAYDOMINANTTRACK_${molecularProfileId}_grp${trackGroupIndex}`,
+                        // The track group header names the profile when
+                        // both tracks are shown.
                         label: isStackedAndDominant
-                            ? `${profile.name} (dominant)`
+                            ? 'Dominant category'
                             : profile.name,
                         data: makeDominantCategoryTrackData(data, categories),
                         category_to_color: _.pick(
@@ -2546,7 +2548,9 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                         key: `GENERICASSAYSTACKEDBARTRACK_${molecularProfileId}_${
                             isAbsolute ? 'abs' : 'comp'
                         }_grp${trackGroupIndex}`,
-                        label: profile.name + (isAbsolute ? ' (absolute)' : ''),
+                        label: isStackedAndDominant
+                            ? 'Stacked bar'
+                            : profile.name + (isAbsolute ? ' (absolute)' : ''),
                         data,
                         stackedBar: true,
                         // Put the sort-by category at the bottom of each stack

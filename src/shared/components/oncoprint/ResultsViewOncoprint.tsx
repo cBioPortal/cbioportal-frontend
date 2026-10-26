@@ -2117,6 +2117,7 @@ export default class ResultsViewOncoprint extends React.Component<
                     this.genericAssayStackedAbsoluteProfiles,
                     this.genericAssayBarProfiles,
                     this.genericAssayDominantProfiles,
+                    this.genericAssayStackedAndDominantProfiles,
                     this.setGenericAssayChartType
                 )
             );
