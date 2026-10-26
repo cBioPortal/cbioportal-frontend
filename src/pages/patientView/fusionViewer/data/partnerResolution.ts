@@ -134,7 +134,8 @@ function strandOf(txs: TranscriptData[]): '+' | '-' | null {
  *  3. Look up (lowStrand, highStrand, connectionType) in the empirical rule
  *     table. Choose which sorted side is the 5' partner.
  *  4. If anything is missing — empty transcripts, unknown connectionType,
- *     intergenic fusion — fall back to the input gene1/gene2 unchanged.
+ *     intergenic fusion — or the row is RNA-derived or interchromosomal,
+ *     keep the input gene1/gene2 order (with any step-1 correction).
  */
 export function resolveFusionPartners(input: ResolveInput): ResolvedFusion {
     const { fusion, gene1Transcripts, gene2Transcripts } = input;
@@ -186,6 +187,26 @@ export function resolveFusionPartners(input: ResolveInput): ResolvedFusion {
         rightTxs = gene2Transcripts;
     }
 
+    // Fallback when the 5'/3' order can't be decided: keep site1's symbol 5',
+    // but keep any transcript-confirmed symbol/position correction.
+    const resolvedFallback: ResolvedFusion = {
+        fivePrime: leftPartner,
+        threePrime: rightPartner,
+        fivePrimeTranscripts: leftTxs,
+        threePrimeTranscripts: rightTxs,
+        swapped: false,
+        mismatchStatus,
+    };
+
+    // RNA callers already report site1 as 5'; positions on different
+    // chromosomes cannot be sorted. Keep the caller's order in both cases.
+    if (
+        fusion.isRnaDerived ||
+        leftPartner.chromosome !== rightPartner.chromosome
+    ) {
+        return resolvedFallback;
+    }
+
     // Position-sort
     const leftIsLow = leftPartner.position <= rightPartner.position;
     const low = leftIsLow ? leftPartner : rightPartner;
@@ -196,7 +217,7 @@ export function resolveFusionPartners(input: ResolveInput): ResolvedFusion {
     const lowStrand = strandOf(lowTxs);
     const highStrand = strandOf(highTxs);
     if (!lowStrand || !highStrand) {
-        return { ...fallback, mismatchStatus };
+        return resolvedFallback;
     }
 
     const which = resolveFivePrimeBy(
@@ -205,7 +226,7 @@ export function resolveFusionPartners(input: ResolveInput): ResolvedFusion {
         fusion.connectionType
     );
     if (which === null) {
-        return { ...fallback, mismatchStatus };
+        return resolvedFallback;
     }
 
     const fivePrime = which === 'low' ? low : high;

@@ -435,3 +435,121 @@ describe('orientByDescriptions', () => {
         assert.strictEqual(orientByDescriptions(fusion), fusion);
     });
 });
+
+describe('resolveFusionPartners: RNA gate, chromosome safety, kept corrections', () => {
+    const tmprss2 = makeTx('TMPRSS2', 42836478, 42903043, '-');
+    const erg = makeTx('ERG', 39751949, 40033704, '-');
+
+    it('keeps the caller order for an RNA-derived row', () => {
+        // The '-|-|3to5' rule would put TMPRSS2 first; an RNA caller's
+        // site1 is already 5prime, so its order must stand.
+        const fusion = makeFusion({
+            gene1: makeGene('ERG', '21', 39860000, 'ENST_ERG'),
+            gene2: makeGene('TMPRSS2', '21', 42880000, 'ENST_TMPRSS2'),
+            connectionType: '3to5',
+            isRnaDerived: true,
+        });
+        const result = resolveFusionPartners({
+            fusion,
+            gene1Transcripts: [erg],
+            gene2Transcripts: [tmprss2],
+        });
+        assert.equal(result.fivePrime.symbol, 'ERG');
+        assert.equal(result.threePrime!.symbol, 'TMPRSS2');
+        assert.equal(result.swapped, false);
+    });
+
+    it('keeps the caller order for an RNA-derived row oriented from descriptions', () => {
+        const fusion = makeFusion({
+            gene1: {
+                ...makeGene('ERG', '21', 39834655, 'NA'),
+                siteDescription: 'Intron of ERG(-)',
+            },
+            gene2: {
+                ...makeGene('TMPRSS2', '21', 42875116, 'NA'),
+                siteDescription: 'Intron of TMPRSS2(-)',
+            },
+            connectionType: '3to5',
+            isRnaDerived: true,
+        });
+        const out = orientByDescriptions(fusion);
+        assert.equal(out.gene1.symbol, 'ERG');
+        assert.equal(out.gene2!.symbol, 'TMPRSS2');
+    });
+
+    it('does not position-sort partners on different chromosomes', () => {
+        // '-|-|3to5' would pick the higher coordinate (gene2) as 5prime, but
+        // positions on chr9 and chr2 are not comparable.
+        const fusion = makeFusion({
+            gene1: makeGene('GENE_X', '9', 1000, 'ENST_X'),
+            gene2: makeGene('GENE_Y', '2', 2000, 'ENST_Y'),
+            connectionType: '3to5',
+        });
+        const result = resolveFusionPartners({
+            fusion,
+            gene1Transcripts: [makeTx('GENE_X', 500, 1500, '-')],
+            gene2Transcripts: [makeTx('GENE_Y', 1500, 2500, '-')],
+        });
+        assert.equal(result.fivePrime.symbol, 'GENE_X');
+        assert.equal(result.fivePrime.chromosome, '9');
+        assert.equal(result.threePrime!.symbol, 'GENE_Y');
+        assert.equal(result.swapped, false);
+    });
+
+    it('keeps a transcript-confirmed correction when orientation is unknown', () => {
+        // Pattern B with no connection type: symbols stay in caller order,
+        // but each symbol keeps the position its transcripts overlap.
+        const fusion = makeFusion({
+            gene1: makeGene('TMPRSS2', '21', 39860000, 'ENST_TMPRSS2'),
+            gene2: makeGene('ERG', '21', 42880000, 'ENST_ERG'),
+            connectionType: '',
+        });
+        const result = resolveFusionPartners({
+            fusion,
+            gene1Transcripts: [tmprss2],
+            gene2Transcripts: [erg],
+        });
+        assert.equal(result.mismatchStatus, 'swapped');
+        assert.equal(result.fivePrime.symbol, 'TMPRSS2');
+        assert.equal(result.fivePrime.position, 42880000);
+        assert.equal(result.threePrime!.symbol, 'ERG');
+        assert.equal(result.threePrime!.position, 39860000);
+        assert.deepEqual(result.fivePrimeTranscripts, [tmprss2]);
+        assert.deepEqual(result.threePrimeTranscripts, [erg]);
+    });
+
+    it('keeps the correction for an RNA-derived pattern B row', () => {
+        const fusion = makeFusion({
+            gene1: makeGene('TMPRSS2', '21', 39860000, 'ENST_TMPRSS2'),
+            gene2: makeGene('ERG', '21', 42880000, 'ENST_ERG'),
+            connectionType: '3to5',
+            isRnaDerived: true,
+        });
+        const result = resolveFusionPartners({
+            fusion,
+            gene1Transcripts: [tmprss2],
+            gene2Transcripts: [erg],
+        });
+        assert.equal(result.fivePrime.symbol, 'TMPRSS2');
+        assert.equal(result.fivePrime.position, 42880000);
+        assert.equal(result.threePrime!.position, 39860000);
+    });
+
+    it('leaves positions alone when neither pairing overlaps transcripts', () => {
+        const fusion = makeFusion({
+            gene1: makeGene('ERG', '21', 100, 'ENST_ERG'),
+            gene2: makeGene('TMPRSS2', '21', 200, 'ENST_TMPRSS2'),
+            connectionType: '',
+        });
+        const result = resolveFusionPartners({
+            fusion,
+            gene1Transcripts: [erg],
+            gene2Transcripts: [tmprss2],
+        });
+        assert.equal(result.mismatchStatus, 'inconsistent');
+        assert.equal(result.fivePrime.symbol, 'ERG');
+        assert.equal(result.fivePrime.position, 100);
+        assert.equal(result.threePrime!.position, 200);
+        assert.equal(result.swapped, false);
+    });
+});

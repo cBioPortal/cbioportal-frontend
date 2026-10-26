@@ -778,7 +778,8 @@ describe('FusionViewerStore', () => {
 
             const f = makeFusion({
                 id: 'f1',
-                isRnaDerived: true,
+                // DNA row: RNA rows keep the caller's order (no resolver swap).
+                isRnaDerived: false,
                 connectionType: '3to5',
                 gene1: {
                     symbol: 'ERG',
@@ -807,6 +808,53 @@ describe('FusionViewerStore', () => {
             assert.isTrue(store.effectiveSelected5pIds.has('ENST_TMPRSS2'));
             assert.isFalse(store.effectiveSelected5pIds.has('ENST_ERG'));
             assert.equal(store.effectiveActive5pId, 'ENST_TMPRSS2');
+        });
+
+        it('keeps the caller order for an RNA-derived row', async () => {
+            mockFetchTranscripts
+                .mockResolvedValueOnce([
+                    makeTranscript({
+                        transcriptId: 'ENST_ERG',
+                        gene: 'ERG',
+                        strand: '-',
+                        txStart: 39751949,
+                        txEnd: 40033704,
+                    }),
+                ])
+                .mockResolvedValueOnce([
+                    makeTranscript({
+                        transcriptId: 'ENST_TMPRSS2',
+                        gene: 'TMPRSS2',
+                        strand: '-',
+                        txStart: 42836478,
+                        txEnd: 42903043,
+                    }),
+                ]);
+            const f = makeFusion({
+                id: 'f1',
+                isRnaDerived: true,
+                connectionType: '3to5',
+                gene1: {
+                    symbol: 'ERG',
+                    chromosome: '21',
+                    position: 39860000,
+                    selectedTranscriptId: 'ENST_ERG',
+                    siteDescription: 'Intron of ERG(-)',
+                },
+                gene2: {
+                    symbol: 'TMPRSS2',
+                    chromosome: '21',
+                    position: 42880000,
+                    selectedTranscriptId: 'ENST_TMPRSS2',
+                    siteDescription: 'Intron of TMPRSS2(-)',
+                },
+            });
+            store.setStructuralVariants([f] as any);
+            await new Promise(r => setTimeout(r, 50));
+
+            assert.equal(store.canonicalFusion!.gene1.symbol, 'ERG');
+            assert.equal(store.canonicalFusion!.gene2!.symbol, 'TMPRSS2');
+            assert.isFalse(store.partnersWereSwapped);
         });
     });
 
