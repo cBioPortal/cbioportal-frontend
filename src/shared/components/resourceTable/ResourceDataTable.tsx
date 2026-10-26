@@ -383,6 +383,10 @@ export class ResourceDataTable extends React.Component<
      * loaded and fall back to the caller's label otherwise.
      */
     @computed get itemsLabel(): string {
+        const configuredLabel = this.resourceConfig.itemsLabel;
+        if (configuredLabel) {
+            return pluralize(configuredLabel, this.props.store.totalRowCount);
+        }
         const resourceName = this.props.store.activeResourceLabel;
         if (!resourceName || !this.labelNamesItsRows) {
             return this.props.resourceLabel || 'items';
@@ -392,11 +396,15 @@ export class ResourceDataTable extends React.Component<
 
     /** Whether "N <label>s" is a true description of the rows; see pluralizeDisplayName. */
     @computed get labelNamesItsRows(): boolean {
-        const resourceId = this.props.store.activeResourceId;
         return (
-            !resourceId ||
-            getResourceConfig({ resourceId }).pluralizeDisplayName !== false
+            !!this.resourceConfig.itemsLabel ||
+            this.resourceConfig.pluralizeDisplayName !== false
         );
+    }
+
+    @computed get resourceConfig() {
+        const resourceId = this.props.store.activeResourceId;
+        return resourceId ? getResourceConfig({ resourceId }) : {};
     }
 
     private downloadAllRows = () => this.props.store.fetchAllRowsForDownload();
@@ -425,9 +433,7 @@ export class ResourceDataTable extends React.Component<
                 style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    minHeight: 30,
                     fontWeight: 'bold',
-                    marginLeft: 6,
                     flexWrap: 'wrap',
                     gap: 6,
                 }}
