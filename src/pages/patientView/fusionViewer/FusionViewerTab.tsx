@@ -31,6 +31,8 @@ export class FusionViewerTab extends React.Component<IFusionViewerTabProps> {
                 this.props.structuralVariants,
                 this.props.referenceGenome
             );
+        } else if (prevProps.referenceGenome !== this.props.referenceGenome) {
+            this.store.setReferenceGenome(this.props.referenceGenome);
         }
     }
 

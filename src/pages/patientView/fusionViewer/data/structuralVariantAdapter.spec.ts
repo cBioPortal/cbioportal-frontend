@@ -364,6 +364,30 @@ describe('structuralVariantAdapter', () => {
     });
 
     // -----------------------------------------------------------------------
+    // per-row ncbiBuild normalization
+    // -----------------------------------------------------------------------
+    describe('ncbiBuild normalization', () => {
+        it('normalizes GRCh38/hg38 and GRCh37/hg19 aliases', () => {
+            const build = (ncbiBuild: string) =>
+                convertStructuralVariantToFusionEvent(makeSV({ ncbiBuild }))
+                    .ncbiBuild;
+            assert.equal(build('GRCh38'), 'GRCh38');
+            assert.equal(build(' hg38 '), 'GRCh38');
+            assert.equal(build('GRCh37'), 'GRCh37');
+            assert.equal(build('hg19'), 'GRCh37');
+        });
+
+        it('maps a missing or unrecognized build to empty', () => {
+            const build = (ncbiBuild: any) =>
+                convertStructuralVariantToFusionEvent(makeSV({ ncbiBuild }))
+                    .ncbiBuild;
+            assert.equal(build(undefined), '');
+            assert.equal(build('NA'), '');
+            assert.equal(build('mm10'), '');
+        });
+    });
+
+    // -----------------------------------------------------------------------
     // isRnaDerived classification (RNA fusion vs DNA SV)
     // -----------------------------------------------------------------------
     describe('isRnaDerived classification', () => {

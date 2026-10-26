@@ -93,6 +93,14 @@ export function isRnaDerivedFusion(sv: StructuralVariant): boolean {
     return /fusion/.test(safeString(sv.molecularProfileId).toLowerCase());
 }
 
+/** Normalize an ncbiBuild value to 'GRCh38' | 'GRCh37', or '' if unknown. */
+function normalizeBuild(raw: string): string {
+    const b = raw.trim().toLowerCase();
+    if (b === 'grch38' || b === 'hg38') return 'GRCh38';
+    if (b === 'grch37' || b === 'hg19') return 'GRCh37';
+    return '';
+}
+
 /**
  * Strip the version suffix from an Ensembl transcript ID (e.g., "ENST00000123.4" -> "ENST00000123").
  */
@@ -200,6 +208,7 @@ export function convertStructuralVariantToFusionEvent(
         svIdiom,
         frame,
         isRnaDerived: isRnaDerivedFusion(sv),
+        ncbiBuild: normalizeBuild(safeString(sv.ncbiBuild)),
     };
 }
 

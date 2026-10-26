@@ -124,6 +124,12 @@ export interface FusionEvent {
      * changes the adapter mapping.
      */
     isRnaDerived: boolean;
+    /**
+     * Per-row genome build normalized from StructuralVariant.ncbiBuild:
+     * 'GRCh37', 'GRCh38', or '' when missing/unrecognized. When set it wins
+     * over the RNA-derived GRCh38 fallback and the study reference genome.
+     */
+    ncbiBuild?: string;
 }
 
 export const COLOR_5PRIME = '#5A73B3';

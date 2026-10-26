@@ -44,8 +44,9 @@ export class FusionViewerStore {
     @observable public activeTranscript5pId: string = '';
     @observable public activeTranscript3pId: string = '';
 
-    // Genome build selection (GRCh38 or GRCh37)
-    @observable public genomeBuild: GenomeBuild = 'GRCh38';
+    // Study-level default build (from referenceGenome). Per-fusion resolution
+    // happens in the genomeBuild computed below.
+    @observable public defaultGenomeBuild: GenomeBuild = 'GRCh38';
 
     // UI display toggles
     @observable public showPromoter: boolean = true;
@@ -108,23 +109,7 @@ export class FusionViewerStore {
         referenceGenome?: string
     ): void {
         this.structuralVariants = svs;
-        if (referenceGenome) {
-            const mapped =
-                GENOME_ID_TO_GENOME_BUILD[
-                    referenceGenome as keyof typeof GENOME_ID_TO_GENOME_BUILD
-                ];
-            if (mapped === 'GRCh37' || mapped === 'GRCh38') {
-                this.genomeBuild = mapped;
-            }
-        }
-        // RNA-derived fusion coordinates are always GRCh38, regardless of the
-        // study's reference genome label. This matters once RNA (e.g. TARGET)
-        // and DNA (e.g. IMPACT) fusions can appear in the same table/study:
-        // the study-level referenceGenome only reflects the DNA build, so
-        // relying on it alone mis-renders RNA-derived fusions.
-        if (this.fusions.some(f => f.isRnaDerived)) {
-            this.genomeBuild = 'GRCh38';
-        }
+        this.setReferenceGenome(referenceGenome);
         this.selectedFusionId = '';
         this.selectedTranscript5pIds.clear();
         this.selectedTranscript3pIds.clear();
@@ -133,6 +118,19 @@ export class FusionViewerStore {
         const fusions = this.fusions;
         if (fusions.length > 0) {
             this.selectFusion(fusions[0].id);
+        }
+    }
+
+    /** Update the study-level default build; keeps the current selection. */
+    @action
+    public setReferenceGenome(referenceGenome?: string): void {
+        if (!referenceGenome) return;
+        const mapped =
+            GENOME_ID_TO_GENOME_BUILD[
+                referenceGenome as keyof typeof GENOME_ID_TO_GENOME_BUILD
+            ];
+        if (mapped === 'GRCh37' || mapped === 'GRCh38') {
+            this.defaultGenomeBuild = mapped;
         }
     }
 
@@ -210,6 +208,21 @@ export class FusionViewerStore {
     @computed
     public get selectedFusion(): FusionEvent | undefined {
         return this.fusions.find(f => f.id === this.selectedFusionId);
+    }
+
+    /**
+     * Genome build for the selected fusion: its per-row ncbiBuild wins; with
+     * no row build, RNA-derived calls fall back to GRCh38 (RNA coordinates are
+     * GRCh38 regardless of the study label) and DNA calls to the study default.
+     */
+    @computed
+    public get genomeBuild(): GenomeBuild {
+        const fusion = this.selectedFusion;
+        if (!fusion) return this.defaultGenomeBuild;
+        if (fusion.ncbiBuild === 'GRCh37' || fusion.ncbiBuild === 'GRCh38') {
+            return fusion.ncbiBuild;
+        }
+        return fusion.isRnaDerived ? 'GRCh38' : this.defaultGenomeBuild;
     }
 
     /**

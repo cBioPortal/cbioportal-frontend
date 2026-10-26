@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { autorun } from 'mobx';
+import { autorun, runInAction } from 'mobx';
 import { FusionViewerStore } from './FusionViewerStore';
 import { FusionEvent, TranscriptData } from './data/types';
 
@@ -437,6 +437,63 @@ describe('FusionViewerStore', () => {
 
             assert.equal(store.genomeBuild, 'GRCh37');
         });
+
+        it('per-row ncbiBuild wins over the RNA-derived GRCh38 fallback', () => {
+            const f = makeFusion({ isRnaDerived: true, ncbiBuild: 'GRCh37' });
+            store.setStructuralVariants([f] as any, 'hg38');
+
+            assert.equal(store.genomeBuild, 'GRCh37');
+        });
+
+        it('a GRCh38 RNA row does not force a GRCh37 DNA row in the same patient', () => {
+            const rna = makeFusion({
+                id: 'rna',
+                isRnaDerived: true,
+                ncbiBuild: 'GRCh38',
+            });
+            const dna = makeFusion({
+                id: 'dna',
+                isRnaDerived: false,
+                ncbiBuild: 'GRCh37',
+            });
+            store.setStructuralVariants([rna, dna] as any, 'hg19');
+            assert.equal(store.genomeBuild, 'GRCh38');
+
+            store.selectFusion('dna');
+            assert.equal(store.genomeBuild, 'GRCh37');
+        });
+
+        it('queries transcripts with the selected fusion build', async () => {
+            const rna = makeFusion({
+                id: 'rna',
+                isRnaDerived: true,
+                ncbiBuild: 'GRCh38',
+            });
+            const dna = makeFusion({
+                id: 'dna',
+                isRnaDerived: false,
+                ncbiBuild: 'GRCh37',
+            });
+            store.setStructuralVariants([rna, dna] as any, 'hg19');
+            store.selectFusion('dna');
+            await new Promise(r => setTimeout(r, 50));
+
+            const calls = mockFetchTranscripts.mock.calls;
+            assert.equal(calls[calls.length - 1][2], 'GRCh37');
+        });
+
+        it('a referenceGenome supplied later replaces the default for rows without a build', async () => {
+            const f = makeFusion({ isRnaDerived: false });
+            store.setStructuralVariants([f] as any);
+            assert.equal(store.genomeBuild, 'GRCh38');
+
+            store.setReferenceGenome('hg19');
+            await new Promise(r => setTimeout(r, 50));
+
+            assert.equal(store.genomeBuild, 'GRCh37');
+            const calls = mockFetchTranscripts.mock.calls;
+            assert.equal(calls[calls.length - 1][2], 'GRCh37');
+        });
     });
 
     // -------------------------------------------------------------------
@@ -580,9 +637,11 @@ describe('FusionViewerStore', () => {
 
         it('selectFusion resets activeTranscript5pId and activeTranscript3pId to empty', () => {
             const f = makeFusion({ id: 'f1' });
-            store.structuralVariants = [f] as any;
-            store.activeTranscript5pId = 'ENST_STALE_5';
-            store.activeTranscript3pId = 'ENST_STALE_3';
+            runInAction(() => {
+                store.structuralVariants = [f] as any;
+                store.activeTranscript5pId = 'ENST_STALE_5';
+                store.activeTranscript3pId = 'ENST_STALE_3';
+            });
 
             store.selectFusion('f1');
 
