@@ -164,8 +164,8 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
         return (
             mutationEffect &&
             (mutationEffect.description ||
-                mutationEffect.citations.abstracts.length > 0 ||
-                mutationEffect.citations.pmids.length > 0)
+                (mutationEffect.citations?.abstracts || []).length > 0 ||
+                (mutationEffect.citations?.pmids || []).length > 0)
         );
     }
 
@@ -207,10 +207,10 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
                     <TabContentWrapper>
                         <BiologicalContent
                             mutationEffectCitations={
-                                indicator.mutationEffect.citations
+                                indicator.mutationEffect?.citations
                             }
                             biologicalSummary={
-                                indicator.mutationEffect.description
+                                indicator.mutationEffect?.description
                             }
                         />
                     </TabContentWrapper>
@@ -241,8 +241,8 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
                             }}
                         >
                             <OncoKbTreatmentTable
-                                variant={indicator.query.alteration || ''}
-                                treatments={indicator.treatments!}
+                                variant={indicator.query?.alteration || ''}
+                                treatments={indicator.treatments || []}
                             />
                         </div>
                     </TabContentWrapper>
@@ -268,9 +268,11 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
                 >
                     <TabContentWrapper>
                         <ImplicationContent
-                            variant={indicator.query.alteration}
+                            variant={indicator.query?.alteration || ''}
                             summary={indicator.diagnosticSummary}
-                            implications={indicator.diagnosticImplications}
+                            implications={
+                                indicator.diagnosticImplications || []
+                            }
                         />
                     </TabContentWrapper>
                 </Tab>
@@ -295,9 +297,11 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
                 >
                     <TabContentWrapper>
                         <ImplicationContent
-                            variant={indicator.query.alteration}
+                            variant={indicator.query?.alteration || ''}
                             summary={indicator.prognosticSummary}
-                            implications={indicator.prognosticImplications}
+                            implications={
+                                indicator.prognosticImplications || []
+                            }
                         />
                     </TabContentWrapper>
                 </Tab>
@@ -382,7 +386,7 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
     }
 
     function getMutationEffect(): string {
-        const mutationEffect = props.indicator?.mutationEffect.knownEffect;
+        const mutationEffect = props.indicator?.mutationEffect?.knownEffect;
         if (!mutationEffect || mutationEffect === UNKNOWN) {
             return 'Unknown Biological Effect';
         }
