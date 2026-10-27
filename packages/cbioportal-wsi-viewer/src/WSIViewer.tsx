@@ -89,9 +89,9 @@ export interface WsiViewerProps {
     pathologyFilter?: PathologySlideFilter;
     /**
      * The host owns the `pathologyFilter` sample (e.g. the patient page's
-     * sample filter shows and clears it). The slide list then shows no
-     * "Sample …" chip, and its own filters and "Show all slides" stay within
-     * that sample.
+     * sample filter shows and widens it). The slide list then shows no
+     * "Sample …" chip, counts its filters within that sample, and its
+     * filters and their reset ("Clear filters") never widen past it.
      */
     hostOwnsSampleScope?: boolean;
     /** Subject that isolates protected in-memory caches (the user name). */
@@ -551,16 +551,16 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
      * and fall back to unmatched slides, so only a scope with nothing but a
      * sample hides the other samples outright.
      */
-    /** A sample scope that only the host may widen. */
-    private get hostOwnsScopedSample(): boolean {
-        return !!this.props.hostOwnsSampleScope && !!this.scopedSampleId;
-    }
-
     private get scopedSampleId(): string | undefined {
         const filter = this.activePathologyFilter;
         return filter?.sampleId && !filter.matchLevel && !filter.specimenKey
             ? filter.sampleId
             : undefined;
+    }
+
+    /** A sample scope that only the host may widen. */
+    private get hostOwnsScopedSample(): boolean {
+        return !!this.props.hostOwnsSampleScope && !!this.scopedSampleId;
     }
 
     @action.bound

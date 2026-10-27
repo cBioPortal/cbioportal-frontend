@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
 import PatientWsiSlidesTab, {
-    resetOpeningWsiSlidesLink,
+    resetLastWsiSlidesLink,
     wsiSlidesTabScopeFromQuery,
 } from './PatientWsiSlidesTab';
 
@@ -85,7 +85,7 @@ describe('PatientWsiSlidesTab', () => {
     afterEach(() => {
         mockEntryPoint.mockClear();
         window.history.replaceState(null, '', '/');
-        resetOpeningWsiSlidesLink();
+        resetLastWsiSlidesLink();
     });
 
     const baseProps = {

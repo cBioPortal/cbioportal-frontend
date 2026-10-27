@@ -30,8 +30,9 @@ function queryValue(value: unknown): string | undefined {
  * Maps pathology slide link params (`sampleId`, plus `matchLevel`,
  * `specimenKey` and `stainFilter` from the `pathologySlideSettings` URL node)
  * to viewer props. A sample scopes the slide list to that sample, as sample
- * view scopes the rest of the page; the page's sample filter widens it. A slide named by a `#wsi:slide=` hash wins: the link scope and
- * the stain filter are dropped so they cannot exclude or hide that slide.
+ * view scopes the rest of the page; the page's sample filter widens it. A
+ * slide named by a deep-link `#wsi:slide=` hash wins: the link scope and the
+ * stain filter are dropped so they cannot exclude or hide that slide.
  */
 export function wsiSlidesTabScopeFromQuery(
     query: WsiSlidesTabQuery,
@@ -77,7 +78,7 @@ let lastLink:
     | undefined;
 
 /** Forgets the last link, as a full page load does. */
-export function resetOpeningWsiSlidesLink() {
+export function resetLastWsiSlidesLink() {
     lastLink = undefined;
 }
 
@@ -93,11 +94,12 @@ export default function PatientWsiSlidesTab({ query, ...viewerProps }: Props) {
     ]);
     const { deepLink, staleHash } = React.useMemo(() => {
         const hashSlide = !!readWsiHashState()?.slideId;
-        const opening = !lastLink || lastLink.patientId !== patientId;
-        const sameLink = !opening && lastLink!.linkKey === linkKey;
+        const previous =
+            lastLink?.patientId === patientId ? lastLink : undefined;
+        const sameLink = previous?.linkKey === linkKey;
         const link = {
-            deepLink: opening ? hashSlide : sameLink && lastLink!.deepLink,
-            staleHash: !opening && !sameLink && hashSlide,
+            deepLink: previous ? sameLink && previous.deepLink : hashSlide,
+            staleHash: !!previous && !sameLink && hashSlide,
         };
         lastLink = { patientId, linkKey, deepLink: link.deepLink };
         return link;
