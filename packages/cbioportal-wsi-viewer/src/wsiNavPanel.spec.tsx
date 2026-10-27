@@ -1205,7 +1205,7 @@ describe('WsiNavPanel', () => {
                 stainFilter="all"
                 sampleIdFilter="S-1"
                 linkoutScopeActive={true}
-                showSampleScope={false}
+                hostOwnsSampleScope={true}
                 onFilterChange={() => {}}
                 onSelectSlide={() => {}}
                 {...navContext}
@@ -1222,6 +1222,65 @@ describe('WsiNavPanel', () => {
                 }).children
             )
         ).toContain('Showing 1 of 2 slides');
+    });
+
+    it("counts a host-owned sample's slides on the filter chips", () => {
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([
+                    makeSample('S-1', [
+                        makeSlide({
+                            slide_key: 'hne-1',
+                            stain_kind: 'hne',
+                            match_level: 'BLOCK',
+                        }),
+                        makeSlide({
+                            slide_key: 'ihc-1',
+                            stain_name: 'IHC',
+                            stain_kind: 'ihc',
+                            match_level: 'PART',
+                        }),
+                    ]),
+                    makeSample('S-2', [
+                        makeSlide({
+                            slide_key: 'hne-2',
+                            stain_kind: 'hne',
+                            match_level: 'PART',
+                        }),
+                        makeSlide({
+                            slide_key: 'hne-3',
+                            stain_kind: 'hne',
+                            match_level: 'PART',
+                        }),
+                        makeSlide({
+                            slide_key: 'ihc-2',
+                            stain_name: 'IHC',
+                            stain_kind: 'ihc',
+                            match_level: 'BLOCK',
+                        }),
+                    ]),
+                ])}
+                selectedSlide={null}
+                stainFilter="all"
+                matchFilter="all"
+                sampleIdFilter="S-1"
+                linkoutScopeActive={true}
+                hostOwnsSampleScope={true}
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                {...navContext}
+            />
+        );
+        const chipCount = (testId: string) =>
+            flattenRenderedText(
+                renderer.root.findByProps({ 'data-testid': testId }).children
+            );
+
+        expect(chipCount('wsi-stain-filter-hne')).toContain('(1)');
+        expect(chipCount('wsi-stain-filter-ihc')).toContain('(1)');
+        // The patient has 3 Part and 2 Block slides; the sample 1 of each.
+        expect(chipCount('wsi-match-filter-part')).toContain('(1)');
+        expect(chipCount('wsi-match-filter-block')).toContain('(1)');
     });
 
     it('computes facet counts from the patient hierarchy while a linkout scope is active', () => {
