@@ -316,12 +316,16 @@ test.describe('treatment feature', () => {
             await options.nth(1).click();
             await expect(selectedOptions).toHaveCount(1);
 
-            await setInputText(
-                page,
-                '[data-test="GenericAssayEntitySelection"] input >> nth=0',
-                ''
-            );
+            // selecting clears the search, so search again and clear it by
+            // keyboard: fill('') presses Delete, which removes the last chip
+            // when the box is empty
+            const input = selector.locator('input').first();
+            await input.pressSequentially('Erlotinib');
+            await expect(options).toHaveCount(2);
+            await input.press('ControlOrMeta+a');
+            await input.press('Backspace');
             await expect(options).toHaveCount(9);
+            await expect(selectedOptions).toHaveCount(1);
             await options.first().click();
             await expect(selectedOptions).toHaveCount(2);
         });
