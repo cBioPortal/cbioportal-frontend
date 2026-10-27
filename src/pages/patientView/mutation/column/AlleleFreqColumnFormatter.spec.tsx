@@ -139,4 +139,26 @@ describe('AlleleFreqColumnFormatter', () => {
             )
         );
     });
+    it('sampleElement draws a baseline for a normal frequency of 0', () => {
+        const mutation = {
+            sampleId: '1',
+            molecularProfileId: `study_${MOLECULAR_PROFILE_MUTATIONS_SUFFIX}`,
+            tumorAltCount: 5,
+            tumorRefCount: 5,
+            normalAltCount: 0,
+            normalRefCount: 30,
+        };
+        const res = AlleleFreqColumnFormatter.convertMutationToSampleElement(
+            mutation,
+            'red',
+            5,
+            {},
+            'normal'
+        );
+        assert(
+            res &&
+                res.bar.props.height ===
+                    AlleleFreqColumnFormatter.minNormalBarHeight
+        );
+    });
 });

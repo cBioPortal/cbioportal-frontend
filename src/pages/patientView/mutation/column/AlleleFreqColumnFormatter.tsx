@@ -40,6 +40,8 @@ export default class AlleleFreqColumnFormatter {
     static barWidth = 6;
     static barSpacing = 3;
     static maxBarHeight = 12;
+    // keeps a normal frequency of 0 visible as a baseline
+    static minNormalBarHeight = 1;
     static indexToBarLeft = (n: number) =>
         n *
         (AlleleFreqColumnFormatter.barWidth +
@@ -87,8 +89,15 @@ export default class AlleleFreqColumnFormatter {
         }
         const { altReads, refReads } = counts;
         const freq = altReads / (altReads + refReads);
-        const barHeight =
+        const scaledHeight =
             (isNaN(freq) ? 0 : freq) * AlleleFreqColumnFormatter.maxBarHeight;
+        const barHeight =
+            source === 'normal' && !isNaN(freq)
+                ? Math.max(
+                      scaledHeight,
+                      AlleleFreqColumnFormatter.minNormalBarHeight
+                  )
+                : scaledHeight;
         const barY = AlleleFreqColumnFormatter.maxBarHeight - barHeight;
 
         const bar = (

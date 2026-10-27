@@ -126,6 +126,14 @@ export default class PatientViewMutationTable extends MutationTable<
     protected generateColumns() {
         super.generateColumns();
 
+        const allMutations = this.props.dataStore
+            ? this.props.dataStore.allData
+            : this.props.data;
+        const hasTumorAlleleFreq = AlleleFreqColumnFormatter.isVisible(
+            this.props.sampleManager,
+            allMutations
+        );
+
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ] = {
             name: 'Allele Freq',
             headerRender: this.props.alleleFreqHeaderRender,
@@ -144,12 +152,7 @@ export default class PatientViewMutationTable extends MutationTable<
             tooltip: this.props.alleleFreqHeaderRender
                 ? undefined
                 : defaultAlleleFrequencyHeaderTooltip,
-            visible: AlleleFreqColumnFormatter.isVisible(
-                this.props.sampleManager,
-                this.props.dataStore
-                    ? this.props.dataStore.allData
-                    : this.props.data
-            ),
+            visible: hasTumorAlleleFreq,
         };
 
         this._columns[MutationTableColumnType.NORMAL_ALLELE_FREQ] = {
@@ -174,13 +177,13 @@ export default class PatientViewMutationTable extends MutationTable<
             download: (d: Mutation[]) =>
                 AlleleFreqColumnFormatter.getFrequency(d, 'normal'),
             tooltip: defaultNormalAlleleFrequencyHeaderTooltip,
-            visible: true,
+            // shown by default only when there is no tumor allele frequency,
+            // e.g. clonal hematopoiesis variants called in the normal sample
+            visible: !hasTumorAlleleFreq,
             shouldExclude: () =>
                 !AlleleFreqColumnFormatter.isVisible(
                     this.props.sampleManager,
-                    this.props.dataStore
-                        ? this.props.dataStore.allData
-                        : this.props.data,
+                    allMutations,
                     'normal'
                 ),
         };
