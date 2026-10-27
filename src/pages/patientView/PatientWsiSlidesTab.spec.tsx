@@ -4,6 +4,7 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
 import PatientWsiSlidesTab, {
+    resetOpeningWsiSlidesLink,
     wsiSlidesTabScopeFromQuery,
 } from './PatientWsiSlidesTab';
 
@@ -84,6 +85,7 @@ describe('PatientWsiSlidesTab', () => {
     afterEach(() => {
         mockEntryPoint.mockClear();
         window.history.replaceState(null, '', '/');
+        resetOpeningWsiSlidesLink();
     });
 
     const baseProps = {
@@ -121,7 +123,7 @@ describe('PatientWsiSlidesTab', () => {
 
     it('scopes to a newly picked sample even though the hash names the previous slide', () => {
         window.history.replaceState(null, '', '/#wsi:slide=slide-9');
-        const { rerender } = render(
+        const first = render(
             <PatientWsiSlidesTab
                 {...baseProps}
                 query={{ sampleId: 'P-1-T02' }}
@@ -131,8 +133,10 @@ describe('PatientWsiSlidesTab', () => {
             mockEntryPoint.mock.calls[mockEntryPoint.mock.calls.length - 1][0]
                 .pathologyFilter
         ).toBeUndefined();
+        // The patient view remounts the tab for the new sample.
+        first.unmount();
 
-        rerender(
+        render(
             <PatientWsiSlidesTab
                 {...baseProps}
                 query={{ sampleId: 'P-1-T01' }}
@@ -149,5 +153,7 @@ describe('PatientWsiSlidesTab', () => {
                 },
             })
         );
+        // The stale slide is dropped from the URL, so a reload keeps the scope.
+        expect(window.location.hash).toBe('');
     });
 });
