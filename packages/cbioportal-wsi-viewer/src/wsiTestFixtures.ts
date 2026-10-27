@@ -86,7 +86,8 @@ export function makeTileMetadata(
 /** A slide-access response body, as the backend sends it. */
 export function makeAccessPayload(overrides: Record<string, unknown> = {}) {
     return {
-        slideKey: 'slide-1',
+        resourceId: 'WSI_SAMPLE',
+        key: 'slide-1',
         accessToken: 'test-token',
         tokenType: 'Bearer',
         expiresIn: 300,
@@ -107,6 +108,8 @@ export function registerTestSlideAccess(
             makeSample('S-1', [
                 makeSlide({
                     slide_key: slideKey,
+                    resource_id: 'WSI_SAMPLE',
+                    serving_key: slideKey,
                     tile_metadata: tileMetadata,
                 }),
             ]),
@@ -121,7 +124,7 @@ const WIRE_SLIDE_TYPES: Record<WsiStainKind, string> = {
     unknown: 'Unknown',
 };
 
-export type TestSlideRow = WsiResourceRow & { resourceId: string };
+export type TestSlideRow = WsiResourceRow;
 
 function orderKey(prefix: string, index: number): string {
     return `${prefix}-${String(index).padStart(4, '0')}`;
@@ -130,7 +133,7 @@ function orderKey(prefix: string, index: number): string {
 /**
  * The slide rows the resource table API returns for a hierarchy: the
  * builder's inverse. Servable slides carry tile metadata (the slide's own, or
- * a valid default) under `wsi_serving`.
+ * a valid default) under `serving`, keyed by the slide key.
  */
 export function toResourceRows(hierarchy: PatientHierarchy): TestSlideRow[] {
     const rows: TestSlideRow[] = [];
@@ -169,7 +172,8 @@ export function toResourceRows(hierarchy: PatientHierarchy): TestSlideRow[] {
                         specimen_key: slide.specimen_key || 'specimen-1',
                     };
                     if (slide.can_serve_tiles) {
-                        metadata.wsi_serving = {
+                        metadata.serving = {
+                            key: slide.serving_key || slide.slide_key,
                             sealed_source: 'sealed',
                             tile_metadata_json:
                                 slide.tile_metadata || makeTileMetadata(),
@@ -179,7 +183,9 @@ export function toResourceRows(hierarchy: PatientHierarchy): TestSlideRow[] {
                         };
                     }
                     rows.push({
-                        resourceId: unmatched ? 'WSI_PATIENT' : 'WSI_SAMPLE',
+                        resourceId:
+                            slide.resource_id ||
+                            (unmatched ? 'WSI_PATIENT' : 'WSI_SAMPLE'),
                         patientId: hierarchy.patient_id,
                         sampleId: unmatched
                             ? null

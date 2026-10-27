@@ -58,7 +58,8 @@ function makeSlideRow(slideKey: string, stainName: string, stainGroup: string) {
             can_serve_tiles: true,
             match_level: 'BLOCK',
             specimen_key: 'block::1::A1',
-            wsi_serving: {
+            serving: {
+                key: slideKey,
                 sealed_source: 'sealed',
                 tile_metadata_json: tileMetadata,
                 thumbnail_width: 128,
@@ -84,33 +85,40 @@ export const pixel = Buffer.from(
 );
 
 /**
- * Slide access as the backend answers it: 400 unless the key is 12 hex, 404
- * for a slide `isPublished` rejects, else a token.
+ * Resource access as the backend answers it for a slide:
+ * `GET /api/resources/{study}/{resource}/access?key=…&patientId=…`. 400 unless
+ * the key is 12 hex, 404 for a row `isPublished` rejects, else a token.
  */
 export async function routeSlideAccess(
     page: Page,
     studyId: string,
-    isPublished: (patientId: string, slideKey: string) => boolean,
+    isPublished: (
+        resourceId: string,
+        patientId: string,
+        key: string
+    ) => boolean,
     accessRequests?: string[]
 ): Promise<void> {
-    await page.route(`**/api/wsi/v2/resources/${studyId}/*/access?*`, route => {
+    await page.route(`**/api/resources/${studyId}/*/access?*`, route => {
         const url = new URL(route.request().url());
         accessRequests?.push(url.toString());
-        const patientId = decodeURIComponent(
+        const resourceId = decodeURIComponent(
             url.pathname.split('/').slice(-2, -1)[0]
         );
-        const slideKey = url.searchParams.get('slideKey') || '';
-        if (!/^[0-9a-f]{12}$/.test(slideKey)) {
+        const patientId = url.searchParams.get('patientId') || '';
+        const key = url.searchParams.get('key') || '';
+        if (!/^[0-9a-f]{12}$/.test(key)) {
             return route.fulfill({ status: 400, body: '' });
         }
-        if (!isPublished(patientId, slideKey)) {
+        if (!isPublished(resourceId, patientId, key)) {
             return route.fulfill({ status: 404, body: '' });
         }
         return route.fulfill({
             status: 200,
             contentType: 'application/json',
             body: JSON.stringify({
-                slideKey,
+                resourceId,
+                key,
                 accessToken: 'wsi-foundation-smoke-token',
                 tokenType: 'Bearer',
                 expiresIn: 300,
@@ -192,9 +200,13 @@ export async function installFoundationMocks(
     await routeSlideAccess(
         page,
         STUDY_ID,
-        (patientId, slideKey) =>
+        (resourceId, patientId, key) =>
             patientId === PATIENT_ID &&
-            slideRows.some(row => row.metadata.slide_key === slideKey),
+            slideRows.some(
+                row =>
+                    row.resourceId === resourceId &&
+                    row.metadata.serving.key === key
+            ),
         options.accessRequests
     );
     await installClinicalMocks(page);

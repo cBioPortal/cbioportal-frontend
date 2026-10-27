@@ -49,14 +49,23 @@ function stainKind(metadata: Record<string, unknown>): WsiStainKind {
     return UNCONFIRMED_SLIDE_TYPES.has(stored) ? 'unknown' : 'other';
 }
 
-function tileMetadata(
+/** The serving block of a slide that can serve tiles. */
+function serving(
     metadata: Record<string, unknown>
-): TileMetadata | undefined {
-    const serving = metadata.wsi_serving as
-        | { tile_metadata_json?: TileMetadata }
+): { key: string; tileMetadata: TileMetadata } | undefined {
+    const value = metadata.serving as
+        | { key?: unknown; tile_metadata_json?: TileMetadata }
         | null
         | undefined;
-    return serving?.tile_metadata_json ?? undefined;
+    if (
+        !value ||
+        typeof value.key !== 'string' ||
+        !value.key ||
+        !value.tile_metadata_json
+    ) {
+        return undefined;
+    }
+    return { key: value.key, tileMetadata: value.tile_metadata_json };
 }
 
 /** A part or block number, compared numerically; missing numbers sort last. */
@@ -144,9 +153,13 @@ export function buildPatientHierarchy(
             sample_id: row.sampleId,
             match_level: text(metadata, 'match_level') as MatchLevel,
             specimen_key: text(metadata, 'specimen_key'),
+            resource_id: row.resourceId,
         };
-        const slideTileMetadata = tileMetadata(metadata);
-        if (slideTileMetadata) slide.tile_metadata = slideTileMetadata;
+        const slideServing = serving(metadata);
+        if (slideServing) {
+            slide.serving_key = slideServing.key;
+            slide.tile_metadata = slideServing.tileMetadata;
+        }
         block.slides.push(slide);
     });
 
@@ -183,7 +196,10 @@ async function requestSlideRows(
     if (!Array.isArray(rows)) {
         throw new Error('Invalid WSI slide rows: expected an array');
     }
-    return rows;
+    // Rows name their resource; the requested one stands in if a row omits it.
+    return rows.map((row: WsiResourceRow) =>
+        row && !row.resourceId ? { ...row, resourceId } : row
+    );
 }
 
 async function requestHierarchy(

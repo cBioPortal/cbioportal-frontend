@@ -11,13 +11,15 @@ import {
 /** A well-formed slide key that the hierarchy does not publish. */
 const MISSING_SLIDE_KEY = '000000000000';
 
-/** "{study}/{patient}/{slideKey}" of a slide access request. */
+/** "{study}/{patient}/{key}" of a slide access request. */
 function slideAccessTarget(url: string): string {
     const parsed = new URL(url);
-    const studyAndPatient = decodeURIComponent(parsed.pathname)
-        .replace(/^.*\/api\/wsi\/v2\/resources\//, '')
-        .replace(/\/access$/, '');
-    return `${studyAndPatient}/${parsed.searchParams.get('slideKey')}`;
+    const studyId = decodeURIComponent(parsed.pathname)
+        .replace(/^.*\/api\/resources\//, '')
+        .split('/')[0];
+    return `${studyId}/${parsed.searchParams.get(
+        'patientId'
+    )}/${parsed.searchParams.get('key')}`;
 }
 
 if (process.env.PW_SUITE === 'wsi') {
@@ -107,8 +109,13 @@ if (process.env.PW_SUITE === 'wsi') {
             // thumbnails carry only the bearer token.
             expect(accessRequests.length).toBeGreaterThan(0);
             for (const url of accessRequests) {
-                expect(new URL(url).searchParams.get('slideKey')).toBe(
-                    SLIDE_KEY
+                const requested = new URL(url);
+                expect(requested.pathname).toContain(
+                    `/api/resources/${STUDY_ID}/WSI_SAMPLE/access`
+                );
+                expect(requested.searchParams.get('key')).toBe(SLIDE_KEY);
+                expect(requested.searchParams.get('patientId')).toBe(
+                    PATIENT_ID
                 );
                 expect(url).not.toMatch(/imageId|image_id/i);
             }

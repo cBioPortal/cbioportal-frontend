@@ -18,6 +18,11 @@ export interface Slide {
     sample_id?: string | null;
     match_level?: MatchLevel;
     specimen_key?: string;
+    /** Resource the slide's row belongs to: `WSI_SAMPLE` or `WSI_PATIENT`. */
+    resource_id?: string;
+    /** Key slide access is requested with (`metadata.serving.key`); present
+     *  only for a slide that can serve tiles. */
+    serving_key?: string;
     /** Tile metadata of a slide that can serve tiles, from its resource row. */
     tile_metadata?: TileMetadata;
 }
@@ -59,9 +64,11 @@ export interface PatientHierarchy {
 /**
  * One slide row of the WSI_SAMPLE or WSI_PATIENT resource, as the portal's
  * resource table API returns it. `metadata` holds the slide fields the data
- * provider wrote, with tile serving data under `wsi_serving`.
+ * provider wrote, with tile serving data under `serving` for a slide that can
+ * serve tiles.
  */
 export interface WsiResourceRow {
+    resourceId: string;
     patientId: string;
     sampleId: string | null;
     metadata: Record<string, unknown> | null;

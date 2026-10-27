@@ -32,7 +32,12 @@ function row(
     sampleId: string | null,
     metadata: Record<string, unknown>
 ): WsiResourceRow {
-    return { patientId: 'P-1', sampleId, metadata };
+    return {
+        resourceId: sampleId ? 'WSI_SAMPLE' : 'WSI_PATIENT',
+        patientId: 'P-1',
+        sampleId,
+        metadata,
+    };
 }
 
 /** A fetch mock that answers each resource table request with its rows. */
@@ -248,7 +253,8 @@ describe('buildPatientHierarchy', () => {
                     can_serve_tiles: true,
                     match_level: 'UNMATCHED',
                     specimen_key: 'unmatched::1::A',
-                    wsi_serving: {
+                    serving: {
+                        key: 'slide-1',
                         sealed_source: 'sealed',
                         tile_metadata_json: tileMetadata,
                     },
@@ -280,10 +286,14 @@ describe('buildPatientHierarchy', () => {
                 part_description: 'Unmatched specimen',
                 block_label: 'A1',
                 block_number: 'A',
+                resource_id: 'WSI_PATIENT',
+                serving_key: 'slide-1',
                 tile_metadata: tileMetadata,
             })
         );
         expect(notServable.can_serve_tiles).toBe(false);
+        expect(notServable.resource_id).toBe('WSI_PATIENT');
+        expect(notServable.serving_key).toBeUndefined();
         expect(notServable.tile_metadata).toBeUndefined();
         expect(notServable.file_size_bytes).toBe('');
     });
@@ -347,10 +357,9 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
             .filter(called => called.includes('/access?'))
             .map(called => {
                 const parsed = new URL(called);
-                return `${parsed.pathname.replace(
-                    '/api/wsi/v2/resources/',
-                    ''
-                )}${parsed.search}`;
+                return `${parsed.pathname.replace('/api/resources/', '')}${
+                    parsed.search
+                }`;
             });
     }
 
@@ -363,14 +372,11 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
         fetchMock = jest.fn((url: string, init?: RequestInit) => {
             if (String(url).includes('/access?')) {
                 const status = accessStatuses.shift() ?? 200;
-                const slideKey = new URL(String(url)).searchParams.get(
-                    'slideKey'
-                );
+                const key = new URL(String(url)).searchParams.get('key');
                 return Promise.resolve({
                     ok: status >= 200 && status < 300,
                     status,
-                    json: () =>
-                        Promise.resolve(makeAccessPayload({ slideKey })),
+                    json: () => Promise.resolve(makeAccessPayload({ key })),
                 });
             }
             return Promise.resolve({
@@ -396,7 +402,9 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
             'user-a'
         );
 
-        expect(accessCalls()).toEqual(['study-1/P-1/access?slideKey=slide-1']);
+        expect(accessCalls()).toEqual([
+            'study-1/WSI_SAMPLE/access?key=slide-1&patientId=P-1',
+        ]);
         expect(access.tileMetadata).toEqual(makeTileMetadata());
         expect(access.accessToken).toBe('test-token');
     });
@@ -409,7 +417,9 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
         await getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a');
 
         expect(rowsCalls()).toBe(2);
-        expect(accessCalls()).toEqual(['study-1/P-1/access?slideKey=slide-1']);
+        expect(accessCalls()).toEqual([
+            'study-1/WSI_SAMPLE/access?key=slide-1&patientId=P-1',
+        ]);
     });
 
     it('does not request access for a slide that cannot serve tiles', async () => {

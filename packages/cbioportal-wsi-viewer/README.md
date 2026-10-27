@@ -68,10 +68,10 @@ The viewer talks to the cBioPortal backend and tile server only:
 | Request | Use |
 | --- | --- |
 | `POST {api}/api/resource-table/query/fetch` (`WSI_SAMPLE`, `WSI_PATIENT`) | The patient's slide rows. The viewer groups them into samples → parts → blocks → slides; no rows means no slides |
-| `GET {api}/api/wsi/v2/resources/{studyId}/{patientId}/access?slideKey=…` | A short-lived signed token for one slide |
+| `GET {api}/api/resources/{studyId}/{resourceId}/access?key=…&patientId=…` | A short-lived signed token for one slide: `resourceId` is the slide row's resource, `key` its `serving.key`, `patientId` the patient whose slides are open. Any user who can read the study gets one |
 | `{tileServerUrl}/tiles/zxy/{level}/{x}/{y}`, `{tileServerUrl}/thumbnails` | Tiles and thumbnails, authorized with the access token |
 
-Slides are rows of the `WSI_SAMPLE`/`WSI_PATIENT` resources, one per slide, written by the data provider's pipeline. A row's `metadata` carries the slide's fields and, for a slide that can serve tiles, `wsi_serving` with its tile metadata and sealed source. Only the tile server can open the sealed source.
+Slides are rows of the `WSI_SAMPLE`/`WSI_PATIENT` resources, one per slide, written by the data provider's pipeline. A row's `metadata` carries the slide's fields and, for a slide that can serve tiles, `serving` with its access key (equal to `slide_key`), tile metadata, thumbnail size and sealed source. Only the tile server can open the sealed source.
 
 The viewer stores the selected slide and viewport in the URL hash (`#wsi:slide=…&x=…&y=…&z=…`) so a view can be shared.
 

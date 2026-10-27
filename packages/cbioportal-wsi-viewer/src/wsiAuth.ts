@@ -86,13 +86,15 @@ const slideAccess = createPromiseCache<WsiSlideAccess>(
 );
 interface RegisteredSlide {
     patientId: string;
+    resourceId?: string;
+    servingKey?: string;
     tileMetadata?: TileMetadata;
 }
 
 /**
  * Every slide a loaded hierarchy published, keyed by study and slide key, with
- * its patient and the tile metadata from its resource row. Access is only ever
- * requested for these slides.
+ * its patient, resource, serving key and the tile metadata from its resource
+ * row. Access is only ever requested for these slides.
  */
 const registeredSlides = new Map<string, RegisteredSlide>();
 
@@ -113,6 +115,8 @@ export function registerWsiResourceAccess(
     hierarchySlides(hierarchy).forEach(slide =>
         registeredSlides.set(registryKey(studyId, slide.slide_key), {
             patientId: hierarchy.patient_id,
+            resourceId: slide.resource_id,
+            servingKey: slide.serving_key,
             tileMetadata: slide.tile_metadata,
         })
     );
@@ -142,23 +146,26 @@ export function clearWsiResourceAccessTargets(
 
 function fetchSlideAccess(
     studyId: string,
-    patientId: string,
-    slideKey: string
+    resourceId: string,
+    key: string,
+    patientId: string
 ): Promise<Response> {
     const { buildApiUrl, fetchImpl } = getWsiViewerRuntime();
     // The host builds only the path: the portal's URL builder encodes a `?`
-    // inside it, so the slide key is added as a query parameter afterwards.
+    // inside it, so the query parameters are added afterwards.
     const url = new URL(
         buildApiUrl(
-            `api/wsi/v2/resources/${encodeURIComponent(
-                studyId
-            )}/${encodeURIComponent(patientId)}/access`
+            `api/resources/${encodeURIComponent(studyId)}/${encodeURIComponent(
+                resourceId
+            )}/access`
         ),
         typeof window === 'undefined'
             ? 'http://localhost'
             : window.location.origin
     );
-    url.search = `?slideKey=${encodeURIComponent(slideKey)}`;
+    url.search = `?key=${encodeURIComponent(
+        key
+    )}&patientId=${encodeURIComponent(patientId)}`;
     // `include`, like the slide rows request: the API may be on another origin.
     return fetchImpl(url.toString(), {
         credentials: 'include',
@@ -171,20 +178,27 @@ async function requestSlideAccess(
     slideKey: string,
     slide: RegisteredSlide
 ): Promise<WsiSlideAccess> {
-    // The tile metadata comes from the slide's resource row; a slide that
-    // cannot serve tiles has none.
-    if (!slide.tileMetadata) {
+    // The tile metadata and serving key come from the slide's resource row; a
+    // slide that cannot serve tiles has neither.
+    const { resourceId, servingKey, tileMetadata } = slide;
+    if (!tileMetadata || !servingKey || !resourceId) {
         throw new Error('WSI slide cannot serve tiles');
     }
-    validateWsiTileMetadata(slide.tileMetadata);
-    const response = await fetchSlideAccess(studyId, slide.patientId, slideKey);
+    validateWsiTileMetadata(tileMetadata);
+    const response = await fetchSlideAccess(
+        studyId,
+        resourceId,
+        servingKey,
+        slide.patientId
+    );
     if (!response.ok) {
         throw new Error(`WSI authorization failed (${response.status})`);
     }
     const payload = await response.json();
     if (
         !payload ||
-        payload.slideKey !== slideKey ||
+        payload.key !== servingKey ||
+        (payload.resourceId != null && payload.resourceId !== resourceId) ||
         !payload.accessToken ||
         !Number.isFinite(payload.expiresIn) ||
         payload.expiresIn <= 0
@@ -193,7 +207,7 @@ async function requestSlideAccess(
     }
     return {
         slideKey,
-        tileMetadata: slide.tileMetadata,
+        tileMetadata,
         accessToken: payload.accessToken,
         expiresIn: payload.expiresIn,
         expiresAt: Date.now() + payload.expiresIn * 1000,

@@ -56,7 +56,7 @@ describe('WSI access capability', () => {
         );
         expect(global.fetch).toHaveBeenCalledTimes(1);
         expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain(
-            '/api/wsi/v2/resources/study-1/patient-1/access?slideKey=slide-1'
+            '/api/resources/study-1/WSI_SAMPLE/access?key=slide-1&patientId=patient-1'
         );
     });
 
@@ -93,6 +93,8 @@ describe('WSI access capability', () => {
                                     slides: [
                                         {
                                             slide_key: 'slide-1',
+                                            resource_id: 'WSI_SAMPLE',
+                                            serving_key: 'slide-1',
                                             tile_metadata: tileMetadata,
                                         },
                                     ],
@@ -153,7 +155,10 @@ describe('WSI access capability', () => {
                 json: async () => validAccess,
             } as Response);
 
-        function hierarchy(slideKeys: string[]): any {
+        function hierarchy(
+            slideKeys: string[],
+            resourceId = 'WSI_SAMPLE'
+        ): any {
             return {
                 patient_id: 'patient-1',
                 samples: [
@@ -165,6 +170,8 @@ describe('WSI access capability', () => {
                                     {
                                         slides: slideKeys.map(slideKey => ({
                                             slide_key: slideKey,
+                                            resource_id: resourceId,
+                                            serving_key: slideKey,
                                             tile_metadata: makeTileMetadata(),
                                         })),
                                     },
@@ -179,10 +186,9 @@ describe('WSI access capability', () => {
         function requestedUrls(): string[] {
             return (global.fetch as jest.Mock).mock.calls.map(([url]) => {
                 const parsed = new URL(String(url));
-                return `${parsed.pathname.replace(
-                    '/api/wsi/v2/resources/',
-                    ''
-                )}${parsed.search}`;
+                return `${parsed.pathname.replace('/api/resources/', '')}${
+                    parsed.search
+                }`;
             });
         }
 
@@ -215,17 +221,17 @@ describe('WSI access capability', () => {
                 getWsiSlideAccess('study-1', 'slide-2')
             ).rejects.toThrow('WSI resource selection is unavailable');
             expect(requestedUrls()).toEqual([
-                'study-1/patient-1/access?slideKey=slide-1',
+                'study-1/WSI_SAMPLE/access?key=slide-1&patientId=patient-1',
             ]);
         });
 
-        it('names the slide by its opaque slide key', async () => {
+        it('names the slide by its resource and opaque serving key', async () => {
             const key = '0123456789ab';
             registerWsiResourceAccess('study-1', hierarchy([key]));
             jest.spyOn(global, 'fetch').mockResolvedValue({
                 ok: true,
                 status: 200,
-                json: async () => ({ ...validAccess, slideKey: key }),
+                json: async () => ({ ...validAccess, key }),
             } as Response);
 
             await expect(getWsiSlideAccess('study-1', key)).resolves.toEqual(
@@ -233,18 +239,51 @@ describe('WSI access capability', () => {
             );
 
             expect(requestedUrls()).toEqual([
-                `study-1/patient-1/access?slideKey=${key}`,
+                `study-1/WSI_SAMPLE/access?key=${key}&patientId=patient-1`,
             ]);
             const url = String((global.fetch as jest.Mock).mock.calls[0][0]);
             expect(url).not.toMatch(/imageId|image_id/i);
         });
 
-        it('rejects a response for a different slide key', async () => {
+        it('requests a patient-level slide from its own resource', async () => {
+            registerWsiResourceAccess(
+                'study-1',
+                hierarchy(['slide-1'], 'WSI_PATIENT')
+            );
+            jest.spyOn(global, 'fetch').mockResolvedValue({
+                ok: true,
+                status: 200,
+                json: async () => ({
+                    ...validAccess,
+                    resourceId: 'WSI_PATIENT',
+                }),
+            } as Response);
+
+            await getWsiSlideAccess('study-1', 'slide-1');
+
+            expect(requestedUrls()).toEqual([
+                'study-1/WSI_PATIENT/access?key=slide-1&patientId=patient-1',
+            ]);
+        });
+
+        it('rejects a slide without serving data before any request', async () => {
+            const unservable = hierarchy(['slide-1']);
+            delete unservable.samples[0].parts[0].blocks[0].slides[0]
+                .serving_key;
+            registerWsiResourceAccess('study-1', unservable);
+
+            await expect(
+                getWsiSlideAccess('study-1', 'slide-1')
+            ).rejects.toThrow('WSI slide cannot serve tiles');
+            expect(global.fetch).not.toHaveBeenCalled();
+        });
+
+        it('rejects a response for a different key', async () => {
             registerWsiResourceAccess('study-1', hierarchy(['slide-1']));
             jest.spyOn(global, 'fetch').mockResolvedValue({
                 ok: true,
                 status: 200,
-                json: async () => ({ ...validAccess, slideKey: 'slide-2' }),
+                json: async () => ({ ...validAccess, key: 'slide-2' }),
             } as Response);
 
             await expect(
@@ -252,9 +291,22 @@ describe('WSI access capability', () => {
             ).rejects.toThrow('Invalid WSI slide access response');
         });
 
-        it('rejects a response without a slide key', async () => {
+        it('rejects a response for a different resource', async () => {
             registerWsiResourceAccess('study-1', hierarchy(['slide-1']));
-            const { slideKey, ...withoutKey } = validAccess;
+            jest.spyOn(global, 'fetch').mockResolvedValue({
+                ok: true,
+                status: 200,
+                json: async () => ({ ...validAccess, resourceId: 'OTHER' }),
+            } as Response);
+
+            await expect(
+                getWsiSlideAccess('study-1', 'slide-1')
+            ).rejects.toThrow('Invalid WSI slide access response');
+        });
+
+        it('rejects a response without a key', async () => {
+            registerWsiResourceAccess('study-1', hierarchy(['slide-1']));
+            const { key, ...withoutKey } = validAccess;
             jest.spyOn(global, 'fetch').mockResolvedValue({
                 ok: true,
                 status: 200,
@@ -291,7 +343,7 @@ describe('WSI access capability', () => {
             expect(JSON.stringify(access)).not.toContain('source-image');
         });
 
-        it('adds the slide key after the host builds the path', async () => {
+        it('adds the query after the host builds the path', async () => {
             // The portal's URL builder encodes a "?" inside the path.
             configureWsiViewerRuntime({
                 buildApiUrl: (path: string) => `/${path.replace(/\?/g, '%3F')}`,
@@ -305,9 +357,10 @@ describe('WSI access capability', () => {
 
             const requested = new URL(String(fetchSpy.mock.calls[0][0]));
             expect(requested.pathname).toBe(
-                '/api/wsi/v2/resources/study-1/patient-1/access'
+                '/api/resources/study-1/WSI_SAMPLE/access'
             );
-            expect(requested.searchParams.get('slideKey')).toBe('slide-1');
+            expect(requested.searchParams.get('key')).toBe('slide-1');
+            expect(requested.searchParams.get('patientId')).toBe('patient-1');
         });
 
         it('reports a 404 once, without a retry', async () => {
