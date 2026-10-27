@@ -207,13 +207,16 @@ describe('PatientWsiSlidesTab', () => {
         expect(window.location.hash).toBe('');
     });
 
-    it("keeps the user's slide when the tab remounts at the same link", () => {
+    it("keeps the scope and the user's slide when the tab remounts at the same link", () => {
+        const lastProps = () =>
+            mockEntryPoint.mock.calls[mockEntryPoint.mock.calls.length - 1][0];
         const first = render(
             <PatientWsiSlidesTab
                 {...baseProps}
                 query={{ sampleId: 'P-1-T01' }}
             />
         );
+        // The viewer writes the slide the user picked to the hash.
         window.history.replaceState(null, '', '/#wsi:slide=slide-t01');
         first.unmount();
 
@@ -224,7 +227,24 @@ describe('PatientWsiSlidesTab', () => {
             />
         );
 
+        expect(lastProps().pathologyFilter).toEqual(
+            expect.objectContaining({ sampleId: 'P-1-T01' })
+        );
         expect(window.location.hash).toBe('#wsi:slide=slide-t01');
+    });
+
+    it('keeps a deep link when the tab remounts at the same link', () => {
+        window.history.replaceState(null, '', '/#wsi:slide=slide-9');
+        render(
+            <PatientWsiSlidesTab {...baseProps} query={LINK_QUERY} />
+        ).unmount();
+
+        render(<PatientWsiSlidesTab {...baseProps} query={LINK_QUERY} />);
+
+        const props =
+            mockEntryPoint.mock.calls[mockEntryPoint.mock.calls.length - 1][0];
+        expect(props.pathologyFilter).toBeUndefined();
+        expect(window.location.hash).toBe('#wsi:slide=slide-9');
     });
 
     it("treats a hash as a deep link when another patient's link opens", () => {
