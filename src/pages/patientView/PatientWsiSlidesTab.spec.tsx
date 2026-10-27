@@ -118,4 +118,36 @@ describe('PatientWsiSlidesTab', () => {
         expect(props.initialStainFilter).toBeUndefined();
         expect(props.preferredSampleId).toBe('P-1-T01');
     });
+
+    it('scopes to a newly picked sample even though the hash names the previous slide', () => {
+        window.history.replaceState(null, '', '/#wsi:slide=slide-9');
+        const { rerender } = render(
+            <PatientWsiSlidesTab
+                {...baseProps}
+                query={{ sampleId: 'P-1-T02' }}
+            />
+        );
+        expect(
+            mockEntryPoint.mock.calls[mockEntryPoint.mock.calls.length - 1][0]
+                .pathologyFilter
+        ).toBeUndefined();
+
+        rerender(
+            <PatientWsiSlidesTab
+                {...baseProps}
+                query={{ sampleId: 'P-1-T01' }}
+            />
+        );
+
+        expect(mockEntryPoint).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+                preferredSampleId: 'P-1-T01',
+                pathologyFilter: {
+                    sampleId: 'P-1-T01',
+                    matchLevel: undefined,
+                    specimenKey: undefined,
+                },
+            })
+        );
+    });
 });

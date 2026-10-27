@@ -63,8 +63,19 @@ type Props = Omit<AppWsiViewerProps, keyof WsiSlidesTabScope> & {
 /** Pathology Slides tab: the viewer scoped by the patient view URL. */
 export default function PatientWsiSlidesTab({ query, ...viewerProps }: Props) {
     const { sampleId, stainFilter, matchLevel, specimenKey } = query;
-    // The hash is read when the link params change, not on every hash
-    // update, because the viewer rewrites it as the user moves around.
+    const linkKey = JSON.stringify([
+        sampleId,
+        stainFilter,
+        matchLevel,
+        specimenKey,
+    ]);
+    // A `#wsi:slide=` hash is a deep link only for the link the page opened
+    // with. Once the user picks another sample, the hash still names the slide
+    // they were looking at, which must not override the new sample's scope.
+    const openedWith = React.useRef({
+        linkKey,
+        hashSlideKey: readWsiHashState()?.slideId,
+    });
     const scope = React.useMemo(
         () =>
             wsiSlidesTabScopeFromQuery(
@@ -74,9 +85,11 @@ export default function PatientWsiSlidesTab({ query, ...viewerProps }: Props) {
                     matchLevel,
                     specimenKey,
                 },
-                readWsiHashState()?.slideId
+                linkKey === openedWith.current.linkKey
+                    ? openedWith.current.hashSlideKey
+                    : undefined
             ),
-        [sampleId, stainFilter, matchLevel, specimenKey]
+        [linkKey]
     );
     return <AppWsiViewer {...viewerProps} {...scope} />;
 }
