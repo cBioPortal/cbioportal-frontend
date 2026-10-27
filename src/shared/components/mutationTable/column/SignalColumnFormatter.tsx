@@ -8,6 +8,8 @@ import {
     signalDownload,
     signalSortValue,
 } from 'react-mutation-mapper';
+import { AnnotationErrorBoundary } from 'cbioportal-frontend-commons';
+import { errorIcon } from 'oncokb-frontend-commons';
 
 export default class SignalColumnFormatter {
     public static renderFunction(
@@ -17,11 +19,16 @@ export default class SignalColumnFormatter {
         >
     ) {
         return (
-            <Signal
-                mutation={mutation[0]}
-                indexedVariantAnnotations={indexedVariantAnnotations}
-                mutationType={Pathogenicity.GERMLINE}
-            />
+            <AnnotationErrorBoundary
+                componentName="Signal"
+                fallback={errorIcon('SIGNAL annotation could not be displayed')}
+            >
+                <Signal
+                    mutation={mutation[0]}
+                    indexedVariantAnnotations={indexedVariantAnnotations}
+                    mutationType={Pathogenicity.GERMLINE}
+                />
+            </AnnotationErrorBoundary>
         );
     }
 
