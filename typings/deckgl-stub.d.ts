@@ -62,6 +62,42 @@ export class ScatterplotLayer {
     constructor(props: ScatterplotLayerProps);
 }
 
+export interface IconLayerProps {
+    id: string;
+    data: any[];
+    getPosition: (d: any) => [number, number];
+    getIcon: (d: any) => string;
+    getColor: (d: any) => [number, number, number, number?];
+    getSize: number | ((d: any) => number);
+    iconAtlas: string;
+    iconMapping: {
+        [iconName: string]: {
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+            mask?: boolean;
+        };
+    };
+    sizeUnits?: 'pixels' | 'meters' | 'common';
+    sizeScale?: number;
+    sizeMinPixels?: number;
+    sizeMaxPixels?: number;
+    pickable?: boolean;
+    onHover?: (info: any) => void;
+    onClick?: (info: any) => void;
+    updateTriggers?: {
+        getIcon?: any[];
+        getColor?: any[];
+        getSize?: any[];
+    };
+    [key: string]: any;
+}
+
+export class IconLayer {
+    constructor(props: IconLayerProps);
+}
+
 export class OrthographicView {
     constructor(props?: any);
 }
@@ -121,6 +157,42 @@ declare module '@deck.gl/layers' {
 
     export class ScatterplotLayer {
         constructor(props: ScatterplotLayerProps);
+    }
+
+    export interface IconLayerProps {
+        id: string;
+        data: any[];
+        getPosition: (d: any) => [number, number];
+        getIcon: (d: any) => string;
+        getColor: (d: any) => [number, number, number, number?];
+        getSize: number | ((d: any) => number);
+        iconAtlas: string;
+        iconMapping: {
+            [iconName: string]: {
+                x: number;
+                y: number;
+                width: number;
+                height: number;
+                mask?: boolean;
+            };
+        };
+        sizeUnits?: 'pixels' | 'meters' | 'common';
+        sizeScale?: number;
+        sizeMinPixels?: number;
+        sizeMaxPixels?: number;
+        pickable?: boolean;
+        onHover?: (info: any) => void;
+        onClick?: (info: any) => void;
+        updateTriggers?: {
+            getIcon?: any[];
+            getColor?: any[];
+            getSize?: any[];
+        };
+        [key: string]: any;
+    }
+
+    export class IconLayer {
+        constructor(props: IconLayerProps);
     }
 }
 
