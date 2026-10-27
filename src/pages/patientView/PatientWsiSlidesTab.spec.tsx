@@ -123,7 +123,7 @@ describe('PatientWsiSlidesTab', () => {
                 pathologyFilter: expect.objectContaining({
                     sampleId: 'P-1-T01',
                 }),
-                hostShowsSampleScope: true,
+                hostOwnsSampleScope: true,
             })
         );
     });
@@ -172,5 +172,81 @@ describe('PatientWsiSlidesTab', () => {
         );
         // The stale slide is dropped from the URL, so a reload keeps the scope.
         expect(window.location.hash).toBe('');
+    });
+
+    it('scopes to the opening sample again once the hash names another sample', () => {
+        const lastProps = () =>
+            mockEntryPoint.mock.calls[mockEntryPoint.mock.calls.length - 1][0];
+        const opening = render(
+            <PatientWsiSlidesTab
+                {...baseProps}
+                query={{ sampleId: 'P-1-T01' }}
+            />
+        );
+        opening.unmount();
+        const picked = render(
+            <PatientWsiSlidesTab
+                {...baseProps}
+                query={{ sampleId: 'P-1-T02' }}
+            />
+        );
+        // The viewer writes the T02 slide it shows to the hash.
+        window.history.replaceState(null, '', '/#wsi:slide=slide-t02');
+        picked.unmount();
+
+        render(
+            <PatientWsiSlidesTab
+                {...baseProps}
+                query={{ sampleId: 'P-1-T01' }}
+            />
+        );
+
+        expect(lastProps().pathologyFilter).toEqual(
+            expect.objectContaining({ sampleId: 'P-1-T01' })
+        );
+        expect(window.location.hash).toBe('');
+    });
+
+    it("keeps the user's slide when the tab remounts at the same link", () => {
+        const first = render(
+            <PatientWsiSlidesTab
+                {...baseProps}
+                query={{ sampleId: 'P-1-T01' }}
+            />
+        );
+        window.history.replaceState(null, '', '/#wsi:slide=slide-t01');
+        first.unmount();
+
+        render(
+            <PatientWsiSlidesTab
+                {...baseProps}
+                query={{ sampleId: 'P-1-T01' }}
+            />
+        );
+
+        expect(window.location.hash).toBe('#wsi:slide=slide-t01');
+    });
+
+    it("treats a hash as a deep link when another patient's link opens", () => {
+        render(
+            <PatientWsiSlidesTab
+                {...baseProps}
+                query={{ sampleId: 'P-1-T01' }}
+            />
+        ).unmount();
+        window.history.replaceState(null, '', '/#wsi:slide=slide-p2');
+
+        render(
+            <PatientWsiSlidesTab
+                {...baseProps}
+                patientId="P-2"
+                query={{ sampleId: 'P-2-T01' }}
+            />
+        );
+
+        const props =
+            mockEntryPoint.mock.calls[mockEntryPoint.mock.calls.length - 1][0];
+        expect(props.pathologyFilter).toBeUndefined();
+        expect(props.preferredSampleId).toBe('P-2-T01');
     });
 });

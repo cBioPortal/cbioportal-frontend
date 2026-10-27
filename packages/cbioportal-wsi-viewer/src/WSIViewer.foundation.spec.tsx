@@ -165,5 +165,44 @@ describe('WSIViewer foundation behavior', () => {
             })();
             expect(instance.scopedSampleId).toBeUndefined();
         });
+
+        describe('owned by the host', () => {
+            function hostInstance() {
+                const instance = makeInstance({
+                    pathologyFilter: { sampleId: 'S-1' },
+                    preferredSampleId: 'S-1',
+                    hostOwnsSampleScope: true,
+                });
+                action(() => {
+                    instance.viewerState.hierarchy = hierarchyOf([
+                        testSlide('slide-a'),
+                    ]);
+                    instance.viewerState.loading = false;
+                })();
+                return instance;
+            }
+            const count = (instance: any, testId: string) =>
+                TestRenderer.create(instance.render()).root.findAllByProps({
+                    'data-testid': testId,
+                }).length;
+
+            it('shows neither the sample chip nor "Show all slides"', () => {
+                const instance = hostInstance();
+                expect(count(instance, 'wsi-sample-scope')).toBe(0);
+                expect(count(instance, 'wsi-clear-filters')).toBe(0);
+            });
+
+            it('keeps the sample scope through filter changes and their reset', () => {
+                const instance = hostInstance();
+                instance.handleFilterChange('hne');
+                expect(instance.scopedSampleId).toBe('S-1');
+                expect(count(instance, 'wsi-clear-filters')).toBe(1);
+
+                instance.handleClearFilters();
+                expect(instance.stainFilter).toBe('all');
+                expect(instance.scopedSampleId).toBe('S-1');
+                expect(count(instance, 'wsi-clear-filters')).toBe(0);
+            });
+        });
     });
 });

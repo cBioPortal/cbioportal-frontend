@@ -291,7 +291,10 @@ function WsiNavPanelComponent({
     // list; otherwise the list shows every slide anyway.
     const slideCountText =
         filteredSlideCount === 0
-            ? emptyPatientMessage || 'No slides match these filters'
+            ? emptyPatientMessage ||
+              (sampleIdFilter && allSampleEntries.length === 0
+                  ? `No viewable slides for sample ${sampleIdFilter}`
+                  : 'No slides match these filters')
             : filteredSlideCount < totalSlideCount
             ? `Showing ${filteredSlideCount} of ${totalSlideCount} ${pluralize(
                   'slide',

@@ -59,26 +59,29 @@ export function wsiSlidesTabScopeFromQuery(
 
 type Props = Omit<
     AppWsiViewerProps,
-    keyof WsiSlidesTabScope | 'hostShowsSampleScope'
+    keyof WsiSlidesTabScope | 'hostOwnsSampleScope'
 > & {
     query: WsiSlidesTabQuery;
 };
 
 /**
- * The patient and link params the page opened the tab with. A `#wsi:slide=`
- * hash is a deep link only for these: once the user picks another sample (the
- * tab may remount), the hash still names the slide they were looking at and
- * must not override the new sample's scope.
+ * The patient and link params the tab last showed. The viewer writes the
+ * selected slide to a `#wsi:slide=` hash, so the hash belongs to that link: it
+ * is a deep link for the link that opened the page, and after a remount at
+ * the same link (e.g. a tab switch) it keeps the user's slide. Once the user
+ * picks another sample, even the one the page opened with, the hash names the
+ * slide they were looking at and must not override the new sample's scope.
  */
-let openingLink: { patientId: string; linkKey: string } | undefined;
+let lastLink: { patientId: string; linkKey: string } | undefined;
 
-/** Forgets the opening link, as a full page load does. */
+/** Forgets the last link, as a full page load does. */
 export function resetOpeningWsiSlidesLink() {
-    openingLink = undefined;
+    lastLink = undefined;
 }
 
 /** Pathology Slides tab: the viewer scoped by the patient view URL. */
 export default function PatientWsiSlidesTab({ query, ...viewerProps }: Props) {
+    const { patientId } = viewerProps;
     const { sampleId, stainFilter, matchLevel, specimenKey } = query;
     const linkKey = JSON.stringify([
         sampleId,
@@ -86,10 +89,14 @@ export default function PatientWsiSlidesTab({ query, ...viewerProps }: Props) {
         matchLevel,
         specimenKey,
     ]);
-    if (!openingLink || openingLink.patientId !== viewerProps.patientId) {
-        openingLink = { patientId: viewerProps.patientId, linkKey };
-    }
-    const isOpeningLink = openingLink.linkKey === linkKey;
+    const hashBelongsToLink = React.useMemo(() => {
+        const same =
+            !lastLink ||
+            lastLink.patientId !== patientId ||
+            lastLink.linkKey === linkKey;
+        lastLink = { patientId, linkKey };
+        return same;
+    }, [patientId, linkKey]);
     const scope = React.useMemo(
         () =>
             wsiSlidesTabScopeFromQuery(
@@ -99,18 +106,18 @@ export default function PatientWsiSlidesTab({ query, ...viewerProps }: Props) {
                     matchLevel,
                     specimenKey,
                 },
-                isOpeningLink ? readWsiHashState()?.slideId : undefined
+                hashBelongsToLink ? readWsiHashState()?.slideId : undefined
             ),
-        [linkKey, isOpeningLink]
+        [linkKey, hashBelongsToLink]
     );
     // A stale slide hash would make a reload or a copied link reopen the
     // previous slide instead of this scope.
     React.useEffect(() => {
-        if (!isOpeningLink && readWsiHashState()?.slideId) {
+        if (!hashBelongsToLink && readWsiHashState()?.slideId) {
             clearWsiHashFromCurrentUrl();
         }
-    }, [linkKey, isOpeningLink]);
-    // The page's sample filter shows and clears the sample scope, so the
-    // slide list does not repeat it as a chip.
-    return <AppWsiViewer {...viewerProps} {...scope} hostShowsSampleScope />;
+    }, [linkKey, hashBelongsToLink]);
+    // The page's sample filter shows and widens the sample scope, so the
+    // slide list neither repeats it as a chip nor widens past it.
+    return <AppWsiViewer {...viewerProps} {...scope} hostOwnsSampleScope />;
 }

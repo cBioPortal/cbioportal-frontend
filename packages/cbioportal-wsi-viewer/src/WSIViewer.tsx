@@ -88,10 +88,12 @@ export interface WsiViewerProps {
     preferredSampleId?: string;
     pathologyFilter?: PathologySlideFilter;
     /**
-     * The host shows the `pathologyFilter` sample itself (e.g. the patient
-     * page's sample filter), so the slide list skips its own "Sample …" chip.
+     * The host owns the `pathologyFilter` sample (e.g. the patient page's
+     * sample filter shows and clears it). The slide list then shows no
+     * "Sample …" chip, and its own filters and "Show all slides" stay within
+     * that sample.
      */
-    hostShowsSampleScope?: boolean;
+    hostOwnsSampleScope?: boolean;
     /** Subject that isolates protected in-memory caches (the user name). */
     authScope: string;
     /**
@@ -196,7 +198,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
     }
 
     private readonly releaseLinkoutScope = action(() => {
-        if (!this.linkoutScopeActive) {
+        if (!this.linkoutScopeActive || this.hostOwnsScopedSample) {
             return false;
         }
         this.linkoutScopeActive = false;
@@ -549,6 +551,11 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
      * and fall back to unmatched slides, so only a scope with nothing but a
      * sample hides the other samples outright.
      */
+    /** A sample scope that only the host may widen. */
+    private get hostOwnsScopedSample(): boolean {
+        return !!this.props.hostOwnsSampleScope && !!this.scopedSampleId;
+    }
+
     private get scopedSampleId(): string | undefined {
         const filter = this.activePathologyFilter;
         return filter?.sampleId && !filter.matchLevel && !filter.specimenKey
@@ -815,8 +822,9 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         } = this.viewerState;
         const { stainFilter, matchFilter } = this;
         const showClearFilters =
-            !!this.activePathologyFilter ||
-            !!this.props.preferredSampleId ||
+            (!this.hostOwnsScopedSample &&
+                (!!this.activePathologyFilter ||
+                    !!this.props.preferredSampleId)) ||
             this.props.initialStainFilter === 'hne' ||
             this.props.initialStainFilter === 'ihc' ||
             stainFilter !== 'all' ||
@@ -872,7 +880,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                         sampleIdFilter={this.scopedSampleId}
                         slideIdFilter={this.preferredSlideKeys}
                         linkoutScopeActive={this.linkoutScopeActive}
-                        showSampleScope={!this.props.hostShowsSampleScope}
+                        showSampleScope={!this.props.hostOwnsSampleScope}
                         stainFilter={stainFilter}
                         matchFilter={matchFilter}
                         showClearFilters={showClearFilters}
