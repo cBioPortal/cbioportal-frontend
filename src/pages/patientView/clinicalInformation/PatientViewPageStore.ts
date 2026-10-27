@@ -1792,9 +1792,9 @@ export class PatientViewPageStore {
     );
 
     /**
-     * Whether the patient has pathology slides, from the WSI hierarchy that
-     * the backend builds from resource_data. False when slides aren't served
-     * or the hierarchy can't be read. The request goes through the viewer's
+     * Whether the patient has pathology slides, from the slide rows of the
+     * WSI_SAMPLE and WSI_PATIENT resources. False when slides aren't served
+     * or the rows can't be read. The request goes through the viewer's
      * hierarchy cache, so opening the Pathology Slides tab reuses it.
      */
     readonly hasPathologySlides = remoteData<boolean>({
