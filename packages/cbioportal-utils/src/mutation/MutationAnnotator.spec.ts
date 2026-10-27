@@ -7,6 +7,8 @@ import { Mutation } from '../model/Mutation';
 import {
     annotateMutation,
     annotateMutations,
+    filterMutationByTranscriptId,
+    findCanonicalTranscript,
     indexAnnotationsByGenomicLocation,
     resolveMissingProteinPositions,
 } from './MutationAnnotator';
@@ -2351,6 +2353,69 @@ describe('MutationAnnotator', () => {
                 mutations[3].proteinPosStart,
                 'invalid proteinChange => proteinPosStart = undefined'
             );
+        });
+    });
+    describe('missing fields in the Genome Nexus response', () => {
+        const mutation = {
+            chr: '17',
+            startPosition: 66,
+            endPosition: 66,
+            referenceAllele: 'A',
+            variantAllele: 'T',
+        } as any;
+
+        it('indexes an annotation that has no allele_string', () => {
+            const index = indexAnnotationsByGenomicLocation([
+                {
+                    seq_region_name: '17',
+                    start: 66,
+                    end: 66,
+                } as any,
+            ]);
+
+            assert.deepEqual(Object.keys(index), ['17,66,66,,']);
+        });
+
+        it('reports no transcript match when annotation_summary is missing', () => {
+            const index = {
+                '17,66,66,A,T': { seq_region_name: '17' } as any,
+            };
+
+            assert.isFalse(
+                filterMutationByTranscriptId(mutation, 'ENST00000269305', index)
+            );
+        });
+
+        it('finds no canonical transcript when the summaries are missing', () => {
+            assert.isUndefined(
+                findCanonicalTranscript({
+                    canonicalTranscriptId: 'ENST00000269305',
+                } as any)
+            );
+        });
+
+        it('still derives the key from allele_string when it is present', () => {
+            const index = indexAnnotationsByGenomicLocation([
+                {
+                    seq_region_name: '17',
+                    start: 66,
+                    end: 66,
+                    allele_string: 'A/T',
+                } as any,
+            ]);
+
+            assert.deepEqual(Object.keys(index), ['17,66,66,A,T']);
+        });
+
+        it('still finds the canonical transcript when the summaries are present', () => {
+            const canonical = findCanonicalTranscript({
+                canonicalTranscriptId: 'ENST00000269305',
+                transcriptConsequenceSummaries: [
+                    { transcriptId: 'ENST00000269305', hugoGeneSymbol: 'TP53' },
+                ],
+            } as any);
+
+            assert.equal(canonical!.transcriptId, 'ENST00000269305');
         });
     });
 });

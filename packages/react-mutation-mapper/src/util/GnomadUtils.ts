@@ -132,21 +132,35 @@ export function setGnomadTableData(
         : GnomadTableColumnName.alleleFrequency
     ).toString() as keyof AlleleFrequency;
 
+    // Genome Nexus can return a gnomAD entry without one of these sub-objects,
+    // so resolve each one to null instead of indexing into a missing value.
+    const alleleCount = data.alleleCount
+        ? data.alleleCount[alleleCountName]
+        : null;
+    const alleleNumber = data.alleleNumber
+        ? data.alleleNumber[alleleNumberName]
+        : null;
+    const homozygotes = data.homozygotes
+        ? data.homozygotes[homozygotesName]
+        : null;
+    // calculateGnomadAlleleFrequency treats anything but null as an explicit
+    // frequency, so a population missing from alleleFrequency must become null
+    // to fall back to count / total instead of producing undefined.
+    const alleleFrequency =
+        data.alleleFrequency &&
+        data.alleleFrequency[alleleFrequencyName] !== undefined
+            ? data.alleleFrequency[alleleFrequencyName]
+            : null;
+
     result[key] = {
         population: key,
-        alleleCount: data.alleleCount[alleleCountName]
-            ? data.alleleCount[alleleCountName]
-            : 0,
-        alleleNumber: data.alleleNumber[alleleNumberName]
-            ? data.alleleNumber[alleleNumberName]
-            : 0,
-        homozygotes: data.homozygotes[homozygotesName]
-            ? data.homozygotes[homozygotesName]
-            : 0,
+        alleleCount: alleleCount ? alleleCount : 0,
+        alleleNumber: alleleNumber ? alleleNumber : 0,
+        homozygotes: homozygotes ? homozygotes : 0,
         alleleFrequency: calculateGnomadAlleleFrequency(
-            data.alleleCount[alleleCountName],
-            data.alleleNumber[alleleNumberName],
-            data.alleleFrequency[alleleFrequencyName]
+            alleleCount,
+            alleleNumber,
+            alleleFrequency
         ),
     } as GnomadSummary;
 }
