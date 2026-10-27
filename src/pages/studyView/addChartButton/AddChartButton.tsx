@@ -674,6 +674,10 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 <AddChartByType
                     width={this.getTabsWidth}
                     options={this.namespaceChartOptions}
+                    autoFocusSearch={
+                        this.activeId ===
+                        ChartMetaDataTypeEnum.VARIANT_ANNOTATIONS
+                    }
                     freqPromise={this.dataCount}
                     onAddAll={this.onAddAll}
                     onClearAll={this.onClearAll}
@@ -984,6 +988,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         <AddChartByType
                             width={this.getTabsWidth}
                             options={this.clinicalDataOptions}
+                            autoFocusSearch={
+                                this.activeId === ChartMetaDataTypeEnum.CLINICAL
+                            }
                             freqPromise={this.dataCount}
                             onAddAll={this.onAddAll}
                             onClearAll={this.onClearAll}
@@ -1003,6 +1010,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         <AddChartByType
                             width={this.getTabsWidth}
                             options={this.genomicChartOptions}
+                            autoFocusSearch={
+                                this.activeId === ChartMetaDataTypeEnum.GENOMIC
+                            }
                             freqPromise={this.dataCount}
                             onAddAll={this.onAddAll}
                             onClearAll={this.onClearAll}
