@@ -41,8 +41,8 @@ describe('buildWsiViewerConfig', () => {
     it('builds portal API URLs and the host services', () => {
         const config = buildWsiViewerConfig();
 
-        expect(config.buildApiUrl('api/wsi/v2/hierarchy/s/p')).toBe(
-            'https://portal.example/beta/api/wsi/v2/hierarchy/s/p'
+        expect(config.buildApiUrl('api/resource-table/query/fetch')).toBe(
+            'https://portal.example/beta/api/resource-table/query/fetch'
         );
         expect(config.osdPrefixUrl).toBe('/reactapp/osd-images/');
     });

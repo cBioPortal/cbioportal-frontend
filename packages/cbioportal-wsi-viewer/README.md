@@ -67,11 +67,11 @@ The viewer talks to the cBioPortal backend and tile server only:
 
 | Request | Use |
 | --- | --- |
-| `GET {api}/api/wsi/v2/hierarchy/{studyId}/{patientId}` | The patient's samples → parts → blocks → slides. An empty hierarchy means no slides; 404 means an unknown study or patient |
-| `GET {api}/api/wsi/v2/resources/{studyId}/{patientId}/access?slideKey=…` | Short-lived access for one slide: a signed token and the tile metadata (no source location) |
+| `POST {api}/api/resource-table/query/fetch` (`WSI_SAMPLE`, `WSI_PATIENT`) | The patient's slide rows. The viewer groups them into samples → parts → blocks → slides; no rows means no slides |
+| `GET {api}/api/wsi/v2/resources/{studyId}/{patientId}/access?slideKey=…` | A short-lived signed token for one slide |
 | `{tileServerUrl}/tiles/zxy/{level}/{x}/{y}`, `{tileServerUrl}/thumbnails` | Tiles and thumbnails, authorized with the access token |
 
-On the backend, slides are `resource_data` rows of the `WSI_SAMPLE`/`WSI_PATIENT` resources. Their private serving metadata stays on the server, and the viewer sees only the hierarchy and per-slide access responses.
+Slides are rows of the `WSI_SAMPLE`/`WSI_PATIENT` resources, one per slide, written by the data provider's pipeline. A row's `metadata` carries the slide's fields and, for a slide that can serve tiles, `wsi_serving` with its tile metadata and sealed source. Only the tile server can open the sealed source.
 
 The viewer stores the selected slide and viewport in the URL hash (`#wsi:slide=…&x=…&y=…&z=…`) so a view can be shared.
 

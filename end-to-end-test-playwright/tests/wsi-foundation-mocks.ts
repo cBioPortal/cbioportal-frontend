@@ -18,7 +18,7 @@ export interface FoundationMockOptions {
     tileRequestHeaders?: Array<Record<string, string>>;
 }
 
-/** Schema-2 tile metadata the viewer accepts, for slide access mocks. */
+/** Schema-2 tile metadata the viewer accepts, carried by the slide rows. */
 export const tileMetadata = {
     dimensions: { width: 512, height: 512 },
     levels: 1,
@@ -34,51 +34,47 @@ export const tileMetadata = {
     tile_size: 256,
 };
 
-function makeSlide(slideKey: string, stainName: string, stainGroup: string) {
+/** One WSI_SAMPLE resource row, as the resource table API returns it. */
+function makeSlideRow(slideKey: string, stainName: string, stainGroup: string) {
     return {
-        slideKey,
-        stainName,
-        stainGroup,
-        isHne: true,
-        isIhc: false,
-        magnification: '',
-        fileSizeBytes: null,
-        canServeTiles: true,
-        slideType: 'H&E',
-        sampleId: 'wsi-foundation-smoke-sample',
-        matchLevel: 'BLOCK',
-        specimenKey: 'block::1::A1',
+        studyId: STUDY_ID,
+        resourceId: 'WSI_SAMPLE',
+        patientId: PATIENT_ID,
+        sampleId: SAMPLE_ID,
+        metadata: {
+            slide_key: slideKey,
+            reference_sample_id: SAMPLE_ID,
+            part_key: 'part:foundation',
+            part_number: '1',
+            part_description: 'Foundation specimen',
+            block_key: 'block:foundation',
+            block_number: 'A1',
+            block_label: 'A1',
+            stain_name: stainName,
+            stain_group: stainGroup,
+            is_hne: true,
+            is_ihc: false,
+            slide_type: 'H&E',
+            can_serve_tiles: true,
+            match_level: 'BLOCK',
+            specimen_key: 'block::1::A1',
+            wsi_serving: {
+                sealed_source: 'sealed',
+                tile_metadata_json: tileMetadata,
+                thumbnail_width: 128,
+                thumbnail_height: 96,
+                thumbnail_content_type: 'image/png',
+            },
+        },
     };
 }
 
-function makeHierarchy(includeSecondSlide: boolean) {
-    const slides = [makeSlide(SLIDE_KEY, 'H&E initial', 'H&E (Initial)')];
+function makeSlideRows(includeSecondSlide: boolean) {
+    const rows = [makeSlideRow(SLIDE_KEY, 'H&E initial', 'H&E (Initial)')];
     if (includeSecondSlide) {
-        slides.push(makeSlide(SECOND_SLIDE_KEY, 'H&E recut', 'H&E (Recut)'));
+        rows.push(makeSlideRow(SECOND_SLIDE_KEY, 'H&E recut', 'H&E (Recut)'));
     }
-    return {
-        referenceSampleId: 'wsi-foundation-smoke-sample',
-        sampleGroups: [
-            {
-                sampleId: 'wsi-foundation-smoke-sample',
-                parts: [
-                    {
-                        partNumber: '1',
-                        partType: '',
-                        partDescription: 'Foundation specimen',
-                        subspecialty: '',
-                        blocks: [
-                            {
-                                blockNumber: 'A1',
-                                blockLabel: 'A1',
-                                slides,
-                            },
-                        ],
-                    },
-                ],
-            },
-        ],
-    };
+    return rows;
 }
 
 /** A 1×1 PNG, for tile and thumbnail mocks. */
@@ -89,7 +85,7 @@ export const pixel = Buffer.from(
 
 /**
  * Slide access as the backend answers it: 400 unless the key is 12 hex, 404
- * for a slide `isPublished` rejects, else a token with `tileMetadata`.
+ * for a slide `isPublished` rejects, else a token.
  */
 export async function routeSlideAccess(
     page: Page,
@@ -116,8 +112,8 @@ export async function routeSlideAccess(
             body: JSON.stringify({
                 slideKey,
                 accessToken: 'wsi-foundation-smoke-token',
+                tokenType: 'Bearer',
                 expiresIn: 300,
-                tileMetadata,
             }),
         });
     });
@@ -145,7 +141,7 @@ export async function installFoundationMocks(
     options: FoundationMockOptions = {}
 ): Promise<string[]> {
     const enrichmentRequests: string[] = [];
-    const hierarchy = makeHierarchy(!!options.includeSecondSlide);
+    const slideRows = makeSlideRows(!!options.includeSecondSlide);
     await page.addInitScript(() => {
         window.localStorage.setItem(
             'frontendConfig',
@@ -172,15 +168,20 @@ export async function installFoundationMocks(
             }),
         })
     );
-    await page.route(
-        `**/api/wsi/v2/hierarchy/${STUDY_ID}/${PATIENT_ID}`,
-        route =>
-            route.fulfill({
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify(hierarchy),
-            })
-    );
+    // The patient's slide rows: WSI_SAMPLE holds them all, and no other
+    // resource has rows.
+    await page.route('**/api/resource-table/query/fetch', route => {
+        const query = route.request().postDataJSON();
+        const rows =
+            query?.resourceId === 'WSI_SAMPLE' &&
+            query.patientIdentifiers?.some(
+                (patient: { patientId: string }) =>
+                    patient.patientId === PATIENT_ID
+            )
+                ? slideRows
+                : [];
+        return route.fulfill(json(rows));
+    });
     await page.route(`**/api/studies/${STUDY_ID}/molecular-profiles**`, route =>
         route.fulfill({
             status: 200,
@@ -193,13 +194,7 @@ export async function installFoundationMocks(
         STUDY_ID,
         (patientId, slideKey) =>
             patientId === PATIENT_ID &&
-            hierarchy.sampleGroups.some(group =>
-                group.parts.some(part =>
-                    part.blocks.some(block =>
-                        block.slides.some(slide => slide.slideKey === slideKey)
-                    )
-                )
-            ),
+            slideRows.some(row => row.metadata.slide_key === slideKey),
         options.accessRequests
     );
     await installClinicalMocks(page);

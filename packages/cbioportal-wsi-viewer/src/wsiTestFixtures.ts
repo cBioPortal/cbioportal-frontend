@@ -7,8 +7,9 @@ import {
     Sample,
     Slide,
     TileMetadata,
+    UNMATCHED_SAMPLE_ID,
+    WsiResourceRow,
     WsiStainKind,
-    WsiV2Hierarchy,
 } from './wsiViewerTypes';
 
 export function makeSlide(overrides: Partial<Slide> = {}): Slide {
@@ -86,8 +87,8 @@ export function makeTileMetadata(
 export function makeAccessPayload(overrides: Record<string, unknown> = {}) {
     return {
         slideKey: 'slide-1',
-        tileMetadata: makeTileMetadata(),
         accessToken: 'test-token',
+        tokenType: 'Bearer',
         expiresIn: 300,
         ...overrides,
     };
@@ -97,11 +98,19 @@ export function makeAccessPayload(overrides: Record<string, unknown> = {}) {
 export function registerTestSlideAccess(
     studyId: string,
     patientId: string,
-    slideKey: string
+    slideKey: string,
+    tileMetadata: TileMetadata = makeTileMetadata()
 ): void {
     registerWsiResourceAccess(studyId, {
         patient_id: patientId,
-        samples: [makeSample('S-1', [makeSlide({ slide_key: slideKey })])],
+        samples: [
+            makeSample('S-1', [
+                makeSlide({
+                    slide_key: slideKey,
+                    tile_metadata: tileMetadata,
+                }),
+            ]),
+        ],
     });
 }
 
@@ -112,43 +121,95 @@ const WIRE_SLIDE_TYPES: Record<WsiStainKind, string> = {
     unknown: 'Unknown',
 };
 
-/** A hierarchy as the v2 endpoint sends it: the normalizer's inverse. */
-export function toWireHierarchy(hierarchy: PatientHierarchy): WsiV2Hierarchy {
-    return {
-        referenceSampleId: hierarchy.reference_sample_id || null,
-        sampleGroups: hierarchy.samples.map(sample => ({
-            sampleId:
-                sample.sample_id === 'UNMATCHED' ? null : sample.sample_id,
-            parts: sample.parts.map(part => ({
-                partNumber: part.part_number,
-                partType: part.part_type,
-                partDescription: part.part_description,
-                subspecialty: part.subspecialty,
-                blocks: part.blocks.map(block => ({
-                    blockNumber: block.block_number,
-                    blockLabel: block.block_label,
-                    slides: block.slides.map(slide => ({
-                        slideKey: slide.slide_key,
-                        stainName: slide.stain_name,
-                        stainGroup: slide.stain_group,
-                        isHne: slide.stain_kind === 'hne',
-                        isIhc: slide.stain_kind === 'ihc',
+export type TestSlideRow = WsiResourceRow & { resourceId: string };
+
+function orderKey(prefix: string, index: number): string {
+    return `${prefix}-${String(index).padStart(4, '0')}`;
+}
+
+/**
+ * The slide rows the resource table API returns for a hierarchy: the
+ * builder's inverse. Servable slides carry tile metadata (the slide's own, or
+ * a valid default) under `wsi_serving`.
+ */
+export function toResourceRows(hierarchy: PatientHierarchy): TestSlideRow[] {
+    const rows: TestSlideRow[] = [];
+    hierarchy.samples.forEach(sample => {
+        const unmatched = sample.sample_id === UNMATCHED_SAMPLE_ID;
+        sample.parts.forEach((part, partIndex) => {
+            const partKey = orderKey(`part:${sample.sample_id}`, partIndex);
+            part.blocks.forEach((block, blockIndex) => {
+                const blockKey = orderKey(`block:${partKey}`, blockIndex);
+                block.slides.forEach(slide => {
+                    const metadata: Record<string, unknown> = {
+                        slide_key: slide.slide_key,
+                        reference_sample_id:
+                            hierarchy.reference_sample_id || undefined,
+                        part_key: partKey,
+                        part_number: part.part_number,
+                        part_type: part.part_type,
+                        part_description: part.part_description,
+                        subspecialty: part.subspecialty,
+                        block_key: blockKey,
+                        block_number: block.block_number,
+                        block_label: block.block_label,
+                        stain_name: slide.stain_name,
+                        stain_group: slide.stain_group,
+                        is_hne: slide.stain_kind === 'hne',
+                        is_ihc: slide.stain_kind === 'ihc',
+                        slide_type: WIRE_SLIDE_TYPES[slide.stain_kind],
                         magnification: slide.magnification,
-                        fileSizeBytes: slide.file_size_bytes
+                        file_size_bytes: slide.file_size_bytes
                             ? Number(slide.file_size_bytes)
-                            : null,
-                        canServeTiles: slide.can_serve_tiles,
-                        slideType: WIRE_SLIDE_TYPES[slide.stain_kind],
-                        sampleId: slide.sample_id ?? sample.sample_id,
-                        matchLevel:
+                            : undefined,
+                        can_serve_tiles: slide.can_serve_tiles,
+                        match_level:
                             slide.match_level ||
-                            (sample.sample_id === 'UNMATCHED'
-                                ? 'UNMATCHED'
-                                : 'BLOCK'),
-                        specimenKey: slide.specimen_key || 'specimen-1',
-                    })),
-                })),
-            })),
-        })),
-    };
+                            (unmatched ? 'UNMATCHED' : 'BLOCK'),
+                        specimen_key: slide.specimen_key || 'specimen-1',
+                    };
+                    if (slide.can_serve_tiles) {
+                        metadata.wsi_serving = {
+                            sealed_source: 'sealed',
+                            tile_metadata_json:
+                                slide.tile_metadata || makeTileMetadata(),
+                            thumbnail_width: 128,
+                            thumbnail_height: 96,
+                            thumbnail_content_type: 'image/jpeg',
+                        };
+                    }
+                    rows.push({
+                        resourceId: unmatched ? 'WSI_PATIENT' : 'WSI_SAMPLE',
+                        patientId: hierarchy.patient_id,
+                        sampleId: unmatched
+                            ? null
+                            : slide.sample_id ?? sample.sample_id,
+                        metadata,
+                    });
+                });
+            });
+        });
+    });
+    return rows;
+}
+
+/** Whether a request is the resource table rows request the viewer sends. */
+export function isSlideRowsRequest(url: string): boolean {
+    return url.includes('/resource-table/query/fetch');
+}
+
+/**
+ * The rows of one resource table request: those of the resource named in its
+ * body.
+ */
+export function slideRowsFor(
+    hierarchy: PatientHierarchy,
+    init?: RequestInit
+): TestSlideRow[] {
+    const resourceId = init?.body
+        ? JSON.parse(String(init.body)).resourceId
+        : undefined;
+    return toResourceRows(hierarchy).filter(
+        row => resourceId === undefined || row.resourceId === resourceId
+    );
 }

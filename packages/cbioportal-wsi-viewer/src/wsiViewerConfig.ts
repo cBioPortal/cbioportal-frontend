@@ -4,7 +4,7 @@
  */
 export interface WsiViewerConfig {
     /**
-     * Resolves a portal API path such as `api/wsi/v2/hierarchy/...` to the
+     * Resolves a portal API path such as `api/resource-table/query/fetch` to the
      * URL to request, including any deployment context path.
      */
     buildApiUrl: (path: string) => string;

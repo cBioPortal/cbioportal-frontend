@@ -1,17 +1,11 @@
 export const WSI_THUMBNAIL_WIDTH = 128;
 export const WSI_THUMBNAIL_HEIGHT = 96;
 
-/** Hierarchy endpoint for one patient. */
-export function buildWsiHierarchyApiUrl(
-    buildApiUrl: (path: string) => string,
-    studyId: string,
-    patientId: string
+/** The portal's resource table rows endpoint, which lists slide rows. */
+export function buildWsiResourceRowsApiUrl(
+    buildApiUrl: (path: string) => string
 ): string {
-    return buildApiUrl(
-        `api/wsi/v2/hierarchy/${encodeURIComponent(
-            studyId
-        )}/${encodeURIComponent(patientId)}`
-    );
+    return buildApiUrl('api/resource-table/query/fetch');
 }
 
 /** Build a slide thumbnail URL from the tile-server base URL. */

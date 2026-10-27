@@ -1,18 +1,16 @@
 import {
-    buildWsiHierarchyApiUrl,
     buildWsiRequestHeaders,
+    buildWsiResourceRowsApiUrl,
     buildWsiThumbnailUrl,
 } from './wsiUrls';
 
-describe('buildWsiHierarchyApiUrl', () => {
-    it('preserves a portal context path and encodes identifiers', () => {
+describe('buildWsiResourceRowsApiUrl', () => {
+    it('preserves a portal context path', () => {
         const buildApiUrl = (path: string) =>
             `https://portal.example/beta/${path}`;
 
-        expect(
-            buildWsiHierarchyApiUrl(buildApiUrl, 'study / 1', 'patient#1')
-        ).toBe(
-            'https://portal.example/beta/api/wsi/v2/hierarchy/study%20%2F%201/patient%231'
+        expect(buildWsiResourceRowsApiUrl(buildApiUrl)).toBe(
+            'https://portal.example/beta/api/resource-table/query/fetch'
         );
     });
 });

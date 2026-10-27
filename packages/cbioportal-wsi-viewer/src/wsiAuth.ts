@@ -1,5 +1,9 @@
 import { getWsiViewerRuntime } from './wsiViewerConfig';
-import { PatientHierarchy, WsiSlideAccess } from './wsiViewerTypes';
+import {
+    PatientHierarchy,
+    TileMetadata,
+    WsiSlideAccess,
+} from './wsiViewerTypes';
 import { createPromiseCache } from './wsiCacheUtils';
 import { hierarchySlides } from './wsiSlideUtils';
 
@@ -80,11 +84,17 @@ export function normalizeWsiAuthScope(scope?: string): string {
 const slideAccess = createPromiseCache<WsiSlideAccess>(
     access => access.expiresAt - 30_000
 );
+interface RegisteredSlide {
+    patientId: string;
+    tileMetadata?: TileMetadata;
+}
+
 /**
- * Patient of every slide a loaded hierarchy published, keyed by study and
- * slide key. Access is only ever requested for these slides.
+ * Every slide a loaded hierarchy published, keyed by study and slide key, with
+ * its patient and the tile metadata from its resource row. Access is only ever
+ * requested for these slides.
  */
-const slidePatients = new Map<string, string>();
+const registeredSlides = new Map<string, RegisteredSlide>();
 
 function registryKey(studyId: string, slideKey: string): string {
     return `${studyId}::${slideKey}`;
@@ -101,10 +111,10 @@ export function registerWsiResourceAccess(
 ): void {
     clearWsiResourceAccessTargets(studyId, hierarchy.patient_id);
     hierarchySlides(hierarchy).forEach(slide =>
-        slidePatients.set(
-            registryKey(studyId, slide.slide_key),
-            hierarchy.patient_id
-        )
+        registeredSlides.set(registryKey(studyId, slide.slide_key), {
+            patientId: hierarchy.patient_id,
+            tileMetadata: slide.tile_metadata,
+        })
     );
 }
 
@@ -117,15 +127,15 @@ export function clearWsiResourceAccessTargets(
     patientId?: string
 ): void {
     if (studyId === undefined) {
-        slidePatients.clear();
+        registeredSlides.clear();
         return;
     }
-    for (const [key, slidePatient] of slidePatients) {
+    for (const [key, slide] of registeredSlides) {
         if (
             key.startsWith(`${studyId}::`) &&
-            (patientId === undefined || slidePatient === patientId)
+            (patientId === undefined || slide.patientId === patientId)
         ) {
-            slidePatients.delete(key);
+            registeredSlides.delete(key);
         }
     }
 }
@@ -149,7 +159,7 @@ function fetchSlideAccess(
             : window.location.origin
     );
     url.search = `?slideKey=${encodeURIComponent(slideKey)}`;
-    // `include`, like the hierarchy request: the API may be on another origin.
+    // `include`, like the slide rows request: the API may be on another origin.
     return fetchImpl(url.toString(), {
         credentials: 'include',
         cache: 'no-store',
@@ -158,30 +168,32 @@ function fetchSlideAccess(
 
 async function requestSlideAccess(
     studyId: string,
-    patientId: string,
-    slideKey: string
+    slideKey: string,
+    slide: RegisteredSlide
 ): Promise<WsiSlideAccess> {
-    const response = await fetchSlideAccess(studyId, patientId, slideKey);
+    // The tile metadata comes from the slide's resource row; a slide that
+    // cannot serve tiles has none.
+    if (!slide.tileMetadata) {
+        throw new Error('WSI slide cannot serve tiles');
+    }
+    validateWsiTileMetadata(slide.tileMetadata);
+    const response = await fetchSlideAccess(studyId, slide.patientId, slideKey);
     if (!response.ok) {
         throw new Error(`WSI authorization failed (${response.status})`);
     }
-    const payload = (await response.json()) as WsiSlideAccess;
+    const payload = await response.json();
     if (
         !payload ||
         payload.slideKey !== slideKey ||
         !payload.accessToken ||
-        !payload.tileMetadata ||
         !Number.isFinite(payload.expiresIn) ||
         payload.expiresIn <= 0
     ) {
         throw new Error('Invalid WSI slide access response');
     }
-    validateWsiTileMetadata(payload.tileMetadata);
-    // Copy only the contract fields so nothing else from the response is
-    // retained client-side.
     return {
         slideKey,
-        tileMetadata: payload.tileMetadata,
+        tileMetadata: slide.tileMetadata,
         accessToken: payload.accessToken,
         expiresIn: payload.expiresIn,
         expiresAt: Date.now() + payload.expiresIn * 1000,
@@ -199,8 +211,8 @@ export function getWsiSlideAccess(
     }
     // Unknown slides fail here, before any request or cached capability:
     // access is only ever used for a slide published by a loaded hierarchy.
-    const patientId = slidePatients.get(registryKey(studyId, slideKey));
-    if (patientId === undefined) {
+    const slide = registeredSlides.get(registryKey(studyId, slideKey));
+    if (slide === undefined) {
         return Promise.reject(
             new Error('WSI resource selection is unavailable')
         );
@@ -208,12 +220,12 @@ export function getWsiSlideAccess(
     const key = [
         normalizeWsiAuthScope(authScope),
         studyId,
-        patientId,
+        slide.patientId,
         slideKey,
     ].join('::');
     return slideAccess.get(
         key,
-        () => requestSlideAccess(studyId, patientId, slideKey),
+        () => requestSlideAccess(studyId, slideKey, slide),
         forceRefresh
     );
 }

@@ -18,6 +18,8 @@ export interface Slide {
     sample_id?: string | null;
     match_level?: MatchLevel;
     specimen_key?: string;
+    /** Tile metadata of a slide that can serve tiles, from its resource row. */
+    tile_metadata?: TileMetadata;
 }
 
 export type MatchLevel = 'PART' | 'BLOCK' | 'UNMATCHED';
@@ -54,46 +56,15 @@ export interface PatientHierarchy {
     reference_sample_id?: string | null;
 }
 
-/** Wire format returned by the normalized WSI v2 hierarchy endpoint. */
-export interface WsiV2Slide {
-    /** Opaque 12-hex de-identified slide key. */
-    slideKey: string;
-    stainName: string;
-    stainGroup: string;
-    isHne: boolean;
-    isIhc: boolean;
-    magnification: string;
-    fileSizeBytes: number | null;
-    canServeTiles: boolean;
-    /** Nullable in older materialized WSI snapshots; derive from the flags. */
-    slideType: string | null;
+/**
+ * One slide row of the WSI_SAMPLE or WSI_PATIENT resource, as the portal's
+ * resource table API returns it. `metadata` holds the slide fields the data
+ * provider wrote, with tile serving data under `wsi_serving`.
+ */
+export interface WsiResourceRow {
+    patientId: string;
     sampleId: string | null;
-    matchLevel: MatchLevel;
-    specimenKey: string;
-}
-
-export interface WsiV2Block {
-    blockNumber: string;
-    blockLabel: string;
-    slides: WsiV2Slide[];
-}
-
-export interface WsiV2Part {
-    partNumber: string;
-    partType: string;
-    partDescription: string;
-    subspecialty: string;
-    blocks: WsiV2Block[];
-}
-
-export interface WsiV2SampleGroup {
-    sampleId: string | null;
-    parts: WsiV2Part[];
-}
-
-export interface WsiV2Hierarchy {
-    referenceSampleId: string | null;
-    sampleGroups: WsiV2SampleGroup[];
+    metadata: Record<string, unknown> | null;
 }
 
 export type PathologySlideFilter = {

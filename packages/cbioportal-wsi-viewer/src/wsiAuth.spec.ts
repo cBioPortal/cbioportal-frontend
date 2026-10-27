@@ -80,51 +80,68 @@ describe('WSI access capability', () => {
         expect(global.fetch).toHaveBeenCalledTimes(2);
     });
 
-    it('rejects a schema-v2 metadata object with a non-current decode policy', async () => {
-        const response = {
-            ok: true,
-            json: async () => ({
-                slideKey: 'slide-1',
-                tileMetadata: {
-                    dimensions: { width: 100, height: 80 },
-                    levels: 1,
-                    level_dimensions: [{ width: 100, height: 80 }],
-                    max_zoom: 0,
-                    tile_size: 256,
-                    tile_metadata_schema_version: 2,
-                    level_downsamples: [1],
-                    safe_min_level: 0,
-                    decode_policy_version:
-                        'geometry-v2;tile-max=4194304;thumbnail-max=4194304',
-                    max_decode_pixels: 4194304,
-                    thumbnail_max_decode_pixels: 4194304,
+    function registerWithTileMetadata(tileMetadata: unknown) {
+        registerWsiResourceAccess('study-1', {
+            patient_id: 'patient-1',
+            samples: [
+                {
+                    sample_id: 'S-1',
+                    parts: [
+                        {
+                            blocks: [
+                                {
+                                    slides: [
+                                        {
+                                            slide_key: 'slide-1',
+                                            tile_metadata: tileMetadata,
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
                 },
-                accessToken: 'token',
-                expiresIn: 300,
-            }),
-        } as Response;
-        jest.spyOn(global, 'fetch').mockResolvedValue(response);
+            ],
+        } as any);
+    }
+
+    it('rejects a slide row whose tile metadata has a non-current decode policy, before any request', async () => {
+        registerWithTileMetadata(
+            makeTileMetadata({
+                decode_policy_version:
+                    'geometry-v2;tile-max=4194304;thumbnail-max=4194304',
+                max_decode_pixels: 4194304,
+                thumbnail_max_decode_pixels: 4194304,
+            })
+        );
 
         await expect(getWsiSlideAccess('study-1', 'slide-1')).rejects.toThrow(
             'Invalid WSI decode policy'
         );
+        expect(global.fetch).not.toHaveBeenCalled();
     });
 
     it('rejects tile metadata without the schema version', async () => {
         const { tile_metadata_schema_version, ...legacy } = makeTileMetadata();
-        jest.spyOn(global, 'fetch').mockResolvedValue({
-            ok: true,
-            json: async () => ({
-                slideKey: 'slide-1',
-                tileMetadata: legacy,
-                accessToken: 'token',
-                expiresIn: 300,
-            }),
-        } as Response);
+        registerWithTileMetadata(legacy);
 
         await expect(getWsiSlideAccess('study-1', 'slide-1')).rejects.toThrow(
             'Invalid WSI tile metadata schema'
         );
+    });
+
+    it('takes the tile metadata from the slide row, not the access response', async () => {
+        jest.spyOn(global, 'fetch').mockResolvedValue({
+            ok: true,
+            json: async () =>
+                makeAccessPayload({
+                    tileMetadata: makeTileMetadata({ tile_size: 512 }),
+                }),
+        } as Response);
+
+        const access = await getWsiSlideAccess('study-1', 'slide-1');
+
+        expect(access.tileMetadata).toEqual(makeTileMetadata());
     });
 
     describe('registered slides', () => {
@@ -148,6 +165,7 @@ describe('WSI access capability', () => {
                                     {
                                         slides: slideKeys.map(slideKey => ({
                                             slide_key: slideKey,
+                                            tile_metadata: makeTileMetadata(),
                                         })),
                                     },
                                 ],
