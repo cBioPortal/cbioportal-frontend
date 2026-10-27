@@ -111,6 +111,23 @@ describe('PatientWsiSlidesTab', () => {
         );
     });
 
+    it('leaves the sample scope to the page sample filter', () => {
+        render(
+            <PatientWsiSlidesTab
+                {...baseProps}
+                query={{ sampleId: 'P-1-T01' }}
+            />
+        );
+        expect(mockEntryPoint).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+                pathologyFilter: expect.objectContaining({
+                    sampleId: 'P-1-T01',
+                }),
+                hostShowsSampleScope: true,
+            })
+        );
+    });
+
     it('lets a hash slide deep link take precedence', () => {
         window.history.replaceState(null, '', '/#wsi:slide=slide-9');
         render(<PatientWsiSlidesTab {...baseProps} query={LINK_QUERY} />);

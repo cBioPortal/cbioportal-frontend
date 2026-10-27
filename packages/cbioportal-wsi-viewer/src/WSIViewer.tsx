@@ -87,6 +87,11 @@ export interface WsiViewerProps {
     initialMatchFilter?: PathologySlideMatchFilter;
     preferredSampleId?: string;
     pathologyFilter?: PathologySlideFilter;
+    /**
+     * The host shows the `pathologyFilter` sample itself (e.g. the patient
+     * page's sample filter), so the slide list skips its own "Sample …" chip.
+     */
+    hostShowsSampleScope?: boolean;
     /** Subject that isolates protected in-memory caches (the user name). */
     authScope: string;
     /**
@@ -867,6 +872,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                         sampleIdFilter={this.scopedSampleId}
                         slideIdFilter={this.preferredSlideKeys}
                         linkoutScopeActive={this.linkoutScopeActive}
+                        showSampleScope={!this.props.hostShowsSampleScope}
                         stainFilter={stainFilter}
                         matchFilter={matchFilter}
                         showClearFilters={showClearFilters}

@@ -1169,6 +1169,36 @@ describe('WsiNavPanel', () => {
         ).toHaveLength(0);
     });
 
+    it('leaves the sample chip to the host but keeps the sample scope', () => {
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([
+                    makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })]),
+                    makeSample('S-2', [makeSlide({ slide_key: 'slide-2' })]),
+                ])}
+                selectedSlide={null}
+                stainFilter="all"
+                sampleIdFilter="S-1"
+                linkoutScopeActive={true}
+                showSampleScope={false}
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                {...navContext}
+            />
+        );
+
+        expect(
+            renderer.root.findAllByProps({ 'data-testid': 'wsi-sample-scope' })
+        ).toHaveLength(0);
+        expect(
+            flattenRenderedText(
+                renderer.root.findByProps({
+                    'data-testid': 'wsi-filtered-slide-count',
+                }).children
+            )
+        ).toContain('Showing 1 of 2 slides');
+    });
+
     it('computes facet counts from the patient hierarchy while a linkout scope is active', () => {
         const onFilterChange = jest.fn();
         const renderer = TestRenderer.create(

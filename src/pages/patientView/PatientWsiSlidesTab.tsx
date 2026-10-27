@@ -57,7 +57,10 @@ export function wsiSlidesTabScopeFromQuery(
     };
 }
 
-type Props = Omit<AppWsiViewerProps, keyof WsiSlidesTabScope> & {
+type Props = Omit<
+    AppWsiViewerProps,
+    keyof WsiSlidesTabScope | 'hostShowsSampleScope'
+> & {
     query: WsiSlidesTabQuery;
 };
 
@@ -107,5 +110,7 @@ export default function PatientWsiSlidesTab({ query, ...viewerProps }: Props) {
             clearWsiHashFromCurrentUrl();
         }
     }, [linkKey, isOpeningLink]);
-    return <AppWsiViewer {...viewerProps} {...scope} />;
+    // The page's sample filter shows and clears the sample scope, so the
+    // slide list does not repeat it as a chip.
+    return <AppWsiViewer {...viewerProps} {...scope} hostShowsSampleScope />;
 }
