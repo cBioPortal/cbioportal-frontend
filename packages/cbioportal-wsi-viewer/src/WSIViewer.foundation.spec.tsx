@@ -186,7 +186,7 @@ describe('WSIViewer foundation behavior', () => {
                     'data-testid': testId,
                 }).length;
 
-            it('shows neither the sample chip nor "Show all slides"', () => {
+            it('shows neither the sample chip nor a filter reset', () => {
                 const instance = hostInstance();
                 expect(count(instance, 'wsi-sample-scope')).toBe(0);
                 expect(count(instance, 'wsi-clear-filters')).toBe(0);

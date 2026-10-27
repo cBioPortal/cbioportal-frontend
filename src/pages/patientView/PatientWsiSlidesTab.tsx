@@ -30,8 +30,7 @@ function queryValue(value: unknown): string | undefined {
  * Maps pathology slide link params (`sampleId`, plus `matchLevel`,
  * `specimenKey` and `stainFilter` from the `pathologySlideSettings` URL node)
  * to viewer props. A sample scopes the slide list to that sample, as sample
- * view scopes the rest of the page; the viewer offers "Show all slides" to
- * widen it. A slide named by a `#wsi:slide=` hash wins: the link scope and
+ * view scopes the rest of the page; the page's sample filter widens it. A slide named by a `#wsi:slide=` hash wins: the link scope and
  * the stain filter are dropped so they cannot exclude or hide that slide.
  */
 export function wsiSlidesTabScopeFromQuery(

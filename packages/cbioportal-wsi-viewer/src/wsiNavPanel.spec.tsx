@@ -1283,6 +1283,37 @@ describe('WsiNavPanel', () => {
         expect(chipCount('wsi-match-filter-block')).toContain('(1)');
     });
 
+    it('offers "Clear filters", not "Show all slides", within a host-owned sample', () => {
+        const label = (hostOwnsSampleScope: boolean) =>
+            flattenRenderedText(
+                TestRenderer.create(
+                    <WsiNavPanel
+                        hierarchy={makeHierarchy([
+                            makeSample('S-1', [
+                                makeSlide({ slide_key: 'slide-1' }),
+                            ]),
+                            makeSample('S-2', [
+                                makeSlide({ slide_key: 'slide-2' }),
+                            ]),
+                        ])}
+                        selectedSlide={null}
+                        stainFilter="hne"
+                        sampleIdFilter="S-1"
+                        linkoutScopeActive={true}
+                        hostOwnsSampleScope={hostOwnsSampleScope}
+                        showClearFilters={true}
+                        onFilterChange={() => {}}
+                        onSelectSlide={() => {}}
+                        {...navContext}
+                    />
+                ).root.findByProps({ 'data-testid': 'wsi-clear-filters' })
+                    .children
+            );
+
+        expect(label(true)).toBe('Clear filters');
+        expect(label(false)).toBe('Show all slides');
+    });
+
     it('computes facet counts from the patient hierarchy while a linkout scope is active', () => {
         const onFilterChange = jest.fn();
         const renderer = TestRenderer.create(

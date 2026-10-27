@@ -304,7 +304,9 @@ function WsiNavPanelComponent({
     const hiddenSampleCount =
         filteredSampleEntries.length - sampleEntries.length;
     // A link scope widens to the whole patient once a filter is picked, so
-    // its counts are the patient's; a host-owned sample scope stays put.
+    // its counts are the patient's; a host-owned sample scope stays put, so
+    // its counts are the sample's and resetting the filters shows only that
+    // sample's slides ("Clear filters", not "Show all slides").
     const facetSampleId =
         hostOwnsSampleScope && linkoutScopeActive ? sampleIdFilter : undefined;
     const facetSlides = React.useMemo(
@@ -480,7 +482,9 @@ function WsiNavPanelComponent({
                             }}
                             onClick={onClearFilters}
                         >
-                            Show all slides
+                            {facetSampleId
+                                ? 'Clear filters'
+                                : 'Show all slides'}
                         </button>
                     )}
                     {slideCountText && (
