@@ -8,12 +8,13 @@ import {
 } from 'mobx';
 import { GenericAssayMeta, MolecularProfile } from 'cbioportal-ts-api-client';
 import {
-    fetchGenericAssayMetaByEntityIds,
+    fetchGenericAssayMetaByEntityIdsInProfiles,
     fetchGenericAssayMetaPageByProfileIds,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import {
     arrangeGenericAssayOptions,
     GenericAssayAxisOptions,
+    GenericAssayOptionGroup,
     GenericAssayPlotsOption,
     groupAndCapGenericAssayOptions,
     IGenericAssayAxisContext,
@@ -25,11 +26,11 @@ jest.mock('shared/lib/GenericAssayUtils/GenericAssayCommonUtils', () => ({
         'shared/lib/GenericAssayUtils/GenericAssayCommonUtils'
     ),
     fetchGenericAssayMetaPageByProfileIds: jest.fn(),
-    fetchGenericAssayMetaByEntityIds: jest.fn(),
+    fetchGenericAssayMetaByEntityIdsInProfiles: jest.fn(),
 }));
 
 const fetchPage = fetchGenericAssayMetaPageByProfileIds as jest.Mock;
-const fetchByIds = fetchGenericAssayMetaByEntityIds as jest.Mock;
+const fetchByIdsInProfiles = fetchGenericAssayMetaByEntityIdsInProfiles as jest.Mock;
 
 function option(value: string, label = value): GenericAssayPlotsOption {
     return { value, label, plotAxisLabel: label };
@@ -84,8 +85,11 @@ describe('arrangeGenericAssayOptions', () => {
         );
     });
 
-    it('puts the "Same" option before everything else', () => {
-        const sameOption = option(SAME_SELECTED_OPTION_STRING_VALUE);
+    it('orders the "Same" option like the other options', () => {
+        const sameOption = option(
+            SAME_SELECTED_OPTION_STRING_VALUE,
+            'Same Methylation (EGFR (cg2))'
+        );
         assert.deepEqual(
             values(
                 arrangeGenericAssayOptions({
@@ -96,7 +100,7 @@ describe('arrangeGenericAssayOptions', () => {
                     sameOption,
                 })
             ),
-            [SAME_SELECTED_OPTION_STRING_VALUE, 'tp53', 'a', 'egfr', 'b']
+            ['tp53', SAME_SELECTED_OPTION_STRING_VALUE, 'a', 'egfr', 'b']
         );
     });
 });
@@ -105,29 +109,19 @@ describe('groupAndCapGenericAssayOptions', () => {
     const options = ['a', 'b', 'c', 'd'].map(v => option(v));
 
     it('caps a flat list when nothing is selected', () => {
-        const { display, shownCount } = groupAndCapGenericAssayOptions(
-            options,
-            [],
-            2
-        );
+        const { display } = groupAndCapGenericAssayOptions(options, [], 2);
         assert.deepEqual(values(display as GenericAssayPlotsOption[]), [
             'a',
             'b',
         ]);
-        assert.equal(shownCount, 2);
     });
 
     it('pins selected entities in their own group and caps only the rest', () => {
-        const { display, shownCount } = groupAndCapGenericAssayOptions(
-            options,
-            ['d'],
-            2
-        );
+        const { display } = groupAndCapGenericAssayOptions(options, ['d'], 2);
         assert.deepEqual(display, [
             { label: 'Selected entities', options: [option('d')] },
             { label: 'Other entities', options: [option('a'), option('b')] },
         ]);
-        assert.equal(shownCount, 3);
     });
 });
 
@@ -136,6 +130,8 @@ describe('GenericAssayAxisOptions', () => {
         molecularProfileId: 'study_methylation',
         genericAssayType: 'METHYLATION',
     } as MolecularProfile;
+    // entities of other profiles are not returned by the profile-scoped fetch
+    const entitiesInProfile = ['cg_sel', 'cg_deep'];
 
     type Mutable<T> = { -readonly [K in keyof T]: T[K] };
     let context: Mutable<IGenericAssayAxisContext>;
@@ -144,14 +140,16 @@ describe('GenericAssayAxisOptions', () => {
 
     beforeEach(() => {
         fetchPage.mockReset();
-        fetchByIds.mockReset();
+        fetchByIdsInProfiles.mockReset();
         fetchPage.mockImplementation(
             (_ids: string[], searchTerm: string | undefined) => {
                 const pages: { [term: string]: GenericAssayMeta[] } = {
                     '': [meta('cg0'), meta('cg9')],
                     TP53: [meta('cg1', 'TP53')],
                     EGFR: [meta('cg2', 'EGFR')],
+                    BRCA1: [meta('cg3', 'BRCA1')],
                     cg9: [meta('cg9')],
+                    cg: [meta('cg0'), meta('cg9')],
                 };
                 const items = pages[searchTerm || ''] || [];
                 return Promise.resolve({
@@ -160,8 +158,12 @@ describe('GenericAssayAxisOptions', () => {
                 });
             }
         );
-        fetchByIds.mockImplementation((ids: string[]) =>
-            Promise.resolve(ids.map(id => meta(id)))
+        fetchByIdsInProfiles.mockImplementation((ids: string[]) =>
+            Promise.resolve(
+                ids
+                    .filter(id => entitiesInProfile.includes(id))
+                    .map(id => meta(id))
+            )
         );
         context = observable({
             profiles: [profile],
@@ -170,7 +172,7 @@ describe('GenericAssayAxisOptions', () => {
             queriedHugoGeneSymbols: ['TP53', 'EGFR'],
             hasNoQueriedGenes: false,
             otherAxisHugoGeneSymbol: 'TP53' as string | undefined,
-            sameOption: undefined,
+            sameOption: undefined as GenericAssayPlotsOption | undefined,
             urlOptionValue: undefined as string | undefined,
         });
         store = new GenericAssayAxisOptions(context);
@@ -178,8 +180,11 @@ describe('GenericAssayAxisOptions', () => {
         disposeObserver = autorun(() => [
             store.menu,
             store.defaultOptions,
+            store.defaultPickOptions,
             store.metaById,
             store.hasNoEntities,
+            // a rendered error state; unobserved errors go to the global handlers
+            store.searchPage.error,
         ]);
     });
 
@@ -191,10 +196,21 @@ describe('GenericAssayAxisOptions', () => {
     const menuValues = () =>
         (store.menu.display as GenericAssayPlotsOption[]).map(o => o.value);
 
-    it('lists the queried genes first and reports the server total', async () => {
+    it('lists the queried genes first and counts every entity', async () => {
         await when(() => !store.isLoading);
         assert.deepEqual(menuValues(), ['cg1', 'cg2', 'cg0', 'cg9']);
+        assert.equal(store.menu.shownCount, 500);
         assert.equal(store.menu.totalCount, 500);
+    });
+
+    it('picks the default from entities in server order', async () => {
+        await when(() => !store.isLoading);
+        assert.deepEqual(values(store.defaultPickOptions), [
+            'cg0',
+            'cg1',
+            'cg2',
+            'cg9',
+        ]);
     });
 
     it('reorders for the other-axis gene without fetching again', async () => {
@@ -205,6 +221,12 @@ describe('GenericAssayAxisOptions', () => {
         assert.equal(fetchPage.mock.calls.length, fetchCount);
     });
 
+    it('fetches the other-axis gene when it is not a queried gene', async () => {
+        runInAction(() => (context.otherAxisHugoGeneSymbol = 'BRCA1'));
+        await when(() => !store.isLoading);
+        assert.equal(menuValues()[0], 'cg3');
+    });
+
     it('searches on the server without changing the default options', async () => {
         await when(() => !store.isLoading);
         const defaultOptions = store.defaultOptions;
@@ -212,12 +234,43 @@ describe('GenericAssayAxisOptions', () => {
         assert.isTrue(store.isLoading);
         await when(() => !store.isLoading, { timeout: 2000 });
         assert.deepEqual(menuValues(), ['cg9']);
-        assert.equal(store.menu.totalCount, 1);
+        assert.equal(store.menu.shownCount, 1);
         assert.strictEqual(store.defaultOptions, defaultOptions);
 
         store.onSelect(option('cg9'));
         assert.equal(store.searchText, '');
         assert.deepEqual(menuValues(), ['cg1', 'cg2', 'cg0', 'cg9']);
+    });
+
+    it('lists loaded entities of the queried genes first in search results', async () => {
+        await when(() => !store.isLoading);
+        // the search's first page has cg0 and cg9 only
+        store.onInputChange('cg', { action: 'input-change' });
+        await when(() => !store.isLoading, { timeout: 2000 });
+        assert.deepEqual(menuValues(), ['cg1', 'cg2', 'cg0', 'cg9']);
+    });
+
+    it('keeps the selected entities in server order', async () => {
+        entitiesInProfile.push('cg1');
+        runInAction(() => (context.selectedEntityIds = ['cg_sel', 'cg1']));
+        await when(() => !store.isLoading);
+        const [selectedGroup] = store.menu.display as GenericAssayOptionGroup[];
+        assert.deepEqual(values(selectedGroup.options), ['cg1', 'cg_sel']);
+        entitiesInProfile.pop();
+    });
+
+    it('stops loading when a search fails', async () => {
+        await when(() => !store.isLoading);
+        // MobxPromise attaches its handler on the next tick, so reject after it
+        fetchPage.mockImplementationOnce(
+            () =>
+                new Promise((_resolve, reject) =>
+                    setTimeout(() => reject(new Error('failed')), 10)
+                )
+        );
+        store.onInputChange('broken', { action: 'input-change' });
+        await when(() => !store.isLoading, { timeout: 2000 });
+        assert.deepEqual(store.menu.display, []);
     });
 
     it('keeps a picked option after its search is cleared', async () => {
@@ -240,24 +293,53 @@ describe('GenericAssayAxisOptions', () => {
         });
     });
 
-    it('fetches a deep-linked selection that is not in the default options', async () => {
+    it('resolves a deep-linked entity of the profile', async () => {
         runInAction(() => (context.urlOptionValue = 'cg_deep'));
         await when(() => !!store.metaById['cg_deep']);
-        expect(fetchByIds).toHaveBeenCalledWith(['cg_deep']);
-        assert.equal(store.resolveOption('cg_deep').value, 'cg_deep');
+        expect(fetchByIdsInProfiles).toHaveBeenCalledWith(
+            ['cg_deep'],
+            ['study_methylation']
+        );
+        assert.equal(store.resolveOption('cg_deep')!.value, 'cg_deep');
     });
 
-    it('pins url-selected entities even while searching', async () => {
-        runInAction(() => (context.selectedEntityIds = ['cg_selected']));
+    it('does not resolve a deep-linked entity outside the profile', async () => {
+        runInAction(() => (context.urlOptionValue = 'cg_elsewhere'));
+        await when(() => store.urlOptionMeta.isComplete);
+        assert.isUndefined(store.resolveOption('cg_elsewhere'));
+    });
+
+    it('groups only the selected entities of this profile', async () => {
+        runInAction(
+            () => (context.selectedEntityIds = ['cg_sel', 'cg_elsewhere'])
+        );
+        await when(() => !store.isLoading);
+        const [selectedGroup] = store.menu.display as GenericAssayOptionGroup[];
+        assert.deepEqual(values(selectedGroup.options), ['cg_sel']);
+        assert.equal(store.menu.shownCount, 499);
+    });
+
+    it('filters the selected entities by the search text', async () => {
+        runInAction(() => (context.selectedEntityIds = ['cg_sel']));
+        await when(() => !store.isLoading);
         store.onInputChange('cg9', { action: 'input-change' });
         await when(() => !store.isLoading, { timeout: 2000 });
-        assert.deepEqual(store.menu.display, [
-            {
-                label: 'Selected entities',
-                options: [option('cg_selected')],
-            },
-            { label: 'Other entities', options: [option('cg9')] },
-        ]);
+        assert.deepEqual(menuValues(), ['cg9']);
+    });
+
+    it('offers "Same" only when it matches the search text', async () => {
+        runInAction(
+            () =>
+                (context.sameOption = option(
+                    SAME_SELECTED_OPTION_STRING_VALUE,
+                    'Same Methylation (cg0)'
+                ))
+        );
+        await when(() => !store.isLoading);
+        assert.equal(store.menu.totalCount, 501);
+        store.onInputChange('cg9', { action: 'input-change' });
+        await when(() => !store.isLoading, { timeout: 2000 });
+        assert.deepEqual(menuValues(), ['cg9']);
     });
 
     it('reports no entities only when the default page is empty', async () => {

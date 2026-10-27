@@ -2,8 +2,11 @@ import * as _ from 'lodash';
 import { action, computed, makeObservable, observable } from 'mobx';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { GenericAssayMeta, MolecularProfile } from 'cbioportal-ts-api-client';
+import { createFilter } from 'react-select';
 import {
-    fetchGenericAssayMetaByEntityIds,
+    compareGenericAssayStableIds,
+    doesGenericAssayMetaMatchSearchTerm,
+    fetchGenericAssayMetaByEntityIdsInProfiles,
     fetchGenericAssayMetaPageByProfileIds,
     filterGenericAssayOptionsByGenes,
     makeGenericAssayPlotsTabOption,
@@ -37,7 +40,7 @@ export interface IArrangeGenericAssayOptionsParams {
 
 // Order: options related to the gene selected on the other axis, then options
 // related to any queried gene, then everything else. The "Same X" option, when
-// present, goes first.
+// present, starts the list before this ordering is applied.
 export function arrangeGenericAssayOptions({
     options,
     queriedHugoGeneSymbols,
@@ -46,6 +49,9 @@ export function arrangeGenericAssayOptions({
     isGeneRelatedOptions,
     sameOption,
 }: IArrangeGenericAssayOptionsParams): GenericAssayPlotsOption[] {
+    if (sameOption) {
+        options = [sameOption, ...options];
+    }
     const otherAxisGeneRelatedOptions =
         isGeneRelatedOptions && otherAxisHugoGeneSymbol
             ? filterGenericAssayOptionsByGenes(options, [
@@ -57,7 +63,7 @@ export function arrangeGenericAssayOptions({
             ? options
             : filterGenericAssayOptionsByGenes(options, queriedHugoGeneSymbols)
         : [];
-    const arranged = _.uniqBy(
+    return _.uniqBy(
         [
             ...otherAxisGeneRelatedOptions,
             ...queriedGeneRelatedOptions,
@@ -65,11 +71,20 @@ export function arrangeGenericAssayOptions({
         ] as GenericAssayPlotsOption[],
         o => o.value
     );
-    return sameOption ? [sameOption, ...arranged] : arranged;
 }
 
-// Pins the entities selected at query time in their own group and caps the
-// rest. The cap must run after arrangeGenericAssayOptions, otherwise the
+// react-select's default filter, which the selector applied on top of the
+// search before options were searched on the server
+const matchesReactSelectFilter = createFilter({});
+
+function sortByStableId(metas: GenericAssayMeta[]) {
+    return metas
+        .slice()
+        .sort((a, b) => compareGenericAssayStableIds(a.stableId, b.stableId));
+}
+
+// Pins the entities selected at query time in their own group, in the given
+// order, and caps the rest. The cap must run after arrangeGenericAssayOptions, otherwise the
 // options it would promote can be cut off.
 export function groupAndCapGenericAssayOptions(
     options: GenericAssayPlotsOption[],
@@ -80,7 +95,8 @@ export function groupAndCapGenericAssayOptions(
     shownCount: number;
 } {
     const selectedIdSet = new Set(selectedEntityIds);
-    const selected = options.filter(o => selectedIdSet.has(o.value));
+    const optionsByValue = _.keyBy(options, o => o.value);
+    const selected = _.compact(selectedEntityIds.map(id => optionsByValue[id]));
     const other = options
         .filter(o => !selectedIdSet.has(o.value))
         .slice(0, cap);
@@ -145,9 +161,13 @@ export class GenericAssayAxisOptions {
             : undefined;
     }
 
+    // entities selected at query time that belong to this axis's profiles
     readonly selectedEntitiesMeta = remoteData<GenericAssayMeta[]>({
         invoke: () =>
-            fetchGenericAssayMetaByEntityIds(this.context.selectedEntityIds),
+            fetchGenericAssayMetaByEntityIdsInProfiles(
+                this.context.selectedEntityIds,
+                this.profileIds
+            ),
         default: [],
     });
 
@@ -190,6 +210,36 @@ export class GenericAssayAxisOptions {
         default: { items: [], totalItems: 0 },
     });
 
+    // the gene on the other axis may not be a queried gene, e.g. in patient
+    // and study view plots
+    @computed private get otherAxisGeneToFetch() {
+        const gene = this.context.otherAxisHugoGeneSymbol;
+        return gene &&
+            this.isGeneRelated &&
+            (this.context.hasNoQueriedGenes ||
+                !this.context.queriedHugoGeneSymbols.includes(gene))
+            ? gene
+            : undefined;
+    }
+
+    readonly otherAxisGenePage = remoteData<GenericAssayMeta[]>({
+        invoke: async () => {
+            const gene = this.otherAxisGeneToFetch;
+            if (!gene) {
+                return [];
+            }
+            return (
+                await fetchGenericAssayMetaPageByProfileIds(
+                    this.profileIds,
+                    gene,
+                    DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING,
+                    0
+                )
+            ).items;
+        },
+        default: [],
+    });
+
     readonly searchPage = remoteData({
         invoke: async () => {
             const searchText = this.debouncedSearchText;
@@ -206,9 +256,26 @@ export class GenericAssayAxisOptions {
         },
     });
 
+    // entities loaded without search text, in server order
+    @computed private get defaultEntities() {
+        return sortByStableId(
+            _.uniqBy(
+                [
+                    ...this.defaultPage.result!.items,
+                    ...this.otherAxisGenePage.result!,
+                ],
+                m => m.stableId
+            )
+        );
+    }
+
     // deep-linked selection that is not in the default options
     readonly urlOptionMeta = remoteData<GenericAssayMeta | undefined>({
-        await: () => [this.defaultPage, this.selectedEntitiesMeta],
+        await: () => [
+            this.defaultPage,
+            this.selectedEntitiesMeta,
+            this.otherAxisGenePage,
+        ],
         invoke: async () => {
             const value = this.context.urlOptionValue;
             if (
@@ -216,13 +283,18 @@ export class GenericAssayAxisOptions {
                 value === SAME_SELECTED_OPTION_STRING_VALUE ||
                 this.pickedOptions[value] ||
                 [
-                    ...this.defaultPage.result!.items,
+                    ...this.defaultEntities,
                     ...this.selectedEntitiesMeta.result!,
                 ].some(m => m.stableId === value)
             ) {
                 return undefined;
             }
-            return (await fetchGenericAssayMetaByEntityIds([value]))[0];
+            return (
+                await fetchGenericAssayMetaByEntityIdsInProfiles(
+                    [value],
+                    this.profileIds
+                )
+            )[0];
         },
     });
 
@@ -238,27 +310,53 @@ export class GenericAssayAxisOptions {
         );
     }
 
-    private arrange(metas: GenericAssayMeta[]) {
+    private arrange(metas: GenericAssayMeta[], searchText?: string) {
+        const sameOption = this.context.sameOption;
         return arrangeGenericAssayOptions({
             options: this.makeOptions(
-                _.unionBy(
-                    this.selectedEntitiesMeta.result!,
-                    metas,
-                    m => m.stableId
+                sortByStableId(
+                    _.unionBy(
+                        this.selectedEntitiesMeta.result!,
+                        metas,
+                        m => m.stableId
+                    )
                 )
             ),
             queriedHugoGeneSymbols: this.context.queriedHugoGeneSymbols,
             hasNoQueriedGenes: this.context.hasNoQueriedGenes,
             otherAxisHugoGeneSymbol: this.context.otherAxisHugoGeneSymbol,
             isGeneRelatedOptions: this.isGeneRelated,
-            sameOption: this.context.sameOption,
+            sameOption:
+                sameOption &&
+                (!searchText || this.matchesSearchText(sameOption, searchText))
+                    ? sameOption
+                    : undefined,
         });
     }
 
-    // options without search text; also used to pick the default selection,
-    // so typing a search never changes the plotted entity
+    private matchesSearchText(
+        option: GenericAssayPlotsOption,
+        searchText: string
+    ) {
+        return matchesReactSelectFilter(
+            { label: option.label, value: option.value, data: option },
+            searchText
+        );
+    }
+
+    // options without search text, so typing a search never changes the
+    // plotted entity
     @computed get defaultOptions() {
-        return this.arrange(this.defaultPage.result!.items);
+        return this.arrange(this.defaultEntities);
+    }
+
+    // the flat option list the default selection is picked from: "Same" first
+    // on the vertical axis, then entities in server order
+    @computed get defaultPickOptions(): GenericAssayPlotsOption[] {
+        const options = this.makeOptions(this.defaultEntities);
+        return this.context.sameOption
+            ? [this.context.sameOption, ...options]
+            : options;
     }
 
     @computed private get isSearching() {
@@ -269,32 +367,80 @@ export class GenericAssayAxisOptions {
         if (this.isSearching) {
             return (
                 this.searchText !== this.debouncedSearchText ||
-                !this.searchPage.isComplete ||
-                this.searchPage.result!.searchText !== this.searchText
+                this.searchPage.isPending ||
+                (this.searchPage.isComplete &&
+                    this.searchPage.result!.searchText !== this.searchText)
             );
         }
         return (
-            this.defaultPage.isPending || this.selectedEntitiesMeta.isPending
+            this.defaultPage.isPending ||
+            this.selectedEntitiesMeta.isPending ||
+            this.otherAxisGenePage.isPending
         );
     }
 
+    @computed private get selectedOptions() {
+        return this.makeOptions(
+            sortByStableId(this.selectedEntitiesMeta.result!)
+        );
+    }
+
+    // shownCount: options matching the search that are not selected entities;
+    // totalCount: every option. The header shows when shownCount exceeds the cap.
     @computed get menu() {
-        if (this.isLoading) {
+        const searchFailed = this.isSearching && this.searchPage.isError;
+        if (this.isLoading || searchFailed || this.defaultPage.isError) {
             return { display: [], shownCount: 0, totalCount: 0 };
         }
+        const searchText = this.isSearching ? this.searchText : undefined;
+        // loaded entities that match are merged in, so entities of the queried
+        // genes are listed first even when they're beyond the search's first page
         const options = this.isSearching
-            ? this.arrange(this.searchPage.result!.items)
+            ? this.arrange(
+                  _.unionBy(
+                      this.searchPage.result!.items,
+                      this.defaultEntities.filter(m =>
+                          doesGenericAssayMetaMatchSearchTerm(
+                              m,
+                              this.searchText
+                          )
+                      ),
+                      m => m.stableId
+                  ),
+                  this.searchText
+              )
             : this.defaultOptions;
-        const totalCount = this.isSearching
+        const selectedIds = searchText
+            ? this.selectedOptions
+                  .filter(o => this.matchesSearchText(o, searchText))
+                  .map(o => o.value)
+            : this.selectedOptions.map(o => o.value);
+        const visibleOptions = options.filter(
+            o =>
+                !this.context.selectedEntityIds.includes(o.value) ||
+                selectedIds.includes(o.value)
+        );
+        const sameCount = options.some(
+            o => o.value === SAME_SELECTED_OPTION_STRING_VALUE
+        )
+            ? 1
+            : 0;
+        const matchingTotal = this.isSearching
             ? this.searchPage.result!.totalItems
             : this.defaultPage.result!.totalItems;
+        const selectedMatching = this.selectedEntitiesMeta.result!.filter(m =>
+            doesGenericAssayMetaMatchSearchTerm(m, searchText)
+        ).length;
         return {
-            ...groupAndCapGenericAssayOptions(
-                options,
-                this.context.selectedEntityIds,
+            display: groupAndCapGenericAssayOptions(
+                visibleOptions,
+                selectedIds,
                 DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING
-            ),
-            totalCount,
+            ).display,
+            shownCount: matchingTotal - selectedMatching + sameCount,
+            totalCount:
+                this.defaultPage.result!.totalItems +
+                (this.context.sameOption ? 1 : 0),
         };
     }
 
@@ -310,6 +456,7 @@ export class GenericAssayAxisOptions {
             [
                 ...this.selectedEntitiesMeta.result!,
                 ...this.defaultPage.result!.items,
+                ...this.otherAxisGenePage.result!,
                 ..._.compact([this.urlOptionMeta.result]),
                 ..._.values(this.pickedMeta),
             ],
@@ -319,7 +466,9 @@ export class GenericAssayAxisOptions {
 
     // Resolves the option object for a stored value. Reads only sources that
     // don't change while typing, so the axis data isn't reloaded per keystroke.
-    resolveOption(value: string): GenericAssayPlotsOption {
+    // Returns undefined for a value that is not in this axis's profiles, so the
+    // default selection is used instead.
+    resolveOption(value: string): GenericAssayPlotsOption | undefined {
         const defaultOption = () =>
             this.defaultOptions.find(o => o.value === value);
         if (value === SAME_SELECTED_OPTION_STRING_VALUE) {
@@ -336,7 +485,7 @@ export class GenericAssayAxisOptions {
         if (meta && meta.stableId === value) {
             return this.makeOptions([meta])[0];
         }
-        return { value, label: value, plotAxisLabel: value };
+        return undefined;
     }
 
     @action.bound

@@ -6,9 +6,7 @@ import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import _ from 'lodash';
 import OncoprintDropdownCount from './OncoprintDropdownCount';
 import CustomDropdown from 'shared/components/oncoprint/controls/CustomDropdown';
-import {
-    deriveDisplayTextFromGenericAssayType,
-} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { deriveDisplayTextFromGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import GenericAssaySelection, {
     GenericAssayTrackInfo,
 } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
@@ -98,8 +96,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
     // make sure data from generic assay endpoints fetched
     @computed get isGenericAssayDataComplete() {
         return (
-            this.props.store &&
-            this.props.store.genericAssayProfiles.isComplete
+            this.props.store && this.props.store.genericAssayProfiles.isComplete
         );
     }
 
@@ -517,16 +514,20 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                             submitButtonText={'Add Track'}
                             genericAssayType={type}
                             initialGenericAssayEntityIds={
-                                selectedProfileId &&
                                 this.props
-                                    .store.selectedGenericAssayEntitiesGroupByMolecularProfileId[
-                                    selectedProfileId
+                                    .selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl &&
+                                this.props
+                                    .selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl[
+                                    type
                                 ]
                                     ? this.props
-                                          .store.selectedGenericAssayEntitiesGroupByMolecularProfileId[
-                                          selectedProfileId
+                                          .selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl[
+                                          type
                                       ]
                                     : []
+                            }
+                            prioritizedHugoGeneSymbols={
+                                this.props.store.hugoGeneSymbols
                             }
                             onSelectGenericAssayProfile={profileId =>
                                 this.onSelectGenericAssayProfileByType(

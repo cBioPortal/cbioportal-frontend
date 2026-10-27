@@ -3185,7 +3185,12 @@ export class StudyViewPageStore
         string,
         GenericAssayMeta
     >({}, { deep: false });
-    private readonly _genericAssayEntityMetaPendingIds = new Set<string>();
+    // in-flight and finished meta requests by stable id, so each id is
+    // requested once and concurrent callers wait for the same request
+    private readonly _genericAssayEntityMetaRequests = new Map<
+        string,
+        Promise<void>
+    >();
     private _XvsYViolinChartMap = observable.map<
         ChartUniqueKey,
         XvsYViolinChart
@@ -4457,6 +4462,23 @@ export class StudyViewPageStore
         );
     }
 
+    public isGenericAssayEntityChartOfProfileType(
+        uniqueKey: string,
+        profileType: string
+    ): boolean {
+        const chart = this._genericAssayChartMap.get(uniqueKey);
+        return (
+            chart !== undefined &&
+            chart.profileType === profileType &&
+            chart.genericAssayEntityId !== undefined &&
+            uniqueKey ===
+                getGenericAssayChartUniqueKey(
+                    chart.genericAssayEntityId,
+                    profileType
+                )
+        );
+    }
+
     public isGenericAssayEntityChart(uniqueKey: string): boolean {
         return (
             this._genericAssayChartMap.has(uniqueKey) &&
@@ -5300,7 +5322,9 @@ export class StudyViewPageStore
 
         void this.ensureGenericAssayEntityMetaByStableIds([stableId]);
         const entityMeta = this._genericAssayEntityMetaByStableId.get(stableId);
-        const entityMetaByStableId = entityMeta ? { [stableId]: entityMeta } : {};
+        const entityMetaByStableId = entityMeta
+            ? { [stableId]: entityMeta }
+            : {};
 
         return getGenericAssayChartDisplayName(
             stableId,
@@ -5331,11 +5355,14 @@ export class StudyViewPageStore
             return rowKey;
         }
 
-        const { stableId, value } =
-            splitGenericAssayFrequencyTableRowUniqueKey(rowKey);
+        const { stableId, value } = splitGenericAssayFrequencyTableRowUniqueKey(
+            rowKey
+        );
         void this.ensureGenericAssayEntityMetaByStableIds([stableId]);
         const entityMeta = this._genericAssayEntityMetaByStableId.get(stableId);
-        const entityMetaByStableId = entityMeta ? { [stableId]: entityMeta } : {};
+        const entityMetaByStableId = entityMeta
+            ? { [stableId]: entityMeta }
+            : {};
         const entityLabel = getGenericAssayEntityLabel(
             stableId,
             chart.genericAssayType,
@@ -6082,14 +6109,16 @@ export class StudyViewPageStore
 
                     const result = await this.internalClient.fetchGenericAssayDataCountsUsingPOST(
                         {
-                            genericAssayDataCountFilter: {
+                            genericAssayDataCountFilter: ({
                                 profileType: chartInfo.profileType,
                                 studyViewFilter: this.filters,
-                            } as unknown as GenericAssayDataCountFilter,
+                            } as unknown) as GenericAssayDataCountFilter,
                         }
                     );
                     const stableIds = _.uniq(result.map(item => item.stableId));
-                    await this.ensureGenericAssayEntityMetaByStableIds(stableIds);
+                    await this.ensureGenericAssayEntityMetaByStableIds(
+                        stableIds
+                    );
                     const entityMetaByStableId = _.fromPairs(
                         stableIds
                             .map(stableId => [
@@ -7155,37 +7184,44 @@ export class StudyViewPageStore
     });
 
     private async ensureGenericAssayEntityMetaByStableIds(stableIds: string[]) {
-        const missingStableIds = _.uniq(stableIds).filter(
+        const uniqueStableIds = _.uniq(stableIds);
+        const missingStableIds = uniqueStableIds.filter(
             stableId =>
                 !this._genericAssayEntityMetaByStableId.has(stableId) &&
-                !this._genericAssayEntityMetaPendingIds.has(stableId)
+                !this._genericAssayEntityMetaRequests.has(stableId)
         );
-
-        if (_.isEmpty(missingStableIds)) {
-            return;
-        }
-
-        missingStableIds.forEach(stableId =>
-            this._genericAssayEntityMetaPendingIds.add(stableId)
-        );
-
-        try {
-            const entities = await fetchGenericAssayMetaByEntityIds(
+        if (missingStableIds.length > 0) {
+            const request = fetchGenericAssayMetaByEntityIds(
                 missingStableIds
-            );
-            runInAction(() => {
-                entities.forEach(entity =>
-                    this._genericAssayEntityMetaByStableId.set(
-                        entity.stableId,
-                        entity
+            ).then(
+                entities =>
+                    runInAction(() =>
+                        entities.forEach(entity =>
+                            this._genericAssayEntityMetaByStableId.set(
+                                entity.stableId,
+                                entity
+                            )
+                        )
+                    ),
+                () =>
+                    // allow a retry after a failed request
+                    missingStableIds.forEach(stableId =>
+                        this._genericAssayEntityMetaRequests.delete(stableId)
                     )
-                );
-            });
-        } finally {
+            );
             missingStableIds.forEach(stableId =>
-                this._genericAssayEntityMetaPendingIds.delete(stableId)
+                this._genericAssayEntityMetaRequests.set(stableId, request)
             );
         }
+        await Promise.all(
+            _.uniq(
+                _.compact(
+                    uniqueStableIds.map(stableId =>
+                        this._genericAssayEntityMetaRequests.get(stableId)
+                    )
+                )
+            )
+        );
     }
 
     @computed({ keepAlive: true })

@@ -44,9 +44,7 @@ import { serializeEvent, trackEvent } from '../../../shared/lib/tracking';
 import classNames from 'classnames';
 import GeneLevelSelection from './geneLevelSelection/GeneLevelSelection';
 import GenericAssaySelection from './genericAssaySelection/GenericAssaySelection';
-import {
-    deriveDisplayTextFromGenericAssayType,
-} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { deriveDisplayTextFromGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 import { getInfoMessageForGenericAssayChart } from './AddChartButtonHelper';
 import styles from './styles.module.scss';
@@ -469,7 +467,10 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     chartMeta =>
                         chartMeta.genericAssayType === genericAssayType &&
                         chartMeta.uniqueKey !== frequencyTableUniqueKey &&
-                        chartMeta.uniqueKey.endsWith(`_${option.value}`)
+                        this.props.store.isGenericAssayEntityChartOfProfileType(
+                            chartMeta.uniqueKey,
+                            option.value
+                        )
                 ),
                 this.selectedAttrs,
                 allChartTypes

@@ -1293,7 +1293,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 const genericAssayOptions = (vertical
                     ? self.vertGenericAssayOptions
                     : self.horzGenericAssayOptions
-                ).defaultOptions;
+                ).defaultPickOptions;
                 const selectedHugoGeneSymbolInTheOtherAxis = vertical
                     ? self.horzSelection.selectedGeneOption?.label
                     : self.vertSelection.selectedGeneOption?.label;
@@ -3896,14 +3896,19 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         const selectedGenericAssayEntityId = vertical
             ? this.vertSelection.genericAssayEntityId
             : this.horzSelection.genericAssayEntityId;
+        // the vertical "Same" option shows the horizontal axis's entity
+        const selectedGenericAssayEntity = selectedGenericAssayEntityId
+            ? genericAssayOptions.metaById[selectedGenericAssayEntityId] ||
+              this.horzGenericAssayOptions.metaById[
+                  selectedGenericAssayEntityId
+              ]
+            : undefined;
         if (
             axisSelection.dataType &&
             isGenericAssaySelected(axisSelection) &&
-            selectedGenericAssayEntityId &&
-            genericAssayOptions.metaById[selectedGenericAssayEntityId]
+            selectedGenericAssayEntity
         ) {
-            const entity =
-                genericAssayOptions.metaById[selectedGenericAssayEntityId];
+            const entity = selectedGenericAssayEntity;
             genericAssayDescription = getGenericAssayMetaPropertyOrDefault(
                 entity,
                 COMMON_GENERIC_ASSAY_PROPERTY.DESCRIPTION,
