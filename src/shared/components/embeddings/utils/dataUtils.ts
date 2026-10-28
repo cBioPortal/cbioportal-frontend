@@ -96,3 +96,23 @@ export function calculatePointScale(data: EmbeddingPoint[]): number {
     const spacing = medianNearestNeighborDistance(data);
     return spacing === undefined ? 1 : spacing / REFERENCE_NEIGHBOR_DISTANCE;
 }
+
+// Points outside the cohort are drawn far smaller than cohort points. On a
+// dense map they still add up to a visible backdrop; on a sparse one they
+// shrink to specks, so enlarge them as the point count drops.
+const CONTEXT_REFERENCE_POINT_COUNT = 50000;
+const MAX_CONTEXT_POINT_BOOST = 3;
+
+/**
+ * Extra radius multiplier for points outside the cohort: 1 on a map as dense
+ * as the H&E one, growing as 1/sqrt(point count) up to MAX_CONTEXT_POINT_BOOST.
+ */
+export function calculateContextPointBoost(pointCount: number): number {
+    if (!(pointCount > 0)) {
+        return 1;
+    }
+    return Math.min(
+        MAX_CONTEXT_POINT_BOOST,
+        Math.max(1, Math.sqrt(CONTEXT_REFERENCE_POINT_COUNT / pointCount))
+    );
+}

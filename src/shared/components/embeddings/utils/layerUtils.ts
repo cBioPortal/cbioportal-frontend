@@ -1,6 +1,7 @@
 import { ScatterplotLayer } from '@deck.gl/layers';
 import { EmbeddingPoint } from '../EmbeddingTypes';
 import { colorToRgb } from './coordinateUtils';
+import { calculateContextPointBoost } from './dataUtils';
 
 /**
  * Create the scatterplot layer for the embedding visualization
@@ -18,15 +19,16 @@ export function createScatterplotLayer(
     const externalSelectedSet = new Set(selectedPatientIds);
     const hasAnySelection =
         selectedPoints.length > 0 || selectedPatientIds.length > 0;
+    const contextPointRadius = 0.003 * calculateContextPointBoost(data.length);
 
     return new ScatterplotLayer({
         id: 'embedding-scatter',
         data,
         getPosition: (d: EmbeddingPoint) => [d.x, d.y],
         getRadius: (d: EmbeddingPoint) => {
-            // Non-cohort samples never participate in selection - make them 10x smaller
+            // Non-cohort samples never participate in selection - draw them as a small backdrop
             if (d.isInCohort === false) {
-                return 0.003;
+                return contextPointRadius;
             }
 
             if (d.isDeemphasized) {
@@ -127,7 +129,7 @@ export function createScatterplotLayer(
             getFillColor: [data, selectedPoints, selectedPatientIds],
             getLineColor: [data, selectedPoints, selectedPatientIds],
             getLineWidth: [data, selectedPoints, selectedPatientIds],
-            getRadius: [selectedPoints, selectedPatientIds],
+            getRadius: [data, selectedPoints, selectedPatientIds],
         },
     } as any);
 }

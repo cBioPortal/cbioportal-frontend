@@ -1,5 +1,6 @@
 import { assert } from 'chai';
 import {
+    calculateContextPointBoost,
     calculatePointScale,
     medianNearestNeighborDistance,
 } from './dataUtils';
@@ -79,5 +80,23 @@ describe('calculatePointScale', () => {
             calculatePointScale([{ x: 1, y: 1 } as EmbeddingPoint]),
             1
         );
+    });
+});
+
+describe('calculateContextPointBoost', () => {
+    it('leaves a map as dense as the H&E one unchanged', () => {
+        assert.equal(calculateContextPointBoost(50871), 1);
+    });
+
+    it('grows as the point count drops', () => {
+        assert.closeTo(calculateContextPointBoost(12500), 2, 1e-9);
+    });
+
+    it('is capped for sparse maps', () => {
+        assert.equal(calculateContextPointBoost(959), 3);
+    });
+
+    it('returns 1 for no points', () => {
+        assert.equal(calculateContextPointBoost(0), 1);
     });
 });
