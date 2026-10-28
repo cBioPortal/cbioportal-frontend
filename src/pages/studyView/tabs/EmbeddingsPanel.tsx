@@ -153,14 +153,6 @@ function msktargetEmbeddingLoader(file: string, label: string) {
     });
 }
 
-const msktargetRnaData = msktargetEmbeddingLoader(
-    'msktarget_rna_umap.json',
-    'MSK-TARGET RNA UMAP'
-);
-const msktargetTsneData = msktargetEmbeddingLoader(
-    'msktarget_rna_tsne.json',
-    'MSK-TARGET RNA t-SNE'
-);
 const msktargetMpathTsneData = msktargetEmbeddingLoader(
     'msktarget_rna_tsne_mpath.json',
     'MSK-TARGET RNA t-SNE (MPath)'
@@ -1005,22 +997,6 @@ export class EmbeddingsPanel extends React.Component<
             });
         }
 
-        if (msktargetRnaData.isComplete && msktargetRnaData.result) {
-            options.push({
-                value: 'msktarget_rna_umap',
-                label: msktargetRnaData.result.title,
-                data: msktargetRnaData.result,
-            });
-        }
-
-        if (msktargetTsneData.isComplete && msktargetTsneData.result) {
-            options.push({
-                value: 'msktarget_rna_tsne',
-                label: msktargetTsneData.result.title,
-                data: msktargetTsneData.result,
-            });
-        }
-
         if (
             msktargetMpathTsneData.isComplete &&
             msktargetMpathTsneData.result
@@ -1052,12 +1028,7 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @computed get isEmbeddingDataLoading(): boolean {
-        return (
-            boehmHeData.isPending ||
-            msktargetRnaData.isPending ||
-            msktargetTsneData.isPending ||
-            msktargetMpathTsneData.isPending
-        );
+        return boehmHeData.isPending || msktargetMpathTsneData.isPending;
     }
 
     // True when the RNA embedding failed to load and the user is actually looking at the
@@ -1066,9 +1037,7 @@ export class EmbeddingsPanel extends React.Component<
     // studies, for whom a missing msktarget embedding is simply irrelevant.
     @computed get isTargetRnaEmbeddingUnreachable(): boolean {
         return (
-            (msktargetRnaData.isError ||
-                msktargetTsneData.isError ||
-                msktargetMpathTsneData.isError) &&
+            msktargetMpathTsneData.isError &&
             this.currentStudyIds.includes(MSKTARGET_STUDY_ID)
         );
     }
@@ -1902,12 +1871,7 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @computed get isLoading(): boolean {
-        if (
-            boehmHeData.isPending ||
-            msktargetRnaData.isPending ||
-            msktargetTsneData.isPending ||
-            msktargetMpathTsneData.isPending
-        ) {
+        if (boehmHeData.isPending || msktargetMpathTsneData.isPending) {
             return true;
         }
 
