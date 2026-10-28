@@ -258,6 +258,97 @@ describe('WSIViewer foundation behavior', () => {
             expect(resets(instance)).toBe(0);
         });
 
+        const chips = (instance: any) =>
+            TestRenderer.create(instance.render()).root.findAllByProps({
+                'data-testid': 'wsi-sample-scope',
+            }).length;
+
+        it('shows a link sample chip only while the scope hides slides', () => {
+            expect(
+                chips(loaded({ pathologyFilter: { sampleId: 'S-1' } }))
+            ).toBe(1);
+            expect(
+                chips(
+                    loaded(
+                        { pathologyFilter: { sampleId: 'S-1' } },
+                        hierarchyOf([sampleSlide('slide-a', 'S-1')])
+                    )
+                )
+            ).toBe(0);
+        });
+
+        it('counts unmatched slides a sample scope hides', () => {
+            const instance = loaded(
+                { pathologyFilter: { sampleId: 'S-1' } },
+                makeHierarchy([
+                    makeSample('', [
+                        makeSlide({
+                            slide_key: 'unmatched',
+                            sample_id: null,
+                            match_level: 'UNMATCHED',
+                            can_serve_tiles: true,
+                        }),
+                    ]),
+                    makeSample('S-1', [sampleSlide('slide-a', 'S-1')]),
+                ])
+            );
+            expect(resets(instance)).toBe(1);
+        });
+
+        it('is offered when a link matches no slide, so the patient can be shown', () => {
+            const instance = loaded({
+                pathologyFilter: { sampleId: 'S-1', specimenKey: 'part::9' },
+            });
+            expect(resets(instance)).toBe(1);
+
+            instance.handleClearFilters();
+            expect(resets(instance)).toBe(0);
+        });
+
+        it('is offered for a match-level link until it is used', () => {
+            const instance = loaded(
+                { pathologyFilter: { matchLevel: 'PART' } },
+                makeHierarchy([
+                    makeSample('S-1', [
+                        makeSlide({
+                            slide_key: 'part',
+                            sample_id: 'S-1',
+                            match_level: 'PART',
+                            can_serve_tiles: true,
+                        }),
+                        makeSlide({
+                            slide_key: 'block',
+                            sample_id: 'S-1',
+                            match_level: 'BLOCK',
+                            can_serve_tiles: true,
+                        }),
+                    ]),
+                ])
+            );
+            expect(resets(instance)).toBe(1);
+
+            instance.handleClearFilters();
+            expect(resets(instance)).toBe(0);
+        });
+
+        it('ignores slides the viewer cannot open', () => {
+            const instance = loaded(
+                { pathologyFilter: { sampleId: 'S-1' } },
+                makeHierarchy([
+                    makeSample('S-1', [sampleSlide('slide-a', 'S-1')]),
+                    makeSample('S-2', [
+                        makeSlide({
+                            slide_key: 'dark',
+                            sample_id: 'S-2',
+                            can_serve_tiles: false,
+                        }),
+                    ]),
+                ])
+            );
+            expect(resets(instance)).toBe(0);
+            expect(chips(instance)).toBe(0);
+        });
+
         it('follows the stain filter, not the stain the link started with', () => {
             const instance = loaded({ initialStainFilter: 'hne' });
             expect(resets(instance)).toBe(1);

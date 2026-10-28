@@ -579,6 +579,17 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         );
     }
 
+    /**
+     * The sample the slide list is narrowed to (and names in its scope chip):
+     * a host-owned sample always, a link's sample only while it hides slides,
+     * so the chip's clear button is never offered when it would do nothing.
+     */
+    private get listSampleId(): string | undefined {
+        return this.hostOwnsScopedSample || this.linkScopeHidesSlides
+            ? this.scopedSampleId
+            : undefined;
+    }
+
     /** A sample scope that only the host may widen. */
     private get hostOwnsScopedSample(): boolean {
         return !!this.props.hostOwnsSampleScope && !!this.scopedSampleId;
@@ -896,7 +907,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                     <WsiNavPanel
                         hierarchy={hierarchy}
                         selectedSlide={selectedSlide}
-                        sampleIdFilter={this.scopedSampleId}
+                        sampleIdFilter={this.listSampleId}
                         slideIdFilter={this.preferredSlideKeys}
                         linkoutScopeActive={this.linkoutScopeActive}
                         hostOwnsSampleScope={this.props.hostOwnsSampleScope}
