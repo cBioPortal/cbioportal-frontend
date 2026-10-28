@@ -65,6 +65,9 @@ export interface ViewState {
 
 export interface EmbeddingVisualizationProps {
     data: EmbeddingPoint[];
+    // Derived from the whole embedding, not `data`, so hiding or filtering points never resizes the rest.
+    pointScale?: number;
+    contextPointBoost?: number;
     title?: string;
     xAxisLabel?: string;
     yAxisLabel?: string;

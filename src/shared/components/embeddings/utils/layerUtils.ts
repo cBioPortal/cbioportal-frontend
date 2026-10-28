@@ -1,7 +1,6 @@
 import { ScatterplotLayer } from '@deck.gl/layers';
 import { EmbeddingPoint } from '../EmbeddingTypes';
 import { colorToRgb } from './coordinateUtils';
-import { calculateContextPointBoost } from './dataUtils';
 
 /**
  * Create the scatterplot layer for the embedding visualization
@@ -12,14 +11,15 @@ export function createScatterplotLayer(
     selectedPatientIds: string[] = [],
     onHover: (info: any) => void,
     onClick: (info: any) => void,
-    pointScale: number = 1
+    pointScale: number = 1,
+    contextPointBoost: number = 1
 ) {
     // Convert to Sets for O(1) lookup performance (computed once per layer creation)
     const localSelectedSet = new Set(selectedPoints.map(p => p.patientId));
     const externalSelectedSet = new Set(selectedPatientIds);
     const hasAnySelection =
         selectedPoints.length > 0 || selectedPatientIds.length > 0;
-    const contextPointRadius = 0.003 * calculateContextPointBoost(data.length);
+    const contextPointRadius = 0.003 * contextPointBoost;
 
     return new ScatterplotLayer({
         id: 'embedding-scatter',

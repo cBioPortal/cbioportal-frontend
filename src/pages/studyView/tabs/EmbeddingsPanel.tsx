@@ -47,7 +47,11 @@ import {
     ViewState,
     EmbeddingPoint,
 } from 'shared/components/embeddings/EmbeddingTypes';
-import { calculateDataBounds } from 'shared/components/embeddings/utils/dataUtils';
+import {
+    calculateContextPointBoost,
+    calculateDataBounds,
+    calculatePointScale,
+} from 'shared/components/embeddings/utils/dataUtils';
 import {
     preComputeClinicalDataMaps,
     getMolecularDataForGeneSync,
@@ -1492,6 +1496,18 @@ export class EmbeddingsPanel extends React.Component<
         });
     }
 
+    // From the whole embedding rather than plotData, so hiding categories or
+    // out-of-cohort samples leaves the remaining points' size unchanged.
+    @computed get pointScale(): number {
+        return calculatePointScale(this.selectedEmbedding?.data.data ?? []);
+    }
+
+    @computed get contextPointBoost(): number {
+        return calculateContextPointBoost(
+            this.selectedEmbedding?.data.data.length ?? 0
+        );
+    }
+
     @computed get plotData(): EmbeddingPlotPoint[] {
         const processedData = this.dimmedPlotData;
         if (processedData.length === 0) {
@@ -2372,6 +2388,8 @@ export class EmbeddingsPanel extends React.Component<
         const patientData = this.plotData;
         const visualizationProps = {
             data: patientData,
+            pointScale: this.pointScale,
+            contextPointBoost: this.contextPointBoost,
             title: `${this.selectedEmbedding.label} Embedding - ${this.selectedEmbedding.data.title}`,
             // No Y-axis label - it overlapped the panel controls.
             xAxisLabel: this.selectedEmbedding.label,

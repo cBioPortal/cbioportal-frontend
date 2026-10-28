@@ -48,7 +48,7 @@ const MAX_SAMPLED_POINTS = 1000;
  * an evenly strided sample of at most MAX_SAMPLED_POINTS points.
  */
 export function medianNearestNeighborDistance(
-    data: EmbeddingPoint[]
+    data: { x: number; y: number }[]
 ): number | undefined {
     const sorted = data
         .filter(d => isFinite(d.x) && isFinite(d.y))
@@ -89,7 +89,7 @@ export function medianNearestNeighborDistance(
  * Multiplier for point radius and stroke width, proportional to the map's
  * median nearest-neighbour distance.
  */
-export function calculatePointScale(data: EmbeddingPoint[]): number {
+export function calculatePointScale(data: { x: number; y: number }[]): number {
     if (!data || data.length === 0) {
         return 1;
     }
