@@ -11,6 +11,7 @@ import SampleManager from '../SampleManager';
 import { Mutation } from 'cbioportal-ts-api-client';
 import AlleleCountColumnFormatter from 'shared/components/mutationTable/column/AlleleCountColumnFormatter';
 import AlleleFreqColumnFormatter from './column/AlleleFreqColumnFormatter';
+import MutationStatusColumnFormatter from 'shared/components/mutationTable/column/MutationStatusColumnFormatter';
 import TumorColumnFormatter from './column/TumorColumnFormatter';
 import PanelColumnFormatter from 'shared/components/mutationTable/column/PanelColumnFormatter';
 import { isUncalled } from 'shared/lib/MutationUtils';
@@ -129,8 +130,7 @@ export default class PatientViewMutationTable extends MutationTable<
         const allMutations = this.props.dataStore
             ? this.props.dataStore.allData
             : this.props.data;
-        const hasTumorAlleleFreq = AlleleFreqColumnFormatter.isVisible(
-            this.props.sampleManager,
+        const hasClonalHematopoiesis = MutationStatusColumnFormatter.hasClonalHematopoiesis(
             allMutations
         );
 
@@ -152,7 +152,10 @@ export default class PatientViewMutationTable extends MutationTable<
             tooltip: this.props.alleleFreqHeaderRender
                 ? undefined
                 : defaultAlleleFrequencyHeaderTooltip,
-            visible: hasTumorAlleleFreq,
+            visible: AlleleFreqColumnFormatter.isVisible(
+                this.props.sampleManager,
+                allMutations
+            ),
         };
 
         this._columns[MutationTableColumnType.NORMAL_ALLELE_FREQ] = {
@@ -177,9 +180,8 @@ export default class PatientViewMutationTable extends MutationTable<
             download: (d: Mutation[]) =>
                 AlleleFreqColumnFormatter.getFrequency(d, 'normal'),
             tooltip: defaultNormalAlleleFrequencyHeaderTooltip,
-            // shown by default only when there is no tumor allele frequency,
-            // e.g. clonal hematopoiesis variants called in the normal sample
-            visible: !hasTumorAlleleFreq,
+            // clonal hematopoiesis variants are called in the normal (blood) sample
+            visible: hasClonalHematopoiesis,
             shouldExclude: () =>
                 !AlleleFreqColumnFormatter.isVisible(
                     this.props.sampleManager,
@@ -394,6 +396,11 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.HGVSG].order = 81;
         this._columns[MutationTableColumnType.HGVSC].order = 82;
         this._columns[MutationTableColumnType.MUTATION_STATUS].order = 90;
+        if (hasClonalHematopoiesis) {
+            this._columns[
+                MutationTableColumnType.MUTATION_STATUS
+            ].visible = true;
+        }
         this._columns[MutationTableColumnType.VALIDATION_STATUS].order = 100;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 110;
         this._columns[MutationTableColumnType.VARIANT_TYPE].order = 114;
