@@ -205,4 +205,65 @@ describe('WSIViewer foundation behavior', () => {
             });
         });
     });
+
+    describe('filter reset', () => {
+        const sampleSlide = (slide_key: string, sample_id: string) =>
+            makeSlide({ slide_key, sample_id, can_serve_tiles: true });
+        const twoSamples = () =>
+            makeHierarchy([
+                makeSample('S-1', [sampleSlide('slide-a', 'S-1')]),
+                makeSample('S-2', [sampleSlide('slide-b', 'S-2')]),
+            ]);
+        function loaded(
+            props: Record<string, unknown>,
+            hierarchy = twoSamples()
+        ) {
+            const instance = makeInstance(props);
+            action(() => {
+                instance.viewerState.hierarchy = hierarchy;
+                instance.viewerState.loading = false;
+            })();
+            // These tests cover the list's controls, not opening a slide.
+            instance.reselectSlideForCurrentFilters = jest
+                .fn()
+                .mockResolvedValue(undefined);
+            return instance;
+        }
+        const resets = (instance: any) =>
+            TestRenderer.create(instance.render()).root.findAllByProps({
+                'data-testid': 'wsi-clear-filters',
+            }).length;
+
+        it('is offered while a link scope hides slides, and not once released', () => {
+            const instance = loaded({
+                pathologyFilter: { sampleId: 'S-1' },
+                preferredSampleId: 'S-1',
+            });
+            expect(resets(instance)).toBe(1);
+
+            instance.handleClearFilters();
+            // The preferred sample still picks the first slide; it is not a filter.
+            expect(resets(instance)).toBe(0);
+        });
+
+        it('is not offered for a preferred sample alone', () => {
+            expect(resets(loaded({ preferredSampleId: 'S-1' }))).toBe(0);
+        });
+
+        it('is not offered for a link scope that hides nothing', () => {
+            const instance = loaded(
+                { pathologyFilter: { sampleId: 'S-1' } },
+                hierarchyOf([sampleSlide('slide-a', 'S-1')])
+            );
+            expect(resets(instance)).toBe(0);
+        });
+
+        it('follows the stain filter, not the stain the link started with', () => {
+            const instance = loaded({ initialStainFilter: 'hne' });
+            expect(resets(instance)).toBe(1);
+
+            instance.handleFilterChange('all');
+            expect(resets(instance)).toBe(0);
+        });
+    });
 });

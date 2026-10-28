@@ -558,6 +558,27 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             : undefined;
     }
 
+    /** Whether a link scope the viewer may release hides any viewable slide. */
+    @computed private get linkScopeHidesSlides(): boolean {
+        const hierarchy = this.viewerState.hierarchy;
+        if (
+            !hierarchy ||
+            !this.activePathologyFilter ||
+            this.hostOwnsScopedSample
+        ) {
+            return false;
+        }
+        const sampleId = this.scopedSampleId;
+        const slideKeys = this.preferredSlideKeys;
+        return hierarchy.samples.some(sample =>
+            getOrderedServableSlidesForSampleReadOnly(sample).some(
+                ({ slide }) =>
+                    (!!sampleId && sample.sample_id !== sampleId) ||
+                    (!!slideKeys && !slideKeys.has(slide.slide_key))
+            )
+        );
+    }
+
     /** A sample scope that only the host may widen. */
     private get hostOwnsScopedSample(): boolean {
         return !!this.props.hostOwnsSampleScope && !!this.scopedSampleId;
@@ -821,12 +842,10 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             thumbnailPreviewUrl,
         } = this.viewerState;
         const { stainFilter, matchFilter } = this;
+        // Only offered when it changes the list: a filter is set, or a link
+        // scope it would release hides some of the patient's slides.
         const showClearFilters =
-            (!this.hostOwnsScopedSample &&
-                (!!this.activePathologyFilter ||
-                    !!this.props.preferredSampleId)) ||
-            this.props.initialStainFilter === 'hne' ||
-            this.props.initialStainFilter === 'ihc' ||
+            this.linkScopeHidesSlides ||
             stainFilter !== 'all' ||
             matchFilter !== 'all';
 
