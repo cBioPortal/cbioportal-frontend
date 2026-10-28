@@ -19,6 +19,10 @@ describe('MutationStatusColumnFormatter', () => {
         mutationStatus: 'na',
     });
 
+    const chMutation = initMutation({
+        mutationStatus: 'CH',
+    });
+
     const germlineData = [germlineMutation];
     const somaticData = [somaticMutation];
     const naData = [naMutation];
@@ -26,6 +30,7 @@ describe('MutationStatusColumnFormatter', () => {
     let germlineComponent: ReactWrapper<any, any>;
     let somaticComponent: ReactWrapper<any, any>;
     let naComponent: ReactWrapper<any, any>;
+    let chComponent: ReactWrapper<any, any>;
 
     beforeAll(() => {
         germlineComponent = mount(
@@ -36,6 +41,9 @@ describe('MutationStatusColumnFormatter', () => {
         );
         naComponent = mount(
             MutationStatusColumnFormatter.renderFunction(naData)
+        );
+        chComponent = mount(
+            MutationStatusColumnFormatter.renderFunction([chMutation])
         );
     });
 
@@ -75,6 +83,41 @@ describe('MutationStatusColumnFormatter', () => {
         testRenderedValues(germlineComponent, 'germline', 'G');
         testRenderedValues(somaticComponent, 'somatic', 'S');
         testRenderedValues(naComponent, 'unknown', 'na');
+        testRenderedValues(chComponent, 'clonalHematopoiesis', 'CH');
+        assert.isTrue(chComponent.find(DefaultTooltip).exists());
+    });
+
+    it('recognizes clonal hematopoiesis mutation statuses', () => {
+        [
+            'CH',
+            'ch',
+            'CHIP',
+            'Clonal_Hematopoiesis',
+            'clonal hematopoiesis',
+        ].forEach(status =>
+            assert.isTrue(
+                MutationStatusColumnFormatter.isClonalHematopoiesis(status),
+                status
+            )
+        );
+        ['Somatic', 'Germline', 'na', '', null, undefined].forEach(status =>
+            assert.isFalse(
+                MutationStatusColumnFormatter.isClonalHematopoiesis(status),
+                String(status)
+            )
+        );
+        assert.isTrue(
+            MutationStatusColumnFormatter.hasClonalHematopoiesis([
+                [somaticMutation],
+                [chMutation],
+            ])
+        );
+        assert.isFalse(
+            MutationStatusColumnFormatter.hasClonalHematopoiesis([
+                [somaticMutation],
+                [germlineMutation],
+            ])
+        );
     });
 
     it('adds tooltips only for germline and somatic mutation statuses', () => {
