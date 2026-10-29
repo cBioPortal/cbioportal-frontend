@@ -18,6 +18,8 @@ import {
 } from 'shared/lib/ResourceTableUtils';
 import { applyCustomUrlTransforms } from './resourceUrlTransforms';
 import { buildPDFUrl } from './resourceUrlUtils';
+import CellExplorerResource from './cellExplorer/CellExplorerResource';
+import { parseCellExplorerUrl } from './cellExplorer/cellExplorerUtils';
 import styles from './styles.module.scss';
 
 /** Shown when a resource's host does not answer and the resource names no message of its own. */
@@ -286,14 +288,27 @@ export default class ResourceViewer extends React.Component<
             );
         }
 
-        return (
-            <IFrameLoader
-                url={this.iframeUrl}
-                height={this.iframeHeight}
-                width={'100%'}
-            />
-        );
+        const cellExplorerPage = parseCellExplorerUrl(row.url);
+        if (cellExplorerPage) {
+            return (
+                <CellExplorerResource
+                    page={cellExplorerPage}
+                    height={this.iframeHeight}
+                    fallback={this.renderIFrame}
+                />
+            );
+        }
+
+        return this.renderIFrame();
     }
+
+    private renderIFrame = () => (
+        <IFrameLoader
+            url={this.iframeUrl}
+            height={this.iframeHeight}
+            width={'100%'}
+        />
+    );
 
     render() {
         const row = this.currentRow;

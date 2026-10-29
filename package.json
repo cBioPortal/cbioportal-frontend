@@ -81,6 +81,7 @@
     "@babel/plugin-syntax-dynamic-import": "^7.8.3",
     "@babel/preset-env": "^7.4.4",
     "@babel/preset-react": "^7.0.0",
+    "@cbioportal-cell-explorer/component": "file:vendor/cbioportal-cell-explorer-component-0.0.1.tgz",
     "@cfaester/enzyme-adapter-react-18": "^0.8.0",
     "@datadog/browser-logs": "^5.28.0",
     "@datadog/browser-rum": "^6.26.0",
