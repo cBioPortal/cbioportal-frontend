@@ -54,7 +54,12 @@ export function buildFusionViewerTab(
         <MSKTab
             key={11}
             id={tabId}
-            linkText={patientSvTabLabel(hasRnaFusion(svs))}
+            linkText={
+                <span>
+                    {patientSvTabLabel(hasRnaFusion(svs))}{' '}
+                    <strong className={'beta-text'}>Beta!</strong>
+                </span>
+            }
             hide={hide}
         >
             {content}

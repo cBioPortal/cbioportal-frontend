@@ -32,5 +32,15 @@ describe('isFusionViewerEnabled', () => {
 
     it('is off when the patient has no known study yet', () => {
         assert.isFalse(isFusionViewerEnabled([], 'study_a'));
+        assert.isFalse(isFusionViewerEnabled([], undefined, true));
+    });
+
+    it('the fusionViewer feature flag turns it on for any study', () => {
+        assert.isTrue(isFusionViewerEnabled(['study_c'], undefined, true));
+        assert.isTrue(isFusionViewerEnabled(['study_c'], 'study_a', true));
+    });
+
+    it('is off for an unlisted study when the flag is off', () => {
+        assert.isFalse(isFusionViewerEnabled(['study_c'], 'study_a', false));
     });
 });

@@ -74,7 +74,9 @@ describe('buildFusionViewerTab', () => {
     it('shows a loading state, not a blank page, when routed to it while SVs load', async () => {
         const w = mount(page(pending, FUSION_TAB));
         await settle(w);
-        assert.deepEqual(navText(w), ['Summary', 'SV Viewer']);
+        // Marked beta, like the mRNA and Plots tabs.
+        assert.deepEqual(navText(w), ['Summary', 'SV Viewer Beta!']);
+        assert.lengthOf(w.find('li strong.beta-text'), 1);
         assert.lengthOf(w.find('.fusion-viewer-stub'), 0);
         assert.isAbove(
             w.find('div.tab-content').find('LoadingIndicator').length,

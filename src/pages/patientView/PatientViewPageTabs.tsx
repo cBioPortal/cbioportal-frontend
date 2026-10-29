@@ -823,7 +823,10 @@ export function tabs(
             (pageComponent.patientViewPageStore.studies.result || []).map(
                 s => s.studyId
             ),
-            getServerConfig().fusion_viewer_study_ids
+            getServerConfig().fusion_viewer_study_ids,
+            pageComponent.props.appStore.featureFlagStore.has(
+                FeatureFlagEnum.FUSION_VIEWER
+            )
         )
     ) {
         tabs.push(
