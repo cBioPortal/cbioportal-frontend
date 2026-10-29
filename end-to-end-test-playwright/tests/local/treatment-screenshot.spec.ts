@@ -147,7 +147,7 @@ test.describe('treatment feature', () => {
                 .locator(GENERIC_ASSAY_ENTITY_SELECTOR)
                 .locator('div[class$="multiValue"]');
 
-            expect(await selectedOptions.count()).toBe(1);
+            await expect(selectedOptions).toHaveCount(1);
 
             await page.locator('button:has-text("Add Track")').click();
             await page.locator('button[id=addTracksDropdown]').click();
