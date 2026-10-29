@@ -8,6 +8,7 @@ import {
     MutationTableColumn,
 } from 'shared/components/mutationTable/MutationTable';
 import CancerTypeColumnFormatter from 'shared/components/mutationTable/column/CancerTypeColumnFormatter';
+import MutationStatusColumnFormatter from 'shared/components/mutationTable/column/MutationStatusColumnFormatter';
 import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter';
 import { Mutation, ClinicalAttribute } from 'cbioportal-ts-api-client';
 import ExonColumnFormatter from 'shared/components/mutationTable/column/ExonColumnFormatter';
@@ -239,6 +240,22 @@ export default class ResultsViewMutationTable extends MutationTable<
                 ? this.props.dataStore.allData
                 : this.props.data
         );
+
+        // clonal hematopoiesis variants are called in the normal (blood) sample
+        if (
+            MutationStatusColumnFormatter.hasClonalHematopoiesis(
+                this.props.dataStore
+                    ? this.props.dataStore.allData
+                    : this.props.data
+            )
+        ) {
+            this._columns[
+                MutationTableColumnType.MUTATION_STATUS
+            ].visible = true;
+            this._columns[
+                MutationTableColumnType.NORMAL_ALLELE_FREQ
+            ].visible = true;
+        }
 
         // disable annotation column if non canonical transcript is selected
         this._columns[MutationTableColumnType.ANNOTATION].shouldExclude = () =>

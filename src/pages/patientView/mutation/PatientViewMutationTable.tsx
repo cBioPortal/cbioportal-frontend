@@ -11,6 +11,7 @@ import SampleManager from '../SampleManager';
 import { Mutation } from 'cbioportal-ts-api-client';
 import AlleleCountColumnFormatter from 'shared/components/mutationTable/column/AlleleCountColumnFormatter';
 import AlleleFreqColumnFormatter from './column/AlleleFreqColumnFormatter';
+import MutationStatusColumnFormatter from 'shared/components/mutationTable/column/MutationStatusColumnFormatter';
 import TumorColumnFormatter from './column/TumorColumnFormatter';
 import PanelColumnFormatter from 'shared/components/mutationTable/column/PanelColumnFormatter';
 import { isUncalled } from 'shared/lib/MutationUtils';
@@ -52,6 +53,10 @@ export const defaultAlleleFrequencyHeaderTooltip = (
             </span>
         }
     />
+);
+
+export const defaultNormalAlleleFrequencyHeaderTooltip = (
+    <span>Variant allele frequency in the matched normal sample</span>
 );
 
 export default class PatientViewMutationTable extends MutationTable<
@@ -99,6 +104,7 @@ export default class PatientViewMutationTable extends MutationTable<
             MutationTableColumnType.MUTANT_TOTAL_COPY_NUM,
             MutationTableColumnType.FUNCTIONAL_IMPACT,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
+            MutationTableColumnType.NORMAL_ALLELE_FREQ,
             MutationTableColumnType.SAMPLES,
             MutationTableColumnType.EXON,
             MutationTableColumnType.HGVSC,
@@ -121,6 +127,13 @@ export default class PatientViewMutationTable extends MutationTable<
     protected generateColumns() {
         super.generateColumns();
 
+        const allMutations = this.props.dataStore
+            ? this.props.dataStore.allData
+            : this.props.data;
+        const hasClonalHematopoiesis = MutationStatusColumnFormatter.hasClonalHematopoiesis(
+            allMutations
+        );
+
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ] = {
             name: 'Allele Freq',
             headerRender: this.props.alleleFreqHeaderRender,
@@ -141,10 +154,40 @@ export default class PatientViewMutationTable extends MutationTable<
                 : defaultAlleleFrequencyHeaderTooltip,
             visible: AlleleFreqColumnFormatter.isVisible(
                 this.props.sampleManager,
-                this.props.dataStore
-                    ? this.props.dataStore.allData
-                    : this.props.data
+                allMutations
             ),
+        };
+
+        this._columns[MutationTableColumnType.NORMAL_ALLELE_FREQ] = {
+            name: 'Normal Allele Freq',
+            headerRender: (name: string) => (
+                <span style={{ display: 'inline-block', maxWidth: 55 }}>
+                    {name}
+                </span>
+            ),
+            render: (d: Mutation[]) =>
+                AlleleFreqColumnFormatter.renderFunction(
+                    d,
+                    this.props.sampleManager,
+                    'normal'
+                ),
+            sortBy: (d: Mutation[]) =>
+                AlleleFreqColumnFormatter.getSortValue(
+                    d,
+                    this.props.sampleManager,
+                    'normal'
+                ),
+            download: (d: Mutation[]) =>
+                AlleleFreqColumnFormatter.getFrequency(d, 'normal'),
+            tooltip: defaultNormalAlleleFrequencyHeaderTooltip,
+            // clonal hematopoiesis variants are called in the normal (blood) sample
+            visible: hasClonalHematopoiesis,
+            shouldExclude: () =>
+                !AlleleFreqColumnFormatter.isVisible(
+                    this.props.sampleManager,
+                    allMutations,
+                    'normal'
+                ),
         };
 
         this._columns[MutationTableColumnType.SAMPLES] = {
@@ -353,6 +396,11 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.HGVSG].order = 81;
         this._columns[MutationTableColumnType.HGVSC].order = 82;
         this._columns[MutationTableColumnType.MUTATION_STATUS].order = 90;
+        if (hasClonalHematopoiesis) {
+            this._columns[
+                MutationTableColumnType.MUTATION_STATUS
+            ].visible = true;
+        }
         this._columns[MutationTableColumnType.VALIDATION_STATUS].order = 100;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 110;
         this._columns[MutationTableColumnType.VARIANT_TYPE].order = 114;
@@ -368,6 +416,7 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.ASCN_COPY_NUM].order = 119;
         this._columns[MutationTableColumnType.CENTER].order = 120;
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ].order = 130;
+        this._columns[MutationTableColumnType.NORMAL_ALLELE_FREQ].order = 135;
         this._columns[MutationTableColumnType.VAR_READS].order = 140;
         this._columns[MutationTableColumnType.REF_READS].order = 150;
         this._columns[MutationTableColumnType.VAR_READS_N].order = 170;
