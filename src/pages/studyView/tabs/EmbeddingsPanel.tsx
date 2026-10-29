@@ -51,6 +51,7 @@ import {
     calculateContextPointBoost,
     calculateDataBounds,
     calculatePointScale,
+    calculateSparseMapPointFactor,
 } from 'shared/components/embeddings/utils/dataUtils';
 import {
     preComputeClinicalDataMaps,
@@ -1468,12 +1469,20 @@ export class EmbeddingsPanel extends React.Component<
     // From the whole embedding rather than plotData, so hiding categories or
     // out-of-cohort samples leaves the remaining points' size unchanged.
     @computed get pointScale(): number {
-        return calculatePointScale(this.selectedEmbedding?.data.data ?? []);
+        const points = this.selectedEmbedding?.data.data ?? [];
+        return (
+            calculatePointScale(points) *
+            calculateSparseMapPointFactor(points.length)
+        );
     }
 
+    // Divides out the sparse-map factor so out-of-cohort backdrop points keep
+    // their size while sample points shrink.
     @computed get contextPointBoost(): number {
-        return calculateContextPointBoost(
-            this.selectedEmbedding?.data.data.length ?? 0
+        const pointCount = this.selectedEmbedding?.data.data.length ?? 0;
+        return (
+            calculateContextPointBoost(pointCount) /
+            calculateSparseMapPointFactor(pointCount)
         );
     }
 

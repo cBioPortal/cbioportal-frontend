@@ -2,6 +2,7 @@ import { assert } from 'chai';
 import {
     calculateContextPointBoost,
     calculatePointScale,
+    calculateSparseMapPointFactor,
     medianNearestNeighborDistance,
 } from './dataUtils';
 import { EmbeddingPoint } from '../EmbeddingTypes';
@@ -98,5 +99,23 @@ describe('calculateContextPointBoost', () => {
 
     it('returns 1 for no points', () => {
         assert.equal(calculateContextPointBoost(0), 1);
+    });
+});
+
+describe('calculateSparseMapPointFactor', () => {
+    it('leaves a map as dense as the H&E one unchanged', () => {
+        assert.equal(calculateSparseMapPointFactor(50871), 1);
+    });
+
+    it('shrinks points on sparser maps, down to half size', () => {
+        assert.closeTo(calculateSparseMapPointFactor(3125), 0.5, 1e-9);
+        assert.equal(calculateSparseMapPointFactor(1133), 0.5);
+        const mid = calculateSparseMapPointFactor(10000);
+        assert.isAbove(mid, 0.5);
+        assert.isBelow(mid, 1);
+    });
+
+    it('falls back to 1 for an empty map', () => {
+        assert.equal(calculateSparseMapPointFactor(0), 1);
     });
 });

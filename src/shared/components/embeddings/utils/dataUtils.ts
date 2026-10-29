@@ -116,3 +116,23 @@ export function calculateContextPointBoost(pointCount: number): number {
         Math.max(1, Math.sqrt(CONTEXT_REFERENCE_POINT_COUNT / pointCount))
     );
 }
+
+// Sized to the H&E calibration, points overlap their neighbours. On a dense
+// map that reads as density; on a sparse one it hides individual samples, so
+// shrink sample points as the point count drops.
+const MIN_SPARSE_MAP_POINT_FACTOR = 0.5;
+
+/**
+ * Radius multiplier for sample points: 1 on a map as dense as the H&E one,
+ * shrinking as the fourth root of the point count down to
+ * MIN_SPARSE_MAP_POINT_FACTOR.
+ */
+export function calculateSparseMapPointFactor(pointCount: number): number {
+    if (!(pointCount > 0)) {
+        return 1;
+    }
+    return Math.max(
+        MIN_SPARSE_MAP_POINT_FACTOR,
+        Math.min(1, Math.pow(pointCount / CONTEXT_REFERENCE_POINT_COUNT, 0.25))
+    );
+}
