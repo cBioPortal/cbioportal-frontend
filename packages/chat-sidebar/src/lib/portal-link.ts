@@ -6,9 +6,30 @@ import { parentOrigin, portalUrl } from './parent-origin';
 // with PORTAL_LINK_ALIASES in src/shared/components/chatSidebar/navigateTool.ts.
 const DEFAULT_PORTAL_LINK_ALIASES = ['www.cbioportal.org', 'cbioportal.org'];
 
-// Served by the backend rather than the app's router, so they open in a new
-// tab. Keep in sync with NON_PAGE_PREFIXES in navigateTool.ts.
-const NON_PAGE_PREFIXES = ['/api', '/chat-sidebar', '/login', '/logout'];
+// The portal app's page routes, each matched with its subpaths; "/" is
+// matched only exactly. Other portal links (backend endpoints, redirect
+// routes such as /encodedRedirect) open in a new tab instead of navigating in
+// place. Keep in sync with PAGE_PREFIXES in navigateTool.ts.
+const PAGE_PREFIXES = [
+    '/results',
+    '/patient',
+    '/study',
+    '/comparison',
+    '/webAPI',
+    '/mutation_mapper',
+    '/oncoprinter',
+    '/datasets',
+    '/installations',
+    '/visualize',
+    '/software',
+    '/tutorials',
+    '/rmatlab',
+    '/about',
+    '/news',
+    '/faq',
+    '/oql',
+    '/testimonials',
+];
 
 let aliases = DEFAULT_PORTAL_LINK_ALIASES;
 
@@ -18,6 +39,16 @@ export function setPortalLinkAliases(hosts: string[]) {
 
 function isUnderPrefix(pathname: string, prefix: string): boolean {
     return pathname === prefix || pathname.startsWith(prefix + '/');
+}
+
+// A leading "//" would read as a protocol-relative URL to another host.
+function isPagePath(pathname: string): boolean {
+    if (pathname.startsWith('//')) {
+        return false;
+    }
+    return (
+        pathname === '/' || PAGE_PREFIXES.some(p => isUnderPrefix(pathname, p))
+    );
 }
 
 // Relative links are written as portal paths ("/study?id=x"), so they are
@@ -71,10 +102,9 @@ export function resolvePortalLink(href: string | undefined): PortalLink | null {
     }
 
     const path = pathname + url.search + url.hash;
-    const isPage = !NON_PAGE_PREFIXES.some(p => isUnderPrefix(pathname, p));
     return {
         href: portal.origin + basePath + path,
-        path: isPage ? path : null,
+        path: isPagePath(pathname) ? path : null,
     };
 }
 

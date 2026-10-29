@@ -212,10 +212,26 @@ export function handleIndexDO() {
     }
 }
 
+// The encoded URL comes from the query string, so it is followed only when it
+// is an http(s) URL on this portal's own origin (as the bitly share links
+// encode); anything else, e.g. a javascript: URL, goes to the home page.
 export function handleEncodedRedirect() {
-    const encodedURL = getBrowserWindow().routingStore.query[EncodedURLParam];
-    const decodedURL = atob(encodedURL);
-    getBrowserWindow().location.href = decodedURL;
+    const win = getBrowserWindow();
+    let target: URL | undefined;
+    try {
+        target = new URL(atob(win.routingStore.query[EncodedURLParam]));
+    } catch {
+        target = undefined;
+    }
+    if (
+        target &&
+        /^https?:$/.test(target.protocol) &&
+        target.origin === win.location.origin
+    ) {
+        win.location.href = target.href;
+    } else {
+        (win.routingStore as ExtendedRouterStore).updateRoute({}, '/');
+    }
 }
 
 export function redirectTo(

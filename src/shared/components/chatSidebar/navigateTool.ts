@@ -19,9 +19,30 @@ export const GO_TO_PAGE_DESCRIPTION =
 // packages/chat-sidebar/src/lib/portal-link.ts.
 const PORTAL_LINK_ALIASES = ['www.cbioportal.org', 'cbioportal.org'];
 
-// Served by the backend rather than the app's router. Keep in sync with
-// NON_PAGE_PREFIXES in packages/chat-sidebar/src/lib/portal-link.ts.
-const NON_PAGE_PREFIXES = ['/api', '/chat-sidebar', '/login', '/logout'];
+// The app's page routes (src/routes.tsx), each matched with its subpaths;
+// "/" is matched only exactly. Anything else, including redirect routes such
+// as /encodedRedirect and /ln, is not navigable. Keep in sync with
+// PAGE_PREFIXES in packages/chat-sidebar/src/lib/portal-link.ts.
+const PAGE_PREFIXES = [
+    '/results',
+    '/patient',
+    '/study',
+    '/comparison',
+    '/webAPI',
+    '/mutation_mapper',
+    '/oncoprinter',
+    '/datasets',
+    '/installations',
+    '/visualize',
+    '/software',
+    '/tutorials',
+    '/rmatlab',
+    '/about',
+    '/news',
+    '/faq',
+    '/oql',
+    '/testimonials',
+];
 
 export function normalizeBasePath(basePath: string | undefined): string {
     const trimmed = (basePath || '').replace(/^\/+|\/+$/g, '');
@@ -30,6 +51,16 @@ export function normalizeBasePath(basePath: string | undefined): string {
 
 function isUnderPrefix(pathname: string, prefix: string): boolean {
     return pathname === prefix || pathname.startsWith(prefix + '/');
+}
+
+// A leading "//" would read as a protocol-relative URL to another host.
+function isPagePath(pathname: string): boolean {
+    if (pathname.startsWith('//')) {
+        return false;
+    }
+    return (
+        pathname === '/' || PAGE_PREFIXES.some(p => isUnderPrefix(pathname, p))
+    );
 }
 
 // Relative URLs are portal paths ("/study?id=x", as the iframe sends them),
@@ -73,7 +104,7 @@ export function toPortalRoute(
         return null;
     }
 
-    if (NON_PAGE_PREFIXES.some(p => isUnderPrefix(pathname, p))) {
+    if (!isPagePath(pathname)) {
         return null;
     }
     return pathname + parsed.search + parsed.hash;

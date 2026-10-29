@@ -423,6 +423,11 @@ const memoizedComponents = memoizeMarkdownComponents({
             </a>
         );
     },
+    // Images are never loaded: a model-written src fetches on render, so a
+    // prompt-injected URL could carry chat data off-site without a click.
+    // Only the alt text is shown.
+    img: ({ alt }) =>
+        alt ? <span className="aui-md-img-alt">{alt}</span> : null,
     blockquote: ({ className, ...props }) => (
         <blockquote
             className={cn(
