@@ -383,7 +383,12 @@ export class PatientViewPageInner extends React.Component<
     ) {
         if (!e.shiftKey && !e.altKey && !e.metaKey) {
             e.preventDefault();
-            this.urlWrapper.updateURL({ caseId: undefined, sampleId: id });
+            // fusionId names a fusion of the previous case; drop it.
+            this.urlWrapper.updateURL({
+                caseId: undefined,
+                sampleId: id,
+                fusionId: undefined,
+            });
         }
         // otherwise do nothing, we want default behavior of link
         // namely that href will open in a new window/tab
@@ -399,14 +404,20 @@ export class PatientViewPageInner extends React.Component<
     @action.bound
     handlePatientClick(id: string) {
         let values = id.split(':');
+        // fusionId names a fusion of the previous patient; drop it.
         if (values.length == 2) {
             this.urlWrapper.updateURL({
                 studyId: values[0],
                 caseId: values[1],
                 sampleId: undefined,
+                fusionId: undefined,
             });
         } else {
-            this.urlWrapper.updateURL({ caseId: id, sampleId: undefined });
+            this.urlWrapper.updateURL({
+                caseId: id,
+                sampleId: undefined,
+                fusionId: undefined,
+            });
         }
     }
 
