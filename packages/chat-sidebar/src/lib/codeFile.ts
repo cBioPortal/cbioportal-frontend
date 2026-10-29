@@ -45,14 +45,16 @@ const DEFAULT_EXTENSION = 'txt';
 const DEFAULT_MIME_TYPE = 'text/plain';
 const MAX_FILENAME_LENGTH = 80;
 
-// Control characters, path separators, and the characters Windows forbids in a
-// name. Built from char codes so the source stays free of literal control bytes.
-const UNSAFE_FILENAME_CHARS = new RegExp(
-    `[${String.fromCharCode(0)}-${String.fromCharCode(31)}${String.fromCharCode(
-        127
-    )}<>:"|?*]`,
-    'g'
-);
+// Anything outside this set is dropped: the name is shown in a copyable
+// `uv run <file>` command, so it must carry nothing a shell would interpret.
+const UNSAFE_FILENAME_CHARS = /[^A-Za-z0-9._-]/g;
+
+// Extensions a downloaded name may keep; any other gets `.txt` appended, so a
+// model-chosen `.html`, `.svg` or `.bat` never lands on disk as one.
+const KNOWN_EXTENSIONS = new Set([
+    ...Object.values(LANGUAGE_EXTENSIONS),
+    DEFAULT_EXTENSION,
+]);
 
 export function extensionForLanguage(language?: string): string {
     if (!language) return DEFAULT_EXTENSION;
@@ -81,13 +83,15 @@ export function sanitizeFilename(
 ): string {
     const base = name.split(/[/\\]/).pop() ?? '';
     let safe = base
-        .replace(UNSAFE_FILENAME_CHARS, '')
+        .trim()
         .replace(/\s+/g, '_')
-        .replace(/^\.+/, '')
-        .trim();
+        .replace(UNSAFE_FILENAME_CHARS, '')
+        .replace(/^\.+/, '');
 
     if (!safe) safe = `snippet.${fallbackExtension}`;
     if (!/\.\w+$/.test(safe)) safe = `${safe}.${fallbackExtension}`;
+    const extension = safe.slice(safe.lastIndexOf('.') + 1).toLowerCase();
+    if (!KNOWN_EXTENSIONS.has(extension)) safe = `${safe}.${DEFAULT_EXTENSION}`;
 
     if (safe.length > MAX_FILENAME_LENGTH) {
         const dot = safe.lastIndexOf('.');
@@ -156,8 +160,8 @@ export function hasInlineScriptMetadata(code: string): boolean {
         .some(line => line.trimEnd() === SCRIPT_METADATA_CLOSE);
 }
 
-// sanitizeFilename has already collapsed whitespace, so the name never needs
-// quoting here.
+// sanitizeFilename has already reduced the name to [A-Za-z0-9._-], so it never
+// needs quoting here.
 export function runCommand(filename: string): string {
     return `uv run ${filename}`;
 }
