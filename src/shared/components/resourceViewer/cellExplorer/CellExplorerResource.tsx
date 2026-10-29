@@ -1,15 +1,12 @@
 import * as React from 'react';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import { IResourceTableRow } from 'shared/lib/ResourceTableUtils';
 import {
-    CellExplorerDataset,
-    CellExplorerPage,
-    datasetPageUrl,
-    datasetsForPage,
-    parseCellExplorerUrl,
+    CELL_EXPLORER_METADATA,
+    CellExplorerColorBy,
+    colorByFor,
 } from './cellExplorerUtils';
 import styles from './styles.module.scss';
-
-type ColorBy = { type: 'category' | 'gene'; value: string };
 
 /**
  * The viewer bundles its own deck.gl and luma.gl. Each registers itself on globalThis when it
@@ -35,7 +32,7 @@ async function importBesidePortalDeckGl(): Promise<any> {
 
 type CellExplorerViewer = React.ComponentType<{
     url: string;
-    filterConfig?: { colorBy: ColorBy };
+    filterConfig?: { colorBy: CellExplorerColorBy };
 }>;
 
 let viewerImport: Promise<CellExplorerViewer> | undefined;
@@ -54,27 +51,12 @@ function loadViewer(): Promise<CellExplorerViewer> {
 const TOOLBAR_HEIGHT = 36;
 
 export interface ICellExplorerResourceProps {
-    /** A Cell Explorer dataset or collection page. */
-    url: string;
+    /** The resource's datasets, one row each. */
+    rows: IResourceTableRow[];
+    /** Which dataset is shown. */
+    index: number;
+    onIndexChange: (index: number) => void;
     height: number;
-}
-
-type DatasetsState =
-    | { status: 'pending' }
-    | { status: 'error' }
-    | { status: 'complete'; datasets: CellExplorerDataset[] };
-
-function filterConfigFor(
-    dataset: CellExplorerDataset
-): { colorBy: ColorBy } | undefined {
-    const view = dataset.default_view;
-    if (view?.colorBy === 'category' && view.category) {
-        return { colorBy: { type: 'category', value: view.category } };
-    }
-    if (view?.colorBy === 'gene' && view.gene) {
-        return { colorBy: { type: 'gene', value: view.gene } };
-    }
-    return undefined;
 }
 
 const CellExplorerError: React.FunctionComponent<{
@@ -89,33 +71,16 @@ const CellExplorerError: React.FunctionComponent<{
     </div>
 );
 
-/** Shows a Cell Explorer page's datasets in the page itself, never in a frame. */
+/**
+ * Shows a Cell Explorer resource's datasets in the page itself, never in a frame, with a picker
+ * when there is more than one. Each row's metadata names the dataset's zarr store.
+ */
 export const CellExplorerResource: React.FunctionComponent<ICellExplorerResourceProps> = ({
-    url,
+    rows,
+    index,
+    onIndexChange,
     height,
 }) => {
-    const page = React.useMemo(() => parseCellExplorerUrl(url), [url]);
-    if (!page) {
-        return (
-            <CellExplorerError
-                message="This link is not a Cell Explorer dataset or collection page."
-                url={url}
-            />
-        );
-    }
-    return <CellExplorerPageViewer page={page} url={url} height={height} />;
-};
-
-/** One Cell Explorer page, with a picker for a collection's datasets. */
-const CellExplorerPageViewer: React.FunctionComponent<{
-    page: CellExplorerPage;
-    url: string;
-    height: number;
-}> = ({ page, url, height }) => {
-    const [state, setState] = React.useState<DatasetsState>({
-        status: 'pending',
-    });
-    const [selectedSlug, setSelectedSlug] = React.useState<string>();
     const [Viewer, setViewer] = React.useState<CellExplorerViewer>();
     const [viewerFailed, setViewerFailed] = React.useState(false);
 
@@ -130,67 +95,36 @@ const CellExplorerPageViewer: React.FunctionComponent<{
         };
     }, []);
 
-    React.useEffect(() => {
-        let cancelled = false;
-        setState({ status: 'pending' });
-        fetch(`${page.origin}/api/datasets`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                return response.json();
-            })
-            .then((body: { datasets: CellExplorerDataset[] }) => {
-                if (!cancelled) {
-                    setState({
-                        status: 'complete',
-                        datasets: datasetsForPage(page, body.datasets),
-                    });
-                }
-            })
-            .catch(() => {
-                if (!cancelled) {
-                    setState({ status: 'error' });
-                }
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [page.origin, 'dataset' in page ? page.dataset : page.collection]);
-
-    const datasets = state.status === 'complete' ? state.datasets : [];
-    const dataset = datasets.find(d => d.slug === selectedSlug) || datasets[0];
+    const row = rows[index];
+    const zarrUrl = row.metadata[CELL_EXPLORER_METADATA.zarrUrl];
+    const colorBy = colorByFor(row.metadata);
     const filterConfig = React.useMemo(
-        () => (dataset ? filterConfigFor(dataset) : undefined),
-        [dataset]
+        () => (colorBy ? { colorBy } : undefined),
+        [colorBy?.type, colorBy?.value]
     );
 
-    if (state.status === 'pending') {
-        return <LoadingIndicator isLoading={true} center={true} />;
-    }
-    if (state.status === 'error') {
-        return (
+    let body: React.ReactNode;
+    if (!zarrUrl) {
+        body = (
             <CellExplorerError
-                message={`The dataset list of ${page.origin} could not be read.`}
-                url={url}
+                message={`This dataset has no ${CELL_EXPLORER_METADATA.zarrUrl} in its metadata.`}
+                url={row.url}
             />
         );
-    }
-    if (!dataset) {
-        return (
-            <CellExplorerError
-                message="Cell Explorer lists no dataset for this link."
-                url={url}
-            />
-        );
-    }
-    if (viewerFailed) {
-        return (
+    } else if (viewerFailed) {
+        body = (
             <CellExplorerError
                 message="The Cell Explorer viewer could not be loaded."
-                url={url}
+                url={row.url}
             />
         );
+    } else if (Viewer) {
+        // A new dataset starts from a fresh viewer.
+        body = (
+            <Viewer key={zarrUrl} url={zarrUrl} filterConfig={filterConfig} />
+        );
+    } else {
+        body = <LoadingIndicator isLoading={true} center={true} />;
     }
 
     return (
@@ -200,23 +134,23 @@ const CellExplorerPageViewer: React.FunctionComponent<{
             data-test="CellExplorerResource"
         >
             <div className={styles.toolbar} style={{ height: TOOLBAR_HEIGHT }}>
-                {datasets.length > 1 && (
+                {rows.length > 1 && (
                     <select
                         className="form-control input-sm"
-                        value={dataset.slug}
-                        onChange={e => setSelectedSlug(e.target.value)}
+                        value={index}
+                        onChange={e => onIndexChange(Number(e.target.value))}
                         data-test="CellExplorerDatasetSelect"
                     >
-                        {datasets.map(d => (
-                            <option key={d.slug} value={d.slug}>
-                                {d.name}
+                        {rows.map((r, i) => (
+                            <option key={r.key} value={i}>
+                                {r.description || r.url}
                             </option>
                         ))}
                     </select>
                 )}
                 <a
                     className={styles.openLink}
-                    href={datasetPageUrl(page, dataset)}
+                    href={row.url}
                     target="_blank"
                     rel="noopener noreferrer"
                 >
@@ -227,16 +161,7 @@ const CellExplorerPageViewer: React.FunctionComponent<{
                 className={styles.viewer}
                 style={{ height: height - TOOLBAR_HEIGHT }}
             >
-                {Viewer ? (
-                    <Viewer
-                        // A new dataset starts from a fresh viewer.
-                        key={dataset.slug}
-                        url={dataset.url}
-                        filterConfig={filterConfig}
-                    />
-                ) : (
-                    <LoadingIndicator isLoading={true} center={true} />
-                )}
+                {body}
             </div>
         </div>
     );

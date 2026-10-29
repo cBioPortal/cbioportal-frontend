@@ -241,15 +241,6 @@ export default class ResourceViewer extends React.Component<
     private renderBody() {
         const row = this.currentRow!;
 
-        if (isCellExplorerResource(row)) {
-            return (
-                <CellExplorerResource
-                    url={row.url}
-                    height={this.iframeHeight}
-                />
-            );
-        }
-
         if (this.httpIframeWithHttpsPortal) {
             return (
                 <div>
@@ -311,6 +302,19 @@ export default class ResourceViewer extends React.Component<
         const row = this.currentRow;
         if (!row) {
             return null;
+        }
+
+        if (isCellExplorerResource(row)) {
+            return (
+                <div data-test="ResourceViewer" ref={this.containerRef}>
+                    <CellExplorerResource
+                        rows={this.props.rows}
+                        index={this.currentIndex}
+                        onIndexChange={this.props.onIndexChange}
+                        height={this.iframeHeight}
+                    />
+                </div>
+            );
         }
 
         const multipleRows = this.props.rows.length > 1;
