@@ -20,7 +20,9 @@ export function buildFusionViewerTab(
     tabId: string,
     svData: FusionViewerSvData,
     activeTabId: string | undefined,
-    referenceGenome: string | undefined
+    referenceGenome: string | undefined,
+    fusionId?: string,
+    onFusionSelected?: (fusionId: string) => void
 ) {
     const svs = svData.result || [];
     const hide =
@@ -42,6 +44,8 @@ export function buildFusionViewerTab(
             <FusionViewerTab
                 structuralVariants={svs}
                 referenceGenome={referenceGenome}
+                fusionId={fusionId}
+                onFusionSelected={onFusionSelected}
             />
         );
     }

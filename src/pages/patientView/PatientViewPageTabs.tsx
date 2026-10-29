@@ -832,7 +832,11 @@ export function tabs(
                 pageComponent.patientViewPageStore.structuralVariantData,
                 urlWrapper.activeTabId,
                 pageComponent.patientViewPageStore.studies.result[0]
-                    ?.referenceGenome
+                    ?.referenceGenome,
+                urlWrapper.query.fusionId,
+                fusionId =>
+                    // replace: clicking through fusions shouldn't flood history
+                    urlWrapper.updateURL({ fusionId }, undefined, false, true)
             )
         );
     }

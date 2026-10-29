@@ -112,6 +112,24 @@ describe('FusionViewerStore', () => {
             assert.equal(store.selectedFusionId, 'f1');
         });
 
+        it('selects the preferred fusion when it is present', () => {
+            const f1 = makeFusion({ id: 'f1' });
+            const f2 = makeFusion({ id: 'f2' });
+
+            store.setStructuralVariants([f1, f2] as any, undefined, 'f2');
+
+            assert.equal(store.selectedFusionId, 'f2');
+        });
+
+        it('falls back to the first fusion when the preferred id is unknown', () => {
+            const f1 = makeFusion({ id: 'f1' });
+            const f2 = makeFusion({ id: 'f2' });
+
+            store.setStructuralVariants([f1, f2] as any, undefined, 'nope');
+
+            assert.equal(store.selectedFusionId, 'f1');
+        });
+
         it('does not select anything if fusions array is empty', () => {
             store.setStructuralVariants([] as any);
 
