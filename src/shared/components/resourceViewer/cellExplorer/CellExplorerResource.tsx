@@ -5,6 +5,7 @@ import {
     CellExplorerPage,
     datasetPageUrl,
     datasetsForPage,
+    parseCellExplorerUrl,
 } from './cellExplorerUtils';
 import styles from './styles.module.scss';
 
@@ -53,10 +54,9 @@ function loadViewer(): Promise<CellExplorerViewer> {
 const TOOLBAR_HEIGHT = 36;
 
 export interface ICellExplorerResourceProps {
-    page: CellExplorerPage;
+    /** A Cell Explorer dataset or collection page. */
+    url: string;
     height: number;
-    /** Shown when Cell Explorer's dataset list cannot be read or names no dataset for the page. */
-    fallback: () => React.ReactElement;
 }
 
 type DatasetsState =
@@ -77,12 +77,41 @@ function filterConfigFor(
     return undefined;
 }
 
-/** Shows a Cell Explorer dataset in the page itself, with a picker for a collection's datasets. */
+const CellExplorerError: React.FunctionComponent<{
+    message: string;
+    url: string;
+}> = ({ message, url }) => (
+    <div className={styles.error} data-test="CellExplorerError">
+        <span>{message}</span>
+        <a href={url} target="_blank" rel="noopener noreferrer">
+            Open in Cell Explorer <i className="fa fa-external-link" />
+        </a>
+    </div>
+);
+
+/** Shows a Cell Explorer page's datasets in the page itself, never in a frame. */
 export const CellExplorerResource: React.FunctionComponent<ICellExplorerResourceProps> = ({
-    page,
+    url,
     height,
-    fallback,
 }) => {
+    const page = React.useMemo(() => parseCellExplorerUrl(url), [url]);
+    if (!page) {
+        return (
+            <CellExplorerError
+                message="This link is not a Cell Explorer dataset or collection page."
+                url={url}
+            />
+        );
+    }
+    return <CellExplorerPageViewer page={page} url={url} height={height} />;
+};
+
+/** One Cell Explorer page, with a picker for a collection's datasets. */
+const CellExplorerPageViewer: React.FunctionComponent<{
+    page: CellExplorerPage;
+    url: string;
+    height: number;
+}> = ({ page, url, height }) => {
     const [state, setState] = React.useState<DatasetsState>({
         status: 'pending',
     });
@@ -139,8 +168,29 @@ export const CellExplorerResource: React.FunctionComponent<ICellExplorerResource
     if (state.status === 'pending') {
         return <LoadingIndicator isLoading={true} center={true} />;
     }
-    if (!dataset || viewerFailed) {
-        return fallback();
+    if (state.status === 'error') {
+        return (
+            <CellExplorerError
+                message={`The dataset list of ${page.origin} could not be read.`}
+                url={url}
+            />
+        );
+    }
+    if (!dataset) {
+        return (
+            <CellExplorerError
+                message="Cell Explorer lists no dataset for this link."
+                url={url}
+            />
+        );
+    }
+    if (viewerFailed) {
+        return (
+            <CellExplorerError
+                message="The Cell Explorer viewer could not be loaded."
+                url={url}
+            />
+        );
     }
 
     return (

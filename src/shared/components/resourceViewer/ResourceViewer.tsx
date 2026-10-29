@@ -19,7 +19,7 @@ import {
 import { applyCustomUrlTransforms } from './resourceUrlTransforms';
 import { buildPDFUrl } from './resourceUrlUtils';
 import CellExplorerResource from './cellExplorer/CellExplorerResource';
-import { parseCellExplorerUrl } from './cellExplorer/cellExplorerUtils';
+import { isCellExplorerResource } from './cellExplorer/cellExplorerUtils';
 import styles from './styles.module.scss';
 
 /** Shown when a resource's host does not answer and the resource names no message of its own. */
@@ -192,7 +192,8 @@ export default class ResourceViewer extends React.Component<
     private startUrlAccessibilityCheck() {
         const url = this.currentRow?.url;
 
-        if (!url) {
+        // Cell Explorer resources are never framed, so there is no frame to warn about.
+        if (!url || isCellExplorerResource(this.currentRow!)) {
             this.urlIsAccessible = true;
             this.urlCheckComplete = true;
             return;
@@ -239,6 +240,15 @@ export default class ResourceViewer extends React.Component<
 
     private renderBody() {
         const row = this.currentRow!;
+
+        if (isCellExplorerResource(row)) {
+            return (
+                <CellExplorerResource
+                    url={row.url}
+                    height={this.iframeHeight}
+                />
+            );
+        }
 
         if (this.httpIframeWithHttpsPortal) {
             return (
@@ -288,27 +298,14 @@ export default class ResourceViewer extends React.Component<
             );
         }
 
-        const cellExplorerPage = parseCellExplorerUrl(row.url);
-        if (cellExplorerPage) {
-            return (
-                <CellExplorerResource
-                    page={cellExplorerPage}
-                    height={this.iframeHeight}
-                    fallback={this.renderIFrame}
-                />
-            );
-        }
-
-        return this.renderIFrame();
+        return (
+            <IFrameLoader
+                url={this.iframeUrl}
+                height={this.iframeHeight}
+                width={'100%'}
+            />
+        );
     }
-
-    private renderIFrame = () => (
-        <IFrameLoader
-            url={this.iframeUrl}
-            height={this.iframeHeight}
-            width={'100%'}
-        />
-    );
 
     render() {
         const row = this.currentRow;

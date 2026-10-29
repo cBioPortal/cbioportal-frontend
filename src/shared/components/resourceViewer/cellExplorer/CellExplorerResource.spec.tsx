@@ -51,14 +51,16 @@ function mockFetch(response: Promise<any>) {
     (global as any).fetch = jest.fn(() => response);
 }
 
-function renderResource(page: any) {
-    return render(
-        <CellExplorerResource
-            page={page}
-            height={800}
-            fallback={() => <div data-testid="fallback" />}
-        />
-    );
+function renderResource(url: string) {
+    return render(<CellExplorerResource url={url} height={800} />);
+}
+
+function errorShown() {
+    return waitFor(() => {
+        const error = document.querySelector('[data-test=CellExplorerError]');
+        assert.isNotNull(error);
+        return error as HTMLElement;
+    });
 }
 
 describe('CellExplorerResource', () => {
@@ -73,7 +75,7 @@ describe('CellExplorerResource', () => {
     });
 
     it('shows a dataset page with its default view and no picker', async () => {
-        renderResource({ origin: ORIGIN, dataset: 'spectrum' });
+        renderResource(`${ORIGIN}/view?dataset=spectrum`);
 
         const viewer = await screen.findByTestId('cell-explorer');
         assert.equal(
@@ -93,7 +95,7 @@ describe('CellExplorerResource', () => {
     });
 
     it('picks between the datasets of a collection', async () => {
-        renderResource({ origin: ORIGIN, collection: 'crc-metastasis' });
+        renderResource(`${ORIGIN}/collections/crc-metastasis`);
 
         const viewer = await screen.findByTestId('cell-explorer');
         assert.equal(
@@ -122,17 +124,42 @@ describe('CellExplorerResource', () => {
         );
     });
 
-    it('falls back when the dataset list cannot be read', async () => {
-        mockFetch(Promise.reject(new TypeError('Failed to fetch')));
-        renderResource({ origin: ORIGIN, dataset: 'spectrum' });
+    it('reads the dataset list of the instance the link points to', async () => {
+        renderResource('http://localhost:8000/view?dataset=spectrum');
 
-        await screen.findByTestId('fallback');
-        assert.isNull(screen.queryByTestId('cell-explorer'));
+        await screen.findByTestId('cell-explorer');
+        assert.equal(
+            (global as any).fetch.mock.calls[0][0],
+            'http://localhost:8000/api/datasets'
+        );
     });
 
-    it('falls back when no dataset matches the page', async () => {
-        renderResource({ origin: ORIGIN, collection: 'unknown' });
+    it('shows an error with the link when the dataset list cannot be read', async () => {
+        mockFetch(Promise.reject(new TypeError('Failed to fetch')));
+        renderResource(`${ORIGIN}/view?dataset=spectrum`);
 
-        await screen.findByTestId('fallback');
+        const error = await errorShown();
+        assert.include(error.textContent || '', 'could not be read');
+        assert.equal(
+            error.querySelector('a')!.getAttribute('href'),
+            `${ORIGIN}/view?dataset=spectrum`
+        );
+        assert.isNull(screen.queryByTestId('cell-explorer'));
+        assert.isNull(document.querySelector('iframe'));
+    });
+
+    it('shows an error when no dataset matches the page', async () => {
+        renderResource(`${ORIGIN}/collections/unknown`);
+
+        const error = await errorShown();
+        assert.include(error.textContent || '', 'lists no dataset');
+    });
+
+    it('shows an error for a link that is not a dataset or collection page', async () => {
+        renderResource(`${ORIGIN}/`);
+
+        const error = await errorShown();
+        assert.include(error.textContent || '', 'not a Cell Explorer');
+        assert.equal((global as any).fetch.mock.calls.length, 0);
     });
 });

@@ -45,10 +45,16 @@ describe('cellExplorerUtils', () => {
             );
         });
 
-        it('ignores other hosts and pages', () => {
-            assert.isUndefined(
-                parseCellExplorerUrl('https://example.org/view?dataset=x')
+        it('reads a page on another Cell Explorer instance', () => {
+            assert.deepEqual(
+                parseCellExplorerUrl(
+                    'http://localhost:8000/view?dataset=spectrum'
+                ),
+                { origin: 'http://localhost:8000', dataset: 'spectrum' }
             );
+        });
+
+        it('ignores other pages', () => {
             assert.isUndefined(parseCellExplorerUrl(`${ORIGIN}/`));
             assert.isUndefined(parseCellExplorerUrl(`${ORIGIN}/view`));
             assert.isUndefined(parseCellExplorerUrl('not a url'));

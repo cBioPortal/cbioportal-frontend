@@ -16,9 +16,17 @@ export interface CellExplorerDataset {
     collection?: { slug: string; name: string } | null;
 }
 
-const CELL_EXPLORER_HOSTS = ['cell-explorer.cbioportal.org'];
+/** Resources with this id are shown in the Cell Explorer viewer, never in a frame. */
+export const CELL_EXPLORER_RESOURCE_ID = 'CELL_EXPLORER';
 
-/** The Cell Explorer page a URL opens, or undefined for any other URL. */
+export function isCellExplorerResource(row: { resourceId: string }): boolean {
+    return row.resourceId === CELL_EXPLORER_RESOURCE_ID;
+}
+
+/**
+ * The Cell Explorer page a URL opens, on any Cell Explorer instance, or undefined when the URL
+ * is not a dataset or collection page.
+ */
 export function parseCellExplorerUrl(
     url: string
 ): CellExplorerPage | undefined {
@@ -28,7 +36,7 @@ export function parseCellExplorerUrl(
     } catch {
         return undefined;
     }
-    if (!CELL_EXPLORER_HOSTS.includes(parsed.hostname)) {
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
         return undefined;
     }
     const dataset = parsed.searchParams.get('dataset');

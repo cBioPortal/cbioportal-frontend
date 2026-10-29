@@ -8,6 +8,15 @@ jest.mock('shared/components/iframeLoader/IFrameLoader', () => {
     };
 });
 
+jest.mock('./cellExplorer/CellExplorerResource', () => {
+    const React = require('react');
+    return function MockCellExplorerResource(props: { url: string }) {
+        return (
+            <div data-testid="cell-explorer-resource" data-url={props.url} />
+        );
+    };
+});
+
 jest.mock('shared/components/loadingIndicator/LoadingIndicator', () => {
     const React = require('react');
     return function MockLoadingIndicator(props: { isLoading: boolean }) {
@@ -161,6 +170,45 @@ describe('ResourceViewer', () => {
                 '',
             'link below'
         );
+    });
+
+    describe('Cell Explorer resources', () => {
+        const originalFetch = (global as any).fetch;
+        afterEach(() => {
+            (global as any).fetch = originalFetch;
+        });
+
+        it('shows them in the Cell Explorer viewer, never in a frame', () => {
+            (global as any).fetch = jest.fn(() => Promise.resolve({}));
+            const url = 'http://cell-explorer.example.org/view?dataset=x';
+            renderViewer({
+                rows: [row({ resourceId: 'CELL_EXPLORER', url })],
+            });
+
+            assert.equal(
+                screen
+                    .getByTestId('cell-explorer-resource')
+                    .getAttribute('data-url'),
+                url
+            );
+            assert.isNull(screen.queryByTestId('iframe-loader'));
+            assert.equal((global as any).fetch.mock.calls.length, 0);
+        });
+
+        it('frames a Cell Explorer link under another resource id', () => {
+            (global as any).fetch = jest.fn(() => new Promise(() => undefined));
+            renderViewer({
+                rows: [
+                    row({
+                        url:
+                            'https://cell-explorer.cbioportal.org/view?dataset=x',
+                    }),
+                ],
+            });
+
+            assert.isNotNull(screen.queryByTestId('iframe-loader'));
+            assert.isNull(screen.queryByTestId('cell-explorer-resource'));
+        });
     });
 
     it('renders nothing when there are no rows', () => {
