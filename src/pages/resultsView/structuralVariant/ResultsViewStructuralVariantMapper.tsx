@@ -5,11 +5,16 @@
  */
 
 import * as React from 'react';
-import ResultsViewStructuralVariantTable from './ResultsViewStructuralVariantTable';
 import { observer } from 'mobx-react';
-import { ResultsViewStructuralVariantMapperStore } from './ResultsViewStructuralVariantMapperStore';
-import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
 import { action, computed, makeObservable, observable } from 'mobx';
+import { StructuralVariant } from 'cbioportal-ts-api-client';
+
+import ResultsViewStructuralVariantTable from './ResultsViewStructuralVariantTable';
+import GenePartnerChart from './GenePartnerChart';
+import ResultsViewStructuralVariantMapperDataStore from './ResultsViewStructuralVariantMapperDataStore';
+import { ResultsViewStructuralVariantMapperStore } from './ResultsViewStructuralVariantMapperStore';
+
+import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
 import {
     getOncoKbIconStyleFromLocalStorage,
     saveOncoKbIconStyleToLocalStorage,
@@ -28,11 +33,31 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
 > {
     @observable mergeFusionTableOncoKbIcons;
 
+    @observable selectedPartner: string | undefined;
+
+    private dataStore: ResultsViewStructuralVariantMapperDataStore;
+
+    private originalDataFilter: (
+        row: StructuralVariant[],
+        filterString?: string,
+        filterStringUpper?: string,
+        filterStringLower?: string
+    ) => boolean;
+
     constructor(props: IFusionMapperProps) {
         super(props);
         makeObservable(this);
 
-        this.mergeFusionTableOncoKbIcons = getOncoKbIconStyleFromLocalStorage().mergeIcons;
+        this.mergeFusionTableOncoKbIcons =
+            getOncoKbIconStyleFromLocalStorage().mergeIcons;
+
+        this.selectedPartner = undefined;
+
+        this.dataStore = new ResultsViewStructuralVariantMapperDataStore(
+            (this.props.store.fusions || []).map(fusion => [fusion])
+        );
+
+        this.originalDataFilter = this.dataStore.getFilter();
     }
 
     @action.bound
@@ -41,9 +66,42 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
         saveOncoKbIconStyleToLocalStorage({ mergeIcons });
     }
 
-    @computed get itemsLabelPlural(): string {
-        const count = this.props.store.dataStore
-            .duplicateStructuralVariantCountInMultipleSamples;
+    @action.bound
+    handlePartnerSelect(partner: string) {
+        if (this.selectedPartner === partner) {
+            this.selectedPartner = undefined;
+            this.dataStore.setFilter(this.originalDataFilter);
+            return;
+        }
+
+        this.selectedPartner = partner;
+
+        this.dataStore.setFilter(
+            (
+                row: StructuralVariant[],
+                filterString?: string,
+                filterStringUpper?: string,
+                filterStringLower?: string
+            ) =>
+                this.originalDataFilter(
+                    row,
+                    filterString,
+                    filterStringUpper,
+                    filterStringLower
+                ) &&
+                row.some(
+                    variant =>
+                        variant.site1HugoSymbol === partner ||
+                        variant.site2HugoSymbol === partner
+                )
+        );
+    }
+
+    @computed
+    get itemsLabelPlural(): string {
+        const count =
+            this.dataStore.duplicateStructuralVariantCountInMultipleSamples;
+
         const structuralVariantsLabel =
             count === 1 ? 'structural variant' : 'structural variants';
 
@@ -64,8 +122,15 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
         render: () => {
             return (
                 <>
+                    <GenePartnerChart
+                        queryGene={this.props.store.gene.hugoGeneSymbol}
+                        variants={this.props.store.fusions}
+                        selectedPartner={this.selectedPartner}
+                        onPartnerSelect={this.handlePartnerSelect}
+                    />
+
                     <ResultsViewStructuralVariantTable
-                        dataStore={this.props.store.dataStore}
+                        dataStore={this.dataStore}
                         itemsLabelPlural={this.itemsLabelPlural}
                         studyIdToStudy={this.props.store.studyIdToStudy.result}
                         molecularProfileIdToMolecularProfile={
@@ -93,6 +158,7 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
         renderPending: () => (
             <LoadingIndicator center={true} isLoading={true} size={'big'} />
         ),
+
         renderError: () => <ErrorMessage />,
     });
 
