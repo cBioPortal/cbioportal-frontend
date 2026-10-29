@@ -2,6 +2,11 @@ import { ScatterplotLayer } from '@deck.gl/layers';
 import { EmbeddingPoint } from '../EmbeddingTypes';
 import { colorToRgb } from './coordinateUtils';
 
+// Samples outside the cohort that the embedding labels itself: colored like
+// cohort points, but smaller and translucent so the cohort still stands out.
+const REFERENCE_POINT_RADIUS = 0.02;
+const REFERENCE_POINT_ALPHA = 140;
+
 /**
  * Create the scatterplot layer for the embedding visualization
  */
@@ -28,7 +33,9 @@ export function createScatterplotLayer(
         getRadius: (d: EmbeddingPoint) => {
             // Non-cohort samples never participate in selection - draw them as a small backdrop
             if (d.isInCohort === false) {
-                return contextPointRadius;
+                return d.referenceColor
+                    ? REFERENCE_POINT_RADIUS
+                    : contextPointRadius;
             }
 
             if (d.isDeemphasized) {
@@ -43,6 +50,10 @@ export function createScatterplotLayer(
         getFillColor: (d: EmbeddingPoint) => {
             // Non-cohort samples always show their dark gray color
             if (d.isInCohort === false) {
+                if (d.referenceColor) {
+                    const rgb = colorToRgb(d.referenceColor);
+                    return [rgb[0], rgb[1], rgb[2], REFERENCE_POINT_ALPHA];
+                }
                 const color = d.color || '#666666';
                 const rgb = colorToRgb(color);
                 return [rgb[0], rgb[1], rgb[2], 255];
@@ -70,6 +81,10 @@ export function createScatterplotLayer(
         getLineColor: (d: EmbeddingPoint) => {
             // Non-cohort samples always show their dark gray color
             if (d.isInCohort === false) {
+                if (d.referenceColor) {
+                    const rgb = colorToRgb(d.referenceColor);
+                    return [rgb[0], rgb[1], rgb[2], REFERENCE_POINT_ALPHA];
+                }
                 const color = d.color || '#666666';
                 return colorToRgb(color); // Use same color for stroke and fill for consistency
             }

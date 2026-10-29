@@ -241,6 +241,10 @@ export interface EmbeddingPlotPoint {
     isInCohort?: boolean;
     // Rendered smaller/more transparent, without changing color or label.
     isDeemphasized?: boolean;
+    // Out-of-cohort points only: the value the embedding itself records for the
+    // coloring attribute (its `referenceData`), and that value's legend color.
+    referenceLabel?: string;
+    referenceColor?: string;
 }
 
 /**
@@ -784,6 +788,9 @@ function transformSampleEmbedding(
     // Pre-compute clinical data if needed (skip for embedding data fields)
     let clinicalDataColorMap: Map<string, string> | undefined;
     let clinicalDataValueMap: Map<string, string> | undefined;
+    // Lets samples the portal lacks still be colored from the embedding's own referenceData.
+    let referenceAttributeId: string | undefined;
+    let referenceCategoryToColor: { [category: string]: string } | undefined;
     let patientColorMap: Map<string, string> | undefined;
     let patientValueMap: Map<string, string> | undefined;
     let isNumericClinicalAttribute = false;
@@ -826,6 +833,12 @@ function transformSampleEmbedding(
             clinicalDataValueMap = maps.valueMap;
             patientColorMap = maps.patientColorMap;
             patientValueMap = maps.patientValueMap;
+            if (!isNumericClinicalAttribute) {
+                referenceAttributeId =
+                    coloringOption.info.clinicalAttribute.clinicalAttributeId;
+                referenceCategoryToColor =
+                    clinicalDataCacheEntry.result.categoryToColor;
+            }
         }
     }
 
@@ -902,6 +915,13 @@ function transformSampleEmbedding(
         const isInCohort = !!sample;
 
         if (!isInCohort) {
+            const referenceValue = referenceAttributeId
+                ? coord.referenceData?.[referenceAttributeId]
+                : undefined;
+            const referenceLabel =
+                referenceValue === undefined || referenceValue === null
+                    ? undefined
+                    : String(referenceValue);
             return {
                 x: coord.x,
                 y: coord.y,
@@ -911,6 +931,12 @@ function transformSampleEmbedding(
                 strokeColor: NON_COHORT_COLOR,
                 displayLabel: getNonCohortLabel(embeddingData.embedding_type),
                 isInCohort: false,
+                ...(referenceLabel !== undefined && {
+                    referenceLabel,
+                    referenceColor:
+                        referenceCategoryToColor?.[referenceLabel] ??
+                        DEFAULT_UNKNOWN_COLOR,
+                }),
             };
         }
 

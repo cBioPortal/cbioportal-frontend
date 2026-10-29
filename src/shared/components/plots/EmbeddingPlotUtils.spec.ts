@@ -549,6 +549,86 @@ describe('EmbeddingPlotUtils', () => {
             assert.notEqual(result[1].displayLabel, 'No data');
         });
 
+        it("colors out-of-cohort samples from the embedding's referenceData", () => {
+            const embeddingData: SampleEmbeddingData = {
+                embedding_type: 'samples',
+                title: 'Test reference map',
+                studyIds: ['study1'],
+                description: 'Test embedding',
+                totalPatients: 3,
+                sampleSize: 3,
+                data: [
+                    {
+                        sampleId: 'sample1',
+                        x: 1.0,
+                        y: 2.0,
+                        referenceData: { TREATMENT: 'Untreated' },
+                    },
+                    {
+                        sampleId: 'reference_only',
+                        x: 3.0,
+                        y: 4.0,
+                        referenceData: { TREATMENT: 'Untreated' },
+                    },
+                    { sampleId: 'unlabelled', x: 5.0, y: 6.0 },
+                ],
+            };
+            const coloringOption = {
+                info: {
+                    clinicalAttribute: {
+                        clinicalAttributeId: 'TREATMENT',
+                        displayName: 'Treatment',
+                        datatype: 'STRING',
+                        patientAttribute: false,
+                    },
+                },
+            } as any;
+
+            const result = makeEmbeddingScatterPlotData(
+                embeddingData,
+                createMockStore(),
+                coloringOption
+            );
+
+            // The portal's own value wins for a sample it has.
+            assert.equal(result[0].displayLabel, 'Treated');
+            assert.isUndefined(result[0].referenceLabel);
+
+            // Still out of cohort for selection and the legend, but colored.
+            assert.equal(result[1].isInCohort, false);
+            assert.include(result[1].displayLabel!, 'not in this cohort');
+            assert.equal(result[1].referenceLabel, 'Untreated');
+            assert.equal(result[1].referenceColor, '#FF0000');
+
+            assert.equal(result[2].isInCohort, false);
+            assert.isUndefined(result[2].referenceColor);
+        });
+
+        it('ignores referenceData when not coloring by a clinical attribute', () => {
+            const embeddingData: SampleEmbeddingData = {
+                embedding_type: 'samples',
+                title: 'Test reference map',
+                studyIds: ['study1'],
+                description: 'Test embedding',
+                totalPatients: 1,
+                sampleSize: 1,
+                data: [
+                    {
+                        sampleId: 'reference_only',
+                        x: 3.0,
+                        y: 4.0,
+                        referenceData: { TREATMENT: 'Untreated' },
+                    },
+                ],
+            };
+            const result = makeEmbeddingScatterPlotData(
+                embeddingData,
+                createMockStore(),
+                undefined
+            );
+            assert.isUndefined(result[0].referenceColor);
+        });
+
         it('uses default cancer type coloring when no coloring option specified', () => {
             const embeddingData: PatientEmbeddingData = {
                 embedding_type: 'patients',

@@ -183,6 +183,13 @@ export const TooltipDisplay: React.FC<TooltipDisplayProps> = ({
         }
     });
 
+    if (isOutOfCohort && hoveredPoint.referenceLabel !== undefined) {
+        allFields.push({
+            label: `${colorByLabel || 'Category'} (reference map)`,
+            value: hoveredPoint.referenceLabel,
+        });
+    }
+
     // Order dynamically selected fields by type, not by selection order.
     const DYNAMIC_FIELD_PREFIX_ORDER = [
         CLINICAL_ATTRIBUTE_FIELD_PREFIX,
