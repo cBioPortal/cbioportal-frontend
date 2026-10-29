@@ -906,12 +906,16 @@ export default class FusionComparisonView extends React.Component<
         );
     };
 
-    // The fusion-viewer deep link for a sample, or undefined when its studyId
-    // is unknown (so the header can omit a dead link).
-    expandedSampleLink = (sampleId: string): string | undefined => {
+    // The fusion-viewer deep link for a sample (opened on `fusionId` when
+    // given), or undefined when its studyId is unknown (so the header can omit
+    // a dead link).
+    expandedSampleLink = (
+        sampleId: string,
+        fusionId?: string
+    ): string | undefined => {
         const studyId = this.studyIdBySampleId.get(sampleId);
         if (!studyId) return undefined;
-        return sampleFusionViewerHref(studyId, sampleId);
+        return sampleFusionViewerHref(studyId, sampleId, fusionId);
     };
 
     /** Pair mode: the caller-stated reciprocal row of the anchored pair. */
@@ -1610,7 +1614,10 @@ export default class FusionComparisonView extends React.Component<
                             const pair = expandedRow.threePrimeSymbol
                                 ? `${expandedRow.fivePrimeSymbol} → ${expandedRow.threePrimeSymbol}`
                                 : expandedRow.fivePrimeSymbol;
-                            const link = this.expandedSampleLink(sampleId);
+                            const link = this.expandedSampleLink(
+                                sampleId,
+                                expandedRow.event.id
+                            );
                             return (
                                 <div
                                     data-testid="expanded-header"

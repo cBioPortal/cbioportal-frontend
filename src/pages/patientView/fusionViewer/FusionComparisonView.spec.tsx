@@ -493,10 +493,10 @@ describe('FusionComparisonView', () => {
             .hostNodes();
         assert.equal(link.length, 1);
         assert.equal(link.prop('target'), '_blank');
-        assert.equal(
-            link.prop('href'),
-            sampleFusionViewerHref('study_a', 'S1')
-        );
+        // Deep-links to this exact fusion, not just the sample.
+        const href = link.prop('href') as string;
+        assert.include(href, sampleFusionViewerHref('study_a', 'S1'));
+        assert.include(href, 'fusionId=S1_TMPRSS2_ERG_100_');
     });
 
     it('expanded header omits the link when studyId is unresolved', () => {
