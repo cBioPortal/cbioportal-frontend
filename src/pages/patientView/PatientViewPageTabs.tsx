@@ -732,6 +732,11 @@ export function tabs(
                     pageComponent.patientViewPageStore.studies.result[0]
                         ?.referenceGenome
                 }
+                fusionId={urlWrapper.query.fusionId}
+                onFusionSelected={fusionId =>
+                    // replace: clicking through fusions shouldn't flood history
+                    urlWrapper.updateURL({ fusionId }, undefined, false, true)
+                }
             />
         </MSKTab>
     );

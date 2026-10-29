@@ -105,7 +105,8 @@ export class FusionViewerStore {
     @action
     public setStructuralVariants(
         svs: StructuralVariant[],
-        referenceGenome?: string
+        referenceGenome?: string,
+        preferredFusionId?: string
     ): void {
         this.structuralVariants = svs;
         if (referenceGenome) {
@@ -130,8 +131,13 @@ export class FusionViewerStore {
         this.selectedTranscript3pIds.clear();
         this.activeTranscript5pId = '';
         this.activeTranscript3pId = '';
+        // A deep-linked fusion (URL `fusionId`) wins when it is in this data;
+        // an unknown id falls back to the first fusion.
         const fusions = this.fusions;
-        if (fusions.length > 0) {
+        const preferred = fusions.find(f => f.id === preferredFusionId);
+        if (preferred) {
+            this.selectFusion(preferred.id);
+        } else if (fusions.length > 0) {
             this.selectFusion(fusions[0].id);
         }
     }

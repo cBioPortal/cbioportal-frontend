@@ -9,6 +9,7 @@ export type PatientViewUrlQuery = {
     caseId?: string;
     sampleId?: string;
     resourceUrl?: string;
+    fusionId?: string;
     genomicEvolutionSettings: {
         showTimeline?: string;
 
@@ -33,6 +34,9 @@ export default class PatientViewUrlWrapper extends URLWrapper<
             caseId: { isSessionProp: false, isHashedProp: true },
             sampleId: { isSessionProp: false, isHashedProp: true },
             resourceUrl: { isSessionProp: false },
+            // Not hashed: the tabs remount on hash change, and selecting a
+            // fusion in the viewer rewrites this param.
+            fusionId: { isSessionProp: false },
             genomicEvolutionSettings: {
                 isSessionProp: false,
                 nestedObjectProps: {

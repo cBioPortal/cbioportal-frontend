@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
+import { IReactionDisposer, reaction } from 'mobx';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 import { FusionViewerStore } from './FusionViewerStore';
 import { FusionListSidebar } from './FusionListSidebar';
@@ -10,18 +11,34 @@ import styles from './styles.module.scss';
 interface IFusionViewerTabProps {
     structuralVariants: StructuralVariant[];
     referenceGenome?: string;
+    /** Deep-linked fusion (`FusionEvent.id`, URL `fusionId`) to open on. */
+    fusionId?: string;
+    /** Called when the user selects a different fusion. */
+    onFusionSelected?: (fusionId: string) => void;
 }
 
 @observer
 export class FusionViewerTab extends React.Component<IFusionViewerTabProps> {
     private store: FusionViewerStore;
+    private disposeSelectionReaction: IReactionDisposer;
 
     constructor(props: IFusionViewerTabProps) {
         super(props);
         this.store = new FusionViewerStore();
         this.store.setStructuralVariants(
             props.structuralVariants,
-            props.referenceGenome
+            props.referenceGenome,
+            props.fusionId
+        );
+        // Mirror selection changes out (e.g. into the URL). Not fired for the
+        // initial selection, so opening the tab doesn't rewrite the URL.
+        this.disposeSelectionReaction = reaction(
+            () => this.store.selectedFusionId,
+            id => {
+                if (id && id !== this.props.fusionId) {
+                    this.props.onFusionSelected?.(id);
+                }
+            }
         );
     }
 
@@ -29,9 +46,21 @@ export class FusionViewerTab extends React.Component<IFusionViewerTabProps> {
         if (prevProps.structuralVariants !== this.props.structuralVariants) {
             this.store.setStructuralVariants(
                 this.props.structuralVariants,
-                this.props.referenceGenome
+                this.props.referenceGenome,
+                this.props.fusionId
             );
+        } else if (
+            // URL changed underneath us (back/forward, pasted link).
+            this.props.fusionId &&
+            prevProps.fusionId !== this.props.fusionId &&
+            this.props.fusionId !== this.store.selectedFusionId
+        ) {
+            this.store.selectFusion(this.props.fusionId);
         }
+    }
+
+    componentWillUnmount() {
+        this.disposeSelectionReaction();
     }
 
     render() {
