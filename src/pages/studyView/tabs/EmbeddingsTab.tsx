@@ -116,6 +116,12 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     // applyFilterGlobally() directly.
     private readonly panel1Ref = React.createRef<EmbeddingsPanel>();
 
+    // Page offset of the panel grid's top edge; panels size their maps to the
+    // viewport below it. It moves when e.g. the filter bar appears.
+    private readonly panelGridRef = React.createRef<HTMLDivElement>();
+    @observable private panelGridTop: number | undefined;
+    private pageResizeObserver: ResizeObserver | undefined;
+
     // Increments on "Clear" - every panel resets its own filters in
     // response (see EmbeddingsPanel.componentDidUpdate).
     @observable private sharedClearFilterRequestId = 0;
@@ -351,6 +357,40 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         }
     }
 
+    componentDidMount() {
+        this.measurePanelGridTop();
+        window.addEventListener('resize', this.measurePanelGridTop);
+        if (typeof ResizeObserver !== 'undefined') {
+            this.pageResizeObserver = new ResizeObserver(
+                this.measurePanelGridTop
+            );
+            this.pageResizeObserver.observe(document.body);
+        }
+    }
+
+    componentDidUpdate() {
+        this.measurePanelGridTop();
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('resize', this.measurePanelGridTop);
+        this.pageResizeObserver?.disconnect();
+    }
+
+    @action.bound
+    private measurePanelGridTop() {
+        const grid = this.panelGridRef.current;
+        if (!grid) {
+            return;
+        }
+        const top = Math.round(
+            grid.getBoundingClientRect().top + window.scrollY
+        );
+        if (top !== this.panelGridTop) {
+            this.panelGridTop = top;
+        }
+    }
+
     private renderPanels() {
         const panelIndexes: PanelIndex[] = Array.from(
             { length: this.panelCount },
@@ -362,6 +402,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
         return (
             <div
+                ref={this.panelGridRef}
                 style={
                     isSquareLayout
                         ? {
@@ -392,6 +433,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                             store={this.props.store}
                             panelIndex={panelIndex}
                             panelCount={this.panelCount}
+                            panelGridTop={this.panelGridTop}
                             selectionMode={this.sharedSelectionMode}
                             onSelectionModeChange={
                                 this.onSharedSelectionModeChange
