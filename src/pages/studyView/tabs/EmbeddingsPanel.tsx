@@ -105,6 +105,8 @@ export interface IEmbeddingsPanelProps {
     sharedMapValue?: string;
     onSharedMapChange: (value: string) => void;
     onSetPanelCount: (target: number) => void;
+    // Page offset of the top of the panel grid, once measured.
+    panelGridTop?: number;
 }
 
 // Clinical attribute every embedding is coloured by on first load. CANCER_TYPE rather
@@ -911,10 +913,12 @@ export class EmbeddingsPanel extends React.Component<
         this.selectedColoringOption = option;
     }
 
+    // Fills the viewport below the panel grid, leaving room for the tab's own
+    // bottom padding, so the page doesn't scroll at its initial position.
     @computed get plotHeight(): number {
         const viewportHeight = this.windowHeight;
-        const bottomPadding = 90;
-        const contentTop = 300;
+        const bottomPadding = 24;
+        const contentTop = this.props.panelGridTop ?? 300;
         // 4 panels lay out as a 2x2 grid (see EmbeddingsTab.tsx).
         const rowCount = this.props.panelCount === 4 ? 2 : 1;
         const rowGap = 12;
