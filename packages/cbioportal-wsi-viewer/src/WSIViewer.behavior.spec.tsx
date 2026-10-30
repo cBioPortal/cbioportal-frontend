@@ -235,11 +235,17 @@ beforeEach(() => {
 });
 
 describe('WSIViewer — tileServerBase', () => {
-    it('drops a trailing slash', () => {
-        const inst = makeInstance('P-1', {
-            tileServerUrl: 'https://tiles.example.com/api/v1/',
-        });
-        assert.equal(inst.tileServerBase, 'https://tiles.example.com/api/v1');
+    it('ends in exactly one slash', () => {
+        for (const tileServerUrl of [
+            'https://tiles.example.com/api/v1',
+            'https://tiles.example.com/api/v1/',
+        ]) {
+            const inst = makeInstance('P-1', { tileServerUrl });
+            assert.equal(
+                inst.tileServerBase,
+                'https://tiles.example.com/api/v1/'
+            );
+        }
     });
 });
 

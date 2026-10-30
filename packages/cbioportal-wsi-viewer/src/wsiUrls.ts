@@ -37,6 +37,24 @@ export function buildWsiSlideQuery(
     ]);
 }
 
+/**
+ * The tile-server base URL with exactly one trailing slash. Tile and
+ * thumbnail paths are appended to it, so `/wsi` and `/wsi/` both serve
+ * `/wsi/tiles/…`. A relative base stays relative, resolved by the browser
+ * against the page.
+ */
+export function normalizeWsiTileServerBase(tileServerUrl: string): string {
+    return `${tileServerUrl.replace(/\/+$/, '')}/`;
+}
+
+function tileServerRequestUrl(
+    tileServerBase: string,
+    path: string,
+    query: string
+): string {
+    return `${normalizeWsiTileServerBase(tileServerBase)}${path}?${query}`;
+}
+
 /** One tile's URL: `{tileServerBase}/tiles/zxy/{z}/{x}/{y}?{slide query}`. */
 export function buildWsiTileUrl(
     tileServerBase: string,
@@ -45,13 +63,17 @@ export function buildWsiTileUrl(
     x: number,
     y: number
 ): string {
-    return `${tileServerBase.replace(
-        /\/$/,
-        ''
-    )}/tiles/zxy/${level}/${x}/${y}?${slideQuery}`;
+    return tileServerRequestUrl(
+        tileServerBase,
+        `tiles/zxy/${level}/${x}/${y}`,
+        slideQuery
+    );
 }
 
-/** Build a slide thumbnail URL from the tile-server base URL. */
+/**
+ * A slide thumbnail's URL: `{tileServerBase}/thumbnails?{slide
+ * query}&width=…&height=…`, at most `width`×`height`.
+ */
 export function buildWsiThumbnailUrl(
     tileServerBase: string,
     studyId: string,
@@ -59,16 +81,40 @@ export function buildWsiThumbnailUrl(
     width = WSI_THUMBNAIL_WIDTH,
     height = WSI_THUMBNAIL_HEIGHT
 ): string {
-    const baseUrl =
-        typeof window === 'undefined'
-            ? 'http://localhost'
-            : window.location.href;
-    const parsed = new URL(tileServerBase, baseUrl);
-    const path = `${parsed.pathname.replace(/\/$/, '')}/thumbnails`;
-    const url = new URL(path, parsed.origin);
-    url.search = `?${buildWsiSlideQuery(studyId, source)}&${encodeQuery([
-        ['width', Math.max(1, Math.round(width))],
-        ['height', Math.max(1, Math.round(height))],
-    ])}`;
-    return url.toString();
+    return tileServerRequestUrl(
+        tileServerBase,
+        'thumbnails',
+        `${buildWsiSlideQuery(studyId, source)}&${encodeQuery([
+            ['width', Math.max(1, Math.round(width))],
+            ['height', Math.max(1, Math.round(height))],
+        ])}`
+    );
+}
+
+const reportedCrossOriginTileServers = new Set<string>();
+
+/**
+ * Whether the tile server is same-origin with the page. Tile and thumbnail
+ * requests rely on the portal session cookie, which a cross-origin tile
+ * server does not get, so a cross-origin one is reported once with
+ * `console.error`.
+ */
+export function checkWsiTileServerOrigin(tileServerUrl: string): boolean {
+    if (typeof window === 'undefined' || !window.location) return true;
+    let origin: string;
+    try {
+        origin = new URL(tileServerUrl, window.location.href).origin;
+    } catch (_) {
+        return true;
+    }
+    if (origin === window.location.origin) return true;
+    if (!reportedCrossOriginTileServers.has(origin)) {
+        reportedCrossOriginTileServers.add(origin);
+        // eslint-disable-next-line no-console
+        console.error(
+            `[WSIViewer] The tile server (${origin}) is not same-origin with the portal (${window.location.origin}). ` +
+                'Tile and thumbnail requests need the portal session cookie, so serve the tile server from the portal host, e.g. under /wsi.'
+        );
+    }
+    return false;
 }
