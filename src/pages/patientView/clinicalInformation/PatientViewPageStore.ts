@@ -28,6 +28,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import { getClient } from '../../../shared/api/cbioportalClientInstance';
 import { PatientViewPlotsStore } from './PatientViewPlotsStore';
+import { ImmuneSignatureStore } from '../immuneSignature/ImmuneSignatureStore';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
 import oncokbClient from '../../../shared/api/oncokbClientInstance';
 import { computed, observable, action, makeObservable } from 'mobx';
@@ -397,6 +398,7 @@ export class PatientViewPageStore {
         this.studyId = studyId;
 
         this.plotsStore = new PatientViewPlotsStore(this);
+        this.immuneSignatureStore = new ImmuneSignatureStore(this);
         this.plotsTabStore = new PlotsTabStore({
             molecularProfiles: this.molecularProfilesInCohortStudies,
             plotsSelectedGenes: this.plotsSelectedGenes,
@@ -457,6 +459,8 @@ export class PatientViewPageStore {
 
     // Sub-store for the patient view plots (e.g. the mRNA tab).
     public readonly plotsStore: PatientViewPlotsStore;
+    // Sub-store for the immune signature tab and header row.
+    public readonly immuneSignatureStore: ImmuneSignatureStore;
     public readonly plotsTabStore: PlotsTabStore;
     public clinicalDataCache: ClinicalDataCache;
 

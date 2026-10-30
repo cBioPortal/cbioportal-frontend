@@ -80,6 +80,16 @@ import {
     MUT_COLOR_TRUNC_PASSENGER,
 } from 'cbioportal-frontend-commons';
 import { getCategoryOrderByGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import {
+    GenericAssayDerivedEntity,
+    getGenericAssayCategories,
+    isDerivedGenericAssayEntityId,
+} from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import {
+    getDerivedGenericAssayEntity,
+    getDerivedGenericAssayEntitySources,
+    makeDerivedGenericAssayData,
+} from 'shared/lib/GenericAssayUtils/GenericAssayDerivedEntityUtils';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
@@ -1481,6 +1491,34 @@ function makeAxisDataPromise_Geneset(
     });
 }
 
+async function makeDerivedGenericAssayAxisData(
+    entity: GenericAssayDerivedEntity,
+    genericAssayType: string | undefined,
+    profiles: MolecularProfile[],
+    genericAssayMolecularDataCache: GenericAssayMolecularDataCache
+): Promise<IStringAxisData> {
+    const queries = _.flatMap(profiles, profile =>
+        getDerivedGenericAssayEntitySources(genericAssayType).map(stableId => ({
+            stableId,
+            molecularProfileId: profile.molecularProfileId,
+        }))
+    );
+    await Promise.all(
+        queries.map(q => genericAssayMolecularDataCache.getPromise(q, true))
+    );
+    const sourceData = _.flatMap(
+        queries,
+        q => genericAssayMolecularDataCache.get(q)!.data!
+    );
+    return {
+        data: makeDerivedGenericAssayData(entity, genericAssayType, sourceData),
+        datatype: 'string',
+        categoryOrder: (getGenericAssayCategories(genericAssayType) || []).map(
+            c => c.label
+        ),
+    };
+}
+
 function makeAxisDataPromise_GenericAssay(
     entityId: string,
     molecularProfileIdSuffix: string,
@@ -1501,6 +1539,21 @@ function makeAxisDataPromise_GenericAssay(
             const profiles = molecularProfileIdSuffixToMolecularProfiles.result![
                 molecularProfileIdSuffix
             ];
+            // each profile in profiles should share the same generic assay type
+            const genericAssayType =
+                profiles.length > 0 ? profiles[0].genericAssayType : undefined;
+            const derivedEntity = getDerivedGenericAssayEntity(
+                genericAssayType,
+                entityId
+            );
+            if (derivedEntity) {
+                return makeDerivedGenericAssayAxisData(
+                    derivedEntity,
+                    genericAssayType,
+                    profiles,
+                    genericAssayMolecularDataCachePromise.result!
+                );
+            }
             // Only LIMITVALUE is numeric data
             const isNumeric =
                 genericAssayDataType === DataTypeConstants.LIMITVALUE;
@@ -1539,13 +1592,9 @@ function makeAxisDataPromise_GenericAssay(
                     genericAssayEntityId: entityId,
                 });
             } else {
-                // each profile in profiles should share the same generic assay type
-                const categoryOrder =
-                    profiles.length > 0
-                        ? getCategoryOrderByGenericAssayType(
-                              profiles[0].genericAssayType
-                          )
-                        : undefined;
+                const categoryOrder = genericAssayType
+                    ? getCategoryOrderByGenericAssayType(genericAssayType)
+                    : undefined;
                 return Promise.resolve({
                     data: data.map(d => {
                         return {
@@ -2776,11 +2825,7 @@ export function logScalePossible(
         !axisHasNegativeNumbers(axisData)
     ) {
         return true;
-    } else if (
-        axisData &&
-        isGenericAssaySelected(axisSelection) &&
-        axisSelection.genericAssayDataType === DataTypeConstants.LIMITVALUE
-    ) {
+    } else if (axisData && isLimitValueGenericAssaySelected(axisSelection)) {
         // Check negative values in log scale
         return axisHasNegativeNumbers(axisData) ? false : true;
     } else {
@@ -3390,14 +3435,10 @@ export function showWaterfallPlot(
 ): boolean {
     return (
         (vertSelection.dataType !== undefined &&
-            isGenericAssaySelected(vertSelection) &&
-            vertSelection.genericAssayDataType ===
-                DataTypeConstants.LIMITVALUE &&
+            isLimitValueGenericAssaySelected(vertSelection) &&
             horzSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE) ||
         (horzSelection.dataType !== undefined &&
-            isGenericAssaySelected(horzSelection) &&
-            horzSelection.genericAssayDataType ===
-                DataTypeConstants.LIMITVALUE &&
+            isLimitValueGenericAssaySelected(horzSelection) &&
             vertSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE) ||
         (horzAxisData !== undefined &&
             isNumberData(horzAxisData) &&
@@ -3860,6 +3901,16 @@ export function maybeSetLogScale(axisSelection: AxisMenuSelection) {
 
 export function isGenericAssaySelected(selection: AxisMenuSelection) {
     return selection.genericAssayDataType !== undefined;
+}
+
+// Whether the selection is a numeric (LIMIT-VALUE) generic assay entity.
+// Derived entities are categorical even in a numeric profile.
+export function isLimitValueGenericAssaySelected(selection: AxisMenuSelection) {
+    return (
+        isGenericAssaySelected(selection) &&
+        selection.genericAssayDataType === DataTypeConstants.LIMITVALUE &&
+        !isDerivedGenericAssayEntityId(selection.genericAssayEntityId)
+    );
 }
 
 export function getOption(

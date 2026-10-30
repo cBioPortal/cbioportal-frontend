@@ -7,6 +7,7 @@ import {
     transitionTrackGroupSortPriority,
     transitionHeatmapTrack,
     transitionCategoricalTrack,
+    getGenericAssayCategoricalRuleSetTrackIds,
 } from './DeltaUtils';
 
 import { spy, SinonStub, match, createStubInstance } from 'sinon';
@@ -640,6 +641,26 @@ describe('Oncoprint DeltaUtils', () => {
                 'right priority order'
             );
         });
+        it('should sort generic assay categorical track groups before the genetic tracks', () => {
+            transitionTrackGroupSortPriority(
+                {
+                    heatmapTracks: [{ trackGroupIndex: 2 }],
+                    genesetHeatmapTracks: [],
+                    categoricalTracks: [{ trackGroupIndex: 3 }],
+                },
+                {
+                    heatmapTracks: [{ trackGroupIndex: 2 }],
+                    genesetHeatmapTracks: [],
+                },
+                oncoprint
+            );
+            assert.deepEqual(oncoprint.setTrackGroupSortPriority.args[0][0], [
+                CLINICAL_TRACK_GROUP_INDEX,
+                2,
+                3,
+                GENETIC_TRACK_GROUP_INDEX,
+            ]);
+        });
         it('should set the track group sort priority on initialisation if only a gene set heatmap is present', () => {
             transitionTrackGroupSortPriority(
                 {
@@ -1262,6 +1283,24 @@ describe('Oncoprint DeltaUtils', () => {
             assert.equal(
                 trackIdForRuleSetSharing.genericAssayCategorical['profile_1'],
                 2
+            );
+        });
+
+        it('does not share the rule set of a stacked bar track of the same profile', () => {
+            const dominantSpec = { ...nextSpec, key: 'DOMINANT' };
+            const stackedSpec = {
+                ...nextSpec,
+                key: 'STACKED',
+                stackedBar: true,
+                stackedBarCategories: [],
+                stackedBarFills: [],
+            } as ICategoricalTrackSpec;
+            assert.deepEqual(
+                getGenericAssayCategoricalRuleSetTrackIds(
+                    [dominantSpec, stackedSpec],
+                    { DOMINANT: 1, STACKED: 2 }
+                ),
+                { profile_1: 1 }
             );
         });
     });
