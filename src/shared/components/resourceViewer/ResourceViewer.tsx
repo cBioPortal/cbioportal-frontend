@@ -18,6 +18,8 @@ import {
 } from 'shared/lib/ResourceTableUtils';
 import { applyCustomUrlTransforms } from './resourceUrlTransforms';
 import { buildPDFUrl } from './resourceUrlUtils';
+import CellExplorerResource from './cellExplorer/CellExplorerResource';
+import { isCellExplorerResource } from './cellExplorer/cellExplorerUtils';
 import styles from './styles.module.scss';
 
 /** Shown when a resource's host does not answer and the resource names no message of its own. */
@@ -190,7 +192,8 @@ export default class ResourceViewer extends React.Component<
     private startUrlAccessibilityCheck() {
         const url = this.currentRow?.url;
 
-        if (!url) {
+        // Cell Explorer resources are never framed, so there is no frame to warn about.
+        if (!url || isCellExplorerResource(this.currentRow!)) {
             this.urlIsAccessible = true;
             this.urlCheckComplete = true;
             return;
@@ -299,6 +302,19 @@ export default class ResourceViewer extends React.Component<
         const row = this.currentRow;
         if (!row) {
             return null;
+        }
+
+        if (isCellExplorerResource(row)) {
+            return (
+                <div data-test="ResourceViewer" ref={this.containerRef}>
+                    <CellExplorerResource
+                        rows={this.props.rows}
+                        index={this.currentIndex}
+                        onIndexChange={this.props.onIndexChange}
+                        height={this.iframeHeight}
+                    />
+                </div>
+            );
         }
 
         const multipleRows = this.props.rows.length > 1;
