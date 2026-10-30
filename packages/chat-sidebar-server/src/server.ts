@@ -114,7 +114,7 @@ app.post('/api/chat/title', async (req, res) => {
 // Streamed as NDJSON, one { title, prompt } per line, so each pill can show as
 // soon as it is complete.
 app.post('/api/chat/followups', async (req, res) => {
-    const { question, answer, href, details } = req.body ?? {};
+    const { question, answer, href, details, model } = req.body ?? {};
     if (typeof question !== 'string' || typeof answer !== 'string') {
         res.status(400).json({
             error: 'question and answer (strings) required',
@@ -130,7 +130,8 @@ app.post('/api/chat/followups', async (req, res) => {
                 href: typeof href === 'string' ? href : '',
                 details: details ?? { available: false },
             },
-            signal
+            signal,
+            typeof model === 'string' ? model : undefined
         );
         for await (const followup of followups) {
             if (!res.headersSent) {

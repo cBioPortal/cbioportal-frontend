@@ -1,6 +1,7 @@
 // All configured providers are live; getModel() picks one per request.
 
 import {
+    APICallError,
     streamText,
     generateText,
     convertToModelMessages,
@@ -36,11 +37,12 @@ const bedrock = createAmazonBedrock({
 
 const BEDROCK_MODEL_ID = process.env.BEDROCK_MODEL_ID;
 
-// Follow-up suggestions always run on this small Bedrock model, whatever the
-// user picked for the chat itself.
+// Small models for follow-up suggestions, on the provider the chat uses.
 const SUGGESTIONS_MODEL_ID =
     process.env.SUGGESTIONS_MODEL_ID ||
     'us.anthropic.claude-haiku-4-5-20251001-v1:0';
+const SMALL_ANTHROPIC_MODEL_ID = 'claude-haiku-4-5';
+const SMALL_VERTEX_MODEL_ID = 'claude-haiku-4-5@20251001';
 
 // Direct Anthropic and Vertex access currently use Sonnet 5.
 const CLAUDE_MODEL_ID = 'claude-sonnet-5';
@@ -340,6 +342,23 @@ export async function runChat(
     await result.pipeUIMessageStreamToResponse(res);
 }
 
+// For one-shot calls. The Bedrock provider drops `reasoning: 'none'`, so Claude
+// there gets the raw field.
+function noThinking(modelId: string) {
+    return {
+        reasoning: 'none' as const,
+        providerOptions: modelId.includes('anthropic.')
+            ? {
+                  bedrock: {
+                      additionalModelRequestFields: {
+                          thinking: { type: 'disabled' },
+                      },
+                  },
+              }
+            : undefined,
+    };
+}
+
 // No tools — everything the report needs (query results, page-state
 // snapshots, navigation URLs) is already in the given history.
 export async function runReport(
@@ -431,28 +450,45 @@ export interface FollowupsInput {
     details: unknown;
 }
 
-// Follow-ups for the latest exchange on the page the user is on, yielded one
-// at a time as each is complete. No tools, no reasoning, and only the
-// exchange the client sends, so the call stays fast and cheap.
-export async function* runFollowups(
-    { question, answer, href, details }: FollowupsInput,
+function getSmallModel(provider: string): LanguageModel {
+    switch (provider) {
+        case 'anthropic':
+            return anthropic(SMALL_ANTHROPIC_MODEL_ID);
+        case 'vertex':
+            return vertexAnthropic(SMALL_VERTEX_MODEL_ID);
+        case 'bedrock':
+            return bedrock(SUGGESTIONS_MODEL_ID);
+        default:
+            throw new Error(`Unknown provider: "${provider}"`);
+    }
+}
+
+// Providers whose small model isn't enabled; their follow-ups use the chat
+// model instead.
+const smallModelUnavailable = new Set<string>();
+
+function isModelUnavailable(err: unknown): boolean {
+    return (
+        APICallError.isInstance(err) &&
+        (err.statusCode === 403 || err.statusCode === 404)
+    );
+}
+
+async function* streamSuggestions(
+    settings: Pick<
+        Parameters<typeof streamText>[0],
+        'model' | 'reasoning' | 'providerOptions'
+    >,
+    system: string,
+    content: string,
     abortSignal: AbortSignal
 ): AsyncGenerator<Suggestion> {
-    const system = `${LOCAL_FOLLOWUPS_PROMPT_TEXT}\n\n${CAPABILITIES_PROMPT_TEXT}\n\n${formatPageSection(
-        href,
-        details
-    )}`;
     // streamText reports failures here rather than throwing.
     let error: unknown;
     const result = streamText({
-        model: bedrock(SUGGESTIONS_MODEL_ID),
+        ...settings,
         system,
-        messages: [
-            {
-                role: 'user',
-                content: `## Latest exchange\n\nUser:\n${question}\n\nAssistant:\n${answer}\n\nSuggest follow-ups.`,
-            },
-        ],
+        messages: [{ role: 'user', content }],
         output: Output.array({ element: SuggestionSchema }),
         abortSignal,
         onError: event => {
@@ -465,4 +501,55 @@ export async function* runFollowups(
         if (++count === FOLLOWUP_COUNT) return;
     }
     if (error !== undefined) throw error;
+}
+
+// Follow-ups for the latest exchange on the page the user is on, yielded one
+// at a time as each is complete. No tools, no reasoning, and only the
+// exchange the client sends, so the call stays fast and cheap.
+export async function* runFollowups(
+    { question, answer, href, details }: FollowupsInput,
+    abortSignal: AbortSignal,
+    model?: string
+): AsyncGenerator<Suggestion> {
+    const modelId = model || AVAILABLE_MODELS[0]?.id;
+    if (!modelId) {
+        throw new Error('No model available — see AVAILABLE_MODELS.');
+    }
+    const provider = modelId.slice(0, modelId.indexOf(':'));
+    const system = `${LOCAL_FOLLOWUPS_PROMPT_TEXT}\n\n${CAPABILITIES_PROMPT_TEXT}\n\n${formatPageSection(
+        href,
+        details
+    )}`;
+    const content = `## Latest exchange\n\nUser:\n${question}\n\nAssistant:\n${answer}\n\nSuggest follow-ups.`;
+    const chatModel = () =>
+        streamSuggestions(
+            { model: getModel(modelId), ...noThinking(modelId) },
+            system,
+            content,
+            abortSignal
+        );
+    if (smallModelUnavailable.has(provider)) {
+        yield* chatModel();
+        return;
+    }
+    let yielded = false;
+    try {
+        for await (const suggestion of streamSuggestions(
+            { model: getSmallModel(provider) },
+            system,
+            content,
+            abortSignal
+        )) {
+            yielded = true;
+            yield suggestion;
+        }
+    } catch (err) {
+        if (yielded || !isModelUnavailable(err)) throw err;
+        console.warn(
+            `${provider} small model unavailable, using ${modelId} for follow-ups:`,
+            describeError(err)
+        );
+        smallModelUnavailable.add(provider);
+        yield* chatModel();
+    }
 }

@@ -1,3 +1,4 @@
+import { getSelectedModel } from './chatSession';
 import { FollowupsExchange } from './followupsInput';
 import { PageEvent } from './page-events';
 import { embedded } from './parent-origin';
@@ -217,6 +218,7 @@ function request(
             question: exchange.question,
             answer: exchange.answer,
             ...requestPage,
+            model: getSelectedModel(),
         },
         controller.signal,
         suggestions => {
