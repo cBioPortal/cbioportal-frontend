@@ -2,33 +2,36 @@
  * @jest-environment jsdom
  */
 import {
+    WSI_SESSION_EXPIRED_MESSAGE,
     WsiViewerController,
     WsiViewerControllerHost,
 } from './wsiViewerController';
-import { getWsiSlideAccess } from './wsiAuth';
+import { getWsiSlideSource } from './wsiAuth';
+import {
+    fetchWsiThumbnailBlob,
+    WsiThumbnailFetchError,
+} from './wsiThumbnailFetchCache';
 import { configureWsiViewerRuntime } from './wsiViewerConfig';
 import { WsiViewerState } from './wsiViewerState';
 import { Sample, Slide, TileMetadata } from './wsiViewerTypes';
 
 jest.mock('./wsiAuth', () => ({
-    getWsiSlideAccess: jest.fn(),
+    getWsiSlideSource: jest.fn(),
 }));
 jest.mock('./wsiThumbnailFetchCache', () => ({
-    fetchWsiThumbnailBlob: jest.fn(() =>
-        Promise.reject(new Error('no preview'))
-    ),
+    ...jest.requireActual('./wsiThumbnailFetchCache'),
+    fetchWsiThumbnailBlob: jest.fn(),
 }));
 jest.mock('./wsiOpenSeadragonLoader', () => ({}));
 
-const getWsiSlideAccessMock = getWsiSlideAccess as jest.Mock;
+const getWsiSlideSourceMock = getWsiSlideSource as jest.Mock;
+const fetchWsiThumbnailBlobMock = fetchWsiThumbnailBlob as jest.Mock;
 
 type Handler = (event?: any) => void;
 
 class FakeViewer {
     handlers = new Map<string, Handler[]>();
-    ajaxHeaders: Record<string, string>;
     element: HTMLElement;
-    loadTilesWithAjax: boolean;
     imageLoader = {
         jobLimit: 1,
         jobsInProgress: 0,
@@ -45,14 +48,9 @@ class FakeViewer {
     open = jest.fn();
     close = jest.fn();
     destroy = jest.fn();
-    setAjaxHeaders = jest.fn((headers: Record<string, string>) => {
-        this.ajaxHeaders = headers;
-    });
 
     constructor(public options: any) {
         this.element = options.element;
-        this.ajaxHeaders = options.ajaxHeaders;
-        this.loadTilesWithAjax = options.loadTilesWithAjax;
     }
 
     addHandler(eventName: string, handler: Handler) {
@@ -83,9 +81,13 @@ function makeSlide(slideKey: string): Slide {
     return { slide_key: slideKey, can_serve_tiles: true } as Slide;
 }
 
-function makeAccess(slideKey: string, token: string) {
+function makeSource(slideKey: string) {
     return {
         slideKey,
+        servingKey: slideKey,
+        sealedSource: `sealed-${slideKey}`,
+        thumbnailWidth: 1024,
+        thumbnailHeight: 768,
         tileMetadata: {
             dimensions: { width: 1000, height: 800 },
             levels: 3,
@@ -93,10 +95,20 @@ function makeAccess(slideKey: string, token: string) {
             max_zoom: 10,
             tile_size: 256,
         },
-        accessToken: token,
-        expiresIn: 600,
-        expiresAt: Date.now() + 600_000,
     };
+}
+
+/** The URL of tile 0/0/0 of an OpenSeadragon tile source. */
+function firstTileUrl(tileSource: any): URL {
+    return new URL(tileSource.getTileUrl(0, 0, 0));
+}
+
+function expectTileUrlFor(tileSource: any, slideKey: string) {
+    const url = firstTileUrl(tileSource);
+    expect(url.pathname).toBe('/tiles/zxy/0/0/0');
+    expect(url.searchParams.get('studyId')).toBe('study');
+    expect(url.searchParams.get('key')).toBe(slideKey);
+    expect(url.searchParams.get('enc')).toBe(`sealed-${slideKey}`);
 }
 
 function makeHarness() {
@@ -153,26 +165,28 @@ describe('WsiViewerController viewer lifecycle', () => {
                 cb(0);
                 return 0;
             });
-        getWsiSlideAccessMock.mockImplementation(
-            (_study: string, slideKey: string) =>
-                Promise.resolve(makeAccess(slideKey, `token-${slideKey}`))
+        getWsiSlideSourceMock.mockImplementation(
+            (_study: string, slideKey: string) => makeSource(slideKey)
+        );
+        fetchWsiThumbnailBlobMock.mockImplementation(() =>
+            Promise.reject(new Error('no preview'))
         );
     });
 
     afterEach(() => {
         rafSpy.mockRestore();
-        getWsiSlideAccessMock.mockReset();
+        getWsiSlideSourceMock.mockReset();
+        fetchWsiThumbnailBlobMock.mockReset();
     });
 
-    it('opens later slides in the same viewer with their own headers', async () => {
+    it('opens later slides in the same viewer with their own tile URLs', async () => {
         const { controller, openSeadragon, viewers } = makeHarness();
 
         await controller.selectSlide(makeSlide('slide-a'), sample);
         expect(openSeadragon).toHaveBeenCalledTimes(1);
         const viewer = viewers[0];
-        expect(viewer.options.ajaxHeaders.Authorization).toBe(
-            'Bearer token-slide-a'
-        );
+        expectTileUrlFor(viewer.options.tileSources, 'slide-a');
+        expect(viewer.options).not.toHaveProperty('ajaxHeaders');
         viewer.raise('open');
         expect(viewer.handlerCount('animation-finish')).toBe(1);
 
@@ -181,13 +195,8 @@ describe('WsiViewerController viewer lifecycle', () => {
         expect(openSeadragon).toHaveBeenCalledTimes(1);
         expect(viewer.destroy).not.toHaveBeenCalled();
         expect(viewer.close).toHaveBeenCalled();
-        expect(viewer.setAjaxHeaders).toHaveBeenCalledWith(
-            {
-                Authorization: 'Bearer token-slide-b',
-            },
-            true
-        );
         expect(viewer.open).toHaveBeenCalledTimes(1);
+        expectTileUrlFor(viewer.open.mock.calls[0][0], 'slide-b');
         expect(viewer.open.mock.calls[0][0]).toMatchObject({
             width: 1000,
             height: 800,
@@ -229,9 +238,7 @@ describe('WsiViewerController viewer lifecycle', () => {
         expect(openSeadragon).toHaveBeenCalledTimes(2);
         expect(viewers[0].destroy).toHaveBeenCalledTimes(1);
         expect(viewers[0].open).not.toHaveBeenCalled();
-        expect(viewers[1].options.ajaxHeaders.Authorization).toBe(
-            'Bearer token-slide-b'
-        );
+        expectTileUrlFor(viewers[1].options.tileSources, 'slide-b');
         controller.dispose();
     });
 
@@ -269,9 +276,7 @@ describe('WsiViewerController viewer lifecycle', () => {
 
         expect(openSeadragon).toHaveBeenCalledTimes(2);
         expect(viewers[0].destroy).toHaveBeenCalledTimes(1);
-        expect(viewers[1].options.ajaxHeaders.Authorization).toBe(
-            'Bearer token-slide-b'
-        );
+        expectTileUrlFor(viewers[1].options.tileSources, 'slide-b');
         controller.dispose();
     });
 
@@ -288,92 +293,86 @@ describe('WsiViewerController viewer lifecycle', () => {
     });
 });
 
-describe('WsiViewerController token refresh', () => {
+describe('WsiViewerController refused session', () => {
     let rafSpy: jest.SpyInstance;
 
     beforeEach(() => {
-        jest.useFakeTimers();
         rafSpy = jest
             .spyOn(window, 'requestAnimationFrame')
             .mockImplementation((cb: FrameRequestCallback) => {
                 cb(0);
                 return 0;
             });
-        getWsiSlideAccessMock.mockImplementation(
-            (_study: string, slideKey: string, forceRefresh: boolean) =>
-                Promise.resolve({
-                    ...makeAccess(
-                        slideKey,
-                        forceRefresh ? 'token-new' : 'token-old'
-                    ),
-                    // Due for refresh 10 s from now.
-                    expiresAt: Date.now() + 40_000,
-                })
+        getWsiSlideSourceMock.mockImplementation(
+            (_study: string, slideKey: string) => makeSource(slideKey)
         );
     });
 
     afterEach(() => {
         rafSpy.mockRestore();
-        getWsiSlideAccessMock.mockReset();
-        jest.useRealTimers();
+        getWsiSlideSourceMock.mockReset();
+        fetchWsiThumbnailBlobMock.mockReset();
     });
 
     async function flushPromises() {
         for (let i = 0; i < 5; i++) await Promise.resolve();
     }
 
-    function refreshCalls() {
-        return getWsiSlideAccessMock.mock.calls.filter(call => call[2]);
-    }
+    it.each([401, 403])(
+        'asks to sign in again when a tile is refused with %s',
+        async status => {
+            fetchWsiThumbnailBlobMock.mockImplementation(
+                () => new Promise(() => {})
+            );
+            const { controller, viewers } = makeHarness();
+            const state = (controller as any).state as WsiViewerState;
+            await controller.selectSlide(makeSlide('slide-a'), sample);
 
-    it('refreshes the token before it expires', async () => {
+            // The first refusal is final: retrying cannot help.
+            viewers[0].raise('tile-load-failed', {
+                tries: 1,
+                tileRequest: { status },
+                tile: { getUrl: () => 'tile-1' },
+            });
+
+            expect(state.error).toBe(WSI_SESSION_EXPIRED_MESSAGE);
+            controller.dispose();
+        }
+    );
+
+    it('keeps retrying a tile that failed for another reason', async () => {
+        fetchWsiThumbnailBlobMock.mockImplementation(
+            () => new Promise(() => {})
+        );
         const { controller, viewers } = makeHarness();
+        const state = (controller as any).state as WsiViewerState;
         await controller.selectSlide(makeSlide('slide-a'), sample);
 
-        jest.advanceTimersByTime(10_000);
-        await flushPromises();
+        viewers[0].raise('tile-load-failed', {
+            tries: 1,
+            tileRequest: { status: 502 },
+            tile: { getUrl: () => 'tile-1' },
+        });
 
-        expect(refreshCalls()).toHaveLength(1);
-        expect(viewers[0].setAjaxHeaders).toHaveBeenLastCalledWith(
-            expect.objectContaining({ Authorization: 'Bearer token-new' }),
-            true
-        );
+        expect(state.error).toBeNull();
         controller.dispose();
     });
 
-    it('pauses refresh while hidden and refreshes a due token when shown', async () => {
-        const { controller, viewers } = makeHarness();
-        await controller.selectSlide(makeSlide('slide-a'), sample);
-
-        controller.setVisible(false);
-        jest.advanceTimersByTime(60_000);
-        await flushPromises();
-        expect(refreshCalls()).toHaveLength(0);
-
-        controller.setVisible(true);
-        await flushPromises();
-
-        expect(refreshCalls()).toHaveLength(1);
-        expect(viewers[0].setAjaxHeaders).toHaveBeenLastCalledWith(
-            expect.objectContaining({ Authorization: 'Bearer token-new' }),
-            true
+    it('asks to sign in again when the thumbnail preview is refused', async () => {
+        fetchWsiThumbnailBlobMock.mockImplementation(() =>
+            Promise.reject(
+                new WsiThumbnailFetchError('thumbnail request failed (401)', {
+                    response: { status: 401 } as Response,
+                })
+            )
         );
-        controller.dispose();
-    });
-
-    it('resumes the refresh schedule when shown before the token is due', async () => {
         const { controller } = makeHarness();
+        const state = (controller as any).state as WsiViewerState;
+
         await controller.selectSlide(makeSlide('slide-a'), sample);
-
-        controller.setVisible(false);
-        jest.advanceTimersByTime(5_000);
-        controller.setVisible(true);
         await flushPromises();
-        expect(refreshCalls()).toHaveLength(0);
 
-        jest.advanceTimersByTime(5_000);
-        await flushPromises();
-        expect(refreshCalls()).toHaveLength(1);
+        expect(state.error).toBe(WSI_SESSION_EXPIRED_MESSAGE);
         controller.dispose();
     });
 });

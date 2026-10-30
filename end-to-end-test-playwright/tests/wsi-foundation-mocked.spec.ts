@@ -6,20 +6,45 @@ import {
     SLIDE_KEY,
     SECOND_SLIDE_KEY,
     CLINICAL_CANCER_TYPE,
+    sealedSourceFor,
+    THUMBNAIL_HEIGHT,
+    THUMBNAIL_WIDTH,
+    TileServerRequest,
 } from './wsi-foundation-mocks';
 
 /** A well-formed slide key that the hierarchy does not publish. */
 const MISSING_SLIDE_KEY = '000000000000';
 
-/** "{study}/{patient}/{key}" of a slide access request. */
-function slideAccessTarget(url: string): string {
-    const parsed = new URL(url);
-    const studyId = decodeURIComponent(parsed.pathname)
-        .replace(/^.*\/api\/resources\//, '')
-        .split('/')[0];
-    return `${studyId}/${parsed.searchParams.get(
-        'patientId'
-    )}/${parsed.searchParams.get('key')}`;
+/** The slide key a tile or thumbnail request names. */
+function requestedSlideKey(request: TileServerRequest): string {
+    return new URL(request.url).searchParams.get('key') || '';
+}
+
+/**
+ * Every tile and thumbnail request names a published slide by study, key and
+ * sealed source, carries no Authorization header (the session cookie
+ * authorizes it), and never names the source image.
+ */
+function expectSlideAddressedByKey(
+    requests: TileServerRequest[],
+    slideKeys: string[]
+) {
+    expect(requests.length).toBeGreaterThan(0);
+    for (const request of requests) {
+        const url = new URL(request.url);
+        const key = url.searchParams.get('key') || '';
+        expect(slideKeys).toContain(key);
+        expect(url.searchParams.get('studyId')).toBe(STUDY_ID);
+        expect(url.searchParams.get('enc')).toBe(sealedSourceFor(key));
+        if (url.pathname.endsWith('/thumbnails')) {
+            expect(url.searchParams.get('tw')).toBe(String(THUMBNAIL_WIDTH));
+            expect(url.searchParams.get('th')).toBe(String(THUMBNAIL_HEIGHT));
+        } else {
+            expect(url.pathname).toMatch(/\/wsi\/tiles\/zxy\/\d+\/\d+\/\d+$/);
+        }
+        expect(request.headers.authorization).toBeUndefined();
+        expect(request.url).not.toMatch(/imageId|image_id/i);
+    }
 }
 
 if (process.env.PW_SUITE === 'wsi') {
@@ -28,10 +53,10 @@ if (process.env.PW_SUITE === 'wsi') {
             page,
         }) => {
             const accessRequests: string[] = [];
-            const tileRequestHeaders: Array<Record<string, string>> = [];
+            const tileServerRequests: TileServerRequest[] = [];
             const enrichmentRequests = await installFoundationMocks(page, {
                 accessRequests,
-                tileRequestHeaders,
+                tileServerRequests,
             });
             const pageErrors: string[] = [];
             const consoleErrors: string[] = [];
@@ -105,35 +130,27 @@ if (process.env.PW_SUITE === 'wsi') {
             await expect(clinical).toContainText(CLINICAL_CANCER_TYPE);
             await expect(clinical).toContainText('Number of Samples');
             await expect(clinical).not.toContainText('Slide Available');
-            // Slides are addressed only by their opaque key, and tiles and
-            // thumbnails carry only the bearer token.
-            expect(accessRequests.length).toBeGreaterThan(0);
-            for (const url of accessRequests) {
-                const requested = new URL(url);
-                expect(requested.pathname).toContain(
-                    `/api/resources/${STUDY_ID}/WSI_SAMPLE/access`
-                );
-                expect(requested.searchParams.get('key')).toBe(SLIDE_KEY);
-                expect(requested.searchParams.get('patientId')).toBe(
-                    PATIENT_ID
-                );
-                expect(url).not.toMatch(/imageId|image_id/i);
-            }
-            expect(tileRequestHeaders.length).toBeGreaterThan(0);
-            for (const headers of tileRequestHeaders) {
-                expect(headers.authorization).toBe(
-                    'Bearer wsi-foundation-smoke-token'
-                );
-            }
+            // Slides are addressed only by their opaque key and sealed
+            // source; no access token is requested.
+            expectSlideAddressedByKey(tileServerRequests, [SLIDE_KEY]);
+            expect(
+                tileServerRequests.some(request =>
+                    new URL(request.url).pathname.endsWith('/thumbnails')
+                )
+            ).toBe(true);
+            expect(accessRequests).toEqual([]);
             const slideItem = page.getByTestId(`wsi-slide-item-${SLIDE_KEY}`);
             for (const attribute of ['title', 'aria-label']) {
                 const value = (await slideItem.getAttribute(attribute)) ?? '';
                 expect(value).not.toContain(SLIDE_KEY);
+                expect(value).not.toContain(sealedSourceFor(SLIDE_KEY));
                 expect(value).not.toMatch(/Barcode|Image ID|Accession/);
             }
             await expect(
                 page.getByTestId('wsi-sidebar-section-imageProperties')
             ).not.toContainText(/Barcode|Image ID|Accession/);
+            // The sealed source is sent, never shown.
+            expect(await page.content()).not.toContain('sealed.');
             expect(enrichmentRequests).toEqual([]);
             expect(pageErrors).toEqual([]);
             expect(consoleErrors).toEqual([]);
@@ -178,10 +195,10 @@ if (process.env.PW_SUITE === 'wsi') {
         });
 
         test('opens the slide named by a slideKey link', async ({ page }) => {
-            const accessRequests: string[] = [];
+            const tileServerRequests: TileServerRequest[] = [];
             await installFoundationMocks(page, {
                 includeSecondSlide: true,
-                accessRequests,
+                tileServerRequests,
             });
 
             await page.goto(
@@ -203,10 +220,14 @@ if (process.env.PW_SUITE === 'wsi') {
                 page.getByTestId('wsi-requested-slide-unavailable')
             ).toHaveCount(0);
             await expect
-                .poll(() => accessRequests.map(slideAccessTarget), {
+                .poll(() => tileServerRequests.map(requestedSlideKey), {
                     timeout: 30000,
                 })
-                .toContain(`${STUDY_ID}/${PATIENT_ID}/${SECOND_SLIDE_KEY}`);
+                .toContain(SECOND_SLIDE_KEY);
+            expectSlideAddressedByKey(tileServerRequests, [
+                SLIDE_KEY,
+                SECOND_SLIDE_KEY,
+            ]);
             expect(new URL(page.url()).hash).toContain(
                 `slide=${SECOND_SLIDE_KEY}`
             );
@@ -230,9 +251,11 @@ if (process.env.PW_SUITE === 'wsi') {
             page,
         }) => {
             const accessRequests: string[] = [];
+            const tileServerRequests: TileServerRequest[] = [];
             await installFoundationMocks(page, {
                 includeSecondSlide: true,
                 accessRequests,
+                tileServerRequests,
             });
 
             await page.goto(
@@ -253,27 +276,51 @@ if (process.env.PW_SUITE === 'wsi') {
                 timeout: 30000,
             });
             await expect
-                .poll(() => accessRequests.length, { timeout: 30000 })
-                .toBeGreaterThan(0);
-            // Access is only requested for slides the hierarchy published; the
-            // unknown slide key never reaches the backend.
-            expect(accessRequests.map(slideAccessTarget)).toContain(
-                `${STUDY_ID}/${PATIENT_ID}/${SLIDE_KEY}`
-            );
+                .poll(() => tileServerRequests.map(requestedSlideKey), {
+                    timeout: 30000,
+                })
+                .toContain(SLIDE_KEY);
+            // Tiles and thumbnails are only requested for slides the
+            // hierarchy published; the unknown slide key never reaches the
+            // tile server.
+            expectSlideAddressedByKey(tileServerRequests, [
+                SLIDE_KEY,
+                SECOND_SLIDE_KEY,
+            ]);
             expect(
-                accessRequests
-                    .map(slideAccessTarget)
-                    .filter(
-                        path =>
-                            ![
-                                `${STUDY_ID}/${PATIENT_ID}/${SLIDE_KEY}`,
-                                `${STUDY_ID}/${PATIENT_ID}/${SECOND_SLIDE_KEY}`,
-                            ].includes(path)
-                    )
-            ).toEqual([]);
-            expect(
-                accessRequests.some(url => url.includes(MISSING_SLIDE_KEY))
+                tileServerRequests.some(request =>
+                    request.url.includes(MISSING_SLIDE_KEY)
+                )
             ).toBe(false);
+            expect(accessRequests).toEqual([]);
         });
+
+        // The thumbnail preview fails the slide at once; refused tiles fail
+        // it on their own when thumbnails still load.
+        for (const [status, tilesOnly] of [
+            [401, false],
+            [403, false],
+            [401, true],
+        ] as const) {
+            test(`asks to sign in again when the tile server answers ${status}${
+                tilesOnly ? ' for tiles' : ''
+            }`, async ({ page }) => {
+                await installFoundationMocks(page, {
+                    tileServerStatus: status,
+                    tileServerStatusTilesOnly: tilesOnly,
+                });
+
+                await page.goto(
+                    `/wsi/patient/${PATIENT_ID}?studyId=${STUDY_ID}`
+                );
+
+                await expect(
+                    page.getByTestId('wsi-viewer-error')
+                ).toContainText('sign in again', { timeout: 30000 });
+                await expect(
+                    page.getByRole('button', { name: 'Retry' })
+                ).toBeVisible();
+            });
+        }
     });
 }

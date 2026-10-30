@@ -6,14 +6,10 @@ import {
     clearPatientHierarchyCache,
     fetchWsiPatientHierarchy,
 } from './wsiHierarchyFetchCache';
-import {
-    clearWsiResourceAccessTargets,
-    clearWsiSlideAccess,
-    getWsiSlideAccess,
-} from './wsiAuth';
+import { clearWsiSlideSources, getWsiSlideSource } from './wsiAuth';
 import {
     isSlideRowsRequest,
-    makeAccessPayload,
+    TEST_SEALED_SOURCE,
     makeSample,
     makeSlide,
     makeTileMetadata,
@@ -257,6 +253,8 @@ describe('buildPatientHierarchy', () => {
                         key: 'slide-1',
                         sealed_source: 'sealed',
                         tile_metadata_json: tileMetadata,
+                        thumbnail_width: 1024,
+                        thumbnail_height: 768,
                     },
                 }),
                 row(null, {
@@ -288,12 +286,16 @@ describe('buildPatientHierarchy', () => {
                 block_number: 'A',
                 resource_id: 'WSI_PATIENT',
                 serving_key: 'slide-1',
+                sealed_source: 'sealed',
+                thumbnail_width: 1024,
+                thumbnail_height: 768,
                 tile_metadata: tileMetadata,
             })
         );
         expect(notServable.can_serve_tiles).toBe(false);
         expect(notServable.resource_id).toBe('WSI_PATIENT');
         expect(notServable.serving_key).toBeUndefined();
+        expect(notServable.sealed_source).toBeUndefined();
         expect(notServable.tile_metadata).toBeUndefined();
         expect(notServable.file_size_bytes).toBe('');
     });
@@ -330,12 +332,11 @@ describe('buildPatientHierarchy', () => {
     );
 });
 
-describe('wsiHierarchyFetchCache resource access registration', () => {
+describe('wsiHierarchyFetchCache slide registration', () => {
     const STUDY = 'study-1';
     const PATIENT = 'P-1';
     let originalFetch: typeof globalThis.fetch;
     let hierarchy: PatientHierarchy;
-    let accessStatuses: number[];
     let fetchMock: jest.Mock;
 
     function withSlides(...slides: ReturnType<typeof makeSlide>[]) {
@@ -351,40 +352,17 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
         ).length;
     }
 
-    function accessCalls(): string[] {
-        return fetchMock.mock.calls
-            .map(([called]) => String(called))
-            .filter(called => called.includes('/access?'))
-            .map(called => {
-                const parsed = new URL(called);
-                return `${parsed.pathname.replace('/api/resources/', '')}${
-                    parsed.search
-                }`;
-            });
-    }
-
     beforeEach(() => {
         originalFetch = (global as any).fetch;
         clearPatientHierarchyCache();
-        clearWsiSlideAccess();
         hierarchy = withSlides(makeSlide({ slide_key: 'slide-1' }));
-        accessStatuses = [];
-        fetchMock = jest.fn((url: string, init?: RequestInit) => {
-            if (String(url).includes('/access?')) {
-                const status = accessStatuses.shift() ?? 200;
-                const key = new URL(String(url)).searchParams.get('key');
-                return Promise.resolve({
-                    ok: status >= 200 && status < 300,
-                    status,
-                    json: () => Promise.resolve(makeAccessPayload({ key })),
-                });
-            }
-            return Promise.resolve({
+        fetchMock = jest.fn((url: string, init?: RequestInit) =>
+            Promise.resolve({
                 ok: true,
                 status: 200,
                 json: () => Promise.resolve(slideRowsFor(hierarchy, init)),
-            });
-        });
+            })
+        );
         (global as any).fetch = fetchMock;
     });
 
@@ -393,57 +371,43 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
         clearPatientHierarchyCache();
     });
 
-    it('registers the slides of a loaded hierarchy with their tile metadata', async () => {
+    it('registers the slides of a loaded hierarchy with their serving fields', async () => {
         await fetchWsiPatientHierarchy(STUDY, PATIENT, 'user-a');
-        const access = await getWsiSlideAccess(
-            STUDY,
-            'slide-1',
-            false,
-            'user-a'
-        );
 
-        expect(accessCalls()).toEqual([
-            'study-1/WSI_SAMPLE/access?key=slide-1&patientId=P-1',
+        expect(getWsiSlideSource(STUDY, 'slide-1')).toEqual({
+            slideKey: 'slide-1',
+            servingKey: 'slide-1',
+            sealedSource: TEST_SEALED_SOURCE,
+            thumbnailWidth: 1024,
+            thumbnailHeight: 768,
+            tileMetadata: makeTileMetadata(),
+        });
+        // Only the slide rows are requested: no per-slide access request.
+        expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
+            ROWS_URL,
+            ROWS_URL,
         ]);
-        expect(access.tileMetadata).toEqual(makeTileMetadata());
-        expect(access.accessToken).toBe('test-token');
     });
 
     it('re-registers the slides on a cache hit', async () => {
         await fetchWsiPatientHierarchy(STUDY, PATIENT, 'user-a');
-        clearWsiResourceAccessTargets(STUDY);
+        clearWsiSlideSources(STUDY);
 
         await fetchWsiPatientHierarchy(STUDY, PATIENT, 'user-a');
-        await getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a');
 
+        expect(getWsiSlideSource(STUDY, 'slide-1').slideKey).toBe('slide-1');
         expect(rowsCalls()).toBe(2);
-        expect(accessCalls()).toEqual([
-            'study-1/WSI_SAMPLE/access?key=slide-1&patientId=P-1',
-        ]);
     });
 
-    it('does not request access for a slide that cannot serve tiles', async () => {
+    it('does not register serving fields for a slide that cannot serve tiles', async () => {
         hierarchy = withSlides(
             makeSlide({ slide_key: 'slide-1', can_serve_tiles: false })
         );
         await fetchWsiPatientHierarchy(STUDY, PATIENT, 'user-a');
 
-        await expect(
-            getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a')
-        ).rejects.toThrow('WSI slide cannot serve tiles');
-        expect(accessCalls()).toEqual([]);
-    });
-
-    it('surfaces a 404 without reloading the hierarchy', async () => {
-        await fetchWsiPatientHierarchy(STUDY, PATIENT, 'user-a');
-        accessStatuses = [404];
-
-        await expect(
-            getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a')
-        ).rejects.toThrow('WSI authorization failed (404)');
-
-        expect(rowsCalls()).toBe(2);
-        expect(accessCalls()).toHaveLength(1);
+        expect(() => getWsiSlideSource(STUDY, 'slide-1')).toThrow(
+            'WSI slide cannot serve tiles'
+        );
     });
 
     it('forgets the slides with the whole hierarchy cache', async () => {
@@ -451,9 +415,8 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
 
         clearPatientHierarchyCache();
 
-        await expect(
-            getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a')
-        ).rejects.toThrow('WSI resource selection is unavailable');
-        expect(accessCalls()).toEqual([]);
+        expect(() => getWsiSlideSource(STUDY, 'slide-1')).toThrow(
+            'WSI resource selection is unavailable'
+        );
     });
 });

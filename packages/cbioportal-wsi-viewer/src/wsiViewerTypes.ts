@@ -20,9 +20,15 @@ export interface Slide {
     specimen_key?: string;
     /** Resource the slide's row belongs to: `WSI_SAMPLE` or `WSI_PATIENT`. */
     resource_id?: string;
-    /** Key slide access is requested with (`metadata.serving.key`); present
+    /** The slide's key on the tile server (`metadata.serving.key`); present
      *  only for a slide that can serve tiles. */
     serving_key?: string;
+    /** Opaque source the tile server opens (`metadata.serving.sealed_source`).
+     *  Sent with tile and thumbnail requests only; never displayed. */
+    sealed_source?: string;
+    /** Stored thumbnail size (`metadata.serving.thumbnail_width/height`). */
+    thumbnail_width?: number;
+    thumbnail_height?: number;
     /** Tile metadata of a slide that can serve tiles, from its resource row. */
     tile_metadata?: TileMetadata;
 }
@@ -100,13 +106,17 @@ export interface TileMetadata {
     vendor?: string;
 }
 
-export interface WsiSlideAccess {
+/**
+ * What tile and thumbnail requests name a slide by: its key and sealed source
+ * from its resource row, never the source image id.
+ */
+export interface WsiSlideSource {
     slideKey: string;
+    servingKey: string;
+    sealedSource: string;
+    thumbnailWidth?: number;
+    thumbnailHeight?: number;
     tileMetadata: TileMetadata;
-    accessToken: string;
-    expiresIn: number;
-    /** When the access token expires (ms since the epoch). */
-    expiresAt: number;
 }
 
 /** A label/value row for the sidebar's Clinical section, built by the host. */

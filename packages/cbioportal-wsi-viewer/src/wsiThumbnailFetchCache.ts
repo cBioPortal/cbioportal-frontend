@@ -1,6 +1,5 @@
-import { WsiSlideAccess } from './wsiViewerTypes';
+import { WsiSlideSource } from './wsiViewerTypes';
 import {
-    buildWsiRequestHeaders,
     buildWsiThumbnailUrl,
     WSI_THUMBNAIL_HEIGHT,
     WSI_THUMBNAIL_WIDTH,
@@ -33,7 +32,7 @@ export class WsiThumbnailFetchError extends Error {
 }
 
 // A thumbnail is kept for five minutes at most, and no longer than its
-// Cache-Control max-age or the access it was fetched with.
+// Cache-Control max-age.
 const thumbnailCache = createPromiseCache<{ blob: Blob; expiresAt: number }>(
     thumbnail => thumbnail.expiresAt
 );
@@ -61,18 +60,22 @@ export function parseMaxAgeMs(cacheControl: string | null): number | undefined {
 
 async function requestThumbnail(
     tileServerBase: string,
-    access: WsiSlideAccess,
+    studyId: string,
+    source: WsiSlideSource,
     cacheMode: RequestCache,
     signal: AbortSignal
 ): Promise<{ blob: Blob; maxAgeMs?: number }> {
     const url = buildWsiThumbnailUrl(
         tileServerBase,
+        studyId,
+        source,
         WSI_THUMBNAIL_WIDTH,
         WSI_THUMBNAIL_HEIGHT
     );
+    // Same-origin: the portal session cookie goes with the request.
     const response = await getWsiViewerRuntime().fetchImpl(url, {
         cache: cacheMode,
-        headers: buildWsiRequestHeaders(access.accessToken),
+        credentials: 'same-origin',
         signal,
     });
     const reason = response.headers
@@ -147,16 +150,14 @@ function leavePendingThumbnail(key: string, pending: PendingThumbnail): void {
 }
 
 /**
- * The slide's published thumbnail, shared by every caller. The access token
- * is left out of the cache key so a refreshed token keeps the thumbnail; an
- * aborted caller stops waiting, and the request is cancelled only once no
- * caller is left waiting on it.
+ * The slide's published thumbnail, shared by every caller of the same user
+ * (`authScope`). An aborted caller stops waiting, and the request is
+ * cancelled only once no caller is left waiting on it.
  */
 export function fetchWsiThumbnailBlob(
     tileServerBase: string,
     studyId: string,
-    slideKey: string,
-    access: WsiSlideAccess,
+    source: WsiSlideSource,
     signal?: AbortSignal,
     cacheMode: RequestCache = 'default',
     authScope?: string
@@ -168,7 +169,7 @@ export function fetchWsiThumbnailBlob(
         normalizeWsiAuthScope(authScope),
         tileServerBase,
         studyId,
-        slideKey,
+        source.slideKey,
     ].join('::');
     const thumbnail = thumbnailCache.get(key, () => {
         const controller = new AbortController();
@@ -176,7 +177,8 @@ export function fetchWsiThumbnailBlob(
             const startedAt = Date.now();
             const result = await requestThumbnail(
                 tileServerBase,
-                access,
+                studyId,
+                source,
                 cacheMode,
                 controller.signal
             );
@@ -184,7 +186,6 @@ export function fetchWsiThumbnailBlob(
                 blob: result.blob,
                 expiresAt: Math.min(
                     startedAt + THUMBNAIL_CACHE_TTL_MS,
-                    access.expiresAt,
                     Date.now() + (result.maxAgeMs ?? THUMBNAIL_CACHE_TTL_MS)
                 ),
             };

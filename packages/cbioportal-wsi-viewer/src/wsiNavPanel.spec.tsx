@@ -5,7 +5,7 @@ import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import TestRenderer, { act } from 'react-test-renderer';
 import { WsiNavPanel } from './wsiNavPanel';
-import { getWsiSlideAccess } from './wsiAuth';
+import { getWsiSlideSource } from './wsiAuth';
 import { clearWsiThumbnailFetchCache } from './wsiThumbnailFetchCache';
 import {
     scheduleThumbnailRequest,
@@ -22,14 +22,24 @@ import { MatchLevel, PatientHierarchy, Sample, Slide } from './wsiViewerTypes';
 
 jest.mock('./wsiAuth', () => ({
     ...jest.requireActual('./wsiAuth'),
-    getWsiSlideAccess: jest.fn(() =>
-        Promise.resolve({ accessToken: 'test-token' })
-    ),
+    getWsiSlideSource: jest.fn(),
 }));
 
-const mockGetWsiSlideAccess = getWsiSlideAccess as jest.MockedFunction<
-    typeof getWsiSlideAccess
+const mockGetWsiSlideSource = getWsiSlideSource as jest.MockedFunction<
+    typeof getWsiSlideSource
 >;
+
+function mockSlideSources() {
+    mockGetWsiSlideSource.mockImplementation((_studyId, slideKey) => ({
+        slideKey,
+        servingKey: slideKey,
+        sealedSource: `sealed-${slideKey}`,
+        thumbnailWidth: 1024,
+        thumbnailHeight: 768,
+        tileMetadata: makeTileMetadata(),
+    }));
+}
+mockSlideSources();
 
 const originalCreateObjectUrl = Object.getOwnPropertyDescriptor(
     URL,
@@ -88,14 +98,8 @@ describe('WsiNavPanel', () => {
     afterEach(() => {
         jest.restoreAllMocks();
         clearWsiThumbnailFetchCache();
-        mockGetWsiSlideAccess.mockReset();
-        mockGetWsiSlideAccess.mockResolvedValue({
-            accessToken: 'test-token',
-            tileMetadata: makeTileMetadata(),
-            slideKey: '1000',
-            expiresIn: 300,
-            expiresAt: Date.now() + 300_000,
-        });
+        mockGetWsiSlideSource.mockReset();
+        mockSlideSources();
         global.fetch = jest.fn().mockResolvedValue({
             ok: true,
             status: 200,
@@ -1357,7 +1361,7 @@ describe('WsiNavPanel', () => {
         expect(onFilterChange).toHaveBeenCalledWith('ihc');
     });
 
-    it('requests slide access without waiting for a thumbnail slot', async () => {
+    it('names each thumbnail by its slide key and sealed source, once a slot frees', async () => {
         Object.defineProperty(URL, 'createObjectURL', {
             configurable: true,
             value: jest.fn(() => 'blob:thumbnail'),
@@ -1365,13 +1369,6 @@ describe('WsiNavPanel', () => {
         Object.defineProperty(URL, 'revokeObjectURL', {
             configurable: true,
             value: jest.fn(),
-        });
-        mockGetWsiSlideAccess.mockResolvedValue({
-            accessToken: 'test-token',
-            tileMetadata: makeTileMetadata(),
-            slideKey: '1000',
-            expiresIn: 300,
-            expiresAt: Date.now() + 300_000,
         });
         global.fetch = jest.fn().mockResolvedValue({
             ok: true,
@@ -1421,12 +1418,6 @@ describe('WsiNavPanel', () => {
                 String(url).startsWith(tileServerBase)
             );
 
-        // Earlier panels may still retry, so only this panel's calls count.
-        expect(
-            mockGetWsiSlideAccess.mock.calls
-                .filter(([studyId]) => studyId === 'slot-study')
-                .map(([, slideKey]) => slideKey)
-        ).toEqual(['slide-1', 'slide-2']);
         expect(thumbnailRequests()).toHaveLength(0);
 
         await act(async () => {
@@ -1434,7 +1425,24 @@ describe('WsiNavPanel', () => {
             await Promise.all(blockers);
         });
 
-        expect(thumbnailRequests()).toHaveLength(2);
+        const requested = thumbnailRequests().map(
+            ([url]) => new URL(String(url))
+        );
+        expect(requested.map(url => url.searchParams.get('key'))).toEqual([
+            'slide-1',
+            'slide-2',
+        ]);
+        requested.forEach(url => {
+            expect(url.searchParams.get('studyId')).toBe('slot-study');
+            expect(url.searchParams.get('enc')).toBe(
+                `sealed-${url.searchParams.get('key')}`
+            );
+            expect(url.searchParams.get('tw')).toBe('1024');
+            expect(url.searchParams.get('th')).toBe('768');
+        });
+        thumbnailRequests().forEach(([, init]) =>
+            expect(init.headers).toBeUndefined()
+        );
         renderer.unmount();
     });
 

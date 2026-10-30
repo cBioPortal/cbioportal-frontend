@@ -11,9 +11,9 @@ import {
     WsiStainKind,
 } from './wsiViewerTypes';
 import {
-    clearWsiResourceAccessTargets,
+    clearWsiSlideSources,
     normalizeWsiAuthScope,
-    registerWsiResourceAccess,
+    registerWsiSlideSources,
 } from './wsiAuth';
 import { getWsiViewerRuntime } from './wsiViewerConfig';
 import { createPromiseCache, withAbort } from './wsiCacheUtils';
@@ -49,23 +49,59 @@ function stainKind(metadata: Record<string, unknown>): WsiStainKind {
     return UNCONFIRMED_SLIDE_TYPES.has(stored) ? 'unknown' : 'other';
 }
 
+function positiveInteger(value: unknown): number | undefined {
+    return typeof value === 'number' && Number.isInteger(value) && value > 0
+        ? value
+        : undefined;
+}
+
 /** The serving block of a slide that can serve tiles. */
 function serving(
     metadata: Record<string, unknown>
-): { key: string; tileMetadata: TileMetadata } | undefined {
+):
+    | Pick<
+          Slide,
+          | 'serving_key'
+          | 'sealed_source'
+          | 'thumbnail_width'
+          | 'thumbnail_height'
+          | 'tile_metadata'
+      >
+    | undefined {
     const value = metadata.serving as
-        | { key?: unknown; tile_metadata_json?: TileMetadata }
+        | {
+              key?: unknown;
+              sealed_source?: unknown;
+              thumbnail_width?: unknown;
+              thumbnail_height?: unknown;
+              tile_metadata_json?: TileMetadata;
+          }
         | null
         | undefined;
     if (
         !value ||
         typeof value.key !== 'string' ||
         !value.key ||
+        typeof value.sealed_source !== 'string' ||
+        !value.sealed_source ||
         !value.tile_metadata_json
     ) {
         return undefined;
     }
-    return { key: value.key, tileMetadata: value.tile_metadata_json };
+    const thumbnailWidth = positiveInteger(value.thumbnail_width);
+    const thumbnailHeight = positiveInteger(value.thumbnail_height);
+    return {
+        serving_key: value.key,
+        sealed_source: value.sealed_source,
+        // Both or neither: the tile server reads the stored size as a pair.
+        ...(thumbnailWidth && thumbnailHeight
+            ? {
+                  thumbnail_width: thumbnailWidth,
+                  thumbnail_height: thumbnailHeight,
+              }
+            : {}),
+        tile_metadata: value.tile_metadata_json,
+    };
 }
 
 /** A part or block number, compared numerically; missing numbers sort last. */
@@ -155,11 +191,7 @@ export function buildPatientHierarchy(
             specimen_key: text(metadata, 'specimen_key'),
             resource_id: row.resourceId,
         };
-        const slideServing = serving(metadata);
-        if (slideServing) {
-            slide.serving_key = slideServing.key;
-            slide.tile_metadata = slideServing.tileMetadata;
-        }
+        Object.assign(slide, serving(metadata));
         block.slides.push(slide);
     });
 
@@ -221,7 +253,7 @@ async function requestHierarchy(
  * Loads one patient's hierarchy from the portal through the cache the viewer
  * reads, so a viewer opened later for the same patient and `authScope` reuses
  * this request. Every returned hierarchy (network or cached) registers the
- * slides that slide access requests may name.
+ * slides that tile and thumbnail requests may name.
  */
 export function fetchWsiPatientHierarchy(
     studyId: string,
@@ -236,7 +268,7 @@ export function fetchWsiPatientHierarchy(
         hierarchyCache
             .get(key, () => requestHierarchy(studyId, patientId))
             .then(hierarchy => {
-                registerWsiResourceAccess(studyId, hierarchy);
+                registerWsiSlideSources(studyId, hierarchy);
                 return hierarchy;
             }),
         signal
@@ -245,5 +277,5 @@ export function fetchWsiPatientHierarchy(
 
 export function clearPatientHierarchyCache() {
     hierarchyCache.clear();
-    clearWsiResourceAccessTargets();
+    clearWsiSlideSources();
 }

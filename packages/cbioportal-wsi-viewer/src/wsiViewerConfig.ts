@@ -16,7 +16,7 @@ export interface WsiViewerConfig {
     /** OpenSeadragon `prefixUrl`; OpenSeadragon's own default when unset. */
     osdPrefixUrl?: string;
     /**
-     * Fetch used for hierarchy, slide access and thumbnail requests; the
+     * Fetch used for hierarchy and thumbnail requests; the
      * global `fetch` when unset. OpenSeadragon loads tiles itself.
      */
     fetchImpl?: typeof fetch;

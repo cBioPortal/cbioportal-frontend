@@ -1,6 +1,6 @@
 import { TileMetadata } from './wsiViewerTypes';
 import { hasWsiHashViewport, WsiHashState } from './wsiViewStateUtils';
-import { buildWsiRequestHeaders } from './wsiUrls';
+import { buildWsiTileUrl } from './wsiUrls';
 import { WSI_THEME } from './wsiTheme';
 
 const OSD_NAVIGATOR_BOTTOM_OFFSET_PX = '48px';
@@ -13,7 +13,18 @@ export const OSD_TILE_REQUEST_TIMEOUT_MS = 120_000;
 export const OSD_TILE_RETRY_MAX = 2;
 export const OSD_TILE_RETRY_DELAY_MS = 1_500;
 
-export function buildOsdTileSource(meta: TileMetadata, baseUrl: string) {
+/**
+ * Tiles are loaded with XHR so a failed tile's HTTP status reaches the
+ * `tile-load-failed` event: a 401/403 means the portal session expired or
+ * lacks access to the study. Same-origin requests carry the session cookie.
+ */
+const OSD_LOAD_TILES_WITH_AJAX = true;
+
+export function buildOsdTileSource(
+    meta: TileMetadata,
+    baseUrl: string,
+    slideQuery: string
+) {
     return {
         width: meta.dimensions.width,
         height: meta.dimensions.height,
@@ -25,7 +36,7 @@ export function buildOsdTileSource(meta: TileMetadata, baseUrl: string) {
             Math.min(meta.safe_min_level ?? 0, meta.max_zoom)
         ),
         getTileUrl(level: number, x: number, y: number): string {
-            return `${baseUrl}/tiles/zxy/${level}/${x}/${y}`;
+            return buildWsiTileUrl(baseUrl, slideQuery, level, x, y);
         },
     };
 }
@@ -35,14 +46,15 @@ export function buildOsdOptions({
     navId,
     meta,
     baseUrl,
-    accessToken,
+    slideQuery,
     prefixUrl,
 }: {
     element: HTMLElement;
     navId: string;
     meta: TileMetadata;
     baseUrl: string;
-    accessToken?: string;
+    /** The slide's tile-server query (see buildWsiSlideQuery). */
+    slideQuery: string;
     /** OpenSeadragon's image prefix; its own default when unset. */
     prefixUrl?: string;
 }) {
@@ -64,9 +76,8 @@ export function buildOsdOptions({
         imageLoaderLimit: OSD_INITIAL_IMAGE_LOADER_LIMIT,
         tileRetryMax: OSD_TILE_RETRY_MAX,
         tileRetryDelay: OSD_TILE_RETRY_DELAY_MS,
-        loadTilesWithAjax: Boolean(accessToken),
-        ajaxHeaders: buildWsiRequestHeaders(accessToken),
-        tileSources: buildOsdTileSource(meta, baseUrl),
+        loadTilesWithAjax: OSD_LOAD_TILES_WITH_AJAX,
+        tileSources: buildOsdTileSource(meta, baseUrl, slideQuery),
     };
 }
 
@@ -104,32 +115,25 @@ export function isStaleOsdTileEvent(osdViewer: any, event: any): boolean {
 }
 
 /**
- * Opens another slide in an existing viewer: the slide's request headers go
- * to the viewer and its navigator first, so every new tile carries them, and
- * tile loading restarts at the cold-open concurrency.
+ * Opens another slide in an existing viewer; tile loading restarts at the
+ * cold-open concurrency.
  */
 export function reopenOsdViewer({
     osdViewer,
     meta,
     baseUrl,
-    accessToken,
+    slideQuery,
 }: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     osdViewer: any;
     meta: TileMetadata;
     baseUrl: string;
-    accessToken?: string;
+    slideQuery: string;
 }): void {
-    const loadTilesWithAjax = Boolean(accessToken);
-    osdViewer.loadTilesWithAjax = loadTilesWithAjax;
-    if (osdViewer.navigator) {
-        osdViewer.navigator.loadTilesWithAjax = loadTilesWithAjax;
-    }
-    osdViewer.setAjaxHeaders(buildWsiRequestHeaders(accessToken), true);
     if (osdViewer.imageLoader) {
         osdViewer.imageLoader.jobLimit = OSD_INITIAL_IMAGE_LOADER_LIMIT;
     }
-    osdViewer.open(buildOsdTileSource(meta, baseUrl));
+    osdViewer.open(buildOsdTileSource(meta, baseUrl, slideQuery));
 }
 
 // OpenSeadragon starts with one tile request so that the server can finish the
@@ -147,7 +151,7 @@ export function ensureNavigator({
     openSeadragon,
     meta,
     baseUrl,
-    accessToken,
+    slideQuery,
 }: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     osdViewer: any;
@@ -155,7 +159,7 @@ export function ensureNavigator({
     openSeadragon: any;
     meta: TileMetadata;
     baseUrl: string;
-    accessToken?: string;
+    slideQuery: string;
 }) {
     if (!osdViewer || osdViewer.navigator) {
         return osdViewer?.navigator ?? null;
@@ -176,15 +180,14 @@ export function ensureNavigator({
         opacity: 0.9,
         borderColor: '#ccc',
         displayRegionColor: WSI_THEME.blue,
-        ajaxHeaders: buildWsiRequestHeaders(accessToken),
-        loadTilesWithAjax: Boolean(accessToken),
+        loadTilesWithAjax: OSD_LOAD_TILES_WITH_AJAX,
     });
     osdViewer.navigator = navigator;
     const world = osdViewer.world;
     const itemCount = world?.getItemCount?.() ?? 0;
     for (let i = 0; i < itemCount; i++) {
         navigator.addTiledImage({
-            tileSource: buildOsdTileSource(meta, baseUrl),
+            tileSource: buildOsdTileSource(meta, baseUrl, slideQuery),
             originalTiledImage: world.getItemAt(i),
         });
     }

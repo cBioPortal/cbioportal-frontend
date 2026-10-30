@@ -11,6 +11,8 @@ import {
     restoreOrHomeViewport,
 } from './wsiOsdUtils';
 
+const QUERY = 'studyId=study-1&key=0123456789ab&enc=sealed';
+
 describe('buildOsdOptions', () => {
     it('defers navigator creation until the main tile is drawn', () => {
         const options = buildOsdOptions({
@@ -27,6 +29,7 @@ describe('buildOsdOptions', () => {
                 tile_size: 256,
             },
             baseUrl: 'https://tiles.example.com',
+            slideQuery: QUERY,
         });
 
         expect(options.showNavigator).toBe(false);
@@ -35,12 +38,13 @@ describe('buildOsdOptions', () => {
         expect(options.tileRetryMax).toBe(OSD_TILE_RETRY_MAX);
         expect(options.tileRetryDelay).toBe(OSD_TILE_RETRY_DELAY_MS);
         expect(options.tileSources.getTileUrl(3, 4, 5)).toBe(
-            'https://tiles.example.com/tiles/zxy/3/4/5'
+            `https://tiles.example.com/tiles/zxy/3/4/5?${QUERY}`
         );
         expect(options.tileSources.minLevel).toBe(0);
-        // Without an access token there is nothing to send.
-        expect(options.loadTilesWithAjax).toBe(false);
-        expect(options.ajaxHeaders).toEqual({});
+        // XHR loading exposes a failed tile's status; the session cookie,
+        // not a header, authorizes the request.
+        expect(options.loadTilesWithAjax).toBe(true);
+        expect(options).not.toHaveProperty('ajaxHeaders');
     });
 
     it('promotes the image loader after the first tile is ready', () => {
@@ -64,33 +68,10 @@ describe('buildOsdOptions', () => {
                 tile_size: 256,
             },
             baseUrl: 'https://tiles.example.com',
+            slideQuery: QUERY,
         });
 
         expect(options.tileSources.minLevel).toBe(3);
-    });
-
-    it('enables AJAX tile loading when a capability token is supplied', () => {
-        const options = buildOsdOptions({
-            element: {} as HTMLElement,
-            navId: 'wsi-nav-test',
-            meta: {
-                dimensions: { width: 1000, height: 800 },
-                levels: 2,
-                level_dimensions: [{ width: 1000, height: 800 }],
-                max_zoom: 6,
-                tile_size: 256,
-            },
-            baseUrl: 'https://tiles.example.com',
-            accessToken: 'token',
-        });
-
-        expect(options.loadTilesWithAjax).toBe(true);
-        expect(options.ajaxHeaders).toEqual({
-            Authorization: 'Bearer token',
-        });
-        expect(options.tileSources.getTileUrl(3, 4, 5)).toBe(
-            'https://tiles.example.com/tiles/zxy/3/4/5'
-        );
     });
 
     it('clamps an extreme shared-view hash before restoring the viewport', () => {
@@ -197,8 +178,8 @@ describe('ensureNavigator', () => {
             osdViewer,
             openSeadragon,
             meta,
-            baseUrl: 'https://tiles.example/wsi/tiles/k',
-            accessToken: 'token',
+            baseUrl: 'https://tiles.example/wsi',
+            slideQuery: QUERY,
         });
 
         expect(created).toHaveLength(1);
@@ -208,7 +189,10 @@ describe('ensureNavigator', () => {
         expect(created[0].options.loadTilesWithAjax).toBe(true);
         expect(created[0].added).toHaveLength(1);
         expect(created[0].added[0].originalTiledImage).toBe(shown);
-        expect(created[0].added[0].tileSource).toBeDefined();
+        expect(created[0].options).not.toHaveProperty('ajaxHeaders');
+        expect(created[0].added[0].tileSource.getTileUrl(1, 0, 0)).toBe(
+            `https://tiles.example/wsi/tiles/zxy/1/0/0?${QUERY}`
+        );
     });
 
     it('creates the navigator only once', () => {
@@ -220,7 +204,8 @@ describe('ensureNavigator', () => {
             osdViewer,
             openSeadragon,
             meta,
-            baseUrl: 'https://tiles.example/wsi/tiles/k',
+            baseUrl: 'https://tiles.example/wsi',
+            slideQuery: QUERY,
         };
         const first = ensureNavigator(args);
         expect(ensureNavigator(args)).toBe(first);

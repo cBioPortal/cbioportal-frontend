@@ -15,8 +15,12 @@ import {
     WsiUrlStateAdapter,
     writeSelectedSlideState,
 } from './wsiViewStateUtils';
-import { clearWsiSlideAccess, getWsiSlideAccess } from './wsiAuth';
-import { registerTestSlideAccess } from './wsiTestFixtures';
+import { clearWsiSlideSources, getWsiSlideSource } from './wsiAuth';
+import { registerTestSlide } from './wsiTestFixtures';
+import {
+    clearWsiThumbnailFetchCache,
+    fetchWsiThumbnailBlob,
+} from './wsiThumbnailFetchCache';
 import WsiViewer from './WsiViewerEntry';
 
 const mockWsiViewer = jest.fn((_props: Record<string, unknown>) => null);
@@ -58,7 +62,8 @@ function makeMemoryUrlState(): WsiUrlStateAdapter & {
 describe('WSI viewer runtime', () => {
     afterEach(() => {
         resetWsiViewerRuntime();
-        clearWsiSlideAccess();
+        clearWsiSlideSources();
+        clearWsiThumbnailFetchCache();
         window.sessionStorage.clear();
         window.history.replaceState(null, '', '/');
     });
@@ -72,22 +77,27 @@ describe('WSI viewer runtime', () => {
         );
     });
 
-    it('requests slide access through the configured URL builder and fetch', async () => {
+    it('requests thumbnails through the configured fetch', async () => {
         const fetchImpl = (jest.fn(async () => ({
             ok: false,
             status: 403,
+            headers: new Headers(),
         })) as unknown) as typeof fetch;
         configureWsiViewerRuntime(makeConfig({ fetchImpl }));
-        registerTestSlideAccess('study-1', 'patient 1', 'slide-1');
+        registerTestSlide('study 1', 'patient-1', 'slide-1');
 
         await expect(
-            getWsiSlideAccess('study-1', 'slide-1', false, 'user-a')
-        ).rejects.toThrow('WSI authorization failed (403)');
-        expect(
-            fetchImpl
-        ).toHaveBeenCalledWith(
-            'https://portal.example/beta/api/resources/study-1/WSI_SAMPLE/access?key=slide-1&patientId=patient%201',
-            { credentials: 'include', cache: 'no-store' }
+            fetchWsiThumbnailBlob(
+                'https://portal.example/tiles',
+                'study 1',
+                getWsiSlideSource('study 1', 'slide-1')
+            )
+        ).rejects.toThrow('thumbnail request failed (403)');
+        expect(fetchImpl).toHaveBeenCalledWith(
+            expect.stringMatching(
+                /^https:\/\/portal\.example\/tiles\/thumbnails\?studyId=study%201&key=slide-1&enc=/
+            ),
+            expect.objectContaining({ credentials: 'same-origin' })
         );
     });
 });

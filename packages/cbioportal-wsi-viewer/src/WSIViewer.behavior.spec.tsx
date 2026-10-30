@@ -12,7 +12,7 @@ import {
     clearPatientHierarchyCache,
     fetchWsiPatientHierarchy,
 } from './wsiHierarchyFetchCache';
-import { clearWsiSlideAccess, getWsiSlideAccess } from './wsiAuth';
+import { clearWsiSlideSources } from './wsiAuth';
 import { clearWsiThumbnailFetchCache } from './wsiThumbnailFetchCache';
 import { PatientHierarchy, Part, Sample, Slide } from './wsiViewerTypes';
 import {
@@ -20,9 +20,9 @@ import {
     makePart,
     makeSample as fixtureSample,
     makeSlide,
-    makeAccessPayload,
     makeTileMetadata,
-    registerTestSlideAccess,
+    registerTestSlide,
+    TEST_SEALED_SOURCE,
     isSlideRowsRequest,
     slideRowsFor,
 } from './wsiTestFixtures';
@@ -132,17 +132,6 @@ function rowsFetchMock(hierarchy: PatientHierarchy) {
     );
 }
 
-// Slide access is requested from the slide's resource with its serving key,
-// for a slide a loaded hierarchy published for the patient.
-function testAccessUrl(
-    studyId: string,
-    patientId: string,
-    key: string,
-    resourceId = 'WSI_SAMPLE'
-) {
-    return `http://localhost/api/resources/${studyId}/${resourceId}/access?key=${key}&patientId=${patientId}`;
-}
-
 const TILE_SERVER_URL = 'https://tiles.example.com';
 
 /** Create an unattached WSIViewer instance (no DOM, lifecycle not started). */
@@ -230,14 +219,6 @@ function renderViewer(url = 'https://tiles.example.com/patient/P-1') {
     return { renderer: renderer!, inst };
 }
 
-function deferredPromise<T = void>() {
-    let resolve!: (value?: T | PromiseLike<T>) => void;
-    const promise = new Promise<T>(res => {
-        resolve = value => res(value as T);
-    });
-    return { promise, resolve };
-}
-
 // ---- tests ----
 
 beforeEach(() => {
@@ -250,7 +231,7 @@ beforeEach(() => {
     );
     clearPatientHierarchyCache();
     clearWsiThumbnailFetchCache();
-    clearWsiSlideAccess();
+    clearWsiSlideSources();
 });
 
 describe('WSIViewer — tileServerBase', () => {
@@ -454,7 +435,7 @@ describe('WSIViewer — componentWillUnmount', () => {
     afterEach(() => {
         (global as any).fetch = origFetch;
     });
-    it('sets hierarchy to null to cancel any running prefetch loop', () => {
+    it('clears the hierarchy on unmount', () => {
         const { renderer, inst } = renderViewer();
         mobxAction(() => {
             inst.viewerState.hierarchy = makeHierarchy([makeSlide()]);
@@ -1500,54 +1481,6 @@ describe('WSIViewer — loadHierarchy', () => {
         assert.isAbove(controller.mountSeq, seqBefore);
     });
 
-    it('starts warming first-slide metadata as soon as the initial slide is chosen', async () => {
-        let releaseMetadata!: () => void;
-        const metadataWarmupStarted = new Promise<void>(resolve => {
-            releaseMetadata = resolve;
-        });
-        (global as any).requestAnimationFrame = (cb: FrameRequestCallback) => {
-            cb(0);
-            return 0;
-        };
-        const mockHierarchy = makeLoadedHierarchy([
-            makeSlide({ slide_key: 'A', can_serve_tiles: true }),
-        ]);
-        setFetchMock(rowsFetchMock(mockHierarchy));
-
-        const inst = new (WSIViewer as any)({
-            patientId: 'P-XYZ',
-            tileServerUrl: TILE_SERVER_URL,
-            height: 500,
-            studyId: 'study-1',
-        });
-        const controller = controllerOf(inst);
-        const fetchMetadataSpy = jest
-            .spyOn(controller as any, 'fetchSlideMetadata')
-            .mockImplementation(async () => {
-                releaseMetadata();
-                return makeTileMetadata({
-                    dimensions: { width: 1000, height: 800 },
-                    levels: 1,
-                    level_dimensions: [{ width: 1000, height: 800 }],
-                    max_zoom: 6,
-                    tile_size: 256,
-                });
-            });
-        const selectSlideSpy = jest
-            .spyOn(controller, 'selectSlide')
-            .mockResolvedValue(undefined);
-
-        const loadPromise = loadHierarchyFor(inst);
-
-        await metadataWarmupStarted;
-        expect(fetchMetadataSpy).toHaveBeenCalledWith('A');
-        expect(selectSlideSpy).not.toHaveBeenCalled();
-
-        await loadPromise;
-
-        expect(selectSlideSpy).toHaveBeenCalledTimes(1);
-    });
-
     it('filters the loaded hierarchy to the requested pathology context before selecting the initial slide', async () => {
         const mockHierarchy: PatientHierarchy = {
             patient_id: 'P-XYZ',
@@ -1632,7 +1565,7 @@ describe('WSIViewer — loadHierarchy', () => {
         );
     });
 
-    it('loads hierarchy data and warms metadata for the selected initial slide', async () => {
+    it('loads hierarchy data with the slide rows requests only', async () => {
         const hierarchy = makeLoadedHierarchy([
             makeSlide({
                 slide_key: 'bootstrap-slide',
@@ -1644,15 +1577,6 @@ describe('WSIViewer — loadHierarchy', () => {
                 const url = String(input);
                 if (isSlideRowsRequest(url)) {
                     return rowsResponse(hierarchy, init);
-                }
-                if (
-                    url === testAccessUrl('study', 'P-XYZ', 'bootstrap-slide')
-                ) {
-                    return {
-                        ok: true,
-                        json: async () =>
-                            makeAccessPayload({ key: 'bootstrap-slide' }),
-                    } as Response;
                 }
                 throw new Error(`Unexpected fetch ${url}`);
             }) as any
@@ -1675,12 +1599,7 @@ describe('WSIViewer — loadHierarchy', () => {
         expect(calls.map(([url]: [string]) => url)).toEqual([
             '/api/resource-table/query/fetch',
             '/api/resource-table/query/fetch',
-            testAccessUrl('study', 'P-XYZ', 'bootstrap-slide'),
         ]);
-        expect(calls[2][1]).toEqual({
-            cache: 'no-store',
-            credentials: 'include',
-        });
         expect(selectSlideSpy).toHaveBeenCalledWith(
             expect.objectContaining({ slide_key: 'bootstrap-slide' }),
             expect.objectContaining({ sample_id: 'S-123456-T01' })
@@ -1798,7 +1717,7 @@ describe('WSIViewer — loadHierarchy', () => {
                         Promise.resolve(
                             isSlideRowsRequest(url)
                                 ? slideRowsFor(mockHierarchy, init)
-                                : makeAccessPayload({ key: 'A' })
+                                : {}
                         ),
                 })
             )
@@ -1835,7 +1754,7 @@ describe('WSIViewer — loadHierarchy', () => {
                         Promise.resolve(
                             isSlideRowsRequest(url)
                                 ? slideRowsFor(mockHierarchy, init)
-                                : makeAccessPayload({ key: 'A' })
+                                : {}
                         ),
                 })
             )
@@ -1850,179 +1769,6 @@ describe('WSIViewer — loadHierarchy', () => {
 
         expect(inst.viewerState.error).toContain('OSD init error');
         expect(inst.viewerState.error).toContain('OSD chunk failed');
-    });
-});
-
-describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
-    let origFetch: typeof globalThis.fetch;
-
-    beforeEach(() => {
-        origFetch = (global as any).fetch;
-    });
-
-    afterEach(() => {
-        (global as any).fetch = origFetch;
-    });
-
-    it('deduplicates concurrent metadata fetches for the same slide', async () => {
-        const inst = makeInstance('P-1');
-        const controller = controllerOf(inst);
-        const slide = makeSlide({ slide_key: 'AAA', can_serve_tiles: true });
-        inst.viewerState.hierarchy = makeHierarchy([slide]);
-        registerTestSlideAccess('study', 'P-123', 'AAA');
-
-        setFetchMock(
-            jest.fn().mockResolvedValue({
-                ok: true,
-                json: () => Promise.resolve(makeAccessPayload({ key: 'AAA' })),
-            })
-        );
-
-        const firstPromise = controller.fetchSlideMetadata('AAA');
-        const secondPromise = controller.fetchSlideMetadata('AAA');
-
-        await Promise.all([firstPromise, secondPromise]);
-
-        expect((global as any).fetch).toHaveBeenCalledTimes(1);
-    });
-
-    it('prefetches only the selected sample, active stain first', async () => {
-        const inst = makeInstance('P-1');
-        const controller = controllerOf(inst);
-        const selectedSampleSlides = [
-            makeSlide({
-                slide_key: 'BBB',
-                can_serve_tiles: true,
-                stain_kind: 'hne',
-            }),
-            makeSlide({
-                slide_key: 'CCC',
-                can_serve_tiles: true,
-                stain_kind: 'ihc',
-                stain_name: 'IHC',
-            }),
-        ];
-        const otherSampleSlides = [
-            makeSlide({
-                slide_key: 'AAA',
-                can_serve_tiles: true,
-                stain_kind: 'hne',
-            }),
-            makeSlide({
-                slide_key: 'DDD',
-                can_serve_tiles: true,
-                stain_kind: 'ihc',
-                stain_name: 'IHC',
-            }),
-        ];
-        const selectedSample = makeSample('S-selected', [
-            makePart([makeBlock(selectedSampleSlides)]),
-        ]);
-        const otherSample = makeSample('S-other', [
-            makePart([makeBlock(otherSampleSlides)]),
-        ]);
-        inst.viewerState.hierarchy = {
-            patient_id: 'P-1',
-            samples: [otherSample, selectedSample],
-        };
-        inst.viewerState.selectedSample = selectedSample;
-        inst.stainFilter = 'hne';
-
-        const order: string[] = [];
-        jest.spyOn(controller, 'fetchSlideMetadata').mockImplementation(
-            async (slideKey: string) => {
-                order.push(slideKey);
-                return makeTileMetadata({
-                    dimensions: { width: 1000, height: 800 },
-                    levels: 1,
-                    level_dimensions: [{ width: 1000, height: 800 }],
-                    max_zoom: 6,
-                    tile_size: 256,
-                });
-            }
-        );
-
-        await controller.prefetchSlideMetadata(undefined);
-
-        // Other samples' slides load their metadata when selected.
-        expect(order).toEqual(['BBB', 'CCC']);
-    });
-
-    it('does not spend prefetch queue slots on duplicate servable slide keys', async () => {
-        const inst = makeInstance('P-1');
-        const controller = controllerOf(inst);
-        const duplicateSlideA = makeSlide({
-            slide_key: 'AAA',
-            can_serve_tiles: true,
-        });
-        const duplicateSlideB = makeSlide({
-            slide_key: 'AAA',
-            can_serve_tiles: true,
-            block_number: '2',
-            block_label: 'A2',
-        });
-        const slideB = makeSlide({
-            slide_key: 'BBB',
-            can_serve_tiles: true,
-            block_number: '3',
-            block_label: 'A3',
-        });
-        const slideC = makeSlide({
-            slide_key: 'CCC',
-            can_serve_tiles: true,
-            block_number: '4',
-            block_label: 'A4',
-        });
-        const slideD = makeSlide({
-            slide_key: 'DDD',
-            can_serve_tiles: true,
-            block_number: '5',
-            block_label: 'A5',
-        });
-        inst.viewerState.hierarchy = makeHierarchy([
-            duplicateSlideA,
-            duplicateSlideB,
-            slideB,
-            slideC,
-            slideD,
-        ]);
-        inst.viewerState.selectedSample = inst.viewerState.hierarchy.samples[0];
-
-        const order: string[] = [];
-        const deferred = new Map<string, ReturnType<typeof deferredPromise>>();
-        ['AAA', 'BBB', 'CCC', 'DDD'].forEach(slideKey => {
-            deferred.set(slideKey, deferredPromise<void>());
-        });
-
-        jest.spyOn(controller, 'fetchSlideMetadata').mockImplementation(
-            (slideKey: string) => {
-                order.push(slideKey);
-                return deferred.get(slideKey)!.promise.then(() =>
-                    makeTileMetadata({
-                        dimensions: { width: 1000, height: 800 },
-                        levels: 1,
-                        level_dimensions: [{ width: 1000, height: 800 }],
-                        max_zoom: 6,
-                        tile_size: 256,
-                    })
-                );
-            }
-        );
-
-        const prefetchPromise = controller.prefetchSlideMetadata(undefined);
-
-        await Promise.resolve();
-        expect(order).toEqual(['AAA', 'BBB', 'CCC']);
-
-        deferred.get('AAA')!.resolve();
-        deferred.get('BBB')!.resolve();
-        deferred.get('CCC')!.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-
-        // The prefetch limit is three slides, so DDD is never fetched.
-        await prefetchPromise;
-        expect(order).toEqual(['AAA', 'BBB', 'CCC']);
     });
 });
 
@@ -2189,16 +1935,12 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         };
         (window as any).cancelIdleCallback = jest.fn();
 
-        // Tile metadata comes with the slide access.
+        // Tile metadata comes with the slide row; the network serves only
+        // the (here unavailable) thumbnail preview.
         (global as any).fetch = jest.fn().mockResolvedValue({
-            ok: true,
-            json: () =>
-                Promise.resolve(
-                    makeAccessPayload({
-                        key: '42',
-                        tileMetadata: metaMock,
-                    })
-                ),
+            ok: false,
+            status: 404,
+            headers: new Headers(),
         });
 
         // Fresh viewport mock — identity coordinate transforms for simplicity
@@ -2260,7 +2002,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             ...props,
         });
         inst.viewerState.selectedSlide = slide;
-        registerTestSlideAccess(
+        registerTestSlide(
             String(props.studyId ?? 'study-1'),
             'P-XYZ',
             slide.slide_key,
@@ -2340,16 +2082,6 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         (URL as any).createObjectURL = createObjectURL;
         (URL as any).revokeObjectURL = revokeObjectURL;
 
-        const accessResponse = {
-            ok: true,
-            json: () =>
-                Promise.resolve(
-                    makeAccessPayload({
-                        key: '42',
-                        tileMetadata: metaMock,
-                    })
-                ),
-        };
         const thumbnailResponse = {
             ok: true,
             status: 200,
@@ -2360,10 +2092,8 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             blob: () =>
                 Promise.resolve(new Blob(['jpeg'], { type: 'image/jpeg' })),
         };
-        const fetchMock = jest.fn((url: string) =>
-            Promise.resolve(
-                url.includes('/thumbnails') ? thumbnailResponse : accessResponse
-            )
+        const fetchMock = jest.fn((_url: string, _init?: RequestInit) =>
+            Promise.resolve(thumbnailResponse)
         );
         (global as any).fetch = fetchMock;
 
@@ -2371,15 +2101,15 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             const inst = await runMount(makeSlide({ slide_key: '42' }));
             await new Promise(resolve => setTimeout(resolve, 0));
 
+            // Only the thumbnail: no slide access request, no bearer token.
+            expect(fetchMock).toHaveBeenCalledTimes(1);
             expect(fetchMock).toHaveBeenCalledWith(
-                'https://tiles.example.com/thumbnails?width=128&height=96',
-                expect.objectContaining({
-                    cache: 'default',
-                    headers: {
-                        Authorization: 'Bearer test-token',
-                    },
-                })
+                `https://tiles.example.com/thumbnails?studyId=study-1&key=42&enc=${encodeURIComponent(
+                    TEST_SEALED_SOURCE
+                )}&tw=1024&th=768&width=128&height=96`,
+                expect.objectContaining({ cache: 'default' })
             );
+            expect(fetchMock.mock.calls[0][1]!.headers).toBeUndefined();
             expect(createObjectURL).toHaveBeenCalledTimes(1);
             expect((inst as any).viewerState.thumbnailPreviewUrl).toBe(
                 'blob:published-thumb'
@@ -2512,16 +2242,6 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
     it('reuses the published thumbnail when retrying the selected slide', async () => {
         window.location.hash = '';
         const slide = makeSlide({ slide_key: '42' });
-        const accessResponse = {
-            ok: true,
-            json: () =>
-                Promise.resolve(
-                    makeAccessPayload({
-                        key: '42',
-                        tileMetadata: metaMock,
-                    })
-                ),
-        };
         const thumbnailResponse = {
             ok: true,
             status: 200,
@@ -2532,10 +2252,8 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             blob: () =>
                 Promise.resolve(new Blob(['jpeg'], { type: 'image/jpeg' })),
         };
-        const fetchMock = jest.fn((url: string) =>
-            Promise.resolve(
-                url.includes('/thumbnails') ? thumbnailResponse : accessResponse
-            )
+        const fetchMock = jest.fn((_url: string, _init?: RequestInit) =>
+            Promise.resolve(thumbnailResponse)
         );
         setFetchMock(fetchMock);
 
@@ -2546,13 +2264,12 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             makePart([makeBlock([slide])]),
         ]);
 
-        expect((global as any).fetch).toHaveBeenCalledTimes(2);
+        expect((global as any).fetch).toHaveBeenCalledTimes(1);
 
         await controller.retrySelectedSlide();
 
-        // The v2 access capability is cached across a retry and the published
-        // thumbnail is reused from the shared Blob cache.
-        expect((global as any).fetch).toHaveBeenCalledTimes(2);
+        // The published thumbnail is reused from the shared Blob cache.
+        expect((global as any).fetch).toHaveBeenCalledTimes(1);
         expect(
             fetchMock.mock.calls.filter(([url]) => url.includes('/thumbnails'))
         ).toHaveLength(1);
@@ -2642,8 +2359,9 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         expect(afterOpen).toBe(true);
     });
 
-    it('starts metadata prefetch only after the first tile readiness event', async () => {
+    it('creates the navigator only once the slide is fully loaded', async () => {
         window.location.hash = '';
+        OSD.Navigator.mockClear();
         const slide = makeSlide({ slide_key: '42' });
         const inst = await runMount(slide, { studyId: 'study-1' });
         const controller = controllerOf(inst);
@@ -2651,42 +2369,26 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         controller.initialSlideKey = '42';
         controller.hierarchyLoadSeq = 1;
         controller.loadingStart = Date.now() - 1000;
-        const prefetchSpy = jest
-            .spyOn(controller, 'prefetchSlideMetadata')
-            .mockResolvedValue(undefined);
 
         capturedOpenCb!();
-        expect(prefetchSpy).not.toHaveBeenCalled();
         expect(OSD.Navigator).not.toHaveBeenCalled();
         expect(OSD.MouseTracker).not.toHaveBeenCalled();
 
         capturedTileDrawnCb!();
-        expect(prefetchSpy).not.toHaveBeenCalled();
-        expect(idleCallbacks).toHaveLength(1);
+        expect(idleCallbacks).toHaveLength(0);
         expect(OSD.Navigator).not.toHaveBeenCalled();
         expect(OSD.MouseTracker).toHaveBeenCalledTimes(1);
 
         capturedFullyLoadedCb!({ fullyLoaded: true });
-        expect(idleCallbacks).toHaveLength(2);
+        expect(idleCallbacks).toHaveLength(1);
 
-        await idleCallbacks.pop()!();
+        idleCallbacks.pop()!();
         expect(OSD.Navigator).toHaveBeenCalledTimes(1);
-        expect(prefetchSpy).not.toHaveBeenCalled();
-
-        idleCallbacks.shift()!();
-        expect(prefetchSpy).toHaveBeenCalledTimes(1);
-        expect(prefetchSpy).toHaveBeenCalledWith(
-            '42',
-            controller.hierarchyLoadSeq
-        );
-        expect(idleCallbacks).toHaveLength(0);
-
-        capturedTileDrawnCb!();
-        expect(prefetchSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('cancels scheduled background work on dispose before idle execution', async () => {
+    it('cancels the scheduled navigator setup on dispose before idle execution', async () => {
         window.location.hash = '';
+        OSD.Navigator.mockClear();
         const slide = makeSlide({ slide_key: '42' });
         const inst = await runMount(slide, { studyId: 'study-1' });
         const controller = controllerOf(inst);
@@ -2694,20 +2396,15 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         controller.initialSlideKey = '42';
         controller.hierarchyLoadSeq = 1;
         controller.loadingStart = Date.now() - 1000;
-        const prefetchSpy = jest
-            .spyOn(controller, 'prefetchSlideMetadata')
-            .mockResolvedValue(undefined);
 
         capturedOpenCb!();
         capturedTileDrawnCb!();
         capturedFullyLoadedCb!({ fullyLoaded: true });
-        expect(idleCallbacks).toHaveLength(2);
+        expect(idleCallbacks).toHaveLength(1);
 
         controller.dispose();
         expect((window as any).cancelIdleCallback).toHaveBeenCalledWith(1);
-        expect((window as any).cancelIdleCallback).toHaveBeenCalledWith(2);
-
-        expect(prefetchSpy).not.toHaveBeenCalled();
+        expect(OSD.Navigator).not.toHaveBeenCalled();
     });
 
     it('reports the outcome and first-tile time once the first tile is ready', async () => {
@@ -2773,37 +2470,22 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         };
         const preloadFetchMock = jest
             .fn()
-            .mockImplementation((url: string, init?: RequestInit) => {
-                if (url.includes('/api/resources/')) {
-                    return Promise.resolve({
-                        ok: true,
-                        json: () =>
-                            Promise.resolve(makeAccessPayload({ key: '42' })),
-                    });
-                }
-                return Promise.resolve(rowsResponse(hierarchy, init));
-            });
+            .mockImplementation((_url: string, init?: RequestInit) =>
+                Promise.resolve(rowsResponse(hierarchy, init))
+            );
         setFetchMock(preloadFetchMock);
 
         const rowsUrl = '/api/resource-table/query/fetch';
         await fetchWsiPatientHierarchy('study', 'P-1');
-        await getWsiSlideAccess('study', '42', false, 'anonymousUser');
 
         clearPatientHierarchyCache();
-        clearWsiSlideAccess();
+        clearWsiSlideSources();
 
         const networkFetchMock = jest
             .fn()
             .mockImplementation((url: string, init?: RequestInit) => {
                 if (url === rowsUrl) {
                     return Promise.resolve(rowsResponse(hierarchy, init));
-                }
-                if (url.includes('/api/resources/')) {
-                    return Promise.resolve({
-                        ok: true,
-                        json: () =>
-                            Promise.resolve(makeAccessPayload({ key: '42' })),
-                    });
                 }
                 return Promise.reject(new Error('unexpected metadata fetch'));
             });

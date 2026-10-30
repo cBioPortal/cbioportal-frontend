@@ -1,5 +1,5 @@
 // Test data shared by the package specs.
-import { registerWsiResourceAccess } from './wsiAuth';
+import { registerWsiSlideSources } from './wsiAuth';
 import {
     Block,
     Part,
@@ -83,26 +83,17 @@ export function makeTileMetadata(
     };
 }
 
-/** A slide-access response body, as the backend sends it. */
-export function makeAccessPayload(overrides: Record<string, unknown> = {}) {
-    return {
-        resourceId: 'WSI_SAMPLE',
-        key: 'slide-1',
-        accessToken: 'test-token',
-        tokenType: 'Bearer',
-        expiresIn: 300,
-        ...overrides,
-    };
-}
+/** The sealed source the fixtures give every servable slide. */
+export const TEST_SEALED_SOURCE = 'sealed-source+/=';
 
 /** Publishes one slide for a patient, as a loaded hierarchy would. */
-export function registerTestSlideAccess(
+export function registerTestSlide(
     studyId: string,
     patientId: string,
     slideKey: string,
     tileMetadata: TileMetadata = makeTileMetadata()
 ): void {
-    registerWsiResourceAccess(studyId, {
+    registerWsiSlideSources(studyId, {
         patient_id: patientId,
         samples: [
             makeSample('S-1', [
@@ -110,6 +101,9 @@ export function registerTestSlideAccess(
                     slide_key: slideKey,
                     resource_id: 'WSI_SAMPLE',
                     serving_key: slideKey,
+                    sealed_source: TEST_SEALED_SOURCE,
+                    thumbnail_width: 1024,
+                    thumbnail_height: 768,
                     tile_metadata: tileMetadata,
                 }),
             ]),
@@ -174,11 +168,12 @@ export function toResourceRows(hierarchy: PatientHierarchy): TestSlideRow[] {
                     if (slide.can_serve_tiles) {
                         metadata.serving = {
                             key: slide.serving_key || slide.slide_key,
-                            sealed_source: 'sealed',
+                            sealed_source:
+                                slide.sealed_source || TEST_SEALED_SOURCE,
                             tile_metadata_json:
                                 slide.tile_metadata || makeTileMetadata(),
-                            thumbnail_width: 128,
-                            thumbnail_height: 96,
+                            thumbnail_width: slide.thumbnail_width || 1024,
+                            thumbnail_height: slide.thumbnail_height || 768,
                             thumbnail_content_type: 'image/jpeg',
                         };
                     }

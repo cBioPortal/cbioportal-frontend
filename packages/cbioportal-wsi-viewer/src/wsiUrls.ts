@@ -1,3 +1,5 @@
+import { WsiSlideSource } from './wsiViewerTypes';
+
 export const WSI_THUMBNAIL_WIDTH = 128;
 export const WSI_THUMBNAIL_HEIGHT = 96;
 
@@ -8,9 +10,55 @@ export function buildWsiResourceRowsApiUrl(
     return buildApiUrl('api/resource-table/query/fetch');
 }
 
+function encodeQuery(params: Array<[string, string | number]>): string {
+    return params
+        .map(
+            ([name, value]) =>
+                `${encodeURIComponent(name)}=${encodeURIComponent(
+                    String(value)
+                )}`
+        )
+        .join('&');
+}
+
+/**
+ * The query naming a slide on the tile server: the study (which the portal in
+ * front of the tile server checks the session cookie against), the slide's
+ * opaque key and its sealed source. Never the source image id.
+ */
+export function buildWsiSlideQuery(
+    studyId: string,
+    source: Pick<WsiSlideSource, 'servingKey' | 'sealedSource'>
+): string {
+    return encodeQuery([
+        ['studyId', studyId],
+        ['key', source.servingKey],
+        ['enc', source.sealedSource],
+    ]);
+}
+
+/** One tile's URL: `{tileServerBase}/tiles/zxy/{z}/{x}/{y}?{slide query}`. */
+export function buildWsiTileUrl(
+    tileServerBase: string,
+    slideQuery: string,
+    level: number,
+    x: number,
+    y: number
+): string {
+    return `${tileServerBase.replace(
+        /\/$/,
+        ''
+    )}/tiles/zxy/${level}/${x}/${y}?${slideQuery}`;
+}
+
 /** Build a slide thumbnail URL from the tile-server base URL. */
 export function buildWsiThumbnailUrl(
     tileServerBase: string,
+    studyId: string,
+    source: Pick<
+        WsiSlideSource,
+        'servingKey' | 'sealedSource' | 'thumbnailWidth' | 'thumbnailHeight'
+    >,
     width = WSI_THUMBNAIL_WIDTH,
     height = WSI_THUMBNAIL_HEIGHT
 ): string {
@@ -21,17 +69,20 @@ export function buildWsiThumbnailUrl(
     const parsed = new URL(tileServerBase, baseUrl);
     const path = `${parsed.pathname.replace(/\/$/, '')}/thumbnails`;
     const url = new URL(path, parsed.origin);
-    url.searchParams.set('width', String(Math.max(1, Math.round(width))));
-    url.searchParams.set('height', String(Math.max(1, Math.round(height))));
-    // The slide is identified only by the bearer token; no slide identifier or
-    // source location is ever placed in the URL or in request headers.
+    const params: Array<[string, string | number]> = [];
+    // The stored thumbnail's size, from the slide's row, when it has one.
+    if (source.thumbnailWidth != null && source.thumbnailHeight != null) {
+        params.push(
+            ['tw', source.thumbnailWidth],
+            ['th', source.thumbnailHeight]
+        );
+    }
+    params.push(
+        ['width', Math.max(1, Math.round(width))],
+        ['height', Math.max(1, Math.round(height))]
+    );
+    url.search = `?${buildWsiSlideQuery(studyId, source)}&${encodeQuery(
+        params
+    )}`;
     return url.toString();
-}
-
-export function buildWsiRequestHeaders(
-    accessToken?: string
-): Record<string, string> {
-    const headers: Record<string, string> = {};
-    if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
-    return headers;
 }

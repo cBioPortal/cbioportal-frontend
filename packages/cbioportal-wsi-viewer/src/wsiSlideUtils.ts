@@ -47,41 +47,6 @@ export function matchesWsiStainFilter(
 }
 
 /**
- * Picks the slides whose metadata is worth fetching ahead of a click: the
- * selected sample's slides, matching stain first, capped at `limit`. Each
- * metadata fetch costs a slide-access request, so other samples load on demand.
- */
-export function selectMetadataPrefetchSlides(
-    entries: ReadonlyArray<ServableSlideEntry>,
-    options: {
-        selectedSampleId: string | undefined;
-        stainFilter: WsiStainFilter;
-        limit: number;
-        skipSlideKey?: string;
-    }
-): Slide[] {
-    const matching: Slide[] = [];
-    const otherStain: Slide[] = [];
-    const seen = new Set<string>();
-    for (const { slide, sample } of entries) {
-        const slideKey = slide.slide_key;
-        if (
-            sample.sample_id !== options.selectedSampleId ||
-            slideKey === options.skipSlideKey ||
-            seen.has(slideKey)
-        ) {
-            continue;
-        }
-        seen.add(slideKey);
-        (matchesWsiStainFilter(slide, options.stainFilter)
-            ? matching
-            : otherStain
-        ).push(slide);
-    }
-    return matching.concat(otherStain).slice(0, options.limit);
-}
-
-/**
  * Compares part or block numbers numerically. Numbers sort before
  * non-numeric values, which sort before missing ones; non-numeric values
  * compare as natural-order text.

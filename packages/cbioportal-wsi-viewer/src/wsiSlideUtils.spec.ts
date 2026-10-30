@@ -4,7 +4,6 @@ import {
     getServableSlideIdsForPathologyFilterReadOnly,
     sampleHasMultiplePartDescriptions,
     sampleHasServableSlide,
-    selectMetadataPrefetchSlides,
 } from './wsiSlideUtils';
 import { makeSample, makeSlide } from './wsiTestFixtures';
 import { PatientHierarchy, Sample, Slide } from './wsiViewerTypes';
@@ -220,76 +219,5 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         expect(sampleHasServableSlide(sample, 'slide-1')).toBe(true);
         expect(sampleHasServableSlide(sample, 'missing')).toBe(false);
         expect(sampleHasMultiplePartDescriptions(sample)).toBe(true);
-    });
-});
-
-describe('selectMetadataPrefetchSlides', () => {
-    const hne = (id: string) => makeSlide({ slide_key: id });
-    const ihc = (id: string) => makeSlide({ slide_key: id, stain_kind: 'ihc' });
-
-    function entries(sample: Sample) {
-        return sample.parts[0].blocks[0].slides.map(slide => ({
-            slide,
-            sample,
-        }));
-    }
-
-    it('takes only the selected sample, matching stain first, capped', () => {
-        const selected = makeSample('S1', [ihc('i1'), hne('h1'), hne('h2')]);
-        const other = makeSample('S2', [hne('o1'), hne('o2')]);
-
-        const picked = selectMetadataPrefetchSlides(
-            [...entries(selected), ...entries(other)],
-            { selectedSampleId: 'S1', stainFilter: 'hne', limit: 10 }
-        );
-
-        expect(picked.map(slide => slide.slide_key)).toEqual([
-            'h1',
-            'h2',
-            'i1',
-        ]);
-    });
-
-    it('skips the given image and duplicates', () => {
-        const sample = makeSample('S1', [hne('h1'), hne('h2')]);
-
-        const picked = selectMetadataPrefetchSlides(
-            [...entries(sample), ...entries(sample)],
-            {
-                selectedSampleId: 'S1',
-                stainFilter: 'all',
-                limit: 10,
-                skipSlideKey: 'h1',
-            }
-        );
-
-        expect(picked.map(slide => slide.slide_key)).toEqual(['h2']);
-    });
-
-    it('stops at the limit', () => {
-        const sample = makeSample(
-            'S1',
-            Array.from({ length: 20 }, (_, index) => hne(`h${index}`))
-        );
-
-        expect(
-            selectMetadataPrefetchSlides(entries(sample), {
-                selectedSampleId: 'S1',
-                stainFilter: 'all',
-                limit: 5,
-            })
-        ).toHaveLength(5);
-    });
-
-    it('prefetches nothing without a selected sample', () => {
-        const sample = makeSample('S1', [hne('h1')]);
-
-        expect(
-            selectMetadataPrefetchSlides(entries(sample), {
-                selectedSampleId: undefined,
-                stainFilter: 'all',
-                limit: 5,
-            })
-        ).toEqual([]);
     });
 });

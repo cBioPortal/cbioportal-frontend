@@ -9,13 +9,39 @@ export const SAMPLE_ID = 'wsi-foundation-smoke-sample';
 /** A sample attribute value the sidebar's Clinical section shows. */
 export const CLINICAL_CANCER_TYPE = 'Lung Adenocarcinoma';
 
+/** The sealed source of a slide's row; only the tile server opens it. */
+export function sealedSourceFor(slideKey: string): string {
+    return `sealed.${slideKey}+/=`;
+}
+
+/** The stored thumbnail size the slide rows carry. */
+export const THUMBNAIL_WIDTH = 1024;
+export const THUMBNAIL_HEIGHT = 768;
+
+/** One tile or thumbnail request, as the tile server received it. */
+export interface TileServerRequest {
+    url: string;
+    headers: Record<string, string>;
+}
+
 export interface FoundationMockOptions {
     /** Adds a second servable slide. */
     includeSecondSlide?: boolean;
-    /** Collects every slide access request URL. */
+    /**
+     * Collects every request to the retired slide access endpoint
+     * (`/api/resources/{study}/{resource}/access`); there should be none.
+     */
     accessRequests?: string[];
-    /** Collects the request headers of every tile and thumbnail request. */
-    tileRequestHeaders?: Array<Record<string, string>>;
+    /** Collects every tile and thumbnail request. */
+    tileServerRequests?: TileServerRequest[];
+    /**
+     * The status the tile server answers every tile and thumbnail with, as
+     * the portal's session check does for an expired session (401) or a
+     * study the session cannot read (403).
+     */
+    tileServerStatus?: number;
+    /** Applies `tileServerStatus` to tiles only, serving thumbnails. */
+    tileServerStatusTilesOnly?: boolean;
 }
 
 /** Schema-2 tile metadata the viewer accepts, carried by the slide rows. */
@@ -60,10 +86,10 @@ function makeSlideRow(slideKey: string, stainName: string, stainGroup: string) {
             specimen_key: 'block::1::A1',
             serving: {
                 key: slideKey,
-                sealed_source: 'sealed',
+                sealed_source: sealedSourceFor(slideKey),
                 tile_metadata_json: tileMetadata,
-                thumbnail_width: 128,
-                thumbnail_height: 96,
+                thumbnail_width: THUMBNAIL_WIDTH,
+                thumbnail_height: THUMBNAIL_HEIGHT,
                 thumbnail_content_type: 'image/png',
             },
         },
@@ -84,57 +110,52 @@ export const pixel = Buffer.from(
     'base64'
 );
 
-/**
- * Resource access as the backend answers it for a slide:
- * `GET /api/resources/{study}/{resource}/access?key=…&patientId=…`. 400 unless
- * the key is 12 hex, 404 for a row `isPublished` rejects, else a token.
- */
-export async function routeSlideAccess(
+/** Records any request to the retired slide access endpoint. */
+async function routeRetiredSlideAccess(
     page: Page,
-    studyId: string,
-    isPublished: (
-        resourceId: string,
-        patientId: string,
-        key: string
-    ) => boolean,
     accessRequests?: string[]
 ): Promise<void> {
-    await page.route(`**/api/resources/${studyId}/*/access?*`, route => {
-        const url = new URL(route.request().url());
-        accessRequests?.push(url.toString());
-        const resourceId = decodeURIComponent(
-            url.pathname.split('/').slice(-2, -1)[0]
-        );
-        const patientId = url.searchParams.get('patientId') || '';
-        const key = url.searchParams.get('key') || '';
-        if (!/^[0-9a-f]{12}$/.test(key)) {
-            return route.fulfill({ status: 400, body: '' });
-        }
-        if (!isPublished(resourceId, patientId, key)) {
-            return route.fulfill({ status: 404, body: '' });
-        }
-        return route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify({
-                resourceId,
-                key,
-                accessToken: 'wsi-foundation-smoke-token',
-                tokenType: 'Bearer',
-                expiresIn: 300,
-            }),
-        });
+    await page.route('**/api/resources/*/*/access**', route => {
+        accessRequests?.push(route.request().url());
+        return route.fulfill({ status: 404, body: '' });
     });
 }
 
-/** Answers every tile and thumbnail request with one pixel. */
-export async function routeTilePixels(
+/**
+ * The tile server behind the portal's session check: every tile and thumbnail
+ * request must name a published slide by `studyId`, `key` and `enc` (its
+ * sealed source), or it is refused; a thumbnail also needs `tw`/`th`. A valid
+ * request gets one pixel, or `status` when set (for tiles only with
+ * `tilesOnly`).
+ */
+export async function routeTileServer(
     page: Page,
-    requestHeaders?: Array<Record<string, string>>
+    slideKeys: string[],
+    requests?: TileServerRequest[],
+    status?: number,
+    tilesOnly = false
 ): Promise<void> {
     for (const pattern of ['**/wsi/tiles/**', '**/wsi/thumbnails**']) {
         await page.route(pattern, route => {
-            requestHeaders?.push(route.request().headers());
+            const request = route.request();
+            requests?.push({ url: request.url(), headers: request.headers() });
+            const url = new URL(request.url());
+            const thumbnail = url.pathname.endsWith('/thumbnails');
+            if (status !== undefined && !(tilesOnly && thumbnail)) {
+                return route.fulfill({ status, body: '' });
+            }
+            const key = url.searchParams.get('key') || '';
+            const valid =
+                url.searchParams.get('studyId') === STUDY_ID &&
+                slideKeys.includes(key) &&
+                url.searchParams.get('enc') === sealedSourceFor(key) &&
+                (!thumbnail ||
+                    (url.searchParams.get('tw') === String(THUMBNAIL_WIDTH) &&
+                        url.searchParams.get('th') ===
+                            String(THUMBNAIL_HEIGHT)));
+            if (!valid) {
+                return route.fulfill({ status: 404, body: '' });
+            }
             return route.fulfill({
                 status: 200,
                 contentType: 'image/png',
@@ -197,20 +218,15 @@ export async function installFoundationMocks(
             body: JSON.stringify([]),
         })
     );
-    await routeSlideAccess(
-        page,
-        STUDY_ID,
-        (resourceId, patientId, key) =>
-            patientId === PATIENT_ID &&
-            slideRows.some(
-                row =>
-                    row.resourceId === resourceId &&
-                    row.metadata.serving.key === key
-            ),
-        options.accessRequests
-    );
+    await routeRetiredSlideAccess(page, options.accessRequests);
     await installClinicalMocks(page);
-    await routeTilePixels(page, options.tileRequestHeaders);
+    await routeTileServer(
+        page,
+        slideRows.map(row => row.metadata.serving.key),
+        options.tileServerRequests,
+        options.tileServerStatus,
+        options.tileServerStatusTilesOnly
+    );
     return enrichmentRequests;
 }
 

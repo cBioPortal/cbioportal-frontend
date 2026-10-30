@@ -1,4 +1,3 @@
-import { selectMetadataPrefetchSlides } from './wsiSlideUtils';
 import { WsiStainFilter } from './wsiViewerTypes';
 import { fetchWsiPatientHierarchy } from './wsiHierarchyFetchCache';
 import {
@@ -25,22 +24,31 @@ import {
     reopenOsdViewer,
     restoreOrHomeViewport,
 } from './wsiOsdUtils';
-import { getWsiSlideAccess } from './wsiAuth';
-import { buildWsiRequestHeaders } from './wsiUrls';
-import { fetchWsiThumbnailBlob } from './wsiThumbnailFetchCache';
+import { getWsiSlideSource } from './wsiAuth';
+import { buildWsiSlideQuery } from './wsiUrls';
+import {
+    fetchWsiThumbnailBlob,
+    WsiThumbnailFetchError,
+} from './wsiThumbnailFetchCache';
 import { revokeObjectUrl } from './wsiCacheUtils';
 import { WsiViewerState } from './wsiViewerState';
-import {
-    PatientHierarchy,
-    Sample,
-    Slide,
-    TileMetadata,
-    WsiSlideAccess,
-} from './wsiViewerTypes';
+import { Sample, Slide, WsiSlideSource } from './wsiViewerTypes';
 
 const WSI_SELECTION_TIMEOUT_MS = 185_000;
 const WSI_TILE_READY_TIMEOUT_MS = 185_000;
 const WSI_OSD_OPEN_TIMEOUT_MS = 120_000;
+
+/**
+ * Shown when the tile server answers 401/403: the portal in front of it
+ * checks the session cookie against the study, so the session has expired or
+ * no longer has access.
+ */
+export const WSI_SESSION_EXPIRED_MESSAGE =
+    'Your session has expired or you do not have access to this study. Reload the page or sign in again.';
+
+function isAccessDeniedStatus(status: unknown): boolean {
+    return status === 401 || status === 403;
+}
 
 export type WsiInitialSlideLoadOutcome =
     | 'success'
@@ -116,7 +124,6 @@ function scheduleIdle(
 const PREVIEW_CLEAR_FALLBACK_MS = 1500;
 
 export class WsiViewerController {
-    private static readonly METADATA_PREFETCH_LIMIT = 3;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private osdViewer: any = null;
     /** Whether `osdViewer` shows, or is opening, the current mount's slide. */
@@ -141,22 +148,11 @@ export class WsiViewerController {
     private tileReadyTimer: ReturnType<typeof setTimeout> | null = null;
     private osdOpenTimer: ReturnType<typeof setTimeout> | null = null;
     private selectionTimeoutTimer: ReturnType<typeof setTimeout> | null = null;
-    private wsiTokenRefreshTimer: ReturnType<typeof setTimeout> | null = null;
-    /** The next access-token refresh, kept while the viewer is hidden. */
-    private wsiTokenRefresh: {
-        studyId: string;
-        slideKey: string;
-        seq: number;
-        refreshAt: number;
-    } | null = null;
     private viewerVisible = true;
     private terminalTileFailures = new Set<string>();
     private writeHashTimer: ReturnType<typeof setTimeout> | null = null;
     private hierarchyLoadSeq = 0;
     private hierarchyAbortController: AbortController | null = null;
-    private backgroundWorkStarted = false;
-    /** Cancels the scheduled metadata prefetch; null when none is pending. */
-    private cancelScheduledBackgroundWork: (() => void) | null = null;
     /** Cancels the scheduled navigator setup or its retry. */
     private cancelScheduledNavigator: (() => void) | null = null;
     private restoreHashViewportForNextSelection = false;
@@ -201,7 +197,7 @@ export class WsiViewerController {
 
     /**
      * Starts a new mount sequence, so callbacks of the previous mount are
-     * ignored, and stops its preview, timers and token refresh.
+     * ignored, and stops its preview and timers.
      */
     private resetMount(): void {
         this.mountSeq++;
@@ -209,7 +205,6 @@ export class WsiViewerController {
         this.nativeTileDrawnSeq = null;
         this.clearThumbnailPreview();
         this.clearMountTimers();
-        this.cancelWsiTokenRefresh();
     }
 
     /**
@@ -233,15 +228,9 @@ export class WsiViewerController {
         this.clearTimer('writeHashTimer');
         this.hierarchyAbortController?.abort();
         this.hierarchyAbortController = null;
-        this.cancelBackgroundWorkSchedule();
         this.cancelNavigatorSchedule();
         this.destroyViewer();
         hashUrlState.clear();
-    }
-
-    private cancelBackgroundWorkSchedule() {
-        this.cancelScheduledBackgroundWork?.();
-        this.cancelScheduledBackgroundWork = null;
     }
 
     private cancelNavigatorSchedule() {
@@ -370,33 +359,21 @@ export class WsiViewerController {
         this.state.thumbnailPreviewUrl = null;
     }
 
-    private startThumbnailPreview(
-        slideKey: string,
-        seq: number,
-        accessPromise: Promise<WsiSlideAccess>
-    ): void {
+    private startThumbnailPreview(source: WsiSlideSource, seq: number): void {
         this.clearThumbnailPreview();
         const requestController = new AbortController();
         this.thumbnailPreviewAbortController = requestController;
 
-        void accessPromise
-            .then(async access => {
-                if (seq !== this.mountSeq || requestController.signal.aborted) {
-                    return null;
-                }
-                const blob = await fetchWsiThumbnailBlob(
-                    this.host.getTileServerBase(),
-                    this.host.getProps().studyId,
-                    slideKey,
-                    access,
-                    requestController.signal,
-                    'default',
-                    this.host.getProps().authScope
-                );
-                return URL.createObjectURL(blob);
-            })
-            .then(objectUrl => {
-                if (!objectUrl) return;
+        void fetchWsiThumbnailBlob(
+            this.host.getTileServerBase(),
+            this.host.getProps().studyId,
+            source,
+            requestController.signal,
+            'default',
+            this.host.getProps().authScope
+        )
+            .then(blob => {
+                const objectUrl = URL.createObjectURL(blob);
                 const stale =
                     seq !== this.mountSeq ||
                     requestController.signal.aborted ||
@@ -414,6 +391,15 @@ export class WsiViewerController {
             })
             .catch(error => {
                 if (requestController.signal.aborted || seq !== this.mountSeq) {
+                    return;
+                }
+                // The tile server refused the session: tiles will be refused
+                // too, so fail now rather than after their retries.
+                if (
+                    error instanceof WsiThumbnailFetchError &&
+                    isAccessDeniedStatus(error.response?.status)
+                ) {
+                    this.failMount(WSI_SESSION_EXPIRED_MESSAGE, 'tile_failed');
                     return;
                 }
                 // A preview is an optimization. Native OSD loading continues
@@ -436,115 +422,15 @@ export class WsiViewerController {
         this.closeViewerSlide();
     }
 
-    private clearWsiTokenRefreshTimer(): void {
-        if (this.wsiTokenRefreshTimer !== null) {
-            clearTimeout(this.wsiTokenRefreshTimer);
-            this.wsiTokenRefreshTimer = null;
-        }
-    }
-
-    private cancelWsiTokenRefresh(): void {
-        this.clearWsiTokenRefreshTimer();
-        this.wsiTokenRefresh = null;
-    }
-
-    private scheduleWsiTokenRefresh(
-        studyId: string,
-        slideKey: string,
-        seq: number,
-        expiresAt: number
-    ): void {
-        this.setWsiTokenRefresh(studyId, slideKey, seq, expiresAt - 30_000);
-    }
-
-    private setWsiTokenRefresh(
-        studyId: string,
-        slideKey: string,
-        seq: number,
-        refreshAt: number
-    ): void {
-        this.cancelWsiTokenRefresh();
-        this.wsiTokenRefresh = { studyId, slideKey, seq, refreshAt };
-        this.startWsiTokenRefreshTimer();
-    }
-
-    // Hidden viewers load no tiles, so their token is refreshed when shown.
-    private startWsiTokenRefreshTimer(): void {
-        const refresh = this.wsiTokenRefresh;
-        if (!refresh || !this.viewerVisible) return;
-        this.clearWsiTokenRefreshTimer();
-        const delay = Math.max(1000, refresh.refreshAt - Date.now());
-        this.wsiTokenRefreshTimer = setTimeout(() => {
-            this.wsiTokenRefreshTimer = null;
-            this.wsiTokenRefresh = null;
-            void this.refreshWsiToken(
-                refresh.studyId,
-                refresh.slideKey,
-                refresh.seq
-            );
-        }, delay);
-    }
-
     /**
-     * Whether the viewer is on screen. Token refresh pauses while it is
-     * hidden and, once shown, runs at once if the refresh is due.
-     * OpenSeadragon ignores container size changes while hidden: a hidden
-     * tab collapses the container, and resizing to that and back rescales
-     * the view.
+     * Whether the viewer is on screen. OpenSeadragon ignores container size
+     * changes while hidden: a hidden tab collapses the container, and
+     * resizing to that and back rescales the view.
      */
     setVisible(visible: boolean): void {
         if (visible === this.viewerVisible) return;
         this.viewerVisible = visible;
         if (this.osdViewer) this.osdViewer.autoResize = visible;
-        if (!visible) {
-            this.clearWsiTokenRefreshTimer();
-            return;
-        }
-        const refresh = this.wsiTokenRefresh;
-        if (refresh && refresh.refreshAt <= Date.now()) {
-            this.wsiTokenRefresh = null;
-            void this.refreshWsiToken(
-                refresh.studyId,
-                refresh.slideKey,
-                refresh.seq
-            );
-            return;
-        }
-        this.startWsiTokenRefreshTimer();
-    }
-
-    private async refreshWsiToken(
-        studyId: string,
-        slideKey: string,
-        seq: number
-    ): Promise<void> {
-        if (seq !== this.mountSeq || !this.osdViewer) return;
-        try {
-            const access = await getWsiSlideAccess(
-                studyId,
-                slideKey,
-                true,
-                this.host.getProps().authScope
-            );
-            if (seq !== this.mountSeq || !this.osdViewer) return;
-            const headers = buildWsiRequestHeaders(access.accessToken);
-            this.osdViewer.setAjaxHeaders?.(headers, true);
-            this.osdViewer.navigator?.setAjaxHeaders?.(headers, true);
-            this.scheduleWsiTokenRefresh(
-                studyId,
-                slideKey,
-                seq,
-                access.expiresAt
-            );
-        } catch (_) {
-            if (seq !== this.mountSeq) return;
-            this.setWsiTokenRefresh(
-                studyId,
-                slideKey,
-                seq,
-                Date.now() + 10_000
-            );
-        }
     }
 
     async loadHierarchy(restoreHashViewport = true) {
@@ -553,9 +439,7 @@ export class WsiViewerController {
         const abortController = new AbortController();
         this.hierarchyAbortController = abortController;
         this.resetMount();
-        this.backgroundWorkStarted = false;
         this.initialSlideKey = undefined;
-        this.cancelBackgroundWorkSchedule();
         this.cancelNavigatorSchedule();
         this.initialSlideLoadStartedAt = Date.now();
         this.state.resetForHierarchyLoad();
@@ -585,11 +469,6 @@ export class WsiViewerController {
             if (first) {
                 this.restoreHashViewportForNextSelection = restoreHashViewport;
                 this.initialSlideKey = first.slide.slide_key;
-                await this.fetchSlideMetadata(first.slide.slide_key).catch(
-                    () => {
-                        // Best-effort warmup; selectSlide will surface real errors.
-                    }
-                );
                 await new Promise<void>(resolve =>
                     requestAnimationFrame(() => resolve())
                 );
@@ -617,53 +496,6 @@ export class WsiViewerController {
         }
     }
 
-    private shouldContinueBackgroundWork(
-        expectedLoadSeq: number,
-        expectedHierarchy?: PatientHierarchy
-    ): boolean {
-        const hierarchy = this.state.hierarchy;
-        return (
-            expectedLoadSeq === this.hierarchyLoadSeq &&
-            hierarchy !== null &&
-            (!expectedHierarchy || hierarchy === expectedHierarchy)
-        );
-    }
-
-    private startBackgroundWorkIfReady(seq: number) {
-        if (
-            seq !== this.mountSeq ||
-            this.backgroundWorkStarted ||
-            this.cancelScheduledBackgroundWork ||
-            !this.initialSlideKey
-        ) {
-            return;
-        }
-
-        const expectedLoadSeq = this.hierarchyLoadSeq;
-        const runBackgroundWork = () => {
-            this.cancelScheduledBackgroundWork = null;
-            if (
-                seq !== this.mountSeq ||
-                this.backgroundWorkStarted ||
-                !this.shouldContinueBackgroundWork(expectedLoadSeq) ||
-                !this.initialSlideKey
-            ) {
-                return;
-            }
-            this.backgroundWorkStarted = true;
-            void this.prefetchSlideMetadata(
-                this.initialSlideKey,
-                expectedLoadSeq
-            );
-        };
-
-        this.cancelScheduledBackgroundWork = scheduleIdle(
-            runBackgroundWork,
-            1500,
-            300
-        );
-    }
-
     private scheduleNavigatorIfReady(seq: number) {
         if (
             seq !== this.mountSeq ||
@@ -680,7 +512,7 @@ export class WsiViewerController {
         const slide = this.state.selectedSlide!;
         const meta = this.state.selectedMeta!;
         const expectedMountSeq = this.mountSeq;
-        const runNavigatorSetup = async () => {
+        const runNavigatorSetup = () => {
             this.cancelScheduledNavigator = null;
             if (
                 expectedMountSeq !== this.mountSeq ||
@@ -692,25 +524,15 @@ export class WsiViewerController {
             }
             const { studyId } = this.host.getProps();
             try {
-                const access = await getWsiSlideAccess(
-                    studyId,
-                    slide.slide_key,
-                    false,
-                    this.host.getProps().authScope
-                );
-                if (
-                    expectedMountSeq !== this.mountSeq ||
-                    !this.osdViewer ||
-                    this.osdViewer.navigator
-                ) {
-                    return;
-                }
                 ensureNavigator({
                     osdViewer: this.osdViewer,
                     openSeadragon: this.openSeadragon,
                     meta,
                     baseUrl: this.host.getTileServerBase(),
-                    accessToken: access.accessToken,
+                    slideQuery: buildWsiSlideQuery(
+                        studyId,
+                        getWsiSlideSource(studyId, slide.slide_key)
+                    ),
                 });
             } catch (_) {
                 if (expectedMountSeq !== this.mountSeq) return;
@@ -726,36 +548,6 @@ export class WsiViewerController {
             runNavigatorSetup,
             750,
             150
-        );
-    }
-
-    /** Tile metadata comes with the slide access, which is cached. */
-    private fetchSlideMetadata(slideKey: string): Promise<TileMetadata> {
-        const { studyId, authScope } = this.host.getProps();
-        return getWsiSlideAccess(studyId, slideKey, false, authScope).then(
-            access => access.tileMetadata
-        );
-    }
-
-    private async prefetchSlideMetadata(
-        skipSlideKey?: string,
-        expectedLoadSeq = this.hierarchyLoadSeq
-    ) {
-        const prioritizedSlides = selectMetadataPrefetchSlides(
-            this.host.getServableSlides(),
-            {
-                selectedSampleId: this.state.selectedSample?.sample_id,
-                stainFilter: this.host.getStainFilter(),
-                limit: WsiViewerController.METADATA_PREFETCH_LIMIT,
-                skipSlideKey,
-            }
-        );
-
-        if (!this.shouldContinueBackgroundWork(expectedLoadSeq)) return;
-        await Promise.allSettled(
-            prioritizedSlides.map(slide =>
-                this.fetchSlideMetadata(slide.slide_key)
-            )
         );
     }
 
@@ -930,7 +722,6 @@ export class WsiViewerController {
         if (this.state.selectedSlide?.slide_key === this.initialSlideKey) {
             this.finishInitialSlideLoad('success');
         }
-        this.startBackgroundWorkIfReady(seq);
     }
 
     private reportViewScale() {
@@ -1103,6 +894,11 @@ export class WsiViewerController {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private handleOsdTileLoadFailed(seq: number, event: any) {
         if (seq !== this.mountSeq) return;
+        // Retrying cannot help a session the portal refused.
+        if (isAccessDeniedStatus(event?.tileRequest?.status)) {
+            this.failMount(WSI_SESSION_EXPIRED_MESSAGE, 'tile_failed');
+            return;
+        }
         if (
             typeof event?.tries === 'number' &&
             event.tries <= OSD_TILE_RETRY_MAX
@@ -1131,24 +927,14 @@ export class WsiViewerController {
         restoreHashViewport = true
     ) {
         const openSeadragonPromise = this.primeOpenSeadragonLoad();
-        const { studyId, authScope } = this.host.getProps();
-        const accessPromise = getWsiSlideAccess(
-            studyId,
-            slide.slide_key,
-            false,
-            authScope
-        );
-        // The access request is shared with metadata loading. Starting the
-        // published-thumbnail fetch here lets it run while OSD and slide
-        // metadata initialize.
-        this.startThumbnailPreview(slide.slide_key, seq, accessPromise);
-        let meta: TileMetadata;
+        const { studyId } = this.host.getProps();
+        let source: WsiSlideSource;
         try {
-            meta = await this.fetchSlideMetadata(slide.slide_key);
+            source = getWsiSlideSource(studyId, slide.slide_key);
         } catch (err) {
             if (seq !== this.mountSeq) return;
             // eslint-disable-next-line no-console
-            console.error('[WSIViewer] metadata fetch failed', err);
+            console.error('[WSIViewer] slide cannot be served', err);
             this.failMount(
                 `Failed to load slide metadata: ${err}`,
                 'metadata_failed'
@@ -1156,7 +942,11 @@ export class WsiViewerController {
             return;
         }
 
-        if (seq !== this.mountSeq) return;
+        // Starting the published-thumbnail fetch here lets it run while OSD
+        // initializes.
+        this.startThumbnailPreview(source, seq);
+        const meta = source.tileMetadata;
+        const slideQuery = buildWsiSlideQuery(studyId, source);
         this.state.selectedMeta = meta;
 
         await new Promise<void>(resolve =>
@@ -1175,7 +965,6 @@ export class WsiViewerController {
         let reopenSlide: (() => void) | null = null;
         try {
             const openSeadragon = await openSeadragonPromise;
-            const access = await accessPromise;
             if (seq !== this.mountSeq) return;
             // Reuse needs an idle viewer: tile requests of the previous slide
             // still in flight would hold loader slots ahead of this slide's
@@ -1191,7 +980,7 @@ export class WsiViewerController {
                         osdViewer: reusableViewer,
                         meta,
                         baseUrl: this.host.getTileServerBase(),
-                        accessToken: access.accessToken,
+                        slideQuery,
                     });
             } else {
                 this.destroyViewer();
@@ -1201,7 +990,7 @@ export class WsiViewerController {
                         navId: this.navId,
                         meta,
                         baseUrl: this.host.getTileServerBase(),
-                        accessToken: access.accessToken,
+                        slideQuery,
                         prefixUrl: getWsiViewerRuntime().osdPrefixUrl,
                     })
                 );
@@ -1216,12 +1005,6 @@ export class WsiViewerController {
                 homeButton?.setAttribute('aria-label', 'Fit to view');
             }
             this.osdSlideMounted = true;
-            this.scheduleWsiTokenRefresh(
-                studyId,
-                slide.slide_key,
-                seq,
-                access.expiresAt
-            );
         } catch (err) {
             if (seq !== this.mountSeq) return;
             // eslint-disable-next-line no-console

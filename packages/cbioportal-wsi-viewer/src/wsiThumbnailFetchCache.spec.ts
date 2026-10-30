@@ -6,15 +6,16 @@ import {
     fetchWsiThumbnailBlob,
     WsiThumbnailFetchError,
 } from './wsiThumbnailFetchCache';
-import { WsiSlideAccess } from './wsiViewerTypes';
+import { WsiSlideSource } from './wsiViewerTypes';
 
-function makeAccess(overrides: Partial<WsiSlideAccess> = {}): WsiSlideAccess {
+function makeSource(overrides: Partial<WsiSlideSource> = {}): WsiSlideSource {
     return {
         slideKey: 'slide-1',
-        tileMetadata: {} as WsiSlideAccess['tileMetadata'],
-        accessToken: 'token-1',
-        expiresIn: 300,
-        expiresAt: Date.now() + 300_000,
+        servingKey: 'slide-1',
+        sealedSource: 'sealed-1',
+        thumbnailWidth: 1024,
+        thumbnailHeight: 768,
+        tileMetadata: {} as WsiSlideSource['tileMetadata'],
         ...overrides,
     };
 }
@@ -52,63 +53,81 @@ describe('wsiThumbnailFetchCache', () => {
     });
 
     it('shares one canonical request between concurrent consumers', async () => {
-        const access = makeAccess();
+        const source = makeSource();
         const first = fetchWsiThumbnailBlob(
             'https://tiles.example.com',
             'study-1',
-            'slide-1',
-            access
+            source
         );
         const second = fetchWsiThumbnailBlob(
             'https://tiles.example.com',
             'study-1',
-            'slide-1',
-            access
+            source
         );
 
         const [firstBlob, secondBlob] = await Promise.all([first, second]);
 
         expect(global.fetch).toHaveBeenCalledTimes(1);
         expect(global.fetch).toHaveBeenCalledWith(
-            'https://tiles.example.com/thumbnails?width=128&height=96',
+            'https://tiles.example.com/thumbnails?studyId=study-1&key=slide-1&enc=sealed-1&tw=1024&th=768&width=128&height=96',
             expect.objectContaining({
                 cache: 'default',
-                headers: {
-                    Authorization: 'Bearer token-1',
-                },
+                credentials: 'same-origin',
             })
         );
+        // The session cookie authorizes the request; no bearer token.
+        const init = (global.fetch as jest.Mock).mock.calls[0][1];
+        expect(init.headers).toBeUndefined();
         expect(firstBlob).toBe(secondBlob);
 
         await expect(
             fetchWsiThumbnailBlob(
                 'https://tiles.example.com',
                 'study-1',
-                'slide-1',
-                access
+                source
             )
         ).resolves.toBe(firstBlob);
         expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 
-    it('keeps a cached thumbnail when the access token is refreshed', async () => {
-        const blob = await fetchWsiThumbnailBlob(
+    it('keeps one thumbnail per user', async () => {
+        await fetchWsiThumbnailBlob(
             'https://tiles.example.com',
             'study-1',
-            'slide-1',
-            makeAccess()
+            makeSource(),
+            undefined,
+            'default',
+            'user-a'
         );
+        await fetchWsiThumbnailBlob(
+            'https://tiles.example.com',
+            'study-1',
+            makeSource(),
+            undefined,
+            'default',
+            'user-b'
+        );
+        expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
 
-        await expect(
-            fetchWsiThumbnailBlob(
+    it.each([401, 403])(
+        'reports a %s from the portal session check as final',
+        async status => {
+            (global.fetch as jest.Mock).mockResolvedValueOnce(
+                makeResponse(status, '', { 'Content-Type': 'text/html' })
+            );
+
+            const error = await fetchWsiThumbnailBlob(
                 'https://tiles.example.com',
                 'study-1',
-                'slide-1',
-                makeAccess({ accessToken: 'token-2' })
-            )
-        ).resolves.toBe(blob);
-        expect(global.fetch).toHaveBeenCalledTimes(1);
-    });
+                makeSource()
+            ).catch(e => e);
+
+            expect(error).toBeInstanceOf(WsiThumbnailFetchError);
+            expect(error.retryable).toBe(false);
+            expect(error.response.status).toBe(status);
+        }
+    );
 
     it('evicts failed requests so a later attempt can recover', async () => {
         const firstResponse = makeResponse(502, '{}', {
@@ -125,22 +144,20 @@ describe('wsiThumbnailFetchCache', () => {
         (global.fetch as jest.Mock)
             .mockResolvedValueOnce(firstResponse)
             .mockResolvedValueOnce(secondResponse);
-        const access = makeAccess();
+        const source = makeSource();
 
         await expect(
             fetchWsiThumbnailBlob(
                 'https://tiles.example.com',
                 'study-1',
-                'slide-1',
-                access
+                source
             )
         ).rejects.toBeInstanceOf(WsiThumbnailFetchError);
         await expect(
             fetchWsiThumbnailBlob(
                 'https://tiles.example.com',
                 'study-1',
-                'slide-1',
-                access
+                source
             )
         ).resolves.toBeInstanceOf(Blob);
         expect(global.fetch).toHaveBeenCalledTimes(2);
@@ -162,8 +179,7 @@ describe('wsiThumbnailFetchCache cancellation', () => {
         fetchWsiThumbnailBlob(
             'https://tiles.example.com',
             'study-1',
-            'slide-1',
-            makeAccess(),
+            makeSource(),
             signal
         );
 
@@ -291,8 +307,7 @@ describe('wsiThumbnailFetchCache expiry', () => {
             fetchWsiThumbnailBlob(
                 'https://tiles.example.com',
                 'study-1',
-                'slide-1',
-                makeAccess({ expiresAt: Date.now() + 300_000 })
+                makeSource()
             );
 
         await fetchThumbnail();

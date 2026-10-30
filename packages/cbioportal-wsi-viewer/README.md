@@ -59,7 +59,7 @@ The cBioPortal app does both in `src/shared/components/wsiViewer/wsiAppConfig.ts
 | `clinicalRows` | Rows for the sidebar's Clinical section, in display order. A row with a `sampleId` shows only for that sample's slides. Unset hides the section |
 | `navCollapsed` / `metadataCollapsed` (+ change callbacks) | Control the hideable slide list and details sidebar. Unset, the viewer remembers the user's choice in `localStorage` |
 | `showDownload`, `renderLoading` | Show the download-view control; a custom loading indicator |
-| `hidden` | The host hides the viewer without unmounting it, e.g. in an inactive tab. Token refresh pauses meanwhile |
+| `hidden` | The host hides the viewer without unmounting it, e.g. in an inactive tab. The panel shortcuts are off and OpenSeadragon ignores the collapsed container's size meanwhile |
 
 ## Portal contract
 
@@ -68,10 +68,12 @@ The viewer talks to the cBioPortal backend and tile server only:
 | Request | Use |
 | --- | --- |
 | `POST {api}/api/resource-table/query/fetch` (`WSI_SAMPLE`, `WSI_PATIENT`) | The patient's slide rows. The viewer groups them into samples → parts → blocks → slides; no rows means no slides |
-| `GET {api}/api/resources/{studyId}/{resourceId}/access?key=…&patientId=…` | A short-lived signed token for one slide: `resourceId` is the slide row's resource, `key` its `serving.key`, `patientId` the patient whose slides are open. Any user who can read the study gets one |
-| `{tileServerUrl}/tiles/zxy/{level}/{x}/{y}`, `{tileServerUrl}/thumbnails` | Tiles and thumbnails, authorized with the access token |
+| `{tileServerUrl}/tiles/zxy/{z}/{x}/{y}?studyId=…&key=…&enc=…` | One tile of a slide |
+| `{tileServerUrl}/thumbnails?studyId=…&key=…&enc=…&tw=…&th=…&width=…&height=…` | A slide's thumbnail, `width`×`height` from the stored `tw`×`th` one |
 
-Slides are rows of the `WSI_SAMPLE`/`WSI_PATIENT` resources, one per slide, written by the data provider's pipeline. A row's `metadata` carries the slide's fields and, for a slide that can serve tiles, `serving` with its access key (equal to `slide_key`), tile metadata, thumbnail size and sealed source. Only the tile server can open the sealed source.
+Slides are rows of the `WSI_SAMPLE`/`WSI_PATIENT` resources, one per slide, written by the data provider's pipeline. A row's `metadata` carries the slide's fields and, for a slide that can serve tiles, `serving` with its key (`serving.key`, equal to `slide_key`), sealed source (`serving.sealed_source`), stored thumbnail size (`serving.thumbnail_width`/`thumbnail_height`) and tile metadata (`serving.tile_metadata_json`). Tile and thumbnail requests name the slide by `studyId`, `key` and `enc` (the sealed source), all URL-encoded; the viewer never sends the source image id, and never displays the sealed source. Only the tile server can open the sealed source.
+
+Access is checked in front of the tile server, not by the viewer: tile and thumbnail requests are same-origin and carry the portal session cookie, and the ingress allows them only if that session can read the study (`GET {api}/api/studies/{studyId}`). No token or `Authorization` header is sent. A 401/403 means the session expired or lacks access to the study; the viewer then shows its error state, asking the user to reload or sign in again.
 
 The viewer stores the selected slide and viewport in the URL hash (`#wsi:slide=…&x=…&y=…&z=…`) so a view can be shared.
 

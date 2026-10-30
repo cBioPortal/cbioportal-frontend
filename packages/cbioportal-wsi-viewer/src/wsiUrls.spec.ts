@@ -1,8 +1,16 @@
 import {
-    buildWsiRequestHeaders,
     buildWsiResourceRowsApiUrl,
+    buildWsiSlideQuery,
     buildWsiThumbnailUrl,
+    buildWsiTileUrl,
 } from './wsiUrls';
+
+const SOURCE = {
+    servingKey: '0123456789ab',
+    sealedSource: 'v1.a+b/c=',
+    thumbnailWidth: 1024,
+    thumbnailHeight: 768,
+};
 
 describe('buildWsiResourceRowsApiUrl', () => {
     it('preserves a portal context path', () => {
@@ -15,25 +23,70 @@ describe('buildWsiResourceRowsApiUrl', () => {
     });
 });
 
-describe('buildWsiThumbnailUrl', () => {
-    it('puts no slide identifier or source in the thumbnail URL', () => {
-        expect(
-            buildWsiThumbnailUrl('https://tiles.example.org/wsi/', 128, 96)
-        ).toBe('https://tiles.example.org/wsi/thumbnails?width=128&height=96');
-    });
-
-    it('bounds thumbnail dimensions', () => {
-        expect(buildWsiThumbnailUrl('https://tiles.example.org', 63.6, 0)).toBe(
-            'https://tiles.example.org/thumbnails?width=64&height=1'
+describe('buildWsiSlideQuery', () => {
+    it('names the slide by study, key and sealed source, URL-encoded', () => {
+        expect(buildWsiSlideQuery('study 1', SOURCE)).toBe(
+            'studyId=study%201&key=0123456789ab&enc=v1.a%2Bb%2Fc%3D'
         );
     });
 });
 
-describe('buildWsiRequestHeaders', () => {
-    it('sends only the bearer token', () => {
-        expect(buildWsiRequestHeaders('token-1')).toEqual({
-            Authorization: 'Bearer token-1',
-        });
-        expect(buildWsiRequestHeaders()).toEqual({});
+describe('buildWsiTileUrl', () => {
+    it('puts the slide query on the ZXY tile path', () => {
+        const query = buildWsiSlideQuery('study-1', SOURCE);
+        expect(buildWsiTileUrl('/tiles-api/', query, 3, 1, 2)).toBe(
+            `/tiles-api/tiles/zxy/3/1/2?${query}`
+        );
+    });
+});
+
+describe('buildWsiThumbnailUrl', () => {
+    it('names the slide and its stored thumbnail size', () => {
+        const url = new URL(
+            buildWsiThumbnailUrl(
+                'https://tiles.example.org/wsi/',
+                'study-1',
+                SOURCE,
+                128,
+                96
+            )
+        );
+        expect(url.origin + url.pathname).toBe(
+            'https://tiles.example.org/wsi/thumbnails'
+        );
+        expect([...url.searchParams.entries()]).toEqual([
+            ['studyId', 'study-1'],
+            ['key', '0123456789ab'],
+            ['enc', 'v1.a+b/c='],
+            ['tw', '1024'],
+            ['th', '768'],
+            ['width', '128'],
+            ['height', '96'],
+        ]);
+    });
+
+    it('leaves out a stored size the row does not have', () => {
+        const url = new URL(
+            buildWsiThumbnailUrl('https://tiles.example.org', 'study-1', {
+                servingKey: 'k',
+                sealedSource: 's',
+            })
+        );
+        expect(url.searchParams.has('tw')).toBe(false);
+        expect(url.searchParams.has('th')).toBe(false);
+    });
+
+    it('bounds thumbnail dimensions', () => {
+        const url = new URL(
+            buildWsiThumbnailUrl(
+                'https://tiles.example.org',
+                'study-1',
+                SOURCE,
+                63.6,
+                0
+            )
+        );
+        expect(url.searchParams.get('width')).toBe('64');
+        expect(url.searchParams.get('height')).toBe('1');
     });
 });
