@@ -5094,9 +5094,10 @@ export function getSurvivalDownloadData(
 
 export async function getMutatedGenesDownloadData(
     promise: MobxPromise<MultiSelectionTableRow[]>,
-    oncokbCancerGeneFilterEnabled: boolean
+    oncokbCancerGeneFilterEnabled: boolean,
+    rows = promise.result
 ): Promise<string> {
-    if (promise.result) {
+    if (rows) {
         let header = [
             'Gene',
             'MutSig(Q-value)',
@@ -5109,7 +5110,7 @@ export async function getMutatedGenesDownloadData(
             header.push('Is Cancer Gene (source: OncoKB)');
         }
         let data = [header.join('\t')];
-        _.each(promise.result, (record: MultiSelectionTableRow) => {
+        _.each(rows, (record: MultiSelectionTableRow) => {
             let rowData = [
                 record.label,
                 record.qValue === undefined ? '' : getQValue(record.qValue),
@@ -5187,9 +5188,10 @@ export function getStructuralVariantGenesDownloadData(
     promise:
         | MobxPromise<MultiSelectionTableRow[]>
         | MobxPromise<StructVarMultiSelectionTableRow[]>,
-    oncokbCancerGeneFilterEnabled: boolean
+    oncokbCancerGeneFilterEnabled: boolean,
+    rows = promise.result
 ): string {
-    if (promise.result) {
+    if (rows) {
         const header = [
             'Gene',
             '# Structural Variant',
@@ -5201,7 +5203,7 @@ export function getStructuralVariantGenesDownloadData(
             header.push('Is Cancer Gene (source: OncoKB)');
         }
         const data = [header.join('\t')];
-        _.each(promise.result, (record: MultiSelectionTableRow) => {
+        _.each(rows, (record: MultiSelectionTableRow) => {
             const rowData = [
                 record.label,
                 record.totalCount,
@@ -5230,9 +5232,10 @@ export function getStructuralVariantGenesDownloadData(
 
 export async function getGenesCNADownloadData(
     promise: MobxPromise<MultiSelectionTableRow[]>,
-    oncokbCancerGeneFilterEnabled: boolean
+    oncokbCancerGeneFilterEnabled: boolean,
+    rows = promise.result
 ): Promise<string> {
-    if (promise.result) {
+    if (rows) {
         let header = [
             'Gene',
             'Gistic(Q-value)',
@@ -5246,7 +5249,7 @@ export async function getGenesCNADownloadData(
             header.push('Is Cancer Gene (source: OncoKB)');
         }
         let data = [header.join('\t')];
-        _.each(promise.result, (record: MultiSelectionTableRow) => {
+        _.each(rows, (record: MultiSelectionTableRow) => {
             let rowData = [
                 record.label,
                 record.qValue === undefined ? '' : getQValue(record.qValue),
@@ -5307,9 +5310,10 @@ export async function getSampleTreatmentDownloadData(
 }
 
 export async function getMutationTypesDownloadData(
-    promise: MobxPromise<MultiSelectionTableRow[]>
+    promise: MobxPromise<MultiSelectionTableRow[]>,
+    rows = promise.result
 ): Promise<string> {
-    if (promise.result) {
+    if (rows) {
         let header = [
             'Mutation Event',
             '# Mut',
@@ -5318,7 +5322,7 @@ export async function getMutationTypesDownloadData(
             'Freq',
         ];
         let data = [header.join('\t')];
-        _.each(promise.result, (record: MultiSelectionTableRow) => {
+        _.each(rows, (record: MultiSelectionTableRow) => {
             let rowData = [
                 record.label,
                 record.totalCount,
@@ -5337,12 +5341,13 @@ export async function getMutationTypesDownloadData(
 }
 
 export async function getVariantAnnotationTypesDownloadData(
-    promise: MobxPromise<MultiSelectionTableRow[]>
+    promise: MobxPromise<MultiSelectionTableRow[]>,
+    rows = promise.result
 ): Promise<string> {
-    if (promise.result) {
+    if (rows) {
         let header = ['Annotation', '# VA', '#', 'Profiled Samples', 'Freq'];
         let data = [header.join('\t')];
-        _.each(promise.result, (record: MultiSelectionTableRow) => {
+        _.each(rows, (record: MultiSelectionTableRow) => {
             let rowData = [
                 record.label,
                 record.totalCount,

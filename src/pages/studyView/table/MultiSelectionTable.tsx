@@ -145,6 +145,12 @@ export class MultiSelectionTable extends React.Component<
     MultiSelectionTableProps,
     {}
 > {
+    private tableRef: MultiSelectionTableComponent | null = null;
+
+    public getDownloadRowsData(): MultiSelectionTableRow[] | undefined {
+        return this.tableRef?.getDownloadRowsData(this.props.promise.result);
+    }
+
     @observable protected sortBy: MultiSelectionTableColumnKey;
     @observable private sortDirection: SortDirection;
     @observable private modalSettings: {
@@ -1124,6 +1130,9 @@ export class MultiSelectionTable extends React.Component<
             <div data-test={tableId} key={tableId}>
                 {this.props.promise.isComplete && (
                     <MultiSelectionTableComponent
+                        ref={ref => {
+                            this.tableRef = ref;
+                        }}
                         key={`multiSelect-${tableId}-${this.preSelectedRowsKeys.join(
                             ''
                         )}`}
