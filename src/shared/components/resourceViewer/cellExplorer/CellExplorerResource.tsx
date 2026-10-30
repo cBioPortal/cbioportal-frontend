@@ -48,7 +48,7 @@ function loadViewer(): Promise<CellExplorerViewer> {
     return viewerImport;
 }
 
-const TOOLBAR_HEIGHT = 36;
+const TOOLBAR_HEIGHT = 44;
 
 export interface ICellExplorerResourceProps {
     /** The resource's datasets, one row each. */

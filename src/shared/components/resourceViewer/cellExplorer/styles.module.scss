@@ -12,17 +12,19 @@
 .toolbar {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     padding: 0 10px;
+    border-bottom: 1px solid #ddd;
 
     select {
         width: auto;
-        max-width: 60%;
+        max-width: 480px;
+        min-width: 0;
     }
 }
 
 .openLink {
-    margin-left: auto;
+    white-space: nowrap;
 }
 
 .viewer {
