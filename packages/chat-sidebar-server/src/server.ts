@@ -83,11 +83,25 @@ app.post('/api/chat/report', async (req, res) => {
     }
     const signal = abortOnClose(res);
     try {
-        const report = await runReport(messages, signal, model);
-        res.json({ report });
+        for await (const chunk of runReport(messages, signal, model)) {
+            if (!res.headersSent) {
+                res.writeHead(200, {
+                    'Content-Type': 'text/plain; charset=utf-8',
+                    'Cache-Control': 'no-cache',
+                    'X-Accel-Buffering': 'no',
+                });
+            }
+            res.write(chunk);
+        }
+        res.end();
     } catch (err) {
         if (signal.aborted) return;
         console.error('report generation failed:', err);
+        // Cut mid-stream so the client sees the report as incomplete.
+        if (res.headersSent) {
+            res.destroy();
+            return;
+        }
         const message = err instanceof Error ? err.message : 'report failed';
         res.status(500).json({ error: message });
     }

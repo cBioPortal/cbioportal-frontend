@@ -8,9 +8,14 @@ import {
     Output,
     stepCountIs,
     tool,
+    getToolName,
+    isToolUIPart,
     CallSettings,
+    DynamicToolUIPart,
     LanguageModel,
+    TextUIPart,
     ToolSet,
+    ToolUIPart,
     UIMessage,
 } from 'ai';
 import { ServerResponse } from 'http';
@@ -359,13 +364,50 @@ function noThinking(modelId: string) {
     };
 }
 
-// No tools — everything the report needs (query results, page-state
-// snapshots, navigation URLs) is already in the given history.
-export async function runReport(
+// Keeps one oversized result from crowding out the rest of the session.
+const MAX_TOOL_RESULT_CHARS = 20_000;
+
+function formatToolResult(output: unknown): string {
+    // MCP results wrap their payload in text content items.
+    const content = (output as { content?: unknown } | null)?.content;
+    const text = Array.isArray(content)
+        ? content
+              .map(item =>
+                  item?.type === 'text' ? item.text : `[${item?.type} content]`
+              )
+              .join('\n')
+        : JSON.stringify(output) ?? String(output);
+    return text.length > MAX_TOOL_RESULT_CHARS
+        ? `${text.slice(0, MAX_TOOL_RESULT_CHARS)}\n[truncated ${text.length -
+              MAX_TOOL_RESULT_CHARS} characters]`
+        : text;
+}
+
+// Tool calls go in as text: Bedrock strips tool content from a request that
+// offers no tools, which would hide every query result from the report.
+function toolPartAsText(part: ToolUIPart | DynamicToolUIPart): TextUIPart {
+    const result =
+        part.state === 'output-available'
+            ? formatToolResult(part.output)
+            : part.state === 'output-error'
+            ? `Error: ${part.errorText}`
+            : 'No result.';
+    return {
+        type: 'text',
+        text: `[Tool call: ${getToolName(part)}]\nInput: ${JSON.stringify(
+            part.input
+        )}\nResult:\n${result}`,
+    };
+}
+
+// No tools offered — everything the report needs (query results, page-state
+// snapshots, navigation URLs) is already in the given history. Yields the
+// report's text as it is written.
+export async function* runReport(
     uiMessages: UIMessage[],
     abortSignal: AbortSignal,
     model?: string
-): Promise<string> {
+): AsyncGenerator<string> {
     const modelId = model || AVAILABLE_MODELS[0]?.id;
     if (!modelId) {
         throw new Error('No model available — see AVAILABLE_MODELS.');
@@ -383,14 +425,21 @@ export async function runReport(
         uiMessages
             .map(message => ({
                 ...message,
-                parts: message.parts.filter(part => part.type !== 'reasoning'),
+                parts: message.parts
+                    .filter(part => part.type !== 'reasoning')
+                    .map(part =>
+                        isToolUIPart(part) ? toolPartAsText(part) : part
+                    ),
             }))
             .filter(message => message.parts.length > 0),
         { ignoreIncompleteToolCalls: true }
     );
-    const { text } = await generateText({
+    // streamText reports failures here rather than throwing.
+    let error: unknown;
+    const result = streamText({
         model: getModel(modelId),
         system,
+        ...noThinking(modelId),
         messages: [
             ...messages,
             {
@@ -399,8 +448,14 @@ export async function runReport(
             },
         ],
         abortSignal,
+        onError: event => {
+            error = event.error;
+        },
     });
-    return text;
+    for await (const chunk of result.textStream) {
+        yield chunk;
+    }
+    if (error !== undefined) throw error;
 }
 
 // Titles come from the opening question alone — enough for a few words, and it
@@ -422,6 +477,7 @@ export async function runTitle(
     const { text: title } = await generateText({
         model: getModel(modelId),
         system: TITLE_PROMPT,
+        ...noThinking(modelId),
         messages: [{ role: 'user', content: text }],
         abortSignal,
     });

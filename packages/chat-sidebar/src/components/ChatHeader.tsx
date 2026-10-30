@@ -1,19 +1,13 @@
-import { FC, useCallback, useRef, useState, useSyncExternalStore } from 'react';
-import { UIMessage } from 'ai';
-import {
-    getExternalStoreMessages,
-    useAui,
-    useAuiState,
-} from '@assistant-ui/react';
+import { FC, useCallback, useState, useSyncExternalStore } from 'react';
+import { useAui, useAuiState } from '@assistant-ui/react';
 import {
     ChevronDownIcon,
     FileChartColumnIcon,
-    LoaderIcon,
     PanelRightIcon,
     PlusIcon,
-    TriangleAlertIcon,
 } from 'lucide-react';
 import { ThreadList } from '@/components/assistant-ui/elements/thread-list.aui';
+import { ReportDialog } from '@/components/ReportDialog';
 import { TooltipIconButton } from '@/components/assistant-ui/elements/tooltip-icon-button';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
@@ -28,9 +22,7 @@ import {
     setSelectedModel,
     subscribe,
 } from '@/lib/chatSession';
-import { downloadTextFile } from '@/lib/download';
 import { embedded } from '@/lib/parent-origin';
-import { appendScreenshotAppendix } from '@/lib/report';
 import { requestSidebarMode } from '@/lib/sidebar-mode';
 
 // Lives inside the runtime provider: everything here acts on the chat the user
@@ -52,48 +44,10 @@ export const ChatHeader: FC<{ models: ModelInfo[] }> = ({ models }) => {
     // does not, so the list stays open for a second delete.
     const closeChats = useCallback(() => setChatsOpen(false), []);
 
-    const [generatingReport, setGeneratingReport] = useState(false);
-    const [reportError, setReportError] = useState<string | null>(null);
-    const reportErrorTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
-
-    const onGenerateReport = async () => {
-        clearTimeout(reportErrorTimeoutRef.current);
-        setReportError(null);
-        setGeneratingReport(true);
-        // Read once, at click time: these are the AI SDK messages behind the
-        // visible thread, which is what the endpoint and the appendix expect.
-        const messages = aui.thread
-            .getState()
-            .messages.flatMap(m => getExternalStoreMessages<UIMessage>(m));
-        try {
-            const res = await fetch('/api/chat/report', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages, model: selectedModel }),
-            });
-            if (!res.ok) {
-                const { error } = await res.json();
-                throw new Error(error ?? 'report generation failed');
-            }
-            const { report } = await res.json();
-            downloadTextFile(
-                `cbioportal-research-report-${Date.now()}.md`,
-                appendScreenshotAppendix(report, messages)
-            );
-        } catch (err) {
-            console.error('report generation failed:', err);
-            setReportError('Failed to generate the research report.');
-            reportErrorTimeoutRef.current = setTimeout(
-                () => setReportError(null),
-                5000
-            );
-        } finally {
-            setGeneratingReport(false);
-        }
-    };
+    const [reportOpen, setReportOpen] = useState(false);
 
     return (
-        <header className="flex items-center gap-2 border-b border-border bg-muted/40 pt-2 pb-2 px-4">
+        <header className="@container flex items-center gap-2 border-b border-border bg-muted/40 pt-2 pb-2 px-4">
             <div className="min-w-0 flex-shrink truncate text-sm font-semibold leading-7">
                 cBioPortal Chat
             </div>
@@ -113,28 +67,31 @@ export const ChatHeader: FC<{ models: ModelInfo[] }> = ({ models }) => {
                         ))}
                     </select>
                 )}
-                <TooltipIconButton
-                    tooltip={
-                        reportError ??
-                        'Generate a research report of current chat'
-                    }
-                    side="bottom"
-                    type="button"
+                {/* The label drops before it would squeeze the title further. */}
+                <Button
                     variant="outline"
-                    size="icon-sm"
-                    className={reportError ? 'text-destructive' : ''}
+                    size="sm"
+                    title="Generate a research report of current chat"
                     aria-label="Generate a research report of current chat"
-                    onClick={onGenerateReport}
-                    disabled={isRunning || generatingReport || isEmpty}
+                    onClick={() => setReportOpen(true)}
+                    disabled={isRunning || isEmpty}
                 >
-                    {generatingReport ? (
-                        <LoaderIcon className="animate-spin" />
-                    ) : reportError ? (
-                        <TriangleAlertIcon />
-                    ) : (
-                        <FileChartColumnIcon />
-                    )}
-                </TooltipIconButton>
+                    <FileChartColumnIcon />
+                    <span
+                        className={
+                            models.length > 1
+                                ? 'hidden @[28rem]:inline'
+                                : 'hidden @[22rem]:inline'
+                        }
+                    >
+                        Report
+                    </span>
+                </Button>
+                <ReportDialog
+                    open={reportOpen}
+                    onOpenChange={setReportOpen}
+                    model={selectedModel ?? undefined}
+                />
                 <ButtonGroup>
                     <Button
                         variant="outline"
