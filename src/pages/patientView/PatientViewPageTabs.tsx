@@ -23,6 +23,7 @@ import _ from 'lodash';
 import MutationalSignaturesContainer from 'pages/patientView/mutationalSignatures/MutationalSignaturesContainer';
 import MrnaTabContent from 'pages/patientView/mrna/MrnaTabContent';
 import { FeatureFlagEnum } from 'shared/featureFlags';
+import { isFusionViewerEnabled } from './fusionViewer/data/fusionViewerStudies';
 import { buildCustomTabs } from 'shared/lib/customTabs/customTabHelpers';
 import * as React from 'react';
 import SampleManager from 'pages/patientView/SampleManager';
@@ -40,6 +41,7 @@ import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
+import { buildFusionViewerTab } from './fusionViewer/fusionViewerPatientTab';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -54,6 +56,7 @@ export enum PatientViewPageTabs {
     PathwayMapper = 'pathways',
     MRNA = 'mrna',
     Plots = 'plots',
+    FusionViewer = 'fusionViewer',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -814,6 +817,32 @@ export function tabs(
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */
         tabs.push(...pageComponent.resourceTabs.component);
+
+    if (
+        isFusionViewerEnabled(
+            (pageComponent.patientViewPageStore.studies.result || []).map(
+                s => s.studyId
+            ),
+            getServerConfig().fusion_viewer_study_ids,
+            pageComponent.props.appStore.featureFlagStore.has(
+                FeatureFlagEnum.FUSION_VIEWER
+            )
+        )
+    ) {
+        tabs.push(
+            buildFusionViewerTab(
+                PatientViewPageTabs.FusionViewer,
+                pageComponent.patientViewPageStore.structuralVariantData,
+                urlWrapper.activeTabId,
+                pageComponent.patientViewPageStore.studies.result[0]
+                    ?.referenceGenome,
+                urlWrapper.query.fusionId,
+                fusionId =>
+                    // replace: clicking through fusions shouldn't flood history
+                    urlWrapper.updateURL({ fusionId }, undefined, false, true)
+            )
+        );
+    }
 
     tabs.push(...buildCustomTabs(pageComponent.customTabs));
 
