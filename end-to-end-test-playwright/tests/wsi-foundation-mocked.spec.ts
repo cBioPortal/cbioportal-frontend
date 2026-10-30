@@ -320,5 +320,55 @@ if (process.env.PW_SUITE === 'wsi') {
                 ).toBeVisible();
             });
         }
+
+        test('opens the slide when the ingress refuses only its thumbnails', async ({
+            page,
+        }) => {
+            const tileResponses: number[] = [];
+            await page.addInitScript(() => {
+                (window as any).__wsiInitialSlidePerformance = [];
+                window.addEventListener(
+                    'wsi-initial-slide-performance',
+                    event => {
+                        (window as any).__wsiInitialSlidePerformance.push(
+                            (event as CustomEvent).detail
+                        );
+                    }
+                );
+            });
+            page.on('response', response => {
+                if (/\/wsi\/tiles\//.test(new URL(response.url()).pathname)) {
+                    tileResponses.push(response.status());
+                }
+            });
+            await installFoundationMocks(page, {
+                ingressStatus: 403,
+                ingressRefuses: 'thumbnails',
+            });
+
+            await page.goto(`/wsi/patient/${PATIENT_ID}?studyId=${STUDY_ID}`);
+
+            await expect
+                .poll(
+                    () =>
+                        page.evaluate(
+                            () =>
+                                (window as any).__wsiInitialSlidePerformance
+                                    .length
+                        ),
+                    { timeout: 30000 }
+                )
+                .toBeGreaterThan(0);
+            const performance = await page.evaluate(
+                () => (window as any).__wsiInitialSlidePerformance.slice(-1)[0]
+            );
+            expect(performance.outcome).toBe('success');
+            expect(tileResponses.length).toBeGreaterThan(0);
+            expect(tileResponses.every(status => status === 200)).toBe(true);
+            await expect(page.getByTestId('wsi-viewer-error')).toHaveCount(0);
+            await expect(
+                page.getByRole('button', { name: 'Zoom in' })
+            ).toBeVisible();
+        });
     });
 }

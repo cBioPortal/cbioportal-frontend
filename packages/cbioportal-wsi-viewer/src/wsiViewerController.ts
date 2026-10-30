@@ -26,10 +26,7 @@ import {
 } from './wsiOsdUtils';
 import { getWsiSlideSource } from './wsiAuth';
 import { buildWsiSlideQuery } from './wsiUrls';
-import {
-    fetchWsiThumbnailBlob,
-    WsiThumbnailFetchError,
-} from './wsiThumbnailFetchCache';
+import { fetchWsiThumbnailBlob } from './wsiThumbnailFetchCache';
 import { revokeObjectUrl } from './wsiCacheUtils';
 import { WsiViewerState } from './wsiViewerState';
 import { Sample, Slide, WsiSlideSource } from './wsiViewerTypes';
@@ -39,9 +36,10 @@ const WSI_TILE_READY_TIMEOUT_MS = 185_000;
 const WSI_OSD_OPEN_TIMEOUT_MS = 120_000;
 
 /**
- * Shown when the tile server answers 401/403: the portal in front of it
- * checks the session cookie against the study, so the session has expired or
- * no longer has access.
+ * Shown when a tile request is answered 401/403. Only the ingress in front of
+ * the tile server answers that, after checking the session cookie against the
+ * study: the session has expired or no longer has access. The tile server's
+ * own refusals are 404.
  */
 export const WSI_SESSION_EXPIRED_MESSAGE =
     'Your session has expired or you do not have access to this study. Reload the page or sign in again.';
@@ -393,17 +391,9 @@ export class WsiViewerController {
                 if (requestController.signal.aborted || seq !== this.mountSeq) {
                     return;
                 }
-                // The tile server refused the session: tiles will be refused
-                // too, so fail now rather than after their retries.
-                if (
-                    error instanceof WsiThumbnailFetchError &&
-                    isAccessDeniedStatus(error.response?.status)
-                ) {
-                    this.failMount(WSI_SESSION_EXPIRED_MESSAGE, 'tile_failed');
-                    return;
-                }
-                // A preview is an optimization. Native OSD loading continues
-                // when the published thumbnail is unavailable.
+                // A preview is an optimization: any failure, a refused
+                // session included, just drops it. The tiles decide whether
+                // the slide fails (see handleOsdTileLoadFailed).
                 if (
                     typeof window !== 'undefined' &&
                     (window as any).devContext === true

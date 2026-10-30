@@ -137,6 +137,7 @@ function makeHarness() {
     );
     return {
         controller,
+        host,
         openSeadragon,
         viewers,
         replaceContainer: () => {
@@ -356,21 +357,45 @@ describe('WsiViewerController refused session', () => {
         controller.dispose();
     });
 
-    it('asks to sign in again when the thumbnail preview is refused', async () => {
-        fetchWsiThumbnailBlobMock.mockImplementation(() =>
-            Promise.reject(
-                new WsiThumbnailFetchError('thumbnail request failed (401)', {
-                    response: { status: 401 } as Response,
-                })
-            )
-        );
-        const { controller } = makeHarness();
-        const state = (controller as any).state as WsiViewerState;
+    it.each([401, 403, 404])(
+        'drops a thumbnail preview refused with %s and lets the tiles load',
+        async status => {
+            fetchWsiThumbnailBlobMock.mockImplementation(() =>
+                Promise.reject(
+                    new WsiThumbnailFetchError(
+                        `thumbnail request failed (${status})`,
+                        { response: { status } as Response }
+                    )
+                )
+            );
+            const { controller, host, openSeadragon, viewers } = makeHarness();
+            openSeadragon.MouseTracker = jest.fn(() => ({
+                destroy: jest.fn(),
+            }));
+            const state = (controller as any).state as WsiViewerState;
+            // Treat slide-a as the first slide of a hierarchy load, whose
+            // outcome is reported.
+            (controller as any).initialSlideKey = 'slide-a';
+            (controller as any).initialSlideLoadStartedAt = Date.now();
 
-        await controller.selectSlide(makeSlide('slide-a'), sample);
-        await flushPromises();
+            await controller.selectSlide(makeSlide('slide-a'), sample);
+            await flushPromises();
 
-        expect(state.error).toBe(WSI_SESSION_EXPIRED_MESSAGE);
-        controller.dispose();
-    });
+            expect(fetchWsiThumbnailBlobMock).toHaveBeenCalledTimes(1);
+            expect(state.error).toBeNull();
+            expect(state.thumbnailPreviewUrl).toBeNull();
+
+            viewers[0].raise('open');
+            viewers[0].raise('tile-loaded', {});
+            // The spinner stays up for a minimum time after the first tile.
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            expect(state.error).toBeNull();
+            expect(state.tilesReady).toBe(true);
+            const report = host.reportInitialSlideLoadPerformance as jest.Mock;
+            expect(report).toHaveBeenCalledTimes(1);
+            expect(report.mock.calls[0][0].outcome).toBe('success');
+            controller.dispose();
+        }
+    );
 });
