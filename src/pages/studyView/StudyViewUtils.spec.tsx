@@ -5,6 +5,7 @@ import {
     annotationFilterActive,
     calcIntervalBinValues,
     getGenericAssayChartDisplayName,
+    getAllClinicalDataByStudyViewFilter,
     getGenericAssayEntityLabel,
     calculateLayout,
     calculateNewLayoutForFocusedChart,
@@ -5840,5 +5841,63 @@ describe('StudyViewUtils', () => {
                 );
             });
         });
+    });
+});
+
+describe('getAllClinicalDataByStudyViewFilter', () => {
+    let fetchStub: sinon.SinonStub;
+
+    beforeEach(() => {
+        fetchStub = sinon.stub(
+            internalClient,
+            'fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo'
+        );
+        fetchStub.returns(
+            Promise.resolve({
+                body: { byUniqueSampleKey: {} },
+                header: { 'total-count': '30000' },
+            })
+        );
+    });
+
+    afterEach(() => {
+        fetchStub.restore();
+    });
+
+    [500, 1000, 25000].forEach(pageSize => {
+        it(`requests exactly ${pageSize} samples per page`, async () => {
+            const filter = { studyIds: ['study'] } as StudyViewFilter;
+            const result = await getAllClinicalDataByStudyViewFilter(
+                filter,
+                'search',
+                'SAMPLE_ID',
+                'desc',
+                pageSize,
+                2
+            );
+
+            assert.deepEqual(fetchStub.firstCall.args[0], {
+                studyViewFilter: filter,
+                pageSize,
+                pageNumber: 2,
+                searchTerm: 'search',
+                sortBy: 'SAMPLE_ID',
+                direction: 'DESC',
+            });
+            assert.deepEqual(result, { totalItems: 30000, data: {} });
+        });
+    });
+
+    it('keeps the default limit when the requested page size is zero', async () => {
+        await getAllClinicalDataByStudyViewFilter(
+            { studyIds: ['study'] } as StudyViewFilter,
+            undefined,
+            undefined,
+            'asc',
+            0,
+            0
+        );
+
+        assert.equal(fetchStub.firstCall.args[0].pageSize, 500);
     });
 });
