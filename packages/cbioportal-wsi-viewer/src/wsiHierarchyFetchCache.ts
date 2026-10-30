@@ -14,6 +14,7 @@ import {
     clearWsiSlideSources,
     normalizeWsiAuthScope,
     registerWsiSlideSources,
+    wsiSlideRegistryGeneration,
 } from './wsiAuth';
 import { getWsiViewerRuntime } from './wsiViewerConfig';
 import { createPromiseCache, withAbort } from './wsiCacheUtils';
@@ -227,7 +228,11 @@ async function requestHierarchy(
  * Loads one patient's hierarchy from the portal through the cache the viewer
  * reads, so a viewer opened later for the same patient and `authScope` reuses
  * this request. Every returned hierarchy (network or cached) registers the
- * slides that tile and thumbnail requests may name.
+ * slides that tile and thumbnail requests may name, unless the caller aborted
+ * or the registry was cleared (e.g. for a change of user) since the call.
+ *
+ * Registered slides outlive the cache entry: a viewer showing a hierarchy
+ * whose entry expired still opens its slides.
  */
 export function fetchWsiPatientHierarchy(
     studyId: string,
@@ -238,11 +243,14 @@ export function fetchWsiPatientHierarchy(
     const key = [normalizeWsiAuthScope(authScope), studyId, patientId].join(
         '::'
     );
+    const generation = wsiSlideRegistryGeneration();
     return withAbort(
         hierarchyCache
             .get(key, () => requestHierarchy(studyId, patientId))
             .then(hierarchy => {
-                registerWsiSlideSources(studyId, hierarchy);
+                if (!signal?.aborted) {
+                    registerWsiSlideSources(studyId, hierarchy, generation);
+                }
                 return hierarchy;
             }),
         signal

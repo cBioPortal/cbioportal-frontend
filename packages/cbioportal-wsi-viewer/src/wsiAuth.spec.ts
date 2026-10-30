@@ -2,6 +2,7 @@ import {
     clearWsiSlideSources,
     getWsiSlideSource,
     registerWsiSlideSources,
+    wsiSlideRegistryGeneration,
 } from './wsiAuth';
 import {
     makeTileMetadata,
@@ -108,6 +109,41 @@ describe('WSI slide sources', () => {
         expect(() => getWsiSlideSource('study-1', 'slide-2')).toThrow(
             'WSI resource selection is unavailable'
         );
+    });
+
+    it('skips registration captured before a clear', () => {
+        const generation = wsiSlideRegistryGeneration();
+        clearWsiSlideSources('other-study');
+
+        expect(
+            registerWsiSlideSources(
+                'study-1',
+                hierarchy(['slide-1']),
+                generation
+            )
+        ).toBe(false);
+        expect(() => getWsiSlideSource('study-1', 'slide-1')).toThrow(
+            'WSI resource selection is unavailable'
+        );
+
+        expect(
+            registerWsiSlideSources(
+                'study-1',
+                hierarchy(['slide-1']),
+                wsiSlideRegistryGeneration()
+            )
+        ).toBe(true);
+        expect(getWsiSlideSource('study-1', 'slide-1').slideKey).toBe(
+            'slide-1'
+        );
+    });
+
+    it('does not advance the generation when registering', () => {
+        const generation = wsiSlideRegistryGeneration();
+        registerWsiSlideSources('study-1', hierarchy(['slide-1']));
+        registerWsiSlideSources('study-1', hierarchy(['slide-2']));
+
+        expect(wsiSlideRegistryGeneration()).toBe(generation);
     });
 
     it('forgets the slides of one study only', () => {

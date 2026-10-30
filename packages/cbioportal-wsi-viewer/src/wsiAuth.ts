@@ -91,38 +91,24 @@ interface RegisteredSlide {
  */
 const registeredSlides = new Map<string, RegisteredSlide>();
 
+/**
+ * Bumped by every `clearWsiSlideSources`. A hierarchy request captures it
+ * before it starts and registers its slides only if it is unchanged, so a
+ * response arriving after a clear (e.g. for a change of user) cannot bring
+ * back the slides the clear removed.
+ */
+let registryGeneration = 0;
+
+/** The current registry generation; see `registerWsiSlideSources`. */
+export function wsiSlideRegistryGeneration(): number {
+    return registryGeneration;
+}
+
 function registryKey(studyId: string, slideKey: string): string {
     return `${studyId}::${slideKey}`;
 }
 
-/**
- * Registers the slides of a loaded hierarchy. The hierarchy is authoritative
- * for its study and patient, so slides from an earlier load of the same
- * patient are replaced rather than merged.
- */
-export function registerWsiSlideSources(
-    studyId: string,
-    hierarchy: PatientHierarchy
-): void {
-    clearWsiSlideSources(studyId, hierarchy.patient_id);
-    hierarchySlides(hierarchy).forEach(slide =>
-        registeredSlides.set(registryKey(studyId, slide.slide_key), {
-            patientId: hierarchy.patient_id,
-            servingKey: slide.serving_key,
-            sealedSource: slide.sealed_source,
-            tileMetadata: slide.tile_metadata,
-        })
-    );
-}
-
-/**
- * Forgets registered slides. With no arguments every slide is forgotten; with
- * a study (and optionally a patient) only matching slides are.
- */
-export function clearWsiSlideSources(
-    studyId?: string,
-    patientId?: string
-): void {
+function forgetSlides(studyId?: string, patientId?: string): void {
     if (studyId === undefined) {
         registeredSlides.clear();
         return;
@@ -135,6 +121,47 @@ export function clearWsiSlideSources(
             registeredSlides.delete(key);
         }
     }
+}
+
+/**
+ * Registers the slides of a loaded hierarchy. The hierarchy is authoritative
+ * for its study and patient, so slides from an earlier load of the same
+ * patient are replaced rather than merged. With `generation` (captured by
+ * `wsiSlideRegistryGeneration` before the hierarchy was requested), nothing
+ * is registered if the registry was cleared since; returns whether the
+ * slides were registered.
+ */
+export function registerWsiSlideSources(
+    studyId: string,
+    hierarchy: PatientHierarchy,
+    generation?: number
+): boolean {
+    if (generation !== undefined && generation !== registryGeneration) {
+        return false;
+    }
+    forgetSlides(studyId, hierarchy.patient_id);
+    hierarchySlides(hierarchy).forEach(slide =>
+        registeredSlides.set(registryKey(studyId, slide.slide_key), {
+            patientId: hierarchy.patient_id,
+            servingKey: slide.serving_key,
+            sealedSource: slide.sealed_source,
+            tileMetadata: slide.tile_metadata,
+        })
+    );
+    return true;
+}
+
+/**
+ * Forgets registered slides. With no arguments every slide is forgotten; with
+ * a study (and optionally a patient) only matching slides are. Hierarchy
+ * requests already in flight will not register their slides.
+ */
+export function clearWsiSlideSources(
+    studyId?: string,
+    patientId?: string
+): void {
+    registryGeneration += 1;
+    forgetSlides(studyId, patientId);
 }
 
 /**
