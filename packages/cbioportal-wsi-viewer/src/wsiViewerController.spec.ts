@@ -86,8 +86,6 @@ function makeSource(slideKey: string) {
         slideKey,
         servingKey: slideKey,
         sealedSource: `sealed-${slideKey}`,
-        thumbnailWidth: 1024,
-        thumbnailHeight: 768,
         tileMetadata: {
             dimensions: { width: 1000, height: 800 },
             levels: 3,

@@ -13,8 +13,6 @@ function makeSource(overrides: Partial<WsiSlideSource> = {}): WsiSlideSource {
         slideKey: 'slide-1',
         servingKey: 'slide-1',
         sealedSource: 'sealed-1',
-        thumbnailWidth: 1024,
-        thumbnailHeight: 768,
         tileMetadata: {} as WsiSlideSource['tileMetadata'],
         ...overrides,
     };
@@ -69,7 +67,7 @@ describe('wsiThumbnailFetchCache', () => {
 
         expect(global.fetch).toHaveBeenCalledTimes(1);
         expect(global.fetch).toHaveBeenCalledWith(
-            'https://tiles.example.com/thumbnails?studyId=study-1&key=slide-1&enc=sealed-1&tw=1024&th=768&width=128&height=96',
+            'https://tiles.example.com/thumbnails?studyId=study-1&key=slide-1&enc=sealed-1&width=128&height=96',
             expect.objectContaining({
                 cache: 'default',
                 credentials: 'same-origin',

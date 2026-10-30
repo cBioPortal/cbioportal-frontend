@@ -49,31 +49,14 @@ function stainKind(metadata: Record<string, unknown>): WsiStainKind {
     return UNCONFIRMED_SLIDE_TYPES.has(stored) ? 'unknown' : 'other';
 }
 
-function positiveInteger(value: unknown): number | undefined {
-    return typeof value === 'number' && Number.isInteger(value) && value > 0
-        ? value
-        : undefined;
-}
-
 /** The serving block of a slide that can serve tiles. */
 function serving(
     metadata: Record<string, unknown>
-):
-    | Pick<
-          Slide,
-          | 'serving_key'
-          | 'sealed_source'
-          | 'thumbnail_width'
-          | 'thumbnail_height'
-          | 'tile_metadata'
-      >
-    | undefined {
+): Pick<Slide, 'serving_key' | 'sealed_source' | 'tile_metadata'> | undefined {
     const value = metadata.serving as
         | {
               key?: unknown;
               sealed_source?: unknown;
-              thumbnail_width?: unknown;
-              thumbnail_height?: unknown;
               tile_metadata_json?: TileMetadata;
           }
         | null
@@ -88,18 +71,9 @@ function serving(
     ) {
         return undefined;
     }
-    const thumbnailWidth = positiveInteger(value.thumbnail_width);
-    const thumbnailHeight = positiveInteger(value.thumbnail_height);
     return {
         serving_key: value.key,
         sealed_source: value.sealed_source,
-        // Both or neither: the tile server reads the stored size as a pair.
-        ...(thumbnailWidth && thumbnailHeight
-            ? {
-                  thumbnail_width: thumbnailWidth,
-                  thumbnail_height: thumbnailHeight,
-              }
-            : {}),
         tile_metadata: value.tile_metadata_json,
     };
 }

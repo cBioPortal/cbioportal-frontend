@@ -80,8 +80,6 @@ interface RegisteredSlide {
     patientId: string;
     servingKey?: string;
     sealedSource?: string;
-    thumbnailWidth?: number;
-    thumbnailHeight?: number;
     tileMetadata?: TileMetadata;
 }
 
@@ -112,8 +110,6 @@ export function registerWsiSlideSources(
             patientId: hierarchy.patient_id,
             servingKey: slide.serving_key,
             sealedSource: slide.sealed_source,
-            thumbnailWidth: slide.thumbnail_width,
-            thumbnailHeight: slide.thumbnail_height,
             tileMetadata: slide.tile_metadata,
         })
     );
@@ -165,8 +161,6 @@ export function getWsiSlideSource(
         slideKey,
         servingKey,
         sealedSource,
-        thumbnailWidth: slide.thumbnailWidth,
-        thumbnailHeight: slide.thumbnailHeight,
         tileMetadata,
     };
 }

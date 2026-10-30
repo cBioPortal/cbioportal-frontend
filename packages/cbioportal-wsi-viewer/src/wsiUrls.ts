@@ -55,10 +55,7 @@ export function buildWsiTileUrl(
 export function buildWsiThumbnailUrl(
     tileServerBase: string,
     studyId: string,
-    source: Pick<
-        WsiSlideSource,
-        'servingKey' | 'sealedSource' | 'thumbnailWidth' | 'thumbnailHeight'
-    >,
+    source: Pick<WsiSlideSource, 'servingKey' | 'sealedSource'>,
     width = WSI_THUMBNAIL_WIDTH,
     height = WSI_THUMBNAIL_HEIGHT
 ): string {
@@ -69,20 +66,9 @@ export function buildWsiThumbnailUrl(
     const parsed = new URL(tileServerBase, baseUrl);
     const path = `${parsed.pathname.replace(/\/$/, '')}/thumbnails`;
     const url = new URL(path, parsed.origin);
-    const params: Array<[string, string | number]> = [];
-    // The stored thumbnail's size, from the slide's row, when it has one.
-    if (source.thumbnailWidth != null && source.thumbnailHeight != null) {
-        params.push(
-            ['tw', source.thumbnailWidth],
-            ['th', source.thumbnailHeight]
-        );
-    }
-    params.push(
+    url.search = `?${buildWsiSlideQuery(studyId, source)}&${encodeQuery([
         ['width', Math.max(1, Math.round(width))],
-        ['height', Math.max(1, Math.round(height))]
-    );
-    url.search = `?${buildWsiSlideQuery(studyId, source)}&${encodeQuery(
-        params
-    )}`;
+        ['height', Math.max(1, Math.round(height))],
+    ])}`;
     return url.toString();
 }

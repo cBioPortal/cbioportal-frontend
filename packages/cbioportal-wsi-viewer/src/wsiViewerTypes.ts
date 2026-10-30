@@ -26,9 +26,6 @@ export interface Slide {
     /** Opaque source the tile server opens (`metadata.serving.sealed_source`).
      *  Sent with tile and thumbnail requests only; never displayed. */
     sealed_source?: string;
-    /** Stored thumbnail size (`metadata.serving.thumbnail_width/height`). */
-    thumbnail_width?: number;
-    thumbnail_height?: number;
     /** Tile metadata of a slide that can serve tiles, from its resource row. */
     tile_metadata?: TileMetadata;
 }
@@ -114,8 +111,6 @@ export interface WsiSlideSource {
     slideKey: string;
     servingKey: string;
     sealedSource: string;
-    thumbnailWidth?: number;
-    thumbnailHeight?: number;
     tileMetadata: TileMetadata;
 }
 

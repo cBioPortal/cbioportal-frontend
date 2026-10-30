@@ -287,11 +287,10 @@ describe('buildPatientHierarchy', () => {
                 resource_id: 'WSI_PATIENT',
                 serving_key: 'slide-1',
                 sealed_source: 'sealed',
-                thumbnail_width: 1024,
-                thumbnail_height: 768,
                 tile_metadata: tileMetadata,
             })
         );
+        expect(servable).not.toHaveProperty('thumbnail_width');
         expect(notServable.can_serve_tiles).toBe(false);
         expect(notServable.resource_id).toBe('WSI_PATIENT');
         expect(notServable.serving_key).toBeUndefined();
@@ -378,8 +377,6 @@ describe('wsiHierarchyFetchCache slide registration', () => {
             slideKey: 'slide-1',
             servingKey: 'slide-1',
             sealedSource: TEST_SEALED_SOURCE,
-            thumbnailWidth: 1024,
-            thumbnailHeight: 768,
             tileMetadata: makeTileMetadata(),
         });
         // Only the slide rows are requested: no per-slide access request.

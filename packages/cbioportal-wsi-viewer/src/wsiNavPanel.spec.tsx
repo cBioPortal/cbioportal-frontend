@@ -34,8 +34,6 @@ function mockSlideSources() {
         slideKey,
         servingKey: slideKey,
         sealedSource: `sealed-${slideKey}`,
-        thumbnailWidth: 1024,
-        thumbnailHeight: 768,
         tileMetadata: makeTileMetadata(),
     }));
 }
@@ -1437,8 +1435,8 @@ describe('WsiNavPanel', () => {
             expect(url.searchParams.get('enc')).toBe(
                 `sealed-${url.searchParams.get('key')}`
             );
-            expect(url.searchParams.get('tw')).toBe('1024');
-            expect(url.searchParams.get('th')).toBe('768');
+            expect(url.searchParams.has('tw')).toBe(false);
+            expect(url.searchParams.has('th')).toBe(false);
         });
         thumbnailRequests().forEach(([, init]) =>
             expect(init.headers).toBeUndefined()

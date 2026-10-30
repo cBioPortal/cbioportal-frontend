@@ -14,10 +14,6 @@ export function sealedSourceFor(slideKey: string): string {
     return `sealed.${slideKey}+/=`;
 }
 
-/** The stored thumbnail size the slide rows carry. */
-export const THUMBNAIL_WIDTH = 1024;
-export const THUMBNAIL_HEIGHT = 768;
-
 /** One tile or thumbnail request, as the tile server received it. */
 export interface TileServerRequest {
     url: string;
@@ -35,14 +31,17 @@ export interface FoundationMockOptions {
     /** Collects every tile and thumbnail request. */
     tileServerRequests?: TileServerRequest[];
     /**
-     * The status the tile server answers every tile and thumbnail with, as
-     * the portal's session check does for an expired session (401) or a
+     * Makes the ingress in front of the tile server refuse requests with this
+     * status, as its session check does for an expired session (401) or a
      * study the session cannot read (403).
      */
-    tileServerStatus?: number;
-    /** Applies `tileServerStatus` to tiles only, serving thumbnails. */
-    tileServerStatusTilesOnly?: boolean;
+    ingressStatus?: number;
+    /** Which requests the ingress refuses (default: all). */
+    ingressRefuses?: IngressRefusal;
 }
+
+/** The tile-server requests a refusing ingress applies to. */
+export type IngressRefusal = 'all' | 'tiles' | 'thumbnails';
 
 /** Schema-2 tile metadata the viewer accepts, carried by the slide rows. */
 export const tileMetadata = {
@@ -88,8 +87,8 @@ function makeSlideRow(slideKey: string, stainName: string, stainGroup: string) {
                 key: slideKey,
                 sealed_source: sealedSourceFor(slideKey),
                 tile_metadata_json: tileMetadata,
-                thumbnail_width: THUMBNAIL_WIDTH,
-                thumbnail_height: THUMBNAIL_HEIGHT,
+                thumbnail_width: 1024,
+                thumbnail_height: 768,
                 thumbnail_content_type: 'image/png',
             },
         },
@@ -122,18 +121,19 @@ async function routeRetiredSlideAccess(
 }
 
 /**
- * The tile server behind the portal's session check: every tile and thumbnail
- * request must name a published slide by `studyId`, `key` and `enc` (its
- * sealed source), or it is refused; a thumbnail also needs `tw`/`th`. A valid
- * request gets one pixel, or `status` when set (for tiles only with
- * `tilesOnly`).
+ * The tile server and the ingress in front of it. The ingress answers
+ * `ingressStatus` (401/403), when set, for the requests `ingressRefuses`
+ * names. The tile server itself never answers 401/403: a request must name a
+ * published slide by `studyId`, `key` and `enc` (its sealed source), or it
+ * gets 404. It sizes thumbnails itself and ignores any `tw`/`th`. A valid
+ * request gets one pixel.
  */
 export async function routeTileServer(
     page: Page,
     slideKeys: string[],
     requests?: TileServerRequest[],
-    status?: number,
-    tilesOnly = false
+    ingressStatus?: number,
+    ingressRefuses: IngressRefusal = 'all'
 ): Promise<void> {
     for (const pattern of ['**/wsi/tiles/**', '**/wsi/thumbnails**']) {
         await page.route(pattern, route => {
@@ -141,18 +141,18 @@ export async function routeTileServer(
             requests?.push({ url: request.url(), headers: request.headers() });
             const url = new URL(request.url());
             const thumbnail = url.pathname.endsWith('/thumbnails');
-            if (status !== undefined && !(tilesOnly && thumbnail)) {
-                return route.fulfill({ status, body: '' });
+            if (
+                ingressStatus !== undefined &&
+                (ingressRefuses === 'all' ||
+                    ingressRefuses === (thumbnail ? 'thumbnails' : 'tiles'))
+            ) {
+                return route.fulfill({ status: ingressStatus, body: '' });
             }
             const key = url.searchParams.get('key') || '';
             const valid =
                 url.searchParams.get('studyId') === STUDY_ID &&
                 slideKeys.includes(key) &&
-                url.searchParams.get('enc') === sealedSourceFor(key) &&
-                (!thumbnail ||
-                    (url.searchParams.get('tw') === String(THUMBNAIL_WIDTH) &&
-                        url.searchParams.get('th') ===
-                            String(THUMBNAIL_HEIGHT)));
+                url.searchParams.get('enc') === sealedSourceFor(key);
             if (!valid) {
                 return route.fulfill({ status: 404, body: '' });
             }
@@ -224,8 +224,8 @@ export async function installFoundationMocks(
         page,
         slideRows.map(row => row.metadata.serving.key),
         options.tileServerRequests,
-        options.tileServerStatus,
-        options.tileServerStatusTilesOnly
+        options.ingressStatus,
+        options.ingressRefuses
     );
     return enrichmentRequests;
 }

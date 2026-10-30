@@ -8,8 +8,6 @@ import {
 const SOURCE = {
     servingKey: '0123456789ab',
     sealedSource: 'v1.a+b/c=',
-    thumbnailWidth: 1024,
-    thumbnailHeight: 768,
 };
 
 describe('buildWsiResourceRowsApiUrl', () => {
@@ -41,7 +39,7 @@ describe('buildWsiTileUrl', () => {
 });
 
 describe('buildWsiThumbnailUrl', () => {
-    it('names the slide and its stored thumbnail size', () => {
+    it('names the slide and the requested size only', () => {
         const url = new URL(
             buildWsiThumbnailUrl(
                 'https://tiles.example.org/wsi/',
@@ -58,22 +56,9 @@ describe('buildWsiThumbnailUrl', () => {
             ['studyId', 'study-1'],
             ['key', '0123456789ab'],
             ['enc', 'v1.a+b/c='],
-            ['tw', '1024'],
-            ['th', '768'],
             ['width', '128'],
             ['height', '96'],
         ]);
-    });
-
-    it('leaves out a stored size the row does not have', () => {
-        const url = new URL(
-            buildWsiThumbnailUrl('https://tiles.example.org', 'study-1', {
-                servingKey: 'k',
-                sealedSource: 's',
-            })
-        );
-        expect(url.searchParams.has('tw')).toBe(false);
-        expect(url.searchParams.has('th')).toBe(false);
     });
 
     it('bounds thumbnail dimensions', () => {

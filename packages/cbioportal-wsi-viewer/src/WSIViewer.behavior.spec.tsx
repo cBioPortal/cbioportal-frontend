@@ -2106,7 +2106,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             expect(fetchMock).toHaveBeenCalledWith(
                 `https://tiles.example.com/thumbnails?studyId=study-1&key=42&enc=${encodeURIComponent(
                     TEST_SEALED_SOURCE
-                )}&tw=1024&th=768&width=128&height=96`,
+                )}&width=128&height=96`,
                 expect.objectContaining({ cache: 'default' })
             );
             expect(fetchMock.mock.calls[0][1]!.headers).toBeUndefined();

@@ -27,8 +27,6 @@ function hierarchy(
                                     resource_id: 'WSI_SAMPLE',
                                     serving_key: slideKey,
                                     sealed_source: TEST_SEALED_SOURCE,
-                                    thumbnail_width: 1024,
-                                    thumbnail_height: 768,
                                     tile_metadata: makeTileMetadata(),
                                     ...slideOverrides,
                                 })),
@@ -54,8 +52,6 @@ describe('WSI slide sources', () => {
             slideKey: 'slide-1',
             servingKey: 'slide-1',
             sealedSource: TEST_SEALED_SOURCE,
-            thumbnailWidth: 1024,
-            thumbnailHeight: 768,
             tileMetadata: makeTileMetadata(),
         });
         expect(global.fetch).not.toHaveBeenCalled();
@@ -141,19 +137,4 @@ describe('WSI slide sources', () => {
             );
         }
     );
-
-    it('keeps the thumbnail size optional', () => {
-        registerWsiSlideSources(
-            'study-1',
-            hierarchy(['slide-1'], {
-                thumbnail_width: undefined,
-                thumbnail_height: undefined,
-            })
-        );
-
-        const source = getWsiSlideSource('study-1', 'slide-1');
-
-        expect(source.thumbnailWidth).toBeUndefined();
-        expect(source.thumbnailHeight).toBeUndefined();
-    });
 });

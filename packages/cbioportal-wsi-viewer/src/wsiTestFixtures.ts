@@ -102,8 +102,6 @@ export function registerTestSlide(
                     resource_id: 'WSI_SAMPLE',
                     serving_key: slideKey,
                     sealed_source: TEST_SEALED_SOURCE,
-                    thumbnail_width: 1024,
-                    thumbnail_height: 768,
                     tile_metadata: tileMetadata,
                 }),
             ]),
@@ -172,8 +170,8 @@ export function toResourceRows(hierarchy: PatientHierarchy): TestSlideRow[] {
                                 slide.sealed_source || TEST_SEALED_SOURCE,
                             tile_metadata_json:
                                 slide.tile_metadata || makeTileMetadata(),
-                            thumbnail_width: slide.thumbnail_width || 1024,
-                            thumbnail_height: slide.thumbnail_height || 768,
+                            thumbnail_width: 1024,
+                            thumbnail_height: 768,
                             thumbnail_content_type: 'image/jpeg',
                         };
                     }
