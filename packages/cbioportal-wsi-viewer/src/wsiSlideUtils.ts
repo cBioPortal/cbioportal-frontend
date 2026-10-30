@@ -1,0 +1,290 @@
+import { normalizeBlockLabel } from './wsiNavUtils';
+import {
+    MatchLevel,
+    PathologySlideFilter,
+    PathologySlideMatchFilter,
+    PatientHierarchy,
+    Sample,
+    Slide,
+    WsiStainFilter,
+} from './wsiViewerTypes';
+
+export interface ServableSlideEntry {
+    slide: Slide;
+    sample: Sample;
+}
+
+export interface OrderedServableSlideEntry {
+    slide: Slide;
+    blockLabel: string | null;
+}
+
+type SampleSlideData = {
+    orderedSlides: OrderedServableSlideEntry[];
+    partDescriptionCount: number;
+    slideKeys: Set<string>;
+};
+
+// A normalized hierarchy is never mutated, so everything derived from it is
+// memoized by object identity.
+const sampleSlideDataCache = new WeakMap<Sample, SampleSlideData>();
+const pathologyFilterSlideKeysCache = new WeakMap<
+    PatientHierarchy,
+    Map<string, Set<string>>
+>();
+const DUMMY_BLOCK_LABELS = new Set(['0', '']);
+export function isServableDiagnosticSlide(
+    slide: Pick<Slide, 'can_serve_tiles' | 'slide_key'>
+): boolean {
+    return !!(slide.can_serve_tiles && slide.slide_key);
+}
+
+export function matchesWsiStainFilter(
+    slide: Pick<Slide, 'stain_kind'>,
+    stainFilter: WsiStainFilter
+): boolean {
+    return stainFilter === 'all' || slide.stain_kind === stainFilter;
+}
+
+/**
+ * Compares part or block numbers numerically. Numbers sort before
+ * non-numeric values, which sort before missing ones; non-numeric values
+ * compare as natural-order text.
+ */
+function compareSpecimenNumbers(
+    left: string | null | undefined,
+    right: string | null | undefined
+): number {
+    const leftText = (left ?? '').trim();
+    const rightText = (right ?? '').trim();
+    const rank = (text: string) =>
+        text === '' ? 2 : /^\d+$/.test(text) ? 0 : 1;
+    const leftRank = rank(leftText);
+    const rightRank = rank(rightText);
+    if (leftRank !== rightRank) {
+        return leftRank - rightRank;
+    }
+    if (leftRank === 0) {
+        return Number(leftText) - Number(rightText);
+    }
+    return leftText.localeCompare(rightText, undefined, {
+        numeric: true,
+        sensitivity: 'base',
+    });
+}
+
+export interface SampleSlideOrderEntry {
+    slide: Pick<Slide, 'block_number' | 'stain_kind' | 'stain_name'>;
+    /** Number of the part holding the slide. */
+    partNumber?: string | null;
+}
+
+/**
+ * Orders slides within a sample by part number, then block number (as the
+ * backend orders them), then stain: H&E first, the rest by stain name. Slide
+ * selection takes the first matching slide in this order as the default.
+ */
+export function compareSlidesInSample(
+    left: SampleSlideOrderEntry,
+    right: SampleSlideOrderEntry
+): number {
+    return (
+        compareSpecimenNumbers(left.partNumber, right.partNumber) ||
+        compareSpecimenNumbers(
+            left.slide.block_number,
+            right.slide.block_number
+        ) ||
+        Number(right.slide.stain_kind === 'hne') -
+            Number(left.slide.stain_kind === 'hne') ||
+        (left.slide.stain_name || '').localeCompare(
+            right.slide.stain_name || ''
+        )
+    );
+}
+
+function buildSampleSlideData(sample: Sample): SampleSlideData {
+    const unorderedSlides: Array<{
+        entry: OrderedServableSlideEntry;
+        partNumber: string;
+    }> = [];
+    const partDescriptions = new Set<string>();
+    const slideKeys = new Set<string>();
+    for (const part of sample.parts) {
+        for (const block of part.blocks) {
+            const normalizedBlockLabel = normalizeBlockLabel(
+                block.block_label,
+                block.block_number
+            );
+            const blockLabel = DUMMY_BLOCK_LABELS.has(normalizedBlockLabel)
+                ? null
+                : normalizedBlockLabel;
+            for (const slide of block.slides) {
+                if (!isServableDiagnosticSlide(slide)) continue;
+                if (slideKeys.has(slide.slide_key)) continue;
+                unorderedSlides.push({
+                    entry: { slide, blockLabel },
+                    partNumber: part.part_number,
+                });
+                slideKeys.add(slide.slide_key);
+                if (slide.part_description) {
+                    partDescriptions.add(slide.part_description);
+                }
+            }
+        }
+    }
+    // Array.prototype.sort is stable, so ties keep the hierarchy order.
+    const orderedSlides = unorderedSlides
+        .sort((a, b) =>
+            compareSlidesInSample(
+                { slide: a.entry.slide, partNumber: a.partNumber },
+                { slide: b.entry.slide, partNumber: b.partNumber }
+            )
+        )
+        .map(({ entry }) => entry);
+    return {
+        orderedSlides,
+        partDescriptionCount: partDescriptions.size,
+        slideKeys,
+    };
+}
+
+function getCachedServableSlideData(sample: Sample): SampleSlideData {
+    let data = sampleSlideDataCache.get(sample);
+    if (!data) {
+        data = buildSampleSlideData(sample);
+        sampleSlideDataCache.set(sample, data);
+    }
+    return data;
+}
+
+export function getOrderedServableSlidesForSampleReadOnly(
+    sample: Sample
+): OrderedServableSlideEntry[] {
+    return getCachedServableSlideData(sample).orderedSlides;
+}
+
+export function sampleHasMultiplePartDescriptions(sample: Sample): boolean {
+    return getCachedServableSlideData(sample).partDescriptionCount > 1;
+}
+
+export function sampleHasServableSlide(
+    sample: Sample,
+    slideId: string | null | undefined
+): boolean {
+    return (
+        !!slideId && getCachedServableSlideData(sample).slideKeys.has(slideId)
+    );
+}
+
+/** The match level a filter or linkout names, in the hierarchy's casing. */
+export function normalizeMatchLevel(
+    value: string | null | undefined
+): MatchLevel | undefined {
+    const normalized = value?.toUpperCase();
+    return normalized === 'PART' ||
+        normalized === 'BLOCK' ||
+        normalized === 'UNMATCHED'
+        ? normalized
+        : undefined;
+}
+
+export function matchesMatchFilter(
+    slide: Pick<Slide, 'match_level'>,
+    matchFilter: PathologySlideMatchFilter
+): boolean {
+    return (
+        matchFilter === 'all' ||
+        slide.match_level === normalizeMatchLevel(matchFilter)
+    );
+}
+
+function buildPathologyFilterCacheKey(
+    filter: PathologySlideFilter
+): string | undefined {
+    const normalizedMatchLevel = normalizeMatchLevel(filter.matchLevel);
+    const hasFilter =
+        !!filter.sampleId || !!normalizedMatchLevel || !!filter.specimenKey;
+    if (!hasFilter) {
+        return undefined;
+    }
+
+    return [
+        filter.sampleId || '',
+        normalizedMatchLevel || '',
+        filter.specimenKey || '',
+    ].join('::');
+}
+
+export function hierarchySlides(hierarchy: PatientHierarchy): Slide[] {
+    return hierarchy.samples.flatMap(sample =>
+        sample.parts.flatMap(part => part.blocks.flatMap(block => block.slides))
+    );
+}
+
+export function getServableSlideIdsForPathologyFilterReadOnly(
+    hierarchy: PatientHierarchy,
+    filter: PathologySlideFilter
+): Set<string> | undefined {
+    const filterKey = buildPathologyFilterCacheKey(filter);
+    if (!filterKey) {
+        return undefined;
+    }
+    let byFilterKey = pathologyFilterSlideKeysCache.get(hierarchy);
+    if (!byFilterKey) {
+        byFilterKey = new Map();
+        pathologyFilterSlideKeysCache.set(hierarchy, byFilterKey);
+    }
+    const cachedSlideKeys = byFilterKey.get(filterKey);
+    if (cachedSlideKeys) {
+        return cachedSlideKeys;
+    }
+
+    const normalizedMatchLevel = normalizeMatchLevel(filter.matchLevel);
+    const slides = hierarchySlides(hierarchy);
+
+    const matchesFilter = (slide: Slide, includeSampleId: boolean): boolean => {
+        if (!slide.can_serve_tiles) {
+            return false;
+        }
+        if (
+            includeSampleId &&
+            filter.sampleId &&
+            slide.sample_id !== filter.sampleId
+        ) {
+            return false;
+        }
+        if (
+            normalizedMatchLevel &&
+            slide.match_level !== normalizedMatchLevel
+        ) {
+            return false;
+        }
+        if (filter.specimenKey && slide.specimen_key !== filter.specimenKey) {
+            return false;
+        }
+        return true;
+    };
+
+    const matchingSlideKeys = new Set(
+        slides
+            .filter(slide => matchesFilter(slide, true))
+            .map(slide => slide.slide_key)
+    );
+
+    // Older pathology linkouts can carry a source sample ID that is not a
+    // portal sample. Keep the explicit specimen and match-level constraints,
+    // but allow the hierarchy's unmatched group to satisfy that linkout.
+    if (
+        matchingSlideKeys.size === 0 &&
+        filter.sampleId &&
+        filter.specimenKey &&
+        !slides.some(slide => slide.sample_id === filter.sampleId)
+    ) {
+        slides
+            .filter(slide => matchesFilter(slide, false))
+            .forEach(slide => matchingSlideKeys.add(slide.slide_key));
+    }
+
+    byFilterKey.set(filterKey, matchingSlideKeys);
+    return matchingSlideKeys;
+}

@@ -3,7 +3,7 @@ import { ResourceDefinition } from 'cbioportal-ts-api-client';
 /**
  * Helper function to check if a string is non-empty
  */
-function isNonEmptyString(value: string | null | undefined): boolean {
+export function isNonEmptyString(value: string | null | undefined): boolean {
     return (value?.trim().length ?? 0) > 0;
 }
 

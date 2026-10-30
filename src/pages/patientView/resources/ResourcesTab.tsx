@@ -5,6 +5,7 @@ import FeatureTitle from '../../../shared/components/featureTitle/FeatureTitle';
 import SampleManager from '../SampleManager';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
+import { isHiddenFromResourceViews } from 'shared/lib/ResourcePolicy';
 import ResourceDataTable from 'shared/components/resourceTable/ResourceDataTable';
 
 export interface IResourcesTabProps {
@@ -19,7 +20,9 @@ export default class ResourcesTab extends React.Component<
     IResourcesTabProps,
     {}
 > {
-    private readonly resourceTableStore = new ResourceTableStore();
+    private readonly resourceTableStore = new ResourceTableStore({
+        hideResource: isHiddenFromResourceViews,
+    });
     private storeReactionDisposer: IReactionDisposer | null = null;
 
     componentDidMount() {
