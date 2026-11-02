@@ -26,6 +26,15 @@ const app = express();
 app.use(cors(corsOrigins.length ? { origin: corsOrigins } : {}));
 app.use(express.json({ limit: '8mb' }));
 
+// Aborts when the client goes away — Stop, a closed tab — so the model call
+// stops with it. Also fires once the response ends normally, when nothing is
+// left to stop.
+function abortOnClose(res: express.Response): AbortSignal {
+    const controller = new AbortController();
+    res.on('close', () => controller.abort());
+    return controller.signal;
+}
+
 app.get('/api/chat/health', (_req, res) => {
     res.json({ ok: true, model: MODEL });
 });
@@ -53,9 +62,11 @@ app.post('/api/chat/message', async (req, res) => {
         res.status(400).json({ error: 'messages (array) required' });
         return;
     }
+    const signal = abortOnClose(res);
     try {
-        await runChat(messages, res, model, pageHref);
+        await runChat(messages, res, signal, model, pageHref);
     } catch (err) {
+        if (signal.aborted) return;
         console.error('chat message failed:', err);
         if (!res.headersSent) {
             const message = err instanceof Error ? err.message : 'chat failed';
@@ -70,10 +81,12 @@ app.post('/api/chat/report', async (req, res) => {
         res.status(400).json({ error: 'messages (array) required' });
         return;
     }
+    const signal = abortOnClose(res);
     try {
-        const report = await runReport(messages, model);
+        const report = await runReport(messages, signal, model);
         res.json({ report });
     } catch (err) {
+        if (signal.aborted) return;
         console.error('report generation failed:', err);
         const message = err instanceof Error ? err.message : 'report failed';
         res.status(500).json({ error: message });
@@ -86,10 +99,12 @@ app.post('/api/chat/title', async (req, res) => {
         res.status(400).json({ error: 'text (string) required' });
         return;
     }
+    const signal = abortOnClose(res);
     try {
-        const title = await runTitle(text, model);
+        const title = await runTitle(text, signal, model);
         res.json({ title });
     } catch (err) {
+        if (signal.aborted) return;
         console.error('title generation failed:', err);
         const message = err instanceof Error ? err.message : 'title failed';
         res.status(500).json({ error: message });
@@ -106,9 +121,7 @@ app.post('/api/chat/followups', async (req, res) => {
         });
         return;
     }
-    // Also fires once the response ends normally, when nothing is left to stop.
-    const controller = new AbortController();
-    res.on('close', () => controller.abort());
+    const signal = abortOnClose(res);
     try {
         const followups = runFollowups(
             {
@@ -117,7 +130,7 @@ app.post('/api/chat/followups', async (req, res) => {
                 href: typeof href === 'string' ? href : '',
                 details: details ?? { available: false },
             },
-            controller.signal
+            signal
         );
         for await (const followup of followups) {
             if (!res.headersSent) {
@@ -131,7 +144,7 @@ app.post('/api/chat/followups', async (req, res) => {
         }
         res.end();
     } catch (err) {
-        if (controller.signal.aborted) return;
+        if (signal.aborted) return;
         console.error('follow-ups generation failed:', err);
         if (res.headersSent) {
             res.end();

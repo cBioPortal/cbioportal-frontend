@@ -309,6 +309,7 @@ export const MODEL = AVAILABLE_MODELS[0]?.id ?? '(none configured)';
 export async function runChat(
     uiMessages: UIMessage[],
     res: ServerResponse,
+    abortSignal: AbortSignal,
     model?: string,
     pageHref?: string
 ): Promise<void> {
@@ -340,6 +341,7 @@ export async function runChat(
         },
         stopWhen: stepCountIs(30),
         messages: await convertToModelMessages(uiMessages),
+        abortSignal,
     });
     await result.pipeUIMessageStreamToResponse(res);
 }
@@ -348,6 +350,7 @@ export async function runChat(
 // snapshots, navigation URLs) is already in the given history.
 export async function runReport(
     uiMessages: UIMessage[],
+    abortSignal: AbortSignal,
     model?: string
 ): Promise<string> {
     const modelId = model || AVAILABLE_MODELS[0]?.id;
@@ -381,6 +384,7 @@ export async function runReport(
                 content: 'Compile the research report for this session now.',
             },
         ],
+        abortSignal,
     });
     return text;
 }
@@ -392,7 +396,11 @@ Rules: at most six words, no quotes, no trailing punctuation, no filler like "ch
 
 const MAX_TITLE_CHARS = 60;
 
-export async function runTitle(text: string, model?: string): Promise<string> {
+export async function runTitle(
+    text: string,
+    abortSignal: AbortSignal,
+    model?: string
+): Promise<string> {
     const modelId = model || AVAILABLE_MODELS[0]?.id;
     if (!modelId) {
         throw new Error('No model available — see AVAILABLE_MODELS.');
@@ -401,6 +409,7 @@ export async function runTitle(text: string, model?: string): Promise<string> {
         model: getModel(modelId),
         system: TITLE_PROMPT,
         messages: [{ role: 'user', content: text }],
+        abortSignal,
     });
     return title.trim().slice(0, MAX_TITLE_CHARS);
 }
