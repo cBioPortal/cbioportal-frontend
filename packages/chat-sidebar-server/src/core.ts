@@ -107,9 +107,9 @@ const langfuse =
 
 async function getSystemPrompt(pageHref?: string): Promise<string> {
     const systemPrompt = langfuse
-        ? (
+        ? // No label: Langfuse serves the version labelled `production`.
+          (
               await langfuse.prompt.get('cBioChat Sidebar System Prompt', {
-                  label: 'latest',
                   fallback: LOCAL_SYSTEM_PROMPT_TEXT,
               })
           ).prompt
