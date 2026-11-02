@@ -340,7 +340,11 @@ export async function runChat(
             bedrock: { reasoningConfig: { display: 'summarized' } },
         },
         stopWhen: stepCountIs(30),
-        messages: await convertToModelMessages(uiMessages),
+        // A reply stopped mid-tool leaves a call with no result, which the
+        // model API rejects on every later turn; drop such calls.
+        messages: await convertToModelMessages(uiMessages, {
+            ignoreIncompleteToolCalls: true,
+        }),
         abortSignal,
     });
     await result.pipeUIMessageStreamToResponse(res);
@@ -372,7 +376,8 @@ export async function runReport(
                 ...message,
                 parts: message.parts.filter(part => part.type !== 'reasoning'),
             }))
-            .filter(message => message.parts.length > 0)
+            .filter(message => message.parts.length > 0),
+        { ignoreIncompleteToolCalls: true }
     );
     const { text } = await generateText({
         model: getModel(modelId),
