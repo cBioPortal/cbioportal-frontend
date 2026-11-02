@@ -119,16 +119,6 @@ async function getSystemPrompt(pageHref?: string): Promise<string> {
         : systemPrompt;
 }
 
-// Not wired to Langfuse yet — the plan is one sidebar prompt in Langfuse
-// distinguished by tag (e.g. "report" vs. the main chat prompt above), not a
-// separate prompt name. Switch to that once the tag scheme exists:
-// const reportPrompt = langfuse
-//     ? (await langfuse.prompt.get('cBioChat Sidebar Prompt', {
-//           label: 'latest',
-//           tag: 'report',
-//           fallback: LOCAL_REPORT_PROMPT_TEXT,
-//       })).prompt
-//     : LOCAL_REPORT_PROMPT_TEXT;
 async function getReportPrompt(): Promise<string> {
     return LOCAL_REPORT_PROMPT_TEXT;
 }

@@ -29,11 +29,7 @@ import {
 import { setPortalLinkAliases } from '@/lib/portal-link';
 import { getSidebarMode, subscribeToSidebarMode } from '@/lib/sidebar-mode';
 import { threadListAdapter } from '@/lib/threadListAdapter';
-import {
-    readLastThreadId,
-    removeLegacyChatStorage,
-    saveLastThreadId,
-} from '@/lib/threadStorage';
+import { readLastThreadId, saveLastThreadId } from '@/lib/threadStorage';
 import { useChatThreadRuntime } from '@/lib/useChatThreadRuntime';
 import {
     FALLBACK_STARTERS,
@@ -116,10 +112,6 @@ export function App() {
     );
 
     useEffect(() => {
-        removeLegacyChatStorage();
-    }, []);
-
-    useEffect(() => {
         fetch('/api/chat/config')
             .then(r => (r.ok ? r.json() : null))
             .then((data: { portalLinkAliases?: string[] } | null) => {
@@ -160,9 +152,9 @@ export function App() {
         };
     }, []);
 
-    // The iframe reloads on every portal navigation, including the ones the
-    // go_to_page tool triggers, so the open chat has to be restored or the
-    // user lands in a blank one mid-conversation. Read once: the runtime
+    // The iframe reloads with the portal page on a full page load (a refresh,
+    // or a link the portal doesn't route itself), so the open chat is restored
+    // rather than leaving the user in a blank one. Read once: the runtime
     // freezes this on its first render.
     const [initialThreadId] = useState(readLastThreadId);
 

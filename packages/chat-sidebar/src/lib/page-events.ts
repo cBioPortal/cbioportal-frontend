@@ -72,12 +72,8 @@ export function listenForPageEvents(): void {
     window.addEventListener('message', (e: MessageEvent) => {
         if (!isFromParent(e)) return;
         if (e.data?.type === 'chat-sidebar:open') {
-            // Hosts from before the rail send only `open`.
-            const mode: SidebarMode = isSidebarMode(e.data.mode)
-                ? e.data.mode
-                : e.data.open
-                ? 'expanded'
-                : 'hidden';
+            if (!isSidebarMode(e.data.mode)) return;
+            const mode: SidebarMode = e.data.mode;
             setSidebarModeFromHost(mode);
             setFollowupsSidebarOpen(mode === 'expanded');
             return;

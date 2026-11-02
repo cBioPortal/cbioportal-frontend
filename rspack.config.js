@@ -631,9 +631,8 @@ if (isDev || isTest) {
     config.devServer.port = devPort;
     //config.devServer.hostname = devHost;
 
-    // Serve bundles from the same origin as the page so the dev server
-    // works whether accessed via localhost or a LAN/Tailscale IP. The
-    // previous hardcoded `//localhost:${port}/` broke remote viewing.
+    // Serve bundles from the same origin as the page, so the dev server
+    // works whether it is reached via localhost or a LAN/Tailscale IP.
     config.output.publicPath = '/';
 } else {
     config.output.publicPath = '/';

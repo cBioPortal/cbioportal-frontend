@@ -6,7 +6,6 @@ import { AsyncStorageLike } from '@assistant-ui/core/react';
 export const PREFIX = 'chat-sidebar:v2:';
 export const THREADS_KEY = `${PREFIX}threads`;
 export const LAST_THREAD_KEY = `${PREFIX}lastThreadId`;
-const LEGACY_MESSAGES_KEY = 'chat-sidebar:messages';
 
 export function messagesKey(remoteId: string): string {
     return `${PREFIX}messages:${remoteId}`;
@@ -141,16 +140,6 @@ export const storage: AsyncStorageLike = {
         }
     },
 };
-
-// The single-chat key this replaced. Its contents are not migrated: the format
-// differs and the sidebar is still experimental.
-export function removeLegacyChatStorage(): void {
-    try {
-        localStorage.removeItem(LEGACY_MESSAGES_KEY);
-    } catch {
-        /* ignore */
-    }
-}
 
 export function readLastThreadId(): string | undefined {
     try {

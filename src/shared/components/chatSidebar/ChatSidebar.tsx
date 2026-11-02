@@ -24,9 +24,6 @@ import './ChatSidebar.scss';
 type ChatSidebarMode = 'expanded' | 'rail' | 'hidden';
 
 const MODE_STORAGE_KEY = 'chat-sidebar:mode';
-// Holds the open/closed boolean stored before the rail existed; read only
-// when no mode has been stored.
-const LEGACY_OPEN_STORAGE_KEY = 'chat-sidebar:open';
 const WIDTH_STORAGE_KEY = 'chat-sidebar:width';
 const KEYBOARD_RESIZE_STEP = 20;
 
@@ -38,9 +35,6 @@ function readStoredMode(): ChatSidebarMode {
     try {
         const mode = localStorage.getItem(MODE_STORAGE_KEY);
         if (isChatSidebarMode(mode)) return mode;
-        if (localStorage.getItem(LEGACY_OPEN_STORAGE_KEY) === 'false') {
-            return 'hidden';
-        }
     } catch {
         /* localStorage may be unavailable */
     }
@@ -107,7 +101,6 @@ export default class ChatSidebar extends React.Component<{}, {}> {
         } catch {
             /* ignore */
         }
-        this.syncBodyClass();
         this.sendOpenState();
     }
 
@@ -116,18 +109,10 @@ export default class ChatSidebar extends React.Component<{}, {}> {
         this.setMode('expanded');
     }
 
-    private syncBodyClass() {
-        document.body.classList.toggle(
-            'chat-sidebar-closed',
-            this.mode !== 'expanded'
-        );
-    }
-
     componentDidMount() {
         window.addEventListener('message', this.onMessage);
         window.addEventListener('resize', this.onWindowResize);
         this.onWindowResize();
-        this.syncBodyClass();
         // Also registers go_to_page as a native WebMCP tool where supported;
         // no-op otherwise.
         this.webMcp.start();
@@ -136,7 +121,6 @@ export default class ChatSidebar extends React.Component<{}, {}> {
     componentWillUnmount() {
         window.removeEventListener('message', this.onMessage);
         window.removeEventListener('resize', this.onWindowResize);
-        document.body.classList.remove('chat-sidebar-closed');
         document.body.classList.remove('chat-sidebar-resizing');
         this.webMcp.stop();
         this.pageEvents.stop();
@@ -219,13 +203,11 @@ export default class ChatSidebar extends React.Component<{}, {}> {
     };
 
     // The iframe stays loaded in every mode; it holds off on work nobody would
-    // see until it's expanded, and draws the rail itself. `open` is kept
-    // alongside `mode` for chat servers deployed before the rail.
+    // see until it's expanded, and draws the rail itself.
     private sendOpenState() {
         this.iframeRef.current?.contentWindow?.postMessage(
             {
                 type: 'chat-sidebar:open',
-                open: this.mode === 'expanded',
                 mode: this.mode,
             },
             getChatOrigin()
@@ -281,9 +263,7 @@ export default class ChatSidebar extends React.Component<{}, {}> {
     }
 
     get iframeSrc(): string {
-        const apiRoot = getLoadConfig().apiRoot || '/';
         const params = new URLSearchParams();
-        params.set('apiRoot', apiRoot);
         params.set('parentOrigin', window.location.origin);
         // Where the iframe points portal links, including any base path the
         // portal is served under.
