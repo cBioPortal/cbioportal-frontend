@@ -7,9 +7,7 @@ import {
 import { ScreenshotButton } from '@/components/assistant-ui/elements/screenshot-button';
 import { File } from '@/components/assistant-ui/elements/file';
 import { ThreadFollowupSuggestions } from '@/components/assistant-ui/elements/follow-up-suggestions.aui';
-import { Image } from '@/components/assistant-ui/elements/image';
 import { MarkdownText } from '@/components/assistant-ui/elements/markdown-text';
-import { Reasoning } from '@/components/assistant-ui/elements/reasoning.aui';
 import { ToolFallback } from '@/components/assistant-ui/elements/tool-fallback.aui';
 import {
     ToolGroupContent,
@@ -37,7 +35,6 @@ import {
     SuggestionPrimitive,
     ThreadPrimitive,
     FileMessagePartComponent,
-    ImageMessagePartComponent,
     ToolCallMessagePartComponent,
     useAuiState,
 } from '@assistant-ui/react';
@@ -52,7 +49,6 @@ import {
     DownloadIcon,
     LucideIcon,
     MessageCircleIcon,
-    MicIcon,
     MoreHorizontalIcon,
     PencilIcon,
     RefreshCwIcon,
@@ -408,42 +404,6 @@ const ComposerAction: FC = () => {
         <div className="aui-composer-action-wrapper relative flex items-center justify-between">
             <ScreenshotButton />
             <div className="flex items-center gap-1.5">
-                <AuiIf condition={s => s.thread.capabilities.dictation}>
-                    <AuiIf condition={s => s.composer.dictation == null}>
-                        <ComposerPrimitive.Dictate
-                            render={
-                                <TooltipIconButton
-                                    tooltip="Voice input"
-                                    side="bottom"
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="aui-composer-dictate text-muted-foreground hover:text-foreground size-7 rounded-full"
-                                    aria-label="Start voice input"
-                                />
-                            }
-                        >
-                            <MicIcon className="aui-composer-dictate-icon size-4" />
-                        </ComposerPrimitive.Dictate>
-                    </AuiIf>
-                    <AuiIf condition={s => s.composer.dictation != null}>
-                        <ComposerPrimitive.StopDictation
-                            render={
-                                <TooltipIconButton
-                                    tooltip="Stop dictation"
-                                    side="bottom"
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="aui-composer-stop-dictation text-destructive size-7 rounded-full"
-                                    aria-label="Stop voice input"
-                                />
-                            }
-                        >
-                            <SquareIcon className="aui-composer-stop-dictation-icon size-3.5 animate-pulse fill-current" />
-                        </ComposerPrimitive.StopDictation>
-                    </AuiIf>
-                </AuiIf>
                 <AuiIf condition={s => !s.thread.isRunning}>
                     <ComposerPrimitive.Send
                         render={
@@ -580,7 +540,6 @@ const WorkBlock: FC<PropsWithChildren<{ group: ThreadGroupPart }>> = ({
 
     return (
         <ToolGroupRoot
-            variant="ghost"
             open={userOpen ?? active}
             onOpenChange={setUserOpen}
             className="mb-2"
@@ -649,7 +608,7 @@ const AssistantMessage: FC = () => {
                             case 'text':
                                 return <MarkdownText />;
                             case 'reasoning':
-                                return <Reasoning {...part} />;
+                                return <MarkdownText />;
                             case 'tool-call':
                                 return (
                                     part.toolUI ?? (
@@ -665,15 +624,6 @@ const AssistantMessage: FC = () => {
                                         className="py-1"
                                     >
                                         <File {...part} />
-                                    </div>
-                                );
-                            case 'image':
-                                return (
-                                    <div
-                                        data-slot="aui_assistant-message-image"
-                                        className="py-1"
-                                    >
-                                        <Image {...part} />
                                     </div>
                                 );
                             case 'indicator':
@@ -764,12 +714,6 @@ const UserFilePart: FileMessagePartComponent = part => (
     </div>
 );
 
-const UserImagePart: ImageMessagePartComponent = part => (
-    <div data-slot="aui_user-message-image" className="py-1">
-        <Image {...part} />
-    </div>
-);
-
 const UserMessage: FC = () => {
     return (
         <MessagePrimitive.Root
@@ -784,7 +728,6 @@ const UserMessage: FC = () => {
                     <MessagePrimitive.Parts
                         components={{
                             File: UserFilePart,
-                            Image: UserImagePart,
                         }}
                     />
                 </div>

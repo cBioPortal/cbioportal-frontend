@@ -1,16 +1,7 @@
 'use client';
 
-import {
-    memo,
-    useCallback,
-    useRef,
-    useState,
-    FC,
-    PropsWithChildren,
-    ReactNode,
-} from 'react';
+import { useCallback, useRef, useState, ReactNode } from 'react';
 import { ChevronDownIcon, LoaderIcon } from 'lucide-react';
-import { cva, VariantProps } from 'class-variance-authority';
 import { useScrollLock } from '@assistant-ui/react';
 import {
     Collapsible,
@@ -21,31 +12,17 @@ import { cn } from '@/lib/utils';
 
 const ANIMATION_DURATION = 200;
 
-const toolGroupVariants = cva('aui-tool-group-root group/tool-group w-full', {
-    variants: {
-        variant: {
-            outline: 'rounded-lg border py-3',
-            ghost: '',
-            muted:
-                'border-muted-foreground/30 bg-muted/30 rounded-lg border py-3',
-        },
-    },
-    defaultVariants: { variant: 'outline' },
-});
-
 export type ToolGroupRootProps = Omit<
     React.ComponentProps<typeof Collapsible>,
     'open' | 'onOpenChange'
-> &
-    VariantProps<typeof toolGroupVariants> & {
-        open?: boolean;
-        onOpenChange?: (open: boolean) => void;
-        defaultOpen?: boolean;
-    };
+> & {
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    defaultOpen?: boolean;
+};
 
 function ToolGroupRoot({
     className,
-    variant,
     open: controlledOpen,
     onOpenChange: controlledOnOpenChange,
     defaultOpen = false,
@@ -74,14 +51,9 @@ function ToolGroupRoot({
         <Collapsible
             ref={collapsibleRef}
             data-slot="tool-group-root"
-            data-variant={variant ?? 'outline'}
             open={isOpen}
             onOpenChange={handleOpenChange}
-            className={cn(
-                toolGroupVariants({ variant }),
-                'group/tool-group-root',
-                className
-            )}
+            className={cn('aui-tool-group-root w-full', className)}
             style={
                 {
                     '--animation-duration': `${ANIMATION_DURATION}ms`,
@@ -113,10 +85,7 @@ function ToolGroupTrigger({
         <CollapsibleTrigger
             data-slot="tool-group-trigger"
             className={cn(
-                'aui-tool-group-trigger group/trigger flex origin-left items-center gap-2 text-sm transition-[color,scale] active:scale-[0.98]',
-                'group-data-[variant=ghost]/tool-group-root:text-muted-foreground group-data-[variant=ghost]/tool-group-root:hover:text-foreground group-data-[variant=ghost]/tool-group-root:py-1.5',
-                'group-data-[variant=outline]/tool-group-root:w-full group-data-[variant=outline]/tool-group-root:px-4',
-                'group-data-[variant=muted]/tool-group-root:w-full group-data-[variant=muted]/tool-group-root:px-4',
+                'aui-tool-group-trigger group/trigger text-muted-foreground hover:text-foreground flex origin-left items-center gap-2 py-1.5 text-sm transition-[color,scale] active:scale-[0.98]',
                 className
             )}
             {...props}
@@ -132,10 +101,7 @@ function ToolGroupTrigger({
             <span
                 data-slot="tool-group-trigger-label"
                 className={cn(
-                    'aui-tool-group-trigger-label-wrapper inline-block text-start text-xs leading-none font-medium',
-                    'group-data-[variant=ghost]/tool-group-root:font-normal',
-                    'group-data-[variant=outline]/tool-group-root:grow',
-                    'group-data-[variant=muted]/tool-group-root:grow',
+                    'aui-tool-group-trigger-label-wrapper inline-block text-start text-xs leading-none font-normal',
                     active && 'shimmer motion-reduce:animate-none'
                 )}
             >
@@ -177,10 +143,7 @@ function ToolGroupContent({
         >
             <div
                 className={cn(
-                    'mt-2 flex flex-col gap-2',
-                    'group-data-[variant=ghost]/tool-group-root:mt-1 group-data-[variant=ghost]/tool-group-root:gap-1',
-                    'group-data-[variant=outline]/tool-group-root:mt-3 group-data-[variant=outline]/tool-group-root:border-t group-data-[variant=outline]/tool-group-root:px-4 group-data-[variant=outline]/tool-group-root:pt-3',
-                    'group-data-[variant=muted]/tool-group-root:mt-3 group-data-[variant=muted]/tool-group-root:border-t group-data-[variant=muted]/tool-group-root:px-4 group-data-[variant=muted]/tool-group-root:pt-3',
+                    'mt-1 flex flex-col gap-1',
                     '[&>*]:animate-in [&>*]:fade-in-0 [&>*]:blur-in-[2px] [&>*]:slide-in-from-top-1 [&>*]:animation-duration-(--animation-duration) [&>*]:ease-[cubic-bezier(0.32,0.72,0,1)]',
                     '[&>*]:motion-reduce:animate-none',
                     '[&>*:nth-child(2)]:[animation-delay:40ms]',
@@ -195,45 +158,4 @@ function ToolGroupContent({
     );
 }
 
-type ToolGroupComponent = FC<
-    PropsWithChildren<{ startIndex: number; endIndex: number }>
-> & {
-    Root: typeof ToolGroupRoot;
-    Trigger: typeof ToolGroupTrigger;
-    Content: typeof ToolGroupContent;
-};
-
-const ToolGroupImpl: FC<PropsWithChildren<{
-    startIndex: number;
-    endIndex: number;
-}>> = ({ children, startIndex, endIndex }) => {
-    const toolCount = endIndex - startIndex + 1;
-
-    return (
-        <ToolGroupRoot>
-            <ToolGroupTrigger count={toolCount} />
-            <ToolGroupContent>{children}</ToolGroupContent>
-        </ToolGroupRoot>
-    );
-};
-
-/**
- * @deprecated This wrapper targets the legacy `components.ToolGroup` prop
- * on `<MessagePrimitive.Parts>`. Use `<MessagePrimitive.GroupedParts>` with
- * a `groupBy` returning `"group-tool"` and compose `ToolGroupRoot` /
- * `ToolGroupTrigger` / `ToolGroupContent` directly. See `thread.tsx`.
- */
-const ToolGroup = (memo(ToolGroupImpl) as unknown) as ToolGroupComponent;
-
-ToolGroup.displayName = 'ToolGroup';
-ToolGroup.Root = ToolGroupRoot;
-ToolGroup.Trigger = ToolGroupTrigger;
-ToolGroup.Content = ToolGroupContent;
-
-export {
-    ToolGroup,
-    ToolGroupRoot,
-    ToolGroupTrigger,
-    ToolGroupContent,
-    toolGroupVariants,
-};
+export { ToolGroupRoot, ToolGroupTrigger, ToolGroupContent };
