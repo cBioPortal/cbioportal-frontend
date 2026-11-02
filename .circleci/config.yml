@@ -850,7 +850,7 @@ jobs:
       - restore_cache:
           name: Restore node_modules cache
           keys:
-            - v3-node-modules-{{ checksum "/tmp/manifests-hash" }}
+            - v4-node-modules-{{ checksum "/tmp/manifests-hash" }}
       - restore_cache:
           name: Restore pnpm store
           keys:
@@ -873,10 +873,12 @@ jobs:
             - ~/.local/share/pnpm/store
       - save_cache:
           name: Save node_modules cache
-          key: v3-node-modules-{{ checksum "/tmp/manifests-hash" }}
+          key: v4-node-modules-{{ checksum "/tmp/manifests-hash" }}
           paths:
             - cbioportal-frontend/node_modules
             - cbioportal-frontend/packages/cbioportal-clinical-timeline/node_modules
+            - cbioportal-frontend/packages/chat-sidebar/node_modules
+            - cbioportal-frontend/packages/chat-sidebar-server/node_modules
             - cbioportal-frontend/packages/cbioportal-frontend-commons/node_modules
             - cbioportal-frontend/packages/cbioportal-ts-api-client/node_modules
             - cbioportal-frontend/packages/cbioportal-utils/node_modules
@@ -901,7 +903,7 @@ jobs:
       - restore_cache:
           name: Restore turbo cache
           keys:
-            - v3-turbo-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}-{{ checksum "/tmp/packages-src-hash" }}
+            - v4-turbo-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}-{{ checksum "/tmp/packages-src-hash" }}
       - run:
           name: Build workspace packages
           command: |
@@ -910,10 +912,12 @@ jobs:
             pnpm -w run buildModules
       - save_cache:
           name: Save turbo cache
-          key: v3-turbo-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}-{{ checksum "/tmp/packages-src-hash" }}
+          key: v4-turbo-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}-{{ checksum "/tmp/packages-src-hash" }}
           paths:
             - cbioportal-frontend/.turbo
             - cbioportal-frontend/packages/cbioportal-clinical-timeline/.turbo
+            - cbioportal-frontend/packages/chat-sidebar/.turbo
+            - cbioportal-frontend/packages/chat-sidebar-server/.turbo
             - cbioportal-frontend/packages/cbioportal-frontend-commons/.turbo
             - cbioportal-frontend/packages/cbioportal-ts-api-client/.turbo
             - cbioportal-frontend/packages/cbioportal-utils/.turbo
@@ -1139,7 +1143,7 @@ jobs:
       - restore_cache:
           name: Restore node_modules cache
           keys:
-            - v3-node-modules-{{ checksum "/tmp/manifests-hash" }}
+            - v4-node-modules-{{ checksum "/tmp/manifests-hash" }}
       - restore_cache:
           name: Restore pnpm store
           keys:

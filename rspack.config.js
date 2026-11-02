@@ -230,14 +230,6 @@ var config = {
                     from: './src/globalStyles/prefixed-bootstrap.min.css.map',
                     to: 'reactapp/prefixed-bootstrap.min.css.map',
                 },
-                // Standalone iframe sidebar app (React 19, isolated bundle).
-                // Built by `pnpm --filter chat-sidebar build`. Served at
-                // /chat-sidebar/index.html from the host dev/prod server.
-                {
-                    from: './packages/chat-sidebar/dist',
-                    to: 'chat-sidebar',
-                    noErrorOnMissing: true,
-                },
             ],
         }), // destination is relative to dist directory
         new TypedCssModulesPlugin({
