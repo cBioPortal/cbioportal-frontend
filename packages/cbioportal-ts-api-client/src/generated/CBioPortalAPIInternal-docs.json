@@ -769,7 +769,7 @@
         "tags": [
           "Data Access Tokens"
         ],
-        "description": "Create a new data access token",
+        "description": "Create a new data access token and download it as a file",
         "operationId": "downloadDataAccessTokenUsingGET"
       }
     },
@@ -809,7 +809,7 @@
       },
       "get": {
         "produces": [
-          "application/octet-stream"
+          "application/json"
         ],
         "parameters": [],
         "responses": {
@@ -845,8 +845,55 @@
         "tags": [
           "Data Access Tokens"
         ],
-        "description": "Get all data access tokens",
+        "description": "Create a new data access token",
         "operationId": "createDataAccessTokenUsingPOST"
+      }
+    },
+    "/api/data-access-tokens/id": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/DataAccessTokenSummary"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "description": "Retrieve summaries of the user's data access tokens, with masked token values",
+        "operationId": "getAllDataAccessTokenSummariesUsingGET"
+      }
+    },
+    "/api/data-access-tokens/id/{id}": {
+      "delete": {
+        "parameters": [
+          {
+            "description": "id of the token, as returned in its summary",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "description": "Delete a data access token by its id",
+        "operationId": "revokeDataAccessTokenByIdUsingDELETE"
       }
     },
     "/api/data-access-tokens/{token}": {
@@ -4662,6 +4709,28 @@
           "type": "string"
         },
         "token": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "DataAccessTokenSummary": {
+      "properties": {
+        "creation": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "expiration": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "tokenPreview": {
           "type": "string"
         },
         "username": {

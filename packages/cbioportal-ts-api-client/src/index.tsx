@@ -48,6 +48,7 @@ export {
     CountSummary,
     CustomDriverAnnotationReport,
     DataAccessToken,
+    DataAccessTokenSummary,
     DataFilter,
     DataFilterValue,
     DensityPlotBin,
