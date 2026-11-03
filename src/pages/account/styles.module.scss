@@ -1,0 +1,55 @@
+.accountPage {
+    margin-bottom: 20px;
+
+    h1 {
+        margin-bottom: 20px;
+    }
+}
+
+.sectionGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+}
+
+.card {
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 16px;
+    background: #fff;
+
+    h4 {
+        margin-top: 0;
+    }
+}
+
+.subtext {
+    color: #767677;
+    font-size: 13px;
+}
+
+.meta {
+    color: #767677;
+    font-size: 12px;
+}
+
+.itemList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+        padding: 8px 0;
+        border-bottom: 1px solid #f0f0f0;
+
+        &:last-child {
+            border-bottom: none;
+        }
+    }
+}
+
+.roleOptions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
