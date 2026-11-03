@@ -36,7 +36,7 @@ import ExonColumnFormatter from './column/ExonColumnFormatter';
 import { IMutSigData } from 'shared/model/MutSig';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
-import VariantCountCache from 'shared/cache/VariantCountCache';
+import { VariantCountCache } from 'shared/cache/VariantCountCache';
 import PubMedCache from 'shared/cache/PubMedCache';
 import MutationCountCache from 'shared/cache/MutationCountCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
