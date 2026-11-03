@@ -10,25 +10,23 @@ export const EvidenceReferenceContent: React.FunctionComponent<{
     citations?: Citations;
     noInfoDisclaimer?: string;
 }> = props => {
+    // JSX builds the props of every branch below before If picks one, so the
+    // citation arrays are resolved up front rather than read off a citations
+    // object that is optional, or that OncoKB can return without either array.
+    const abstracts = props.citations?.abstracts || [];
+    const pmids = props.citations?.pmids || [];
+
     return (
         <If condition={!!props.description}>
             <Then>
                 <SummaryWithRefs content={props.description} type={'tooltip'} />
             </Then>
             <Else>
-                <If
-                    condition={
-                        props.citations != undefined &&
-                        (props.citations.abstracts.length > 0 ||
-                            props.citations.pmids.length > 0)
-                    }
-                >
+                <If condition={abstracts.length > 0 || pmids.length > 0}>
                     <Then>
                         <ReferenceList
-                            pmids={props.citations!.pmids.map(pmid =>
-                                Number(pmid)
-                            )}
-                            abstracts={props.citations!.abstracts}
+                            pmids={pmids.map(pmid => Number(pmid))}
+                            abstracts={abstracts}
                         />
                     </Then>
                     <Else>

@@ -2,8 +2,10 @@ import { assert } from 'chai';
 
 import { Mutation } from 'cbioportal-utils';
 
+import { isGermlineIndicator, isSomaticIndicator } from '../model/OncoKB';
 import {
     defaultOncoKbIndicatorFilter,
+    generateIdToIndicatorMap,
     getPositionalVariant,
     groupOncoKbIndicatorDataByMutations,
     parseOncoKBAbstractReference,
@@ -367,6 +369,50 @@ describe('OncoKbUtils', () => {
                 parseOncoKBAbstractReference(abstractReference),
                 undefined,
                 'undefined should be returned'
+            );
+        });
+    });
+    describe('missing fields in the OncoKB response', () => {
+        it('skips an indicator without a query when building the id map', () => {
+            const map = generateIdToIndicatorMap([
+                { oncogenic: 'Oncogenic' } as any,
+                {
+                    query: { id: 'BRAF_V600E', germline: false },
+                    oncogenic: 'Oncogenic',
+                } as any,
+            ]);
+
+            assert.deepEqual(Object.keys(map), ['BRAF_V600E']);
+        });
+
+        it('treats an indicator without a query as somatic', () => {
+            const indicator = { oncogenic: 'Oncogenic' } as any;
+
+            assert.isFalse(isGermlineIndicator(indicator));
+            assert.isTrue(isSomaticIndicator(indicator));
+        });
+
+        it('still reads the germline flag when the query is populated', () => {
+            const indicator = { query: { germline: true } } as any;
+
+            assert.isTrue(isGermlineIndicator(indicator));
+            assert.isFalse(isSomaticIndicator(indicator));
+        });
+
+        it('filters out a somatic indicator without an oncogenic value', () => {
+            assert.isFalse(
+                defaultOncoKbIndicatorFilter({
+                    query: { germline: false },
+                } as any)
+            );
+        });
+
+        it('still filters by oncogenicity when the value is populated', () => {
+            assert.isTrue(
+                defaultOncoKbIndicatorFilter({
+                    query: { germline: false },
+                    oncogenic: 'Likely Oncogenic',
+                } as any)
             );
         });
     });

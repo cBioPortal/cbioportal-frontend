@@ -11,16 +11,18 @@ export type IndicatorQueryResp =
 // sets on the response query (germline endpoints return `germline: true`).
 // These guards let downstream components narrow the union instead of probing for
 // the presence of shape-specific fields like `pathogenic`/`oncogenic`.
+// A response that arrives without its query is treated as somatic, the same as
+// one without the flag, instead of throwing in every component that asks.
 export function isGermlineIndicator(
     indicator: IndicatorQueryResp
 ): indicator is GermlineIndicatorQueryResp {
-    return indicator.query.germline;
+    return !!indicator.query?.germline;
 }
 
 export function isSomaticIndicator(
     indicator: IndicatorQueryResp
 ): indicator is SomaticIndicatorQueryResp {
-    return !indicator.query.germline;
+    return !indicator.query?.germline;
 }
 
 export type Query = {
