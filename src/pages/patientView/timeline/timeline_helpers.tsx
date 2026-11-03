@@ -315,6 +315,7 @@ export function buildBaseConfig(
             'Diagnosis',
             'Lab_test',
             'Measurements',
+            'Tumor_volume',
         ],
         trackStructures: [
             ['TREATMENT', 'TREATMENT_TYPE', 'SUBTYPE', 'AGENT'],
@@ -379,6 +380,14 @@ export function buildBaseConfig(
                         };
                     }
                 },
+            },
+            {
+                trackTypeMatch: /TUMOR_VOLUME/i,
+                configureTrack: (track: TimelineTrackSpecification) => {
+                    track.trackType= TimelineTrackType.LINE_CHART;
+                    track.getLineChartValue = e =>
+                        getNumericalAttrVal('TUMOR_VOLUME', e);
+                    },
             },
             {
                 trackTypeMatch: /^STATUS$/i,
@@ -750,6 +759,19 @@ function configureLABTESTSubTrack(track: TimelineTrackSpecification) {
         // recurse
         if (track.tracks) {
             track.tracks.forEach(configureLABTESTSubTrack);
+        }
+    }
+}
+
+function configureTUMORVOLUMESubTrack(track: TimelineTrackSpecification) {
+    if (track.items.length) {
+        if (allResultValuesAreNumerical(track.items)) {
+            track.trackType = TimelineTrackType.LINE_CHART;
+            track.getLineChartValue = e => getNumericalAttrVal('TUMOR_VOLUME', e);
+        }
+        // recurse
+        if (track.tracks) {
+            track.tracks.forEach(configureTUMORVOLUMESubTrack);
         }
     }
 }
