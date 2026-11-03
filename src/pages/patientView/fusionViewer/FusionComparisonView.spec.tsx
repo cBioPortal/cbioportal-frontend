@@ -2,6 +2,7 @@ import { assert } from 'chai';
 import { mount } from 'enzyme';
 import { runInAction } from 'mobx';
 import * as React from 'react';
+import { act } from 'react-dom/test-utils';
 import FusionComparisonView, {
     FUSION_BREAKPOINT_FILTER_KEY,
 } from './FusionComparisonView';
@@ -58,6 +59,7 @@ describe('FusionComparisonView', () => {
                 site2HugoSymbol: 'ERG',
                 sampleId: 'S1',
                 site1Position: 100,
+                site2Position: 500,
             } as any,
         ]);
         store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
@@ -96,12 +98,14 @@ describe('FusionComparisonView', () => {
                 site2HugoSymbol: 'ERG',
                 sampleId: 'S1',
                 site1Position: 100,
+                site2Position: 500,
             } as any,
             {
                 site1HugoSymbol: 'TMPRSS2',
                 site2HugoSymbol: 'ERG',
                 sampleId: 'S2',
                 site1Position: 100,
+                site2Position: 500,
             } as any,
         ]);
         const wrapper = mount(<FusionComparisonView store={store} />);
@@ -123,6 +127,7 @@ describe('FusionComparisonView', () => {
                 sampleId: 'S1',
                 studyId: 'study_a',
                 site1Position: 100,
+                site2Position: 500,
             } as any,
             {
                 site1HugoSymbol: 'TMPRSS2',
@@ -130,6 +135,7 @@ describe('FusionComparisonView', () => {
                 sampleId: 'S2',
                 studyId: 'study_b',
                 site1Position: 200,
+                site2Position: 500,
             } as any,
         ]);
         const spy = jest.fn();
@@ -172,6 +178,7 @@ describe('FusionComparisonView', () => {
                 sampleId: 'S1',
                 studyId: 'study_a',
                 site1Position: 100,
+                site2Position: 500,
             } as any,
         ]);
         const spy = jest.fn();
@@ -200,6 +207,7 @@ describe('FusionComparisonView', () => {
                 site2HugoSymbol: 'ERG',
                 sampleId: 'S1',
                 site1Position: 100,
+                site2Position: 500,
             } as any,
         ]);
         store.setAnchor({ mode: 'pair', key: 'ERG::TMPRSS2' });
@@ -292,6 +300,7 @@ describe('FusionComparisonView', () => {
                 sampleId: 'S1',
                 studyId: 'study_a',
                 site1Position: 100,
+                site2Position: 500,
             } as any,
         ]);
         const spy = jest.fn();
@@ -322,6 +331,7 @@ describe('FusionComparisonView', () => {
                 sampleId: 'S1',
                 studyId: 'study_a',
                 site1Position: 100,
+                site2Position: 500,
             } as any,
         ]);
         const wrapper = mount(<FusionComparisonView store={store} />);
@@ -469,13 +479,16 @@ describe('FusionComparisonView', () => {
                 sampleId: 'S1',
                 studyId: 'study_a',
                 site1Position: 100,
+                site2Position: 500,
             } as any,
         ]);
         store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
         const wrapper = mount(<FusionComparisonView store={store} />);
         const view = wrapper.instance() as any;
-        runInAction(() => {
-            view.expandedSampleId = 'S1';
+        act(() => {
+            runInAction(() => {
+                view.expandedSampleId = 'S1';
+            });
         });
         wrapper.update();
 
@@ -538,11 +551,13 @@ function mountView() {
     store.setAnchor({ mode: 'gene', gene: 'TMPRSS2', side: '5p' });
     const wrapper = mount(<FusionComparisonView store={store} />);
     const instance = wrapper.instance() as any;
-    runInAction(() => {
-        instance.transcriptsByKey = new Map([
-            ['GRCh38|TMPRSS2|', tx('TMPRSS2')],
-            ['GRCh38|ERG|', tx('ERG')],
-        ]);
+    act(() => {
+        runInAction(() => {
+            instance.transcriptsByKey = new Map([
+                ['GRCh38|TMPRSS2|', tx('TMPRSS2')],
+                ['GRCh38|ERG|', tx('ERG')],
+            ]);
+        });
     });
     wrapper.update();
     return { wrapper, store };
@@ -570,7 +585,7 @@ describe('FusionComparisonView exon ladder controls', () => {
 
     it('shows the ladder toggle once full transcript is selected', () => {
         const { wrapper, store } = mountView();
-        store.setExonMode('full');
+        act(() => store.setExonMode('full'));
         wrapper.update();
         assert.isAbove(
             wrapper.find('[data-testid="laddermode-reference"]').hostNodes()
@@ -581,10 +596,10 @@ describe('FusionComparisonView exon ladder controls', () => {
 
     it('renders the exon ruler only for the reference ladder', () => {
         const { wrapper, store } = mountView();
-        store.setExonMode('full');
+        act(() => store.setExonMode('full'));
         wrapper.update();
         assert.isAbove(wrapper.find('ExonRuler').length, 0);
-        store.setLadderMode('perRow');
+        act(() => store.setLadderMode('perRow'));
         wrapper.update();
         assert.equal(wrapper.find('ExonRuler').length, 0);
     });
@@ -645,13 +660,13 @@ describe('FusionComparisonView gene mode', () => {
         const store = alkStore();
         store.setAnchor({ mode: 'gene', gene: 'ALK', side: '3p' });
         const w = mount(<FusionComparisonView store={store} />);
-        runInAction(() => store.setTrackMode('genomic'));
+        act(() => runInAction(() => store.setTrackMode('genomic')));
         w.update();
         assert.lengthOf(w.find('g[data-testid="lollipop-stick"]'), 0);
         assert.isTrue(
             w.find('button[data-testid="trackmode-lollipop"]').exists()
         );
-        runInAction(() => store.setAnchorMode('pair'));
+        act(() => runInAction(() => store.setAnchorMode('pair')));
         w.update();
         assert.isFalse(
             w.find('button[data-testid="trackmode-lollipop"]').exists()
@@ -752,14 +767,14 @@ describe('FusionComparisonView gene mode', () => {
         const w = mount(<FusionComparisonView store={store} />);
         const legend = () => w.find('[data-testid="lollipop-legend"]');
         assert.isFalse(legend().exists());
-        runInAction(() => store.setLollipopColorBy('frame'));
+        act(() => runInAction(() => store.setLollipopColorBy('frame')));
         w.update();
         assert.include(legend().text(), 'In-frame');
-        runInAction(() => store.setLollipopColorBy('svType'));
+        act(() => runInAction(() => store.setLollipopColorBy('svType')));
         w.update();
         assert.include(legend().text(), 'DEL');
         assert.include(legend().text(), 'INV');
-        runInAction(() => store.setLollipopColorBy('partner'));
+        act(() => runInAction(() => store.setLollipopColorBy('partner')));
         w.update();
         assert.isFalse(legend().exists());
     });
@@ -1047,7 +1062,7 @@ describe('FusionComparisonView link arcs', () => {
             .first()
             .simulate('mouseenter');
         assert.isDefined(view.linkHover.matcher);
-        runInAction(() => store.setTrackMode('genomic'));
+        act(() => runInAction(() => store.setTrackMode('genomic')));
         assert.isUndefined(view.linkHover.matcher);
         w.update();
         w.find('rect[data-testid="breakpoint-bin"]')

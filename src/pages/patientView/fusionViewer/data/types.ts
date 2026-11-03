@@ -111,18 +111,6 @@ export interface FusionEvent {
      * partner symbols instead.
      */
     eventLabel: string;
-    /**
-     * The reference genome this ROW's coordinates are on, normalised to
-     * 'GRCh37' / 'GRCh38' ('' when the export omits it).
-     *
-     * A cBioPortal study declares only ONE referenceGenome, but an export may
-     * mix builds -- msktarget declares GRCh37 while its RNA fusion rows carry
-     * GRCh38 coordinates. Resolving those against the study build compares a
-     * breakpoint to exon bounds ~200-290kb away, and because exon selection is
-     * a plain coordinate filter it does not degrade gracefully: it returns
-     * either NO retained exons (a blank strip) or the entire gene.
-     */
-    ncbiBuild: string;
     totalReadSupport: number;
     callMethod: string;
     frameCallMethod: string;
