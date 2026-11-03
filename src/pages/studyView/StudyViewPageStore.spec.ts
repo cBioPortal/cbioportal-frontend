@@ -3,93 +3,57 @@ import { StudyViewPageStore } from './StudyViewPageStore';
 import { ChartTypeEnum } from './StudyViewConfig';
 import { SampleIdentifier } from 'cbioportal-ts-api-client';
 
-// The Top SV Gene Pairs card and the SV/Fusion Comparison tab both install
-// labeled sample-identifier filters through the same store map. Resetting the
-// card must not take the Comparison tab's filter with it.
+// The SV/Fusion Comparison tab filters the cohort by breakpoint bar / collapsed
+// group through selectSvGenePairSamples; a label turns that filter into a
+// removable pill in the study-view header.
 describe('StudyViewPageStore SV gene pair filters', () => {
-    const TOP_SV_CARD_KEY = 'sv-profile_TOP_SV_GENE_PAIRS_TABLE';
-    const GENE_PAIR_KEY = 'GENEA::GENEB';
     // Mirrors FUSION_BREAKPOINT_FILTER_KEY in
     // pages/patientView/fusionViewer/FusionComparisonView.tsx.
     const FUSION_BREAKPOINT_KEY = 'FUSION_BREAKPOINT_BAR';
 
-    const samples: SampleIdentifier[] = [
-        { studyId: 'study1', sampleId: 'sample1' },
-        { studyId: 'study1', sampleId: 'sample2' },
-    ];
     const breakpointSamples: SampleIdentifier[] = [
         { studyId: 'study1', sampleId: 'sample3' },
     ];
 
     function makeStore(): StudyViewPageStore {
-        const store = new StudyViewPageStore(
-            {} as any,
-            false,
-            {} as any,
-            {} as any
-        );
-        store.chartsType.set(
-            TOP_SV_CARD_KEY,
-            ChartTypeEnum.TOP_SV_GENE_PAIRS_TABLE
-        );
-        return store;
+        return new StudyViewPageStore({} as any, false, {} as any, {} as any);
     }
 
-    it('resetting the Top SV Gene Pairs card clears only its own gene-pair filters', () => {
-        const store = makeStore();
-        store.toggleSvGenePairSamples(GENE_PAIR_KEY, samples, 'GENEA-GENEB');
-        store.selectSvGenePairSamples(
-            FUSION_BREAKPOINT_KEY,
-            breakpointSamples,
-            'Breakpoint 1,000-2,000'
-        );
-        assert.equal(store.svGenePairSampleFilters.length, 2);
-
-        store.resetFilterAndChangeChartVisibility(TOP_SV_CARD_KEY, false);
-
-        const remaining = store.svGenePairSampleFilters;
-        assert.deepEqual(
-            remaining.map(f => f.uniqueKey),
-            [FUSION_BREAKPOINT_KEY],
-            "the Comparison tab's breakpoint pill must survive"
-        );
-        assert.equal(remaining[0].numSamples, 1);
-        assert.deepEqual(store.selectedSvGenePairKeys, []);
-    });
-
-    it('isChartFiltered is false for the card when only the breakpoint filter exists', () => {
+    it('a labeled filter is listed as a pill with its sample count', () => {
         const store = makeStore();
         store.selectSvGenePairSamples(
             FUSION_BREAKPOINT_KEY,
             breakpointSamples,
             'Breakpoint 1,000-2,000'
         );
-        assert.isFalse((store as any).isChartFiltered(TOP_SV_CARD_KEY));
-
-        store.toggleSvGenePairSamples(GENE_PAIR_KEY, samples, 'GENEA-GENEB');
-        assert.isTrue((store as any).isChartFiltered(TOP_SV_CARD_KEY));
+        assert.deepEqual(store.svGenePairSampleFilters, [
+            {
+                uniqueKey: FUSION_BREAKPOINT_KEY,
+                label: 'Breakpoint 1,000-2,000',
+                numSamples: 1,
+            },
+        ]);
     });
 
-    it('clearSvGenePairSampleFilters leaves the breakpoint filter installed', () => {
+    it('an unlabeled filter gets no pill', () => {
         const store = makeStore();
-        store.toggleSvGenePairSamples(GENE_PAIR_KEY, samples, 'GENEA-GENEB');
+        store.selectSvGenePairSamples(FUSION_BREAKPOINT_KEY, breakpointSamples);
+        assert.deepEqual(store.svGenePairSampleFilters, []);
+    });
+
+    it('removing the pill drops the filter', () => {
+        const store = makeStore();
         store.selectSvGenePairSamples(
             FUSION_BREAKPOINT_KEY,
             breakpointSamples,
             'Breakpoint 1,000-2,000'
         );
-
-        store.clearSvGenePairSampleFilters();
-
-        assert.deepEqual(
-            store.svGenePairSampleFilters.map(f => f.uniqueKey),
-            [FUSION_BREAKPOINT_KEY]
-        );
+        store.removeSvGenePairSampleFilter(FUSION_BREAKPOINT_KEY);
+        assert.deepEqual(store.svGenePairSampleFilters, []);
     });
 
-    it('clearAllFilters still drops the breakpoint filter too', () => {
+    it('clearAllFilters drops the breakpoint filter too', () => {
         const store = makeStore();
-        store.toggleSvGenePairSamples(GENE_PAIR_KEY, samples, 'GENEA-GENEB');
         store.selectSvGenePairSamples(
             FUSION_BREAKPOINT_KEY,
             breakpointSamples,
