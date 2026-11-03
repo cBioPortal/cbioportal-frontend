@@ -8,30 +8,19 @@ import { observer } from 'mobx-react';
 import { action, computed, makeObservable, observable } from 'mobx';
 import { GoslingComponent, GoslingRef, GoslingSpec } from 'gosling.js';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-
-export interface ChromoscopeData {
-    chrom1: string;
-    start1: number;
-    end1: number;
-    chrom2: string;
-    start2: number;
-    end2: number;
-    strand1: string;
-    strand2: string;
-    sv_id: string;
-    svclass: string;
-    [key: string]: any;
-}
+import {
+    ChromoscopeAssembly,
+    GenomeVisualizationSV,
+    SV_CLASS,
+    SvClass,
+} from 'shared/lib/goslingTransforms/goslingStructuralVariantTransform';
 
 interface IChromoscopeViewProps {
     /**
      * Structural variant data in Gosling-compatible format
      */
-    data: ChromoscopeData[];
-    /**
-     * Reference genome assembly version
-     */
-    assembly?: string;
+    data: GenomeVisualizationSV[];
+    assembly: ChromoscopeAssembly;
     /**
      * Currently selected structural variant ID for highlighting
      */
@@ -50,23 +39,47 @@ interface IChromoscopeViewProps {
     isLoading?: boolean;
 }
 
-/**
- * Color scheme for structural variant types
- */
 const GOSLING_PADDING = 3;
 const CIRCULAR_MAX_WIDTH = 400;
 const VIEW_SPACING = 20;
+const SV_ROW_HEIGHT = 50;
 
-const SV_COLORS = {
+export const SV_COLORS: { domain: SvClass[]; range: string[] } = {
     domain: [
-        'Translocation',
-        'Duplication',
-        'Deletion',
-        'Inversion (TtT)',
-        'Inversion (HtH)',
+        SV_CLASS.TRANSLOCATION,
+        SV_CLASS.DUPLICATION,
+        SV_CLASS.DELETION,
+        SV_CLASS.INVERSION_TTT,
+        SV_CLASS.INVERSION_HTH,
+        SV_CLASS.OTHER,
     ],
-    range: ['lightgrey', '#409F7A', '#3275B4', '#CC7DAA', '#E6A01B'],
+    range: ['lightgrey', '#409F7A', '#3275B4', '#CC7DAA', '#E6A01B', '#8C6D46'],
 };
+
+const CYTOBAND_URL: { [assembly in ChromoscopeAssembly]: string } = {
+    hg19:
+        'https://raw.githubusercontent.com/sehilyi/gemini-datasets/master/data/UCSC.HG19.Human.CytoBandIdeogram.csv',
+    hg38:
+        'https://raw.githubusercontent.com/sehilyi/gemini-datasets/master/data/UCSC.HG38.Human.CytoBandIdeogram.csv',
+};
+
+const GENE_ANNOTATION_URL: { [assembly in ChromoscopeAssembly]: string } = {
+    hg19:
+        'https://server.gosling-lang.org/api/v1/tileset_info/?d=gene-annotation-hg19',
+    hg38:
+        'https://server.gosling-lang.org/api/v1/tileset_info/?d=gene-annotation',
+};
+
+const SV_TOOLTIP = [
+    { field: 'sampleId', type: 'nominal', alt: 'Sample' },
+    { field: 'gene1', type: 'nominal', alt: 'Gene 1' },
+    { field: 'start1', type: 'genomic', alt: 'Breakpoint 1' },
+    { field: 'gene2', type: 'nominal', alt: 'Gene 2' },
+    { field: 'start2', type: 'genomic', alt: 'Breakpoint 2' },
+    { field: 'svclass', type: 'nominal', alt: 'Shown as' },
+    { field: 'originalClass', type: 'nominal', alt: 'Class' },
+    { field: 'connectionType', type: 'nominal', alt: 'Connection type' },
+];
 
 /**
  * Gosling theme matching Chromoscope
@@ -102,7 +115,6 @@ export default class ChromoscopeView extends React.Component<
     private resizeObserver: ResizeObserver | undefined;
 
     public static defaultProps: Partial<IChromoscopeViewProps> = {
-        assembly: 'hg38',
         isLoading: false,
     };
 
@@ -173,6 +185,7 @@ export default class ChromoscopeView extends React.Component<
         const linearWidth = width - circularWidth - VIEW_SPACING;
 
         return {
+            assembly: this.props.assembly,
             arrangement: 'horizontal',
             spacing: VIEW_SPACING,
             views: [
@@ -199,10 +212,7 @@ export default class ChromoscopeView extends React.Component<
                     id: 'circular-ideogram',
                     alignment: 'overlay',
                     data: {
-                        url:
-                            this.props.assembly === 'hg38'
-                                ? 'https://raw.githubusercontent.com/sehilyi/gemini-datasets/master/data/UCSC.HG38.Human.CytoBandIdeogram.csv'
-                                : 'https://raw.githubusercontent.com/sehilyi/gemini-datasets/master/data/UCSC.HG19.Human.CytoBandIdeogram.csv',
+                        url: CYTOBAND_URL[this.props.assembly],
                         type: 'csv',
                         chromosomeField: 'Chromosome',
                         genomicFields: ['chromStart', 'chromEnd'],
@@ -323,12 +333,7 @@ export default class ChromoscopeView extends React.Component<
                     },
                     strokeWidth: { value: 1 },
                     opacity: { value: 0.7 },
-                    tooltip: [
-                        { field: 'sv_id', type: 'nominal', alt: 'SV ID' },
-                        { field: 'svclass', type: 'nominal', alt: 'SV Type' },
-                        { field: 'start1', type: 'genomic', alt: 'Position 1' },
-                        { field: 'start2', type: 'genomic', alt: 'Position 2' },
-                    ],
+                    tooltip: SV_TOOLTIP,
                     style: {
                         linkStyle: 'elliptical',
                         linkMinHeight: 0.7,
@@ -358,7 +363,10 @@ export default class ChromoscopeView extends React.Component<
             tracks: [
                 this.generateLinearIdeogramTrack(width, 18),
                 this.generateGeneTrack(width, 60),
-                this.generateLinearSVTrack(width, 250),
+                this.generateLinearSVTrack(
+                    width,
+                    SV_ROW_HEIGHT * SV_COLORS.domain.length
+                ),
             ],
         };
     }
@@ -372,10 +380,7 @@ export default class ChromoscopeView extends React.Component<
             title: '  Ideogram',
             alignment: 'overlay',
             data: {
-                url:
-                    this.props.assembly === 'hg38'
-                        ? 'https://raw.githubusercontent.com/sehilyi/gemini-datasets/master/data/UCSC.HG38.Human.CytoBandIdeogram.csv'
-                        : 'https://raw.githubusercontent.com/sehilyi/gemini-datasets/master/data/UCSC.HG19.Human.CytoBandIdeogram.csv',
+                url: CYTOBAND_URL[this.props.assembly],
                 type: 'csv',
                 chromosomeField: 'Chromosome',
                 genomicFields: ['chromStart', 'chromEnd'],
@@ -447,10 +452,7 @@ export default class ChromoscopeView extends React.Component<
             title: '  Gene Annotation',
             template: 'gene',
             data: {
-                url:
-                    this.props.assembly === 'hg19'
-                        ? 'https://server.gosling-lang.org/api/v1/tileset_info/?d=gene-annotation-hg19'
-                        : 'https://server.gosling-lang.org/api/v1/tileset_info/?d=gene-annotation',
+                url: GENE_ANNOTATION_URL[this.props.assembly],
                 type: 'beddb',
                 genomicFields: [
                     { index: 1, name: 'start' },
@@ -494,21 +496,21 @@ export default class ChromoscopeView extends React.Component<
      */
     private generateLinearSVTrack(width: number, height: number) {
         const TRI_SIZE = 5;
-        const baselineYMap: { [k: string]: { y: number; ye: number } } = {
-            Translocation: { y: (height / 5) * 4, ye: height },
-            Deletion: { y: height / 5, ye: 1 },
-            Duplication: { y: height / 5, ye: (height / 5) * 2 },
-            'Inversion (TtT)': { y: (height / 5) * 3, ye: (height / 5) * 2 },
-            'Inversion (HtH)': { y: (height / 5) * 3, ye: (height / 5) * 4 },
+        const row = height / 6;
+        // each pair of classes shares a baseline, drawn above and below it
+        const baselineYMap: { [k in SvClass]: { y: number; ye: number } } = {
+            [SV_CLASS.DELETION]: { y: row, ye: 1 },
+            [SV_CLASS.DUPLICATION]: { y: row, ye: row * 2 },
+            [SV_CLASS.INVERSION_TTT]: { y: row * 3, ye: row * 2 },
+            [SV_CLASS.INVERSION_HTH]: { y: row * 3, ye: row * 4 },
+            [SV_CLASS.OTHER]: { y: row * 5, ye: row * 4 },
+            [SV_CLASS.TRANSLOCATION]: { y: row * 5, ye: height },
         };
 
         const svTracks = [];
 
         for (const svType of SV_COLORS.domain) {
-            const baseline = baselineYMap[svType];
-            if (!baseline) continue;
-
-            const { y, ye } = baseline;
+            const { y, ye } = baselineYMap[svType];
 
             svTracks.push(
                 {
@@ -673,7 +675,7 @@ export default class ChromoscopeView extends React.Component<
             },
             mark: 'withinLink',
             tracks: svTracks,
-            y: { value: height / 5 },
+            y: { value: row },
             color: {
                 field: 'svclass',
                 type: 'nominal',
@@ -689,14 +691,7 @@ export default class ChromoscopeView extends React.Component<
             },
             strokeWidth: { value: 1 },
             opacity: { value: 0.7 },
-            tooltip: [
-                { field: 'start1', type: 'genomic' },
-                { field: 'end2', type: 'genomic' },
-                { field: 'strand1', type: 'nominal' },
-                { field: 'strand2', type: 'nominal' },
-                { field: 'svclass', type: 'nominal' },
-                { field: 'sv_id', type: 'nominal' },
-            ],
+            tooltip: SV_TOOLTIP,
             style: {
                 linkStyle: 'elliptical',
                 linkMinHeight: 0.7,

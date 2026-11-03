@@ -16,12 +16,7 @@ import {
 } from 'shared/lib/AnnotationColumnUtils';
 import { MakeMobxView } from 'shared/components/MobxView';
 import ErrorMessage from 'shared/components/ErrorMessage';
-import ChromoscopeView from 'shared/components/chromoscope/ChromoscopeView';
-import {
-    filterStructuralVariantsByGene,
-    GenomeVisualizationSV,
-    transformStructuralVariantsForVisualization,
-} from 'shared/lib/goslingTransforms/goslingStructuralVariantTransform';
+import StructuralVariantChromoscope from './StructuralVariantChromoscope';
 
 export interface IFusionMapperProps {
     store: ResultsViewStructuralVariantMapperStore;
@@ -61,15 +56,6 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
         return `Structural Variants${multipleStructuralVariantInfo}`;
     }
 
-    @computed get chromoscopeData(): GenomeVisualizationSV[] {
-        return filterStructuralVariantsByGene(
-            transformStructuralVariantsForVisualization(
-                this.props.store.fusions
-            ),
-            this.props.store.gene.hugoGeneSymbol
-        );
-    }
-
     tableUI = MakeMobxView({
         await: () => [
             this.props.store.studyIdToStudy,
@@ -79,9 +65,9 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
         render: () => {
             return (
                 <>
-                    <ChromoscopeView
-                        data={this.chromoscopeData}
-                        assembly="hg38"
+                    <StructuralVariantChromoscope
+                        structuralVariants={this.props.store.fusions}
+                        studyIdToStudy={this.props.store.studyIdToStudy.result!}
                     />
                     <ResultsViewStructuralVariantTable
                         dataStore={this.props.store.dataStore}
