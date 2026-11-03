@@ -47,6 +47,9 @@ function makeEvent(overrides: Partial<FusionEvent> = {}): FusionEvent {
         significance: 'NA',
         note: '',
         connectionType: '5to3',
+        svIdiom: 'INTERGENIC_FUSION',
+        frame: 'IN_FRAME',
+        isRnaDerived: true,
         ...overrides,
     };
 }
@@ -745,6 +748,9 @@ describe('buildSampleRows', () => {
             significance: 'NA',
             note: '',
             connectionType: '',
+            svIdiom: 'INTERGENIC_FUSION' as const,
+            frame: 'IN_FRAME' as const,
+            isRnaDerived: true,
         };
 
         const rows1 = buildSampleRows([

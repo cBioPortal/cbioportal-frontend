@@ -12,6 +12,7 @@ const USER_ROW_Y = 36 + 48;
 
 function makeTranscript(id: string, isForte: boolean): TranscriptData {
     return {
+        genomeBuild: 'GRCh38',
         transcriptId: id,
         displayName: id,
         gene: 'GENE_A',

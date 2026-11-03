@@ -37,6 +37,8 @@ function makeTx(
         txEnd,
         exons: [{ number: 1, start: txStart, end: txEnd }],
         isForteSelected: true,
+        isCallerSelected: true,
+        isCanonical: true,
         domains: [],
         utrs: [],
     };

@@ -46,15 +46,35 @@ export function buildComparisonRows(
         );
     };
 
-    return events.filter(matches).map(e => ({
+    const matched = events.filter(matches);
+    // A row is drawn at its breakpoint coordinates, so an event whose source
+    // reported no position (-1/null → undefined) cannot be placed. Exclude it
+    // and say how many, rather than plotting it at a made-up coordinate.
+    const placeable = matched.filter(hasBreakpointPositions);
+    if (placeable.length < matched.length) {
+        console.warn(
+            `Fusion comparison: ${matched.length -
+                placeable.length} event(s) without a breakpoint position were excluded`
+        );
+    }
+
+    return placeable.map(e => ({
         event: e,
         sampleId: e.tumorId,
         fivePrimeSymbol: e.gene1.symbol,
         threePrimeSymbol: e.gene2 ? e.gene2.symbol : null,
-        anchorBreakpoint: e.gene1.position,
-        partnerBreakpoint: e.gene2 ? e.gene2.position : null,
+        anchorBreakpoint: e.gene1.position!,
+        partnerBreakpoint: e.gene2 ? e.gene2.position! : null,
         frame: classifyFrame(e.frameCallMethod),
     }));
+}
+
+/** True when every site the event names has a reported breakpoint position. */
+export function hasBreakpointPositions(e: FusionEvent): boolean {
+    return (
+        e.gene1.position !== undefined &&
+        (!e.gene2 || e.gene2.position !== undefined)
+    );
 }
 
 /**
@@ -84,12 +104,14 @@ export function resolveComparisonRows(
             resolved.fivePrime.symbol !== stated;
         const five = swap ? resolved.threePrime! : resolved.fivePrime;
         const three = swap ? resolved.fivePrime : resolved.threePrime;
+        // Rows come from buildComparisonRows, which only admits events whose
+        // sites all have positions, so the resolved partners do too.
         return {
             ...row,
             fivePrimeSymbol: five.symbol,
             threePrimeSymbol: three ? three.symbol : null,
-            anchorBreakpoint: five.position,
-            partnerBreakpoint: three ? three.position : null,
+            anchorBreakpoint: five.position!,
+            partnerBreakpoint: three ? three.position! : null,
         };
     });
 }

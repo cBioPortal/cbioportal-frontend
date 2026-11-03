@@ -943,6 +943,10 @@ describe('FusionCohortStore pair facet', () => {
                     id: `${sample}-${g1[0]}-${g2[0]}`,
                     tumorId: sample,
                     connectionType: '3to5',
+                    // A same-chromosome DNA SV: the resolver keeps an RNA
+                    // caller's (or a cross-chromosome) order as stated, so only
+                    // this case is re-derived from strand + position.
+                    isRnaDerived: false,
                     gene1: {
                         ...makeEvent().gene1,
                         symbol: g1[0],
@@ -950,6 +954,7 @@ describe('FusionCohortStore pair facet', () => {
                     },
                     gene2: {
                         ...makeEvent().gene2!,
+                        chromosome: makeEvent().gene1.chromosome,
                         symbol: g2[0],
                         position: g2[1],
                     },

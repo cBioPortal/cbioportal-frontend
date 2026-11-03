@@ -115,18 +115,19 @@ export function eventInBreakpointRegion(
 
     const { chromosome, start, end } = region;
 
+    // A site with no reported position cannot be inside any region.
+    const inRegion = (pos: number | undefined) =>
+        pos !== undefined && pos >= start && pos <= end;
+
     const site1Match =
-        event.gene1.chromosome === chromosome &&
-        event.gene1.position >= start &&
-        event.gene1.position <= end;
+        event.gene1.chromosome === chromosome && inRegion(event.gene1.position);
 
     if (site1Match) return true;
 
     if (event.gene2) {
         const site2Match =
             event.gene2.chromosome === chromosome &&
-            event.gene2.position >= start &&
-            event.gene2.position <= end;
+            inRegion(event.gene2.position);
         if (site2Match) return true;
     }
 

@@ -12984,7 +12984,7 @@ export class StudyViewPageStore
             ) {
                 return [];
             }
-            const studyIdToProfileMap = this
+            const studyIdToProfileMap = this.plotsTabStore
                 .studyToStructuralVariantMolecularProfile.result;
             const sampleMolecularIdentifiers = this.selectedSamples.result.reduce(
                 (memo, sample: Sample) => {
