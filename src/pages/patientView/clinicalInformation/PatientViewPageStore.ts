@@ -30,7 +30,13 @@ import { getClient } from '../../../shared/api/cbioportalClientInstance';
 import { PatientViewPlotsStore } from './PatientViewPlotsStore';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
 import oncokbClient from '../../../shared/api/oncokbClientInstance';
-import { computed, observable, action, makeObservable } from 'mobx';
+import {
+    computed,
+    observable,
+    action,
+    makeObservable,
+    runInAction,
+} from 'mobx';
 import {
     cached,
     remoteData,
@@ -307,6 +313,14 @@ export function buildCohortIdsFromNavCaseIds(
         return navCaseId.studyId + ':' + navCaseId.patientId;
     });
 }
+
+// Score in chunks to not stall page load
+export const ALPHA_GENOME_SCORING_CHUNK_SIZE = 16;
+
+export type AlphaGenomeScoringProgress = {
+    done: number;
+    total: number;
+};
 
 export function handlePathologyReportCheckResponse(
     patientId: string,
@@ -1923,6 +1937,97 @@ export class PatientViewPageStore {
             return getMyVariantInfoAnnotationsFromIndexedVariantAnnotations(
                 indexedVariantAnnotations
             );
+        },
+        onError: () => {
+            // fail silently, leave the error handling responsibility to the data consumer
+        },
+    });
+
+    // Click triggers batched scoring for variants
+    @observable public isAlphaGenomeTriggered = false;
+    @observable public isAlphaGenomeScoring = false;
+    @observable.shallow public streamingAlphaGenomeAnnotations: {
+        [genomicLocation: string]: VariantAnnotation;
+    } = {};
+    @observable public alphaGenomeProgress: AlphaGenomeScoringProgress = {
+        done: 0,
+        total: 0,
+    };
+
+    @action.bound
+    public triggerAlphaGenomeScoring(): void {
+        // Gate on serverConfig, defaulting on for local dev — TBD to remove before PR merge
+        if (
+            !getServerConfig().show_alphagenome ||
+            this.isAlphaGenomeTriggered
+        ) {
+            return;
+        }
+        this.isAlphaGenomeTriggered = true;
+        this.isAlphaGenomeScoring = true;
+        this.streamingAlphaGenomeAnnotations = {};
+        this.alphaGenomeProgress = {
+            done: 0,
+            total: concatMutationData(
+                this.mutationData,
+                this.uncalledMutationData
+            ).length,
+        };
+    }
+
+    readonly indexedAlphaGenomeAnnotations = remoteData<
+        { [genomicLocation: string]: VariantAnnotation } | undefined
+    >({
+        await: () => [this.mutationData, this.uncalledMutationData],
+        invoke: async () => {
+            if (!this.isAlphaGenomeTriggered) {
+                return undefined;
+            }
+            const mutations = concatMutationData(
+                this.mutationData,
+                this.uncalledMutationData
+            );
+            const merged: {
+                [genomicLocation: string]: VariantAnnotation;
+            } = {};
+            try {
+                for (
+                    let i = 0;
+                    i < mutations.length;
+                    i += ALPHA_GENOME_SCORING_CHUNK_SIZE
+                ) {
+                    const chunk = mutations.slice(
+                        i,
+                        i + ALPHA_GENOME_SCORING_CHUNK_SIZE
+                    );
+                    const indexed = await fetchVariantAnnotationsIndexedByGenomicLocation(
+                        chunk,
+                        [GENOME_NEXUS_ARG_FIELD_ENUM.ALPHA_GENOME],
+                        getServerConfig().genomenexus_isoform_override_source,
+                        this.genomeNexusClient
+                    );
+                    const done = Math.min(i + chunk.length, mutations.length);
+                    runInAction(() => {
+                        if (indexed) {
+                            Object.assign(
+                                this.streamingAlphaGenomeAnnotations,
+                                indexed
+                            );
+                            Object.assign(merged, indexed);
+                        }
+                        this.isAlphaGenomeScoring = true;
+                        this.alphaGenomeProgress = {
+                            done,
+                            total: mutations.length,
+                        };
+                    });
+                }
+            } finally {
+                runInAction(() => {
+                    this.isAlphaGenomeScoring = false;
+                });
+            }
+            return merged;
         },
         onError: () => {
             // fail silently, leave the error handling responsibility to the data consumer
