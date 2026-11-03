@@ -595,4 +595,57 @@ describe('CancerHotspotsUtils', () => {
             );
         });
     });
+    describe('missing fields in the Genome Nexus response', () => {
+        const mutation = {
+            chr: '17',
+            startPosition: 66,
+            endPosition: 66,
+            referenceAllele: 'A',
+            variantAllele: 'T',
+        } as any;
+
+        it('ignores an aggregated entry that has no hotspots array', () => {
+            const index = indexHotspots([
+                {
+                    genomicLocation: {
+                        chromosome: '17',
+                        start: 66,
+                        end: 66,
+                        referenceAllele: 'A',
+                        variantAllele: 'T',
+                    },
+                } as any,
+            ]);
+
+            assert.isFalse(isHotspot(mutation, index));
+            assert.isFalse(isLinearClusterHotspot(mutation, index));
+            assert.isFalse(is3dHotspot(mutation, index));
+        });
+
+        it('ignores a hotspot that has no type', () => {
+            const index = indexHotspots([
+                {
+                    genomicLocation: {
+                        chromosome: '17',
+                        start: 66,
+                        end: 66,
+                        referenceAllele: 'A',
+                        variantAllele: 'T',
+                    },
+                    hotspots: [{ hugoSymbol: 'TP53', version: 'v3' }],
+                } as any,
+            ]);
+
+            assert.isFalse(defaultHotspotFilter({ hugoSymbol: 'TP53' } as any));
+            assert.isFalse(isLinearClusterHotspot(mutation, index));
+            assert.isFalse(is3dHotspot(mutation, index));
+        });
+
+        it('still resolves hotspots when the fields are populated', () => {
+            assert.isTrue(
+                isLinearClusterHotspot(hotspotMutation1, hotspotIndex),
+                'a fully populated payload is unaffected by the guards'
+            );
+        });
+    });
 });
