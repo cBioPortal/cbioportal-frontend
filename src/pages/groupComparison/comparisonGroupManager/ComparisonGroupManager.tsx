@@ -17,6 +17,7 @@ import {
 import styles, { sharedGroup } from '../styles.module.scss';
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
 import {
+    filterGroupsByName,
     getGroupParameters,
     getSelectedGroups,
 } from './ComparisonGroupManagerUtils';
@@ -71,12 +72,9 @@ export default class ComparisonGroupManager extends React.Component<
         await: () => [this.props.store.comparisonGroups],
         invoke: () =>
             Promise.resolve(
-                // TODO: fuzzy string search?
-                _.sortBy(
-                    this.props.store.comparisonGroups.result!.filter(group =>
-                        new RegExp(this.groupNameFilter, 'i').test(group.name)
-                    ),
-                    group => group.name.toLowerCase()
+                filterGroupsByName(
+                    this.props.store.comparisonGroups.result!,
+                    this.groupNameFilter
                 )
             ),
     });
