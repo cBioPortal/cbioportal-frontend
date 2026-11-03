@@ -136,7 +136,9 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 selectedPoints,
                 this.props.selectedPatientIds || [],
                 this.onHover,
-                this.onClick
+                this.onClick,
+                this.props.pointScale,
+                this.props.contextPointBoost
             ),
         ];
     }

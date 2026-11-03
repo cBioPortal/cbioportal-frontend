@@ -40,6 +40,9 @@ import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
+import PatientSimilarityMap from './similarityMap/PatientSimilarityMap';
+import { getEmbeddingOptionsForSamples } from './similarityMap/PatientSimilarityMapUtils';
+import { getLoadedEmbeddingOptions } from 'shared/components/embeddings/embeddingSources';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -54,6 +57,7 @@ export enum PatientViewPageTabs {
     PathwayMapper = 'pathways',
     MRNA = 'mrna',
     Plots = 'plots',
+    SimilarityMap = 'similarityMap',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -807,6 +811,40 @@ export function tabs(
                         center={true}
                     />
                 )}
+            </MSKTab>
+        );
+    }
+
+    // Behind the EMBEDDINGS flag, like the study view's Similarity Maps tab.
+    // Shown once a loaded map holds one of this patient's samples, or at once
+    // when deep-linked so the link doesn't fall back to Summary meanwhile.
+    if (
+        sampleManager &&
+        pageComponent.props.appStore.featureFlagStore.has(
+            FeatureFlagEnum.EMBEDDINGS
+        ) &&
+        (urlWrapper.activeTabId === PatientViewPageTabs.SimilarityMap ||
+            getEmbeddingOptionsForSamples(
+                getLoadedEmbeddingOptions(),
+                pageComponent.patientViewPageStore.studyId,
+                sampleManager.getSampleIdsInOrder()
+            ).length > 0)
+    ) {
+        tabs.push(
+            <MSKTab
+                key={11}
+                id={PatientViewPageTabs.SimilarityMap}
+                linkText={
+                    <span>
+                        Similarity Map{' '}
+                        <strong className={'beta-text'}>Beta!</strong>
+                    </span>
+                }
+            >
+                <PatientSimilarityMap
+                    studyId={pageComponent.patientViewPageStore.studyId}
+                    sampleManager={sampleManager}
+                />
             </MSKTab>
         );
     }
