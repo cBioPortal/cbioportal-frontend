@@ -338,6 +338,7 @@ export function makeHeatmapTrackTooltip(
         const profileCategories: string[] = [];
         let profileDataCount = 0;
         let categoryCount = 0;
+        const contradictoryValueLists: number[][] = [];
         for (const d of dataUnderMouse) {
             if (
                 d.profile_data !== null &&
@@ -354,6 +355,11 @@ export function makeHeatmapTrackTooltip(
                     profileDataSum += d.profile_data;
                     profileDataCount += 1;
                 }
+            } else if (
+                d.contradictoryValues &&
+                d.contradictoryValues.length > 0
+            ) {
+                contradictoryValueLists.push(d.contradictoryValues);
             }
         }
 
@@ -381,14 +387,26 @@ export function makeHeatmapTrackTooltip(
         }
 
         let ret = data_header;
-        if (valueTextElement !== tooltipTextElementNaN || categoryCount === 0) {
-            ret += '<b>' + valueTextElement + '</b>';
-        }
-        if (valueTextElement !== tooltipTextElementNaN && categoryCount > 0) {
-            ret += ' and ';
-        }
-        if (categoryCount > 0) {
-            ret += '<b>' + categoryTextElement + '</b>';
+        if (contradictoryValueLists.length > 0 && profileDataCount === 0) {
+            const allValues = _.flatten(contradictoryValueLists);
+            const formatted = allValues.map(v => v.toFixed(2)).join(', ');
+            ret += `<b>contradictory values (${formatted})</b>`;
+        } else {
+            if (
+                valueTextElement !== tooltipTextElementNaN ||
+                categoryCount === 0
+            ) {
+                ret += '<b>' + valueTextElement + '</b>';
+            }
+            if (
+                valueTextElement !== tooltipTextElementNaN &&
+                categoryCount > 0
+            ) {
+                ret += ' and ';
+            }
+            if (categoryCount > 0) {
+                ret += '<b>' + categoryTextElement + '</b>';
+            }
         }
         ret += '<br />';
         return $('<div>')

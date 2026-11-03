@@ -107,6 +107,7 @@ export interface IBaseHeatmapTrackDatum {
     na?: boolean;
     category?: string;
     thresholdType?: '>' | '<';
+    contradictoryValues?: number[];
 }
 export interface IGeneHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
     hugo_gene_symbol: string;
