@@ -32,6 +32,8 @@ export interface IAddChartByTypeProps {
     width?: number;
     firstColumnHeaderName?: string;
     hideControls?: boolean;
+    // focus the search box when the table mounts
+    autoFocusSearch?: boolean;
     shareCharts?: (chartIds: string[]) => void;
     deleteChart?: (chartId: string) => void;
     restoreChart?: (chartId: string) => void;
@@ -54,6 +56,7 @@ export default class AddChartByType extends React.Component<
     public static defaultProps = {
         firstColumnHeaderName: 'Name',
         hideControls: false,
+        autoFocusSearch: true,
         width: 400,
     };
 
@@ -372,7 +375,9 @@ export default class AddChartByType extends React.Component<
                         removeAll={this.removeAll}
                         showSelectableNumber={true}
                         showAddRemoveAllButton={true}
-                        autoFocusSearchAfterRendering={true}
+                        autoFocusSearchAfterRendering={
+                            this.props.autoFocusSearch
+                        }
                         numberOfSelectedRows={
                             this.getCurrentSelectedRows().length
                         }
