@@ -5,6 +5,7 @@ import SampleSummaryList from 'pages/patientView/sampleHeader/SampleSummaryList'
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
 import { IGenePanelModal } from 'pages/patientView/PatientViewPage';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
+import MFPClassBar from 'pages/patientView/signatureData/MFPClassBar';
 
 interface IPatientPageHeaderProps {
     handlePatientClick: (id: string) => void;
@@ -71,6 +72,12 @@ const PatientViewPageHeader: React.FC<IPatientPageHeaderProps> = observer(
                                     />
                                 )}
                             </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Immune Signature:</td>
+                        <td>
+                            <MFPClassBar />
                         </td>
                     </tr>
                 </table>

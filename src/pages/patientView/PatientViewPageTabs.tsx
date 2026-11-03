@@ -40,6 +40,8 @@ import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
+import ExpressionTableWrapper from './expression/ExpressionTableWrapper';
+import SignatureDataTab from './signatureData/SignatureDataTab';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -54,6 +56,8 @@ export enum PatientViewPageTabs {
     PathwayMapper = 'pathways',
     MRNA = 'mrna',
     Plots = 'plots',
+    Expression = 'expression',
+    HelloWorld = 'helloWorld',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -544,6 +548,48 @@ export function tabs(
         expressionTabsEnabled &&
         (activeTabIsExpressionTab ||
             (mrnaProfilePromise.isComplete && !!mrnaProfilePromise.result));
+    pageComponent.patientViewPageStore.isExpressionProfiledForPatient
+        .isComplete &&
+        pageComponent.patientViewPageStore.isExpressionProfiledForPatient
+            .result &&
+        tabs.push(
+            <MSKTab
+                key={11}
+                id={PatientViewPageTabs.Expression}
+                linkText={'Expression'}
+            >
+                {pageComponent.patientViewPageStore
+                    .mrnaExpressionDataByGeneThenProfile.isComplete &&
+                pageComponent.patientViewPageStore
+                    .proteinExpressionDataByGeneThenProfile.isComplete &&
+                pageComponent.patientViewPageStore.mutationData.isComplete &&
+                pageComponent.patientViewPageStore.structuralVariantData
+                    .isComplete &&
+                pageComponent.patientViewPageStore.cnaDataByGeneThenProfile
+                    .isComplete &&
+                pageComponent.patientViewPageStore.allEntrezGeneIdsToGene
+                    .isComplete &&
+                pageComponent.patientViewPageStore.allHugoGeneSymbolsToGene
+                    .isComplete &&
+                pageComponent.patientViewPageStore
+                    .analysisMrnaExpressionProfiles.isComplete &&
+                pageComponent.patientViewPageStore
+                    .analysisProteinExpressionProfiles.isComplete ? (
+                    <ExpressionTableWrapper
+                        store={pageComponent.patientViewPageStore}
+                        mergeOncoKbIcons={
+                            pageComponent.mergeMutationTableOncoKbIcons
+                        }
+                    />
+                ) : (
+                    <LoadingIndicator
+                        isLoading={true}
+                        size={'big'}
+                        center={true}
+                    />
+                )}
+            </MSKTab>
+        );
 
     tabs.push(
         <MSKTab
@@ -810,6 +856,16 @@ export function tabs(
             </MSKTab>
         );
     }
+
+    tabs.push(
+        <MSKTab
+            key={12}
+            id={PatientViewPageTabs.HelloWorld}
+            linkText="Hello World"
+        >
+            <SignatureDataTab />
+        </MSKTab>
+    );
 
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */
