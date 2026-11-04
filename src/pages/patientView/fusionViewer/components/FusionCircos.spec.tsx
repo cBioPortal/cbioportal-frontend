@@ -1,0 +1,236 @@
+import * as React from 'react';
+import { assert } from 'chai';
+import { mount } from 'enzyme';
+import sinon from 'sinon';
+import { FusionCircos } from './FusionCircos';
+import { FusionEvent } from '../data/types';
+
+function makeFusion(overrides: Partial<FusionEvent> = {}): FusionEvent {
+    return {
+        id: 'fusion-1',
+        tumorId: 'tumor-1',
+        gene1: {
+            symbol: 'TMPRSS2',
+            chromosome: '21',
+            position: 42880000,
+            selectedTranscriptId: 'ENST_A',
+            siteDescription: 'exon',
+        },
+        gene2: {
+            symbol: 'ERG',
+            chromosome: '21',
+            position: 39956000,
+            selectedTranscriptId: 'ENST_B',
+            siteDescription: 'exon',
+        },
+        fusion: 'TMPRSS2::ERG',
+        totalReadSupport: 10,
+        callMethod: '',
+        frameCallMethod: '',
+        annotation: '',
+        position: '',
+        significance: 'NA',
+        note: '',
+        connectionType: '5to3',
+        svIdiom: 'INTRACHROM_FUSION',
+        frame: 'UNKNOWN',
+        isRnaDerived: true,
+        ...overrides,
+    };
+}
+
+describe('FusionCircos', () => {
+    it('renders one arc <path> per mappable fusion', () => {
+        const fusions = [
+            makeFusion({ id: 'f1' }),
+            makeFusion({
+                id: 'f2',
+                gene2: { ...makeFusion().gene2!, chromosome: '9' },
+            }),
+        ];
+        const wrapper = mount(
+            <FusionCircos
+                fusions={fusions}
+                selectedFusionId="f1"
+                genomeBuild="GRCh38"
+                onSelectFusion={() => {}}
+            />
+        );
+        assert.equal(wrapper.find('[data-testid="circos-arc"]').length, 2);
+    });
+
+    it('skips a fusion with gene2 === null (no chord drawn)', () => {
+        const fusions = [
+            makeFusion({ id: 'f1' }),
+            makeFusion({ id: 'f2', gene2: null, svIdiom: 'INTERGENIC_REGION' }),
+        ];
+        const wrapper = mount(
+            <FusionCircos
+                fusions={fusions}
+                selectedFusionId="f1"
+                genomeBuild="GRCh38"
+                onSelectFusion={() => {}}
+            />
+        );
+        assert.equal(wrapper.find('[data-testid="circos-arc"]').length, 1);
+    });
+
+    it('skips a fusion whose chromosome is unmappable', () => {
+        const fusions = [
+            makeFusion({
+                id: 'f1',
+                gene1: { ...makeFusion().gene1, chromosome: 'GL000220.1' },
+            }),
+        ];
+        const wrapper = mount(
+            <FusionCircos
+                fusions={fusions}
+                selectedFusionId=""
+                genomeBuild="GRCh38"
+                onSelectFusion={() => {}}
+            />
+        );
+        assert.equal(wrapper.find('[data-testid="circos-arc"]').length, 0);
+    });
+
+    it('renders the selected fusion arc at full opacity and thicker stroke than an unselected one', () => {
+        const fusions = [makeFusion({ id: 'f1' }), makeFusion({ id: 'f2' })];
+        const wrapper = mount(
+            <FusionCircos
+                fusions={fusions}
+                selectedFusionId="f1"
+                genomeBuild="GRCh38"
+                onSelectFusion={() => {}}
+            />
+        );
+        const selected = wrapper
+            .find('[data-testid="circos-arc"]')
+            .filterWhere(n => n.prop('data-fusion-id') === 'f1');
+        const unselected = wrapper
+            .find('[data-testid="circos-arc"]')
+            .filterWhere(n => n.prop('data-fusion-id') === 'f2');
+
+        assert.equal(selected.prop('strokeOpacity'), 1);
+        assert.isBelow(unselected.prop('strokeOpacity') as number, 1);
+        // Selected arc is thicker than an unselected one (exact widths are a
+        // styling detail).
+        assert.isAbove(
+            selected.prop('strokeWidth') as number,
+            unselected.prop('strokeWidth') as number
+        );
+    });
+
+    it('colors and pulses only the selected arc and its breakpoint dots', () => {
+        const fusions = [makeFusion({ id: 'f1' }), makeFusion({ id: 'f2' })];
+        const wrapper = mount(
+            <FusionCircos
+                fusions={fusions}
+                selectedFusionId="f1"
+                genomeBuild="GRCh38"
+                onSelectFusion={() => {}}
+            />
+        );
+        const arc = (id: string) =>
+            wrapper
+                .find('path[data-testid="circos-arc"]')
+                .filterWhere(n => n.prop('data-fusion-id') === id);
+        assert.equal(arc('f1').prop('stroke'), '#FF8C00');
+        assert.notEqual(arc('f2').prop('stroke'), '#FF8C00');
+        assert.isOk(arc('f1').prop('className'));
+        assert.isNotOk(arc('f2').prop('className'));
+        const dots = wrapper.find('circle');
+        assert.equal(dots.length, 2);
+        dots.forEach(d => assert.equal(d.prop('fill'), '#FF8C00'));
+    });
+
+    it('calls onSelectFusion with the clicked fusion id', () => {
+        const onSelectFusion = sinon.spy();
+        const fusions = [makeFusion({ id: 'f1' })];
+        const wrapper = mount(
+            <FusionCircos
+                fusions={fusions}
+                selectedFusionId=""
+                genomeBuild="GRCh38"
+                onSelectFusion={onSelectFusion}
+            />
+        );
+        wrapper
+            .find('[data-testid="circos-arc"]')
+            .first()
+            .simulate('click');
+        assert.isTrue(onSelectFusion.calledOnceWith('f1'));
+    });
+
+    it('does not move arc nodes in the DOM on hover', () => {
+        // Moving the node under the cursor makes the browser drop its
+        // mouseleave, which leaves that arc's tooltip stuck open.
+        const fusions = [
+            makeFusion({ id: 'f1' }),
+            makeFusion({ id: 'f2' }),
+            makeFusion({ id: 'f3' }),
+        ];
+        const wrapper = mount(
+            <FusionCircos
+                fusions={fusions}
+                selectedFusionId="f1"
+                genomeBuild="GRCh38"
+                onSelectFusion={() => {}}
+            />
+        );
+        const domOrder = () =>
+            Array.from(
+                wrapper
+                    .getDOMNode()
+                    .querySelectorAll('path[data-testid="circos-arc"]')
+            ).map(n => n.getAttribute('data-fusion-id'));
+        const before = domOrder();
+        wrapper
+            .find('path[data-testid="circos-arc"]')
+            .filterWhere(n => n.prop('data-fusion-id') === 'f2')
+            .simulate('mouseenter');
+        assert.deepEqual(domOrder(), before);
+    });
+
+    it('draws a non-interactive highlight of the hovered arc below the selected arc', () => {
+        const fusions = [makeFusion({ id: 'f1' }), makeFusion({ id: 'f2' })];
+        const wrapper = mount(
+            <FusionCircos
+                fusions={fusions}
+                selectedFusionId="f1"
+                genomeBuild="GRCh38"
+                onSelectFusion={() => {}}
+            />
+        );
+        wrapper
+            .find('path[data-testid="circos-arc"]')
+            .filterWhere(n => n.prop('data-fusion-id') === 'f2')
+            .simulate('mouseenter');
+        const paths = Array.from(
+            wrapper.getDOMNode().querySelectorAll('path[data-fusion-id]')
+        );
+        const hover = paths.findIndex(
+            p => p.getAttribute('data-testid') === 'circos-arc-hover'
+        );
+        const selected = paths.findIndex(
+            p =>
+                p.getAttribute('data-testid') === 'circos-arc' &&
+                p.getAttribute('data-fusion-id') === 'f1'
+        );
+        assert.isAtLeast(hover, 0);
+        assert.equal(paths[hover].getAttribute('data-fusion-id'), 'f2');
+        assert.equal(paths[hover].getAttribute('pointer-events'), 'none');
+        assert.isBelow(hover, selected);
+    });
+
+    it('renders without error for an empty fusions list', () => {
+        const wrapper = mount(
+            <FusionCircos
+                fusions={[]}
+                selectedFusionId=""
+                genomeBuild="GRCh38"
+                onSelectFusion={() => {}}
+            />
+        );
+        assert.equal(wrapper.find('[data-testid="circos-arc"]').length, 0);
+    });
+});

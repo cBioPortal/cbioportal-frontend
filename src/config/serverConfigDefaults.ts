@@ -187,6 +187,8 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     enable_cross_study_expression: undefined,
 
+    fusion_viewer_study_ids: 'msk_impact_50k_2026',
+
     clinical_attribute_product_limit: 6500000,
 
     skin_show_gsva: false,

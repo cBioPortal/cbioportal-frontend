@@ -28,6 +28,7 @@ import { MutationStatus } from 'react-mutation-mapper';
 import { getSamplesProfiledStatus } from 'pages/patientView/PatientViewPageUtils';
 import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
+import { classifyFrameStatus } from 'pages/patientView/fusionViewer/data/frameStatus';
 import { createNamespaceColumns } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 import CustomDriverTierColumnFormatter from './column/CustomDriverTierColumnFormatter';
 import CustomDriverColumnFormatter from './column/CustomDriverColumnFormatter';
@@ -496,6 +497,27 @@ export default class StructuralVariantTableWrapper extends React.Component<
                 sortBy: (d: StructuralVariant[]) => d[0].eventInfo,
                 visible: true,
                 order: 66,
+            });
+
+            columns.push({
+                name: 'Effect on Frame',
+                render: (d: StructuralVariant[]) => {
+                    const f = classifyFrameStatus(d[0].site2EffectOnFrame);
+                    return (
+                        <span style={{ color: f.color }} title={f.label}>
+                            {f.icon} {d[0].site2EffectOnFrame || 'NA'}
+                        </span>
+                    );
+                },
+                download: (d: StructuralVariant[]) =>
+                    d[0].site2EffectOnFrame || '',
+                sortBy: (d: StructuralVariant[]) =>
+                    d[0].site2EffectOnFrame || '',
+                filter: (d: StructuralVariant[], _f: string, up: string) =>
+                    (d[0].site2EffectOnFrame || '').toUpperCase().indexOf(up) >
+                    -1,
+                visible: true,
+                order: 67,
             });
 
             columns.push({
