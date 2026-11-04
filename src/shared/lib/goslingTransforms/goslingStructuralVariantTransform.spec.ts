@@ -1,7 +1,10 @@
 import { assert } from 'chai';
 import { CancerStudy, StructuralVariant } from 'cbioportal-ts-api-client';
 import {
+    geneSideChromosome,
     getChromoscopeAssembly,
+    getChromoscopeXDomain,
+    GenomeVisualizationSV,
     groupStructuralVariantsByAssembly,
     inferSvClass,
     normalizeChromosome,
@@ -166,6 +169,27 @@ describe('goslingStructuralVariantTransform', () => {
     });
 
     describe('toGenomeVisualizationSV', () => {
+        it('keeps Entrez gene ids with their breakpoints and uses the index as id', () => {
+            const result = toGenomeVisualizationSV(
+                sv({
+                    site1EntrezGeneId: 1,
+                    site1Position: 2000,
+                    site2EntrezGeneId: 2,
+                    site2Position: 1000,
+                }),
+                7
+            )!;
+            assert.equal(result.entrezGeneId1, 2);
+            assert.equal(result.entrezGeneId2, 1);
+            assert.equal(result.sv_id, '7');
+        });
+
+        it('uses 0 for a missing Entrez gene id', () => {
+            const result = toGenomeVisualizationSV(sv({}), 0)!;
+            assert.equal(result.entrezGeneId1, 0);
+            assert.equal(result.entrezGeneId2, 0);
+        });
+
         it('converts an MSK-IMPACT inversion', () => {
             const result = toGenomeVisualizationSV(
                 sv({
@@ -287,6 +311,80 @@ describe('goslingStructuralVariantTransform', () => {
             );
             const ids = result.groups[0].plotted.map(d => d.sv_id);
             assert.equal(new Set(ids).size, 2);
+        });
+    });
+
+    describe('xDomain', () => {
+        function record(
+            fields: Partial<GenomeVisualizationSV>
+        ): GenomeVisualizationSV {
+            return {
+                ...toGenomeVisualizationSV(sv({}), 0)!,
+                ...fields,
+            };
+        }
+
+        const fusion = record({
+            chrom1: 'chr2',
+            chrom2: 'chr7',
+            entrezGeneId1: 238,
+            entrezGeneId2: 1956,
+        });
+
+        it('picks the chromosome of the breakpoint in the gene', () => {
+            assert.equal(geneSideChromosome(fusion, 1956), 'chr7');
+            assert.equal(geneSideChromosome(fusion, 238), 'chr2');
+            assert.equal(geneSideChromosome(fusion, 999), 'chr2');
+        });
+
+        it('pads an intrachromosomal focused record', () => {
+            const focused = record({
+                chrom1: 'chr3',
+                start1: 100000,
+                chrom2: 'chr3',
+                end2: 200001,
+            });
+            assert.deepEqual(getChromoscopeXDomain([focused], focused, 1), {
+                chromosome: 'chr3',
+                interval: [80000, 220001],
+            });
+        });
+
+        it('pads a short focused record by at least 10 kb, starting at 1', () => {
+            const focused = record({
+                chrom1: 'chr3',
+                start1: 5000,
+                chrom2: 'chr3',
+                end2: 5101,
+            });
+            assert.deepEqual(
+                getChromoscopeXDomain([focused], focused, 1).interval,
+                [1, 15101]
+            );
+        });
+
+        it("shows the gene's chromosome for an interchromosomal focused record", () => {
+            assert.deepEqual(getChromoscopeXDomain([fusion], fusion, 1956), {
+                chromosome: 'chr7',
+            });
+        });
+
+        it("defaults to the chromosome with most of the gene's records", () => {
+            const other = record({ chrom1: 'chr7', entrezGeneId1: 1956 });
+            assert.deepEqual(
+                getChromoscopeXDomain(
+                    [record({ chrom1: 'chr1' }), fusion, other],
+                    undefined,
+                    1956
+                ),
+                { chromosome: 'chr7' }
+            );
+        });
+
+        it('defaults to chr1 without records', () => {
+            assert.deepEqual(getChromoscopeXDomain([], undefined, 1), {
+                chromosome: 'chr1',
+            });
         });
     });
 });

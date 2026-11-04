@@ -1,7 +1,7 @@
 /**
- * Unified Chromoscope visualization component
- * Displays circular genome overview and linear variant detail view in a single Gosling instance
- * Based on Chromoscope's architecture for proper brush linking functionality
+ * Chromoscope-style structural variant view: a circular genome overview that
+ * brushes a linear view of ideogram, gene annotation and SV tracks.
+ * Track design adapted from Chromoscope (https://github.com/hms-dbmi/chromoscope).
  */
 import * as React from 'react';
 import { observer } from 'mobx-react';
@@ -10,6 +10,7 @@ import { GoslingComponent, GoslingRef, GoslingSpec } from 'gosling.js';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
     ChromoscopeAssembly,
+    ChromoscopeXDomain,
     GenomeVisualizationSV,
     SV_CLASS,
     SvClass,
@@ -21,17 +22,11 @@ interface IChromoscopeViewProps {
      */
     data: GenomeVisualizationSV[];
     assembly: ChromoscopeAssembly;
-    /**
-     * Currently selected structural variant ID for highlighting
-     */
     selectedId?: string;
-    /**
-     * Genomic region to display [chromosome, start, end]
-     */
-    xDomain?: [string, number, number];
-    /**
-     * Callback when user clicks on a structural variant
-     */
+    /** Initial region of the linear view when nothing is focused */
+    xDomain: ChromoscopeXDomain;
+    /** Region of the focused structural variant; the view zooms to it on change */
+    focusXDomain?: ChromoscopeXDomain;
     onClick?: (svId: string) => void;
     /**
      * Loading state
@@ -43,6 +38,13 @@ const GOSLING_PADDING = 3;
 const CIRCULAR_MAX_WIDTH = 400;
 const VIEW_SPACING = 20;
 const SV_ROW_HEIGHT = 50;
+const ZOOM_DURATION = 500;
+
+function toPosition({ chromosome, interval }: ChromoscopeXDomain): string {
+    return interval
+        ? `${chromosome}:${interval[0]}-${interval[1]}`
+        : chromosome;
+}
 
 export const SV_COLORS: { domain: SvClass[]; range: string[] } = {
     domain: [
@@ -107,10 +109,8 @@ const THEME = {
 export default class ChromoscopeView extends React.Component<
     IChromoscopeViewProps
 > {
-    @observable private isInitialized = false;
     @observable private containerWidth = 0;
 
-    private goslingRef = React.createRef<GoslingRef>();
     private containerRef = React.createRef<HTMLDivElement>();
     private resizeObserver: ResizeObserver | undefined;
 
@@ -124,8 +124,6 @@ export default class ChromoscopeView extends React.Component<
     }
 
     componentDidMount() {
-        this.setupEventListeners();
-        this.isInitialized = true;
         if (this.containerRef.current) {
             this.resizeObserver = new ResizeObserver(entries => {
                 this.setContainerWidth(entries[0].contentRect.width);
@@ -134,8 +132,26 @@ export default class ChromoscopeView extends React.Component<
         }
     }
 
+    componentDidUpdate(prevProps: IChromoscopeViewProps) {
+        const focus = this.props.focusXDomain;
+        if (
+            focus &&
+            // a new genome remounts gosling, which starts at the spec's xDomain
+            this.props.assembly === prevProps.assembly &&
+            (!prevProps.focusXDomain ||
+                toPosition(focus) !== toPosition(prevProps.focusXDomain))
+        ) {
+            // the spec's xDomain only applies to new views, so move the existing ones
+            this.goslingApi?.zoomTo(
+                'linear-ideogram',
+                toPosition(focus),
+                0,
+                ZOOM_DURATION
+            );
+        }
+    }
+
     componentWillUnmount() {
-        this.cleanupEventListeners();
         this.resizeObserver?.disconnect();
     }
 
@@ -144,28 +160,38 @@ export default class ChromoscopeView extends React.Component<
         this.containerWidth = Math.floor(width);
     }
 
-    /**
-     * Set up Gosling event listeners for user interactions
-     */
-    private setupEventListeners() {
-        setTimeout(() => {
-            if (this.goslingRef.current?.api) {
-                this.goslingRef.current.api.subscribe(
-                    'click',
-                    this.handleClick
-                );
-            }
-        }, 100);
-    }
+    private goslingApi: GoslingRef['api'] | undefined;
+
+    private mountXDomain:
+        | { assembly: ChromoscopeAssembly; xDomain: ChromoscopeXDomain }
+        | undefined;
 
     /**
-     * Clean up event listeners to prevent memory leaks
+     * Gosling applies the spec's xDomain only when it mounts, once per genome;
+     * changing it later would also disturb a running zoom.
      */
-    private cleanupEventListeners() {
-        if (this.goslingRef.current?.api) {
-            this.goslingRef.current.api.unsubscribe('click');
+    private get initialXDomain(): ChromoscopeXDomain {
+        if (this.mountXDomain?.assembly !== this.props.assembly) {
+            this.mountXDomain = {
+                assembly: this.props.assembly,
+                xDomain: this.props.focusXDomain || this.props.xDomain,
+            };
         }
+        return this.mountXDomain.xDomain;
     }
+
+    // gosling's api only exists once the component renders, after the width is known
+    private setGoslingRef = (ref: GoslingRef | null) => {
+        // gosling's pubsub is global, so this removes every click subscriber
+        this.goslingApi?.unsubscribe('click');
+        this.goslingApi = ref?.api;
+        this.goslingApi?.subscribe('click', (_type, event) => {
+            const svId = event.data?.[0]?.sv_id;
+            if (svId !== undefined && this.props.onClick) {
+                this.props.onClick(String(svId));
+            }
+        });
+    };
 
     /**
      * Generate unified Gosling specification with circular overview and linear detail
@@ -193,6 +219,11 @@ export default class ChromoscopeView extends React.Component<
                 this.generateLinearDetailSpec(linearWidth),
             ],
         };
+    }
+
+    /** Filters need a value even when nothing is selected */
+    private get selectedIdOrNone(): string {
+        return this.props.selectedId ?? '__no_selection__';
     }
 
     /**
@@ -290,10 +321,7 @@ export default class ChromoscopeView extends React.Component<
                                 {
                                     type: 'filter',
                                     field: 'sv_id',
-                                    oneOf: [
-                                        this.props.selectedId ||
-                                            '__no_selection__',
-                                    ],
+                                    oneOf: [this.selectedIdOrNone],
                                     not: true,
                                 },
                             ],
@@ -307,7 +335,7 @@ export default class ChromoscopeView extends React.Component<
                                 {
                                     type: 'filter',
                                     field: 'sv_id',
-                                    oneOf: [this.props.selectedId],
+                                    oneOf: [this.selectedIdOrNone],
                                     not: false,
                                 },
                             ],
@@ -353,12 +381,7 @@ export default class ChromoscopeView extends React.Component<
     private generateLinearDetailSpec(width: number) {
         return {
             linkingId: 'linear-scale',
-            xDomain: this.props.xDomain
-                ? {
-                      chromosome: this.props.xDomain[0],
-                      interval: [this.props.xDomain[1], this.props.xDomain[2]],
-                  }
-                : { chromosome: 'chr1' },
+            xDomain: this.initialXDomain,
             layout: 'linear',
             tracks: [
                 this.generateLinearIdeogramTrack(width, 18),
@@ -518,7 +541,7 @@ export default class ChromoscopeView extends React.Component<
                         {
                             type: 'filter',
                             field: 'sv_id',
-                            oneOf: [this.props.selectedId],
+                            oneOf: [this.selectedIdOrNone],
                             not: true,
                         },
                         {
@@ -541,7 +564,7 @@ export default class ChromoscopeView extends React.Component<
                         {
                             type: 'filter',
                             field: 'sv_id',
-                            oneOf: [this.props.selectedId],
+                            oneOf: [this.selectedIdOrNone],
                             not: false,
                         },
                         {
@@ -619,7 +642,7 @@ export default class ChromoscopeView extends React.Component<
                         {
                             type: 'filter',
                             field: 'sv_id',
-                            oneOf: [this.props.selectedId],
+                            oneOf: [this.selectedIdOrNone],
                         },
                     ],
                     mark: 'rule',
@@ -634,7 +657,7 @@ export default class ChromoscopeView extends React.Component<
                         {
                             type: 'filter',
                             field: 'sv_id',
-                            oneOf: [this.props.selectedId],
+                            oneOf: [this.selectedIdOrNone],
                         },
                     ],
                     mark: 'rule',
@@ -703,43 +726,6 @@ export default class ChromoscopeView extends React.Component<
         };
     }
 
-    /**
-     * Handle click events from Gosling visualization
-     */
-    private handleClick = (type: string, event: any) => {
-        if (event.data && event.data.length > 0) {
-            const clickedData = event.data[0];
-            if (clickedData.sv_id && this.props.onClick) {
-                this.props.onClick(clickedData.sv_id);
-            }
-        }
-    };
-
-    /**
-     * Zoom to specific genomic region
-     */
-    public zoomTo(chromosome: string, start?: number, end?: number) {
-        if (this.goslingRef.current?.api) {
-            const region =
-                start && end ? `${chromosome}:${start}-${end}` : chromosome;
-            this.goslingRef.current.api.zoomTo(
-                'linear-ideogram',
-                region,
-                0,
-                500
-            );
-        }
-    }
-
-    /**
-     * Zoom to show entire genome
-     */
-    public zoomToGenome() {
-        if (this.goslingRef.current?.api) {
-            this.goslingRef.current.api.zoomToExtent('linear-ideogram', 500);
-        }
-    }
-
     private renderContent() {
         const messageStyle: React.CSSProperties = {
             height: 100,
@@ -776,11 +762,12 @@ export default class ChromoscopeView extends React.Component<
 
         return (
             <GoslingComponent
-                ref={this.goslingRef}
+                // gosling keeps the zoom across specs, which is wrong on another genome
+                key={this.props.assembly}
+                ref={this.setGoslingRef}
                 spec={this.goslingSpec}
                 padding={GOSLING_PADDING}
                 margin={0}
-                reactive={true}
                 theme={THEME}
             />
         );

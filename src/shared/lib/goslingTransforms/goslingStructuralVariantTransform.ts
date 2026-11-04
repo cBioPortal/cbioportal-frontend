@@ -32,6 +32,7 @@ export interface GenomeVisualizationSV {
     /** Empty when the data has no Connection_Type */
     strand1: Strand;
     strand2: Strand;
+    /** Index of the record in the input array */
     sv_id: string;
     svclass: SvClass;
     svclassSource: SvClassSource;
@@ -39,6 +40,9 @@ export interface GenomeVisualizationSV {
     studyId: string;
     gene1: string;
     gene2: string;
+    /** 0 when missing; Gosling data values must be numbers or strings */
+    entrezGeneId1: number;
+    entrezGeneId2: number;
     /** Class value as given in the data */
     originalClass: string;
     connectionType: string;
@@ -56,6 +60,12 @@ export interface ChromoscopeSVGroups {
     groups: ChromoscopeSVGroup[];
     /** Records from studies whose reference genome cannot be drawn */
     unsupportedGenomeCount: number;
+}
+
+/** Region of the linear view */
+export interface ChromoscopeXDomain {
+    chromosome: string;
+    interval?: [number, number];
 }
 
 // The importer treats these as missing values
@@ -244,12 +254,14 @@ export function toGenomeVisualizationSV(
         pos: sv.site1Position,
         strand: strands ? strands[0] : ('' as Strand),
         gene: sv.site1HugoSymbol || '',
+        entrezGeneId: sv.site1EntrezGeneId || 0,
     };
     let site2 = {
         chrom: chromB,
         pos: sv.site2Position,
         strand: strands ? strands[1] : ('' as Strand),
         gene: sv.site2HugoSymbol || '',
+        entrezGeneId: sv.site2EntrezGeneId || 0,
     };
     const orderA = chromosomeOrder(site1.chrom);
     const orderB = chromosomeOrder(site2.chrom);
@@ -273,13 +285,15 @@ export function toGenomeVisualizationSV(
         end2: site2.pos + 1,
         strand1: site1.strand,
         strand2: site2.strand,
-        sv_id: `${sv.uniqueSampleKey}_${index}`,
+        sv_id: `${index}`,
         svclass,
         svclassSource: source,
         sampleId: sv.sampleId,
         studyId: sv.studyId,
         gene1: site1.gene,
         gene2: site2.gene,
+        entrezGeneId1: site1.entrezGeneId,
+        entrezGeneId2: site2.entrezGeneId,
         originalClass: sv.variantClass || '',
         connectionType: sv.connectionType || '',
     };
@@ -327,4 +341,52 @@ export function groupStructuralVariantsByAssembly(
         groups: Array.from(groups.values()),
         unsupportedGenomeCount,
     };
+}
+
+/** Chromosome of the breakpoint in the given gene, otherwise of the first breakpoint */
+export function geneSideChromosome(
+    d: GenomeVisualizationSV,
+    entrezGeneId: number
+): string {
+    return d.entrezGeneId2 === entrezGeneId && d.entrezGeneId1 !== entrezGeneId
+        ? d.chrom2
+        : d.chrom1;
+}
+
+/**
+ * The focused record with padding (its gene's chromosome if interchromosomal),
+ * otherwise the chromosome where the queried gene has the most records.
+ */
+export function getChromoscopeXDomain(
+    plotted: GenomeVisualizationSV[],
+    focused: GenomeVisualizationSV | undefined,
+    entrezGeneId: number
+): ChromoscopeXDomain {
+    if (focused && focused.chrom1 === focused.chrom2) {
+        const padding = Math.max((focused.end2 - focused.start1) * 0.2, 10000);
+        return {
+            chromosome: focused.chrom1,
+            interval: [
+                Math.max(1, Math.round(focused.start1 - padding)),
+                Math.round(focused.end2 + padding),
+            ],
+        };
+    }
+    if (focused) {
+        return { chromosome: geneSideChromosome(focused, entrezGeneId) };
+    }
+    const counts = new Map<string, number>();
+    plotted.forEach(d => {
+        const chromosome = geneSideChromosome(d, entrezGeneId);
+        counts.set(chromosome, (counts.get(chromosome) || 0) + 1);
+    });
+    let mostCommon = 'chr1';
+    let maxCount = 0;
+    counts.forEach((count, chromosome) => {
+        if (count > maxCount) {
+            mostCommon = chromosome;
+            maxCount = count;
+        }
+    });
+    return { chromosome: mostCommon };
 }

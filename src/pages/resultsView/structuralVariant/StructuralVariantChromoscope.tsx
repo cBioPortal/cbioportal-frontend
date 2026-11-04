@@ -1,25 +1,39 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { action, computed, makeObservable, observable } from 'mobx';
+import {
+    action,
+    computed,
+    IReactionDisposer,
+    makeObservable,
+    observable,
+    reaction,
+} from 'mobx';
 import _ from 'lodash';
 import classnames from 'classnames';
 import { CancerStudy, StructuralVariant } from 'cbioportal-ts-api-client';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { FilterResetPanel } from 'react-mutation-mapper';
 import ChromoscopeView, {
     SV_COLORS,
 } from 'shared/components/chromoscope/ChromoscopeView';
 import {
     ChromoscopeAssembly,
     ChromoscopeSVGroup,
+    ChromoscopeXDomain,
     GenomeVisualizationSV,
+    getChromoscopeAssembly,
+    getChromoscopeXDomain,
     groupStructuralVariantsByAssembly,
     SV_CLASS,
     SvClass,
 } from 'shared/lib/goslingTransforms/goslingStructuralVariantTransform';
+import ResultsViewStructuralVariantMapperDataStore from './ResultsViewStructuralVariantMapperDataStore';
 
 export interface IStructuralVariantChromoscopeProps {
-    structuralVariants: StructuralVariant[];
+    dataStore: ResultsViewStructuralVariantMapperDataStore;
     studyIdToStudy: { [studyId: string]: CancerStudy };
+    /** The queried gene, used to choose the initial chromosome */
+    entrezGeneId: number;
 }
 
 const ASSEMBLY_LABEL: { [assembly in ChromoscopeAssembly]: string } = {
@@ -87,10 +101,111 @@ export default class StructuralVariantChromoscope extends React.Component<
     IStructuralVariantChromoscopeProps
 > {
     @observable private selectedAssembly: ChromoscopeAssembly | undefined;
+    private disposers: IReactionDisposer[] = [];
 
     constructor(props: IStructuralVariantChromoscopeProps) {
         super(props);
         makeObservable(this);
+    }
+
+    componentDidMount() {
+        this.disposers = [
+            // show the reference genome of a structural variant picked in the table
+            reaction(
+                () => this.focusedStructuralVariant,
+                sv => {
+                    const assembly =
+                        sv &&
+                        getChromoscopeAssembly(
+                            this.props.studyIdToStudy[sv.studyId]
+                                ?.referenceGenome
+                        );
+                    if (assembly) {
+                        this.selectAssembly(assembly);
+                    }
+                }
+            ),
+            // otherwise the table would show every row under the selection notice
+            reaction(
+                () => {
+                    const selected = this.props.dataStore
+                        .selectedStructuralVariant;
+                    return !!selected && !this.visibleSet.has(selected);
+                },
+                hidden => {
+                    if (hidden) {
+                        this.resetSelection();
+                    }
+                }
+            ),
+        ];
+    }
+
+    componentWillUnmount() {
+        this.disposers.forEach(dispose => dispose());
+    }
+
+    @computed private get visibleSet(): Set<StructuralVariant> {
+        return new Set(_.flatten(this.props.dataStore.sortedFilteredData));
+    }
+
+    /** Rows matching the table search, in data order so sorting keeps the chart */
+    @computed private get visibleStructuralVariants(): StructuralVariant[] {
+        return _.flatten(this.props.dataStore.allData).filter(sv =>
+            this.visibleSet.has(sv)
+        );
+    }
+
+    @computed private get totalCount(): number {
+        return this.props.dataStore.allData.length;
+    }
+
+    @computed private get focusedStructuralVariant() {
+        return (
+            this.props.dataStore.selectedStructuralVariant ||
+            this.props.dataStore.highlightedStructuralVariant
+        );
+    }
+
+    @computed private get focusedRecord(): GenomeVisualizationSV | undefined {
+        const focused = this.focusedStructuralVariant;
+        return focused
+            ? this.activeGroup?.plotted.find(
+                  d => this.visibleStructuralVariants[+d.sv_id] === focused
+              )
+            : undefined;
+    }
+
+    @computed private get xDomain(): ChromoscopeXDomain {
+        return getChromoscopeXDomain(
+            this.activeGroup?.plotted || [],
+            undefined,
+            this.props.entrezGeneId
+        );
+    }
+
+    @computed private get focusXDomain(): ChromoscopeXDomain | undefined {
+        return this.focusedRecord
+            ? getChromoscopeXDomain(
+                  [],
+                  this.focusedRecord,
+                  this.props.entrezGeneId
+              )
+            : undefined;
+    }
+
+    @action.bound
+    private onChartClick(svId: string) {
+        const sv = this.visibleStructuralVariants[+svId];
+        if (sv) {
+            this.props.dataStore.setHighlightedStructuralVariant(undefined);
+            this.props.dataStore.setSelectedStructuralVariant(sv);
+        }
+    }
+
+    @action.bound
+    private resetSelection() {
+        this.props.dataStore.setSelectedStructuralVariant(undefined);
     }
 
     @action.bound
@@ -100,7 +215,7 @@ export default class StructuralVariantChromoscope extends React.Component<
 
     @computed private get grouped() {
         return groupStructuralVariantsByAssembly(
-            this.props.structuralVariants,
+            this.visibleStructuralVariants,
             this.props.studyIdToStudy
         );
     }
@@ -141,7 +256,15 @@ export default class StructuralVariantChromoscope extends React.Component<
     private renderInfo(active: ChromoscopeSVGroup | undefined) {
         const otherAssemblies = this.groups.filter(g => g !== active);
         const unsupported = this.grouped.unsupportedGenomeCount;
+        const filteredOut =
+            this.totalCount - this.visibleStructuralVariants.length;
         const notShown = [
+            filteredOut > 0
+                ? `${pluralize(
+                      filteredOut,
+                      'structural variant'
+                  )} not matching the table search`
+                : undefined,
             active && active.missingCoordinatesCount > 0
                 ? `${pluralize(
                       active.missingCoordinatesCount,
@@ -238,6 +361,8 @@ export default class StructuralVariantChromoscope extends React.Component<
                         <b>Breakpoint orientation arrows:</b>{' '}
                         {withOrientation === active.plotted.length
                             ? 'shown for all, from Connection_Type.'
+                            : withOrientation === 0
+                            ? 'not shown; these structural variants have no Connection_Type.'
                             : `shown for ${withOrientation} of ${active.plotted.length}; the others have no Connection_Type.`}
                     </div>
                 )}
@@ -265,6 +390,13 @@ export default class StructuralVariantChromoscope extends React.Component<
             textAlign: 'center',
             color: '#6c757d',
         };
+        if (this.visibleStructuralVariants.length === 0) {
+            return (
+                <div style={messageStyle}>
+                    No structural variants match the table search.
+                </div>
+            );
+        }
         if (!active) {
             return (
                 <div style={messageStyle}>
@@ -282,12 +414,19 @@ export default class StructuralVariantChromoscope extends React.Component<
             );
         }
         return (
-            <ChromoscopeView data={active.plotted} assembly={active.assembly} />
+            <ChromoscopeView
+                data={active.plotted}
+                assembly={active.assembly}
+                xDomain={this.xDomain}
+                focusXDomain={this.focusXDomain}
+                selectedId={this.focusedRecord?.sv_id}
+                onClick={this.onChartClick}
+            />
         );
     }
 
     render() {
-        if (this.props.structuralVariants.length === 0) {
+        if (this.totalCount === 0) {
             return null;
         }
         const active = this.activeGroup;
@@ -304,15 +443,23 @@ export default class StructuralVariantChromoscope extends React.Component<
                     {this.renderAssemblySwitch()}
                     <span>
                         Showing {active ? active.plotted.length : 0} of{' '}
-                        {pluralize(
-                            this.props.structuralVariants.length,
-                            'structural variant'
-                        )}
+                        {pluralize(this.totalCount, 'structural variant')}
                         {active && ` (${ASSEMBLY_LABEL[active.assembly]})`}
                     </span>
                     {this.renderInfo(active)}
                 </div>
                 {this.renderBody(active)}
+                {this.props.dataStore.selectedStructuralVariant && (
+                    <FilterResetPanel
+                        resetFilters={this.resetSelection}
+                        filterInfo={`Showing ${pluralize(
+                            this.props.dataStore.tableData.length,
+                            'structural variant'
+                        )} selected in the chart.`}
+                        className="alert alert-success small"
+                        buttonClass="btn btn-default btn-xs"
+                    />
+                )}
             </div>
         );
     }
