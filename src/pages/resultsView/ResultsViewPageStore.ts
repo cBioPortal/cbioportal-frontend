@@ -252,6 +252,11 @@ import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/colu
 import NormalAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/NormalAlleleFreqColumnFormatter';
 import ChromosomeColumnFormatter from 'shared/components/mutationTable/column/ChromosomeColumnFormatter';
 import { getASCNMethodValue } from 'shared/components/mutationTable/column/ascnMethod/ASCNMethodColumnFormatter';
+import {
+    getCancerCellFraction,
+    getSourceMutationProfileId,
+    makeClonalityHeatmapProfile,
+} from 'shared/lib/ClonalityHeatmapUtils';
 import SampleColumnFormatter from 'shared/components/mutationTable/column/SampleColumnFormatter';
 import GeneColumnFormatter from 'shared/components/mutationTable/column/GeneColumnFormatter';
 import ProteinChangeColumnFormatter from 'shared/components/mutationTable/column/ProteinChangeColumnFormatter';
@@ -4521,6 +4526,7 @@ export class ResultsViewPageStore extends AnalysisStore
             this.selectedMolecularProfiles,
             this.genesetMolecularProfile,
             this.hasVAFData,
+            this.clonalityHeatmapMolecularProfiles,
         ],
         invoke: () => {
             const MRNA_EXPRESSION = AlterationTypeConstants.MRNA_EXPRESSION;
@@ -4579,14 +4585,104 @@ export class ResultsViewPageStore extends AnalysisStore
                     }
                 }
             );
+            // place each clonality profile right after its source mutation profile
+            const clonalityHeatmapsBySourceId = _.keyBy(
+                this.clonalityHeatmapMolecularProfiles.result!,
+                p => getSourceMutationProfileId(p.molecularProfileId)
+            );
+            const expressionAndClonalityHeatmaps = _.flatMap(
+                expressionHeatmaps,
+                profile =>
+                    profile.molecularProfileId in clonalityHeatmapsBySourceId
+                        ? [
+                              profile,
+                              clonalityHeatmapsBySourceId[
+                                  profile.molecularProfileId
+                              ],
+                          ]
+                        : [profile]
+            );
             const genesetMolecularProfile = this.genesetMolecularProfile
                 .result!;
             const genesetHeatmaps = genesetMolecularProfile.isApplicable
                 ? [genesetMolecularProfile.value]
                 : [];
-            return Promise.resolve(expressionHeatmaps.concat(genesetHeatmaps));
+            return Promise.resolve(
+                expressionAndClonalityHeatmaps.concat(genesetHeatmaps)
+            );
         },
     });
+
+    /**
+     * Virtual heatmap profiles showing clonality (cancer cell fraction) for
+     * each mutation profile that has CCF data in the queried mutations.
+     */
+    readonly clonalityHeatmapMolecularProfiles = remoteData<MolecularProfile[]>(
+        {
+            await: () => [
+                this.mutations,
+                this.molecularProfileIdToMolecularProfile,
+            ],
+            invoke: () => {
+                const profileIdsWithCCF = _.uniq(
+                    this.mutations
+                        .result!.filter(
+                            m => getCancerCellFraction(m) !== undefined
+                        )
+                        .map(m => m.molecularProfileId)
+                );
+                return Promise.resolve(
+                    profileIdsWithCCF
+                        .map(
+                            id =>
+                                this.molecularProfileIdToMolecularProfile
+                                    .result![id]
+                        )
+                        .filter(
+                            profile =>
+                                !!profile &&
+                                profile.molecularAlterationType ===
+                                    AlterationTypeConstants.MUTATION_EXTENDED
+                        )
+                        .map(makeClonalityHeatmapProfile)
+                );
+            },
+            default: [],
+        }
+    );
+
+    readonly hasClonalityData = remoteData<boolean>({
+        await: () => [this.clonalityHeatmapMolecularProfiles],
+        invoke: () =>
+            Promise.resolve(
+                this.clonalityHeatmapMolecularProfiles.result!.length > 0
+            ),
+        default: false,
+    });
+
+    /**
+     * molecularProfileIdToMolecularProfile extended with the virtual
+     * clonality heatmap profiles, for use by the oncoprint heatmap tracks.
+     */
+    readonly oncoprintMolecularProfileIdToMolecularProfile = remoteData<{
+        [molecularProfileId: string]: MolecularProfile;
+    }>(
+        {
+            await: () => [
+                this.molecularProfileIdToMolecularProfile,
+                this.clonalityHeatmapMolecularProfiles,
+            ],
+            invoke: () =>
+                Promise.resolve({
+                    ...this.molecularProfileIdToMolecularProfile.result!,
+                    ..._.keyBy(
+                        this.clonalityHeatmapMolecularProfiles.result!,
+                        p => p.molecularProfileId
+                    ),
+                }),
+        },
+        {}
+    );
 
     readonly hasVAFData = remoteData<boolean>({
         await: () => [this.mutations],

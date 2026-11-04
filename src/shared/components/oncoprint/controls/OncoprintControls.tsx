@@ -44,6 +44,7 @@ import {
 } from 'shared/components/oncoprint/Oncoprint';
 import { getServerConfig } from 'config/config';
 import { AlterationTypeConstants } from 'shared/constants';
+import { isClonalityHeatmapProfile } from 'shared/lib/ClonalityHeatmapUtils';
 
 export interface IOncoprintControlsHandlers
     extends IDriverAnnotationControlsHandlers {
@@ -490,7 +491,9 @@ export default class OncoprintControls extends React.Component<
                 this.props.state.heatmapProfilesPromise.result,
                 profile => {
                     let label = profile.name;
-                    if (
+                    if (isClonalityHeatmapProfile(profile)) {
+                        label = `Clonality (CCF) in Selected Mutations Profile`;
+                    } else if (
                         profile.molecularAlterationType ===
                         AlterationTypeConstants.MUTATION_EXTENDED
                     ) {
