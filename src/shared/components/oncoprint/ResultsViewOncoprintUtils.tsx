@@ -25,6 +25,7 @@ import { AlterationTypeConstants } from 'shared/constants';
 import { Group } from 'shared/api/session-service/sessionServiceModels';
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { AlterationTypeText } from 'shared/constants';
+import { isClonalityHeatmapProfile } from 'shared/lib/ClonalityHeatmapUtils';
 
 export function getAnnotatingProgressMessage(
     usingOncokb: boolean,
@@ -380,7 +381,9 @@ export function makeTrackGroupHeaders(
                     nextEntry.molecularProfileId
                 ].name;
 
-            if (
+            if (isClonalityHeatmapProfile(profile)) {
+                headerText = 'Clonality (CCF)';
+            } else if (
                 profile.molecularAlterationType ===
                 AlterationTypeConstants.MUTATION_EXTENDED
             ) {

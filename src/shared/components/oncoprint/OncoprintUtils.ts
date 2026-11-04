@@ -81,6 +81,11 @@ import { IQueriedCaseData } from 'shared/model/IQueriedCaseData';
 import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
 import { OncoprintModel } from 'oncoprintjs';
 import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
+import {
+    getCancerCellFraction,
+    getSourceMutationProfileId,
+    isClonalityHeatmapProfile,
+} from 'shared/lib/ClonalityHeatmapUtils';
 import { DataType } from 'pages/studyView/StudyViewUtils';
 import GeneCache from 'shared/cache/GeneCache';
 import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
@@ -241,6 +246,18 @@ export function getHeatmapTrackRuleSetParams(
             ];
             break;
         case AlterationTypeConstants.MUTATION_EXTENDED:
+            if (isClonalityHeatmapProfile(trackSpec)) {
+                value_range = [0, 1];
+                legend_label = trackSpec.legendLabel || 'CCF Heatmap';
+                null_legend_label = 'Not mutated/no CCF data';
+                na_legend_label = 'Not profiled';
+                value_stop_points = [0, 1];
+                colors = [
+                    [222, 235, 247, 1],
+                    [8, 48, 107, 1],
+                ];
+                break;
+            }
             value_range = [0, 1];
             legend_label = trackSpec.legendLabel || 'VAF Heatmap';
             null_legend_label = 'Not mutated/no VAF data';
@@ -638,12 +655,13 @@ export function getCategoricalTrackRuleSetParams(
 
 /**
  * Processes molecular data for heatmap tracks based on profile type.
- * For MUTATION_EXTENDED profiles, calculates variant allele frequency (VAF) from mutations.
+ * For MUTATION_EXTENDED profiles, calculates variant allele frequency (VAF) from mutations,
+ * or cancer cell fraction (CCF) for clonality heatmap profiles.
  * For other profiles, retrieves molecular data values directly from cache.
  */
 function createHeatmapTracksData(
     query: any,
-    profileType: string,
+    profile: MolecularProfile,
     oncoprint: ResultsViewOncoprint,
     useOqlFiltering: boolean = false
 ): Array<{
@@ -652,8 +670,20 @@ function createHeatmapTracksData(
     value: number | null;
     thresholdType?: '>' | '<';
 }> {
-    if (profileType === AlterationTypeConstants.MUTATION_EXTENDED) {
+    if (
+        profile.molecularAlterationType ===
+        AlterationTypeConstants.MUTATION_EXTENDED
+    ) {
         const PROFILED_BUT_NOT_MUTATED = null;
+        const mutationProfileId = getSourceMutationProfileId(
+            query.molecularProfileId
+        );
+        const getValue = isClonalityHeatmapProfile(profile)
+            ? (m: Mutation) => getCancerCellFraction(m)
+            : (m: Mutation) => {
+                  const vafReport = getVariantAlleleFrequency(m);
+                  return vafReport ? vafReport.vaf : undefined;
+              };
         const samples = oncoprint.props.store.filteredSamples.result!;
         const coverageInfo = oncoprint.props.store.coverageInformation.result!;
         const queriedGenes = oncoprint.props.store.genes.result || [];
@@ -693,7 +723,7 @@ function createHeatmapTracksData(
             mutations = mutationPromise.result;
             if (mutations) {
                 mutations = mutations.filter(
-                    m => m.molecularProfileId === query.molecularProfileId
+                    m => m.molecularProfileId === mutationProfileId
                 );
             }
         } else {
@@ -704,7 +734,7 @@ function createHeatmapTracksData(
             mutations = mutationPromise.result;
             if (mutations) {
                 mutations = mutations.filter(
-                    m => m.molecularProfileId === query.molecularProfileId
+                    m => m.molecularProfileId === mutationProfileId
                 );
             }
         }
@@ -713,16 +743,17 @@ function createHeatmapTracksData(
             const sampleMutationMap = new Map<string, number | null>();
 
             mutations.forEach(m => {
-                const vafReport = getVariantAlleleFrequency(m);
-                if (vafReport && _.isFinite(vafReport.vaf)) {
-                    const existingVaf = sampleMutationMap.get(
+                const value = getValue(m);
+                if (value !== undefined && _.isFinite(value)) {
+                    const existingValue = sampleMutationMap.get(
                         m.uniqueSampleKey
                     );
                     if (
-                        existingVaf === undefined ||
-                        vafReport.vaf > existingVaf!
+                        existingValue === undefined ||
+                        existingValue === null ||
+                        value > existingValue
                     ) {
-                        sampleMutationMap.set(m.uniqueSampleKey, vafReport.vaf);
+                        sampleMutationMap.set(m.uniqueSampleKey, value);
                     }
                 } else {
                     if (!sampleMutationMap.has(m.uniqueSampleKey)) {
@@ -742,21 +773,19 @@ function createHeatmapTracksData(
                     }
                     return isSampleProfiled(
                         sample.uniqueSampleKey,
-                        query.molecularProfileId,
+                        mutationProfileId,
                         query.hugoGeneSymbol,
                         coverageInfo
                     );
                 })
                 .map(sample => {
-                    const vafValue = sampleMutationMap.get(
-                        sample.uniqueSampleKey
-                    );
+                    const value = sampleMutationMap.get(sample.uniqueSampleKey);
                     return {
                         uniqueSampleKey: sample.uniqueSampleKey,
                         uniquePatientKey: sample.uniquePatientKey,
                         value:
-                            vafValue !== undefined
-                                ? vafValue
+                            value !== undefined
+                                ? value
                                 : PROFILED_BUT_NOT_MUTATED,
                     };
                 });
@@ -769,7 +798,7 @@ function createHeatmapTracksData(
                     }
                     return isSampleProfiled(
                         sample.uniqueSampleKey,
-                        query.molecularProfileId,
+                        mutationProfileId,
                         query.hugoGeneSymbol,
                         coverageInfo
                     );
@@ -1498,7 +1527,7 @@ export function makeHeatmapTracksMobxPromise(
     return remoteData<IHeatmapTrackSpec[]>({
         await: () => {
             const molecularProfileIdToMolecularProfile = oncoprint.props.store
-                .molecularProfileIdToMolecularProfile.result!;
+                .oncoprintMolecularProfileIdToMolecularProfile.result!;
             const molecularProfileIdToAdditionalTracks =
                 oncoprint.molecularProfileIdToAdditionalTracks;
 
@@ -1511,7 +1540,8 @@ export function makeHeatmapTracksMobxPromise(
             return [
                 oncoprint.props.store.filteredSamples,
                 oncoprint.props.store.filteredPatients,
-                oncoprint.props.store.molecularProfileIdToMolecularProfile,
+                oncoprint.props.store
+                    .oncoprintMolecularProfileIdToMolecularProfile,
                 oncoprint.props.store.geneMolecularDataCache,
                 oncoprint.props.store.coverageInformation,
                 oncoprint.props.store.oqlFilteredAlterations,
@@ -1524,7 +1554,7 @@ export function makeHeatmapTracksMobxPromise(
         },
         invoke: async () => {
             const molecularProfileIdToMolecularProfile = oncoprint.props.store
-                .molecularProfileIdToMolecularProfile.result!;
+                .oncoprintMolecularProfileIdToMolecularProfile.result!;
             const molecularProfileIdToAdditionalTracks =
                 oncoprint.molecularProfileIdToAdditionalTracks;
 
@@ -1650,7 +1680,7 @@ export function makeHeatmapTracksMobxPromise(
 
                 const dataForTrack = createHeatmapTracksData(
                     query,
-                    profileType,
+                    molecularProfileIdToMolecularProfile[molecularProfileId],
                     oncoprint,
                     false
                 );
@@ -1662,6 +1692,9 @@ export function makeHeatmapTracksMobxPromise(
                     molecularProfileName,
                     molecularAlterationType: profileType,
                     datatype,
+                    tooltipValueLabel: isClonalityHeatmapProfile({ datatype })
+                        ? 'CCF'
+                        : undefined,
                     data: makeHeatmapTrackData<
                         IGeneHeatmapTrackDatum,
                         'hugo_gene_symbol'

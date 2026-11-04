@@ -49,6 +49,7 @@ import {
 } from 'shared/components/oncoprint/makeGeneticTrackTooltip';
 import $ from 'jquery';
 import getCustomJsFunctions from 'shared/getCustomJsFunctions';
+import { isClonalityHeatmapProfile } from 'shared/lib/ClonalityHeatmapUtils';
 
 // This file implements functions that call imperative OncoprintJS library
 //  methods in order to keep the oncoprint in a state consistent with the
@@ -613,6 +614,7 @@ function transitionTracks(
         heatmap: undefined as undefined | TrackId,
         heatmap01: undefined as undefined | TrackId,
         mutation: undefined as undefined | TrackId,
+        clonality: undefined as undefined | TrackId,
         genericAssayHeatmap: ({} as any) as GenericAssayProfileToTrackIdMap,
         genericAssayCategorical: ({} as any) as GenericAssayProfileToTrackIdMap,
     };
@@ -640,6 +642,7 @@ function transitionTracks(
         let heatmap01;
         let heatmap;
         let mutation;
+        let clonality;
         for (const spec of prevProps.heatmapTracks) {
             if (
                 heatmap01 === undefined &&
@@ -648,11 +651,16 @@ function transitionTracks(
             ) {
                 heatmap01 = trackSpecKeyToTrackId[spec.key];
             } else if (
-                mutation === undefined &&
                 spec.molecularAlterationType ===
-                    AlterationTypeConstants.MUTATION_EXTENDED
+                AlterationTypeConstants.MUTATION_EXTENDED
             ) {
-                mutation = trackSpecKeyToTrackId[spec.key];
+                if (isClonalityHeatmapProfile(spec)) {
+                    if (clonality === undefined) {
+                        clonality = trackSpecKeyToTrackId[spec.key];
+                    }
+                } else if (mutation === undefined) {
+                    mutation = trackSpecKeyToTrackId[spec.key];
+                }
             } else if (
                 heatmap === undefined &&
                 spec.molecularAlterationType !==
@@ -667,7 +675,8 @@ function transitionTracks(
             if (
                 heatmap01 !== undefined &&
                 heatmap !== undefined &&
-                mutation !== undefined
+                mutation !== undefined &&
+                clonality !== undefined
             ) {
                 break;
             }
@@ -675,6 +684,7 @@ function transitionTracks(
         trackIdForRuleSetSharing.heatmap = heatmap;
         trackIdForRuleSetSharing.heatmap01 = heatmap01;
         trackIdForRuleSetSharing.mutation = mutation;
+        trackIdForRuleSetSharing.clonality = clonality;
     } else if (prevProps.genesetHeatmapTracks) {
         for (const gsTrack of prevProps.genesetHeatmapTracks) {
             if (
@@ -1508,6 +1518,12 @@ function transitionGenesetHeatmapTrack(
     }
 }
 
+function getMutationHeatmapRuleSetKey(
+    spec: Pick<IHeatmapTrackSpec, 'datatype'>
+): 'mutation' | 'clonality' {
+    return isClonalityHeatmapProfile(spec) ? 'clonality' : 'mutation';
+}
+
 export function transitionHeatmapTrack(
     nextSpec: IHeatmapTrackSpec | undefined,
     prevSpec: IHeatmapTrackSpec | undefined,
@@ -1520,8 +1536,9 @@ export function transitionHeatmapTrack(
         heatmap?: TrackId;
         heatmap01?: TrackId;
         genericAssayHeatmap?: GenericAssayProfileToTrackIdMap;
-        // Mutation-specific key to separate VAF from other tracks
+        // Mutation-specific keys to separate VAF and CCF from other tracks
         mutation?: TrackId;
+        clonality?: TrackId;
     },
     expansionParentKey?: string
 ) {
@@ -1596,14 +1613,17 @@ export function transitionHeatmapTrack(
             let trackIdForRuleSetSharingKey:
                 | 'heatmap'
                 | 'heatmap01'
-                | 'mutation';
+                | 'mutation'
+                | 'clonality';
 
             // Each molecular alteration type gets its own rule set
             if (
                 nextSpec.molecularAlterationType ===
                 AlterationTypeConstants.MUTATION_EXTENDED
             ) {
-                trackIdForRuleSetSharingKey = 'mutation';
+                trackIdForRuleSetSharingKey = getMutationHeatmapRuleSetKey(
+                    nextSpec
+                );
             } else if (
                 nextSpec.molecularAlterationType ===
                 AlterationTypeConstants.METHYLATION
@@ -1652,7 +1672,7 @@ export function transitionHeatmapTrack(
         ) {
             oncoprint.setTrackMovable(trackId, nextSpec.movable);
         }
-        // Rule set when white background flag changes for mutation (VAF) heatmap tracks
+        // Rule set when white background flag changes for mutation (VAF/CCF) heatmap tracks
         if (
             nextSpec.molecularAlterationType ===
                 AlterationTypeConstants.MUTATION_EXTENDED &&
@@ -1660,14 +1680,10 @@ export function transitionHeatmapTrack(
                 (prevProps as Partial<IOncoprintProps>)
                     .isWhiteBackgroundForGlyphsEnabled
         ) {
-            if (
-                trackIdForRuleSetSharing.mutation !== undefined &&
-                trackIdForRuleSetSharing.mutation !== trackId
-            ) {
-                oncoprint.shareRuleSet(
-                    trackIdForRuleSetSharing.mutation,
-                    trackId
-                );
+            const ruleSetKey = getMutationHeatmapRuleSetKey(nextSpec);
+            const sharedTrackId = trackIdForRuleSetSharing[ruleSetKey];
+            if (sharedTrackId !== undefined && sharedTrackId !== trackId) {
+                oncoprint.shareRuleSet(sharedTrackId, trackId);
             } else {
                 oncoprint.setRuleSet(
                     trackId,
@@ -1677,7 +1693,7 @@ export function transitionHeatmapTrack(
                     )
                 );
             }
-            trackIdForRuleSetSharing.mutation = trackId;
+            trackIdForRuleSetSharing[ruleSetKey] = trackId;
         }
         // generic assay profile tracks always are associated with the last added added track id
         if (
