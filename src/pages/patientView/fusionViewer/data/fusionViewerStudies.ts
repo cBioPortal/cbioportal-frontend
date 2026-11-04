@@ -18,3 +18,15 @@ export function isFusionViewerEnabled(
         .filter(id => id.length > 0);
     return studyIds.every(id => allowed.indexOf(id) !== -1);
 }
+
+/**
+ * A URL that opens the viewer tab (/patient/fusionViewer) or names a fusion
+ * (fusionId=) is an explicit request for the viewer, so it opts in like the
+ * feature flag. Keeps shared deep links working without ?featureFlags=.
+ */
+export function isFusionViewerDeepLink(
+    activeTabId: string | undefined,
+    fusionId: string | undefined
+): boolean {
+    return activeTabId === 'fusionViewer' || !!fusionId;
+}
