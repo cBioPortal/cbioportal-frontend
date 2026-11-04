@@ -23,7 +23,10 @@ import _ from 'lodash';
 import MutationalSignaturesContainer from 'pages/patientView/mutationalSignatures/MutationalSignaturesContainer';
 import MrnaTabContent from 'pages/patientView/mrna/MrnaTabContent';
 import { FeatureFlagEnum } from 'shared/featureFlags';
-import { isFusionViewerEnabled } from './fusionViewer/data/fusionViewerStudies';
+import {
+    isFusionViewerDeepLink,
+    isFusionViewerEnabled,
+} from './fusionViewer/data/fusionViewerStudies';
 import { buildCustomTabs } from 'shared/lib/customTabs/customTabHelpers';
 import * as React from 'react';
 import SampleManager from 'pages/patientView/SampleManager';
@@ -826,7 +829,11 @@ export function tabs(
             getServerConfig().fusion_viewer_study_ids,
             pageComponent.props.appStore.featureFlagStore.has(
                 FeatureFlagEnum.FUSION_VIEWER
-            )
+            ) ||
+                isFusionViewerDeepLink(
+                    urlWrapper.activeTabId,
+                    urlWrapper.query.fusionId
+                )
         )
     ) {
         tabs.push(

@@ -1,5 +1,23 @@
 import { assert } from 'chai';
-import { isFusionViewerEnabled } from './fusionViewerStudies';
+import {
+    isFusionViewerDeepLink,
+    isFusionViewerEnabled,
+} from './fusionViewerStudies';
+
+describe('isFusionViewerDeepLink', () => {
+    it('is true for the fusionViewer tab route', () => {
+        assert.isTrue(isFusionViewerDeepLink('fusionViewer', undefined));
+    });
+
+    it('is true when the URL names a fusion', () => {
+        assert.isTrue(isFusionViewerDeepLink('summary', 'S_GENE1_GENE2_1_2'));
+    });
+
+    it('is false for other tabs without a fusionId', () => {
+        assert.isFalse(isFusionViewerDeepLink('summary', undefined));
+        assert.isFalse(isFusionViewerDeepLink(undefined, ''));
+    });
+});
 
 describe('isFusionViewerEnabled', () => {
     it('is off when no study list is configured', () => {
