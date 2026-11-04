@@ -38,6 +38,9 @@ import IFrameLoader from '../../shared/components/iframeLoader/IFrameLoader';
 import { StudySummaryTab } from 'pages/studyView/tabs/SummaryTab';
 import StudyPageHeader from './studyPageHeader/StudyPageHeader';
 import CNSegments from './tabs/CNSegments';
+import FusionComparisonView from 'pages/patientView/fusionViewer/FusionComparisonView';
+import { FusionCohortStore } from 'pages/patientView/fusionViewer/FusionCohortStore';
+import { cohortSvTabLabel } from 'pages/patientView/fusionViewer/data/svTabLabels';
 import { getInternalClient } from 'shared/api/cbioportalInternalClientInstance';
 import AddChartButton from './addChartButton/AddChartButton';
 import { sleep } from '../../shared/lib/TimeUtils';
@@ -326,6 +329,27 @@ export default class StudyViewPage extends React.Component<
             }
         }, 500);
 
+        this.fusionStoreDisposer = autorun(() => {
+            // Preserve the user's Comparison-tab filter: this reruns on every
+            // studyView cohort change, not just on an initial data load.
+            this._fusionCohortStore.updateStructuralVariants(
+                this.store.cohortStructuralVariants.result || []
+            );
+            // Seed the Comparison tab's Gene anchor from the SV genes table
+            // (exactly one gene). Pending until the cohort SVs load.
+            this._fusionCohortStore.seedFromStudyFilter(
+                this.store.svGenesTableFilterGenes,
+                this.store.cohortStructuralVariants.isComplete
+            );
+            // Transcripts must be fetched in the cohort's coordinate build, or
+            // breakpoints won't align with the gene track.
+            if (this.store.displayedStudies.isComplete) {
+                this._fusionCohortStore.setReferenceGenome(
+                    this.store.displayedStudies.result[0]?.referenceGenome
+                );
+            }
+        });
+
         this.resourceTableStoreDisposer = autorun(() => {
             const samples = this.store.selectedSamples.result;
             if (!samples) return;
@@ -566,6 +590,13 @@ export default class StudyViewPage extends React.Component<
         // Embeddings tab itself will handle checking if the remote data
         // supports the current studies, so we just enable the tab here
         return true;
+    }
+
+    private readonly _fusionCohortStore = new FusionCohortStore();
+    private fusionStoreDisposer: (() => void) | undefined;
+
+    get fusionCohortStore(): FusionCohortStore {
+        return this._fusionCohortStore;
     }
 
     @computed get isLoading() {
@@ -962,6 +993,39 @@ export default class StudyViewPage extends React.Component<
                                         }
                                     >
                                         <CNSegments store={this.store} />
+                                    </MSKTab>
+                                    <MSKTab
+                                        key={6}
+                                        id={
+                                            StudyViewPageTabKeyEnum.FUSION_COMPARISON
+                                        }
+                                        linkText={cohortSvTabLabel(
+                                            this.store.studyHasRnaFusions
+                                        )}
+                                        hide={
+                                            this.store.cohortStructuralVariants
+                                                .isPending ||
+                                            _.isEmpty(
+                                                this.store
+                                                    .cohortStructuralVariants
+                                                    .result
+                                            )
+                                        }
+                                    >
+                                        <FusionComparisonView
+                                            store={this.fusionCohortStore}
+                                            onFilterCohortBySamples={(
+                                                filterKey,
+                                                label,
+                                                samples
+                                            ) =>
+                                                this.store.selectSvGenePairSamples(
+                                                    filterKey,
+                                                    samples,
+                                                    label
+                                                )
+                                            }
+                                        />
                                     </MSKTab>
                                     <MSKTab
                                         key={4}
@@ -1406,6 +1470,9 @@ export default class StudyViewPage extends React.Component<
         }
         if (this.legacyTabRedirectDisposer) {
             this.legacyTabRedirectDisposer();
+        }
+        if (this.fusionStoreDisposer) {
+            this.fusionStoreDisposer();
         }
     }
 

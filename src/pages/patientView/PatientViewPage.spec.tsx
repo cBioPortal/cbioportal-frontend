@@ -39,6 +39,15 @@ describe('PatientViewPage', () => {
             assert.isTrue(preventDefaultStub.called);
         });
 
+        it('clears the fusion-viewer fusionId when switching sample', () => {
+            handleSampleClick.call(mock, 'S2', ev);
+            assert.deepEqual(updateURLStub.firstCall.args[0], {
+                caseId: undefined,
+                sampleId: 'S2',
+                fusionId: undefined,
+            });
+        });
+
         it('does not call updateRoute or preventDefault if altKey is true', () => {
             ev.altKey = true;
             handleSampleClick.call(mock, 1, ev);
@@ -58,6 +67,37 @@ describe('PatientViewPage', () => {
             handleSampleClick.call(mock, 1, ev);
             assert.isFalse(updateURLStub.called);
             assert.isFalse(preventDefaultStub.called);
+        });
+    });
+
+    describe('handlePatientClick', () => {
+        const handlePatientClick = (componentUnderTest as any).prototype
+            .handlePatientClick;
+
+        let updateURLStub: sinon.SinonStub, mock: any;
+
+        beforeEach(() => {
+            updateURLStub = sinon.stub();
+            mock = { urlWrapper: { updateURL: updateURLStub } };
+        });
+
+        it('clears the fusion-viewer fusionId when switching patient', () => {
+            handlePatientClick.call(mock, 'PATIENT_2');
+            assert.deepEqual(updateURLStub.firstCall.args[0], {
+                caseId: 'PATIENT_2',
+                sampleId: undefined,
+                fusionId: undefined,
+            });
+        });
+
+        it('clears fusionId for a study-qualified patient id', () => {
+            handlePatientClick.call(mock, 'study_b:PATIENT_2');
+            assert.deepEqual(updateURLStub.firstCall.args[0], {
+                studyId: 'study_b',
+                caseId: 'PATIENT_2',
+                sampleId: undefined,
+                fusionId: undefined,
+            });
         });
     });
 });

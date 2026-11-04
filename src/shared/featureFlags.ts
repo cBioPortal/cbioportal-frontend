@@ -4,4 +4,5 @@ export enum FeatureFlagEnum {
     GENE_SPECIFIC_VIOLIN_PLOT = 'geneSpecificViolinPlot',
     EMBEDDINGS = 'EMBEDDINGS',
     ONCOTREE2GENES = 'ONCOTREE2GENES',
+    FUSION_VIEWER = 'fusionViewer',
 }

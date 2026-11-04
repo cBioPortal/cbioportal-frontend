@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import { getClient } from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
+import { hasRnaFusion } from 'pages/patientView/fusionViewer/data/svTabLabels';
 import {
     action,
     comparer,
@@ -2999,6 +3000,16 @@ export class StudyViewPageStore
         string[][]
     >({}, { deep: false });
 
+    // Human-readable labels for the SV-gene-pair sample-identifier filters set
+    // via selectSvGenePairSamples (e.g. the fusion breakpoint-bar / collapsed
+    // group filter). Keyed by the same uniqueKey used in
+    // _chartSampleIdentifiersFilterSet; presence here opts a filter into a
+    // labeled removable pill (see svGenePairSampleFilters).
+    private _svGenePairFilterLabels = observable.map<ChartUniqueKey, string>(
+        {},
+        { deep: false }
+    );
+
     public preDefinedCustomChartFilterSet = observable.map<
         ChartUniqueKey,
         ClinicalDataFilter
@@ -3430,6 +3441,7 @@ export class StudyViewPageStore
         this._genericAssayDataFilterSet.clear();
         this._chartSampleIdentifiersFilterSet.clear();
         this._genericAssayFrequencyTableFilterSet.clear();
+        this._svGenePairFilterLabels.clear();
         this.preDefinedCustomChartFilterSet.clear();
         this.numberOfSelectedSamplesInCustomSelection = 0;
         this.removeComparisonGroupSelectionFilter();
@@ -5166,6 +5178,28 @@ export class StudyViewPageStore
             _.map(filterSet, geneFilterQueryToOql)
         );
         return toJS(filters);
+    }
+
+    /**
+     * Distinct genes selected in STRUCTURAL_VARIANT_GENES_TABLE charts. The SV
+     * genes table writes gene filters (addGeneFilters), not struct-var filters.
+     * Read by the fusion cohort store to seed its Gene anchor.
+     */
+    @computed
+    public get svGenesTableFilterGenes(): string[] {
+        const genes = new Set<string>();
+        this._geneFilterSet.forEach((queries, uniqueKey) => {
+            if (
+                this.chartsType.get(uniqueKey) !==
+                ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
+            ) {
+                return;
+            }
+            queries.forEach(group =>
+                group.forEach(q => genes.add(q.hugoGeneSymbol))
+            );
+        });
+        return Array.from(genes);
     }
 
     public getStructVarFiltersByUniqueKey(uniqueKey: string): string[][] {
@@ -12932,6 +12966,132 @@ export class StudyViewPageStore
         },
         []
     );
+
+    readonly cohortStructuralVariants = remoteData<StructuralVariant[]>({
+        // Use selectedSamples (not samples) so this respects the active
+        // studyView cohort filter — the SV/Fusion Comparison tab then
+        // reflects the filtered cohort.
+        await: () => [
+            this.selectedSamples,
+            this.plotsTabStore.studyToStructuralVariantMolecularProfile,
+        ],
+        invoke: async () => {
+            if (
+                _.isEmpty(
+                    this.plotsTabStore.studyToStructuralVariantMolecularProfile
+                        .result
+                )
+            ) {
+                return [];
+            }
+            const studyIdToProfileMap = this.plotsTabStore
+                .studyToStructuralVariantMolecularProfile.result;
+            const sampleMolecularIdentifiers = this.selectedSamples.result.reduce(
+                (memo, sample: Sample) => {
+                    if (sample.studyId in studyIdToProfileMap) {
+                        memo.push({
+                            molecularProfileId:
+                                studyIdToProfileMap[sample.studyId]
+                                    .molecularProfileId,
+                            sampleId: sample.sampleId,
+                        });
+                    }
+                    return memo;
+                },
+                [] as StructuralVariantFilter['sampleMolecularIdentifiers']
+            );
+            if (_.isEmpty(sampleMolecularIdentifiers)) {
+                return [];
+            }
+            return await this.internalClient.fetchStructuralVariantsUsingPOST({
+                structuralVariantFilter: {
+                    entrezGeneIds: [],
+                    structuralVariantQueries: [],
+                    sampleMolecularIdentifiers,
+                    molecularProfileIds: [],
+                },
+            });
+        },
+        default: [],
+        onResult: svs => {
+            // Pin the tab name from the first whole-study load, so it names
+            // the study's data and doesn't flip as the cohort filter changes.
+            if (
+                this.pinnedStudyHasRnaFusions === undefined &&
+                this.samples.isComplete &&
+                this.selectedSamples.result.length ===
+                    this.samples.result.length
+            ) {
+                this.pinnedStudyHasRnaFusions = hasRnaFusion(svs);
+            }
+        },
+    });
+
+    @observable private pinnedStudyHasRnaFusions: boolean | undefined;
+
+    /**
+     * Whether the study has RNA fusions (vs. DNA SVs only). Falls back to the
+     * current cohort until a whole-study load has been seen, e.g. when the
+     * page opens with a filter already in the URL.
+     */
+    @computed get studyHasRnaFusions(): boolean {
+        return this.pinnedStudyHasRnaFusions !== undefined
+            ? this.pinnedStudyHasRnaFusions
+            : hasRnaFusion(this.cohortStructuralVariants.result || []);
+    }
+
+    @action.bound
+    selectSvGenePairSamples(
+        uniqueKey: string,
+        sampleIdentifiers: SampleIdentifier[],
+        label?: string
+    ): void {
+        this.updateChartSampleIdentifierFilter(
+            uniqueKey,
+            sampleIdentifiers,
+            false
+        );
+        // A label opts this sample-identifier filter into a labeled removable
+        // pill; without one it filters silently as before (Reset-only).
+        if (label && !_.isEmpty(sampleIdentifiers)) {
+            this._svGenePairFilterLabels.set(uniqueKey, label);
+        } else {
+            this._svGenePairFilterLabels.delete(uniqueKey);
+        }
+    }
+
+    /**
+     * The SV-gene-pair sample-identifier filters that carry a display label,
+     * for rendering as labeled removable pills. Only keys still present in the
+     * active filter set are returned (stale labels are ignored).
+     */
+    @computed
+    get svGenePairSampleFilters(): {
+        uniqueKey: string;
+        label: string;
+        numSamples: number;
+    }[] {
+        const result: {
+            uniqueKey: string;
+            label: string;
+            numSamples: number;
+        }[] = [];
+        this._svGenePairFilterLabels.forEach((label, uniqueKey) => {
+            const samples = this._chartSampleIdentifiersFilterSet.get(
+                uniqueKey
+            );
+            if (samples && samples.length > 0) {
+                result.push({ uniqueKey, label, numSamples: samples.length });
+            }
+        });
+        return result;
+    }
+
+    @action.bound
+    removeSvGenePairSampleFilter(uniqueKey: string): void {
+        this.updateChartSampleIdentifierFilter(uniqueKey, []);
+        this._svGenePairFilterLabels.delete(uniqueKey);
+    }
 
     readonly patients = remoteData({
         await: () => [this.samples],
