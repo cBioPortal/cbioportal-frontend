@@ -230,7 +230,7 @@ async function fetchTranscriptsFromEnsembl(
         const client = getClient(build);
 
         // Fetch all transcripts and canonical transcript in parallel
-        const [gnTranscripts, canonicalTranscript] = await Promise.all([
+        let [gnTranscripts, canonicalTranscript] = await Promise.all([
             client.fetchEnsemblTranscriptsGET({ hugoSymbol: geneSymbol }),
             client
                 .fetchCanonicalEnsemblTranscriptByHugoSymbolGET({
@@ -239,6 +239,18 @@ async function fetchTranscriptsFromEnsembl(
                 })
                 .catch(() => null),
         ]);
+
+        // The transcript-list lookup matches hugoSymbol case-sensitively, but
+        // the portal upper-cases symbols (C19ORF38 vs HGNC C19orf38). The
+        // canonical lookup is case-insensitive, so retry by its gene id.
+        if (
+            (!gnTranscripts || gnTranscripts.length === 0) &&
+            canonicalTranscript?.geneId
+        ) {
+            gnTranscripts = await client.fetchEnsemblTranscriptsGET({
+                geneId: canonicalTranscript.geneId,
+            });
+        }
 
         if (!gnTranscripts || gnTranscripts.length === 0) {
             console.warn(

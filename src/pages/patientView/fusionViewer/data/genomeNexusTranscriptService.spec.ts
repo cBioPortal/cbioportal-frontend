@@ -284,6 +284,38 @@ describe('genomeNexusTranscriptService', () => {
             assert.deepEqual(result, []);
         });
 
+        it('falls back to the canonical geneId when the symbol lookup is empty (case-sensitive symbol)', async () => {
+            // The portal upper-cases symbols (C19ORF38) but Genome Nexus's
+            // transcript-list lookup is case-sensitive (C19orf38), while the
+            // canonical-transcript lookup is not and returns the gene id.
+            const gene = `${uniqueGene()}ORF38`;
+            mockFetchTranscripts.mockImplementation((p: any) =>
+                Promise.resolve(
+                    p.geneId === 'ENSG00000214212'
+                        ? [
+                              makeGNTranscript({
+                                  transcriptId: 'ENST00000397820.4',
+                              }),
+                          ]
+                        : []
+                )
+            );
+            mockFetchCanonical.mockResolvedValue({
+                transcriptId: 'ENST00000397820',
+                geneId: 'ENSG00000214212',
+            });
+            mockFetchPfam.mockResolvedValue([]);
+
+            const result = await fetchTranscriptsFromEnsembl(gene, 'GRCh37');
+
+            assert.lengthOf(result, 1);
+            assert.equal(result[0].transcriptId, 'ENST00000397820');
+            assert.isTrue(result[0].isCanonical);
+            assert.deepEqual(mockFetchTranscripts.mock.calls[1][0], {
+                geneId: 'ENSG00000214212',
+            });
+        });
+
         it('returns empty array on fetch error', async () => {
             const gene = uniqueGene();
             mockFetchTranscripts.mockRejectedValue(new Error('Network error'));
