@@ -1,11 +1,16 @@
 import { action, makeObservable, observable } from 'mobx';
 import { remoteData } from 'cbioportal-frontend-commons';
-import { PatientIdentifier, SampleIdentifier } from 'cbioportal-ts-api-client';
+import {
+    PatientIdentifier,
+    SampleIdentifier,
+    StudyViewFilter,
+} from 'cbioportal-ts-api-client';
 import { fetchResourceTableData } from 'shared/api/resourceTableClient';
 import {
     IResourceTableRow,
     toResourceTableRows,
 } from 'shared/lib/ResourceTableUtils';
+import { resourceCohortFields } from 'shared/components/resourceTable/resourceTableCohort';
 
 /**
  * The items one resource viewer can step through.
@@ -23,6 +28,7 @@ export class ResourceViewerStore {
     @observable.ref private studyIds: string[] = [];
     @observable.ref private patientIdentifiers: PatientIdentifier[] = [];
     @observable.ref private sampleIdentifiers: SampleIdentifier[] = [];
+    @observable.ref private studyViewFilter: StudyViewFilter | undefined;
     @observable private resourceId: string | undefined;
     /** Rows the tabs endpoint reports, used as the page size so one request holds them all. */
     @observable private totalCount = 0;
@@ -30,11 +36,13 @@ export class ResourceViewerStore {
     @action setContext(
         studyIds: string[],
         patientIdentifiers: PatientIdentifier[],
-        sampleIdentifiers: SampleIdentifier[]
+        sampleIdentifiers: SampleIdentifier[],
+        studyViewFilter?: StudyViewFilter
     ) {
         this.studyIds = studyIds;
         this.patientIdentifiers = patientIdentifiers;
         this.sampleIdentifiers = sampleIdentifiers;
+        this.studyViewFilter = studyViewFilter;
     }
 
     @action setResource(resourceId: string | undefined, totalCount: number) {
@@ -52,10 +60,13 @@ export class ResourceViewerStore {
                 return [];
             }
             const result = await fetchResourceTableData({
-                studyIds: this.studyIds,
+                ...resourceCohortFields({
+                    studyIds: this.studyIds,
+                    patientIdentifiers: this.patientIdentifiers,
+                    sampleIdentifiers: this.sampleIdentifiers,
+                    studyViewFilter: this.studyViewFilter,
+                }),
                 resourceId: this.resourceId,
-                patientIdentifiers: this.patientIdentifiers,
-                sampleIdentifiers: this.sampleIdentifiers,
                 pageNumber: 0,
                 pageSize: this.totalCount,
             });

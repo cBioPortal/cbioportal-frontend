@@ -1,6 +1,10 @@
 import axios from 'axios';
 import { getCbioPortalApiUrl } from 'shared/api/urls';
-import { PatientIdentifier, SampleIdentifier } from 'cbioportal-ts-api-client';
+import {
+    PatientIdentifier,
+    SampleIdentifier,
+    StudyViewFilter,
+} from 'cbioportal-ts-api-client';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -80,11 +84,23 @@ export interface ResourceColumnFilter {
     values: string[];
 }
 
+/**
+ * The request body of query/fetch and metadata/fetch.
+ *
+ * The cohort is either the identifier lists or `studyViewFilter`, which the backend resolves to its
+ * samples and their patients the way the study-view charts do; when present it replaces the lists.
+ * Sending neither means every case in `studyIds`.
+ *
+ * `resourceId` names one resource; `resourceIds` reads several together as one table, and the two
+ * combine when both are given.
+ */
 export interface ResourceTableQuery {
     studyIds: string[];
-    resourceId: string;
-    patientIdentifiers: PatientIdentifier[];
-    sampleIdentifiers: SampleIdentifier[];
+    resourceId?: string;
+    resourceIds?: string[];
+    patientIdentifiers?: PatientIdentifier[];
+    sampleIdentifiers?: SampleIdentifier[];
+    studyViewFilter?: StudyViewFilter;
     search?: string;
     pageNumber: number;
     pageSize: number;

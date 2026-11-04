@@ -91,6 +91,10 @@ import {
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
 import { PlotsTabWrapper } from 'pages/studyView/StudyViewPlotsTabWrapper';
 import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
+import {
+    getStudyViewResourceCohort,
+    syncStudyViewResourceCohort,
+} from './resources/studyViewResourceCohort';
 import ResourceDataTable from 'shared/components/resourceTable/ResourceDataTable';
 import { ResourceViewerStore } from 'shared/components/resourceViewer/ResourceViewerStore';
 import ResourceViewerTab from 'shared/components/resourceViewer/ResourceViewerTab';
@@ -327,25 +331,11 @@ export default class StudyViewPage extends React.Component<
         }, 500);
 
         this.resourceTableStoreDisposer = autorun(() => {
-            const samples = this.store.selectedSamples.result;
-            if (!samples) return;
-            const allSamples = this.store.samples.result;
-            // store.samples is itself filtered to the queried identifiers for a virtual study or
-            // case list, so "every sample is selected" does not mean "the whole study" there.
-            const coversWholeStudy = _.isEmpty(
-                this.store.queriedSampleIdentifiers.result
-            );
-            this.resourceTableStore.setContextFromSelection(
-                samples,
-                allSamples,
-                coversWholeStudy
-            );
+            const cohort = getStudyViewResourceCohort(this.store);
+            if (!cohort) return;
+            syncStudyViewResourceCohort(this.resourceTableStore, cohort);
             this.resourceTableStores.forEach(store =>
-                store.setContextFromSelection(
-                    samples,
-                    allSamples,
-                    coversWholeStudy
-                )
+                syncStudyViewResourceCohort(store, cohort)
             );
             this.resourceViewerStores.forEach(store =>
                 this.setViewerStoreContext(store)
@@ -377,13 +367,9 @@ export default class StudyViewPage extends React.Component<
             store.setSelectedResourceId(resourceId);
             this.resourceTableStores.set(resourceId, store);
 
-            const samples = this.store.selectedSamples.result;
-            if (samples) {
-                store.setContextFromSelection(
-                    samples,
-                    this.store.samples.result,
-                    _.isEmpty(this.store.queriedSampleIdentifiers.result)
-                );
+            const cohort = getStudyViewResourceCohort(this.store);
+            if (cohort) {
+                store.setCohort(cohort);
             }
         }
         return store;
@@ -393,7 +379,8 @@ export default class StudyViewPage extends React.Component<
         store.setContext(
             this.resourceTableStore.studyIds,
             this.resourceTableStore.patientIdentifiers,
-            this.resourceTableStore.sampleIdentifiers
+            this.resourceTableStore.sampleIdentifiers,
+            this.resourceTableStore.studyViewFilter
         );
     }
 
