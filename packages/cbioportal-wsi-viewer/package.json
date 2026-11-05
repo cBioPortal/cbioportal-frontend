@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-wsi-viewer",
   "description": "Whole slide image (WSI) viewer for cBioPortal pathology slides: an OpenSeadragon-based viewer plus slide navigation, metadata panels and tile-server URL helpers",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "main": "dist/index.js",
   "module": "dist/es/index.js",
