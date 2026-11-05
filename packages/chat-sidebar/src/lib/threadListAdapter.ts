@@ -1,9 +1,6 @@
 import { createLocalStorageAdapter } from '@assistant-ui/core/react';
 import { RemoteThreadListAdapter } from '@assistant-ui/react';
-import {
-    ThreadHistoryProvider,
-    useThreadHistoryAdapters,
-} from './threadHistoryAdapter';
+import { useThreadHistoryAdapters } from './threadHistoryAdapter';
 import { PREFIX, storage } from './threadStorage';
 import { titleAdapter } from './titleAdapter';
 
@@ -21,9 +18,9 @@ const base = createLocalStorageAdapter({
 });
 
 // One instance for the app's lifetime: a new adapter reference tears the list
-// down and reloads it.
+// down and reloads it. The runtime calls `unstable_useAdapters` once per
+// mounted thread, background ones included, so each gets the history adapter.
 export const threadListAdapter: RemoteThreadListAdapter = {
     ...base,
-    unstable_Provider: ThreadHistoryProvider,
     unstable_useAdapters: useThreadHistoryAdapters,
 };

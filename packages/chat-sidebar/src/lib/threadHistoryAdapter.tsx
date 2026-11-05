@@ -1,17 +1,9 @@
-import {
-    FC,
-    PropsWithChildren,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     GenericThreadHistoryAdapter,
     MessageFormatAdapter,
     MessageFormatItem,
     MessageStorageEntry,
-    RuntimeAdapterProvider,
     ThreadHistoryAdapter,
     useAui,
 } from '@assistant-ui/react';
@@ -90,16 +82,6 @@ class LocalStorageHistoryAdapter implements ThreadHistoryAdapter {
         const resolveItem = (): ThreadListItem =>
             pinned ?? getAui().threadListItem;
 
-        const readRows = async (remoteId: string): Promise<StoredRow[]> =>
-            parseRows(await storage.getItem(messagesKey(remoteId)));
-
-        const writeRows = (remoteId: string, rows: StoredRow[]) => {
-            const key = messagesKey(remoteId);
-            return queue.run(key, () =>
-                storage.setItem(key, JSON.stringify(rows))
-            );
-        };
-
         const toRow = (item: MessageFormatItem<TMessage>): StoredRow => ({
             id: formatAdapter.getId(item.message),
             parent_id: item.parentId,
@@ -115,7 +97,9 @@ class LocalStorageHistoryAdapter implements ThreadHistoryAdapter {
             async load() {
                 const remoteId = resolveItem().getState().remoteId;
                 if (!remoteId) return { messages: [] };
-                const rows = await readRows(remoteId);
+                const rows = parseRows(
+                    await storage.getItem(messagesKey(remoteId))
+                );
                 return {
                     messages: rows
                         .filter(row => row.format === formatAdapter.format)
@@ -164,19 +148,24 @@ class LocalStorageHistoryAdapter implements ThreadHistoryAdapter {
                 const ids = new Set(
                     items.map(item => formatAdapter.getId(item.message))
                 );
-                const rows = await readRows(remoteId);
-                await writeRows(
-                    remoteId,
-                    rows.filter(row => !ids.has(row.id))
-                );
+                const key = messagesKey(remoteId);
+                // Read inside the queue too: a stopped run deletes its prompt
+                // while that run's appends may still be landing.
+                await queue.run(key, async () => {
+                    const rows = parseRows(await storage.getItem(key));
+                    await storage.setItem(
+                        key,
+                        JSON.stringify(rows.filter(row => !ids.has(row.id)))
+                    );
+                });
             },
         };
     }
 }
 
 // The adapter resolves the live aui lazily, so it is created once and kept
-// across renders; the object handed to the provider has to be memoized too,
-// because the host republishes its adapters on every identity change.
+// across renders; the returned object has to be memoized too, because the
+// host republishes its adapters on every identity change.
 export function useThreadHistoryAdapters() {
     const aui = useAui();
     const auiRef = useRef(aui);
@@ -188,14 +177,3 @@ export function useThreadHistoryAdapters() {
     );
     return useMemo(() => ({ history }), [history]);
 }
-
-// Wrapped around every mounted thread. It must render children on its first
-// commit — deferring them leaves thread context unavailable downstream.
-export const ThreadHistoryProvider: FC<PropsWithChildren> = ({ children }) => {
-    const adapters = useThreadHistoryAdapters();
-    return (
-        <RuntimeAdapterProvider adapters={adapters}>
-            {children}
-        </RuntimeAdapterProvider>
-    );
-};
