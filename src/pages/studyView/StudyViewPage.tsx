@@ -89,7 +89,7 @@ import {
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
 import { STUDY_VIEW_RESOURCE_TABLE_OPTIONS } from 'shared/lib/ResourcePolicy';
-import { isResourceListedInTable } from 'shared/lib/ResourceTableUtils';
+import { listedResourceTabs } from 'shared/lib/ResourceTableUtils';
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
 import { PlotsTabWrapper } from 'pages/studyView/StudyViewPlotsTabWrapper';
 import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
@@ -102,7 +102,7 @@ import { ResourceViewerStore } from 'shared/components/resourceViewer/ResourceVi
 import ResourceViewerTab from 'shared/components/resourceViewer/ResourceViewerTab';
 import resourceViewerStyles from 'shared/components/resourceViewer/styles.module.scss';
 import { ResourceTableTab } from 'shared/api/resourceTableClient';
-import { isStudyWideResource } from 'shared/lib/ResourceTableUtils';
+import { isResourceViewerTab } from 'shared/lib/ResourceTableUtils';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -368,7 +368,7 @@ export default class StudyViewPage extends React.Component<
         let store = this.resourceTableStores.get(resourceId);
         if (!store) {
             store = new ResourceTableStore(STUDY_VIEW_RESOURCE_TABLE_OPTIONS);
-            store.setSelectedResourceId(resourceId);
+            store.scopeToResource(resourceId);
             this.resourceTableStores.set(resourceId, store);
 
             const cohort = getStudyViewResourceCohort(this.store);
@@ -526,18 +526,17 @@ export default class StudyViewPage extends React.Component<
         }
     }
 
-    @computed get visibleResourceDefinitions() {
-        return (this.store.resourceDefinitions.result || []).filter(d =>
-            isResourceListedInTable(
-                d.resourceId,
-                STUDY_VIEW_RESOURCE_TABLE_OPTIONS
-            )
+    /** The tabs the study's resources are listed in, a combined tab once; see listedResourceTabs. */
+    @computed get listedResourceTabs() {
+        return listedResourceTabs(
+            this.store.resourceDefinitions.result || [],
+            STUDY_VIEW_RESOURCE_TABLE_OPTIONS
         );
     }
 
     @computed get shouldShowResources() {
         if (this.store.resourceDefinitions.isComplete) {
-            return this.visibleResourceDefinitions.length > 0;
+            return this.listedResourceTabs.length > 0;
         } else {
             return false;
         }
@@ -710,7 +709,7 @@ export default class StudyViewPage extends React.Component<
                 return [] as JSX.Element[];
             }
             return apiTabs.map(tab =>
-                isStudyWideResource(tab) ? (
+                isResourceViewerTab(tab, STUDY_VIEW_RESOURCE_TABLE_OPTIONS) ? (
                     this.renderViewerTab(tab)
                 ) : (
                     <MSKTab
@@ -771,9 +770,9 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get isStudyWideViewerTabActive(): boolean {
-        return (this.resourceTableStore.tabs.result || []).some(
+        return this.resourceTableStore.visibleTabs.some(
             tab =>
-                isStudyWideResource(tab) &&
+                isResourceViewerTab(tab, STUDY_VIEW_RESOURCE_TABLE_OPTIONS) &&
                 (this.store.currentTab as string) ===
                     getStudyViewResourceTableTabId(tab.resourceId)
         );
@@ -963,11 +962,9 @@ export default class StudyViewPage extends React.Component<
                                             StudyViewPageTabKeyEnum.FILES_AND_LINKS
                                         }
                                         linkText={
-                                            this.visibleResourceDefinitions
-                                                .length === 1
-                                                ? this
-                                                      .visibleResourceDefinitions[0]
-                                                      .displayName
+                                            this.listedResourceTabs.length === 1
+                                                ? this.listedResourceTabs[0]
+                                                      .label
                                                 : RESOURCES_TAB_NAME
                                         }
                                         hide={

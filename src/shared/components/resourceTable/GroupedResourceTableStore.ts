@@ -18,6 +18,7 @@ import {
     EMPTY_RESOURCE_COHORT,
     ResourceCohort,
     resourceCohortFields,
+    resourceIdFields,
 } from './resourceTableCohort';
 
 export const EMPTY_GROUP_PAGE: ResourceTableGroupPage = {
@@ -85,18 +86,6 @@ export function isGroupCountColumnValid(columnId: string): boolean {
 
 /** groups/fetch rejects a page whose offset, pageNumber * pageSize, exceeds a Java int. */
 const MAX_GROUP_OFFSET = 2 ** 31 - 1;
-
-/**
- * The resources a request reads: one goes in `resourceId`, several in `resourceIds`, which the
- * backend reads together as one table.
- */
-export function resourceIdFields(
-    resourceIds: string[]
-): Pick<ResourceTableQuery, 'resourceId' | 'resourceIds'> {
-    return resourceIds.length === 1
-        ? { resourceId: resourceIds[0] }
-        : { resourceIds };
-}
 
 export interface ResourceTableGroupsState {
     cohort: ResourceCohort;

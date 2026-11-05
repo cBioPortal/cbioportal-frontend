@@ -14,6 +14,7 @@ import {
     ResourceTableRow,
 } from 'shared/api/resourceTableClient';
 import {
+    combinedTabOwners,
     IResourceTableRow,
     IResourceTableTab,
     ResourceTableStoreOptions,
@@ -24,8 +25,11 @@ import {
     SampleIdentifier,
     StudyViewFilter,
 } from 'cbioportal-ts-api-client';
-import { ResourceCohort, resourceCohortFields } from './resourceTableCohort';
-import { resourceIdFields } from './GroupedResourceTableStore';
+import {
+    ResourceCohort,
+    resourceCohortFields,
+    resourceIdFields,
+} from './resourceTableCohort';
 
 // Guards against a pathological resource pulling an unbounded result set into the browser.
 const MAX_DOWNLOAD_ROWS = 100000;
@@ -48,37 +52,39 @@ export interface ResourceTableStoreTab extends ResourceTableTab {
 
 /**
  * The tabs a table offers for the fetched per-resource tabs: each combined tab replaces the tabs
- * of its resources, where the first of them was, and reads those present; then hideResource
- * drops tabs by their id. A combined tab's totalCount is its resources' sum. Its patient and sample counts
- * are the largest of theirs, a lower bound, since two resources can share a case; the table's
- * header shows the exact counts.
+ * of its resources, at the position of the first of them in the fetched order, and reads those
+ * present; then hideResource drops tabs by their id. A combined tab may share its id with one of
+ * its members; a fetched resource sharing a combined tab's id without being a member is dropped.
+ * A resource two combined tabs list belongs to the first (see combinedTabOwners).
+ *
+ * A combined tab's totalCount is its resources' sum. Its patient and sample counts are the
+ * largest of theirs, a lower bound, since two resources can share a case; the table's header
+ * shows the exact counts.
  */
 export function buildResourceTableTabs(
     fetched: ResourceTableTab[],
     options: ResourceTableStoreOptions
 ): ResourceTableStoreTab[] {
     const combinedTabs = options.combinedTabs || [];
+    const owners = combinedTabOwners(combinedTabs);
     const combinedIds = new Set(combinedTabs.map(tab => tab.id));
     const tabs: ResourceTableStoreTab[] = [];
     const placed = new Set<string>();
     fetched.forEach(tab => {
-        // A fetched resource sharing a combined tab's id gives way to it.
-        if (combinedIds.has(tab.resourceId)) {
-            return;
-        }
-        const combined = combinedTabs.find(c =>
-            c.resourceIds.includes(tab.resourceId)
-        );
+        const combined = owners.get(tab.resourceId);
         if (!combined) {
-            tabs.push({ ...tab, resourceIds: [tab.resourceId] });
+            // A resource that is not a member gives way to a combined tab with its id.
+            if (!combinedIds.has(tab.resourceId)) {
+                tabs.push({ ...tab, resourceIds: [tab.resourceId] });
+            }
             return;
         }
         if (placed.has(combined.id)) {
             return;
         }
         placed.add(combined.id);
-        const members = fetched.filter(t =>
-            combined.resourceIds.includes(t.resourceId)
+        const members = fetched.filter(
+            t => owners.get(t.resourceId) === combined
         );
         tabs.push({
             resourceId: combined.id,
@@ -106,6 +112,8 @@ export class ResourceTableStore {
     /** When set, the row and metadata requests send this as the cohort; see ResourceCohort. */
     @observable.ref studyViewFilter: StudyViewFilter | undefined;
     @observable selectedResourceId: string | undefined;
+    /** Whether the store shows only selectedResourceId; see scopeToResource. */
+    @observable isScoped = false;
 
     // Server-side state
     @observable pageNumber: number = 0;
@@ -146,8 +154,8 @@ export class ResourceTableStore {
         this.pageNumber = 0;
         this.searchTerm = '';
         this.filters = [];
-        // selectedResourceId survives a cohort change: a store created for one resource stays
-        // scoped to it. Cleared here, activeResourceId falls back to the first tab instead.
+        // selectedResourceId survives a cohort change, so a scoped store stays on its resource.
+        // A selection the new cohort's tabs lack resolves as activeResourceId describes.
     }
 
     @computed get cohort(): ResourceCohort {
@@ -157,6 +165,15 @@ export class ResourceTableStore {
             sampleIdentifiers: this.sampleIdentifiers,
             studyViewFilter: this.studyViewFilter,
         };
+    }
+
+    /**
+     * Shows only this resource's tab: unlike setSelectedResourceId, the store never falls back to
+     * another tab, and reads nothing while the tabs lack this one.
+     */
+    @action scopeToResource(resourceId: string) {
+        this.isScoped = true;
+        this.setSelectedResourceId(resourceId);
     }
 
     @action setSelectedResourceId(resourceId: string) {
@@ -208,26 +225,36 @@ export class ResourceTableStore {
         return buildResourceTableTabs(this.tabs.result || [], this.options);
     }
 
-    /** The active tab's id: a resource id, or a combined tab's id. */
+    /**
+     * The active tab's id: a resource id, or a combined tab's id. The selected tab while the tabs
+     * load or once they include it. Once they have loaded without it (a cohort change removed
+     * it, or the id is hidden, combined into another tab or unknown), a scoped store keeps it,
+     * reading nothing, and any other store falls back to the first tab, as it does with no
+     * selection.
+     */
     @computed get activeResourceId(): string | undefined {
-        return this.selectedResourceId || this.visibleTabs[0]?.resourceId;
+        const selected = this.selectedResourceId;
+        if (
+            selected &&
+            (this.isScoped ||
+                !this.tabs.isComplete ||
+                this.visibleTabs.some(tab => tab.resourceId === selected))
+        ) {
+            return selected;
+        }
+        return this.visibleTabs[0]?.resourceId;
     }
 
     /**
-     * The resources the active tab reads. A combined tab reads those of its resources the cohort
-     * has, and none while the tabs load or when it has none, since the API rejects a resource
-     * that none of the studies holds.
+     * The resources the active tab reads: those of its resources the cohort has, per the tabs.
+     * None while the tabs load or when the tabs lack the active one, so a stale, hidden or
+     * combined-away id is never read on its own, and none of a combined tab with no members
+     * present, since the API rejects a resource that none of the studies holds.
      */
     @computed get activeResourceIds(): string[] {
         const active = this.activeResourceId;
-        if (!active) {
+        if (!active || !this.tabs.isComplete) {
             return [];
-        }
-        const combined = (this.options.combinedTabs || []).find(
-            tab => tab.id === active
-        );
-        if (!combined) {
-            return [active];
         }
         return (
             this.visibleTabs.find(tab => tab.resourceId === active)
@@ -355,8 +382,13 @@ export class ResourceTableStore {
     /**
      * Every row matching the current search, filters and sort. The table is server-paginated, so
      * downloading "the table" has to go back to the server rather than use the page on screen.
+     * Nothing while the tabs load.
      */
     async fetchAllRowsForDownload(): Promise<IResourceTableRow[]> {
+        // While the tabs reload, the active tab's resources are the previous cohort's.
+        if (!this.tabs.isComplete) {
+            return [];
+        }
         const query = this.baseQuery;
         if (!query) {
             return [];
