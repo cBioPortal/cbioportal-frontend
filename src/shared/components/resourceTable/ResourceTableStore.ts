@@ -14,9 +14,9 @@ import {
     ResourceTableRow,
 } from 'shared/api/resourceTableClient';
 import {
-    CombinedResourceTab,
     IResourceTableRow,
     IResourceTableTab,
+    ResourceTableStoreOptions,
     toResourceTableRows,
 } from 'shared/lib/ResourceTableUtils';
 import { resourceSearchTermForQuery } from 'shared/lib/ResourcePolicy';
@@ -47,17 +47,10 @@ export interface ResourceTableStoreTab extends ResourceTableTab {
     resourceIds: string[];
 }
 
-export interface ResourceTableStoreOptions {
-    /** Resources left out of the table, e.g. ones another view shows. */
-    hideResource?: (resourceId: string) => boolean;
-    /** Tabs that show several resources together, in place of their own tabs. */
-    combinedTabs?: CombinedResourceTab[];
-}
-
 /**
  * The tabs a table offers for the fetched per-resource tabs: each combined tab replaces the tabs
- * of its resources, where the first of them was, and reads those present; then hidden resources
- * are left out. A combined tab's totalCount is its resources' sum. Its patient and sample counts
+ * of its resources, where the first of them was, and reads those present; then hideResource
+ * drops tabs by their id. A combined tab's totalCount is its resources' sum. Its patient and sample counts
  * are the largest of theirs, a lower bound, since two resources can share a case; the table's
  * header shows the exact counts.
  */
@@ -241,6 +234,12 @@ export class ResourceTableStore {
             this.visibleTabs.find(tab => tab.resourceId === active)
                 ?.resourceIds || []
         );
+    }
+
+    /** Whether the active tab's table leaves a metadata key out; see hideMetadataKey. */
+    isMetadataKeyHidden(metadataKey: string): boolean {
+        const hide = this.options.hideMetadataKey;
+        return !!hide && hide(this.activeResourceIds, metadataKey);
     }
 
     /** The search sent to the backend; see resourceSearchTermForQuery. */

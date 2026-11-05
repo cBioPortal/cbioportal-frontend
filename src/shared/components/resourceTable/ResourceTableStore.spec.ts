@@ -6,6 +6,7 @@ import {
     fetchResourceTableMetadata,
     fetchResourceTableTabs,
 } from 'shared/api/resourceTableClient';
+import { isResourceListedInTable } from 'shared/lib/ResourceTableUtils';
 import {
     buildResourceTableTabs,
     ResourceTableStore,
@@ -283,5 +284,68 @@ describe('combined resource tabs', () => {
             'SLIDE_PATIENT',
         ]);
         assert.equal(download.pageSize, 7);
+    });
+});
+
+describe('resource table options', () => {
+    const slides = {
+        id: 'SLIDES',
+        label: 'Slides',
+        resourceIds: ['SLIDE_SAMPLE', 'SLIDE_PATIENT'],
+    };
+
+    it('lists a resource in a combined tab even when its own tab is hidden', () => {
+        const options = {
+            combinedTabs: [slides],
+            hideResource: (id: string) => id !== 'NOTES',
+        };
+        assert.isTrue(isResourceListedInTable('SLIDE_PATIENT', options));
+        assert.isTrue(isResourceListedInTable('NOTES', options));
+        assert.isFalse(isResourceListedInTable('REPORTS', options));
+        assert.isTrue(isResourceListedInTable('REPORTS', {}));
+    });
+
+    it('offers every fetched resource as its own tab without options', () => {
+        const tabs = [
+            {
+                resourceId: 'NOTES',
+                label: 'Notes',
+                totalCount: 1,
+                patientCount: 1,
+                sampleCount: 0,
+            },
+        ];
+        assert.deepEqual(buildResourceTableTabs(tabs, {}), [
+            { ...tabs[0], resourceIds: ['NOTES'] },
+        ]);
+    });
+
+    it("asks hideMetadataKey about the active tab's resources", () => {
+        const asked: string[][] = [];
+        const store = new ResourceTableStore({
+            combinedTabs: [slides],
+            hideMetadataKey: (resourceIds, key) => {
+                asked.push([...resourceIds]);
+                return key === 'internal';
+            },
+        });
+        (store as any).tabs = {
+            result: [
+                {
+                    resourceId: 'SLIDE_PATIENT',
+                    label: 'Unmatched',
+                    totalCount: 1,
+                    patientCount: 1,
+                    sampleCount: 0,
+                },
+            ],
+        };
+
+        assert.isTrue(store.isMetadataKeyHidden('internal'));
+        assert.isFalse(store.isMetadataKeyHidden('score'));
+        assert.deepEqual(asked[0], ['SLIDE_PATIENT']);
+        assert.isFalse(
+            new ResourceTableStore().isMetadataKeyHidden('internal')
+        );
     });
 });

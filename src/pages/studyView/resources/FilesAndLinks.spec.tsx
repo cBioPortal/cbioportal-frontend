@@ -1,9 +1,10 @@
 import { getServerConfig } from 'config/config';
 import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
-import {
-    isHiddenFromStudyResourceTable as isHiddenFromFilesAndLinks,
-    STUDY_VIEW_RESOURCE_TABLE_OPTIONS,
-} from 'shared/lib/ResourcePolicy';
+import { STUDY_VIEW_RESOURCE_TABLE_OPTIONS } from 'shared/lib/ResourcePolicy';
+import { isResourceListedInTable } from 'shared/lib/ResourceTableUtils';
+
+const isHiddenFromFilesAndLinks = (resourceId: string) =>
+    !isResourceListedInTable(resourceId, STUDY_VIEW_RESOURCE_TABLE_OPTIONS);
 
 describe('Files & Links resource filtering', () => {
     let savedTileServerUrl: unknown;
@@ -66,6 +67,8 @@ describe('Files & Links resource filtering', () => {
             ['OTHER', 'Pathology report', 2],
         ]);
         expect(store.activeResourceIds).toEqual(['WSI_SAMPLE', 'WSI_PATIENT']);
+        expect(store.isMetadataKeyHidden('serving')).toBe(true);
+        expect(store.isMetadataKeyHidden('slide_key')).toBe(false);
     });
 
     it('offers only the visible resources as tabs', () => {

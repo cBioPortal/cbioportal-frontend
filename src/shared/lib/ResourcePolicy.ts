@@ -7,7 +7,10 @@ import { getServerConfig } from 'config/config';
 import { PatientViewPageTabs } from 'pages/patientView/PatientViewPageTabIds';
 import { PathologySlideSettings } from 'pages/patientView/PatientViewUrlWrapper';
 import { isNonEmptyString } from './ResourceUtils';
-import { CombinedResourceTab } from './ResourceTableUtils';
+import {
+    CombinedResourceTab,
+    ResourceTableStoreOptions,
+} from './ResourceTableUtils';
 
 // H&E slide resources that the native viewer replaces. Every H&E resource on
 // the public and MSK portals uses one of these IDs.
@@ -78,23 +81,14 @@ export function isHiddenFromResourceViews(resourceId: string): boolean {
 }
 
 /**
- * Resources study view's resource tables leave out: those of isHiddenFromResourceViews, except
- * the slide resources, which show together as the Pathology slides tab
- * (STUDY_VIEW_COMBINED_RESOURCE_TABS) rather than as their own tabs.
+ * How study view's resource tables (its resource tabs and Files & Links) list resources: the slide
+ * resources together as the Pathology slides tab, without their tile serving block, and the
+ * resources hidden from the resource views (legacy H&E) left out.
  */
-export function isHiddenFromStudyResourceTable(resourceId: string): boolean {
-    return (
-        isHiddenFromResourceViews(resourceId) &&
-        !STUDY_VIEW_COMBINED_RESOURCE_TABS.some(tab =>
-            tab.resourceIds.includes(resourceId)
-        )
-    );
-}
-
-/** How study view's resource tables (its resource tabs and Files & Links) list resources. */
-export const STUDY_VIEW_RESOURCE_TABLE_OPTIONS = {
-    hideResource: isHiddenFromStudyResourceTable,
+export const STUDY_VIEW_RESOURCE_TABLE_OPTIONS: ResourceTableStoreOptions = {
+    hideResource: isHiddenFromResourceViews,
     combinedTabs: STUDY_VIEW_COMBINED_RESOURCE_TABS,
+    hideMetadataKey: isHiddenMetadataKey,
 };
 
 /**

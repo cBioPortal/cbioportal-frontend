@@ -2,10 +2,10 @@ import { assert } from 'chai';
 import { getServerConfig } from 'config/config';
 import {
     isHiddenFromResourceViews,
-    isHiddenFromStudyResourceTable,
     isHiddenMetadataKey,
     PATHOLOGY_SLIDES_RESOURCE_TAB,
     STUDY_VIEW_COMBINED_RESOURCE_TABS,
+    STUDY_VIEW_RESOURCE_TABLE_OPTIONS,
     isWsiResourceId,
     isWsiTileServerConfigured,
     patientViewPathForResource,
@@ -15,6 +15,10 @@ import {
     slideStainFilterForColumnFilters,
     slideStainFilterQuery,
 } from './ResourcePolicy';
+import { isResourceListedInTable } from './ResourceTableUtils';
+
+const isHiddenFromStudyResourceTable = (resourceId: string) =>
+    !isResourceListedInTable(resourceId, STUDY_VIEW_RESOURCE_TABLE_OPTIONS);
 
 describe('legacy H&E resource policy', () => {
     let savedTileServerUrl: unknown;

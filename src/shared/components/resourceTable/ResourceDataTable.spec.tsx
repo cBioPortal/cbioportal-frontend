@@ -30,7 +30,7 @@ describe('ResourceDataTable metadata columns', () => {
                 facetRanges: {},
                 distinctValueCounts: {},
                 rowsForDisplay: [],
-                activeResourceIds: [],
+                isMetadataKeyHidden: () => false,
                 ...store,
             } as any,
         });
@@ -128,35 +128,30 @@ describe('ResourceDataTable metadata columns', () => {
         assert.equal(slideId.download!(slideRow), '1234094d6bc6');
     });
 
-    it("leaves out the slides' tile serving block, from the table and the download", () => {
-        const slideColumns = (activeResourceIds: string[]) =>
+    it('leaves out the keys the store hides, from the table and the download', () => {
+        const hideInternal = (key: string) => key === 'internal';
+        assert.deepEqual(
             columns({
-                activeResourceIds,
+                isMetadataKeyHidden: hideInternal,
                 columns: [
-                    metadataColumn({ id: 'metadata:slide_key' }),
-                    metadataColumn({ id: 'metadata:serving' }),
+                    metadataColumn({ id: 'metadata:score' }),
+                    metadataColumn({ id: 'metadata:internal' }),
                 ] as ResourceColumnInfo[],
-            }).map(c => c.id);
-
-        assert.deepEqual(slideColumns(['WSI_SAMPLE', 'WSI_PATIENT']), [
-            'metadata:slide_key',
-        ]);
-        assert.deepEqual(slideColumns(['NOTES']), [
-            'metadata:slide_key',
-            'metadata:serving',
-        ]);
+            }).map(c => c.id),
+            ['metadata:score']
+        );
         // Without backend columns, the keys found in the rows are filtered alike.
         assert.deepEqual(
             columns({
-                activeResourceIds: ['WSI_PATIENT'],
+                isMetadataKeyHidden: hideInternal,
                 rowsForDisplay: [
                     {
-                        resourceId: 'WSI_PATIENT',
-                        metadata: { slide_key: 'a', serving: '[object]' },
+                        resourceId: 'NOTES',
+                        metadata: { score: '1', internal: 'x' },
                     } as any,
                 ],
             }).map(c => c.id),
-            ['metadata:slide_key']
+            ['metadata:score']
         );
     });
 

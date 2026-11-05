@@ -88,10 +88,8 @@ import {
     buildCustomTabs,
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
-import {
-    isHiddenFromStudyResourceTable,
-    STUDY_VIEW_RESOURCE_TABLE_OPTIONS,
-} from 'shared/lib/ResourcePolicy';
+import { STUDY_VIEW_RESOURCE_TABLE_OPTIONS } from 'shared/lib/ResourcePolicy';
+import { isResourceListedInTable } from 'shared/lib/ResourceTableUtils';
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
 import { PlotsTabWrapper } from 'pages/studyView/StudyViewPlotsTabWrapper';
 import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
@@ -529,11 +527,11 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get visibleResourceDefinitions() {
-        // The resources the resource tables list (slides through the combined
-        // Pathology slides tab), so a study whose resources are all hidden from
-        // them (legacy H&E) has no Files & Links tab.
-        return (this.store.resourceDefinitions.result || []).filter(
-            d => !isHiddenFromStudyResourceTable(d.resourceId)
+        return (this.store.resourceDefinitions.result || []).filter(d =>
+            isResourceListedInTable(
+                d.resourceId,
+                STUDY_VIEW_RESOURCE_TABLE_OPTIONS
+            )
         );
     }
 

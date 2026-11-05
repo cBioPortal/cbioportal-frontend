@@ -17,7 +17,6 @@ import ServerDrivenTable, {
 } from 'shared/components/serverDrivenTable/ServerDrivenTable';
 import TabbedTableLayout from 'shared/components/tabbedTable/TabbedTableLayout';
 import {
-    isHiddenMetadataKey,
     isWsiResourceId,
     patientViewPathForResource,
     resourceMetadataDisplayValue,
@@ -154,21 +153,16 @@ export class ResourceDataTable extends React.Component<
      * Metadata columns as the backend describes them: discovered from the data, then decorated
      * with the resource's `custom_metadata` contract where it declares a label, description,
      * type or filterability. Ordering is the backend's too — contract-declared fields first, in
-     * declaration order. Keys the resource policy hides are left out, from the table and its
-     * download alike.
+     * declaration order. Keys the store's hideMetadataKey option hides are left out, from the
+     * table and its download alike.
      */
     @computed get metadataColumnInfos(): ResourceColumnInfo[] {
         return this.props.store.columns.filter(
             column =>
                 column.source === 'metadata' &&
-                !this.isHiddenKey(column.id.slice('metadata:'.length))
-        );
-    }
-
-    private isHiddenKey(metadataKey: string): boolean {
-        return isHiddenMetadataKey(
-            this.props.store.activeResourceIds,
-            metadataKey
+                !this.props.store.isMetadataKeyHidden(
+                    column.id.slice('metadata:'.length)
+                )
         );
     }
 
@@ -189,7 +183,7 @@ export class ResourceDataTable extends React.Component<
                   a.toLowerCase().localeCompare(b.toLowerCase())
               )
             : getResourceTableMetadataKeys(this.rows)
-        ).filter(key => !this.isHiddenKey(key));
+        ).filter(key => !this.props.store.isMetadataKeyHidden(key));
     }
 
     @computed get metadataColumns(): ServerDrivenTableColumn<
