@@ -8,8 +8,18 @@ import {
 } from 'shared/components/resourceTable/resourceTableCohort';
 
 /**
- * The resource-table cohort of a study view, or undefined until its selection has loaded. Read it
+ * The resource-table cohort of a study view, or undefined while its selection is loading. Read it
  * inside a reaction: it tracks the selection and the filter.
+ *
+ * Undefined means "leave the cohort as it is". A MobxPromise keeps its previous result while it
+ * refetches, so pairing the new filter with that result would set a cohort whose filter and
+ * identifier lists disagree, and clearing the last filter would briefly send the old filtered
+ * identifiers with no filter. Waiting for every promise the cohort reads to complete sets it
+ * once per filter change, from a consistent selection.
+ *
+ * In hesitate mode, chart changes queue in `filtersProxy` until submitted, while `store.filters`
+ * holds the submitted filter. The selection the charts show is fetched with the submitted filter,
+ * so sending `store.filters`, not the queued one, keeps the table on the same cases as the charts.
  */
 export function getStudyViewResourceCohort(
     store: Pick<
@@ -21,10 +31,15 @@ export function getStudyViewResourceCohort(
         | 'chartsAreFiltered'
     >
 ): ResourceCohort | undefined {
-    const selected = store.selectedSamples.result;
-    if (!selected) return undefined;
+    if (
+        !store.selectedSamples.isComplete ||
+        !store.samples.isComplete ||
+        !store.queriedSampleIdentifiers.isComplete
+    ) {
+        return undefined;
+    }
     return studyViewResourceCohort({
-        selected,
+        selected: store.selectedSamples.result!,
         all: store.samples.result,
         // store.samples is itself filtered to the queried identifiers for a virtual study or
         // case list, so "every sample is selected" does not mean "the whole study" there.
