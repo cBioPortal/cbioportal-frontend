@@ -132,6 +132,23 @@ describe('buildResourceTableGroupsQuery', () => {
         );
     });
 
+    it('leaves out a locator without a study', () => {
+        ['', '  '].forEach(studyId =>
+            assert.isUndefined(
+                buildResourceTableGroupsQuery({
+                    ...baseState,
+                    locate: { studyId, patientId: 'patient_1' },
+                })!.locate
+            )
+        );
+        assert.isUndefined(
+            buildResourceTableGroupsQuery({
+                ...baseState,
+                locate: { studyId: 'study_a', patientId: ' ' },
+            })!.locate
+        );
+    });
+
     it('leaves out a sort the grouping cannot order by', () => {
         const query = buildResourceTableGroupsQuery({
             ...baseState,
@@ -261,6 +278,53 @@ describe('GroupedResourceTableStore', () => {
         assert.equal(store.locatedIndex, 57);
     });
 
+    describe('a locate answered after the user moves on', () => {
+        let resolvers: ((page: ResourceTableGroupPage) => void)[];
+
+        beforeEach(() => {
+            resolvers = [];
+            fetchGroups.mockImplementation(
+                () =>
+                    new Promise<ResourceTableGroupPage>(resolve =>
+                        resolvers.push(resolve)
+                    )
+            );
+        });
+
+        /** Answers every request so far, each locating the group at index 57. */
+        async function answerAll(store: GroupedResourceTableStore) {
+            resolvers.splice(0).forEach(resolve => resolve(page(120, 57)));
+            await when(() => store.groups.isComplete);
+        }
+
+        it('stays on the page the user asked for', async () => {
+            const store = newStore();
+            store.setPageSize(25);
+            await answerAll(store);
+
+            store.locateGroup({ studyId: 'study_a', patientId: 'patient_58' });
+            store.setPage(1);
+            await answerAll(store);
+
+            assert.equal(lastQuery().pageNumber, 1);
+            assert.equal(store.pageNumber, 1);
+            assert.equal(store.locatedIndex, 57);
+        });
+
+        it('stays on the first page after a search', async () => {
+            const store = newStore();
+            store.setPageSize(25);
+            await answerAll(store);
+
+            store.locateGroup({ studyId: 'study_a', patientId: 'patient_58' });
+            store.setSearchTerm('TCGA');
+            await answerAll(store);
+
+            assert.equal(lastQuery().search, 'TCGA');
+            assert.equal(store.pageNumber, 0);
+        });
+    });
+
     it('stays on its page when the located group is filtered out', async () => {
         fetchGroups.mockResolvedValue(page(10, null));
         const store = newStore();
@@ -315,6 +379,59 @@ describe('GroupedResourceTableStore', () => {
         const store = new GroupedResourceTableStore();
         const columns = Array.from({ length: 11 }, (_, i) => `metadata:k${i}`);
         assert.throws(() => store.setGroupCounts(columns));
+    });
+
+    it('drops repeated group counts before counting them', () => {
+        const store = new GroupedResourceTableStore();
+        const columns = Array.from({ length: 10 }, (_, i) => `metadata:k${i}`);
+
+        store.setGroupCounts([...columns, 'metadata:k0']);
+
+        assert.deepEqual(store.groupCounts, columns);
+    });
+
+    it('rejects group counts the endpoint cannot count', () => {
+        const store = new GroupedResourceTableStore();
+        store.setGroupCounts(['resourceId']);
+
+        ['metadata:', 'metadata:  ', 'stain', 'patientId'].forEach(column =>
+            assert.throws(
+                () => store.setGroupCounts(['resourceId', column]),
+                /resourceId' or 'metadata:<key>'/
+            )
+        );
+        assert.deepEqual(store.groupCounts, ['resourceId']);
+    });
+
+    it('keeps the page within what groups/fetch accepts before a total is known', () => {
+        const store = new GroupedResourceTableStore();
+        store.setPageSize(1000);
+
+        store.setPage(1e9);
+        assert.equal(store.pageNumber, Math.floor((2 ** 31 - 1) / 1000));
+
+        store.setPage(-3);
+        assert.equal(store.pageNumber, 0);
+    });
+
+    it('clamps the page to the last one once the total is known', async () => {
+        fetchGroups.mockResolvedValue(page(120, null));
+        const store = newStore();
+        store.setPageSize(25);
+        await when(() => store.groups.isComplete && store.totalGroups > 0);
+
+        store.setPage(10);
+
+        assert.equal(store.pageNumber, 4);
+    });
+
+    it('clears the locator when the grouping changes', () => {
+        const store = new GroupedResourceTableStore();
+        store.locateGroup({ studyId: 'study_a', patientId: 'patient_1' });
+
+        store.setGroupBy('sample');
+
+        assert.isUndefined(store.locate);
     });
 
     it('resets search and filters with the cohort', () => {

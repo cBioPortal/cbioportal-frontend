@@ -62,6 +62,30 @@ function locatorKey(
     return groupBy === 'sample' ? locate.sampleId : locate.patientId;
 }
 
+const isBlank = (value: string | undefined) => !value || !value.trim();
+
+/** Whether groups/fetch accepts the locator under `groupBy`: a study and the key it groups on. */
+export function isLocatorValid(
+    locate: ResourceGroupLocator,
+    groupBy: ResourceGroupBy
+): boolean {
+    return !isBlank(locate.studyId) && !isBlank(locatorKey(locate, groupBy));
+}
+
+const METADATA_COLUMN_PREFIX = 'metadata:';
+
+/** Whether groups/fetch can count `columnId`: `resourceId` or `metadata:<key>`. */
+export function isGroupCountColumnValid(columnId: string): boolean {
+    return (
+        columnId === 'resourceId' ||
+        (columnId.startsWith(METADATA_COLUMN_PREFIX) &&
+            !isBlank(columnId.slice(METADATA_COLUMN_PREFIX.length)))
+    );
+}
+
+/** groups/fetch rejects a page whose offset, pageNumber * pageSize, exceeds a Java int. */
+const MAX_GROUP_OFFSET = 2 ** 31 - 1;
+
 /**
  * The resources a request reads: one goes in `resourceId`, several in `resourceIds`, which the
  * backend reads together as one table.
@@ -89,32 +113,48 @@ export interface ResourceTableGroupsState {
 }
 
 /**
- * The groups/fetch request for a grouped table's state, or undefined when it names no study or no
- * resource and so cannot be answered.
- *
- * A sort the grouping cannot order by, and a locator missing the id the grouping keys on, are left
- * out rather than sent, since the backend rejects both.
+ * The fields the groups and metadata requests share: which rows, and how they group. Undefined
+ * when the state names no study or no resource and so cannot be answered.
  */
-export function buildResourceTableGroupsQuery(
+function groupedRowsQuery(
     state: ResourceTableGroupsState
-): ResourceTableQuery | undefined {
+): Omit<ResourceTableQuery, 'pageNumber' | 'pageSize'> | undefined {
     if (state.cohort.studyIds.length === 0 || state.resourceIds.length === 0) {
         return undefined;
     }
-    const sortValid = isGroupSortValid(state.sortBy, state.groupBy);
-    const locate =
-        state.locate && locatorKey(state.locate, state.groupBy)
-            ? state.locate
-            : undefined;
     return {
         ...resourceCohortFields(state.cohort),
         ...resourceIdFields(state.resourceIds),
         groupBy: state.groupBy,
+        search: state.search || undefined,
+        filters: state.filters.length > 0 ? state.filters : undefined,
+    };
+}
+
+/**
+ * The groups/fetch request for a grouped table's state, or undefined when it names no study or no
+ * resource and so cannot be answered.
+ *
+ * A sort the grouping cannot order by, and a locator missing its study or the id the grouping
+ * keys on, are left out rather than sent, since the backend rejects both.
+ */
+export function buildResourceTableGroupsQuery(
+    state: ResourceTableGroupsState
+): ResourceTableQuery | undefined {
+    const rows = groupedRowsQuery(state);
+    if (!rows) {
+        return undefined;
+    }
+    const sortValid = isGroupSortValid(state.sortBy, state.groupBy);
+    const locate =
+        state.locate && isLocatorValid(state.locate, state.groupBy)
+            ? state.locate
+            : undefined;
+    return {
+        ...rows,
         groupCounts:
             state.groupCounts.length > 0 ? state.groupCounts : undefined,
         locate,
-        search: state.search || undefined,
-        filters: state.filters.length > 0 ? state.filters : undefined,
         sortBy: sortValid ? state.sortBy : undefined,
         direction: sortValid ? state.direction : undefined,
         pageNumber: state.pageNumber,
@@ -130,18 +170,8 @@ export function buildResourceTableGroupsQuery(
 export function buildResourceTableGroupsMetadataQuery(
     state: ResourceTableGroupsState
 ): ResourceTableQuery | undefined {
-    if (state.cohort.studyIds.length === 0 || state.resourceIds.length === 0) {
-        return undefined;
-    }
-    return {
-        ...resourceCohortFields(state.cohort),
-        ...resourceIdFields(state.resourceIds),
-        groupBy: state.groupBy,
-        search: state.search || undefined,
-        filters: state.filters.length > 0 ? state.filters : undefined,
-        pageNumber: 0,
-        pageSize: 0,
-    };
+    const rows = groupedRowsQuery(state);
+    return rows && { ...rows, pageNumber: 0, pageSize: 0 };
 }
 
 /**
@@ -154,7 +184,12 @@ export function buildResourceTableGroupsMetadataQuery(
  * filtered out disappears. Paging and sort apply to groups.
  *
  * `locateGroup` asks for one group's position. The next result moves to the page holding it, once:
- * paging away afterwards stays put, while `locatedIndex` keeps reporting where the group is.
+ * paging away afterwards stays put, while `locatedIndex` keeps reporting where the group is. Any
+ * change the user makes before that result arrives (page, sort, search, filters, cohort, grouping)
+ * cancels the move, so a slow answer never overrides it.
+ *
+ * Setters reject what groups/fetch would reject: an invalid sort or count column throws, rather
+ * than being silently dropped from the request.
  */
 export class GroupedResourceTableStore {
     @observable.ref cohort: ResourceCohort = EMPTY_RESOURCE_COHORT;
@@ -170,8 +205,14 @@ export class GroupedResourceTableStore {
     @observable.ref filters: ResourceColumnFilter[] = [];
     @observable.ref locate: ResourceGroupLocator | undefined;
 
-    /** Set by locateGroup until a result reports the located group's position. */
+    /**
+     * Set by locateGroup until a result reports the located group's position, and cleared by
+     * any change the user makes meanwhile.
+     */
     private followLocate = false;
+
+    /** totalGroups of the latest result for the current rows, or undefined until one arrives. */
+    private knownTotalGroups: number | undefined;
 
     constructor() {
         makeObservable(this);
@@ -180,7 +221,7 @@ export class GroupedResourceTableStore {
     /** Sets the cohort; resets paging, search and filters as ResourceTableStore does. */
     @action setCohort(cohort: ResourceCohort) {
         this.cohort = cohort;
-        this.pageNumber = 0;
+        this.resetRows();
         this.searchTerm = '';
         this.filters = [];
     }
@@ -191,31 +232,61 @@ export class GroupedResourceTableStore {
      */
     @action setResourceIds(resourceIds: string[]) {
         this.resourceIds = resourceIds;
-        this.pageNumber = 0;
+        this.resetRows();
         this.searchTerm = '';
         this.filters = [];
     }
 
+    /** Changes the grouping; a locator names one grouping's key, so it is cleared too. */
     @action setGroupBy(groupBy: ResourceGroupBy) {
         this.groupBy = groupBy;
-        this.pageNumber = 0;
+        this.resetRows();
+        this.locate = undefined;
         if (!isGroupSortValid(this.sortBy, groupBy)) {
             this.sortBy = undefined;
         }
     }
 
-    /** Columns to count values of per group: `metadata:<key>` or `resourceId`. */
+    /**
+     * Columns to count values of per group: `resourceId` or `metadata:<key>`. Repeats are
+     * dropped; an invalid column, or more than RESOURCE_GROUPS_MAX_COUNTS distinct ones, throws
+     * and leaves the counts as they were.
+     */
     @action setGroupCounts(columnIds: string[]) {
-        if (columnIds.length > RESOURCE_GROUPS_MAX_COUNTS) {
+        const distinct = Array.from(new Set(columnIds));
+        const invalid = distinct.filter(id => !isGroupCountColumnValid(id));
+        if (invalid.length > 0) {
+            throw new Error(
+                `groupCounts entries must be 'resourceId' or 'metadata:<key>', not ${invalid
+                    .map(id => `'${id}'`)
+                    .join(', ')}`
+            );
+        }
+        if (distinct.length > RESOURCE_GROUPS_MAX_COUNTS) {
             throw new Error(
                 `groupCounts may name at most ${RESOURCE_GROUPS_MAX_COUNTS} columns`
             );
         }
-        this.groupCounts = columnIds;
+        this.groupCounts = distinct;
     }
 
+    /**
+     * Moves to a page: never below the first, past the last once a result has reported the
+     * total, or beyond the offset groups/fetch accepts.
+     */
     @action setPage(page: number) {
-        this.pageNumber = Math.max(page, 0);
+        let last = Math.floor(MAX_GROUP_OFFSET / this.pageSize);
+        if (this.knownTotalGroups !== undefined) {
+            last = Math.min(
+                last,
+                Math.max(
+                    Math.ceil(this.knownTotalGroups / this.pageSize) - 1,
+                    0
+                )
+            );
+        }
+        this.pageNumber = Math.min(Math.max(Math.floor(page), 0), last);
+        this.followLocate = false;
     }
 
     @action setPageSize(size: number) {
@@ -224,6 +295,7 @@ export class GroupedResourceTableStore {
             RESOURCE_GROUPS_MAX_PAGE_SIZE
         );
         this.pageNumber = 0;
+        this.followLocate = false;
     }
 
     @action setSort(sortBy: ResourceGroupSort, direction: 'asc' | 'desc') {
@@ -235,16 +307,17 @@ export class GroupedResourceTableStore {
         this.sortBy = sortBy;
         this.sortDirection = direction;
         this.pageNumber = 0;
+        this.followLocate = false;
     }
 
     @action setSearchTerm(term: string) {
         this.searchTerm = term;
-        this.pageNumber = 0;
+        this.resetRows();
     }
 
     @action setFilters(filters: ResourceColumnFilter[]) {
         this.filters = filters;
-        this.pageNumber = 0;
+        this.resetRows();
     }
 
     /** Asks where a group is, and moves to its page when the answer arrives. */
@@ -256,6 +329,16 @@ export class GroupedResourceTableStore {
 
     @action clearLocate() {
         this.locate = undefined;
+        this.followLocate = false;
+    }
+
+    /**
+     * After a change to which groups there are: back to the first page, the old total no longer
+     * bounds paging, and a pending locate no longer moves the page.
+     */
+    private resetRows() {
+        this.pageNumber = 0;
+        this.knownTotalGroups = undefined;
         this.followLocate = false;
     }
 
@@ -294,7 +377,7 @@ export class GroupedResourceTableStore {
             return query ? fetchResourceTableGroups(query) : EMPTY_GROUP_PAGE;
         },
         default: EMPTY_GROUP_PAGE,
-        onResult: page => this.followLocatedGroup(page),
+        onResult: page => this.onGroupsResult(page),
     });
 
     /** Columns, filter options and counts, with facet values counting groups. */
@@ -328,10 +411,10 @@ export class GroupedResourceTableStore {
         return Math.ceil(this.totalGroups / this.pageSize);
     }
 
-    @action private followLocatedGroup(
-        page: ResourceTableGroupPage | undefined
-    ) {
-        if (!this.followLocate || !page || !this.locate) return;
+    @action private onGroupsResult(page: ResourceTableGroupPage | undefined) {
+        if (!page) return;
+        this.knownTotalGroups = page.totalGroups;
+        if (!this.followLocate || !this.locate) return;
         this.followLocate = false;
         if (page.locatedIndex === null || page.locatedIndex === undefined) {
             return;
