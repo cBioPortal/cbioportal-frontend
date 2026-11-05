@@ -9,6 +9,7 @@ import { File } from '@/components/assistant-ui/elements/file';
 import { ThreadFollowupSuggestions } from '@/components/assistant-ui/elements/follow-up-suggestions.aui';
 import { MarkdownText } from '@/components/assistant-ui/elements/markdown-text';
 import { ModelSelector } from '@/components/assistant-ui/elements/model-selector.aui';
+import { useModelSelectorContext } from '@/components/assistant-ui/elements/model-selector';
 import { ToolFallback } from '@/components/assistant-ui/elements/tool-fallback.aui';
 import {
     ToolGroupContent,
@@ -406,6 +407,18 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
     );
 };
 
+// The provider, after the model name: two providers can serve the same model,
+// and the trigger would otherwise show only the shared name.
+const SelectedModelProvider: FC = () => {
+    const { selectedModel } = useModelSelectorContext();
+    if (!selectedModel?.description) return null;
+    return (
+        <span className="text-muted-foreground truncate">
+            {selectedModel.description}
+        </span>
+    );
+};
+
 // Hidden when the server offers a single model. Disabled while a reply
 // streams: a tool result sends the turn's next request automatically, and it
 // must go to the same provider as the rest of the turn.
@@ -428,7 +441,14 @@ const ComposerModelSelector: FC = () => {
             value={selected ?? undefined}
             onValueChange={setSelectedModel}
         >
-            <ModelSelector.Trigger size="sm" disabled={isRunning} />
+            <ModelSelector.Trigger
+                variant="ghost"
+                size="sm"
+                disabled={isRunning}
+            >
+                <ModelSelector.Value />
+                <SelectedModelProvider />
+            </ModelSelector.Trigger>
             <ModelSelector.Content align="end" />
         </ModelSelector.Root>
     );
