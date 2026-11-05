@@ -294,15 +294,24 @@ describe('resource table options', () => {
         resourceIds: ['SLIDE_SAMPLE', 'SLIDE_PATIENT'],
     };
 
-    it('lists a resource in a combined tab even when its own tab is hidden', () => {
-        const options = {
+    it('lists a resource in a combined tab as long as that tab is not hidden', () => {
+        const hideOwnSlideTabs = {
             combinedTabs: [slides],
-            hideResource: (id: string) => id !== 'NOTES',
+            hideResource: (id: string) => id.startsWith('SLIDE_'),
         };
-        assert.isTrue(isResourceListedInTable('SLIDE_PATIENT', options));
-        assert.isTrue(isResourceListedInTable('NOTES', options));
-        assert.isFalse(isResourceListedInTable('REPORTS', options));
+        assert.isTrue(
+            isResourceListedInTable('SLIDE_PATIENT', hideOwnSlideTabs)
+        );
+        assert.isTrue(isResourceListedInTable('NOTES', hideOwnSlideTabs));
         assert.isTrue(isResourceListedInTable('REPORTS', {}));
+
+        const hideSlidesTab = {
+            combinedTabs: [slides],
+            hideResource: (id: string) => id === 'SLIDES' || id === 'REPORTS',
+        };
+        assert.isFalse(isResourceListedInTable('SLIDE_SAMPLE', hideSlidesTab));
+        assert.isFalse(isResourceListedInTable('REPORTS', hideSlidesTab));
+        assert.isTrue(isResourceListedInTable('NOTES', hideSlidesTab));
     });
 
     it('offers every fetched resource as its own tab without options', () => {
