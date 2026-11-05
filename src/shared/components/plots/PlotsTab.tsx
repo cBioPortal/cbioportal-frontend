@@ -16,6 +16,7 @@ import 'react-select1/dist/react-select.css';
 import AsyncSelect from 'react-select/async';
 import Select from 'react-select';
 import _ from 'lodash';
+import { makeDerivedGenericAssayMetas } from 'shared/lib/GenericAssayUtils/GenericAssayDerivedEntityUtils';
 import {
     axisHasNegativeNumbers,
     boxPlotTooltip,
@@ -66,6 +67,7 @@ import {
     maybeSetLogScale,
     logScalePossibleForProfile,
     isGenericAssaySelected,
+    isLimitValueGenericAssaySelected,
     showWaterfallPlot,
     getOption,
 } from './PlotsTabUtils';
@@ -2080,9 +2082,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             // listen to updates of `dataTypeOptions` and on the selected data type for the vertical axis
             if (
                 this.dataTypeOptions.result &&
-                ((isGenericAssaySelected(this.vertSelection) &&
-                    this.vertSelection.genericAssayDataType ===
-                        DataTypeConstants.LIMITVALUE) ||
+                (isLimitValueGenericAssaySelected(this.vertSelection) ||
                     (this.vertSelection.dataType &&
                         this.vertSelection.dataType ===
                             AlterationTypeConstants.MRNA_EXPRESSION))
@@ -2108,9 +2108,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             // listen to updates of `dataTypeOptions` and on the selected data type for the horzontal axis
             if (
                 this.dataTypeOptions.result &&
-                ((isGenericAssaySelected(this.horzSelection) &&
-                    this.horzSelection.genericAssayDataType ===
-                        DataTypeConstants.LIMITVALUE) ||
+                (isLimitValueGenericAssaySelected(this.horzSelection) ||
                     (this.horzSelection.dataType &&
                         this.horzSelection.dataType ===
                             AlterationTypeConstants.MRNA_EXPRESSION))
@@ -2370,14 +2368,41 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         },
     });
 
+    // The derived entities of each profile's generic assay type, followed by
+    // the profile's own entities, so a derived entity is the default option.
+    readonly genericAssayEntitiesWithDerivedByProfileId = remoteData<{
+        [profileId: string]: GenericAssayMeta[];
+    }>({
+        await: () => [
+            this.props.genericAssayEntitiesGroupByMolecularProfileId,
+            this.props.molecularProfilesInStudies,
+        ],
+        invoke: () => {
+            const profileById = _.keyBy(
+                this.props.molecularProfilesInStudies.result!,
+                p => p.molecularProfileId
+            );
+            return Promise.resolve(
+                _.mapValues(
+                    this.props.genericAssayEntitiesGroupByMolecularProfileId
+                        .result!,
+                    (entities, profileId) =>
+                        makeDerivedGenericAssayMetas(
+                            profileById[profileId]?.genericAssayType
+                        ).concat(entities)
+                )
+            );
+        },
+    });
+
     // group entites by stableId, each stableId should only have on
     readonly genericEntitiesGroupByEntityId = remoteData<{
         [entityId: string]: GenericAssayMeta;
     }>({
-        await: () => [this.props.genericAssayEntitiesGroupByMolecularProfileId],
+        await: () => [this.genericAssayEntitiesWithDerivedByProfileId],
         invoke: () => {
             const result: { [entityId: string]: GenericAssayMeta } = _.chain(
-                this.props.genericAssayEntitiesGroupByMolecularProfileId.result
+                this.genericAssayEntitiesWithDerivedByProfileId.result
             )
                 .values()
                 .flatten()
@@ -2390,7 +2415,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     readonly horzGenericAssayOptions = remoteData({
         await: () => [
-            this.props.genericAssayEntitiesGroupByMolecularProfileId,
+            this.genericAssayEntitiesWithDerivedByProfileId,
             this.props.molecularProfileIdSuffixToMolecularProfiles,
         ],
         invoke: () => {
@@ -2409,14 +2434,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     )
                         .reduce((acc, profile) => {
                             if (
-                                this.props
-                                    .genericAssayEntitiesGroupByMolecularProfileId
+                                this.genericAssayEntitiesWithDerivedByProfileId
                                     .result &&
-                                this.props
-                                    .genericAssayEntitiesGroupByMolecularProfileId
+                                this.genericAssayEntitiesWithDerivedByProfileId
                                     .result[profile.molecularProfileId]
                             ) {
-                                this.props.genericAssayEntitiesGroupByMolecularProfileId.result[
+                                this.genericAssayEntitiesWithDerivedByProfileId.result[
                                     profile.molecularProfileId
                                 ].forEach(meta => {
                                     acc[meta.stableId] = { meta, profile };
@@ -2441,7 +2464,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     readonly vertGenericAssayOptions = remoteData({
         await: () => [
-            this.props.genericAssayEntitiesGroupByMolecularProfileId,
+            this.genericAssayEntitiesWithDerivedByProfileId,
             this.props.molecularProfileIdSuffixToMolecularProfiles,
         ],
         invoke: () => {
@@ -2468,14 +2491,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     )
                         .reduce((acc, profile) => {
                             if (
-                                this.props
-                                    .genericAssayEntitiesGroupByMolecularProfileId
+                                this.genericAssayEntitiesWithDerivedByProfileId
                                     .result &&
-                                this.props
-                                    .genericAssayEntitiesGroupByMolecularProfileId
+                                this.genericAssayEntitiesWithDerivedByProfileId
                                     .result[profile.molecularProfileId]
                             ) {
-                                this.props.genericAssayEntitiesGroupByMolecularProfileId.result[
+                                this.genericAssayEntitiesWithDerivedByProfileId.result[
                                     profile.molecularProfileId
                                 ].forEach(meta => {
                                     acc[meta.stableId] = { meta, profile };
@@ -3123,9 +3144,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         if (
             this.horzAxisDataPromise.result &&
             this.horzSelection.dataType &&
-            isGenericAssaySelected(this.horzSelection) &&
-            this.horzSelection.genericAssayDataType ===
-                DataTypeConstants.LIMITVALUE
+            isLimitValueGenericAssaySelected(this.horzSelection)
         ) {
             return getLimitValues(this.horzAxisDataPromise.result.data);
         }
@@ -3140,9 +3159,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         if (
             this.vertAxisDataPromise.result &&
             this.vertSelection.dataType &&
-            isGenericAssaySelected(this.vertSelection) &&
-            this.vertSelection.genericAssayDataType ===
-                DataTypeConstants.LIMITVALUE
+            isLimitValueGenericAssaySelected(this.vertSelection)
         ) {
             return getLimitValues(this.vertAxisDataPromise.result.data);
         }
@@ -4441,8 +4458,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         isLoading={
                                             this.horzGenericAssayOptions
                                                 .isPending ||
-                                            this.props
-                                                .genericAssayEntitiesGroupByMolecularProfileId
+                                            this
+                                                .genericAssayEntitiesWithDerivedByProfileId
                                                 .isPending
                                         }
                                         options={genericAssayOptions}
