@@ -258,7 +258,6 @@ describe('combined resource tabs', () => {
             store.tableMetadata.result;
         });
         await when(() => store.isTableReady && fetchData.mock.calls.length > 0);
-        dispose();
 
         assert.deepEqual(store.activeResourceIds, [
             'SLIDE_SAMPLE',
@@ -284,6 +283,7 @@ describe('combined resource tabs', () => {
             'SLIDE_PATIENT',
         ]);
         assert.equal(download.pageSize, 7);
+        dispose();
     });
 });
 
@@ -339,6 +339,7 @@ describe('resource table options', () => {
             },
         });
         (store as any).tabs = {
+            isComplete: true,
             result: [
                 {
                     resourceId: 'SLIDE_PATIENT',
@@ -356,5 +357,263 @@ describe('resource table options', () => {
         assert.isFalse(
             new ResourceTableStore().isMetadataKeyHidden('internal')
         );
+    });
+});
+
+describe('combined tab configuration', () => {
+    const tab = (
+        resourceId: string,
+        totalCount = 1,
+        patientCount = 1,
+        sampleCount = 1
+    ) => ({
+        resourceId,
+        label: resourceId,
+        totalCount,
+        patientCount,
+        sampleCount,
+    });
+
+    it('keeps a combined tab whose id is one of its members, at its first member', () => {
+        const slides = {
+            id: 'SLIDES',
+            label: 'Slides',
+            resourceIds: ['SLIDES', 'SLIDE_PATIENT'],
+        };
+        assert.deepEqual(
+            buildResourceTableTabs(
+                [tab('SLIDE_PATIENT'), tab('NOTES'), tab('SLIDES')],
+                { combinedTabs: [slides] }
+            ).map(t => [t.resourceId, t.label, t.resourceIds]),
+            [
+                ['SLIDES', 'Slides', ['SLIDE_PATIENT', 'SLIDES']],
+                ['NOTES', 'NOTES', ['NOTES']],
+            ]
+        );
+        // Only the member sharing the tab's id is present.
+        assert.deepEqual(
+            buildResourceTableTabs([tab('NOTES'), tab('SLIDES')], {
+                combinedTabs: [slides],
+            }).map(t => [t.resourceId, t.label, t.resourceIds]),
+            [
+                ['NOTES', 'NOTES', ['NOTES']],
+                ['SLIDES', 'Slides', ['SLIDES']],
+            ]
+        );
+        assert.isTrue(
+            isResourceListedInTable('SLIDES', { combinedTabs: [slides] })
+        );
+    });
+
+    it('does not list a resource that a combined tab with its id replaces', () => {
+        assert.isFalse(
+            isResourceListedInTable('SLIDES', {
+                combinedTabs: [
+                    { id: 'SLIDES', label: 'Slides', resourceIds: ['OTHER'] },
+                ],
+            })
+        );
+    });
+
+    it('gives a resource two combined tabs list to the first, and warns once', () => {
+        const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        try {
+            const options = {
+                combinedTabs: [
+                    { id: 'FIRST', label: 'First', resourceIds: ['A', 'B'] },
+                    { id: 'SECOND', label: 'Second', resourceIds: ['B', 'C'] },
+                ],
+            };
+            const fetched = [tab('A'), tab('B', 4), tab('C', 2)];
+            const tabs = buildResourceTableTabs(fetched, options);
+            buildResourceTableTabs(fetched, options);
+
+            assert.deepEqual(
+                tabs.map(t => [t.resourceId, t.resourceIds, t.totalCount]),
+                [
+                    ['FIRST', ['A', 'B'], 5],
+                    ['SECOND', ['C'], 2],
+                ]
+            );
+            assert.equal(warn.mock.calls.length, 1);
+            assert.include(warn.mock.calls[0][0], 'B');
+
+            // Listing agrees: B is listed through FIRST only.
+            assert.isTrue(
+                isResourceListedInTable('B', {
+                    ...options,
+                    hideResource: id => id === 'SECOND',
+                })
+            );
+            assert.isFalse(
+                isResourceListedInTable('B', {
+                    ...options,
+                    hideResource: id => id === 'FIRST',
+                })
+            );
+        } finally {
+            warn.mockRestore();
+        }
+    });
+
+    it('counts zero-count members as zero, and skips a combined tab with no members', () => {
+        const tabs = buildResourceTableTabs(
+            [tab('EMPTY_A', 0, 0, 0), tab('EMPTY_B', 0, 0, 0), tab('NOTES')],
+            {
+                combinedTabs: [
+                    {
+                        id: 'EMPTY',
+                        label: 'Empty',
+                        resourceIds: ['EMPTY_A', 'EMPTY_B'],
+                    },
+                    { id: 'NONE', label: 'None', resourceIds: [] },
+                ],
+            }
+        );
+        assert.deepEqual(
+            tabs.map(t => [
+                t.resourceId,
+                t.totalCount,
+                t.patientCount,
+                t.sampleCount,
+            ]),
+            [
+                ['EMPTY', 0, 0, 0],
+                ['NOTES', 1, 1, 1],
+            ]
+        );
+    });
+});
+
+describe('ResourceTableStore selection across cohorts', () => {
+    const tab = (resourceId: string) => ({
+        resourceId,
+        label: resourceId,
+        totalCount: 1,
+        patientCount: 1,
+        sampleCount: 1,
+    });
+    const slides = {
+        id: 'SLIDES',
+        label: 'Slides',
+        resourceIds: ['SLIDE_SAMPLE', 'SLIDE_PATIENT'],
+    };
+    const tabsByStudy: Record<string, ReturnType<typeof tab>[]> = {
+        study_a: [tab('NOTES'), tab('SLIDE_SAMPLE'), tab('REPORTS')],
+        study_b: [tab('NOTES')],
+    };
+
+    beforeEach(() => {
+        fetchTabs
+            .mockReset()
+            .mockImplementation(
+                async ({ studyIds }) => tabsByStudy[studyIds[0]]
+            );
+        fetchData.mockReset().mockResolvedValue([]);
+        fetchMetadata.mockReset().mockResolvedValue({
+            columns: [],
+            totalRowCount: 0,
+            filteredPatientCount: 0,
+            filteredSampleCount: 0,
+            facets: {},
+            facetRanges: {},
+            distinctValueCounts: {},
+        });
+    });
+
+    // Keeps each store observed, as its mounted table does: a remoteData read outside a
+    // reaction starts a new request, so it reports pending.
+    const observers: (() => void)[] = [];
+    afterEach(() => observers.splice(0).forEach(dispose => dispose()));
+
+    /** Loads the table for a study, returning the resources its rows request read. */
+    async function load(store: ResourceTableStore, studyId: string) {
+        fetchData.mockClear();
+        const tabsCalls = fetchTabs.mock.calls.length;
+        store.setContext([studyId]);
+        observers.push(
+            autorun(() => {
+                store.tableData.result;
+                store.tableMetadata.result;
+            })
+        );
+        await when(
+            () =>
+                fetchTabs.mock.calls.length > tabsCalls &&
+                store.tabs.isComplete &&
+                store.isTableReady
+        );
+        return fetchData.mock.calls.map(
+            ([query]) => query.resourceIds || [query.resourceId]
+        );
+    }
+
+    it('falls back to the first tab when a cohort change removes the selected tab', async () => {
+        const store = new ResourceTableStore();
+        await load(store, 'study_a');
+        store.setSelectedResourceId('REPORTS');
+
+        assert.deepEqual(await load(store, 'study_b'), [['NOTES']]);
+        assert.equal(store.activeResourceId, 'NOTES');
+        assert.deepEqual(store.activeResourceIds, ['NOTES']);
+    });
+
+    it('falls back the same way when the removed tab is a combined one', async () => {
+        const store = new ResourceTableStore({ combinedTabs: [slides] });
+        await load(store, 'study_a');
+        store.setSelectedResourceId('SLIDES');
+        assert.deepEqual(store.activeResourceIds, ['SLIDE_SAMPLE']);
+
+        assert.deepEqual(await load(store, 'study_b'), [['NOTES']]);
+        assert.equal(store.activeResourceId, 'NOTES');
+    });
+
+    it('reads nothing in a scoped store whose tab a cohort change removes', async () => {
+        const single = new ResourceTableStore();
+        single.scopeToResource('REPORTS');
+        assert.deepEqual(await load(single, 'study_a'), [['REPORTS']]);
+        assert.deepEqual(await load(single, 'study_b'), []);
+        assert.equal(single.activeResourceId, 'REPORTS');
+        assert.deepEqual(single.activeResourceIds, []);
+
+        const combined = new ResourceTableStore({ combinedTabs: [slides] });
+        combined.scopeToResource('SLIDES');
+        assert.deepEqual(await load(combined, 'study_a'), [['SLIDE_SAMPLE']]);
+        assert.deepEqual(await load(combined, 'study_b'), []);
+        assert.deepEqual(combined.activeResourceIds, []);
+    });
+
+    it('never reads a combined member on its own, from a stale id', async () => {
+        const store = new ResourceTableStore({ combinedTabs: [slides] });
+        store.setSelectedResourceId('SLIDE_SAMPLE');
+        assert.deepEqual(await load(store, 'study_a'), [['NOTES']]);
+        assert.equal(store.activeResourceId, 'NOTES');
+
+        const scoped = new ResourceTableStore({ combinedTabs: [slides] });
+        scoped.scopeToResource('SLIDE_SAMPLE');
+        assert.deepEqual(await load(scoped, 'study_a'), []);
+    });
+
+    it('never reads a hidden resource set as the selection', async () => {
+        const store = new ResourceTableStore({
+            hideResource: id => id === 'REPORTS',
+        });
+        store.setSelectedResourceId('REPORTS');
+        assert.deepEqual(await load(store, 'study_a'), [['NOTES']]);
+        assert.deepEqual(store.activeResourceIds, ['NOTES']);
+    });
+
+    it('downloads nothing while the tabs reload', async () => {
+        const store = new ResourceTableStore();
+        await load(store, 'study_a');
+        store.setSelectedResourceId('REPORTS');
+
+        fetchTabs.mockImplementation(() => new Promise(() => {}));
+        store.setContext(['study_b']);
+        await when(() => store.tabs.isPending);
+        fetchData.mockClear();
+
+        assert.deepEqual(await store.fetchAllRowsForDownload(), []);
+        assert.equal(fetchData.mock.calls.length, 0);
     });
 });

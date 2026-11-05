@@ -148,3 +148,15 @@ export function studyViewResourceCohort(
     }
     return { ...cohort, studyViewFilter: input.studyViewFilter };
 }
+
+/**
+ * The resources a request reads: one goes in `resourceId`, several in `resourceIds`, which the
+ * backend reads together as one table.
+ */
+export function resourceIdFields(
+    resourceIds: string[]
+): Pick<ResourceTableQuery, 'resourceId' | 'resourceIds'> {
+    return resourceIds.length === 1
+        ? { resourceId: resourceIds[0] }
+        : { resourceIds };
+}

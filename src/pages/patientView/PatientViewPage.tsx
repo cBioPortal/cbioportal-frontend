@@ -326,7 +326,7 @@ export class PatientViewPageInner extends React.Component<
         let store = this.resourceTableStores.get(resourceId);
         if (!store) {
             store = new ResourceTableStore();
-            store.setSelectedResourceId(resourceId);
+            store.scopeToResource(resourceId);
             this.resourceTableStores.set(resourceId, store);
 
             const cohort = this.resourceCohort;

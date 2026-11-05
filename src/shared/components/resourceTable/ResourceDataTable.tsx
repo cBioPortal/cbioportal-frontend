@@ -505,9 +505,7 @@ export class ResourceDataTable extends React.Component<
                     this.props.scopedResourceId
             ) {
                 this.clearActiveFilters();
-                this.props.store.setSelectedResourceId(
-                    this.props.scopedResourceId!
-                );
+                this.props.store.scopeToResource(this.props.scopedResourceId!);
             }
         });
     }
