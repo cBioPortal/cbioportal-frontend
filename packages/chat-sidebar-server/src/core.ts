@@ -1,5 +1,3 @@
-// All configured providers are live; getModel() picks one per request.
-
 import {
     streamText,
     generateText,
@@ -8,7 +6,6 @@ import {
     stepCountIs,
     tool,
     CallSettings,
-    LanguageModel,
     ToolSet,
     UIMessage,
 } from 'ai';
@@ -17,37 +14,16 @@ import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { z } from 'zod';
-import { anthropic } from '@ai-sdk/anthropic';
-import { createVertexAnthropic } from '@ai-sdk/google-vertex/anthropic';
-import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
 import { createMCPClient, MCPClient } from '@ai-sdk/mcp';
-import { defaultProvider } from '@aws-sdk/credential-provider-node';
 import { LangfuseClient } from '@langfuse/client';
+import { resolveModels } from './models.js';
 
-const vertexAnthropic = createVertexAnthropic({
-    project: process.env.GOOGLE_VERTEX_PROJECT,
-    location: process.env.GOOGLE_VERTEX_LOCATION || 'global',
-});
-
-const bedrock = createAmazonBedrock({
-    region: process.env.AWS_REGION,
-    credentialProvider: defaultProvider(),
-});
-
-const BEDROCK_MODEL_ID = process.env.BEDROCK_MODEL_ID;
-
-// Follow-up suggestions always run on this small Bedrock model, whatever the
-// user picked for the chat itself.
-const SUGGESTIONS_MODEL_ID =
-    process.env.SUGGESTIONS_MODEL_ID ||
-    'us.anthropic.claude-haiku-4-5-20251001-v1:0';
-
-// Direct Anthropic and Vertex access currently use Sonnet 5.
-const CLAUDE_MODEL_ID = 'claude-sonnet-5';
+export { AVAILABLE_MODELS, DEFAULT_MODEL } from './models.js';
 
 // The SDK's provider-agnostic reasoning setting, so one value maps to each
-// provider's own knob (Anthropic `thinking`, Bedrock `reasoningConfig`) —
-// a provider-keyed `providerOptions` would silently no-op on the others.
+// provider's own knob (Anthropic `thinking`, Bedrock `reasoningConfig`,
+// OpenAI `reasoningEffort`) — a provider-keyed `providerOptions` would
+// silently no-op on the others.
 type ReasoningEffort = NonNullable<CallSettings['reasoning']>;
 
 const REASONING_EFFORT_VALUES: readonly ReasoningEffort[] = [
@@ -124,7 +100,7 @@ async function getReportPrompt(): Promise<string> {
 }
 
 // Optional and independent — unset means that server's tools aren't offered
-// (same pattern as AVAILABLE_MODELS below).
+// (same pattern as the providers in models.ts).
 interface McpServerConfig {
     name: string;
     url: string;
@@ -253,49 +229,6 @@ const getPageDetailsTool = tool({
     inputSchema: z.object({}),
 });
 
-// Ids are "<provider>:<model>".
-function getModel(id: string): LanguageModel {
-    const separatorIndex = id.indexOf(':');
-    const provider = id.slice(0, separatorIndex);
-    const modelId = id.slice(separatorIndex + 1);
-    switch (provider) {
-        case 'anthropic':
-            return anthropic(modelId);
-        case 'vertex':
-            return vertexAnthropic(modelId);
-        case 'bedrock':
-            if (!BEDROCK_MODEL_ID || modelId !== BEDROCK_MODEL_ID) {
-                throw new Error(`Unknown Bedrock model id: "${modelId}"`);
-            }
-            return bedrock(BEDROCK_MODEL_ID);
-        default:
-            throw new Error(`Unknown model id: "${id}"`);
-    }
-}
-
-export interface ModelInfo {
-    id: string;
-    name: string;
-}
-
-// Only listed if its credentials are configured.
-export const AVAILABLE_MODELS: readonly ModelInfo[] = [
-    process.env.ANTHROPIC_API_KEY && {
-        id: `anthropic:${CLAUDE_MODEL_ID}`,
-        name: 'Claude Sonnet 5 (Anthropic)',
-    },
-    process.env.GOOGLE_VERTEX_PROJECT && {
-        id: `vertex:${CLAUDE_MODEL_ID}`,
-        name: 'Claude Sonnet 5 (Vertex)',
-    },
-    BEDROCK_MODEL_ID && {
-        id: `bedrock:${BEDROCK_MODEL_ID}`,
-        name: `${BEDROCK_MODEL_ID} (Amazon Bedrock)`,
-    },
-].filter((m): m is ModelInfo => Boolean(m));
-
-export const MODEL = AVAILABLE_MODELS[0]?.id ?? '(none configured)';
-
 export async function runChat(
     uiMessages: UIMessage[],
     res: ServerResponse,
@@ -303,10 +236,7 @@ export async function runChat(
     model?: string,
     pageHref?: string
 ): Promise<void> {
-    const modelId = model || AVAILABLE_MODELS[0]?.id;
-    if (!modelId) {
-        throw new Error('No model available — see AVAILABLE_MODELS.');
-    }
+    const { chat } = resolveModels(model);
     const [system, mcpTools] = await Promise.all([
         getSystemPrompt(pageHref),
         getMcpTools(),
@@ -318,17 +248,10 @@ export async function runChat(
     };
 
     const result = streamText({
-        model: getModel(modelId),
+        model: chat,
         system,
         tools,
         reasoning: REASONING_EFFORT,
-        // The generic setting leaves Bedrock's `display` unset, where the other
-        // providers ask for summarized thinking; without it the sidebar's
-        // reasoning disclosure would stay empty on Bedrock. Merges with, rather
-        // than replaces, the reasoningConfig the generic setting produces.
-        providerOptions: {
-            bedrock: { reasoningConfig: { display: 'summarized' } },
-        },
         stopWhen: stepCountIs(30),
         // A reply stopped mid-tool leaves a call with no result, which the
         // model API rejects on every later turn; drop such calls.
@@ -347,10 +270,7 @@ export async function runReport(
     abortSignal: AbortSignal,
     model?: string
 ): Promise<string> {
-    const modelId = model || AVAILABLE_MODELS[0]?.id;
-    if (!modelId) {
-        throw new Error('No model available — see AVAILABLE_MODELS.');
-    }
+    const { chat } = resolveModels(model);
     const system = await getReportPrompt();
     // Claude rejects a request whose messages end on 'assistant' (treats it
     // as an unsupported prefill) — the session's history ends there whenever
@@ -370,7 +290,7 @@ export async function runReport(
         { ignoreIncompleteToolCalls: true }
     );
     const { text } = await generateText({
-        model: getModel(modelId),
+        model: chat,
         system,
         messages: [
             ...messages,
@@ -396,14 +316,11 @@ export async function runTitle(
     abortSignal: AbortSignal,
     model?: string
 ): Promise<string> {
-    const modelId = model || AVAILABLE_MODELS[0]?.id;
-    if (!modelId) {
-        throw new Error('No model available — see AVAILABLE_MODELS.');
-    }
     const { text: title } = await generateText({
-        model: getModel(modelId),
+        model: resolveModels(model).utility,
         system: TITLE_PROMPT,
         messages: [{ role: 'user', content: text }],
+        reasoning: 'none',
         abortSignal,
     });
     return title.trim().slice(0, MAX_TITLE_CHARS);
@@ -436,8 +353,10 @@ export interface FollowupsInput {
 // exchange the client sends, so the call stays fast and cheap.
 export async function* runFollowups(
     { question, answer, href, details }: FollowupsInput,
-    abortSignal: AbortSignal
+    abortSignal: AbortSignal,
+    model?: string
 ): AsyncGenerator<Suggestion> {
+    const { utility } = resolveModels(model);
     const system = `${LOCAL_FOLLOWUPS_PROMPT_TEXT}\n\n${CAPABILITIES_PROMPT_TEXT}\n\n${formatPageSection(
         href,
         details
@@ -445,7 +364,7 @@ export async function* runFollowups(
     // streamText reports failures here rather than throwing.
     let error: unknown;
     const result = streamText({
-        model: bedrock(SUGGESTIONS_MODEL_ID),
+        model: utility,
         system,
         messages: [
             {
@@ -454,6 +373,7 @@ export async function* runFollowups(
             },
         ],
         output: Output.array({ element: SuggestionSchema }),
+        reasoning: 'none',
         abortSignal,
         onError: event => {
             error = event.error;

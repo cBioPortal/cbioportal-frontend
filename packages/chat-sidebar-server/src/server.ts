@@ -2,8 +2,9 @@ import './env.js'; // must be first — see env.ts
 import express from 'express';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
+import { NoSuchModelError } from 'ai';
 import {
-    MODEL,
+    DEFAULT_MODEL,
     AVAILABLE_MODELS,
     runChat,
     runFollowups,
@@ -35,8 +36,13 @@ function abortOnClose(res: express.Response): AbortSignal {
     return controller.signal;
 }
 
+// A model id the registry doesn't have is the client's mistake, not ours.
+function errorStatus(err: unknown): number {
+    return NoSuchModelError.isInstance(err) ? 400 : 500;
+}
+
 app.get('/api/chat/health', (_req, res) => {
-    res.json({ ok: true, model: MODEL });
+    res.json({ ok: true, model: DEFAULT_MODEL ?? null });
 });
 
 // Hosts whose links the sidebar rewrites to the portal it is embedded in —
@@ -70,7 +76,7 @@ app.post('/api/chat/message', async (req, res) => {
         console.error('chat message failed:', err);
         if (!res.headersSent) {
             const message = err instanceof Error ? err.message : 'chat failed';
-            res.status(500).json({ error: message });
+            res.status(errorStatus(err)).json({ error: message });
         }
     }
 });
@@ -89,7 +95,7 @@ app.post('/api/chat/report', async (req, res) => {
         if (signal.aborted) return;
         console.error('report generation failed:', err);
         const message = err instanceof Error ? err.message : 'report failed';
-        res.status(500).json({ error: message });
+        res.status(errorStatus(err)).json({ error: message });
     }
 });
 
@@ -107,14 +113,14 @@ app.post('/api/chat/title', async (req, res) => {
         if (signal.aborted) return;
         console.error('title generation failed:', err);
         const message = err instanceof Error ? err.message : 'title failed';
-        res.status(500).json({ error: message });
+        res.status(errorStatus(err)).json({ error: message });
     }
 });
 
 // Streamed as NDJSON, one { title, prompt } per line, so each pill can show as
 // soon as it is complete.
 app.post('/api/chat/followups', async (req, res) => {
-    const { question, answer, href, details } = req.body ?? {};
+    const { question, answer, href, details, model } = req.body ?? {};
     if (typeof question !== 'string' || typeof answer !== 'string') {
         res.status(400).json({
             error: 'question and answer (strings) required',
@@ -130,7 +136,8 @@ app.post('/api/chat/followups', async (req, res) => {
                 href: typeof href === 'string' ? href : '',
                 details: details ?? { available: false },
             },
-            signal
+            signal,
+            model
         );
         for await (const followup of followups) {
             if (!res.headersSent) {
@@ -152,7 +159,7 @@ app.post('/api/chat/followups', async (req, res) => {
         }
         const message =
             err instanceof Error ? err.message : 'follow-ups failed';
-        res.status(500).json({ error: message });
+        res.status(errorStatus(err)).json({ error: message });
     }
 });
 
@@ -160,6 +167,7 @@ app.use('/chat-sidebar', express.static(SIDEBAR_DIST));
 
 app.listen(PORT, HOST, () => {
     console.log(
-        `chat-sidebar-server listening on http://${HOST}:${PORT} (model: ${MODEL})`
+        `chat-sidebar-server listening on http://${HOST}:${PORT} (default model: ${DEFAULT_MODEL ??
+            'none configured'})`
     );
 });
