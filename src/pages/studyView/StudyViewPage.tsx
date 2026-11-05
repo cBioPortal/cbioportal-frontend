@@ -379,12 +379,7 @@ export default class StudyViewPage extends React.Component<
     }
 
     private setViewerStoreContext(store: ResourceViewerStore) {
-        store.setContext(
-            this.resourceTableStore.studyIds,
-            this.resourceTableStore.patientIdentifiers,
-            this.resourceTableStore.sampleIdentifiers,
-            this.resourceTableStore.studyViewFilter
-        );
+        store.setCohort(this.resourceTableStore.cohort);
     }
 
     private getOrCreateViewerStore(

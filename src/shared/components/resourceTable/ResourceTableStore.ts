@@ -19,16 +19,10 @@ import {
 } from 'shared/lib/ResourceTableUtils';
 import {
     PatientIdentifier,
-    Sample,
     SampleIdentifier,
     StudyViewFilter,
 } from 'cbioportal-ts-api-client';
-import {
-    cohortFromSamples,
-    cohortFromSelection,
-    ResourceCohort,
-    resourceCohortFields,
-} from './resourceTableCohort';
+import { ResourceCohort, resourceCohortFields } from './resourceTableCohort';
 
 // Guards against a pathological resource pulling an unbounded result set into the browser.
 const MAX_DOWNLOAD_ROWS = 100000;
@@ -101,29 +95,6 @@ export class ResourceTableStore {
         this.filters = [];
         // selectedResourceId survives a cohort change: a store created for one resource stays
         // scoped to it. Cleared here, activeResourceId falls back to the first tab instead.
-    }
-
-    /** Sets the cohort from a study view selection; see cohortFromSelection. */
-    @action
-    setContextFromSelection(
-        selected: Pick<Sample, 'studyId' | 'patientId' | 'sampleId'>[],
-        all: Pick<Sample, 'studyId'>[] | undefined,
-        coversWholeStudy: boolean = false
-    ) {
-        this.setCohort(cohortFromSelection(selected, all, coversWholeStudy));
-    }
-
-    /**
-     * Derives the whole cohort from a sample set, keeping each id paired with its own study. Use
-     * this wherever the cohort *is* the samples, so a call site cannot flatten the pairing away.
-     * The patient view builds its context explicitly instead, because a patient with no samples
-     * still has patient-level resources to show.
-     */
-    @action
-    setContextFromSamples(
-        samples: Pick<Sample, 'studyId' | 'patientId' | 'sampleId'>[]
-    ) {
-        this.setCohort(cohortFromSamples(samples));
     }
 
     @computed get cohort(): ResourceCohort {
