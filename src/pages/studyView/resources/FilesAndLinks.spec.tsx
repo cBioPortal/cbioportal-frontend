@@ -36,6 +36,7 @@ describe('Files & Links resource filtering', () => {
     it('offers the slide resources as one Pathology slides tab', () => {
         const store = new ResourceTableStore(STUDY_VIEW_RESOURCE_TABLE_OPTIONS);
         (store as any).tabs = {
+            isComplete: true,
             result: [
                 {
                     resourceId: 'WSI_SAMPLE',
@@ -76,6 +77,7 @@ describe('Files & Links resource filtering', () => {
             hideResource: id => id === 'WSI_SAMPLE',
         });
         (store as any).tabs = {
+            isComplete: true,
             result: [
                 { resourceId: 'WSI_SAMPLE', label: 'Pathology Slides' },
                 { resourceId: 'OTHER', label: 'Pathology report' },
