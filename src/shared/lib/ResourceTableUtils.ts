@@ -62,20 +62,18 @@ export interface ResourceTableStoreOptions {
 }
 
 /**
- * Whether a table with these options lists a resource: in a combined tab, or in its own tab
- * unless hidden.
+ * Whether a table with these options lists a resource: through its combined tab, or else its own
+ * tab, unless hideResource hides that tab.
  */
 export function isResourceListedInTable(
     resourceId: string,
     options: ResourceTableStoreOptions
 ): boolean {
-    return (
-        (options.combinedTabs || []).some(tab =>
-            tab.resourceIds.includes(resourceId)
-        ) ||
-        !options.hideResource ||
-        !options.hideResource(resourceId)
+    const combined = (options.combinedTabs || []).find(tab =>
+        tab.resourceIds.includes(resourceId)
     );
+    const hide = options.hideResource;
+    return !hide || !hide(combined ? combined.id : resourceId);
 }
 
 export function getResourceTableMetadataKeys(rows: IResourceTableRow[]) {
