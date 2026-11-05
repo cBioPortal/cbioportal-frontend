@@ -1,0 +1,6 @@
+{
+  "extends": "../config/tsconfig.test.json",
+  "compilerOptions": {
+    "target": "es2015"
+  }
+}
