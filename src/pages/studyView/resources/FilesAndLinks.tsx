@@ -9,7 +9,7 @@ import {
     syncStudyViewResourceCohort,
 } from './studyViewResourceCohort';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import { isHiddenFromResourceViews } from 'shared/lib/ResourcePolicy';
+import { STUDY_VIEW_RESOURCE_TABLE_OPTIONS } from 'shared/lib/ResourcePolicy';
 
 export interface IFilesLinksTable {
     store: StudyViewPageStore;
@@ -17,9 +17,9 @@ export interface IFilesLinksTable {
 
 @observer
 export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
-    private readonly resourceTableStore = new ResourceTableStore({
-        hideResource: isHiddenFromResourceViews,
-    });
+    private readonly resourceTableStore = new ResourceTableStore(
+        STUDY_VIEW_RESOURCE_TABLE_OPTIONS
+    );
     private storeReactionDisposer: IReactionDisposer | null = null;
 
     constructor(props: IFilesLinksTable) {

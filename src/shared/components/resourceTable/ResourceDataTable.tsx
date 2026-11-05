@@ -149,11 +149,16 @@ export class ResourceDataTable extends React.Component<
      * Metadata columns as the backend describes them: discovered from the data, then decorated
      * with the resource's `custom_metadata` contract where it declares a label, description,
      * type or filterability. Ordering is the backend's too — contract-declared fields first, in
-     * declaration order.
+     * declaration order. Keys the store's hideMetadataKey option hides are left out, from the
+     * table and its download alike.
      */
     @computed get metadataColumnInfos(): ResourceColumnInfo[] {
         return this.props.store.columns.filter(
-            column => column.source === 'metadata'
+            column =>
+                column.source === 'metadata' &&
+                !this.props.store.isMetadataKeyHidden(
+                    column.id.slice('metadata:'.length)
+                )
         );
     }
 
@@ -169,11 +174,12 @@ export class ResourceDataTable extends React.Component<
             .filter(key => key.startsWith('metadata:'))
             .map(key => key.slice('metadata:'.length));
         const allKeys = Array.from(new Set([...facetKeys, ...rangeKeys]));
-        return allKeys.length > 0
+        return (allKeys.length > 0
             ? allKeys.sort((a, b) =>
                   a.toLowerCase().localeCompare(b.toLowerCase())
               )
-            : getResourceTableMetadataKeys(this.rows);
+            : getResourceTableMetadataKeys(this.rows)
+        ).filter(key => !this.props.store.isMetadataKeyHidden(key));
     }
 
     @computed get metadataColumns(): ServerDrivenTableColumn<

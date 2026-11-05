@@ -88,7 +88,8 @@ import {
     buildCustomTabs,
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
-import { isHiddenFromResourceViews } from 'shared/lib/ResourcePolicy';
+import { STUDY_VIEW_RESOURCE_TABLE_OPTIONS } from 'shared/lib/ResourcePolicy';
+import { isResourceListedInTable } from 'shared/lib/ResourceTableUtils';
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
 import { PlotsTabWrapper } from 'pages/studyView/StudyViewPlotsTabWrapper';
 import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
@@ -159,9 +160,9 @@ export default class StudyViewPage extends React.Component<
     private toolbarLeftUpdater: any;
     @observable private toolbarLeft: number = 0;
 
-    private readonly resourceTableStore = new ResourceTableStore({
-        hideResource: isHiddenFromResourceViews,
-    });
+    private readonly resourceTableStore = new ResourceTableStore(
+        STUDY_VIEW_RESOURCE_TABLE_OPTIONS
+    );
     private readonly resourceTableStores = new Map<
         string,
         ResourceTableStore
@@ -366,7 +367,7 @@ export default class StudyViewPage extends React.Component<
     private getOrCreateResourceStore(resourceId: string): ResourceTableStore {
         let store = this.resourceTableStores.get(resourceId);
         if (!store) {
-            store = new ResourceTableStore();
+            store = new ResourceTableStore(STUDY_VIEW_RESOURCE_TABLE_OPTIONS);
             store.setSelectedResourceId(resourceId);
             this.resourceTableStores.set(resourceId, store);
 
@@ -526,8 +527,11 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get visibleResourceDefinitions() {
-        return (this.store.resourceDefinitions.result || []).filter(
-            d => !isHiddenFromResourceViews(d.resourceId)
+        return (this.store.resourceDefinitions.result || []).filter(d =>
+            isResourceListedInTable(
+                d.resourceId,
+                STUDY_VIEW_RESOURCE_TABLE_OPTIONS
+            )
         );
     }
 
