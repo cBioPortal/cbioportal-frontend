@@ -10,7 +10,7 @@ import {
     useAuiState,
 } from '@assistant-ui/react';
 import { useAISDKRuntime } from '@assistant-ui/ai-sdk';
-import { AuthErrorStatus, getSelectedModel, setAuthError } from './chatSession';
+import { AuthErrorStatus, setAuthError } from './chatSession';
 import { notifyNavigate, resolvePortalLink } from './portal-link';
 import { getLatestPageEvents } from './page-events';
 
@@ -42,10 +42,9 @@ export function useChatThreadRuntime(): AssistantRuntime {
                     }
                     return response;
                 },
-                // Evaluated per request, so the model picker stays live even
-                // though this hook never re-reads it.
+                // Evaluated per request, so it carries the page the user is on
+                // now even though this hook never re-reads it.
                 body: () => ({
-                    model: getSelectedModel(),
                     pageHref: getLatestPageEvents().snapshot?.href ?? null,
                 }),
             }),

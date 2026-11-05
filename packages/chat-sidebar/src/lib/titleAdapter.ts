@@ -3,7 +3,6 @@ import {
     TitleGenerationAdapter,
 } from '@assistant-ui/core/react';
 import { ThreadMessage } from '@assistant-ui/react';
-import { getSelectedModel } from './chatSession';
 
 // Titles are generated from the opening question alone, which is all the model
 // needs for a few words and keeps the call cheap. Screenshots ride along as
@@ -33,7 +32,7 @@ export const titleAdapter: TitleGenerationAdapter = {
             const response = await fetch('/api/chat/title', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text, model: getSelectedModel() }),
+                body: JSON.stringify({ text }),
             });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const { title } = await response.json();

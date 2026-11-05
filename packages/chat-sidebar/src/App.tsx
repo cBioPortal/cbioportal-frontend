@@ -20,10 +20,7 @@ import { useCrossTabSync } from '@/hooks/use-cross-tab-sync';
 import {
     AuthErrorStatus,
     getAuthError,
-    getSelectedModel,
-    ModelInfo,
     setAuthError,
-    setSelectedModel,
     subscribe,
 } from '@/lib/chatSession';
 import { setPortalLinkAliases } from '@/lib/portal-link';
@@ -99,7 +96,6 @@ const THREAD_COMPONENTS = {
 };
 
 export function App() {
-    const [models, setModels] = useState<ModelInfo[]>([]);
     const authError = useSyncExternalStore(
         subscribe,
         getAuthError,
@@ -113,7 +109,14 @@ export function App() {
 
     useEffect(() => {
         fetch('/api/chat/config')
-            .then(r => (r.ok ? r.json() : null))
+            .then(r => {
+                // Surfaces the reason on load rather than on first message.
+                if (r.status === 401 || r.status === 403) {
+                    setAuthError(r.status);
+                    return null;
+                }
+                return r.ok ? r.json() : null;
+            })
             .then((data: { portalLinkAliases?: string[] } | null) => {
                 if (Array.isArray(data?.portalLinkAliases)) {
                     setPortalLinkAliases(data.portalLinkAliases);
@@ -122,34 +125,6 @@ export function App() {
             .catch(() => {
                 /* links keep the default aliases */
             });
-    }, []);
-
-    useEffect(() => {
-        let cancelled = false;
-        fetch('/api/chat/models')
-            .then(r => {
-                // Surfaces the reason on load rather than on first message.
-                if (r.status === 401 || r.status === 403) {
-                    setAuthError(r.status);
-                    return null;
-                }
-                return r.json();
-            })
-            .then((data: { models: ModelInfo[] } | null) => {
-                if (!data) return;
-                if (cancelled) return;
-                setModels(data.models);
-                const selected = getSelectedModel();
-                if (!selected || !data.models.some(m => m.id === selected)) {
-                    setSelectedModel(data.models[0]?.id ?? null);
-                }
-            })
-            .catch(() => {
-                /* dropdown will just stay empty */
-            });
-        return () => {
-            cancelled = true;
-        };
     }, []);
 
     // The iframe reloads with the portal page on a full page load (a refresh,
@@ -200,7 +175,7 @@ export function App() {
                         </div>
                     ) : (
                         <>
-                            <ChatHeader models={models} />
+                            <ChatHeader />
                             <div className="min-h-0 flex-1">
                                 <Thread components={THREAD_COMPONENTS} />
                             </div>

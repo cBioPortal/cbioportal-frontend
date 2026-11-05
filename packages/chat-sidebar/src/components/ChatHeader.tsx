@@ -1,4 +1,4 @@
-import { FC, useCallback, useRef, useState, useSyncExternalStore } from 'react';
+import { FC, useCallback, useRef, useState } from 'react';
 import { UIMessage } from 'ai';
 import {
     getExternalStoreMessages,
@@ -22,12 +22,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import {
-    getSelectedModel,
-    ModelInfo,
-    setSelectedModel,
-    subscribe,
-} from '@/lib/chatSession';
 import { downloadTextFile } from '@/lib/download';
 import { embedded } from '@/lib/parent-origin';
 import { appendScreenshotAppendix } from '@/lib/report';
@@ -35,13 +29,8 @@ import { requestSidebarMode } from '@/lib/sidebar-mode';
 
 // Lives inside the runtime provider: everything here acts on the chat the user
 // is looking at.
-export const ChatHeader: FC<{ models: ModelInfo[] }> = ({ models }) => {
+export const ChatHeader: FC = () => {
     const aui = useAui();
-    const selectedModel = useSyncExternalStore(
-        subscribe,
-        getSelectedModel,
-        getSelectedModel
-    );
     const isRunning = useAuiState(s => s.thread.isRunning);
     // A boolean, not the message list — the header would otherwise re-render
     // on every streamed token.
@@ -69,7 +58,7 @@ export const ChatHeader: FC<{ models: ModelInfo[] }> = ({ models }) => {
             const res = await fetch('/api/chat/report', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages, model: selectedModel }),
+                body: JSON.stringify({ messages }),
             });
             if (!res.ok) {
                 const { error } = await res.json();
@@ -98,21 +87,6 @@ export const ChatHeader: FC<{ models: ModelInfo[] }> = ({ models }) => {
                 cBioPortal Chat
             </div>
             <div className="ml-auto flex flex-shrink-0 items-center gap-1.5">
-                {models.length > 1 && (
-                    <select
-                        className="h-7 max-w-40 cursor-pointer rounded-[3px] border border-border bg-transparent px-1 text-[11px] leading-tight text-muted-foreground hover:text-foreground disabled:opacity-60"
-                        value={selectedModel ?? ''}
-                        onChange={e => setSelectedModel(e.target.value)}
-                        disabled={isRunning}
-                        aria-label="Model"
-                    >
-                        {models.map(m => (
-                            <option key={m.id} value={m.id}>
-                                {m.name}
-                            </option>
-                        ))}
-                    </select>
-                )}
                 <TooltipIconButton
                     tooltip={
                         reportError ??

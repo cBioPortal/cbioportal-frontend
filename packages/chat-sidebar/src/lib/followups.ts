@@ -1,4 +1,3 @@
-import { getSelectedModel } from './chatSession';
 import { FollowupsExchange } from './followupsInput';
 import { PageEvent } from './page-events';
 import { embedded } from './parent-origin';
@@ -218,8 +217,6 @@ function request(
             question: exchange.question,
             answer: exchange.answer,
             ...requestPage,
-            // Same provider as the chat, which pays for its follow-ups too.
-            model: getSelectedModel(),
         },
         controller.signal,
         suggestions => {
