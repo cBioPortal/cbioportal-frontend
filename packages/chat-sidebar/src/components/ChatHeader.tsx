@@ -22,6 +22,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
+import { getSelectedModel } from '@/lib/chatSession';
 import { downloadTextFile } from '@/lib/download';
 import { embedded } from '@/lib/parent-origin';
 import { appendScreenshotAppendix } from '@/lib/report';
@@ -58,7 +59,10 @@ export const ChatHeader: FC = () => {
             const res = await fetch('/api/chat/report', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages }),
+                body: JSON.stringify({
+                    messages,
+                    model: getSelectedModel(),
+                }),
             });
             if (!res.ok) {
                 const { error } = await res.json();

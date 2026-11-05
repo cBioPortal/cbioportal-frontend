@@ -31,7 +31,8 @@ function withDefaults(model: Model, settings: ModelSettings): Model {
 interface ProviderConfig {
     id: string;
     label: string;
-    chatModelId: string;
+    // What the model picker shows.
+    chatModelName: string;
     chat: Model;
     utility: Model;
 }
@@ -49,7 +50,7 @@ function configureBedrock(): ProviderConfig | undefined {
     return {
         id: 'bedrock',
         label: 'Amazon Bedrock',
-        chatModelId,
+        chatModelName: process.env.BEDROCK_CHAT_MODEL_NAME || chatModelId,
         // The generic reasoning setting leaves Bedrock's `display` unset for
         // Claude, where the other providers ask for summarized thinking;
         // without it the sidebar's reasoning disclosure would stay empty. The
@@ -70,12 +71,15 @@ function configureBedrock(): ProviderConfig | undefined {
 
 function configureAnthropic(): ProviderConfig | undefined {
     if (!process.env.ANTHROPIC_API_KEY) return undefined;
-    const chatModelId = process.env.ANTHROPIC_CHAT_MODEL || 'claude-sonnet-5';
+    const chatModelId = process.env.ANTHROPIC_CHAT_MODEL;
     return {
         id: 'anthropic',
         label: 'Anthropic',
-        chatModelId,
-        chat: anthropic(chatModelId),
+        chatModelName:
+            process.env.ANTHROPIC_CHAT_MODEL_NAME ||
+            chatModelId ||
+            'Claude Sonnet 5',
+        chat: anthropic(chatModelId || 'claude-sonnet-5'),
         utility: anthropic(
             process.env.ANTHROPIC_UTILITY_MODEL || 'claude-haiku-4-5'
         ),
@@ -84,14 +88,15 @@ function configureAnthropic(): ProviderConfig | undefined {
 
 function configureOpenAI(): ProviderConfig | undefined {
     if (!process.env.OPENAI_API_KEY) return undefined;
-    const chatModelId = process.env.OPENAI_CHAT_MODEL || 'gpt-6.1-sol';
+    const chatModelId = process.env.OPENAI_CHAT_MODEL;
     return {
         id: 'openai',
         label: 'OpenAI',
-        chatModelId,
+        chatModelName:
+            process.env.OPENAI_CHAT_MODEL_NAME || chatModelId || 'GPT-6.1 Sol',
         // OpenAI only returns reasoning summaries when asked; without them the
         // sidebar's reasoning disclosure would stay empty.
-        chat: withDefaults(openai(chatModelId), {
+        chat: withDefaults(openai(chatModelId || 'gpt-6.1-sol'), {
             providerOptions: { openai: { reasoningSummary: 'auto' } },
         }),
         utility: openai(process.env.OPENAI_UTILITY_MODEL || 'gpt-6-luna'),
@@ -116,14 +121,17 @@ const registry = createProviderRegistry(
     )
 );
 
+// The shape of the sidebar model picker's options.
 export interface ModelInfo {
     id: string;
     name: string;
+    description: string;
 }
 
 export const AVAILABLE_MODELS: readonly ModelInfo[] = PROVIDERS.map(p => ({
     id: `${p.id}:chat`,
-    name: `${p.chatModelId} (${p.label})`,
+    name: p.chatModelName,
+    description: p.label,
 }));
 
 export const DEFAULT_MODEL: string | undefined = AVAILABLE_MODELS[0]?.id;

@@ -8,6 +8,7 @@ import { ScreenshotButton } from '@/components/assistant-ui/elements/screenshot-
 import { File } from '@/components/assistant-ui/elements/file';
 import { ThreadFollowupSuggestions } from '@/components/assistant-ui/elements/follow-up-suggestions.aui';
 import { MarkdownText } from '@/components/assistant-ui/elements/markdown-text';
+import { ModelSelector } from '@/components/assistant-ui/elements/model-selector.aui';
 import { ToolFallback } from '@/components/assistant-ui/elements/tool-fallback.aui';
 import {
     ToolGroupContent,
@@ -17,6 +18,12 @@ import {
 import { TooltipIconButton } from '@/components/assistant-ui/elements/tooltip-icon-button';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+    getModels,
+    getSelectedModel,
+    setSelectedModel,
+    subscribe as subscribeToChatSession,
+} from '@/lib/chatSession';
 import { getPageType, PageType, subscribe } from '@/lib/page-events';
 import { getStartersState, subscribeToStarters } from '@/lib/starters';
 import { cn } from '@/lib/utils';
@@ -399,11 +406,40 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
     );
 };
 
+// Hidden when the server offers a single model. Disabled while a reply
+// streams: a tool result sends the turn's next request automatically, and it
+// must go to the same provider as the rest of the turn.
+const ComposerModelSelector: FC = () => {
+    const models = useSyncExternalStore(
+        subscribeToChatSession,
+        getModels,
+        getModels
+    );
+    const selected = useSyncExternalStore(
+        subscribeToChatSession,
+        getSelectedModel,
+        getSelectedModel
+    );
+    const isRunning = useAuiState(s => s.thread.isRunning);
+    if (models.length < 2) return null;
+    return (
+        <ModelSelector.Root
+            models={models}
+            value={selected ?? undefined}
+            onValueChange={setSelectedModel}
+        >
+            <ModelSelector.Trigger size="sm" disabled={isRunning} />
+            <ModelSelector.Content align="end" />
+        </ModelSelector.Root>
+    );
+};
+
 const ComposerAction: FC = () => {
     return (
         <div className="aui-composer-action-wrapper relative flex items-center justify-between">
             <ScreenshotButton />
             <div className="flex items-center gap-1.5">
+                <ComposerModelSelector />
                 <AuiIf condition={s => !s.thread.isRunning}>
                     <ComposerPrimitive.Send
                         render={

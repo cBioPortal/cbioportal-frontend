@@ -1,8 +1,8 @@
 import { AsyncStorageLike } from '@assistant-ui/core/react';
 
 // v2 marks the break from the single-chat `chat-sidebar:messages` key, and
-// keeps the chat keys in their own namespace so a prefix scan only ever reaches
-// chat data.
+// keeps the chat keys in their own namespace so a prefix scan can never reach
+// `chat-sidebar:selectedModel`, which has a different lifecycle.
 export const PREFIX = 'chat-sidebar:v2:';
 export const THREADS_KEY = `${PREFIX}threads`;
 export const LAST_THREAD_KEY = `${PREFIX}lastThreadId`;

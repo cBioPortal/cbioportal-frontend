@@ -20,7 +20,9 @@ import { useCrossTabSync } from '@/hooks/use-cross-tab-sync';
 import {
     AuthErrorStatus,
     getAuthError,
+    ModelInfo,
     setAuthError,
+    setModels,
     subscribe,
 } from '@/lib/chatSession';
 import { setPortalLinkAliases } from '@/lib/portal-link';
@@ -124,6 +126,17 @@ export function App() {
             })
             .catch(() => {
                 /* links keep the default aliases */
+            });
+    }, []);
+
+    useEffect(() => {
+        fetch('/api/chat/models')
+            .then(r => (r.ok ? r.json() : null))
+            .then((data: { models?: ModelInfo[] } | null) => {
+                if (Array.isArray(data?.models)) setModels(data.models);
+            })
+            .catch(() => {
+                /* no selector; requests use the server's default model */
             });
     }, []);
 
