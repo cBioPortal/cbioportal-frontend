@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { action, computed, makeObservable, observable } from 'mobx';
 import { remoteData } from 'cbioportal-frontend-commons';
 import {
@@ -13,6 +14,7 @@ import {
     ResourceTableRow,
 } from 'shared/api/resourceTableClient';
 import {
+    CombinedResourceTab,
     IResourceTableRow,
     IResourceTableTab,
     toResourceTableRows,
@@ -24,6 +26,7 @@ import {
     StudyViewFilter,
 } from 'cbioportal-ts-api-client';
 import { ResourceCohort, resourceCohortFields } from './resourceTableCohort';
+import { resourceIdFields } from './GroupedResourceTableStore';
 
 // Guards against a pathological resource pulling an unbounded result set into the browser.
 const MAX_DOWNLOAD_ROWS = 100000;
@@ -37,6 +40,66 @@ const EMPTY_METADATA: ResourceTableMetadataResult = {
     facetRanges: {},
     distinctValueCounts: {},
 };
+
+/** A tab of the table: one resource, or several read together (see CombinedResourceTab). */
+export interface ResourceTableStoreTab extends ResourceTableTab {
+    /** The resources the tab reads; `resourceId` is the tab's id. */
+    resourceIds: string[];
+}
+
+export interface ResourceTableStoreOptions {
+    /** Resources left out of the table, e.g. ones another view shows. */
+    hideResource?: (resourceId: string) => boolean;
+    /** Tabs that show several resources together, in place of their own tabs. */
+    combinedTabs?: CombinedResourceTab[];
+}
+
+/**
+ * The tabs a table offers for the fetched per-resource tabs: each combined tab replaces the tabs
+ * of its resources, where the first of them was, and reads those present; then hidden resources
+ * are left out. A combined tab's totalCount is its resources' sum. Its patient and sample counts
+ * are the largest of theirs, a lower bound, since two resources can share a case; the table's
+ * header shows the exact counts.
+ */
+export function buildResourceTableTabs(
+    fetched: ResourceTableTab[],
+    options: ResourceTableStoreOptions
+): ResourceTableStoreTab[] {
+    const combinedTabs = options.combinedTabs || [];
+    const combinedIds = new Set(combinedTabs.map(tab => tab.id));
+    const tabs: ResourceTableStoreTab[] = [];
+    const placed = new Set<string>();
+    fetched.forEach(tab => {
+        // A fetched resource sharing a combined tab's id gives way to it.
+        if (combinedIds.has(tab.resourceId)) {
+            return;
+        }
+        const combined = combinedTabs.find(c =>
+            c.resourceIds.includes(tab.resourceId)
+        );
+        if (!combined) {
+            tabs.push({ ...tab, resourceIds: [tab.resourceId] });
+            return;
+        }
+        if (placed.has(combined.id)) {
+            return;
+        }
+        placed.add(combined.id);
+        const members = fetched.filter(t =>
+            combined.resourceIds.includes(t.resourceId)
+        );
+        tabs.push({
+            resourceId: combined.id,
+            label: combined.label,
+            resourceIds: members.map(t => t.resourceId),
+            totalCount: _.sumBy(members, t => t.totalCount),
+            patientCount: _.max(members.map(t => t.patientCount)) || 0,
+            sampleCount: _.max(members.map(t => t.sampleCount)) || 0,
+        });
+    });
+    const hide = options.hideResource;
+    return hide ? tabs.filter(tab => !hide(tab.resourceId)) : tabs;
+}
 
 /**
  * Server-side resource table store.
@@ -60,13 +123,10 @@ export class ResourceTableStore {
     @observable searchTerm: string = '';
     @observable.ref filters: ResourceColumnFilter[] = [];
 
-    /** Resources left out of the table, e.g. ones another view shows. */
-    private readonly hideResource?: (resourceId: string) => boolean;
+    private readonly options: ResourceTableStoreOptions;
 
-    constructor(
-        options: { hideResource?: (resourceId: string) => boolean } = {}
-    ) {
-        this.hideResource = options.hideResource;
+    constructor(options: ResourceTableStoreOptions = {}) {
+        this.options = options;
         makeObservable(this);
     }
 
@@ -151,31 +211,61 @@ export class ResourceTableStore {
         default: [],
     });
 
-    /** The resource tabs the table offers: the fetched ones less the hidden. */
-    @computed get visibleTabs(): ResourceTableTab[] {
-        const tabs = this.tabs.result || [];
-        const hide = this.hideResource;
-        return hide ? tabs.filter(tab => !hide(tab.resourceId)) : tabs;
+    /** The tabs the table offers; see buildResourceTableTabs. */
+    @computed get visibleTabs(): ResourceTableStoreTab[] {
+        return buildResourceTableTabs(this.tabs.result || [], this.options);
     }
 
+    /** The active tab's id: a resource id, or a combined tab's id. */
     @computed get activeResourceId(): string | undefined {
         return this.selectedResourceId || this.visibleTabs[0]?.resourceId;
     }
 
     /**
-     * The cohort-scoped request, without paging. Both fetches start from this; only the rows
-     * fetch adds pageNumber/pageSize, so turning a page does not re-run the metadata fetch.
+     * The resources the active tab reads. A combined tab reads those of its resources the cohort
+     * has, and none while the tabs load or when it has none, since the API rejects a resource
+     * that none of the studies holds.
      */
+    @computed get activeResourceIds(): string[] {
+        const active = this.activeResourceId;
+        if (!active) {
+            return [];
+        }
+        const combined = (this.options.combinedTabs || []).find(
+            tab => tab.id === active
+        );
+        if (!combined) {
+            return [active];
+        }
+        return (
+            this.visibleTabs.find(tab => tab.resourceId === active)
+                ?.resourceIds || []
+        );
+    }
+
     /** The search sent to the backend; see resourceSearchTermForQuery. */
     @computed private get querySearchTerm(): string | undefined {
         return this.searchTerm
-            ? resourceSearchTermForQuery(this.activeResourceId, this.searchTerm)
+            ? resourceSearchTermForQuery(
+                  this.activeResourceIds,
+                  this.searchTerm
+              )
             : undefined;
     }
 
+    /**
+     * The request without paging, or undefined when there is nothing to read. Both fetches start
+     * from this; only the rows fetch adds pageNumber/pageSize, so turning a page does not re-run
+     * the metadata fetch.
+     */
     @computed private get baseQuery() {
+        const resourceIds = this.activeResourceIds;
+        if (resourceIds.length === 0 || this.studyIds.length === 0) {
+            return undefined;
+        }
         return {
             ...resourceCohortFields(this.cohort),
+            ...resourceIdFields(resourceIds),
             sortBy: this.sortBy,
             direction: this.sortDirection,
             search: this.querySearchTerm,
@@ -191,13 +281,12 @@ export class ResourceTableStore {
     readonly tableMetadata = remoteData<ResourceTableMetadataResult>({
         await: () => [this.tabs],
         invoke: async () => {
-            const resourceId = this.activeResourceId;
-            if (!resourceId || this.studyIds.length === 0) {
+            const query = this.baseQuery;
+            if (!query) {
                 return EMPTY_METADATA;
             }
             return fetchResourceTableMetadata({
-                ...this.baseQuery,
-                resourceId,
+                ...query,
                 pageNumber: 0,
                 pageSize: 0,
             });
@@ -209,13 +298,12 @@ export class ResourceTableStore {
     readonly tableData = remoteData<ResourceTableRow[]>({
         await: () => [this.tabs],
         invoke: async () => {
-            const resourceId = this.activeResourceId;
-            if (!resourceId || this.studyIds.length === 0) {
+            const query = this.baseQuery;
+            if (!query) {
                 return [];
             }
             return fetchResourceTableData({
-                ...this.baseQuery,
-                resourceId,
+                ...query,
                 pageNumber: this.pageNumber,
                 pageSize: this.pageSize,
             });
@@ -281,22 +369,17 @@ export class ResourceTableStore {
      * downloading "the table" has to go back to the server rather than use the page on screen.
      */
     async fetchAllRowsForDownload(): Promise<IResourceTableRow[]> {
-        const resourceId = this.activeResourceId;
-        if (!resourceId || this.studyIds.length === 0) {
+        const query = this.baseQuery;
+        if (!query) {
             return [];
         }
         const result = await fetchResourceTableData({
-            ...resourceCohortFields(this.cohort),
-            resourceId,
+            ...query,
             pageNumber: 0,
             pageSize: Math.min(
                 Math.max(this.totalRowCount, 1),
                 MAX_DOWNLOAD_ROWS
             ),
-            sortBy: this.sortBy,
-            direction: this.sortDirection,
-            search: this.querySearchTerm,
-            filters: this.filters.length > 0 ? this.filters : undefined,
         });
         return toResourceTableRows(result);
     }

@@ -32,6 +32,16 @@ export interface IResourceTableTab {
     sampleCount: number;
 }
 
+/**
+ * Several resources a resource table shows as one tab, read together through the API's
+ * `resourceIds`, in place of each resource's own tab. `id` names the tab, not a resource.
+ */
+export interface CombinedResourceTab {
+    id: string;
+    label: string;
+    resourceIds: string[];
+}
+
 export function getResourceTableMetadataKeys(rows: IResourceTableRow[]) {
     return _.sortBy(
         _.uniq(

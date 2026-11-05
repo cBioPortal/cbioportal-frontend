@@ -88,7 +88,10 @@ import {
     buildCustomTabs,
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
-import { isHiddenFromStudyResourceTable } from 'shared/lib/ResourcePolicy';
+import {
+    isHiddenFromStudyResourceTable,
+    STUDY_VIEW_RESOURCE_TABLE_OPTIONS,
+} from 'shared/lib/ResourcePolicy';
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
 import { PlotsTabWrapper } from 'pages/studyView/StudyViewPlotsTabWrapper';
 import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
@@ -159,9 +162,9 @@ export default class StudyViewPage extends React.Component<
     private toolbarLeftUpdater: any;
     @observable private toolbarLeft: number = 0;
 
-    private readonly resourceTableStore = new ResourceTableStore({
-        hideResource: isHiddenFromStudyResourceTable,
-    });
+    private readonly resourceTableStore = new ResourceTableStore(
+        STUDY_VIEW_RESOURCE_TABLE_OPTIONS
+    );
     private readonly resourceTableStores = new Map<
         string,
         ResourceTableStore
@@ -366,7 +369,7 @@ export default class StudyViewPage extends React.Component<
     private getOrCreateResourceStore(resourceId: string): ResourceTableStore {
         let store = this.resourceTableStores.get(resourceId);
         if (!store) {
-            store = new ResourceTableStore();
+            store = new ResourceTableStore(STUDY_VIEW_RESOURCE_TABLE_OPTIONS);
             store.setSelectedResourceId(resourceId);
             this.resourceTableStores.set(resourceId, store);
 
@@ -526,9 +529,9 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get visibleResourceDefinitions() {
-        // The resources the resource table lists, so a study whose resources are
-        // all hidden from it (legacy H&E, slides the viewer shows) has no Files
-        // & Links tab.
+        // The resources the resource tables list (slides through the combined
+        // Pathology slides tab), so a study whose resources are all hidden from
+        // them (legacy H&E) has no Files & Links tab.
         return (this.store.resourceDefinitions.result || []).filter(
             d => !isHiddenFromStudyResourceTable(d.resourceId)
         );
