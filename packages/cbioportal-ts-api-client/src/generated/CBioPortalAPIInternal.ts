@@ -1106,6 +1106,8 @@ export type Sample = {
 export type SampleClinicalDataCollection = {
     'byUniqueSampleKey': {}
 
+    'orderedSampleKeys': Array < string >
+
 };
 export type SampleIdentifier = {
     'sampleId': string
