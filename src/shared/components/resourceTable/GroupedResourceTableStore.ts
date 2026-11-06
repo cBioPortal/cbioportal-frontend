@@ -207,12 +207,10 @@ export class GroupedResourceTableStore {
         makeObservable(this);
     }
 
-    /** Sets the cohort; resets paging, search and filters as ResourceTableStore does. */
+    /** Sets the cohort; resets paging but keeps search and filters, as ResourceTableStore does. */
     @action setCohort(cohort: ResourceCohort) {
         this.cohort = cohort;
         this.resetRows();
-        this.searchTerm = '';
-        this.filters = [];
     }
 
     /**

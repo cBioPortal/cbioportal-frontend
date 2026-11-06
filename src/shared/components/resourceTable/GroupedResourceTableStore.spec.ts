@@ -434,7 +434,7 @@ describe('GroupedResourceTableStore', () => {
         assert.isUndefined(store.locate);
     });
 
-    it('resets search and filters with the cohort', () => {
+    it('keeps search and filters with a new cohort, resetting paging', () => {
         const store = new GroupedResourceTableStore();
         store.setResourceIds(['PATHOLOGY_SLIDE']);
         store.setSearchTerm('TCGA');
@@ -442,7 +442,7 @@ describe('GroupedResourceTableStore', () => {
 
         store.setCohort({ ...baseState.cohort, studyViewFilter: filter });
 
-        assert.equal(store.searchTerm, '');
+        assert.equal(store.searchTerm, 'TCGA');
         assert.equal(store.pageNumber, 0);
         assert.deepEqual(store.groupsQuery!.studyViewFilter, filter);
     });
