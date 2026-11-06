@@ -10,6 +10,7 @@ const {
     clickElement,
     getNthElements,
     waitForElementDisplayed,
+    setInputText,
 } = require('../../../shared/specUtils_Async.js');
 
 const TIMEOUT = 6000;
@@ -163,5 +164,32 @@ describe('oncoprinter clinical example data, color configuration', () => {
         await (await getElementByTestHandle('resetColors')).waitForDisplayed({
             reverse: true,
         });
+    });
+
+    it('oncoprinter hex input applies an arbitrary color', async () => {
+        // continues from the previous test: the modal is open and all colors are default
+        await clickElement('[data-test="color-picker-icon"]', { moveTo: true });
+        await waitForElementDisplayed('.circle-picker', { timeout: TIMEOUT });
+
+        await setInputText('[data-test="colorPickerHexInput"]', '#123456');
+        await browser.keys('Enter');
+        await waitForOncoprint();
+
+        assert.strictEqual(
+            await (
+                await getElement('[data-test="color-picker-icon"] rect')
+            ).getAttribute('fill'),
+            '#123456'
+        );
+        await (await getElementByTestHandle('resetColors')).waitForDisplayed();
+    });
+
+    it('oncoprinter palette import and export controls are available', async () => {
+        await (
+            await getElementByTestHandle('exportColorPalette')
+        ).waitForDisplayed();
+        await (
+            await getElementByTestHandle('importColorPalette')
+        ).waitForDisplayed();
     });
 });

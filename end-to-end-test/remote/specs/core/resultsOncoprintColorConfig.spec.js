@@ -10,6 +10,7 @@ const {
     getElement,
     clickElement,
     getNthElements,
+    setInputText,
 } = require('../../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -221,6 +222,54 @@ describe('oncoprint colors', () => {
             ).waitForDisplayed({
                 reverse: true,
             });
+        });
+
+        it('hex input applies an arbitrary color that is not in the swatches', async () => {
+            // continues from the previous test: the modal is open and all colors are default
+            await clickElement('[data-test="color-picker-icon"]');
+            await (await getElement('.circle-picker')).waitForDisplayed({
+                timeout: 1000,
+            });
+
+            await setInputText('[data-test="colorPickerHexInput"]', '#123456');
+            await browser.keys('Enter');
+            await waitForOncoprint();
+
+            assert.strictEqual(
+                await (
+                    await getElement('[data-test="color-picker-icon"] rect')
+                ).getAttribute('fill'),
+                '#123456'
+            );
+            // an arbitrary color is still an override, so the reset button comes back
+            await (
+                await getElementByTestHandle('resetColors')
+            ).waitForDisplayed();
+        });
+
+        it('hex input rejects a value that is not a color', async () => {
+            await setInputText('[data-test="colorPickerHexInput"]', 'nonsense');
+            await (
+                await getElementByTestHandle('colorPickerHexInputError')
+            ).waitForDisplayed();
+
+            // the rejected value is discarded rather than applied
+            await browser.keys('Escape');
+            assert.strictEqual(
+                await (
+                    await getElement('[data-test="color-picker-icon"] rect')
+                ).getAttribute('fill'),
+                '#123456'
+            );
+        });
+
+        it('palette import and export controls are available', async () => {
+            await (
+                await getElementByTestHandle('exportColorPalette')
+            ).waitForDisplayed();
+            await (
+                await getElementByTestHandle('importColorPalette')
+            ).waitForDisplayed();
         });
     });
 
