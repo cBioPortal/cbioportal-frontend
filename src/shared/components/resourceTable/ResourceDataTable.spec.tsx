@@ -30,6 +30,7 @@ describe('ResourceDataTable metadata columns', () => {
                 facetRanges: {},
                 distinctValueCounts: {},
                 rowsForDisplay: [],
+                isMetadataKeyHidden: () => false,
                 ...store,
             } as any,
         });
@@ -108,6 +109,33 @@ describe('ResourceDataTable metadata columns', () => {
         assert.equal(
             cols.find(c => c.id === 'metadata:score')!.dataType,
             'number'
+        );
+    });
+
+    it('leaves out the keys the store hides, from the table and the download', () => {
+        const hideInternal = (key: string) => key === 'internal';
+        assert.deepEqual(
+            columns({
+                isMetadataKeyHidden: hideInternal,
+                columns: [
+                    metadataColumn({ id: 'metadata:score' }),
+                    metadataColumn({ id: 'metadata:internal' }),
+                ] as ResourceColumnInfo[],
+            }).map(c => c.id),
+            ['metadata:score']
+        );
+        // Without backend columns, the keys found in the rows are filtered alike.
+        assert.deepEqual(
+            columns({
+                isMetadataKeyHidden: hideInternal,
+                rowsForDisplay: [
+                    {
+                        resourceId: 'NOTES',
+                        metadata: { score: '1', internal: 'x' },
+                    } as any,
+                ],
+            }).map(c => c.id),
+            ['metadata:score']
         );
     });
 

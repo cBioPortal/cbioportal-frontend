@@ -88,16 +88,21 @@ import {
     buildCustomTabs,
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
-import { isHiddenFromResourceViews } from 'shared/lib/ResourcePolicy';
+import { STUDY_VIEW_RESOURCE_TABLE_OPTIONS } from 'shared/lib/ResourcePolicy';
+import { listedResourceTabs } from 'shared/lib/ResourceTableUtils';
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
 import { PlotsTabWrapper } from 'pages/studyView/StudyViewPlotsTabWrapper';
 import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
+import {
+    getStudyViewResourceCohort,
+    syncStudyViewResourceCohort,
+} from './resources/studyViewResourceCohort';
 import ResourceDataTable from 'shared/components/resourceTable/ResourceDataTable';
 import { ResourceViewerStore } from 'shared/components/resourceViewer/ResourceViewerStore';
 import ResourceViewerTab from 'shared/components/resourceViewer/ResourceViewerTab';
 import resourceViewerStyles from 'shared/components/resourceViewer/styles.module.scss';
 import { ResourceTableTab } from 'shared/api/resourceTableClient';
-import { isStudyWideResource } from 'shared/lib/ResourceTableUtils';
+import { isResourceViewerTab } from 'shared/lib/ResourceTableUtils';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -155,9 +160,9 @@ export default class StudyViewPage extends React.Component<
     private toolbarLeftUpdater: any;
     @observable private toolbarLeft: number = 0;
 
-    private readonly resourceTableStore = new ResourceTableStore({
-        hideResource: isHiddenFromResourceViews,
-    });
+    private readonly resourceTableStore = new ResourceTableStore(
+        STUDY_VIEW_RESOURCE_TABLE_OPTIONS
+    );
     private readonly resourceTableStores = new Map<
         string,
         ResourceTableStore
@@ -330,25 +335,11 @@ export default class StudyViewPage extends React.Component<
         }, 500);
 
         this.resourceTableStoreDisposer = autorun(() => {
-            const samples = this.store.selectedSamples.result;
-            if (!samples) return;
-            const allSamples = this.store.samples.result;
-            // store.samples is itself filtered to the queried identifiers for a virtual study or
-            // case list, so "every sample is selected" does not mean "the whole study" there.
-            const coversWholeStudy = _.isEmpty(
-                this.store.queriedSampleIdentifiers.result
-            );
-            this.resourceTableStore.setContextFromSelection(
-                samples,
-                allSamples,
-                coversWholeStudy
-            );
+            const cohort = getStudyViewResourceCohort(this.store);
+            if (!cohort) return;
+            syncStudyViewResourceCohort(this.resourceTableStore, cohort);
             this.resourceTableStores.forEach(store =>
-                store.setContextFromSelection(
-                    samples,
-                    allSamples,
-                    coversWholeStudy
-                )
+                syncStudyViewResourceCohort(store, cohort)
             );
             this.resourceViewerStores.forEach(store =>
                 this.setViewerStoreContext(store)
@@ -376,28 +367,20 @@ export default class StudyViewPage extends React.Component<
     private getOrCreateResourceStore(resourceId: string): ResourceTableStore {
         let store = this.resourceTableStores.get(resourceId);
         if (!store) {
-            store = new ResourceTableStore();
-            store.setSelectedResourceId(resourceId);
+            store = new ResourceTableStore(STUDY_VIEW_RESOURCE_TABLE_OPTIONS);
+            store.scopeToResource(resourceId);
             this.resourceTableStores.set(resourceId, store);
 
-            const samples = this.store.selectedSamples.result;
-            if (samples) {
-                store.setContextFromSelection(
-                    samples,
-                    this.store.samples.result,
-                    _.isEmpty(this.store.queriedSampleIdentifiers.result)
-                );
+            const cohort = getStudyViewResourceCohort(this.store);
+            if (cohort) {
+                store.setCohort(cohort);
             }
         }
         return store;
     }
 
     private setViewerStoreContext(store: ResourceViewerStore) {
-        store.setContext(
-            this.resourceTableStore.studyIds,
-            this.resourceTableStore.patientIdentifiers,
-            this.resourceTableStore.sampleIdentifiers
-        );
+        store.setCohort(this.resourceTableStore.cohort);
     }
 
     private getOrCreateViewerStore(
@@ -543,15 +526,17 @@ export default class StudyViewPage extends React.Component<
         }
     }
 
-    @computed get visibleResourceDefinitions() {
-        return (this.store.resourceDefinitions.result || []).filter(
-            d => !isHiddenFromResourceViews(d.resourceId)
+    /** The tabs the study's resources are listed in, a combined tab once; see listedResourceTabs. */
+    @computed get listedResourceTabs() {
+        return listedResourceTabs(
+            this.store.resourceDefinitions.result || [],
+            STUDY_VIEW_RESOURCE_TABLE_OPTIONS
         );
     }
 
     @computed get shouldShowResources() {
         if (this.store.resourceDefinitions.isComplete) {
-            return this.visibleResourceDefinitions.length > 0;
+            return this.listedResourceTabs.length > 0;
         } else {
             return false;
         }
@@ -724,7 +709,7 @@ export default class StudyViewPage extends React.Component<
                 return [] as JSX.Element[];
             }
             return apiTabs.map(tab =>
-                isStudyWideResource(tab) ? (
+                isResourceViewerTab(tab, STUDY_VIEW_RESOURCE_TABLE_OPTIONS) ? (
                     this.renderViewerTab(tab)
                 ) : (
                     <MSKTab
@@ -785,9 +770,9 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get isStudyWideViewerTabActive(): boolean {
-        return (this.resourceTableStore.tabs.result || []).some(
+        return this.resourceTableStore.visibleTabs.some(
             tab =>
-                isStudyWideResource(tab) &&
+                isResourceViewerTab(tab, STUDY_VIEW_RESOURCE_TABLE_OPTIONS) &&
                 (this.store.currentTab as string) ===
                     getStudyViewResourceTableTabId(tab.resourceId)
         );
@@ -977,11 +962,9 @@ export default class StudyViewPage extends React.Component<
                                             StudyViewPageTabKeyEnum.FILES_AND_LINKS
                                         }
                                         linkText={
-                                            this.visibleResourceDefinitions
-                                                .length === 1
-                                                ? this
-                                                      .visibleResourceDefinitions[0]
-                                                      .displayName
+                                            this.listedResourceTabs.length === 1
+                                                ? this.listedResourceTabs[0]
+                                                      .label
                                                 : RESOURCES_TAB_NAME
                                         }
                                         hide={
