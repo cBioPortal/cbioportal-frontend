@@ -572,6 +572,16 @@ export function getGenericAssayCategoricalEnrichmentRowData(
         }
     );
 }
+
+// Expression and generic assay rows compare groups by mean, alteration rows by
+// altered percentage. A mean of 0 is a valid value, so only fall back to the
+// altered percentage when the group has no mean at all.
+function getGroupEnrichmentValue(groupData: any): number {
+    return _.isNil(groupData.meanExpression)
+        ? groupData.alteredPercentage
+        : groupData.meanExpression;
+}
+
 export function getFilteredData(
     data: (
         | ExpressionEnrichmentRow
@@ -594,16 +604,14 @@ export function getFilteredData(
             if (!enrichedGroupData) {
                 return false;
             }
-            let enrichedGroupAlteredPercentage =
-                enrichedGroupData.meanExpression ||
-                enrichedGroupData.alteredPercentage;
+            let enrichedGroupAlteredPercentage = getGroupEnrichmentValue(
+                enrichedGroupData
+            );
             let res = _.reduce(
                 enrichmentDatum.groupsSet,
                 (acc, next, group) => {
                     if (enrichedGroup !== group) {
-                        let alteredPercentage =
-                            (next as any).meanExpression ||
-                            (next as any).alteredPercentage;
+                        let alteredPercentage = getGroupEnrichmentValue(next);
                         acc =
                             acc &&
                             enrichedGroupAlteredPercentage >= alteredPercentage;

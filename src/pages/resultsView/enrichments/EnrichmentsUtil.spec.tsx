@@ -665,6 +665,105 @@ describe('EnrichmentsUtil', () => {
                 ]
             );
         });
+
+        it('keeps expression rows where another group has a mean of 0', () => {
+            const notExpressedInFemale = {
+                checked: false,
+                disabled: false,
+                hugoGeneSymbol: 'RPS4Y1',
+                entrezGeneId: 6192,
+                cytoband: 'Yp11.31',
+                groupsSet: {
+                    Female: {
+                        name: 'Female',
+                        meanExpression: 0,
+                        standardDeviation: 0,
+                    },
+                    Male: {
+                        name: 'Male',
+                        meanExpression: 9.4,
+                        standardDeviation: 0.8,
+                    },
+                },
+                logRatio: -9.4,
+                pValue: 1e-30,
+                qValue: 1e-28,
+                enrichedGroup: 'Male',
+            };
+
+            assert.deepEqual(
+                getFilteredData(
+                    [notExpressedInFemale],
+                    ['Female', 'Male'],
+                    false,
+                    () => true
+                ),
+                [notExpressedInFemale]
+            );
+            assert.deepEqual(
+                getFilteredData(
+                    [notExpressedInFemale],
+                    ['Male'],
+                    false,
+                    () => true
+                ),
+                [notExpressedInFemale]
+            );
+            assert.deepEqual(
+                getFilteredData(
+                    [notExpressedInFemale],
+                    ['Female'],
+                    false,
+                    () => true
+                ),
+                []
+            );
+        });
+
+        it('keeps expression rows enriched in a group whose mean is 0', () => {
+            const enrichedAtZero = {
+                checked: false,
+                disabled: false,
+                hugoGeneSymbol: 'EGFR',
+                entrezGeneId: 1956,
+                cytoband: '7p11.2',
+                groupsSet: {
+                    'group A': {
+                        name: 'group A',
+                        meanExpression: 0,
+                        standardDeviation: 0.5,
+                    },
+                    'group B': {
+                        name: 'group B',
+                        meanExpression: -1.5,
+                        standardDeviation: 0.7,
+                    },
+                },
+                logRatio: 1.5,
+                pValue: 0.001,
+                qValue: 0.01,
+                enrichedGroup: 'group A',
+            };
+
+            assert.deepEqual(
+                getFilteredData(
+                    [enrichedAtZero],
+                    ['group A'],
+                    false,
+                    () => true
+                ),
+                [enrichedAtZero]
+            );
+            assert.deepEqual(
+                getFilteredData(
+                    [enrichedAtZero],
+                    ['group B'],
+                    false,
+                    () => true
+                ),
+                []
+            );
+        });
     });
 
     describe('#getBarChartTooltipContent()', () => {
