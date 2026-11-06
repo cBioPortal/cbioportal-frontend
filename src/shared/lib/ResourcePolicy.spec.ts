@@ -176,23 +176,54 @@ describe('slide ID display', () => {
         }
     );
 
-    it('leaves other searches unchanged', () => {
-        assert.equal(
-            resourceSearchTermForQuery(SLIDES, 'P-0000012-T06-IM7'),
-            'P-0000012-T06-IM7'
-        );
-        assert.equal(
-            resourceSearchTermForQuery(SLIDES, '1234094d6bc6'),
-            '1234094d6bc6'
-        );
-        assert.equal(
-            resourceSearchTermForQuery(['NOTES'], '1234-094d-6bc6'),
-            '1234-094d-6bc6'
-        );
-        assert.equal(
-            resourceSearchTermForQuery(['NOTES'], 'WSI-1234-094d-6bc6'),
-            'WSI-1234-094d-6bc6'
-        );
+    it.each([
+        ['WSI-0acd', '0acd'],
+        ['wsi-0acd-ab', '0acdab'],
+        ['WSI-0ACD-AB3D-2', '0acdab3d2'],
+        ['WSI-0acdab', '0acdab'],
+        ['0acd-ab3d', '0acdab3d'],
+        ['0acd-ab', '0acdab'],
+        ['0ACD-', '0acd'],
+        [' wsi-0acd-ab3d ', '0acdab3d'],
+    ])(
+        'searches a slide table for a partial Slide ID %p as %p',
+        (term, key) => {
+            assert.equal(resourceSearchTermForQuery(SLIDES, term), key);
+        }
+    );
+
+    it.each([
+        ['0ACDAB3D2BB2', '0acdab3d2bb2'],
+        ['AB3D', 'ab3d'],
+        ['0acdab', '0acdab'],
+    ])('lower-cases a bare hex search %p in a slide table', (term, key) => {
+        assert.equal(resourceSearchTermForQuery(SLIDES, term), key);
+    });
+
+    it.each([
+        'P-0000012-T06-IM7',
+        'P-0000012',
+        'Breast',
+        'H&E',
+        '2024-01',
+        '2024-01-15',
+        '2024-1-',
+        'WSI-',
+        '0acd-ab3d-2bb2-ffff',
+        'abc-def',
+    ])('leaves an unrelated slide-table search %p unchanged', term => {
+        assert.equal(resourceSearchTermForQuery(SLIDES, term), term);
+    });
+
+    it('leaves searches outside slide tables unchanged', () => {
+        for (const term of [
+            '1234-094d-6bc6',
+            'WSI-1234-094d-6bc6',
+            'WSI-0acd',
+            '0ACDAB3D2BB2',
+        ]) {
+            assert.equal(resourceSearchTermForQuery(['NOTES'], term), term);
+        }
     });
 });
 

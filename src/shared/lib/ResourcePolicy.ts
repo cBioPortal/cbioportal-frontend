@@ -1,8 +1,4 @@
-import {
-    formatSlideId,
-    slideKeyFromSlideId,
-    WsiStainFilter,
-} from 'cbioportal-wsi-viewer';
+import { formatSlideId, WsiStainFilter } from 'cbioportal-wsi-viewer';
 import { getServerConfig } from 'config/config';
 import { PatientViewPageTabs } from 'pages/patientView/PatientViewPageTabIds';
 import { PathologySlideSettings } from 'pages/patientView/PatientViewUrlWrapper';
@@ -164,15 +160,38 @@ export function resourceMetadataDisplayValue(
         : value;
 }
 
+// A Slide ID being typed: WSI- and anything after it, or a first group of four hex chars
+// followed by one or two (possibly unfinished) groups, e.g. 0acd-ab or 0acd-ab3d-1.
+const SLIDE_ID_PREFIX = /^wsi-/i;
+const PARTIAL_SLIDE_ID_GROUPS = /^[0-9a-f]{4}(?:-[0-9a-f]{0,4}){1,2}$/i;
+// Dates (2024-01, 2024-01-15) also fit the groups above; they are searched as typed.
+const DATE_LIKE = /^\d{4}-\d{1,2}(?:-\d{0,2})?$/;
+const HEX = /^[0-9a-f]+$/i;
+
 /**
- * The search the backend runs for a resource table's search box: in a slide table, a pasted Slide ID
- * (WSI-1234-094d-6bc6, with or without the prefix or dashes) searches for the bare slide key it stands for.
+ * The search the backend runs for a resource table's search box. The backend matches slide keys
+ * by substring against the bare lower-case key (1234094d6bc6), so in a slide table a Slide ID,
+ * whole or partly typed (WSI-1234-094d-6bc6, wsi-1234-09, 1234-094d), searches for the key
+ * characters it stands for, and a bare hex term is lower-cased. Other terms, and every term
+ * outside slide tables, are sent unchanged.
  */
 export function resourceSearchTermForQuery(
     resourceIds: readonly string[],
     term: string
 ): string {
-    return (
-        (resourceIds.some(isWsiResourceId) && slideKeyFromSlideId(term)) || term
-    );
+    if (!resourceIds.some(isWsiResourceId)) {
+        return term;
+    }
+    const text = term.trim();
+    if (
+        SLIDE_ID_PREFIX.test(text) ||
+        (PARTIAL_SLIDE_ID_GROUPS.test(text) && !DATE_LIKE.test(text))
+    ) {
+        const key = text
+            .replace(SLIDE_ID_PREFIX, '')
+            .replace(/-/g, '')
+            .toLowerCase();
+        return key || term;
+    }
+    return HEX.test(text) ? text.toLowerCase() : term;
 }
