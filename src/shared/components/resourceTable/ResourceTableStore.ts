@@ -83,7 +83,12 @@ export class ResourceTableStore {
         this.setCohort({ studyIds, patientIdentifiers, sampleIdentifiers });
     }
 
-    /** Sets the cohort, including a study-view filter when it has one; see ResourceCohort. */
+    /**
+     * Sets the cohort, including a study-view filter when it has one; see ResourceCohort.
+     * Search and column filters are kept: they narrow whatever the cohort holds, as study-view
+     * filters compose, and the table's search box and filter chips keep showing them. A filter
+     * value the new cohort lacks just matches no rows. Only paging resets.
+     */
     @action
     setCohort(cohort: ResourceCohort) {
         this.studyIds = cohort.studyIds;
@@ -91,8 +96,6 @@ export class ResourceTableStore {
         this.sampleIdentifiers = cohort.sampleIdentifiers;
         this.studyViewFilter = cohort.studyViewFilter;
         this.pageNumber = 0;
-        this.searchTerm = '';
-        this.filters = [];
         // selectedResourceId survives a cohort change: a store created for one resource stays
         // scoped to it. Cleared here, activeResourceId falls back to the first tab instead.
     }

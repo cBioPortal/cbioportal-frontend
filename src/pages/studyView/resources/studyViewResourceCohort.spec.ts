@@ -75,19 +75,19 @@ describe('studyViewResourceCohort', () => {
         const table = new ResourceTableStore();
         const cohort = getStudyViewResourceCohort(studyView(true))!;
         syncStudyViewResourceCohort(table, cohort);
-        table.setSearchTerm('TCGA');
+        table.setPage(3);
 
         syncStudyViewResourceCohort(
             table,
             getStudyViewResourceCohort(studyView(true))!
         );
-        assert.equal(table.searchTerm, 'TCGA');
+        assert.equal(table.pageNumber, 3);
 
         syncStudyViewResourceCohort(
             table,
             getStudyViewResourceCohort(studyView(false))!
         );
-        assert.equal(table.searchTerm, '');
+        assert.equal(table.pageNumber, 0);
         assert.isUndefined(table.studyViewFilter);
     });
 

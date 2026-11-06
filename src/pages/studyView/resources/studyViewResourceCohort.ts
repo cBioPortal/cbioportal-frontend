@@ -52,8 +52,8 @@ export function getStudyViewResourceCohort(
 
 /**
  * Gives a store the study view's cohort when it differs from the one it has. Setting a cohort
- * resets the table's paging, search and filters, so an unchanged cohort is not set again when the
- * reaction re-runs for an unrelated change.
+ * resets the table's paging, so an unchanged cohort is not set again when the reaction re-runs
+ * for an unrelated change.
  */
 export function syncStudyViewResourceCohort(
     target: {

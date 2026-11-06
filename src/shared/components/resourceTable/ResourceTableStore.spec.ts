@@ -2,6 +2,7 @@ import { assert } from 'chai';
 import { autorun, when } from 'mobx';
 import { StudyViewFilter } from 'cbioportal-ts-api-client';
 import {
+    ResourceColumnFilter,
     fetchResourceTableData,
     fetchResourceTableMetadata,
     fetchResourceTableTabs,
@@ -40,15 +41,42 @@ describe('ResourceTableStore cohort context', () => {
         assert.equal(store.selectedResourceId, 'PATHOLOGY_SLIDE');
     });
 
-    it('resets paging, search and filters when the cohort changes', () => {
+    it('resets paging but keeps search and filters when the cohort changes', () => {
+        // The table's search box and filter chips hold their own state and are not told about
+        // a cohort change, so the store keeps the same search and filters they show.
         const store = new ResourceTableStore();
         store.setSelectedResourceId('PATHOLOGY_SLIDE');
-        store.setPage(2);
+        const filters: ResourceColumnFilter[] = [
+            {
+                columnId: 'metadata:stain_group',
+                operator: 'in',
+                values: ['H&E'],
+            },
+        ];
         store.setSearchTerm('TCGA-A1');
+        store.setFilters(filters);
+        store.setPage(2);
 
-        store.setCohort(cohort);
+        store.setCohort({
+            ...cohort,
+            studyViewFilter: { studyIds: ['study_a'] } as any,
+        });
 
         assert.equal(store.pageNumber, 0);
+        assert.equal(store.searchTerm, 'TCGA-A1');
+        assert.deepEqual(store.filters, filters);
+    });
+
+    it('still clears search and filters when the resource changes', () => {
+        const store = new ResourceTableStore();
+        store.setSelectedResourceId('PATHOLOGY_SLIDE');
+        store.setSearchTerm('TCGA-A1');
+        store.setFilters([
+            { columnId: 'patientId', operator: 'in', values: ['P1'] },
+        ]);
+
+        store.setSelectedResourceId('OTHER');
+
         assert.equal(store.searchTerm, '');
         assert.deepEqual(store.filters, []);
     });
