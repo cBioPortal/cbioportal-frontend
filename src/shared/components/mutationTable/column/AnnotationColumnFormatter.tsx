@@ -39,7 +39,11 @@ export default class AnnotationColumnFormatter {
         indexedVariantAnnotations?: RemoteData<
             { [genomicLocation: string]: VariantAnnotation } | undefined
         >,
-        resolveTumorType?: (mutation: Mutation) => string
+        resolveTumorType?: (mutation: Mutation) => string,
+        resolveEntrezGeneId?: (mutation: Mutation) => number,
+        indexedAlphaGenomeAnnotations?: RemoteData<
+            { [genomicLocation: string]: VariantAnnotation } | undefined
+        >
     ): number[] {
         const annotationData: IAnnotation = getAnnotationData(
             mutations ? mutations[0] : undefined,
@@ -50,7 +54,9 @@ export default class AnnotationColumnFormatter {
             civicGenes,
             civicVariants,
             indexedVariantAnnotations,
-            resolveTumorType
+            resolveTumorType,
+            resolveEntrezGeneId,
+            indexedAlphaGenomeAnnotations
         );
         return annotationSortValue(annotationData);
     }
@@ -67,7 +73,12 @@ export default class AnnotationColumnFormatter {
             { [genomicLocation: string]: VariantAnnotation } | undefined
         >,
         resolveTumorType?: (mutation: Mutation) => string,
-        shouldShowRevue?: boolean
+        shouldShowRevue?: boolean,
+        resolveEntrezGeneId?: (mutation: Mutation) => number,
+        indexedAlphaGenomeAnnotations?: RemoteData<
+            { [genomicLocation: string]: VariantAnnotation } | undefined
+        >,
+        showAlphaGenomeIcon?: boolean
     ) {
         const annotationData: IAnnotation = getAnnotationData(
             mutations ? mutations[0] : undefined,
@@ -78,7 +89,9 @@ export default class AnnotationColumnFormatter {
             civicGenes,
             civicVariants,
             indexedVariantAnnotations,
-            resolveTumorType
+            resolveTumorType,
+            resolveEntrezGeneId,
+            indexedAlphaGenomeAnnotations
         );
 
         const annotationDownloadContent = [
@@ -112,6 +125,13 @@ export default class AnnotationColumnFormatter {
             `CancerHotspot: ${annotationData.isHotspot ? 'yes' : 'no'}`,
             `3DHotspot: ${annotationData.is3dHotspot ? 'yes' : 'no'}`
         );
+        if (showAlphaGenomeIcon && annotationData.alphaGenome?.annotation) {
+            const alphaGenome = annotationData.alphaGenome.annotation;
+            annotationDownloadContent.push(
+                `AlphaGenome: ${alphaGenome.hg38_variant} (${alphaGenome.canonical_gene}), ` +
+                    `merged_splicing_score=${alphaGenome.merged_splicing_score ?? 'null'}`
+            );
+        }
         return annotationDownloadContent.join(';');
     }
 
@@ -120,7 +140,8 @@ export default class AnnotationColumnFormatter {
         width: number,
         mergeOncoKbIcons?: boolean,
         onOncoKbIconToggle?: (mergeIcons: boolean) => void,
-        enableRevue?: boolean
+        enableRevue?: boolean,
+        enableAlphaGenome?: boolean
     ) {
         return (
             <AnnotationHeader
@@ -129,6 +150,7 @@ export default class AnnotationColumnFormatter {
                 mergeOncoKbIcons={mergeOncoKbIcons}
                 onOncoKbIconToggle={onOncoKbIconToggle}
                 showRevueIcon={enableRevue}
+                showAlphaGenomeIcon={enableAlphaGenome}
             />
         );
     }

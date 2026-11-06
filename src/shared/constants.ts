@@ -65,6 +65,7 @@ export const enum GENETIC_PROFILE_FIELD_ENUM {
 
 /* genome nexus api request arguments */
 export const enum GENOME_NEXUS_ARG_FIELD_ENUM {
+    ALPHA_GENOME = 'alpha_genome',
     ANNOTATION_SUMMARY = 'annotation_summary',
     HOTSPOTS = 'hotspots',
     MUTATION_ASSESSOR = 'mutation_assessor',
