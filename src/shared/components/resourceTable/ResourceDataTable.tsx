@@ -17,9 +17,13 @@ import ServerDrivenTable, {
 } from 'shared/components/serverDrivenTable/ServerDrivenTable';
 import TabbedTableLayout from 'shared/components/tabbedTable/TabbedTableLayout';
 import {
-    getPatientViewUrlWithPathname,
-    getSampleViewUrlWithPathname,
-} from 'shared/api/urls';
+    isWsiResourceId,
+    patientViewPathForResource,
+    resourceMetadataDisplayValue,
+    slideStainFilterForColumnFilters,
+    slideStainFilterQuery,
+} from 'shared/lib/ResourcePolicy';
+import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import {
     ResourceColumnFilter,
     ResourceColumnInfo,
@@ -149,11 +153,16 @@ export class ResourceDataTable extends React.Component<
      * Metadata columns as the backend describes them: discovered from the data, then decorated
      * with the resource's `custom_metadata` contract where it declares a label, description,
      * type or filterability. Ordering is the backend's too — contract-declared fields first, in
-     * declaration order.
+     * declaration order. Keys the store's hideMetadataKey option hides are left out, from the
+     * table and its download alike.
      */
     @computed get metadataColumnInfos(): ResourceColumnInfo[] {
         return this.props.store.columns.filter(
-            column => column.source === 'metadata'
+            column =>
+                column.source === 'metadata' &&
+                !this.props.store.isMetadataKeyHidden(
+                    column.id.slice('metadata:'.length)
+                )
         );
     }
 
@@ -169,11 +178,12 @@ export class ResourceDataTable extends React.Component<
             .filter(key => key.startsWith('metadata:'))
             .map(key => key.slice('metadata:'.length));
         const allKeys = Array.from(new Set([...facetKeys, ...rangeKeys]));
-        return allKeys.length > 0
+        return (allKeys.length > 0
             ? allKeys.sort((a, b) =>
                   a.toLowerCase().localeCompare(b.toLowerCase())
               )
-            : getResourceTableMetadataKeys(this.rows);
+            : getResourceTableMetadataKeys(this.rows)
+        ).filter(key => !this.props.store.isMetadataKeyHidden(key));
     }
 
     @computed get metadataColumns(): ServerDrivenTableColumn<
@@ -214,7 +224,18 @@ export class ResourceDataTable extends React.Component<
         return this.createColumn(
             `metadata:${metadataKey}`,
             label,
-            row => <span>{row.metadata[metadataKey] || NOT_AVAILABLE}</span>,
+            row => (
+                <span>
+                    {row.metadata[metadataKey]
+                        ? resourceMetadataDisplayValue(
+                              row.resourceId,
+                              metadataKey,
+                              row.metadata[metadataKey]
+                          )
+                        : NOT_AVAILABLE}
+                </span>
+            ),
+            // Downloads keep the stored value (a bare slide key), as links and the API do.
             row => row.metadata[metadataKey] || NOT_AVAILABLE,
             overrides
         );
@@ -484,9 +505,7 @@ export class ResourceDataTable extends React.Component<
                     this.props.scopedResourceId
             ) {
                 this.clearActiveFilters();
-                this.props.store.setSelectedResourceId(
-                    this.props.scopedResourceId!
-                );
+                this.props.store.scopeToResource(this.props.scopedResourceId!);
             }
         });
     }
@@ -520,14 +539,31 @@ export class ResourceDataTable extends React.Component<
         );
     }
 
+    /**
+     * The patient view link of a row's patient or sample; slide rows open Pathology Slides with the
+     * table's stain group filter.
+     */
+    private rowCaseUrl(
+        row: IResourceTableRow,
+        caseQuery: { caseId: string } | { sampleId: string }
+    ) {
+        const stainFilter = isWsiResourceId(row.resourceId)
+            ? slideStainFilterForColumnFilters(this.props.store.filters)
+            : undefined;
+        return buildCBioPortalPageUrl(
+            patientViewPathForResource(row.resourceId),
+            {
+                studyId: row.studyId,
+                ...caseQuery,
+                ...slideStainFilterQuery(stainFilter),
+            }
+        );
+    }
+
     private renderPatientId = (row: IResourceTableRow) => {
         const href =
             row.studyId && row.patientStableId
-                ? getPatientViewUrlWithPathname(
-                      row.studyId,
-                      row.patientStableId,
-                      'patient/filesAndLinks'
-                  )
+                ? this.rowCaseUrl(row, { caseId: row.patientStableId })
                 : undefined;
         return this.renderLinkOrText(row.patientId, href);
     };
@@ -535,11 +571,7 @@ export class ResourceDataTable extends React.Component<
     private renderSampleId = (row: IResourceTableRow) => {
         const href =
             row.studyId && row.sampleStableId
-                ? getSampleViewUrlWithPathname(
-                      row.studyId,
-                      row.sampleStableId,
-                      'patient/filesAndLinks'
-                  )
+                ? this.rowCaseUrl(row, { sampleId: row.sampleStableId })
                 : undefined;
         return this.renderLinkOrText(row.sampleId, href);
     };

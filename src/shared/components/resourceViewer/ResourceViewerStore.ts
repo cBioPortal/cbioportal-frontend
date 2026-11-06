@@ -1,11 +1,15 @@
 import { action, makeObservable, observable } from 'mobx';
 import { remoteData } from 'cbioportal-frontend-commons';
-import { PatientIdentifier, SampleIdentifier } from 'cbioportal-ts-api-client';
 import { fetchResourceTableData } from 'shared/api/resourceTableClient';
 import {
     IResourceTableRow,
     toResourceTableRows,
 } from 'shared/lib/ResourceTableUtils';
+import {
+    EMPTY_RESOURCE_COHORT,
+    ResourceCohort,
+    resourceCohortFields,
+} from 'shared/components/resourceTable/resourceTableCohort';
 
 /**
  * The items one resource viewer can step through.
@@ -20,21 +24,14 @@ export class ResourceViewerStore {
         makeObservable(this);
     }
 
-    @observable.ref private studyIds: string[] = [];
-    @observable.ref private patientIdentifiers: PatientIdentifier[] = [];
-    @observable.ref private sampleIdentifiers: SampleIdentifier[] = [];
+    @observable.ref private cohort: ResourceCohort = EMPTY_RESOURCE_COHORT;
     @observable private resourceId: string | undefined;
     /** Rows the tabs endpoint reports, used as the page size so one request holds them all. */
     @observable private totalCount = 0;
 
-    @action setContext(
-        studyIds: string[],
-        patientIdentifiers: PatientIdentifier[],
-        sampleIdentifiers: SampleIdentifier[]
-    ) {
-        this.studyIds = studyIds;
-        this.patientIdentifiers = patientIdentifiers;
-        this.sampleIdentifiers = sampleIdentifiers;
+    /** The cases to step through; see ResourceCohort. */
+    @action setCohort(cohort: ResourceCohort) {
+        this.cohort = cohort;
     }
 
     @action setResource(resourceId: string | undefined, totalCount: number) {
@@ -46,16 +43,14 @@ export class ResourceViewerStore {
         invoke: async () => {
             if (
                 !this.resourceId ||
-                this.studyIds.length === 0 ||
+                this.cohort.studyIds.length === 0 ||
                 this.totalCount === 0
             ) {
                 return [];
             }
             const result = await fetchResourceTableData({
-                studyIds: this.studyIds,
+                ...resourceCohortFields(this.cohort),
                 resourceId: this.resourceId,
-                patientIdentifiers: this.patientIdentifiers,
-                sampleIdentifiers: this.sampleIdentifiers,
                 pageNumber: 0,
                 pageSize: this.totalCount,
             });

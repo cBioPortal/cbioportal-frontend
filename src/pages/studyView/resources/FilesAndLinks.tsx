@@ -1,12 +1,15 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import _ from 'lodash';
 import { autorun, IReactionDisposer } from 'mobx';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
 import ResourceDataTable from 'shared/components/resourceTable/ResourceDataTable';
+import {
+    getStudyViewResourceCohort,
+    syncStudyViewResourceCohort,
+} from './studyViewResourceCohort';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import { isHiddenFromResourceViews } from 'shared/lib/ResourcePolicy';
+import { STUDY_VIEW_RESOURCE_TABLE_OPTIONS } from 'shared/lib/ResourcePolicy';
 
 export interface IFilesLinksTable {
     store: StudyViewPageStore;
@@ -14,9 +17,9 @@ export interface IFilesLinksTable {
 
 @observer
 export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
-    private readonly resourceTableStore = new ResourceTableStore({
-        hideResource: isHiddenFromResourceViews,
-    });
+    private readonly resourceTableStore = new ResourceTableStore(
+        STUDY_VIEW_RESOURCE_TABLE_OPTIONS
+    );
     private storeReactionDisposer: IReactionDisposer | null = null;
 
     constructor(props: IFilesLinksTable) {
@@ -24,15 +27,12 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
     }
 
     componentDidMount() {
-        // Keep ResourceTableStore in sync with Study View's selected samples
+        // Keep ResourceTableStore in sync with Study View's selection
         this.storeReactionDisposer = autorun(() => {
-            const samples = this.props.store.selectedSamples.result;
-            if (!samples) return;
-            this.resourceTableStore.setContextFromSelection(
-                samples,
-                this.props.store.samples.result,
-                _.isEmpty(this.props.store.queriedSampleIdentifiers.result)
-            );
+            const cohort = getStudyViewResourceCohort(this.props.store);
+            if (cohort) {
+                syncStudyViewResourceCohort(this.resourceTableStore, cohort);
+            }
         });
     }
 
