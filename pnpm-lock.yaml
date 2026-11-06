@@ -973,9 +973,6 @@ importers:
       lucide-react:
         specifier: 1.42.0
         version: 1.42.0(react@19.2.8)
-      radix-ui:
-        specifier: 1.8.1
-        version: 1.8.1(@types/react-dom@19.2.4(@types/react@18.3.27))(@types/react@18.3.27)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react:
         specifier: ^19.0.0
         version: 19.2.8

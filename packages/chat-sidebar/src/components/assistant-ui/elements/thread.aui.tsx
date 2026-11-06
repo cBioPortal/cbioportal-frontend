@@ -8,8 +8,10 @@ import { ScreenshotButton } from '@/components/assistant-ui/elements/screenshot-
 import { File } from '@/components/assistant-ui/elements/file';
 import { ThreadFollowupSuggestions } from '@/components/assistant-ui/elements/follow-up-suggestions.aui';
 import { MarkdownText } from '@/components/assistant-ui/elements/markdown-text';
-import { ModelSelector } from '@/components/assistant-ui/elements/model-selector.aui';
-import { useModelSelectorContext } from '@/components/assistant-ui/elements/model-selector';
+import {
+    ModelSelector,
+    useModelSelectorContext,
+} from '@/components/assistant-ui/elements/model-selector';
 import { ToolFallback } from '@/components/assistant-ui/elements/tool-fallback.aui';
 import {
     ToolGroupContent,
