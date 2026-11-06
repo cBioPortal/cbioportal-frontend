@@ -214,7 +214,7 @@ test.describe('treatment feature', () => {
             const options = page
                 .locator(GENERIC_ASSAY_ENTITY_SELECTOR)
                 .locator('div[class$="option"]');
-            expect(await options.count()).toBe(10);
+            await expect(options).toHaveCount(10);
         });
 
         test('select one treatment in generic assay selector', async ({
@@ -239,7 +239,7 @@ test.describe('treatment feature', () => {
             const selectedOptions = page
                 .locator(GENERIC_ASSAY_ENTITY_SELECTOR)
                 .locator('div[class$="multiValue"]');
-            expect(await selectedOptions.count()).toBe(1);
+            await expect(selectedOptions).toHaveCount(1);
         });
 
         test('show multiple filtered treatments', async ({ page }) => {
@@ -253,7 +253,7 @@ test.describe('treatment feature', () => {
             const options = page
                 .locator(GENERIC_ASSAY_ENTITY_SELECTOR)
                 .locator('div[class$="option"]');
-            expect(await options.count()).toBe(3);
+            await expect(options).toHaveCount(3);
         });
 
         test('select multiple filtered treatments in generic assay selector', async ({
@@ -277,7 +277,7 @@ test.describe('treatment feature', () => {
             const selectedOptions = page
                 .locator(GENERIC_ASSAY_ENTITY_SELECTOR)
                 .locator('div[class$="multiValue"]');
-            expect(await selectedOptions.count()).toBe(2);
+            await expect(selectedOptions).toHaveCount(2);
         });
 
         test('keeps the filtered treatments list open after selecting an option', async ({
@@ -288,13 +288,46 @@ test.describe('treatment feature', () => {
             let options = page
                 .locator(GENERIC_ASSAY_ENTITY_SELECTOR)
                 .locator('div[class$="option"]');
-            expect(await options.count()).toBe(10);
+            await expect(options).toHaveCount(10);
 
             await options.first().click();
             options = page
                 .locator(GENERIC_ASSAY_ENTITY_SELECTOR)
                 .locator('div[class$="option"]');
-            expect(await options.count()).toBe(9);
+            await expect(options).toHaveCount(9);
+        });
+
+        test('keeps previously selected treatments after clearing a search', async ({
+            page,
+        }) => {
+            await goToTreatmentTab(page);
+            const selector = page.locator(GENERIC_ASSAY_ENTITY_SELECTOR);
+            const options = selector.locator('div[class$="option"]');
+            const selectedOptions = selector.locator(
+                'div[class$="multiValue"]'
+            );
+            await selector.click();
+            await setInputText(
+                page,
+                '[data-test="GenericAssayEntitySelection"] input >> nth=0',
+                'AZD'
+            );
+            await expect(options).toHaveCount(3);
+            await options.nth(1).click();
+            await expect(selectedOptions).toHaveCount(1);
+
+            // selecting clears the search, so search again and clear it by
+            // keyboard: fill('') presses Delete, which removes the last chip
+            // when the box is empty
+            const input = selector.locator('input').first();
+            await input.pressSequentially('Erlotinib');
+            await expect(options).toHaveCount(2);
+            await input.press('ControlOrMeta+a');
+            await input.press('Backspace');
+            await expect(options).toHaveCount(9);
+            await expect(selectedOptions).toHaveCount(1);
+            await options.first().click();
+            await expect(selectedOptions).toHaveCount(2);
         });
 
         test('initializes from `generic_assay_groups` URL parameter', async ({
@@ -317,10 +350,36 @@ test.describe('treatment feature', () => {
             const selectedOptions = page
                 .locator(GENERIC_ASSAY_ENTITY_SELECTOR)
                 .locator('div[class$="multiValue"]');
-            expect(await selectedOptions.count()).toBe(1);
+            await expect(selectedOptions).toHaveCount(1);
             expect(await selectedOptions.first().innerText()).toBe(
                 'Name of 17-AAG (17-AAG): Desc of 17-AAG'
             );
+        });
+
+        test('keeps url-selected treatments that also exist in the new profile', async ({
+            page,
+        }) => {
+            await goToUrlAndSetLocalStorage(
+                page,
+                oncoprintTabUrl.concat(
+                    '&generic_assay_groups=study_es_0_treatment_ic50,17-AAG'
+                ),
+                true
+            );
+            await waitForOncoprint(page);
+            await goToTreatmentTab(page);
+            const selectedOptions = page
+                .locator(GENERIC_ASSAY_ENTITY_SELECTOR)
+                .locator('div[class$="multiValue"]');
+            await expect(selectedOptions).toHaveCount(1);
+
+            await page.locator(GENERIC_ASSAY_PROFILE_SELECTOR).click();
+            await page
+                .locator(
+                    `//*[text()="${TREATMENT_EC50_PROFILE_NAME}"] >> nth=0`
+                )
+                .click();
+            await expect(selectedOptions).toHaveCount(1);
         });
 
         test('sets `generic_assay_groups` URL parameter', async ({ page }) => {
@@ -354,7 +413,7 @@ test.describe('treatment feature', () => {
             const selectedOptions = page
                 .locator(GENERIC_ASSAY_ENTITY_SELECTOR)
                 .locator('div[class$="multiValue"]');
-            expect(await selectedOptions.count()).toBe(1);
+            await expect(selectedOptions).toHaveCount(1);
 
             await page.locator('button:text-is("Add Track")').click();
             await waitForOncoprint(page);
