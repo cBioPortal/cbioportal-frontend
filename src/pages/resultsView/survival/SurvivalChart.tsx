@@ -145,6 +145,7 @@ export interface ISurvivalChartProps {
 }
 
 const MIN_GROUP_SIZE_FOR_LOGRANK = 10;
+const MINIMUM_P_VALUE_EXPONENT = -10;
 // Start to down sampling when there are more than 1000 dots in the plot.
 const SURVIVAL_DOWN_SAMPLING_THRESHOLD = 1000;
 
@@ -581,6 +582,11 @@ export default class SurvivalChartExtended
             showNA
         ) {
             return 'N/A (<10 cases in a group)';
+        } else if (
+            this.props.pValue === 0 ||
+            Math.log10(this.props.pValue!) < MINIMUM_P_VALUE_EXPONENT
+        ) {
+            return `<10^${MINIMUM_P_VALUE_EXPONENT}`;
         } else {
             return toConditionalPrecision(this.props.pValue!, 3, 0.01);
         }
