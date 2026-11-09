@@ -3,6 +3,8 @@ import {
     colorByFor,
     idMappingFor,
     isCellExplorerResource,
+    mappedAttributesFor,
+    mappedColumnsFor,
     zarrIdsFor,
 } from './cellExplorerUtils';
 
@@ -131,6 +133,86 @@ describe('cellExplorerUtils', () => {
                     ])
                 ),
                 ['KG1P', 'KG2P']
+            );
+        });
+    });
+
+    describe('mappedAttributesFor', () => {
+        it('splits the comma-separated attributes', () => {
+            assert.deepEqual(
+                mappedAttributesFor({
+                    cbioportal_mapped_attributes: 'STAGE_DX, SEX,',
+                }),
+                ['STAGE_DX', 'SEX']
+            );
+            assert.deepEqual(mappedAttributesFor({}), []);
+        });
+    });
+
+    describe('mappedColumnsFor', () => {
+        const sampleType = {
+            displayName: 'Sample Type',
+            patientAttribute: false,
+            data: [
+                { sampleId: 'P1-T1', patientId: 'P1', value: 'Primary' },
+                { sampleId: 'P1-T2', patientId: 'P1', value: 'Metastasis' },
+                { sampleId: 'P2-T1', patientId: 'P2', value: 'Primary' },
+            ],
+        };
+        const stage = {
+            displayName: 'Stage',
+            patientAttribute: true,
+            data: [
+                { sampleId: '', patientId: 'P1', value: 'IV' },
+                { sampleId: '', patientId: 'P2', value: 'II' },
+            ],
+        };
+
+        it('maps sample zarr IDs to sample and patient values', () => {
+            assert.deepEqual(
+                mappedColumnsFor(
+                    {
+                        zarrColumn: 'Sample ID',
+                        level: 'sample',
+                        attribute: 'H5AD_SAMPLE_ID',
+                    },
+                    [
+                        { zarrId: 'KG1P', sampleId: 'P1-T1', patientId: 'P1' },
+                        { zarrId: 'KG1M', sampleId: 'P1-T2', patientId: 'P1' },
+                    ],
+                    [sampleType, stage]
+                ),
+                [
+                    {
+                        label: 'Sample Type (cBioPortal)',
+                        sourceColumn: 'Sample ID',
+                        mapping: { KG1P: 'Primary', KG1M: 'Metastasis' },
+                    },
+                    {
+                        label: 'Stage (cBioPortal)',
+                        sourceColumn: 'Sample ID',
+                        mapping: { KG1P: 'IV', KG1M: 'IV' },
+                    },
+                ]
+            );
+        });
+
+        it("joins a patient's sample values", () => {
+            assert.deepEqual(
+                mappedColumnsFor(
+                    {
+                        zarrColumn: 'donor_id',
+                        level: 'patient',
+                        attribute: 'PATIENT_ID',
+                    },
+                    [
+                        { zarrId: 'P1', patientId: 'P1' },
+                        { zarrId: 'P2', patientId: 'P2' },
+                        { zarrId: 'P3', patientId: 'P3' },
+                    ],
+                    [sampleType]
+                )[0].mapping,
+                { P1: 'Metastasis, Primary', P2: 'Primary' }
             );
         });
     });

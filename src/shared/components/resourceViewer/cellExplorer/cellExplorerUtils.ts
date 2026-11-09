@@ -18,6 +18,8 @@ export const CELL_EXPLORER_METADATA = {
     sampleIdAttribute: 'cbioportal_sample_id_attribute',
     /** PATIENT_ID, or the patient attribute whose values appear in the zarr ID column. */
     patientIdAttribute: 'cbioportal_patient_id_attribute',
+    /** Comma-separated clinical attributes added to the viewer as columns, through the zarr ID column. */
+    mappedAttributes: 'cbioportal_mapped_attributes',
 };
 
 export type CellExplorerColorBy = { type: 'category' | 'gene'; value: string };
@@ -36,6 +38,27 @@ export type CellExplorerSelection = {
     sampleId: string;
     patientId: string;
 }[];
+
+/** A sample, or a patient when the zarr is matched by patient, with its value in the zarr ID column. */
+export type CellExplorerZarrEntity = {
+    zarrId: string;
+    sampleId?: string;
+    patientId: string;
+};
+
+/** A clinical attribute with its values in one study. */
+export type CellExplorerClinicalAttribute = {
+    displayName: string;
+    patientAttribute: boolean;
+    data: { sampleId: string; patientId: string; value: string }[];
+};
+
+/** A viewer column that labels each value of an obs column. */
+export type CellExplorerMappedColumn = {
+    label: string;
+    sourceColumn: string;
+    mapping: Record<string, string>;
+};
 
 export function isCellExplorerResource(row: { resourceId: string }): boolean {
     return row.resourceId === CELL_EXPLORER_RESOURCE_ID;
@@ -108,4 +131,58 @@ export function zarrIdsFor(
         }
     }
     return Array.from(ids);
+}
+
+/** The clinical attributes the metadata asks to add to the viewer. */
+export function mappedAttributesFor(
+    metadata: Record<string, string>
+): string[] {
+    const attributes = metadata[CELL_EXPLORER_METADATA.mappedAttributes];
+    return attributes
+        ? attributes
+              .split(',')
+              .map(a => a.trim())
+              .filter(a => a)
+        : [];
+}
+
+/**
+ * One viewer column per attribute, mapping each zarr ID to its sample's or patient's value. A
+ * zarr ID with several values, such as a patient's samples, gets them all, comma-separated.
+ */
+export function mappedColumnsFor(
+    mapping: CellExplorerIdMapping,
+    entities: CellExplorerZarrEntity[],
+    attributes: CellExplorerClinicalAttribute[]
+): CellExplorerMappedColumn[] {
+    return attributes.map(attribute => {
+        const byPatient =
+            attribute.patientAttribute || mapping.level === 'patient';
+        const values = new Map<string, string[]>();
+        for (const d of attribute.data) {
+            const key = byPatient ? d.patientId : d.sampleId;
+            values.set(key, [...(values.get(key) || []), d.value]);
+        }
+        const zarrValues = new Map<string, Set<string>>();
+        for (const entity of entities) {
+            const key = byPatient ? entity.patientId : entity.sampleId!;
+            for (const value of values.get(key) || []) {
+                if (!zarrValues.has(entity.zarrId)) {
+                    zarrValues.set(entity.zarrId, new Set());
+                }
+                zarrValues.get(entity.zarrId)!.add(value);
+            }
+        }
+        const columnMapping: Record<string, string> = {};
+        zarrValues.forEach((v, zarrId) => {
+            columnMapping[zarrId] = Array.from(v)
+                .sort()
+                .join(', ');
+        });
+        return {
+            label: `${attribute.displayName} (cBioPortal)`,
+            sourceColumn: mapping.zarrColumn,
+            mapping: columnMapping,
+        };
+    });
 }

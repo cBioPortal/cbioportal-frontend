@@ -5,10 +5,15 @@ import { IResourceTableRow } from 'shared/lib/ResourceTableUtils';
 import {
     CELL_EXPLORER_METADATA,
     CellExplorerColorBy,
+    CellExplorerClinicalAttribute,
     CellExplorerIdMapping,
+    CellExplorerMappedColumn,
     CellExplorerSelection,
+    CellExplorerZarrEntity,
     colorByFor,
     idMappingFor,
+    mappedAttributesFor,
+    mappedColumnsFor,
     mapsToIds,
     zarrIdsFor,
 } from './cellExplorerUtils';
@@ -41,6 +46,7 @@ type CellExplorerFilterConfig = {
     obsColumn?: string;
     /** The obsColumn values whose cells are highlighted; none clears the highlight. */
     ids?: string[];
+    mappedColumns?: CellExplorerMappedColumn[];
 };
 
 type CellExplorerViewer = React.ComponentType<{
@@ -61,38 +67,142 @@ function loadViewer(): Promise<CellExplorerViewer> {
     return viewerImport;
 }
 
-const attributeValueRequests = new Map<string, Promise<Map<string, string>>>();
+const requests = new Map<string, Promise<any>>();
+
+/** Reuses a request's response, retrying it after a failure. */
+function cachedRequest<T>(key: string, request: () => Promise<T>): Promise<T> {
+    let response = requests.get(key);
+    if (!response) {
+        response = request();
+        response.catch(() => requests.delete(key));
+        requests.set(key, response);
+    }
+    return response;
+}
+
+function fetchClinicalData(
+    studyId: string,
+    level: 'sample' | 'patient',
+    attributeId: string
+) {
+    return cachedRequest(['data', studyId, level, attributeId].join(':'), () =>
+        getClient().getAllClinicalDataInStudyUsingGET({
+            studyId,
+            attributeId,
+            clinicalDataType: level === 'sample' ? 'SAMPLE' : 'PATIENT',
+        })
+    );
+}
 
 /** A study's samples or patients mapped to their values of the mapping's attribute. */
 function fetchAttributeValues(
     studyId: string,
     mapping: CellExplorerIdMapping
 ): Promise<Map<string, string>> {
-    const key = [studyId, mapping.level, mapping.attribute].join(':');
-    let request = attributeValueRequests.get(key);
-    if (!request) {
-        request = getClient()
-            .getAllClinicalDataInStudyUsingGET({
-                studyId,
-                attributeId: mapping.attribute,
-                clinicalDataType:
-                    mapping.level === 'sample' ? 'SAMPLE' : 'PATIENT',
-            })
-            .then(
-                data =>
-                    new Map(
-                        data.map(d => [
-                            mapping.level === 'sample'
-                                ? d.sampleId
-                                : d.patientId,
-                            d.value,
-                        ])
-                    )
-            );
-        request.catch(() => attributeValueRequests.delete(key));
-        attributeValueRequests.set(key, request);
+    return fetchClinicalData(studyId, mapping.level, mapping.attribute).then(
+        data =>
+            new Map(
+                data.map(d => [
+                    mapping.level === 'sample' ? d.sampleId : d.patientId,
+                    d.value,
+                ])
+            )
+    );
+}
+
+/** A study's samples or patients that the mapping matches, with their zarr IDs. */
+async function fetchZarrEntities(
+    studyId: string,
+    mapping: CellExplorerIdMapping
+): Promise<CellExplorerZarrEntity[]> {
+    if (!mapsToIds(mapping)) {
+        const data = await fetchClinicalData(
+            studyId,
+            mapping.level,
+            mapping.attribute
+        );
+        return data.map(d => ({
+            zarrId: d.value,
+            sampleId: mapping.level === 'sample' ? d.sampleId : undefined,
+            patientId: d.patientId,
+        }));
     }
-    return request;
+    if (mapping.level === 'sample') {
+        const samples = await cachedRequest(
+            ['samples', studyId].join(':'),
+            () => getClient().getAllSamplesInStudyUsingGET({ studyId })
+        );
+        return samples.map(s => ({
+            zarrId: s.sampleId,
+            sampleId: s.sampleId,
+            patientId: s.patientId,
+        }));
+    }
+    const patients = await cachedRequest(['patients', studyId].join(':'), () =>
+        getClient().getAllPatientsInStudyUsingGET({ studyId })
+    );
+    return patients.map(p => ({ zarrId: p.patientId, patientId: p.patientId }));
+}
+
+/** The study's attributes among attributeIds, in their order, with their values. */
+async function fetchClinicalAttributes(
+    studyId: string,
+    attributeIds: string[]
+): Promise<CellExplorerClinicalAttribute[]> {
+    const studyAttributes = await cachedRequest(
+        ['attributes', studyId].join(':'),
+        () => getClient().getAllClinicalAttributesInStudyUsingGET({ studyId })
+    );
+    const attributes = attributeIds
+        .map(id => studyAttributes.find(a => a.clinicalAttributeId === id))
+        .filter(a => a) as typeof studyAttributes;
+    return Promise.all(
+        attributes.map(async a => ({
+            displayName: a.displayName,
+            patientAttribute: a.patientAttribute,
+            data: await fetchClinicalData(
+                studyId,
+                a.patientAttribute ? 'patient' : 'sample',
+                a.clinicalAttributeId
+            ),
+        }))
+    );
+}
+
+/** The viewer columns of the metadata's clinical attributes, or undefined until they are loaded. */
+function useMappedColumns(
+    studyId: string,
+    mapping: CellExplorerIdMapping | undefined,
+    attributeIds: string[]
+): CellExplorerMappedColumn[] | undefined {
+    const [columns, setColumns] = React.useState<CellExplorerMappedColumn[]>();
+    const attributeKey = attributeIds.join(',');
+    React.useEffect(() => {
+        setColumns(undefined);
+        if (!mapping || !attributeIds.length) {
+            return;
+        }
+        let cancelled = false;
+        Promise.all([
+            fetchZarrEntities(studyId, mapping),
+            fetchClinicalAttributes(studyId, attributeIds),
+        ]).then(
+            ([entities, attributes]) =>
+                !cancelled &&
+                setColumns(mappedColumnsFor(mapping, entities, attributes)),
+            () => {}
+        );
+        return () => {
+            cancelled = true;
+        };
+    }, [
+        studyId,
+        mapping?.zarrColumn,
+        mapping?.level,
+        mapping?.attribute,
+        attributeKey,
+    ]);
+    return columns;
 }
 
 /** The zarr IDs of the selection, or undefined while they are looked up or when nothing is selected. */
@@ -186,6 +296,11 @@ export const CellExplorerResource: React.FunctionComponent<ICellExplorerResource
     const colorBy = colorByFor(row.metadata);
     const mapping = idMappingFor(row.metadata);
     const zarrIds = useZarrIds(row.studyId, mapping, selection);
+    const mappedColumns = useMappedColumns(
+        row.studyId,
+        mapping,
+        mappedAttributesFor(row.metadata)
+    );
     const filterConfig = React.useMemo(() => {
         const config: CellExplorerFilterConfig = {};
         if (colorBy) {
@@ -195,8 +310,17 @@ export const CellExplorerResource: React.FunctionComponent<ICellExplorerResource
             config.obsColumn = mapping.zarrColumn;
             config.ids = zarrIds || [];
         }
+        if (mappedColumns?.length) {
+            config.mappedColumns = mappedColumns;
+        }
         return Object.keys(config).length ? config : undefined;
-    }, [colorBy?.type, colorBy?.value, mapping?.zarrColumn, zarrIds]);
+    }, [
+        colorBy?.type,
+        colorBy?.value,
+        mapping?.zarrColumn,
+        zarrIds,
+        mappedColumns,
+    ]);
 
     let body: React.ReactNode;
     if (!zarrUrl) {

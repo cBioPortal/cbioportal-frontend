@@ -11,9 +11,15 @@ jest.mock('@cbioportal-cell-explorer/component', () => {
 });
 
 const getAllClinicalDataInStudyUsingGET = jest.fn();
+const getAllClinicalAttributesInStudyUsingGET = jest.fn();
+const getAllPatientsInStudyUsingGET = jest.fn();
 
 jest.mock('shared/api/cbioportalClientInstance', () => ({
-    getClient: () => ({ getAllClinicalDataInStudyUsingGET }),
+    getClient: () => ({
+        getAllClinicalDataInStudyUsingGET,
+        getAllClinicalAttributesInStudyUsingGET,
+        getAllPatientsInStudyUsingGET,
+    }),
 }));
 
 jest.mock('shared/components/loadingIndicator/LoadingIndicator', () => {
@@ -88,6 +94,8 @@ describe('CellExplorerResource', () => {
     beforeEach(() => {
         viewerProps.length = 0;
         getAllClinicalDataInStudyUsingGET.mockReset();
+        getAllClinicalAttributesInStudyUsingGET.mockReset();
+        getAllPatientsInStudyUsingGET.mockReset();
     });
 
     const lastFilterConfig = () =>
@@ -264,5 +272,47 @@ describe('CellExplorerResource', () => {
                 .textContent,
             'None of the selected patients are in this dataset'
         );
+    });
+
+    it('adds the clinical attributes as columns of the zarr IDs', async () => {
+        getAllPatientsInStudyUsingGET.mockResolvedValue([
+            { patientId: 'P1' },
+            { patientId: 'P2' },
+        ]);
+        getAllClinicalAttributesInStudyUsingGET.mockResolvedValue([
+            {
+                clinicalAttributeId: 'HR_STATUS',
+                displayName: 'HR Status',
+                patientAttribute: true,
+            },
+        ]);
+        getAllClinicalDataInStudyUsingGET.mockResolvedValue([
+            { sampleId: '', patientId: 'P1', value: 'HRD' },
+            { sampleId: '', patientId: 'P2', value: 'HRP' },
+        ]);
+        renderResource([
+            row('m', 'M', {
+                zarr_url: 'https://example.org/m.zarr',
+                zarr_id_column: 'donor_id',
+                cbioportal_patient_id_attribute: 'PATIENT_ID',
+                cbioportal_mapped_attributes: 'HR_STATUS,MISSING',
+            }),
+        ]);
+
+        await screen.findByTestId('cell-explorer');
+        await waitFor(() =>
+            assert.deepEqual(lastFilterConfig().mappedColumns, [
+                {
+                    label: 'HR Status (cBioPortal)',
+                    sourceColumn: 'donor_id',
+                    mapping: { P1: 'HRD', P2: 'HRP' },
+                },
+            ])
+        );
+        assert.deepEqual(getAllClinicalDataInStudyUsingGET.mock.calls[0][0], {
+            studyId: 'study',
+            attributeId: 'HR_STATUS',
+            clinicalDataType: 'PATIENT',
+        });
     });
 });
