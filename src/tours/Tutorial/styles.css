@@ -1,0 +1,46 @@
+.tutorial-tour.reactour__helper {
+    max-width: 420px;
+}
+
+.tutorial-tour .tutorial-badge {
+    display: inline-block;
+    min-width: 22px;
+    height: 22px;
+    margin-right: 8px;
+    border-radius: 11px;
+    background: #3786c2;
+    color: #fff;
+    font-size: 13px;
+    line-height: 22px;
+    text-align: center;
+}
+
+.tutorial-tour ul {
+    padding-left: 18px;
+    margin: 8px 0 0;
+}
+
+.tutorial-tour .tutorial-missing,
+.tutorial-tour .tutorial-foot {
+    margin-top: 8px;
+    color: #666;
+    font-style: italic;
+}
+
+.tutorial-tour .tutorial-count {
+    margin-top: 10px;
+    color: #999;
+    font-size: 12px;
+}
+
+.tutorial-tour-proxy,
+.tutorial-tour-also {
+    position: absolute;
+    pointer-events: none;
+}
+
+.tutorial-tour-also {
+    z-index: 1000001;
+    border: 2px dashed #3786c2;
+    border-radius: 4px;
+}

@@ -1,3 +1,4 @@
 import Tour, { setTourLocalStorageFromURL } from './Tour';
+import TutorialTour from './Tutorial/TutorialTour';
 
-export { Tour, setTourLocalStorageFromURL };
+export { Tour, TutorialTour, setTourLocalStorageFromURL };
