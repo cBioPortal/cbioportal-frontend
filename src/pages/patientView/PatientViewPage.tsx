@@ -739,6 +739,11 @@ export class PatientViewPageInner extends React.Component<
                     )}
                     resourceDisplayName={tab.label}
                     fillWindowHeight={true}
+                    cellExplorerSelection={
+                        this.pageStore.samples.isComplete
+                            ? this.pageStore.samples.result
+                            : undefined
+                    }
                     iframeErrorMessage={
                         definition
                             ? getResourceConfig(definition).iframeErrorMessage

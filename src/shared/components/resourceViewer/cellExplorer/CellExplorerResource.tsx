@@ -1,10 +1,16 @@
 import * as React from 'react';
+import { getClient } from 'shared/api/cbioportalClientInstance';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { IResourceTableRow } from 'shared/lib/ResourceTableUtils';
 import {
     CELL_EXPLORER_METADATA,
     CellExplorerColorBy,
+    CellExplorerIdMapping,
+    CellExplorerSelection,
     colorByFor,
+    idMappingFor,
+    mapsToIds,
+    zarrIdsFor,
 } from './cellExplorerUtils';
 import styles from './styles.module.scss';
 
@@ -30,9 +36,16 @@ async function importBesidePortalDeckGl(): Promise<any> {
     }
 }
 
+type CellExplorerFilterConfig = {
+    colorBy?: CellExplorerColorBy;
+    obsColumn?: string;
+    /** The obsColumn values whose cells are highlighted; none clears the highlight. */
+    ids?: string[];
+};
+
 type CellExplorerViewer = React.ComponentType<{
     url: string;
-    filterConfig?: { colorBy: CellExplorerColorBy };
+    filterConfig?: CellExplorerFilterConfig;
 }>;
 
 let viewerImport: Promise<CellExplorerViewer> | undefined;
@@ -48,6 +61,76 @@ function loadViewer(): Promise<CellExplorerViewer> {
     return viewerImport;
 }
 
+const attributeValueRequests = new Map<string, Promise<Map<string, string>>>();
+
+/** A study's samples or patients mapped to their values of the mapping's attribute. */
+function fetchAttributeValues(
+    studyId: string,
+    mapping: CellExplorerIdMapping
+): Promise<Map<string, string>> {
+    const key = [studyId, mapping.level, mapping.attribute].join(':');
+    let request = attributeValueRequests.get(key);
+    if (!request) {
+        request = getClient()
+            .getAllClinicalDataInStudyUsingGET({
+                studyId,
+                attributeId: mapping.attribute,
+                clinicalDataType:
+                    mapping.level === 'sample' ? 'SAMPLE' : 'PATIENT',
+            })
+            .then(
+                data =>
+                    new Map(
+                        data.map(d => [
+                            mapping.level === 'sample'
+                                ? d.sampleId
+                                : d.patientId,
+                            d.value,
+                        ])
+                    )
+            );
+        request.catch(() => attributeValueRequests.delete(key));
+        attributeValueRequests.set(key, request);
+    }
+    return request;
+}
+
+/** The zarr IDs of the selection, or undefined while they are looked up or when nothing is selected. */
+function useZarrIds(
+    studyId: string,
+    mapping: CellExplorerIdMapping | undefined,
+    selection: CellExplorerSelection | undefined
+): string[] | undefined {
+    const [zarrIds, setZarrIds] = React.useState<string[]>();
+    React.useEffect(() => {
+        setZarrIds(undefined);
+        if (!mapping || !selection) {
+            return;
+        }
+        if (mapsToIds(mapping)) {
+            setZarrIds(zarrIdsFor(mapping, studyId, selection));
+            return;
+        }
+        let cancelled = false;
+        fetchAttributeValues(studyId, mapping).then(
+            values =>
+                !cancelled &&
+                setZarrIds(zarrIdsFor(mapping, studyId, selection, values)),
+            () => {}
+        );
+        return () => {
+            cancelled = true;
+        };
+    }, [
+        studyId,
+        mapping?.zarrColumn,
+        mapping?.level,
+        mapping?.attribute,
+        selection,
+    ]);
+    return zarrIds;
+}
+
 const TOOLBAR_HEIGHT = 44;
 
 export interface ICellExplorerResourceProps {
@@ -57,6 +140,8 @@ export interface ICellExplorerResourceProps {
     index: number;
     onIndexChange: (index: number) => void;
     height: number;
+    /** Highlights the cells of these samples, or of their patients, when the dataset maps them. */
+    selection?: CellExplorerSelection;
 }
 
 const CellExplorerError: React.FunctionComponent<{
@@ -80,6 +165,7 @@ export const CellExplorerResource: React.FunctionComponent<ICellExplorerResource
     index,
     onIndexChange,
     height,
+    selection,
 }) => {
     const [Viewer, setViewer] = React.useState<CellExplorerViewer>();
     const [viewerFailed, setViewerFailed] = React.useState(false);
@@ -98,10 +184,19 @@ export const CellExplorerResource: React.FunctionComponent<ICellExplorerResource
     const row = rows[index];
     const zarrUrl = row.metadata[CELL_EXPLORER_METADATA.zarrUrl];
     const colorBy = colorByFor(row.metadata);
-    const filterConfig = React.useMemo(
-        () => (colorBy ? { colorBy } : undefined),
-        [colorBy?.type, colorBy?.value]
-    );
+    const mapping = idMappingFor(row.metadata);
+    const zarrIds = useZarrIds(row.studyId, mapping, selection);
+    const filterConfig = React.useMemo(() => {
+        const config: CellExplorerFilterConfig = {};
+        if (colorBy) {
+            config.colorBy = colorBy;
+        }
+        if (mapping) {
+            config.obsColumn = mapping.zarrColumn;
+            config.ids = zarrIds || [];
+        }
+        return Object.keys(config).length ? config : undefined;
+    }, [colorBy?.type, colorBy?.value, mapping?.zarrColumn, zarrIds]);
 
     let body: React.ReactNode;
     if (!zarrUrl) {
@@ -147,6 +242,20 @@ export const CellExplorerResource: React.FunctionComponent<ICellExplorerResource
                             </option>
                         ))}
                     </select>
+                )}
+                {mapping && zarrIds && (
+                    <span
+                        className={styles.selectionNote}
+                        data-test="CellExplorerSelectionNote"
+                    >
+                        {zarrIds.length > 0
+                            ? `Highlighting cells of ${
+                                  zarrIds.length
+                              } selected ${mapping.level}${
+                                  zarrIds.length === 1 ? '' : 's'
+                              }`
+                            : `None of the selected ${mapping.level}s are in this dataset`}
+                    </span>
                 )}
                 <a
                     className={styles.openLink}

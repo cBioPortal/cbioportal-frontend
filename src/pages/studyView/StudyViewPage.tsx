@@ -94,6 +94,7 @@ import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTabl
 import ResourceDataTable from 'shared/components/resourceTable/ResourceDataTable';
 import { ResourceViewerStore } from 'shared/components/resourceViewer/ResourceViewerStore';
 import ResourceViewerTab from 'shared/components/resourceViewer/ResourceViewerTab';
+import { CellExplorerSelection } from 'shared/components/resourceViewer/cellExplorer/cellExplorerUtils';
 import resourceViewerStyles from 'shared/components/resourceViewer/styles.module.scss';
 import { ResourceTableTab } from 'shared/api/resourceTableClient';
 import { isStudyWideResource } from 'shared/lib/ResourceTableUtils';
@@ -760,6 +761,7 @@ export default class StudyViewPage extends React.Component<
                     resourceDisplayName={tab.label}
                     hideHeader={true}
                     fillWindowHeight={true}
+                    cellExplorerSelection={this.cellExplorerSelection}
                     iframeErrorMessage={
                         definition
                             ? getResourceConfig(definition).iframeErrorMessage
@@ -773,6 +775,14 @@ export default class StudyViewPage extends React.Component<
                 />
             </MSKTab>
         );
+    }
+
+    /** The samples the charts filter to, or undefined when no chart is filtered. */
+    @computed get cellExplorerSelection(): CellExplorerSelection | undefined {
+        return this.store.chartsAreFiltered &&
+            this.store.selectedSamples.isComplete
+            ? this.store.selectedSamples.result
+            : undefined;
     }
 
     @computed get isStudyWideViewerTabActive(): boolean {

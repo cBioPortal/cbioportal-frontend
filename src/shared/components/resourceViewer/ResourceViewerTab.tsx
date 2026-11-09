@@ -3,6 +3,7 @@ import { observer } from 'mobx-react';
 import { action, makeObservable, observable } from 'mobx';
 import ResourceViewer from 'shared/components/resourceViewer/ResourceViewer';
 import { ResourceViewerStore } from 'shared/components/resourceViewer/ResourceViewerStore';
+import { CellExplorerSelection } from 'shared/components/resourceViewer/cellExplorer/cellExplorerUtils';
 
 export interface IResourceViewerTabProps {
     store: ResourceViewerStore;
@@ -10,6 +11,7 @@ export interface IResourceViewerTabProps {
     iframeErrorMessage?: string;
     hideHeader?: boolean;
     fillWindowHeight?: boolean;
+    cellExplorerSelection?: CellExplorerSelection;
     /** Whether this viewer's tab is the one in view. */
     isActive: boolean;
     /** The item the URL names; it belongs to this viewer only while this tab is in view. */
@@ -114,6 +116,7 @@ export default class ResourceViewerTab extends React.Component<
                 iframeErrorMessage={this.props.iframeErrorMessage}
                 hideHeader={this.props.hideHeader}
                 fillWindowHeight={this.props.fillWindowHeight}
+                cellExplorerSelection={this.props.cellExplorerSelection}
             />
         );
     }

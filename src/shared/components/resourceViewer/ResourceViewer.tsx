@@ -19,7 +19,10 @@ import {
 import { applyCustomUrlTransforms } from './resourceUrlTransforms';
 import { buildPDFUrl } from './resourceUrlUtils';
 import CellExplorerResource from './cellExplorer/CellExplorerResource';
-import { isCellExplorerResource } from './cellExplorer/cellExplorerUtils';
+import {
+    CellExplorerSelection,
+    isCellExplorerResource,
+} from './cellExplorer/cellExplorerUtils';
 import styles from './styles.module.scss';
 
 /** Shown when a resource's host does not answer and the resource names no message of its own. */
@@ -50,6 +53,8 @@ export interface IResourceViewerProps {
     hideHeader?: boolean;
     /** Sizes the frame to reach the bottom of the window from wherever the viewer starts. */
     fillWindowHeight?: boolean;
+    /** The page's selected samples, whose cells a Cell Explorer dataset highlights. */
+    cellExplorerSelection?: CellExplorerSelection;
 }
 
 /** Frames one resource and steps through the rest. The caller owns which item is shown. */
@@ -312,6 +317,7 @@ export default class ResourceViewer extends React.Component<
                         index={this.currentIndex}
                         onIndexChange={this.props.onIndexChange}
                         height={this.iframeHeight}
+                        selection={this.props.cellExplorerSelection}
                     />
                 </div>
             );
