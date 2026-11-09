@@ -128,12 +128,11 @@ test.describe('generic assay selection', () => {
             await openStudyViewTreatmentTab(page);
             const selector = visibleSelection(page);
             await openMenu(selector.entity, selector.menu);
-            await expect(selector.menu).toContainText(
-                /Showing first 100 of \d+ results/,
-                {
-                    timeout: LOAD_TIMEOUT,
-                }
-            );
+            await expect(
+                selector.menu
+            ).toContainText(/Showing first 100 of \d+ results/, {
+                timeout: LOAD_TIMEOUT,
+            });
             await expect(selector.options).toHaveCount(100);
         });
 
