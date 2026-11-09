@@ -97,7 +97,10 @@ import ResourceViewerTab from 'shared/components/resourceViewer/ResourceViewerTa
 import { CellExplorerSelection } from 'shared/components/resourceViewer/cellExplorer/cellExplorerUtils';
 import resourceViewerStyles from 'shared/components/resourceViewer/styles.module.scss';
 import { ResourceTableTab } from 'shared/api/resourceTableClient';
-import { isStudyWideResource } from 'shared/lib/ResourceTableUtils';
+import {
+    isStudyWideResource,
+    studyViewResourceTabs,
+} from 'shared/lib/ResourceTableUtils';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -156,6 +159,11 @@ export default class StudyViewPage extends React.Component<
     @observable private toolbarLeft: number = 0;
 
     private readonly resourceTableStore = new ResourceTableStore();
+    /**
+     * The resources of the whole studies, whatever the charts select. Study-wide resources have
+     * no patient or sample to match a selection, so only this store lists them while filtered.
+     */
+    private readonly studyResourceTableStore = new ResourceTableStore();
     private readonly resourceTableStores = new Map<
         string,
         ResourceTableStore
@@ -341,6 +349,12 @@ export default class StudyViewPage extends React.Component<
                 allSamples,
                 coversWholeStudy
             );
+            const studyIds = _.uniq(
+                (allSamples || samples).map(s => s.studyId)
+            );
+            if (!_.isEqual(studyIds, this.studyResourceTableStore.studyIds)) {
+                this.studyResourceTableStore.setContext(studyIds);
+            }
             this.resourceTableStores.forEach(store =>
                 store.setContextFromSelection(
                     samples,
@@ -361,7 +375,7 @@ export default class StudyViewPage extends React.Component<
                 this.urlWrapper.tabId ===
                     StudyViewPageTabKeyEnum.FILES_AND_LINKS
             ) {
-                const firstTab = this.resourceTableStore.tabs.result?.[0];
+                const firstTab = this.resourceTableTabs?.[0];
                 if (firstTab) {
                     this.urlWrapper.setTab(
                         getStudyViewResourceTableTabId(firstTab.resourceId)
@@ -390,12 +404,9 @@ export default class StudyViewPage extends React.Component<
         return store;
     }
 
+    // Viewers show study-wide resources, so they read the whole studies.
     private setViewerStoreContext(store: ResourceViewerStore) {
-        store.setContext(
-            this.resourceTableStore.studyIds,
-            this.resourceTableStore.patientIdentifiers,
-            this.resourceTableStore.sampleIdentifiers
-        );
+        store.setContext(this.studyResourceTableStore.studyIds, [], []);
     }
 
     private getOrCreateViewerStore(
@@ -708,10 +719,21 @@ export default class StudyViewPage extends React.Component<
         );
     }
 
+    @computed get resourceTableTabs(): ResourceTableTab[] | undefined {
+        const studyTabs = this.studyResourceTableStore.tabs.result;
+        const selectionTabs = this.resourceTableStore.tabs.result;
+        return studyTabs && selectionTabs
+            ? studyViewResourceTabs(studyTabs, selectionTabs)
+            : undefined;
+    }
+
     readonly resourceTabs = MakeMobxView({
-        await: () => [this.resourceTableStore.tabs],
+        await: () => [
+            this.resourceTableStore.tabs,
+            this.studyResourceTableStore.tabs,
+        ],
         render: () => {
-            const apiTabs = this.resourceTableStore.tabs.result || [];
+            const apiTabs = this.resourceTableTabs || [];
             if (apiTabs.length === 0) {
                 return [] as JSX.Element[];
             }
@@ -786,7 +808,7 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get isStudyWideViewerTabActive(): boolean {
-        return (this.resourceTableStore.tabs.result || []).some(
+        return (this.resourceTableTabs || []).some(
             tab =>
                 isStudyWideResource(tab) &&
                 (this.store.currentTab as string) ===
@@ -795,7 +817,7 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get hasNewResourceTabs(): boolean {
-        const tabs = this.resourceTableStore.tabs.result;
+        const tabs = this.resourceTableTabs;
         return !!tabs && tabs.length > 0;
     }
 
