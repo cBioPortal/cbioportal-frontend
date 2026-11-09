@@ -88,6 +88,7 @@ import {
     buildCustomTabs,
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
+import { isHiddenFromResourceViews } from 'shared/lib/ResourcePolicy';
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
 import { PlotsTabWrapper } from 'pages/studyView/StudyViewPlotsTabWrapper';
 import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
@@ -158,12 +159,16 @@ export default class StudyViewPage extends React.Component<
     private toolbarLeftUpdater: any;
     @observable private toolbarLeft: number = 0;
 
-    private readonly resourceTableStore = new ResourceTableStore();
+    private readonly resourceTableStore = new ResourceTableStore({
+        hideResource: isHiddenFromResourceViews,
+    });
     /**
      * The resources of the whole studies, whatever the charts select. Study-wide resources have
      * no patient or sample to match a selection, so only this store lists them while filtered.
      */
-    private readonly studyResourceTableStore = new ResourceTableStore();
+    private readonly studyResourceTableStore = new ResourceTableStore({
+        hideResource: isHiddenFromResourceViews,
+    });
     private readonly resourceTableStores = new Map<
         string,
         ResourceTableStore
@@ -375,7 +380,7 @@ export default class StudyViewPage extends React.Component<
                 this.urlWrapper.tabId ===
                     StudyViewPageTabKeyEnum.FILES_AND_LINKS
             ) {
-                const firstTab = this.resourceTableTabs?.[0];
+                const firstTab = this.resourceTableTabs[0];
                 if (firstTab) {
                     this.urlWrapper.setTab(
                         getStudyViewResourceTableTabId(firstTab.resourceId)
@@ -552,9 +557,15 @@ export default class StudyViewPage extends React.Component<
         }
     }
 
+    @computed get visibleResourceDefinitions() {
+        return (this.store.resourceDefinitions.result || []).filter(
+            d => !isHiddenFromResourceViews(d.resourceId)
+        );
+    }
+
     @computed get shouldShowResources() {
         if (this.store.resourceDefinitions.isComplete) {
-            return this.store.resourceDefinitions.result.length > 0;
+            return this.visibleResourceDefinitions.length > 0;
         } else {
             return false;
         }
@@ -719,12 +730,11 @@ export default class StudyViewPage extends React.Component<
         );
     }
 
-    @computed get resourceTableTabs(): ResourceTableTab[] | undefined {
-        const studyTabs = this.studyResourceTableStore.tabs.result;
-        const selectionTabs = this.resourceTableStore.tabs.result;
-        return studyTabs && selectionTabs
-            ? studyViewResourceTabs(studyTabs, selectionTabs)
-            : undefined;
+    @computed get resourceTableTabs(): ResourceTableTab[] {
+        return studyViewResourceTabs(
+            this.studyResourceTableStore.visibleTabs,
+            this.resourceTableStore.visibleTabs
+        );
     }
 
     readonly resourceTabs = MakeMobxView({
@@ -733,7 +743,7 @@ export default class StudyViewPage extends React.Component<
             this.studyResourceTableStore.tabs,
         ],
         render: () => {
-            const apiTabs = this.resourceTableTabs || [];
+            const apiTabs = this.resourceTableTabs;
             if (apiTabs.length === 0) {
                 return [] as JSX.Element[];
             }
@@ -808,7 +818,7 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get isStudyWideViewerTabActive(): boolean {
-        return (this.resourceTableTabs || []).some(
+        return this.resourceTableTabs.some(
             tab =>
                 isStudyWideResource(tab) &&
                 (this.store.currentTab as string) ===
@@ -817,8 +827,7 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get hasNewResourceTabs(): boolean {
-        const tabs = this.resourceTableTabs;
-        return !!tabs && tabs.length > 0;
+        return this.resourceTableTabs.length > 0;
     }
 
     @computed get customTabs() {
@@ -1001,10 +1010,11 @@ export default class StudyViewPage extends React.Component<
                                             StudyViewPageTabKeyEnum.FILES_AND_LINKS
                                         }
                                         linkText={
-                                            this.store.resourceDefinitions
-                                                .result?.length === 1
-                                                ? this.store.resourceDefinitions
-                                                      .result[0].displayName
+                                            this.visibleResourceDefinitions
+                                                .length === 1
+                                                ? this
+                                                      .visibleResourceDefinitions[0]
+                                                      .displayName
                                                 : RESOURCES_TAB_NAME
                                         }
                                         hide={
