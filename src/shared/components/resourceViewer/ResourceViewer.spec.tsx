@@ -8,6 +8,22 @@ jest.mock('shared/components/iframeLoader/IFrameLoader', () => {
     };
 });
 
+jest.mock('./cellExplorer/CellExplorerResource', () => {
+    const React = require('react');
+    return function MockCellExplorerResource(props: {
+        rows: any[];
+        index: number;
+    }) {
+        return (
+            <div
+                data-testid="cell-explorer-resource"
+                data-url={props.rows[props.index].url}
+                data-count={props.rows.length}
+            />
+        );
+    };
+});
+
 jest.mock('shared/components/loadingIndicator/LoadingIndicator', () => {
     const React = require('react');
     return function MockLoadingIndicator(props: { isLoading: boolean }) {
@@ -161,6 +177,62 @@ describe('ResourceViewer', () => {
                 '',
             'link below'
         );
+    });
+
+    describe('Cell Explorer resources', () => {
+        const originalFetch = (global as any).fetch;
+        afterEach(() => {
+            (global as any).fetch = originalFetch;
+        });
+
+        it('shows them in the Cell Explorer viewer, never in a frame', () => {
+            (global as any).fetch = jest.fn(() => Promise.resolve({}));
+            const url = 'http://cell-explorer.example.org/view?dataset=x';
+            renderViewer({
+                rows: [row({ resourceId: 'CELL_EXPLORER', url })],
+            });
+
+            assert.equal(
+                screen
+                    .getByTestId('cell-explorer-resource')
+                    .getAttribute('data-url'),
+                url
+            );
+            assert.isNull(screen.queryByTestId('iframe-loader'));
+            assert.equal((global as any).fetch.mock.calls.length, 0);
+        });
+
+        it('hands every dataset to the Cell Explorer viewer, without chevrons', () => {
+            const datasets = ['a', 'b', 'c'].map(slug =>
+                row({
+                    resourceId: 'CELL_EXPLORER',
+                    url: `https://cell-explorer.example.org/view?dataset=${slug}`,
+                    key: slug,
+                })
+            );
+            renderViewer({ rows: datasets, index: 1 });
+
+            const viewer = screen.getByTestId('cell-explorer-resource');
+            assert.equal(viewer.getAttribute('data-count'), '3');
+            assert.equal(viewer.getAttribute('data-url'), datasets[1].url);
+            assert.isNull(screen.queryByTestId('ResourceViewerPrev'));
+            assert.isNull(screen.queryByTestId('ResourceViewerCaption'));
+        });
+
+        it('frames a Cell Explorer link under another resource id', () => {
+            (global as any).fetch = jest.fn(() => new Promise(() => undefined));
+            renderViewer({
+                rows: [
+                    row({
+                        url:
+                            'https://cell-explorer.cbioportal.org/view?dataset=x',
+                    }),
+                ],
+            });
+
+            assert.isNotNull(screen.queryByTestId('iframe-loader'));
+            assert.isNull(screen.queryByTestId('cell-explorer-resource'));
+        });
     });
 
     it('renders nothing when there are no rows', () => {
