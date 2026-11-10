@@ -46,9 +46,16 @@ describe('mrnaAxisUtils', () => {
             assert.deepEqual(logValueTicks(0.05, 2e3), [0.1, 1, 10, 100, 1e3]);
         });
 
+        it('labels every decade when they fit', () => {
+            assert.deepEqual(
+                logValueTicks(Math.pow(10, -2.3), Math.pow(10, 4.2)),
+                [0.01, 0.1, 1, 10, 100, 1e3, 1e4]
+            );
+        });
+
         it('keeps the tick count bounded for very wide ranges', () => {
             const ticks = logValueTicks(1e-64, 1e5)!;
-            assert.isAtMost(ticks.length, MAX_LOG_TICKS + 1);
+            assert.isAtMost(ticks.length, MAX_LOG_TICKS);
             assert.include(ticks, 1);
         });
     });
