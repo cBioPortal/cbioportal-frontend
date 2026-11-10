@@ -12,8 +12,10 @@ import {
     VictoryScatter,
 } from 'victory';
 import {
+    axisTickLabelStyles,
     CBIOPORTAL_VICTORY_THEME,
     DefaultTooltip,
+    getTextWidth,
     placeArrowBottomLeft,
 } from 'cbioportal-frontend-commons';
 import {
@@ -280,6 +282,14 @@ function geneBackgroundOverlay(symbol: string, curated: any): JSX.Element {
 // curates the gene, also shows the gene's summary/background on hover (no
 // icon — hovering the gene name itself triggers it). Victory supplies the
 // positioning props (x/y/text/style); the OncoKB lookup comes in as a prop.
+// Gene tick label style. The font family is set explicitly so the rendered
+// labels match the font the left padding is measured with.
+const GENE_LABEL_STYLE = {
+    fontFamily: axisTickLabelStyles.fontFamily,
+    fontSize: 12,
+    fill: '#333',
+};
+
 const GeneTickLabel: React.FunctionComponent<any> = props => {
     const { oncokbGeneBySymbol, ...labelProps } = props;
     const raw = labelProps.text;
@@ -2861,18 +2871,26 @@ export default class MrnaTabContent extends React.Component<
         // overflowY:hidden — overlays and clips the bottom x-axis.
         const BORDERED_CHART_CHROME = 22;
         // Non-swapped: the gene names are the left-axis tick labels, so the
-        // left padding only needs to fit the longest one (~7px/char at
-        // fontSize 12, plus room for the tick mark) — no need for a big fixed
-        // gutter. Swapped layout needs more left padding (so the rotated
+        // left padding only needs to fit the widest one (measured at the
+        // label font, with ~10% slack for font substitution, plus room for the
+        // tick mark). Swapped layout needs more left padding (so the rotated
         // value-axis label clears the tick numbers) and more bottom padding (so
         // the angled gene tick labels fit beneath the axis without overlapping).
-        const maxGeneLabelLen = this.genes.reduce(
-            (m, g) => Math.max(m, g.symbol.length),
+        const maxGeneLabelWidth = this.plotGenes.reduce(
+            (m, g) =>
+                Math.max(
+                    m,
+                    getTextWidth(
+                        g.symbol,
+                        GENE_LABEL_STYLE.fontFamily,
+                        `${GENE_LABEL_STYLE.fontSize}px`
+                    )
+                ),
             0
         );
         const geneAxisPad = Math.min(
             140,
-            Math.max(50, maxGeneLabelLen * 7 + 16)
+            Math.max(50, Math.ceil(maxGeneLabelWidth * 1.1) + 16)
         );
         const padding = swap
             ? { top: 30, bottom: 110, left: 90, right: 25 + extraRightPad }
@@ -2892,7 +2910,7 @@ export default class MrnaTabContent extends React.Component<
         const oncokbGeneBySymbol = this.plotsStore.oncokbGeneBySymbol;
         const categoryTickLabel = (
             <GeneTickLabel
-                style={{ fontSize: 12, fill: '#333' } as any}
+                style={GENE_LABEL_STYLE as any}
                 oncokbGeneBySymbol={oncokbGeneBySymbol}
             />
         );
@@ -2902,7 +2920,7 @@ export default class MrnaTabContent extends React.Component<
         // the right of the tick.
         const categoryTickLabelSwap = (
             <GeneTickLabel
-                style={{ fontSize: 12, fill: '#333' } as any}
+                style={GENE_LABEL_STYLE as any}
                 dx={-8}
                 oncokbGeneBySymbol={oncokbGeneBySymbol}
             />
@@ -2943,7 +2961,8 @@ export default class MrnaTabContent extends React.Component<
                   tickFormat: categoryTickFormat,
                   tickLabelComponent: categoryTickLabel,
                   crossAxis: false,
-                  offsetX: 60,
+                  // Pin the gene axis to the plot area's left edge.
+                  offsetX: geneAxisPad,
               };
 
         return (

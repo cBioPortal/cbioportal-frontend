@@ -10,7 +10,7 @@ export const LOG_FLOOR_PERCENTILE = 0.01;
 export const MAX_LOG_DECADES = 8;
 
 // Upper bound on the number of labelled ticks on a log axis.
-export const MAX_LOG_TICKS = 6;
+export const MAX_LOG_TICKS = 8;
 
 function quantileSorted(sorted: number[], q: number): number {
     const pos = (sorted.length - 1) * q;
@@ -65,7 +65,11 @@ export function logValueTicks(lo: number, hi: number): number[] | undefined {
             });
         }
     } else {
-        const expStep = Math.max(1, Math.ceil(decades / MAX_LOG_TICKS));
+        // Count only the powers of ten that fall inside [lo, hi], so the
+        // padded ends of the domain don't force decades to be skipped.
+        const inRangeCount =
+            Math.floor(Math.log10(hi)) - Math.ceil(Math.log10(lo)) + 1;
+        const expStep = Math.max(1, Math.ceil(inRangeCount / MAX_LOG_TICKS));
         // Align to multiples of the step so labels land on round exponents
         // (1, 100, 10k rather than 10, 1k, 100k).
         const firstExp = Math.ceil(startExp / expStep) * expStep;
