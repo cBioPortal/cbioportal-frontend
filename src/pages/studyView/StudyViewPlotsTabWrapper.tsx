@@ -23,10 +23,6 @@ export const PlotsTabWrapper: React.FunctionComponent<{
             genes={store.plotsTabStore.genes}
             clinicalAttributes={store.plotsTabStore.clinicalAttributes}
             genesets={store.plotsTabStore.genesets}
-            genericAssayEntitiesGroupByMolecularProfileId={
-                store.plotsTabStore
-                    .genericAssayEntitiesGroupByMolecularProfileId
-            }
             customAttributes={store.plotsTabStore.customAttributes}
             studyIds={store.plotsTabStore.studyIds}
             molecularProfilesWithData={

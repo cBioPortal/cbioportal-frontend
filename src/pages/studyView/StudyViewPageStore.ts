@@ -323,10 +323,7 @@ import {
     CNA_AMP_VALUE,
     CNA_HOMDEL_VALUE,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
-import {
-    fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
-    fetchGenericAssayMetaByEntityIds,
-} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { fetchGenericAssayMetaByEntityIds } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import {
     buildDriverAnnotationSettings,
     DriverAnnotationSettings,
@@ -705,8 +702,6 @@ export class StudyViewPageStore
             clinicalAttributes: this.clinicalAttributes,
             customAttributes: this.customAttributes,
             genesets: this.genesets,
-            genericAssayEntitiesGroupByMolecularProfileId: this
-                .genericAssayEntitiesGroupedByProfileId,
             get selectedGenericAssayEntitiesGroupByMolecularProfileId() {
                 return self.selectedGenericAssayEntitiesGroupByMolecularProfileId;
             },
@@ -7117,17 +7112,6 @@ export class StudyViewPageStore
                 .map(gene => gene.entrezGeneId);
         },
         default: [],
-    });
-
-    readonly genericAssayEntitiesGroupedByProfileId = remoteData<{
-        [profileId: string]: GenericAssayMeta[];
-    }>({
-        await: () => [this.genericAssayProfiles],
-        invoke: async () => {
-            return await fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId(
-                this.genericAssayProfiles.result
-            );
-        },
     });
 
     readonly genericAssayProfiles = remoteData({

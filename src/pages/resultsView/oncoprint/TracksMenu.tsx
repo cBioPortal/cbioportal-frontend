@@ -22,8 +22,7 @@ import {
     clinicalAttributeIsPROFILEDIN,
 } from 'shared/cache/ClinicalDataCache';
 import { ExtendedClinicalAttribute } from '../ResultsViewPageStoreUtils';
-import { ClinicalAttribute, GenericAssayMeta } from 'cbioportal-ts-api-client';
-import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
 import SaveClinicalTracksButton from 'pages/resultsView/oncoprint/SaveClinicalTracksButton';
 import { toggleIncluded } from 'shared/lib/ArrayUtils';

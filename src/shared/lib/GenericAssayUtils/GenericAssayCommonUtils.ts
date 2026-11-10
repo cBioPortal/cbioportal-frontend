@@ -131,38 +131,6 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecular
     return genericAssayMetaGroupByMolecularProfileId;
 }
 
-export async function fetchGenericAssayMetaGroupedByMolecularProfileIdSuffix(
-    genericAssayProfiles: MolecularProfile[]
-) {
-    const genericAssayProfilesGroupedByProfileIdSuffix = _.groupBy(
-        genericAssayProfiles,
-        getSuffixOfMolecularProfile
-    );
-    const profileSuffixes = _.keys(
-        genericAssayProfilesGroupedByProfileIdSuffix
-    );
-
-    const genericAssayMetaGroupedByProfileIdSuffix: {
-        [profileIdSuffix: string]: GenericAssayMeta[];
-    } = {};
-
-    await Promise.all(
-        profileSuffixes.map(profileSuffix =>
-            fetchGenericAssayMetaByProfileIds(
-                _.map(
-                    genericAssayProfilesGroupedByProfileIdSuffix[profileSuffix],
-                    profile => profile.molecularProfileId
-                )
-            ).then(genericAssayMeta => {
-                genericAssayMetaGroupedByProfileIdSuffix[
-                    profileSuffix
-                ] = genericAssayMeta;
-            })
-        )
-    );
-    return genericAssayMetaGroupedByProfileIdSuffix;
-}
-
 export function fetchGenericAssayMetaByProfileIds(
     genericAssayProfileIds: string[]
 ) {

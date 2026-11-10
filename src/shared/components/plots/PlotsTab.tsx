@@ -73,7 +73,6 @@ import {
 } from './PlotsTabUtils';
 import {
     ClinicalAttribute,
-    GenericAssayMeta,
     Gene,
     ClinicalData,
     CancerStudy,
@@ -231,9 +230,6 @@ export interface IPlotsTabProps {
     clinicalAttributes: MobxPromise<ExtendedClinicalAttribute[]>;
     customAttributes: MobxPromise<ExtendedClinicalAttribute[]>;
     genesets: MobxPromise<Geneset[]>;
-    genericAssayEntitiesGroupByMolecularProfileId: MobxPromise<{
-        [profileId: string]: GenericAssayMeta[];
-    }>;
     studyIds: MobxPromise<string[]>;
     molecularProfilesWithData: MobxPromise<MolecularProfile[]>;
     molecularProfilesInStudies: MobxPromiseUnionTypeWithDefault<
