@@ -1,6 +1,3 @@
-import { UIMessage } from 'ai';
-import { screenshotParts } from './report';
-
 // The report is model-written, so the file may load nothing from elsewhere: a
 // remote URL in it could carry the report off-site when the file is opened.
 const CONTENT_SECURITY_POLICY =
@@ -21,22 +18,20 @@ code { font: 0.9em ui-monospace, SFMono-Regular, Menlo, monospace; background: #
 pre { background: #f6f8fa; padding: 12px 16px; border-radius: 6px; overflow-x: auto; }
 pre code { background: none; padding: 0; }
 blockquote { margin: 1em 0; padding-left: 1em; border-left: 3px solid #d1d9e0; color: #59636e; }
-figure { margin: 1.5em 0; }
-figure img { max-width: 100%; border: 1px solid #d1d9e0; }
-figcaption { color: #59636e; font-size: 0.9em; }
+img { max-width: 100%; border: 1px solid #d1d9e0; }
 @media print {
     main { max-width: none; padding: 0; }
     table { display: table; }
     pre { white-space: pre-wrap; }
     h1, h2, h3, h4 { break-after: avoid; }
-    tr, figure, pre, blockquote { break-inside: avoid; }
+    tr, img, pre, blockquote { break-inside: avoid; }
 }
 `;
 
 const DEFAULT_TITLE = 'Research report';
 
-// A standalone page: the rendered report, then the chat's screenshots.
-export function reportHtml(rendered: Element, messages: UIMessage[]): string {
+// A standalone page around the rendered report.
+export function reportHtml(rendered: Element): string {
     const doc = document.implementation.createHTMLDocument(
         rendered.querySelector('h1')?.textContent?.trim() || DEFAULT_TITLE
     );
@@ -56,25 +51,6 @@ export function reportHtml(rendered: Element, messages: UIMessage[]): string {
         ...Array.from(rendered.childNodes, node => doc.importNode(node, true))
     );
 
-    const images = screenshotParts(messages).filter(part =>
-        part.url.startsWith('data:image/')
-    );
-    if (images.length > 0) {
-        const heading = doc.createElement('h2');
-        heading.textContent = 'Appendix: Captured Screenshots';
-        main.append(heading);
-        images.forEach((part, i) => {
-            const name = part.filename ?? `Screenshot ${i + 1}`;
-            const figure = doc.createElement('figure');
-            const img = doc.createElement('img');
-            img.src = part.url;
-            img.alt = name;
-            const caption = doc.createElement('figcaption');
-            caption.textContent = name;
-            figure.append(img, caption);
-            main.append(figure);
-        });
-    }
     doc.body.append(main);
     return `<!doctype html>\n${doc.documentElement.outerHTML}`;
 }

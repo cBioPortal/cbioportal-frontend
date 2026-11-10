@@ -979,6 +979,9 @@ importers:
       remark-gfm:
         specifier: ^4.0.0
         version: 4.0.1
+      remark-parse:
+        specifier: 11.0.0
+        version: 11.0.0
       shadcn:
         specifier: 4.21.0
         version: 4.21.0(typescript@5.9.3)
@@ -991,6 +994,9 @@ importers:
       tw-shimmer:
         specifier: 0.4.12
         version: 0.4.12(tailwindcss@4.3.3)
+      unified:
+        specifier: 11.0.5
+        version: 11.0.5
       zustand:
         specifier: 5.0.15
         version: 5.0.15(@types/react@18.3.27)(react@19.2.8)(use-sync-external-store@1.6.0(react@19.2.8))

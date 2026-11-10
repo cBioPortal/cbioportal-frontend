@@ -1,4 +1,13 @@
-import { FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import {
+    ComponentProps,
+    FC,
+    ReactNode,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import { UIMessage } from 'ai';
 import {
     getExternalStoreMessages,
@@ -39,8 +48,9 @@ import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { downloadTextFile } from '@/lib/download';
 import { resolvePortalLink } from '@/lib/portal-link';
 import {
-    appendScreenshotAppendix,
     cacheReport,
+    cleanReport,
+    composeReport,
     getCachedReport,
     reportKey,
     screenshotParts,
@@ -58,14 +68,34 @@ const SKELETON_WIDTHS = ['w-2/3', 'w-full', 'w-5/6', 'w-full', 'w-3/4'];
 // How close to the bottom still counts as at the bottom.
 const BOTTOM_SLACK_PX = 32;
 
-// Plain markup for the HTML and PDF exports, without the chat's controls. As in
-// the chat, model-written images are never loaded.
-const EXPORT_COMPONENTS = {
-    a: ({ href, children }: { href?: string; children?: ReactNode }) => (
-        <a href={resolvePortalLink(href)?.href ?? href}>{children}</a>
-    ),
-    img: ({ alt }: { alt?: string }) => (alt ? <span>{alt}</span> : null),
-};
+// Screenshots are placed by a fragment URL, which the markdown renderer lets
+// through; the image itself comes from the chat.
+const screenshotHref = (_url: string, n: number) => `#screenshot-${n}`;
+const SCREENSHOT_HREF = /^#screenshot-(\d+)$/;
+
+function screenshotImage(
+    messages: () => UIMessage[],
+    className?: string
+): FC<ComponentProps<'img'>> {
+    return ({ src, alt }) => {
+        const n = Number(SCREENSHOT_HREF.exec(String(src ?? ''))?.[1]);
+        const url = n ? screenshotParts(messages())[n - 1]?.url : undefined;
+        return url ? (
+            <img src={url} alt={alt ?? ''} className={className} />
+        ) : null;
+    };
+}
+
+// Plain markup for the HTML and PDF exports, without the chat's controls.
+function ExportLink({
+    href,
+    children,
+}: {
+    href?: string;
+    children?: ReactNode;
+}) {
+    return <a href={resolvePortalLink(href)?.href ?? href}>{children}</a>;
+}
 
 type Format = 'md' | 'html' | 'pdf';
 
@@ -107,6 +137,22 @@ export const ReportDialog: FC<{
     const { isCopied, copyToClipboard } = useCopyToClipboard();
     const exportRef = useRef<HTMLDivElement>(null);
     const [formatsOpen, setFormatsOpen] = useState(false);
+    const previewComponents = useMemo(
+        () => ({
+            img: screenshotImage(
+                () => messagesRef.current,
+                'my-3 max-w-full rounded-md border border-border'
+            ),
+        }),
+        []
+    );
+    const exportComponents = useMemo(
+        () => ({
+            a: ExportLink,
+            img: screenshotImage(() => messagesRef.current),
+        }),
+        []
+    );
 
     const generate = useCallback(
         (force: boolean) => {
@@ -168,6 +214,12 @@ export const ReportDialog: FC<{
     const { status, text } = state;
     const streaming = status === 'streaming';
     const done = status === 'done';
+    // Unplaced screenshots are appended once the report is complete, since
+    // until then it may still place them.
+    const display = useMemo(
+        () => composeReport(text, messagesRef.current, screenshotHref, done),
+        [text, done]
+    );
 
     const download = (format: Format) => {
         setFormatsOpen(false);
@@ -175,12 +227,12 @@ export const ReportDialog: FC<{
         if (format === 'md') {
             downloadTextFile(
                 `${filename}.md`,
-                appendScreenshotAppendix(text, messagesRef.current)
+                composeReport(text, messagesRef.current, url => url, true)
             );
             return;
         }
         if (!exportRef.current) return;
-        const html = reportHtml(exportRef.current, messagesRef.current);
+        const html = reportHtml(exportRef.current);
         if (format === 'html') {
             downloadTextFile(`${filename}.html`, html, 'text/html');
         } else {
@@ -213,10 +265,7 @@ export const ReportDialog: FC<{
                                     ? 'Writing the report…'
                                     : 'Reading the session…'}
                             </span>
-                        ) : (
-                            screenshotParts(messagesRef.current).length > 0 &&
-                            'Downloads also include the chat’s screenshots.'
-                        )}
+                        ) : null}
                     </DialogDescription>
                 </DialogHeader>
                 <div
@@ -237,10 +286,10 @@ export const ReportDialog: FC<{
                     <div ref={followContent}>
                         {text ? (
                             <TextMessagePartProvider
-                                text={text}
+                                text={display}
                                 isRunning={streaming}
                             >
-                                <MarkdownText />
+                                <MarkdownText components={previewComponents} />
                             </TextMessagePartProvider>
                         ) : (
                             streaming && (
@@ -258,10 +307,10 @@ export const ReportDialog: FC<{
                 </div>
                 {done && (
                     <div ref={exportRef} hidden>
-                        <TextMessagePartProvider text={text}>
+                        <TextMessagePartProvider text={display}>
                             <MarkdownTextPrimitive
                                 remarkPlugins={[remarkGfm]}
-                                components={EXPORT_COMPONENTS}
+                                components={exportComponents}
                             />
                         </TextMessagePartProvider>
                     </div>
@@ -280,7 +329,13 @@ export const ReportDialog: FC<{
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => copyToClipboard(text)}
+                        // Screenshots stay out: their data URLs would flood the
+                        // clipboard.
+                        onClick={() =>
+                            copyToClipboard(
+                                cleanReport(text, () => undefined).markdown
+                            )
+                        }
                         disabled={status !== 'done'}
                     >
                         {isCopied ? <CheckIcon /> : <CopyIcon />}

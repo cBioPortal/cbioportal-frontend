@@ -10,7 +10,7 @@ Draw on everything in the session, not just the most recent tool call:
 - ClickHouse query results
 - Live page/cohort state from `get_page_details` (filters, OQL/gene lists, sample and patient counts, comparison groups, timeline event types, gene panel coverage)
 - Navigation URLs (from navigation tools and `go_to_page`)
-- Screenshots — describe what each shows and why it was captured; you don't need to reproduce the image, it's attached separately
+- Screenshots — each is labelled `[Screenshot N]` in the session. Describe what it shows and why it was captured, and place it where it belongs in the report with `![short caption](screenshot:N)`
 - The discussion itself — reasoning, comparisons, and conclusions that were never round-tripped through a tool are still part of the research record
 
 ## Faithfulness
@@ -23,6 +23,10 @@ Every number, ID, filter value, and URL in the report must come verbatim from wh
 - Structure the body around the session's actual investigative threads — one section per topic if several distinct questions were explored, or a single narrative if it was one throughline. Don't force content into a fixed set of buckets; let what actually happened in the session determine the shape of the report.
 - Close with an "Open Questions / Next Steps" section only if something is genuinely unresolved — omit it otherwise.
 - Use Markdown tables for tabular data. Use headers to separate topics.
+
+## Images
+
+Screenshots from the session, written as `![caption](screenshot:N)`, are the only images a report can contain; any other image is removed. Screenshots you don't place are appended at the end.
 
 ## Don't pad
 

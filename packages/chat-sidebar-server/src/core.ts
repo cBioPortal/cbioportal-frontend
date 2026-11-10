@@ -400,6 +400,26 @@ function toolPartAsText(part: ToolUIPart | DynamicToolUIPart): TextUIPart {
     };
 }
 
+// Numbers each distinct screenshot in order of appearance so the report can
+// place it with screenshot:N. The client numbers them the same way.
+function labelScreenshots(uiMessages: UIMessage[]): UIMessage[] {
+    const numbers = new Map<string, number>();
+    return uiMessages.map(message => ({
+        ...message,
+        parts: message.parts.flatMap(part => {
+            if (part.type !== 'file' || !part.mediaType.startsWith('image/')) {
+                return [part];
+            }
+            if (!numbers.has(part.url)) numbers.set(part.url, numbers.size + 1);
+            const label: TextUIPart = {
+                type: 'text',
+                text: `[Screenshot ${numbers.get(part.url)}]`,
+            };
+            return [label, part];
+        }),
+    }));
+}
+
 // No tools offered — everything the report needs (query results, page-state
 // snapshots, navigation URLs) is already in the given history. Yields the
 // report's text as it is written.
@@ -422,7 +442,7 @@ export async function* runReport(
     // differ from the original response, and the Bedrock provider drops
     // reasoning parts that carry no signature.
     const messages = await convertToModelMessages(
-        uiMessages
+        labelScreenshots(uiMessages)
             .map(message => ({
                 ...message,
                 parts: message.parts
