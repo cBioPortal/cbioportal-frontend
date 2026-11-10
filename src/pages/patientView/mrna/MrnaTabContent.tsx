@@ -1237,6 +1237,7 @@ export default class MrnaTabContent extends React.Component<
             median: number;
             mad: number;
             sortedTransformed: number[];
+            sortedRaw: number[];
         };
     } {
         const result: {
@@ -1244,6 +1245,7 @@ export default class MrnaTabContent extends React.Component<
                 median: number;
                 mad: number;
                 sortedTransformed: number[];
+                sortedRaw: number[];
             };
         } = {};
         const transform = (v: number) =>
@@ -1258,11 +1260,16 @@ export default class MrnaTabContent extends React.Component<
                 .map(d => transform(d.value))
                 .filter(Number.isFinite)
                 .sort((a, b) => a - b);
+            const raw = byEntrez[entrezId]
+                .map(d => d.value)
+                .filter(Number.isFinite)
+                .sort((a, b) => a - b);
             if (transformed.length === 0) {
                 result[entrezId] = {
                     median: 0,
                     mad: 0,
                     sortedTransformed: [],
+                    sortedRaw: [],
                 };
                 return;
             }
@@ -1272,6 +1279,7 @@ export default class MrnaTabContent extends React.Component<
                 median,
                 mad,
                 sortedTransformed: transformed,
+                sortedRaw: raw,
             };
         });
         return result;
@@ -1307,7 +1315,9 @@ export default class MrnaTabContent extends React.Component<
             if (!stats || stats.sortedTransformed.length < 5) return;
             const tv = transform(d.value);
             const z = robustZ(tv, stats.median, stats.mad);
-            const percentile = percentileOf(tv, stats.sortedTransformed);
+            // Rank on raw values: the log transform preserves order, but the
+            // log floor clamps low values together and would create ties.
+            const percentile = percentileOf(d.value, stats.sortedRaw);
             (out[d.entrezGeneId] = out[d.entrezGeneId] || {})[d.sampleId] = {
                 value: d.value,
                 z,

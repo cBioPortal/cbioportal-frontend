@@ -104,31 +104,57 @@ function superscript(n: number): string {
         .join('');
 }
 
-function compact(n: number, divisor: number, suffix: string): string {
-    const scaled = n / divisor;
-    return `${
-        Number.isInteger(scaled) ? scaled : Number(scaled.toFixed(1))
-    }${suffix}`;
+function compact(
+    n: number,
+    divisor: number,
+    suffix: string,
+    decimals: number
+): string {
+    return `${Number((n / divisor).toFixed(decimals))}${suffix}`;
 }
 
-// Short value-axis tick label: 1.5k, 2M, 0.05, 10⁻⁶, 2×10⁻⁴.
-export function formatValueTick(t: number): string {
+function formatTickWithPrecision(t: number, decimals: number): string {
     const abs = Math.abs(t);
     if (abs >= 1e6) {
-        return compact(t, 1e6, 'M');
+        return compact(t, 1e6, 'M', decimals);
     }
     if (abs >= 1e3) {
-        return compact(t, 1e3, 'k');
+        return compact(t, 1e3, 'k', decimals);
     }
     if (abs >= 1) {
-        return t.toLocaleString('en-US');
+        return t.toLocaleString('en-US', {
+            maximumFractionDigits: decimals + 2,
+        });
     }
     if (t === 0 || abs >= 0.01) {
         return `${t}`;
     }
     const exp = Math.floor(Math.log10(abs));
-    const mantissa = Number((t / Math.pow(10, exp)).toPrecision(3));
+    const mantissa = Number((t / Math.pow(10, exp)).toPrecision(decimals + 2));
     return mantissa === 1
         ? `10${superscript(exp)}`
         : `${mantissa}×10${superscript(exp)}`;
+}
+
+// Most decimals a k/M tick label will use to tell ticks apart.
+const MAX_TICK_DECIMALS = 6;
+
+// Short value-axis tick label: 1.5k, 2M, 0.05, 10⁻⁶, 2×10⁻⁴. Matches Victory's
+// tickFormat(tick, index, ticks) signature: when all ticks are given, uses the
+// fewest decimals that keep every label distinct (e.g. 1M, 1.005M, 1.01M).
+export function formatValueTick(
+    t: number,
+    _index?: number,
+    ticks?: number[]
+): string {
+    if (ticks && ticks.length > 1) {
+        for (let d = 1; d < MAX_TICK_DECIMALS; d++) {
+            const labels = ticks.map(x => formatTickWithPrecision(x, d));
+            if (new Set(labels).size === labels.length) {
+                return formatTickWithPrecision(t, d);
+            }
+        }
+        return formatTickWithPrecision(t, MAX_TICK_DECIMALS);
+    }
+    return formatTickWithPrecision(t, 1);
 }
