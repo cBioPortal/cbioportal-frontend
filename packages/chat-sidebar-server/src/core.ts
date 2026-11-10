@@ -9,6 +9,7 @@ import {
     tool,
     toUIMessageStream,
     CallSettings,
+    OnLanguageModelCallEndCallback,
     ToolSet,
     UIMessage,
     UIMessageChunk,
@@ -292,7 +293,9 @@ function withholdReplyStart(
 // just sent — or, after a client-side tool call, with the assistant message
 // carrying its output, which this reply then continues under the same id.
 // `onEnd` receives the reply once it ends, however it ends — or null when it
-// was stopped before the client saw it begin.
+// was stopped before the client saw it begin. `onCall` receives the usage of
+// each model call, one per step of the tool loop; the run* functions below
+// take it too.
 export async function runChat(
     branch: UIMessage[],
     res: ServerResponse,
@@ -301,6 +304,7 @@ export async function runChat(
         message: UIMessage | null,
         isContinuation: boolean
     ) => Promise<void>,
+    onCall: OnLanguageModelCallEndCallback,
     model?: string,
     pageHref?: string
 ): Promise<void> {
@@ -327,6 +331,7 @@ export async function runChat(
             ignoreIncompleteToolCalls: true,
         }),
         abortSignal,
+        onLanguageModelCallEnd: onCall,
     });
     const reply = withholdReplyStart(
         toUIMessageStream({
@@ -363,6 +368,7 @@ export async function runChat(
 export async function runReport(
     uiMessages: UIMessage[],
     abortSignal: AbortSignal,
+    onCall: OnLanguageModelCallEndCallback,
     model?: string
 ): Promise<string> {
     const { chat } = resolveModels(model);
@@ -395,6 +401,7 @@ export async function runReport(
             },
         ],
         abortSignal,
+        onLanguageModelCallEnd: onCall,
     });
     return text;
 }
@@ -409,6 +416,7 @@ const MAX_TITLE_CHARS = 60;
 export async function runTitle(
     text: string,
     abortSignal: AbortSignal,
+    onCall: OnLanguageModelCallEndCallback,
     model?: string
 ): Promise<string> {
     const { text: title } = await generateText({
@@ -417,6 +425,7 @@ export async function runTitle(
         messages: [{ role: 'user', content: text }],
         reasoning: 'none',
         abortSignal,
+        onLanguageModelCallEnd: onCall,
     });
     return title.trim().slice(0, MAX_TITLE_CHARS);
 }
@@ -461,6 +470,7 @@ export interface FollowupsInput {
 export async function* runFollowups(
     { question, answer, href, details }: FollowupsInput,
     abortSignal: AbortSignal,
+    onCall: OnLanguageModelCallEndCallback,
     model?: string
 ): AsyncGenerator<Suggestion> {
     const { utility } = resolveModels(model);
@@ -482,6 +492,7 @@ export async function* runFollowups(
         output: Output.array({ element: SuggestionSchema }),
         reasoning: 'none',
         abortSignal,
+        onLanguageModelCallEnd: onCall,
         onError: event => {
             error = event.error;
         },

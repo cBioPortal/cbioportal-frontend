@@ -2,7 +2,11 @@ import './env.js'; // must be first — see env.ts
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
-import { NoSuchModelError, UIMessage } from 'ai';
+import {
+    NoSuchModelError,
+    OnLanguageModelCallEndCallback,
+    UIMessage,
+} from 'ai';
 import {
     DEFAULT_MODEL,
     AVAILABLE_MODELS,
@@ -25,6 +29,12 @@ import {
     updateThread,
     upsertMessage,
 } from './store.js';
+import {
+    getUsage,
+    recordCall,
+    requireAllowance,
+    UsageLimitError,
+} from './usage.js';
 import { rejectCrossSite, requireUser, userOf } from './user.js';
 
 const PORT = Number(process.env.PORT || 4000);
@@ -49,6 +59,11 @@ function abortOnClose(res: express.Response): AbortSignal {
     const controller = new AbortController();
     res.on('close', () => controller.abort());
     return controller.signal;
+}
+
+// Counts each model call a request makes against the user's allowance.
+function recordFor(userId: string): OnLanguageModelCallEndCallback {
+    return event => recordCall(userId, event);
 }
 
 // A model id the registry doesn't have is the client's mistake, not ours.
@@ -77,13 +92,30 @@ app.get('/api/chat/models', (_req, res) => {
     res.json({ models: AVAILABLE_MODELS });
 });
 
-// Everything that reads or writes a user's chats. The rest — config, models,
-// reports, follow-ups — works from what the request carries.
+// Everything that reads or writes a user's chats, or calls a model and so
+// counts against their allowance. The rest — config, models — works from what
+// the request carries.
 app.use(
-    ['/api/chat/threads', '/api/chat/message'],
+    [
+        '/api/chat/threads',
+        '/api/chat/message',
+        '/api/chat/report',
+        '/api/chat/followups',
+        '/api/chat/usage',
+    ],
     rejectCrossSite,
     requireUser
 );
+
+// The time is in UTC, as the server doesn't know the user's time zone; the
+// client can show `availableAt` in theirs.
+function limitMessage(availableAt: Date): string {
+    const at = availableAt
+        .toISOString()
+        .slice(0, 16)
+        .replace('T', ' ');
+    return `You've reached your chat usage limit. You can chat again after ${at} UTC.`;
+}
 
 // Express 4 doesn't catch a rejected async handler, so each one goes through
 // here. A thread that is missing or someone else's is a 404 either way.
@@ -94,6 +126,14 @@ function route(
         handler(req, res).catch(err => {
             if (err instanceof ThreadNotFoundError) {
                 res.status(404).json({ error: err.message });
+                return;
+            }
+            if (err instanceof UsageLimitError) {
+                res.status(429).json({
+                    error: limitMessage(err.availableAt),
+                    code: 'limit_reached',
+                    availableAt: err.availableAt,
+                });
                 return;
             }
             console.error(`${req.method} ${req.path} failed:`, err);
@@ -125,6 +165,13 @@ function isUIMessage(value: unknown): value is UIMessage {
         Array.isArray(message.parts)
     );
 }
+
+app.get(
+    '/api/chat/usage',
+    route(async (_req, res) => {
+        res.json(await getUsage(userOf(res)));
+    })
+);
 
 app.get(
     '/api/chat/threads',
@@ -213,7 +260,8 @@ app.delete(
 );
 
 // Generates the title and saves it, since the client's thread list only shows
-// what it is handed back.
+// what it is handed back. A user at their allowance still gets a title: the
+// start of their opening question.
 app.post(
     '/api/chat/threads/:id/title',
     route(async (req, res) => {
@@ -229,10 +277,14 @@ app.post(
         const signal = abortOnClose(res);
         let title: string;
         try {
+            await requireAllowance(userId);
             title =
-                (await runTitle(text, signal, model)) || fallbackTitle(text);
+                (await runTitle(text, signal, recordFor(userId), model)) ||
+                fallbackTitle(text);
         } catch (err) {
-            if (!signal.aborted) console.error('title generation failed:', err);
+            if (!signal.aborted && !(err instanceof UsageLimitError)) {
+                console.error('title generation failed:', err);
+            }
             title = fallbackTitle(text);
         }
         await updateThread(userId, req.params.id, { title });
@@ -266,6 +318,9 @@ app.post(
         const signal = abortOnClose(res);
         const userId = userOf(res);
         const parent: string | null = parentId ?? null;
+        // Before the prompt is saved, so a refused one never enters the
+        // history.
+        await requireAllowance(userId);
         await ensureThread(userId, id);
         await upsertMessage(id, message, parent);
         const branch = await loadBranch(id, message.id);
@@ -292,7 +347,15 @@ app.post(
             }
         };
         try {
-            await runChat(branch, res, signal, onEnd, model, pageHref);
+            await runChat(
+                branch,
+                res,
+                signal,
+                onEnd,
+                recordFor(userId),
+                model,
+                pageHref
+            );
         } catch (err) {
             if (signal.aborted) return;
             console.error('chat message failed:', err);
@@ -304,69 +367,86 @@ app.post(
     })
 );
 
-app.post('/api/chat/report', async (req, res) => {
-    const { messages, model } = req.body ?? {};
-    if (!Array.isArray(messages)) {
-        res.status(400).json({ error: 'messages (array) required' });
-        return;
-    }
-    const signal = abortOnClose(res);
-    try {
-        const report = await runReport(messages, signal, model);
-        res.json({ report });
-    } catch (err) {
-        if (signal.aborted) return;
-        console.error('report generation failed:', err);
-        const message = err instanceof Error ? err.message : 'report failed';
-        res.status(errorStatus(err)).json({ error: message });
-    }
-});
+app.post(
+    '/api/chat/report',
+    route(async (req, res) => {
+        const { messages, model } = req.body ?? {};
+        if (!Array.isArray(messages)) {
+            res.status(400).json({ error: 'messages (array) required' });
+            return;
+        }
+        const signal = abortOnClose(res);
+        const userId = userOf(res);
+        await requireAllowance(userId);
+        try {
+            const report = await runReport(
+                messages,
+                signal,
+                recordFor(userId),
+                model
+            );
+            res.json({ report });
+        } catch (err) {
+            if (signal.aborted) return;
+            console.error('report generation failed:', err);
+            const message =
+                err instanceof Error ? err.message : 'report failed';
+            res.status(errorStatus(err)).json({ error: message });
+        }
+    })
+);
 
 // Streamed as NDJSON, one { title, prompt } per line, so each pill can show as
 // soon as it is complete.
-app.post('/api/chat/followups', async (req, res) => {
-    const { question, answer, href, details, model } = req.body ?? {};
-    if (typeof question !== 'string' || typeof answer !== 'string') {
-        res.status(400).json({
-            error: 'question and answer (strings) required',
-        });
-        return;
-    }
-    const signal = abortOnClose(res);
-    try {
-        const followups = runFollowups(
-            {
-                question,
-                answer,
-                href: typeof href === 'string' ? href : '',
-                details: details ?? { available: false },
-            },
-            signal,
-            model
-        );
-        for await (const followup of followups) {
-            if (!res.headersSent) {
-                res.writeHead(200, {
-                    'Content-Type': 'application/x-ndjson',
-                    'Cache-Control': 'no-cache',
-                    'X-Accel-Buffering': 'no',
-                });
-            }
-            res.write(`${JSON.stringify(followup)}\n`);
-        }
-        res.end();
-    } catch (err) {
-        if (signal.aborted) return;
-        console.error('follow-ups generation failed:', err);
-        if (res.headersSent) {
-            res.end();
+app.post(
+    '/api/chat/followups',
+    route(async (req, res) => {
+        const { question, answer, href, details, model } = req.body ?? {};
+        if (typeof question !== 'string' || typeof answer !== 'string') {
+            res.status(400).json({
+                error: 'question and answer (strings) required',
+            });
             return;
         }
-        const message =
-            err instanceof Error ? err.message : 'follow-ups failed';
-        res.status(errorStatus(err)).json({ error: message });
-    }
-});
+        const signal = abortOnClose(res);
+        const userId = userOf(res);
+        await requireAllowance(userId);
+        try {
+            const followups = runFollowups(
+                {
+                    question,
+                    answer,
+                    href: typeof href === 'string' ? href : '',
+                    details: details ?? { available: false },
+                },
+                signal,
+                recordFor(userId),
+                model
+            );
+            for await (const followup of followups) {
+                if (!res.headersSent) {
+                    res.writeHead(200, {
+                        'Content-Type': 'application/x-ndjson',
+                        'Cache-Control': 'no-cache',
+                        'X-Accel-Buffering': 'no',
+                    });
+                }
+                res.write(`${JSON.stringify(followup)}\n`);
+            }
+            res.end();
+        } catch (err) {
+            if (signal.aborted) return;
+            console.error('follow-ups generation failed:', err);
+            if (res.headersSent) {
+                res.end();
+                return;
+            }
+            const message =
+                err instanceof Error ? err.message : 'follow-ups failed';
+            res.status(errorStatus(err)).json({ error: message });
+        }
+    })
+);
 
 app.use('/chat-sidebar', express.static(SIDEBAR_DIST));
 

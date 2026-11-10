@@ -3,6 +3,7 @@ import {
     bigserial,
     check,
     index,
+    integer,
     jsonb,
     pgTable,
     primaryKey,
@@ -62,5 +63,30 @@ export const chatMessage = pgTable(
     t => [
         primaryKey({ columns: [t.threadId, t.id] }),
         index('chat_message_thread_seq_idx').on(t.threadId, t.seq),
+    ]
+);
+
+// One row per model call: its weighted tokens (see usage.ts), counted against
+// the user's allowance when billed to the portal. Not tied to a thread, so
+// deleting a chat leaves its usage in place.
+export const chatUsage = pgTable(
+    'chat_usage',
+    {
+        id: bigserial('id', { mode: 'number' }).primaryKey(),
+        userId: text('user_id').notNull(),
+        weighted: integer('weighted').notNull(),
+        billedTo: text('billed_to', { enum: ['portal', 'user'] })
+            .notNull()
+            .default('portal'),
+        createdAt: timestamp('created_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+    },
+    t => [
+        index('chat_usage_user_created_idx').on(t.userId, t.createdAt),
+        check(
+            'chat_usage_billed_to_check',
+            sql`${t.billedTo} in ('portal', 'user')`
+        ),
     ]
 );
