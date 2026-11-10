@@ -51,6 +51,11 @@ import {
     getGeneGroupLabelMeta,
 } from 'pages/patientView/mrna/mrnaTabGeneGroups';
 import styles from 'pages/patientView/mrna/styles.module.scss';
+import {
+    computeLogFloor,
+    formatValueTick,
+    logValueTicks,
+} from 'pages/patientView/mrna/mrnaAxisUtils';
 
 // One row of the expression table: a gene and its per-sample expression values.
 type ExpressionTableRow = {
@@ -319,13 +324,14 @@ function robustZ(value: number, median: number, mad: number): number {
 }
 
 // Short, readable rendering of an mRNA expression value for the bubble
-// tooltip — uses up to 3 significant digits and falls back to fixed notation
-// for typical microarray/log-ratio ranges.
+// tooltip — fixed notation for typical microarray/log-ratio ranges, exponential
+// for tiny non-zero values that would otherwise round to 0.00.
 function formatExpressionValue(v: number): string {
     if (!Number.isFinite(v)) return String(v);
     const abs = Math.abs(v);
     if (abs >= 100) return v.toFixed(0);
     if (abs >= 10) return v.toFixed(1);
+    if (abs > 0 && abs < 0.005) return v.toExponential(2);
     return v.toFixed(2);
 }
 
@@ -1630,10 +1636,11 @@ export default class MrnaTabContent extends React.Component<
         return this.plotsStore.logScale && this.canRenderLog;
     }
 
-    // Smallest positive value; the lower bound for the log scale so zeros and
-    // tiny values have somewhere to render.
+    // Lower bound for the log scale; zeros and values below it render at the
+    // bound. Ignores a small fraction of near-zero outliers so they don't
+    // stretch the axis (see computeLogFloor).
     @computed get logFloor(): number {
-        return _.min(this.allValues.filter(v => v > 0)) ?? 1;
+        return computeLogFloor(this.allValues);
     }
 
     // Clamp a value into the plottable range (log can't render <= 0).
@@ -1899,8 +1906,8 @@ export default class MrnaTabContent extends React.Component<
         const min = _.min(vals) ?? 0;
         const max = _.max(vals) ?? 1;
         if (this.useLog) {
-            // pad in log space so the data fills the axis; floor at smallest
-            // positive value so clamped zeros sit just inside the left edge
+            // pad in log space so the data fills the axis; values clamped to
+            // the floor sit just inside the left edge
             const logMin = Math.log10(this.logFloor);
             const logMax = Math.log10(max);
             const pad = Math.max((logMax - logMin) * 0.05, 0.02);
@@ -1916,23 +1923,7 @@ export default class MrnaTabContent extends React.Component<
     @computed get valueTicks(): number[] | undefined {
         const [lo, hi] = this.valueDomain;
         if (this.useLog) {
-            const startExp = Math.floor(Math.log10(lo));
-            const endExp = Math.ceil(Math.log10(hi));
-            const decades = endExp - startExp;
-            // Few decades: 1-2-5 per decade. Many decades: powers of ten only
-            // (optionally every other decade) so the axis stays readable.
-            const mantissas = decades <= 2 ? [1, 2, 5] : [1];
-            const expStep = decades > 6 ? 2 : 1;
-            const ticks: number[] = [];
-            for (let e = startExp; e <= endExp; e += expStep) {
-                mantissas.forEach(m => {
-                    const v = m * Math.pow(10, e);
-                    if (v >= lo && v <= hi) {
-                        ticks.push(v);
-                    }
-                });
-            }
-            return ticks.length ? ticks : undefined;
+            return logValueTicks(lo, hi);
         }
         const span = hi - lo;
         if (!(span > 0)) {
@@ -2916,22 +2907,13 @@ export default class MrnaTabContent extends React.Component<
                 oncokbGeneBySymbol={oncokbGeneBySymbol}
             />
         );
-        // Abbreviate thousands so 4+ digit ticks stay compact: 2000 -> "2k",
-        // 1500 -> "1.5k", 12000 -> "12k".
-        const valueTickFormat = (t: number) => {
-            if (Math.abs(t) >= 1000) {
-                const k = t / 1000;
-                return `${Number.isInteger(k) ? k : k.toFixed(1)}k`;
-            }
-            return t >= 1 ? Number(t).toLocaleString('en-US') : `${t}`;
-        };
         // The value-axis label rotates with the axis. When it's on the left
         // (swapped layout), it needs more outward padding so it sits clear of
         // the tick numbers.
         const valueAxisProps = {
             label: valueLabel,
             tickValues: this.valueTicks,
-            tickFormat: valueTickFormat,
+            tickFormat: formatValueTick,
             style: { axisLabel: { padding: swap ? 55 : 38 } },
         };
         // When the gene axis is on the bottom (swapped), rotate the gene
