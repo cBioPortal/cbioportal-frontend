@@ -8,6 +8,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
+import request from 'superagent';
 import { IDataQueryFilter } from '../StoreUtils';
 import {
     doesOptionMatchSearchText,
@@ -43,6 +44,11 @@ export enum GenericAssayDataType {
     LIMIT_VALUE = 'LIMIT-VALUE',
     CATEGORICAL = 'CATEGORICAL',
     BINARY = 'BINARY',
+}
+
+export interface IGenericAssayMetaPageResult {
+    items: GenericAssayMeta[];
+    totalItems: number;
 }
 
 export async function fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType(
@@ -168,6 +174,105 @@ export function fetchGenericAssayMetaByProfileIds(
                 // incorrectly requires both molecularProfileIds and genericAssayStableIds;
                 // use 'as' to tell TypeScript that this object really does fit.
             } as GenericAssayMetaFilter,
+        });
+    }
+    return Promise.resolve([]);
+}
+
+export function fetchGenericAssayMetaPageByProfileIds(
+    genericAssayProfileIds: string[],
+    searchTerm: string | undefined,
+    pageSize: number,
+    pageNumber: number
+): Promise<IGenericAssayMetaPageResult> {
+    if (genericAssayProfileIds.length > 0) {
+        return getClient()
+            .fetchGenericAssayMetaUsingPOSTWithHttpInfo({
+                searchTerm,
+                pageSize,
+                pageNumber,
+                genericAssayMetaFilter: {
+                    molecularProfileIds: genericAssayProfileIds,
+                } as GenericAssayMetaFilter,
+            })
+            .then((response: request.Response) => {
+                const totalCount = response.header['total-count'];
+                if (totalCount === undefined) {
+                    // backends before v7.0.6 ignore search and paging and
+                    // return every entity without a total-count header
+                    const matching = (response.body as GenericAssayMeta[]).filter(
+                        meta =>
+                            doesGenericAssayMetaMatchSearchTerm(
+                                meta,
+                                searchTerm
+                            )
+                    );
+                    return {
+                        items: matching.slice(
+                            pageNumber * pageSize,
+                            (pageNumber + 1) * pageSize
+                        ),
+                        totalItems: matching.length,
+                    };
+                }
+                return {
+                    items: response.body,
+                    totalItems: parseInt(totalCount, 10),
+                };
+            });
+    }
+    return Promise.resolve({ items: [], totalItems: 0 });
+}
+
+// Same order as the backend: leading number, then stable id (byte order).
+export function compareGenericAssayStableIds(a: string, b: string) {
+    const leadingNumber = (id: string) => {
+        const match = /^[0-9]+/.exec(id);
+        return match ? Number(match[0]) : 0;
+    };
+    const byNumber = leadingNumber(a) - leadingNumber(b);
+    if (byNumber !== 0) {
+        return byNumber;
+    }
+    return a < b ? -1 : a > b ? 1 : 0;
+}
+
+// Matches like the backend search: trimmed, case-insensitive substring of the
+// stable ID, NAME or DESCRIPTION.
+export function doesGenericAssayMetaMatchSearchTerm(
+    meta: GenericAssayMeta,
+    searchTerm: string | undefined
+) {
+    const term = (searchTerm || '').trim().toLowerCase();
+    if (!term) {
+        return true;
+    }
+    return [
+        meta.stableId,
+        getGenericAssayMetaPropertyOrDefault(
+            meta,
+            COMMON_GENERIC_ASSAY_PROPERTY.NAME,
+            ''
+        ),
+        getGenericAssayMetaPropertyOrDefault(
+            meta,
+            COMMON_GENERIC_ASSAY_PROPERTY.DESCRIPTION,
+            ''
+        ),
+    ].some(field => field.toLowerCase().includes(term));
+}
+
+// Returns only the entities that belong to the given profiles.
+export function fetchGenericAssayMetaByEntityIdsInProfiles(
+    entityIds: string[],
+    genericAssayProfileIds: string[]
+): Promise<GenericAssayMeta[]> {
+    if (entityIds.length > 0 && genericAssayProfileIds.length > 0) {
+        return getClient().fetchGenericAssayMetaUsingPOST({
+            genericAssayMetaFilter: {
+                molecularProfileIds: genericAssayProfileIds,
+                genericAssayStableIds: entityIds,
+            },
         });
     }
     return Promise.resolve([]);
