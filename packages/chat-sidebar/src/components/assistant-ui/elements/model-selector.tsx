@@ -191,10 +191,15 @@ function ModelSelectorValue({
 
 export type ModelSelectorContentProps = ComponentPropsWithoutRef<
     typeof PopoverContent
->;
+> & {
+    // Shown above the models. Not cmdk's group heading, which is hidden from
+    // screen readers, so it can hold controls.
+    header?: ReactNode;
+};
 
 function ModelSelectorContent({
     className,
+    header,
     ...props
 }: ModelSelectorContentProps) {
     const { models, value } = useModelSelectorContext();
@@ -218,6 +223,14 @@ function ModelSelectorContent({
                 <div className="sr-only">
                     <CommandInput readOnly aria-label="Model" />
                 </div>
+                {header && (
+                    <div
+                        data-slot="model-selector-header"
+                        className="text-muted-foreground px-3 pt-2 text-xs font-medium"
+                    >
+                        {header}
+                    </div>
+                )}
                 <CommandList
                     data-slot="model-selector-list"
                     className="[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"

@@ -35,7 +35,8 @@ function getWindowHours(): number {
 }
 
 const ALLOWANCE_WEIGHTED = getAllowanceUnits() * WEIGHTED_PER_UNIT;
-const WINDOW = sql`make_interval(hours => ${getWindowHours()})`;
+const WINDOW_HOURS = getWindowHours();
+const WINDOW = sql`make_interval(hours => ${WINDOW_HOURS})`;
 
 function weigh(usage: LanguageModelUsage): number {
     const cacheRead = usage.inputTokenDetails.cacheReadTokens ?? 0;
@@ -78,6 +79,8 @@ function inWindow(userId: string) {
 
 export interface Usage {
     percentUsed: number;
+    // How far back usage counts, so the client can say so.
+    windowHours: number;
     // When usage next falls below the allowance; null while it already is.
     availableAt: Date | null;
 }
@@ -95,7 +98,9 @@ export async function getUsage(userId: string): Promise<Usage> {
         .from(chatUsage)
         .where(inWindow(userId));
     const percentUsed = (used / ALLOWANCE_WEIGHTED) * 100;
-    if (used < ALLOWANCE_WEIGHTED) return { percentUsed, availableAt: null };
+    if (used < ALLOWANCE_WEIGHTED) {
+        return { percentUsed, windowHours: WINDOW_HOURS, availableAt: null };
+    }
 
     // The first row, oldest first, whose ageing out brings usage below the
     // allowance.
@@ -113,6 +118,7 @@ export async function getUsage(userId: string): Promise<Usage> {
     `);
     return {
         percentUsed,
+        windowHours: WINDOW_HOURS,
         availableAt: new Date(result.rows[0]?.available_at ?? Date.now()),
     };
 }

@@ -21,6 +21,7 @@ import {
 import { TooltipIconButton } from '@/components/assistant-ui/elements/tooltip-icon-button';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PortalModelsHeading, UsageBanner } from '@/components/Usage';
 import {
     getModels,
     getSelectedModel,
@@ -385,9 +386,10 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
             <ThreadFollowupSuggestions
                 onSelect={() => focusInputAtEnd(inputRef)}
             />
+            <UsageBanner />
             <div
                 data-slot="aui_composer-shell"
-                className="border-border focus-within:border-muted-foreground/40 dark:border-muted-foreground/15 dark:focus-within:border-muted-foreground/30 flex w-full cursor-text flex-col gap-2 rounded-(--composer-radius) border bg-(--composer-bg) p-(--composer-padding) transition-[border-color]"
+                className="border-border focus-within:border-muted-foreground/40 dark:border-muted-foreground/15 dark:focus-within:border-muted-foreground/30 flex w-full cursor-text flex-col gap-2 rounded-(--composer-radius) border bg-(--composer-bg) [[data-usage-banner]+&]:rounded-t-none p-(--composer-padding) transition-[border-color]"
             >
                 <ComposerAttachments />
                 <ComposerPrimitive.Input
@@ -421,9 +423,10 @@ const SelectedModelProvider: FC = () => {
     );
 };
 
-// Hidden when the server offers a single model. Disabled while a reply
-// streams: a tool result sends the turn's next request automatically, and it
-// must go to the same provider as the rest of the turn.
+// Shown even for a single model, since it also holds the usage. Hidden only
+// while there is nothing to list. Disabled while a reply streams: a tool
+// result sends the turn's next request automatically, and it must go to the
+// same provider as the rest of the turn.
 const ComposerModelSelector: FC = () => {
     const models = useSyncExternalStore(
         subscribeToChatSession,
@@ -436,7 +439,7 @@ const ComposerModelSelector: FC = () => {
         getSelectedModel
     );
     const isRunning = useAuiState(s => s.thread.isRunning);
-    if (models.length < 2) return null;
+    if (models.length === 0) return null;
     return (
         <ModelSelector.Root
             models={models}
@@ -451,7 +454,10 @@ const ComposerModelSelector: FC = () => {
                 <ModelSelector.Value />
                 <SelectedModelProvider />
             </ModelSelector.Trigger>
-            <ModelSelector.Content align="end" />
+            <ModelSelector.Content
+                align="end"
+                header={<PortalModelsHeading />}
+            />
         </ModelSelector.Root>
     );
 };

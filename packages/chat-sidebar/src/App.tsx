@@ -36,6 +36,7 @@ import {
     getStartersState,
     subscribeToStarters,
 } from '@/lib/starters';
+import { startUsageSync } from '@/lib/usage';
 
 const AUTH_ERROR_CONTENT: Record<
     AuthErrorStatus,
@@ -186,6 +187,8 @@ export function App() {
                 /* no selector; requests use the server's default model */
             });
     }, []);
+
+    useEffect(() => startUsageSync(), []);
 
     // The iframe reloads with the portal page on a full page load (a refresh,
     // or a link the portal doesn't route itself), so the open chat is restored

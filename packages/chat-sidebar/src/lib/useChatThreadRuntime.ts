@@ -15,6 +15,7 @@ import { getSelectedModel } from './chatSession';
 import { notifyNavigate, resolvePortalLink } from './portal-link';
 import { getLatestPageEvents } from './page-events';
 import { notifyThreadsChanged } from './threadSync';
+import { refreshUsage, throwIfLimitReached } from './usage';
 
 // Stateless — one instance for the app's lifetime rather than one per thread.
 const attachmentAdapter = new SimpleImageAttachmentAdapter();
@@ -31,9 +32,12 @@ export function useChatThreadRuntime(): AssistantRuntime {
                 api: '/api/chat/message',
                 // The portal proxies this endpoint and rejects it when the
                 // session has lapsed or the user lacks the chat role.
+                // A user at their usage limit is refused too, and the error
+                // shown is the refusal's own message rather than its body.
                 fetch: async (input, init) => {
                     const response = await fetch(input, init);
                     throwIfUnauthorized(response);
+                    await throwIfLimitReached(response);
                     return response;
                 },
                 // The server keeps the history, so only the new message goes
@@ -88,8 +92,12 @@ export function useChatThreadRuntime(): AssistantRuntime {
             }
         },
         // The server has saved the reply, or dropped a prompt stopped before
-        // any reply, and the chat has moved up the list.
-        onFinish: () => notifyThreadsChanged(),
+        // any reply, and the chat has moved up the list. Its usage is saved
+        // by now too. Runs once per request, so once per tool continuation.
+        onFinish: () => {
+            notifyThreadsChanged();
+            void refreshUsage();
+        },
         sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     });
     const { addToolOutput } = chat;

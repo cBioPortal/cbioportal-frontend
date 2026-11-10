@@ -2,6 +2,7 @@ import { getSelectedModel } from './chatSession';
 import { FollowupsExchange } from './followupsInput';
 import { PageEvent } from './page-events';
 import { embedded } from './parent-origin';
+import { throwIfLimitReached } from './usage';
 
 // Follow-up suggestions shown above the composer after a reply, generated
 // server-side from the latest exchange and the page the user is on when they
@@ -263,6 +264,7 @@ async function streamFollowups(
         body: JSON.stringify(body),
         signal,
     });
+    await throwIfLimitReached(response);
     if (!response.ok || !response.body) {
         throw new Error(`HTTP ${response.status}`);
     }

@@ -27,6 +27,11 @@ import { downloadTextFile } from '@/lib/download';
 import { embedded } from '@/lib/parent-origin';
 import { appendScreenshotAppendix } from '@/lib/report';
 import { requestSidebarMode } from '@/lib/sidebar-mode';
+import {
+    refreshUsage,
+    throwIfLimitReached,
+    UsageLimitError,
+} from '@/lib/usage';
 
 // Lives inside the runtime provider: everything here acts on the chat the user
 // is looking at.
@@ -64,18 +69,24 @@ export const ChatHeader: FC = () => {
                     model: getSelectedModel(),
                 }),
             });
+            await throwIfLimitReached(res);
             if (!res.ok) {
                 const { error } = await res.json();
                 throw new Error(error ?? 'report generation failed');
             }
             const { report } = await res.json();
+            void refreshUsage();
             downloadTextFile(
                 `cbioportal-research-report-${Date.now()}.md`,
                 appendScreenshotAppendix(report, messages)
             );
         } catch (err) {
             console.error('report generation failed:', err);
-            setReportError('Failed to generate the research report.');
+            setReportError(
+                err instanceof UsageLimitError
+                    ? err.message
+                    : 'Failed to generate the research report.'
+            );
             reportErrorTimeoutRef.current = setTimeout(
                 () => setReportError(null),
                 5000
