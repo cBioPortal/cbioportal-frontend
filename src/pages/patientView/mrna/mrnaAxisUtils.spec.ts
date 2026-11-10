@@ -74,6 +74,30 @@ describe('mrnaAxisUtils', () => {
             assert.equal(formatValueTick(0.05), '0.05');
         });
 
+        it('adds decimals to keep million-scale ticks distinct', () => {
+            const ticks = [1e6, 1.005e6, 1.01e6, 1.015e6, 1.02e6];
+            assert.deepEqual(
+                ticks.map((t, i) => formatValueTick(t, i, ticks)),
+                ['1M', '1.005M', '1.01M', '1.015M', '1.02M']
+            );
+        });
+
+        it('adds decimals to keep thousand-scale ticks distinct', () => {
+            const ticks = [1000, 1005, 1010];
+            assert.deepEqual(
+                ticks.map((t, i) => formatValueTick(t, i, ticks)),
+                ['1k', '1.005k', '1.01k']
+            );
+        });
+
+        it('keeps short labels when ticks are already distinct', () => {
+            const ticks = [0, 500000, 1e6, 1.5e6];
+            assert.deepEqual(
+                ticks.map((t, i) => formatValueTick(t, i, ticks)),
+                ['0', '500k', '1M', '1.5M']
+            );
+        });
+
         it('uses exponent notation for tiny values', () => {
             assert.equal(formatValueTick(1e-6), '10⁻⁶');
             assert.equal(formatValueTick(1e-12), '10⁻¹²');
