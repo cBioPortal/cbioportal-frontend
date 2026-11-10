@@ -109,7 +109,7 @@ describe('groupAndCapGenericAssayOptions', () => {
     const options = ['a', 'b', 'c', 'd'].map(v => option(v));
 
     it('caps a flat list when nothing is selected', () => {
-        const { display } = groupAndCapGenericAssayOptions(options, [], 2);
+        const display = groupAndCapGenericAssayOptions(options, [], 2);
         assert.deepEqual(values(display as GenericAssayPlotsOption[]), [
             'a',
             'b',
@@ -117,7 +117,7 @@ describe('groupAndCapGenericAssayOptions', () => {
     });
 
     it('pins selected entities in their own group and caps only the rest', () => {
-        const { display } = groupAndCapGenericAssayOptions(options, ['d'], 2);
+        const display = groupAndCapGenericAssayOptions(options, ['d'], 2);
         assert.deepEqual(display, [
             { label: 'Selected entities', options: [option('d')] },
             { label: 'Other entities', options: [option('a'), option('b')] },

@@ -11,6 +11,7 @@ import {
     filterGenericAssayOptionsByGenes,
     makeGenericAssayPlotsTabOption,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { fetchGenericAssayMetaFirstPageWithGenes } from 'shared/lib/GenericAssayUtils/GenericAssayMetaFirstPage';
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import {
     DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING,
@@ -73,8 +74,8 @@ export function arrangeGenericAssayOptions({
     );
 }
 
-// react-select's default filter, which the selector applied on top of the
-// search before options were searched on the server
+// react-select's default label filter, used for options that have no meta
+// (the selected entities group and the "Same" option)
 const matchesReactSelectFilter = createFilter({});
 
 function sortByStableId(metas: GenericAssayMeta[]) {
@@ -90,27 +91,20 @@ export function groupAndCapGenericAssayOptions(
     options: GenericAssayPlotsOption[],
     selectedEntityIds: string[],
     cap: number
-): {
-    display: (GenericAssayPlotsOption | GenericAssayOptionGroup)[];
-    shownCount: number;
-} {
+): (GenericAssayPlotsOption | GenericAssayOptionGroup)[] {
     const selectedIdSet = new Set(selectedEntityIds);
     const optionsByValue = _.keyBy(options, o => o.value);
     const selected = _.compact(selectedEntityIds.map(id => optionsByValue[id]));
     const other = options
         .filter(o => !selectedIdSet.has(o.value))
         .slice(0, cap);
-    const shownCount = selected.length + other.length;
     if (selected.length === 0) {
-        return { display: other, shownCount };
+        return other;
     }
-    return {
-        display: [
-            { label: 'Selected entities', options: selected },
-            { label: 'Other entities', options: other },
-        ],
-        shownCount,
-    };
+    return [
+        { label: 'Selected entities', options: selected },
+        { label: 'Other entities', options: other },
+    ];
 }
 
 export interface IGenericAssayAxisContext {
@@ -185,30 +179,16 @@ export class GenericAssayAxisOptions {
                 this.isGeneRelated && !this.context.hasNoQueriedGenes
                     ? this.context.queriedHugoGeneSymbols
                     : [];
-            const [page, ...geneRelatedPages] = await Promise.all([
-                fetchGenericAssayMetaPageByProfileIds(
-                    profileIds,
-                    undefined,
-                    DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING,
-                    0
-                ),
-                ...genes.map(gene =>
-                    fetchGenericAssayMetaPageByProfileIds(
-                        profileIds,
-                        gene,
-                        DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING,
-                        0
-                    )
-                ),
-            ]);
+            const {
+                page,
+                geneItems,
+            } = await fetchGenericAssayMetaFirstPageWithGenes(
+                profileIds,
+                genes,
+                DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING
+            );
             return {
-                items: _.uniqBy(
-                    _.flatten([
-                        ...geneRelatedPages.map(p => p.items),
-                        page.items,
-                    ]),
-                    m => m.stableId
-                ),
+                items: _.uniqBy([...geneItems, ...page.items], m => m.stableId),
                 totalItems: page.totalItems,
             };
         },
@@ -441,7 +421,7 @@ export class GenericAssayAxisOptions {
                 visibleOptions,
                 selectedIds,
                 DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING
-            ).display,
+            ),
             shownCount: matchingTotal - selectedMatching + sameCount,
             totalCount:
                 this.defaultPage.result!.totalItems +

@@ -35,6 +35,7 @@ import {
     getGenericAssayPropertyOrDefault,
     makeGenericAssayOption,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { fetchGenericAssayMetaFirstPageWithGenes } from 'shared/lib/GenericAssayUtils/GenericAssayMetaFirstPage';
 import { GenericAssayMeta } from 'cbioportal-ts-api-client';
 import { DataTypeConstants } from 'shared/constants';
 import { remoteData } from 'cbioportal-frontend-commons';
@@ -179,9 +180,7 @@ export default class GenericAssaySelection extends React.Component<
                         ? formatGenericAssayCompactLabelByNameAndId(
                               entityId,
                               getGenericAssayPropertyOrDefault(
-                                  entity
-                                      ? entity.genericEntityMetaProperties
-                                      : {},
+                                  entity.genericEntityMetaProperties,
                                   COMMON_GENERIC_ASSAY_PROPERTY.NAME,
                                   entityId
                               )
@@ -231,7 +230,7 @@ export default class GenericAssaySelection extends React.Component<
         if (!page) {
             return;
         }
-        const entities = await this.fetchAllMatching(page, page.totalItems);
+        const entities = await this.fetchAllMatching(page);
         runInAction(() => {
             this._selectedGenericAssayEntityIds = entities.map(e => e.stableId);
         });
@@ -360,24 +359,16 @@ export default class GenericAssaySelection extends React.Component<
             const profileKey = this.profileKey;
             const profileIds = this.selectedGenericAssayProfileIds;
             const genes = this.prioritizedHugoGeneSymbols;
-            const [page, ...genePages] = await Promise.all([
-                fetchGenericAssayMetaPageByProfileIds(
-                    profileIds,
-                    undefined,
-                    DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING,
-                    0
-                ),
-                ...genes.map(gene =>
-                    fetchGenericAssayMetaPageByProfileIds(
-                        profileIds,
-                        gene,
-                        DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING,
-                        0
-                    )
-                ),
-            ]);
+            const {
+                page,
+                geneItems,
+            } = await fetchGenericAssayMetaFirstPageWithGenes(
+                profileIds,
+                genes,
+                DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING
+            );
             const geneRelated = filterGenericAssayEntitiesByGenes(
-                _.flatMap(genePages, p => p.items),
+                geneItems,
                 genes
             ).sort((a, b) =>
                 compareGenericAssayStableIds(a.stableId, b.stableId)
@@ -448,14 +439,14 @@ export default class GenericAssaySelection extends React.Component<
             ),
     });
 
-    private async fetchAllMatching(page: EntityPage, totalItems: number) {
-        if (page.items.length >= totalItems) {
+    private async fetchAllMatching(page: EntityPage) {
+        if (page.items.length >= page.totalItems) {
             return page.items;
         }
         const all = await fetchGenericAssayMetaPageByProfileIds(
             this.selectedGenericAssayProfileIds,
             page.searchText || undefined,
-            totalItems,
+            page.totalItems,
             0
         );
         this.rememberMeta(page.profileKey, all.items);
@@ -620,10 +611,7 @@ export default class GenericAssaySelection extends React.Component<
         ) {
             this._isSelectingAll = true;
             try {
-                const matching = await this.fetchAllMatching(
-                    page,
-                    page.totalItems
-                );
+                const matching = await this.fetchAllMatching(page);
                 runInAction(() => {
                     this._selectedGenericAssayEntityIds = _.union(
                         this._selectedGenericAssayEntityIds,

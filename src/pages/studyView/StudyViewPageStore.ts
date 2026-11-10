@@ -4472,14 +4472,7 @@ export class StudyViewPageStore
     ): boolean {
         const chart = this._genericAssayChartMap.get(uniqueKey);
         return (
-            chart !== undefined &&
-            chart.profileType === profileType &&
-            chart.genericAssayEntityId !== undefined &&
-            uniqueKey ===
-                getGenericAssayChartUniqueKey(
-                    chart.genericAssayEntityId,
-                    profileType
-                )
+            chart?.profileType === profileType && chart.chartKind === 'ENTITY'
         );
     }
 
@@ -5324,11 +5317,9 @@ export class StudyViewPageStore
             }
         }
 
-        void this.ensureGenericAssayEntityMetaByStableIds([stableId]);
-        const entityMeta = this._genericAssayEntityMetaByStableId.get(stableId);
-        const entityMetaByStableId = entityMeta
-            ? { [stableId]: entityMeta }
-            : {};
+        const entityMetaByStableId = this.loadedGenericAssayEntityMeta(
+            stableId
+        );
 
         return getGenericAssayChartDisplayName(
             stableId,
@@ -5362,11 +5353,9 @@ export class StudyViewPageStore
         const { stableId, value } = splitGenericAssayFrequencyTableRowUniqueKey(
             rowKey
         );
-        void this.ensureGenericAssayEntityMetaByStableIds([stableId]);
-        const entityMeta = this._genericAssayEntityMetaByStableId.get(stableId);
-        const entityMetaByStableId = entityMeta
-            ? { [stableId]: entityMeta }
-            : {};
+        const entityMetaByStableId = this.loadedGenericAssayEntityMeta(
+            stableId
+        );
         const entityLabel = getGenericAssayEntityLabel(
             stableId,
             chart.genericAssayType,
@@ -6113,10 +6102,10 @@ export class StudyViewPageStore
 
                     const result = await this.internalClient.fetchGenericAssayDataCountsUsingPOST(
                         {
-                            genericAssayDataCountFilter: ({
+                            genericAssayDataCountFilter: {
                                 profileType: chartInfo.profileType,
                                 studyViewFilter: this.filters,
-                            } as unknown) as GenericAssayDataCountFilter,
+                            } as GenericAssayDataCountFilter,
                         }
                     );
                     const stableIds = _.uniq(result.map(item => item.stableId));
@@ -7181,6 +7170,14 @@ export class StudyViewPageStore
         },
         default: {},
     });
+
+    // meta of the entity if loaded, keyed by stable id; starts loading it
+    // otherwise
+    private loadedGenericAssayEntityMeta(stableId: string) {
+        void this.ensureGenericAssayEntityMetaByStableIds([stableId]);
+        const entityMeta = this._genericAssayEntityMetaByStableId.get(stableId);
+        return entityMeta ? { [stableId]: entityMeta } : {};
+    }
 
     private async ensureGenericAssayEntityMetaByStableIds(stableIds: string[]) {
         const uniqueStableIds = _.uniq(stableIds);

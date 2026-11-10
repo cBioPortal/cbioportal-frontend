@@ -479,7 +479,6 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                     return {
                         value: profile.molecularProfileId,
                         label: profile.name,
-                        profileIds: [profile.molecularProfileId],
                     };
                 });
 
