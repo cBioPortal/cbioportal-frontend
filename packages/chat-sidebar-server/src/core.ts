@@ -2,12 +2,16 @@ import {
     streamText,
     generateText,
     convertToModelMessages,
+    createIdGenerator,
     Output,
+    pipeUIMessageStreamToResponse,
     stepCountIs,
     tool,
+    toUIMessageStream,
     CallSettings,
     ToolSet,
     UIMessage,
+    UIMessageChunk,
 } from 'ai';
 import { ServerResponse } from 'http';
 import { readFileSync } from 'fs';
@@ -229,10 +233,74 @@ const getPageDetailsTool = tool({
     inputSchema: z.object({}),
 });
 
+// Assistant message ids are minted here rather than on the client, so the id
+// the client streams into is the one that is saved.
+const generateMessageId = createIdGenerator({ prefix: 'msg' });
+
+const KEEP_ALIVE_MS = 1000;
+
+// A reply stopped just as its text began is saved with an empty text part,
+// which the model APIs reject on every later turn. A message left with
+// nothing is dropped by convertToModelMessages.
+function withoutEmptyText(message: UIMessage): UIMessage {
+    return {
+        ...message,
+        parts: message.parts.filter(
+            part => part.type !== 'text' || part.text.trim() !== ''
+        ),
+    };
+}
+
+// Holds back the chunks that open a reply until something follows them. A
+// client that stops before then has seen no reply begin, so assistant-ui
+// treats the run as unanswered and puts the prompt back in the composer — it
+// can't once even an empty reply has appeared. `released()` says whether the
+// client was sent a reply, and so has one to hang its next message off.
+// An abort isn't content: by then there is no client to tell.
+function withholdReplyStart(
+    stream: ReadableStream<UIMessageChunk>
+): {
+    stream: ReadableStream<UIMessageChunk>;
+    released: () => boolean;
+} {
+    let held: UIMessageChunk[] | null = [];
+    const isOpening = (chunk: UIMessageChunk) =>
+        chunk.type === 'start' ||
+        chunk.type === 'start-step' ||
+        chunk.type === 'abort';
+    return {
+        stream: stream.pipeThrough(
+            new TransformStream<UIMessageChunk, UIMessageChunk>({
+                transform(chunk, controller) {
+                    if (held && isOpening(chunk)) {
+                        held.push(chunk);
+                        return;
+                    }
+                    if (held) {
+                        for (const opening of held) controller.enqueue(opening);
+                        held = null;
+                    }
+                    controller.enqueue(chunk);
+                },
+            })
+        ),
+        released: () => held === null,
+    };
+}
+
+// `branch` is the conversation so far, oldest first, ending with the message
+// just sent — or, after a client-side tool call, with the assistant message
+// carrying its output, which this reply then continues under the same id.
+// `onEnd` receives the reply once it ends, however it ends — or null when it
+// was stopped before the client saw it begin.
 export async function runChat(
-    uiMessages: UIMessage[],
+    branch: UIMessage[],
     res: ServerResponse,
     abortSignal: AbortSignal,
+    onEnd: (
+        message: UIMessage | null,
+        isContinuation: boolean
+    ) => Promise<void>,
     model?: string,
     pageHref?: string
 ): Promise<void> {
@@ -255,12 +323,39 @@ export async function runChat(
         stopWhen: stepCountIs(30),
         // A reply stopped mid-tool leaves a call with no result, which the
         // model API rejects on every later turn; drop such calls.
-        messages: await convertToModelMessages(uiMessages, {
+        messages: await convertToModelMessages(branch.map(withoutEmptyText), {
             ignoreIncompleteToolCalls: true,
         }),
         abortSignal,
     });
-    await result.pipeUIMessageStreamToResponse(res);
+    const reply = withholdReplyStart(
+        toUIMessageStream({
+            stream: result.stream,
+            tools,
+            originalMessages: branch,
+            generateMessageId,
+            // Awaited before the response ends, so the history is settled by
+            // the time the client can send its next message.
+            onEnd: async ({
+                responseMessage,
+                isContinuation,
+                isAborted,
+                isCancelled,
+            }) => {
+                const withdrawn =
+                    (isAborted || isCancelled) && !reply.released();
+                await onEnd(withdrawn ? null : responseMessage, isContinuation);
+            },
+        })
+    );
+    await pipeUIMessageStreamToResponse({
+        response: res,
+        stream: reply.stream,
+        // A proxy only notices the browser has gone — Stop, a closed tab —
+        // when it next writes to it, so something is written while the model
+        // is still thinking. Without it the model runs on to the end.
+        keepAliveMs: KEEP_ALIVE_MS,
+    });
 }
 
 // No tools — everything the report needs (query results, page-state
@@ -324,6 +419,18 @@ export async function runTitle(
         abortSignal,
     });
     return title.trim().slice(0, MAX_TITLE_CHARS);
+}
+
+// The chat still gets a name when the model can't be reached: the start of
+// its opening question.
+export function fallbackTitle(text: string): string {
+    const firstLine = text
+        .trim()
+        .split('\n')[0]
+        .trim();
+    return firstLine.length > MAX_TITLE_CHARS
+        ? `${firstLine.slice(0, MAX_TITLE_CHARS - 1).trimEnd()}…`
+        : firstLine;
 }
 
 const SuggestionSchema = z.object({ title: z.string(), prompt: z.string() });

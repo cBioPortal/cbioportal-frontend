@@ -2,7 +2,6 @@ import { getSelectedModel } from './chatSession';
 import { FollowupsExchange } from './followupsInput';
 import { PageEvent } from './page-events';
 import { embedded } from './parent-origin';
-import { PREFIX } from './threadStorage';
 
 // Follow-up suggestions shown above the composer after a reply, generated
 // server-side from the latest exchange and the page the user is on when they
@@ -24,13 +23,12 @@ export interface FollowupsState {
 
 const FOLLOWUP_COUNT = 3;
 // Enough to switch between a few threads and back without regenerating. Also
-// the cap on stored replies, which at a few hundred bytes each stays small
-// next to the chats sharing the quota.
+// the cap on stored replies, a few hundred bytes each.
 const MAX_CACHED = 20;
 
 // Ready results by reply id, oldest first, so a reload or another tab shows a
 // restored reply's suggestions without requesting them again.
-const STORAGE_KEY = `${PREFIX}followups`;
+const STORAGE_KEY = 'chat-sidebar:followups';
 
 const IDLE: FollowupsState = { status: 'idle', suggestions: [] };
 const LOADING: FollowupsState = { status: 'loading', suggestions: [] };
@@ -137,10 +135,8 @@ function lookUpStored(key: string): FollowupsState | undefined {
     return entry && { status: 'ready', suggestions: entry[1] };
 }
 
-// Written straight to localStorage rather than through threadStorage, whose
-// quota handling deletes old chats to make room — suggestions are never worth
-// that, so a failed write is just skipped. Re-reads before writing so entries
-// stored by another tab are kept.
+// A cache, so a failed write is just skipped. Re-reads before writing so
+// entries stored by another tab are kept.
 function store(key: string, suggestions: readonly Followup[]): void {
     const entries = readStored().filter(([storedKey]) => storedKey !== key);
     entries.push([key, [...suggestions]]);

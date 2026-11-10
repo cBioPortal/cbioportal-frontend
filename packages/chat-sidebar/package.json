@@ -19,6 +19,7 @@
         "@fontsource-variable/geist": "5.3.0",
         "@tailwindcss/vite": "4.3.3",
         "ai": "^7.0.163",
+        "assistant-stream": "0.3.55",
         "class-variance-authority": "0.7.1",
         "cmdk": "1.1.1",
         "cn": "0.2.6",

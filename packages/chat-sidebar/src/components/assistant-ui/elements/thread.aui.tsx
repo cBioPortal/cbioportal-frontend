@@ -273,7 +273,7 @@ const ThreadWelcome: FC = () => {
                 />
                 <span>
                     This assistant is experimental and under active development.
-                    Chats are stored only in this browser's local storage.
+                    Chats are saved to your account.
                 </span>
             </p>
         </div>

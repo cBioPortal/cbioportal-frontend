@@ -83,3 +83,24 @@ export function setSelectedModel(id: string | null): void {
     }
     emit();
 }
+
+// The iframe reloads with the portal page on a full page load, so the open
+// chat is remembered to be restored.
+const LAST_THREAD_STORAGE_KEY = 'chat-sidebar:lastThreadId';
+
+export function readLastThreadId(): string | undefined {
+    try {
+        return localStorage.getItem(LAST_THREAD_STORAGE_KEY) ?? undefined;
+    } catch {
+        return undefined;
+    }
+}
+
+export function saveLastThreadId(remoteId: string | undefined): void {
+    try {
+        if (remoteId) localStorage.setItem(LAST_THREAD_STORAGE_KEY, remoteId);
+        else localStorage.removeItem(LAST_THREAD_STORAGE_KEY);
+    } catch {
+        /* the open chat just won't be restored next load */
+    }
+}

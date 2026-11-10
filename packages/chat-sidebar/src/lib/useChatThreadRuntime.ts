@@ -10,15 +10,11 @@ import {
     useAuiState,
 } from '@assistant-ui/react';
 import { useAISDKRuntime } from '@assistant-ui/ai-sdk';
-import { AuthErrorStatus, getSelectedModel, setAuthError } from './chatSession';
+import { throwIfUnauthorized } from './chatApi';
+import { getSelectedModel } from './chatSession';
 import { notifyNavigate, resolvePortalLink } from './portal-link';
 import { getLatestPageEvents } from './page-events';
-
-export class ChatAuthError extends Error {
-    constructor(readonly status: AuthErrorStatus) {
-        super(`the portal rejected the chat request (${status})`);
-    }
-}
+import { notifyThreadsChanged } from './threadSync';
 
 // Stateless — one instance for the app's lifetime rather than one per thread.
 const attachmentAdapter = new SimpleImageAttachmentAdapter();
@@ -37,16 +33,23 @@ export function useChatThreadRuntime(): AssistantRuntime {
                 // session has lapsed or the user lacks the chat role.
                 fetch: async (input, init) => {
                     const response = await fetch(input, init);
-                    if (response.status === 401 || response.status === 403) {
-                        throw new ChatAuthError(response.status);
-                    }
+                    throwIfUnauthorized(response);
                     return response;
                 },
+                // The server keeps the history, so only the new message goes
+                // up — the prompt, or after a client-side tool call the reply
+                // carrying its output — with the parent it hangs off, which
+                // places it in the tree when the user edits or regenerates.
                 // Evaluated per request, so it carries the current model and
                 // page even though this hook never re-reads them.
-                body: () => ({
-                    model: getSelectedModel(),
-                    pageHref: getLatestPageEvents().snapshot?.href ?? null,
+                prepareSendMessagesRequest: ({ id, messages }) => ({
+                    body: {
+                        id,
+                        message: messages.at(-1),
+                        parentId: messages.at(-2)?.id ?? null,
+                        model: getSelectedModel(),
+                        pageHref: getLatestPageEvents().snapshot?.href ?? null,
+                    },
                 }),
             }),
         []
@@ -84,9 +87,9 @@ export function useChatThreadRuntime(): AssistantRuntime {
                 return;
             }
         },
-        onError: error => {
-            if (error instanceof ChatAuthError) setAuthError(error.status);
-        },
+        // The server has saved the reply, or dropped a prompt stopped before
+        // any reply, and the chat has moved up the list.
+        onFinish: () => notifyThreadsChanged(),
         sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     });
     const { addToolOutput } = chat;

@@ -1,55 +1,30 @@
 import { useEffect } from 'react';
 import { AssistantRuntime } from '@assistant-ui/react';
-import { messagesKey, THREADS_KEY } from '@/lib/threadStorage';
+import { subscribeToThreadsChanged } from '@/lib/threadSync';
 
-// A burst of writes lands per run (one append per message), so react to the
-// last one rather than every one.
+// A reply and its title land within moments of each other, so react to the
+// last of a burst rather than to each.
 const DEBOUNCE_MS = 300;
 
-// `storage` fires only in OTHER same-origin tabs, never the one that wrote it —
-// exactly what's needed to pick up a chat continued elsewhere. Both tabs
-// restore the same chat on load, so this is the common case, not a corner one.
+// Keeps the chat list current with the sidebar's other tabs in this browser.
+// Only the list: a chat open here is not refreshed when another tab adds to it.
 export function useCrossTabSync(runtime: AssistantRuntime): void {
     useEffect(() => {
-        let listTimer: ReturnType<typeof setTimeout> | undefined;
-        let messagesTimer: ReturnType<typeof setTimeout> | undefined;
-
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        // Metadata only: running threads, composer state and streams are left
+        // alone.
         const reloadList = () => {
-            // Metadata only: running threads, composer state and streams are
-            // left alone.
             runtime.threads.reload().catch(() => {
-                /* the next write or reload picks it up */
+                /* the next change or reload picks it up */
             });
         };
-
-        const reloadOpenThread = () => {
-            // This remounts the thread, which would end a run and discard an
-            // unsent draft — so only when there is neither.
-            if (runtime.thread.getState().isRunning) return;
-            if (runtime.thread.composer.getState().text.trim()) return;
-            runtime.threads.reloadMainThread().catch(() => {
-                /* the next switch or reload picks it up */
-            });
-        };
-
-        function onStorage(e: StorageEvent) {
-            if (e.key === THREADS_KEY) {
-                clearTimeout(listTimer);
-                listTimer = setTimeout(reloadList, DEBOUNCE_MS);
-                return;
-            }
-            const remoteId = runtime.threads.mainItem.getState().remoteId;
-            if (remoteId && e.key === messagesKey(remoteId)) {
-                clearTimeout(messagesTimer);
-                messagesTimer = setTimeout(reloadOpenThread, DEBOUNCE_MS);
-            }
-        }
-
-        window.addEventListener('storage', onStorage);
+        const unsubscribe = subscribeToThreadsChanged(() => {
+            clearTimeout(timer);
+            timer = setTimeout(reloadList, DEBOUNCE_MS);
+        });
         return () => {
-            clearTimeout(listTimer);
-            clearTimeout(messagesTimer);
-            window.removeEventListener('storage', onStorage);
+            clearTimeout(timer);
+            unsubscribe();
         };
     }, [runtime]);
 }

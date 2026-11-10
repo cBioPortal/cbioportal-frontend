@@ -21,6 +21,8 @@ import {
     AuthErrorStatus,
     getAuthError,
     ModelInfo,
+    readLastThreadId,
+    saveLastThreadId,
     setAuthError,
     setModels,
     subscribe,
@@ -28,7 +30,6 @@ import {
 import { setPortalLinkAliases } from '@/lib/portal-link';
 import { getSidebarMode, subscribeToSidebarMode } from '@/lib/sidebar-mode';
 import { threadListAdapter } from '@/lib/threadListAdapter';
-import { readLastThreadId, saveLastThreadId } from '@/lib/threadStorage';
 import { useChatThreadRuntime } from '@/lib/useChatThreadRuntime';
 import {
     FALLBACK_STARTERS,
@@ -68,8 +69,7 @@ const AUTH_ERROR_CONTENT: Record<
 const SILENT_TOOLS = new Set(['go_to_page', 'get_page_details']);
 
 // Stands in for the whole sidebar, header and chat list included: there is
-// nothing to do until the user has access or a fresh session. Mirrors
-// ThreadWelcome's heading so it reads as the same screen.
+// nothing to do until the user has access or a fresh session.
 const AuthErrorScreen: FC<{ status: AuthErrorStatus }> = ({ status }) => {
     const { title, caption } = AUTH_ERROR_CONTENT[status];
     return (
@@ -95,6 +95,53 @@ const AppToolFallback: ToolCallMessagePartComponent = part => {
 const THREAD_COMPONENTS = {
     ToolFallback: AppToolFallback,
     hiddenTools: SILENT_TOOLS,
+};
+
+// The chat itself: its runtime and the list sync.
+const ChatRuntime: FC<{
+    initialThreadId: string | undefined;
+    authError: AuthErrorStatus | null;
+}> = ({ initialThreadId, authError }) => {
+    const runtime = useRemoteThreadListRuntime({
+        adapter: threadListAdapter,
+        runtimeHook: useChatThreadRuntime,
+        initialThreadId,
+        onThreadIdChange: saveLastThreadId,
+    });
+
+    useCrossTabSync(runtime);
+
+    // While loading, the composer shows skeletons instead of this list.
+    const starters = useSyncExternalStore(
+        subscribeToStarters,
+        getStartersState
+    );
+    const config = AuiConfig({
+        // `label` is required by the type but unused.
+        suggestions: Suggestions(
+            (starters.suggestions ?? FALLBACK_STARTERS).map(s => ({
+                ...s,
+                label: '',
+            }))
+        ),
+    });
+
+    return (
+        <AssistantRuntimeProvider runtime={runtime} config={config}>
+            {authError ? (
+                <div className="min-h-0 flex-1">
+                    <AuthErrorScreen status={authError} />
+                </div>
+            ) : (
+                <>
+                    <ChatHeader />
+                    <div className="min-h-0 flex-1">
+                        <Thread components={THREAD_COMPONENTS} />
+                    </div>
+                </>
+            )}
+        </AssistantRuntimeProvider>
+    );
 };
 
 export function App() {
@@ -146,30 +193,6 @@ export function App() {
     // freezes this on its first render.
     const [initialThreadId] = useState(readLastThreadId);
 
-    const runtime = useRemoteThreadListRuntime({
-        adapter: threadListAdapter,
-        runtimeHook: useChatThreadRuntime,
-        initialThreadId,
-        onThreadIdChange: saveLastThreadId,
-    });
-
-    useCrossTabSync(runtime);
-
-    // While loading, the composer shows skeletons instead of this list.
-    const starters = useSyncExternalStore(
-        subscribeToStarters,
-        getStartersState
-    );
-    const config = AuiConfig({
-        // `label` is required by the type but unused.
-        suggestions: Suggestions(
-            (starters.suggestions ?? FALLBACK_STARTERS).map(s => ({
-                ...s,
-                label: '',
-            }))
-        ),
-    });
-
     // The chat stays mounted in the rail, only hidden, so a reply keeps
     // streaming and the draft survives a collapse. In the hidden mode the host
     // hides the whole frame, so the chat is left as it is, ready to reopen.
@@ -181,20 +204,10 @@ export function App() {
             <div
                 className={`h-full flex-col ${chatVisible ? 'flex' : 'hidden'}`}
             >
-                <AssistantRuntimeProvider runtime={runtime} config={config}>
-                    {authError ? (
-                        <div className="min-h-0 flex-1">
-                            <AuthErrorScreen status={authError} />
-                        </div>
-                    ) : (
-                        <>
-                            <ChatHeader />
-                            <div className="min-h-0 flex-1">
-                                <Thread components={THREAD_COMPONENTS} />
-                            </div>
-                        </>
-                    )}
-                </AssistantRuntimeProvider>
+                <ChatRuntime
+                    initialThreadId={initialThreadId}
+                    authError={authError}
+                />
             </div>
         </>
     );

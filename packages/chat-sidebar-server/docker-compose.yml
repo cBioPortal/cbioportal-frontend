@@ -1,0 +1,16 @@
+# Local development only: the Postgres that DATABASE_URL in .env.example
+# points at. Deployed, the database is provided separately.
+services:
+    postgres:
+        image: postgres:17
+        environment:
+            POSTGRES_USER: chat
+            POSTGRES_PASSWORD: chat
+            POSTGRES_DB: chat
+        ports:
+            - '5432:5432'
+        volumes:
+            - chat-postgres:/var/lib/postgresql/data
+
+volumes:
+    chat-postgres:

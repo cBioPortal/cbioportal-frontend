@@ -20,6 +20,7 @@
 *.toml
 *.xml
 *.py
+*.sql
 *module.scss.d.ts
 **/generated/**
 src/shared/lib/oql/oql-parser.js

@@ -60,6 +60,9 @@ WORKDIR /app
 COPY --from=production-dependencies /out/node_modules ./packages/chat-sidebar-server/node_modules
 COPY --from=production-dependencies /out/package.json ./packages/chat-sidebar-server/package.json
 COPY --from=build /workspace/packages/chat-sidebar-server/dist ./packages/chat-sidebar-server/dist
+# Applied by `node packages/chat-sidebar-server/dist/migrate.js`, run as its
+# own deploy step before the server starts.
+COPY --from=build /workspace/packages/chat-sidebar-server/drizzle ./packages/chat-sidebar-server/drizzle
 COPY --from=build /workspace/packages/chat-sidebar/dist ./packages/chat-sidebar-server/public
 
 USER node
