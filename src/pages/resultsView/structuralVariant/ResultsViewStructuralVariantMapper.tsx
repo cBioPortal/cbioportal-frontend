@@ -15,7 +15,9 @@ import {
     saveOncoKbIconStyleToLocalStorage,
 } from 'shared/lib/AnnotationColumnUtils';
 import { MakeMobxView } from 'shared/components/MobxView';
+import { StructuralVariant } from 'cbioportal-ts-api-client';
 import ErrorMessage from 'shared/components/ErrorMessage';
+import StructuralVariantChromoscope from './StructuralVariantChromoscope';
 
 export interface IFusionMapperProps {
     store: ResultsViewStructuralVariantMapperStore;
@@ -41,6 +43,16 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
         saveOncoKbIconStyleToLocalStorage({ mergeIcons });
     }
 
+    @action.bound
+    handleRowClick(row: StructuralVariant[]) {
+        const dataStore = this.props.store.dataStore;
+        dataStore.setHighlightedStructuralVariant(
+            dataStore.highlightedStructuralVariant === row[0]
+                ? undefined
+                : row[0]
+        );
+    }
+
     @computed get itemsLabelPlural(): string {
         const count = this.props.store.dataStore
             .duplicateStructuralVariantCountInMultipleSamples;
@@ -64,6 +76,11 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
         render: () => {
             return (
                 <>
+                    <StructuralVariantChromoscope
+                        dataStore={this.props.store.dataStore}
+                        studyIdToStudy={this.props.store.studyIdToStudy.result!}
+                        entrezGeneId={this.props.store.gene.entrezGeneId}
+                    />
                     <ResultsViewStructuralVariantTable
                         dataStore={this.props.store.dataStore}
                         itemsLabelPlural={this.itemsLabelPlural}
@@ -85,6 +102,7 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
                         }
                         mergeOncoKbIcons={this.mergeFusionTableOncoKbIcons}
                         onOncoKbIconToggle={this.handleOncoKbIconToggle}
+                        onRowClick={this.handleRowClick}
                     />
                 </>
             );

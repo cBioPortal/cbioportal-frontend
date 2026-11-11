@@ -158,6 +158,7 @@ export interface IFusionTableProps {
     usingPublicOncoKbInstance: boolean;
     mergeOncoKbIcons?: boolean;
     onOncoKbIconToggle: (mergeIcons: boolean) => void;
+    onRowClick?: (d: StructuralVariant[]) => void;
 }
 
 export class FusionTableComponent extends LazyMobXTable<StructuralVariant[]> {}
@@ -241,6 +242,7 @@ export default class StructuralVariantTable<
             <FusionTableComponent
                 columns={this.columns}
                 dataStore={this.props.dataStore}
+                onRowClick={this.props.onRowClick}
                 downloadDataFetcher={this.props.downloadDataFetcher}
                 initialItemsPerPage={this.props.initialItemsPerPage}
                 initialSortColumn={this.props.initialSortColumn}
