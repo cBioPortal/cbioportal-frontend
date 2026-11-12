@@ -3,6 +3,13 @@ import {
     getCanonicalMutationType,
 } from 'cbioportal-frontend-commons';
 
+/** Build an OncoKB gene/variant URL. */
+export function buildOncoKbUrl(gene: string, variant?: string): string {
+    return `https://www.oncokb.org/gene/${encodeURIComponent(gene)}${
+        variant ? '/' + encodeURIComponent(variant) : ''
+    }`;
+}
+
 /** Split a `"GENE variant"` mutation token into `{ gene, variant }`. */
 export function parseMutationToken(
     token: string

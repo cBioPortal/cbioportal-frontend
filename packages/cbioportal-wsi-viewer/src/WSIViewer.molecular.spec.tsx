@@ -7,6 +7,7 @@ import WSIViewer from './WSIViewer';
 import { WsiViewerController } from './wsiViewerController';
 import * as wsiMetaUtils from './wsiMetaUtils';
 import * as wsiSlideUtils from './wsiSlideUtils';
+import * as wsiMolecularAnnotationDataUtils from './wsiMolecularAnnotationDataUtils';
 import * as wsiCbioportalDataUtils from './wsiCbioportalDataUtils';
 import { clearPatientHierarchyCache } from './wsiHierarchyFetchCache';
 import {
@@ -25,6 +26,13 @@ import {
 
 // Component tests use a synthetic origin, so keep portal API URLs relative.
 const testMolecularServices: WsiMolecularServices = {
+    showOncoKb: false,
+    showCivic: false,
+    getOncoKbApiUrl: () => '/proxy/oncokb',
+    getOncoKbClient: () => {
+        throw new Error('OncoKB client is not used by these tests');
+    },
+    getCivicCnaVariants: () => ({}),
     getSimplifiedMutationType: (type: string) => type.toLowerCase(),
 };
 
@@ -570,11 +578,21 @@ describe('WSIViewer — loadHierarchy enrichment', () => {
 });
 
 describe('WSIViewer — sample enrichment scheduling', () => {
+    beforeEach(() => {
+        configureTestRuntime({
+            molecular: {
+                ...testMolecularServices,
+                showOncoKb: true,
+                showCivic: true,
+            },
+        });
+    });
+
     afterEach(() => {
         jest.restoreAllMocks();
     });
 
-    it('does not apply stale mutation frequency results to a new hierarchy', async () => {
+    it('does not apply stale mutation frequency or annotation results to a new hierarchy', async () => {
         const makeEnrichmentHierarchy = (patientId: string) => {
             const hierarchy = makeHierarchy(
                 [makeSlide({ slide_key: `${patientId}-slide` })],
@@ -606,14 +624,25 @@ describe('WSIViewer — sample enrichment scheduling', () => {
             }>;
             total: number;
         }>();
+        const annotations = deferredPromise<any[]>();
         const frequencySpy = jest
             .spyOn(wsiCbioportalDataUtils, 'fetchMutationFrequencyDataReadOnly')
             .mockReturnValue(frequency.promise);
+        const annotationSpy = jest
+            .spyOn(
+                wsiMolecularAnnotationDataUtils,
+                'fetchOncoKbMutationAnnotationsReadOnly'
+            )
+            .mockReturnValue(annotations.promise);
         const stageSpies = [
             'fetchAndMergeClinicalData',
             'fetchAndMergeMutations',
             'fetchAndMergeCNA',
             'fetchAndMergeStructuralVariants',
+            'fetchAndMergeCivicAnnotations',
+            'fetchAndMergeCnaOncoKbAnnotations',
+            'fetchAndMergeCnaCivicAnnotations',
+            'fetchAndMergeStructuralVariantOncoKbAnnotations',
         ].map(methodName =>
             jest.spyOn(inst as any, methodName).mockResolvedValue(undefined)
         );
@@ -630,6 +659,7 @@ describe('WSIViewer — sample enrichment scheduling', () => {
         await Promise.resolve();
 
         expect(frequencySpy).toHaveBeenCalledTimes(1);
+        expect(annotationSpy).toHaveBeenCalledTimes(1);
 
         inst.viewerState.hierarchy = hierarchyB;
         frequency.resolve({
@@ -643,6 +673,12 @@ describe('WSIViewer — sample enrichment scheduling', () => {
             ],
             total: 4,
         });
+        annotations.resolve([
+            {
+                id: '7157_R175H_missense_variant',
+                oncogenic: 'Oncogenic',
+            },
+        ]);
         await enrichmentPromise;
         await Promise.resolve();
         await Promise.resolve();
@@ -650,9 +686,11 @@ describe('WSIViewer — sample enrichment scheduling', () => {
         const nextDetail = inst.viewerState.hierarchy.samples[0]
             .oncogenic_mutation_details![0];
         expect(nextDetail.cohortFrequency).toBeUndefined();
+        expect(nextDetail.oncogenic).toBeUndefined();
 
         stageSpies.forEach(spy => spy.mockRestore());
         frequencySpy.mockRestore();
+        annotationSpy.mockRestore();
     });
 
     it('applies enrichment results when the hierarchy is still current', async () => {
@@ -685,6 +723,17 @@ describe('WSIViewer — sample enrichment scheduling', () => {
                 ],
                 total: 4,
             });
+        const annotationSpy = jest
+            .spyOn(
+                wsiMolecularAnnotationDataUtils,
+                'fetchOncoKbMutationAnnotationsReadOnly'
+            )
+            .mockResolvedValue([
+                {
+                    id: '7157_R175H_missense_variant',
+                    oncogenic: 'Oncogenic',
+                },
+            ]);
 
         await (inst as any).fetchAndMergeMutationFrequency(
             '',
@@ -692,13 +741,17 @@ describe('WSIViewer — sample enrichment scheduling', () => {
             () => true
         );
         expect(frequencySpy).toHaveBeenCalledTimes(1);
+        await (inst as any).fetchAndMergeOncoKbAnnotations(() => true);
+        expect(annotationSpy).toHaveBeenCalledTimes(1);
 
         const detail = inst.viewerState.hierarchy.samples[0]
             .oncogenic_mutation_details![0];
         expect(detail.cohortFrequency).toBe(0.5);
+        expect(detail.oncogenic).toBe('Oncogenic');
 
         (inst as any).cancelScheduledHierarchyRefresh();
         frequencySpy.mockRestore();
+        annotationSpy.mockRestore();
     });
 
     it('runs independent enrichment fetches in parallel stages', async () => {
@@ -721,8 +774,14 @@ describe('WSIViewer — sample enrichment scheduling', () => {
                 return mutations.promise;
             }
         );
+        const civicSpy = jest
+            .spyOn(inst as any, 'fetchAndMergeCivicAnnotations')
+            .mockResolvedValue(undefined);
         const frequencySpy = jest
             .spyOn(inst as any, 'fetchAndMergeMutationFrequency')
+            .mockResolvedValue(undefined);
+        const oncoKbSpy = jest
+            .spyOn(inst as any, 'fetchAndMergeOncoKbAnnotations')
             .mockResolvedValue(undefined);
         jest.spyOn(inst as any, 'fetchAndMergeCNA').mockImplementation(() => {
             order.push('cna');
@@ -735,6 +794,18 @@ describe('WSIViewer — sample enrichment scheduling', () => {
             order.push('sv');
             return structuralVariants.promise;
         });
+        const cnaOncoKbSpy = jest
+            .spyOn(inst as any, 'fetchAndMergeCnaOncoKbAnnotations')
+            .mockResolvedValue(undefined);
+        const cnaCivicSpy = jest
+            .spyOn(inst as any, 'fetchAndMergeCnaCivicAnnotations')
+            .mockResolvedValue(undefined);
+        const svOncoKbSpy = jest
+            .spyOn(
+                inst as any,
+                'fetchAndMergeStructuralVariantOncoKbAnnotations'
+            )
+            .mockResolvedValue(undefined);
 
         const enrichmentPromise = (inst as any).runSampleEnrichment(
             '',
@@ -759,16 +830,28 @@ describe('WSIViewer — sample enrichment scheduling', () => {
         await Promise.resolve();
         await Promise.resolve();
         expect(order).toEqual(['clinical', 'mutations', 'cna', 'sv']);
+        expect(oncoKbSpy).not.toHaveBeenCalled();
+        expect(civicSpy).not.toHaveBeenCalled();
         expect(frequencySpy).not.toHaveBeenCalled();
 
         cna.resolve();
         await Promise.resolve();
+        expect(cnaOncoKbSpy).not.toHaveBeenCalled();
+        expect(cnaCivicSpy).not.toHaveBeenCalled();
+        expect(svOncoKbSpy).not.toHaveBeenCalled();
+        expect(oncoKbSpy).not.toHaveBeenCalled();
+        expect(civicSpy).not.toHaveBeenCalled();
         expect(frequencySpy).not.toHaveBeenCalled();
 
         structuralVariants.resolve();
         await enrichmentPromise;
 
+        expect(oncoKbSpy).toHaveBeenCalledTimes(1);
+        expect(civicSpy).toHaveBeenCalledTimes(1);
         expect(frequencySpy).toHaveBeenCalledTimes(1);
+        expect(cnaOncoKbSpy).toHaveBeenCalledTimes(1);
+        expect(cnaCivicSpy).toHaveBeenCalledTimes(1);
+        expect(svOncoKbSpy).toHaveBeenCalledTimes(1);
     });
 
     it('skips mutation hierarchy updates when no mutation data and no existing mutation text are available', async () => {
@@ -941,7 +1024,27 @@ describe('WSIViewer — sample enrichment scheduling', () => {
             .mockResolvedValue(undefined);
         jest.spyOn(
             inst as any,
+            'fetchAndMergeOncoKbAnnotations'
+        ).mockResolvedValue(undefined);
+        jest.spyOn(
+            inst as any,
+            'fetchAndMergeCivicAnnotations'
+        ).mockResolvedValue(undefined);
+        jest.spyOn(
+            inst as any,
             'fetchAndMergeMutationFrequency'
+        ).mockResolvedValue(undefined);
+        jest.spyOn(
+            inst as any,
+            'fetchAndMergeCnaOncoKbAnnotations'
+        ).mockResolvedValue(undefined);
+        jest.spyOn(
+            inst as any,
+            'fetchAndMergeCnaCivicAnnotations'
+        ).mockResolvedValue(undefined);
+        jest.spyOn(
+            inst as any,
+            'fetchAndMergeStructuralVariantOncoKbAnnotations'
         ).mockResolvedValue(undefined);
 
         await (inst as any).runSampleEnrichment(

@@ -4,12 +4,29 @@
 import { assert } from 'chai';
 
 import {
+    buildOncoKbUrl,
     formatMutationType,
     parseMutationToken,
     parseMutationTokens,
 } from './wsiMolecularUtils';
 
 describe('wsiMolecularUtils', () => {
+    describe('buildOncoKbUrl', () => {
+        it('builds gene-level URLs', () => {
+            assert.equal(
+                buildOncoKbUrl('TP53'),
+                'https://www.oncokb.org/gene/TP53'
+            );
+        });
+
+        it('builds variant-level URLs with encoding', () => {
+            assert.equal(
+                buildOncoKbUrl('MTOR', 'p.E2419K'),
+                'https://www.oncokb.org/gene/MTOR/p.E2419K'
+            );
+        });
+    });
+
     describe('parseMutationToken', () => {
         it('splits gene and variant tokens', () => {
             assert.deepEqual(parseMutationToken('KRAS p.G13D'), {

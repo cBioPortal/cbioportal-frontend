@@ -1,3 +1,5 @@
+import { ICivicEntry } from 'cbioportal-utils';
+
 export interface Slide {
     /** Opaque 12-hex de-identified slide key (never the source image id). */
     slide_key: string;
@@ -61,7 +63,15 @@ export interface MutationDetail {
     vaf?: number; // 0–100 percent
     annotation?: string; // driverFilterAnnotation, e.g. "KRAS G13D is a hotspot"
     cohortFrequency?: number; // fraction 0–1: how often this position mutated in study cohort
-    // Portal mutation fields used to look up the variant (not displayed)
+    // OncoKB annotation fields (populated by fetchAndMergeOncoKbAnnotations)
+    oncogenic?: string; // "Oncogenic" | "Likely Oncogenic" | "Likely Neutral" | "Unknown"
+    mutationEffect?: string; // "Gain-of-function" | "Loss-of-function" | "Unknown"
+    hotspot?: boolean;
+    hasCivic?: boolean; // true when OncoKB variantExist=true (CIViC DB has an entry)
+    civicEntry?: ICivicEntry | null;
+    geneSummary?: string;
+    variantSummary?: string;
+    // Fields used internally to build the OncoKB batch request (not displayed)
     entrezGeneId?: number;
     consequence?: string; // e.g. "Missense_Mutation"
     proteinStart?: number;
@@ -78,6 +88,12 @@ export interface CNADetail {
     cohortAlteredCount?: number;
     cohortProfiledCount?: number;
     cohortFrequency?: number;
+    oncogenic?: string;
+    mutationEffect?: string;
+    civicEntry?: ICivicEntry | null;
+    hasCivicVariants?: boolean;
+    geneSummary?: string;
+    variantSummary?: string;
 }
 
 export interface StructuralVariantDetail {
@@ -108,6 +124,10 @@ export interface StructuralVariantDetail {
     site2Chromosome?: string;
     site2Position?: number;
     ncbiBuild?: string;
+    oncogenic?: string;
+    mutationEffect?: string;
+    geneSummary?: string;
+    variantSummary?: string;
 }
 
 export interface Sample {

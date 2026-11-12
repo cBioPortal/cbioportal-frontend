@@ -50,8 +50,11 @@
   },
   "peerDependencies": {
     "cbioportal-frontend-commons": "workspace:*",
+    "cbioportal-utils": "workspace:*",
     "mobx": "^6.0.0",
     "mobx-react": "^6.0.0 || ^7.0.0",
+    "oncokb-frontend-commons": "workspace:*",
+    "oncokb-ts-api-client": "workspace:*",
     "react": "^16.8.0 || ^17.0.0 || ^18.0.0",
     "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0",
     "react-mutation-mapper": "workspace:*"

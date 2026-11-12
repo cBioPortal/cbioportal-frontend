@@ -57,12 +57,29 @@ import {
     fetchStructuralVariantDataReadOnly,
 } from './wsiCbioportalDataUtils';
 import {
+    fetchCivicCnaAnnotationsReadOnly,
+    fetchCivicMutationAnnotationsReadOnly,
+    fetchOncoKbCnaAnnotationsReadOnly,
+    fetchOncoKbMutationAnnotationsReadOnly,
+    fetchOncoKbStructuralVariantAnnotationsReadOnly,
+} from './wsiMolecularAnnotationDataUtils';
+import {
     applyClinicalDataRecords,
+    applyCivicCnaAnnotations,
+    applyCivicMutationAnnotations,
     applyCnaData,
     applyMutationData,
     applyMutationFrequencyData,
+    applyOncoKbCnaAnnotations,
+    applyOncoKbMutationAnnotations,
+    applyOncoKbStructuralVariantAnnotations,
     applyStructuralVariantData,
 } from './wsiHierarchyUpdateUtils';
+import {
+    getOncoKbApiUrl,
+    isWsiCivicEnabled,
+    isWsiOncoKbEnabled,
+} from './wsiMolecularServices';
 import {
     WSI_FONT_FAMILY,
     WSI_SIDEBAR_MAX_WIDTH,
@@ -844,6 +861,39 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         return identifiers;
     }
 
+    private collectSampleEntries<T>(
+        getEntries: (sample: Sample) => T[] | undefined,
+        includeEntry?: (entry: T) => boolean
+    ): T[] {
+        const hierarchy = this.viewerState.hierarchy;
+        if (!hierarchy) {
+            return [];
+        }
+
+        const result: T[] = [];
+        for (
+            let sampleIndex = 0;
+            sampleIndex < hierarchy.samples.length;
+            sampleIndex += 1
+        ) {
+            const entries = getEntries(hierarchy.samples[sampleIndex]);
+            if (!entries?.length) {
+                continue;
+            }
+            for (
+                let entryIndex = 0;
+                entryIndex < entries.length;
+                entryIndex += 1
+            ) {
+                const entry = entries[entryIndex];
+                if (!includeEntry || includeEntry(entry)) {
+                    result.push(entry);
+                }
+            }
+        }
+        return result;
+    }
+
     @computed get servableSlides(): Array<{ slide: Slide; sample: Sample }> {
         if (!this.viewerState.hierarchy) return [];
         return [...this.viewerState.hierarchy.samples]
@@ -1101,11 +1151,32 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         ]);
         if (!shouldContinueForHierarchy()) return;
 
+        if (isWsiOncoKbEnabled()) {
+            void this.fetchAndMergeOncoKbAnnotations(
+                shouldContinueForHierarchy
+            );
+        }
+        if (isWsiCivicEnabled()) {
+            void this.fetchAndMergeCivicAnnotations(shouldContinueForHierarchy);
+        }
         void this.fetchAndMergeMutationFrequency(
             base,
             studyId,
             shouldContinueForHierarchy
         );
+        if (isWsiOncoKbEnabled()) {
+            void this.fetchAndMergeCnaOncoKbAnnotations(
+                shouldContinueForHierarchy
+            );
+            void this.fetchAndMergeStructuralVariantOncoKbAnnotations(
+                shouldContinueForHierarchy
+            );
+        }
+        if (isWsiCivicEnabled()) {
+            void this.fetchAndMergeCnaCivicAnnotations(
+                shouldContinueForHierarchy
+            );
+        }
     }
 
     /**
@@ -1220,6 +1291,71 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
     }
 
     /**
+     * Fetch OncoKB annotations for all mutations collected by fetchAndMergeMutations and
+     * merge oncogenic / mutationEffect / hotspot / geneSummary / variantSummary into each
+     * MutationDetail object in-place so that MutationTable can show rich tooltips.
+     *
+     * Routes through the portal's configured OncoKB proxy to preserve the same
+     * request path, credentials and response contract used by the rest of the
+     * frontend. The tile origin is never used as an annotation host.
+     *
+     * Silently no-ops when the portal proxy is unavailable or returns an optional-service
+     * failure, or when the hierarchy has no mutations with entrezGeneId.
+     */
+    private async fetchAndMergeOncoKbAnnotations(
+        shouldContinue: () => boolean = () => true
+    ): Promise<void> {
+        if (!shouldContinue()) return;
+        const allDetails = this.collectSampleEntries(
+            sample => sample.oncogenic_mutation_details,
+            detail => !!detail.entrezGeneId
+        );
+        if (!allDetails.length) return;
+
+        let oncoKbBase: string;
+        try {
+            oncoKbBase = getOncoKbApiUrl();
+        } catch {
+            // Embedded viewers may not have portal config yet; enrichment is optional.
+            return;
+        }
+        if (!oncoKbBase) return;
+
+        const annotations = await fetchOncoKbMutationAnnotationsReadOnly(
+            oncoKbBase,
+            allDetails
+        );
+        if (!annotations?.length || !shouldContinue()) return;
+
+        this.applyHierarchyMutationAndRefresh(samples => {
+            applyOncoKbMutationAnnotations(samples, annotations);
+        }, shouldContinue);
+    }
+
+    /**
+     * Fetch CIViC gene/variant records for WSI mutation details so the compact
+     * metadata table can reuse the same detailed CIViC card used elsewhere.
+     */
+    private async fetchAndMergeCivicAnnotations(
+        shouldContinue: () => boolean = () => true
+    ): Promise<void> {
+        if (!shouldContinue()) return;
+        const allDetails = this.collectSampleEntries(
+            sample => sample.oncogenic_mutation_details
+        );
+        if (!allDetails.length) return;
+
+        const annotations = await fetchCivicMutationAnnotationsReadOnly(
+            allDetails
+        );
+        if (!annotations?.length || !shouldContinue()) return;
+
+        this.applyHierarchyMutationAndRefresh(samples => {
+            applyCivicMutationAnnotations(samples, annotations);
+        }, shouldContinue);
+    }
+
+    /**
      * Fetch significant discrete copy-number alterations (value ≠ 0) from cBioPortal
      * and merge them into each sample's `cna_alterations` field.
      */
@@ -1242,6 +1378,52 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         }, shouldContinue);
     }
 
+    private async fetchAndMergeCnaCivicAnnotations(
+        shouldContinue: () => boolean = () => true
+    ): Promise<void> {
+        if (!shouldContinue()) return;
+        const allCnas = this.collectSampleEntries(
+            sample => sample.cna_alterations
+        );
+        if (!allCnas.length) return;
+
+        const annotations = await fetchCivicCnaAnnotationsReadOnly(allCnas);
+        if (!annotations?.length || !shouldContinue()) return;
+
+        this.applyHierarchyMutationAndRefresh(samples => {
+            applyCivicCnaAnnotations(samples, annotations);
+        }, shouldContinue);
+    }
+
+    /**
+     * Fetch OncoKB annotations for CNA events so CNA annotation mouseover
+     * matches the SNV annotation card.
+     */
+    private async fetchAndMergeCnaOncoKbAnnotations(
+        shouldContinue: () => boolean = () => true
+    ): Promise<void> {
+        if (!shouldContinue()) return;
+        const allCnas = this.collectSampleEntries(
+            sample => sample.cna_alterations
+        );
+        let oncoKbBase: string;
+        try {
+            oncoKbBase = getOncoKbApiUrl();
+        } catch {
+            // Embedded viewers may not have portal config yet; enrichment is optional.
+            return;
+        }
+        if (!oncoKbBase) return;
+
+        const annotations = await fetchOncoKbCnaAnnotationsReadOnly(
+            oncoKbBase,
+            allCnas
+        );
+        if (!annotations?.length || !shouldContinue()) return;
+        this.applyHierarchyMutationAndRefresh(samples => {
+            applyOncoKbCnaAnnotations(samples, annotations);
+        }, shouldContinue);
+    }
     /**
      * Fetch sample-level structural variants from cBioPortal and merge them into
      * each sample's `structural_variants` field.
@@ -1265,6 +1447,31 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         }, shouldContinue);
     }
 
+    private async fetchAndMergeStructuralVariantOncoKbAnnotations(
+        shouldContinue: () => boolean = () => true
+    ): Promise<void> {
+        if (!shouldContinue()) return;
+        const allStructuralVariants = this.collectSampleEntries(
+            sample => sample.structural_variants
+        );
+        let oncoKbBase: string;
+        try {
+            oncoKbBase = getOncoKbApiUrl();
+        } catch {
+            // Embedded viewers may not have portal config yet; enrichment is optional.
+            return;
+        }
+        if (!oncoKbBase) return;
+
+        const annotations = await fetchOncoKbStructuralVariantAnnotationsReadOnly(
+            oncoKbBase,
+            allStructuralVariants
+        );
+        if (!annotations?.length || !shouldContinue()) return;
+        this.applyHierarchyMutationAndRefresh(samples => {
+            applyOncoKbStructuralVariantAnnotations(samples, annotations);
+        }, shouldContinue);
+    }
     /**
      * Fetch cohort mutation frequencies for all mutations and store as fraction (0–1)
      * in each MutationDetail's `cohortFrequency` field.
