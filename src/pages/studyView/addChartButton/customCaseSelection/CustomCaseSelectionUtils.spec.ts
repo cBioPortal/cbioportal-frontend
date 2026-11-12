@@ -412,10 +412,6 @@ describe('CustomCaseSelectionUtils', () => {
             caseId,
             alias,
             attributeId,
-            attributeDisplayName:
-                attributeId === 'SAMPLE_DISPLAY_NAME'
-                    ? 'Sample Display Name'
-                    : 'Other Sample ID',
         });
 
         const sampleAliases = [
@@ -457,14 +453,7 @@ describe('CustomCaseSelectionUtils', () => {
         it('matches samples by display name', () => {
             const result = parseSamples('Tumor_A');
             assert.deepEqual(sampleIds(result.data), ['s1:P-1-T01']);
-            assert.deepEqual(
-                result.validationResult.warning.map(w => w.code),
-                [CodeEnum.ALIAS_MATCH]
-            );
-            assert.include(
-                result.validationResult.warning[0].message.message,
-                'Sample Display Name'
-            );
+            assert.equal(result.validationResult.warning.length, 0);
         });
 
         it('matches samples by other sample ID', () => {
@@ -554,6 +543,21 @@ describe('CustomCaseSelectionUtils', () => {
                 's1:P-2-T02',
             ]);
             assert.isTrue(result.data.every(d => d.patientId === 'P-2'));
+        });
+
+        it('handles aliases that are names of Object.prototype properties', () => {
+            const result = parseSamples(
+                'constructor\ntoString',
+                ['s1'],
+                [
+                    sampleAlias('s1', 'P-1-T01', 'constructor'),
+                    sampleAlias('s1', 'P-3-T01', 'toString'),
+                ]
+            );
+            assert.deepEqual(sampleIds(result.data), [
+                's1:P-1-T01',
+                's1:P-3-T01',
+            ]);
         });
 
         it('behaves as before when no aliases are given', () => {

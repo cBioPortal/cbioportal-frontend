@@ -117,11 +117,10 @@ export default class CustomCaseSelection extends React.Component<
     }
 
     @computed
-    get aliasAttributeNames(): string[] {
-        return _.uniq(
-            this.caseIdAliases.map(a => a.attributeDisplayName || a.attributeId)
-        );
+    get caseIdAliasesPending() {
+        return !!this.props.caseIdAliases && this.props.caseIdAliases.isPending;
     }
+
     @computed
     get newChartInfo(): CustomChartData {
         const displayName = this.chartName
@@ -224,6 +223,7 @@ export default class CustomCaseSelection extends React.Component<
     get addChartButtonDisabled() {
         return (
             !!this.props.disableSubmitButton ||
+            this.caseIdAliasesPending ||
             this.result.validationResult.error.length > 0 ||
             this.newChartInfo.data.length === 0 ||
             this.chartNameValidation.error.length > 0
@@ -334,15 +334,6 @@ export default class CustomCaseSelection extends React.Component<
                             );
                         })}
                 </ButtonGroup>
-                {this.aliasAttributeNames.length > 0 && (
-                    <div
-                        className="text-muted small"
-                        data-test="CustomCaseSetAliasHint"
-                        style={{ marginTop: 3 }}
-                    >
-                        Also accepts {this.aliasAttributeNames.join(', ')}
-                    </div>
-                )}
                 <span>
                     <div
                         style={{

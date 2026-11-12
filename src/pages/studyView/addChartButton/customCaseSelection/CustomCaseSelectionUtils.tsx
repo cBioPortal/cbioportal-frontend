@@ -15,7 +15,6 @@ type Code =
     | 'STUDY_NOT_SELECTED'
     | 'INPUT_ERROR'
     | 'NO_CHART_NAME'
-    | 'ALIAS_MATCH'
     | 'AMBIGUOUS_ALIAS';
 
 export const DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT = 'custom_value';
@@ -30,7 +29,6 @@ export enum CodeEnum {
     INPUT_ERROR = 'INPUT_ERROR',
     NO_CHART_NAME = 'NO_CHART_NAME',
     NO_GROUP_NAME = 'NO_GROUP_NAME',
-    ALIAS_MATCH = 'ALIAS_MATCH',
     AMBIGUOUS_ALIAS = 'AMBIGUOUS_ALIAS',
 }
 
@@ -63,7 +61,6 @@ export type CaseIdAlias = {
     // the alternative identifier, e.g. a SAMPLE_DISPLAY_NAME value
     alias: string;
     attributeId: string;
-    attributeDisplayName?: string;
 };
 
 export type CaseIdAliases = {
@@ -212,9 +209,9 @@ export function validateLines(
 
     const aliasMap = getAliasMap(caseIdAliases, caseType);
     // input alias -> resolved case IDs, for the validation messages
-    const aliasMatches: { [alias: string]: string[] } = {};
-    const ambiguousAliases: { [alias: string]: string[] } = {};
-    const aliasAttributeNames: string[] = [];
+    // prototype-free so arbitrary alias strings (e.g. "constructor") are safe keys
+    const aliasMatches: { [alias: string]: string[] } = Object.create(null);
+    const ambiguousAliases: { [alias: string]: string[] } = Object.create(null);
 
     // Returns the internal case IDs that `caseId` refers to in `studyId`.
     // An exact internal ID match always takes precedence over an alias.
@@ -233,11 +230,6 @@ export function validateLines(
             if (aliasMatches[caseId].length > 1) {
                 ambiguousAliases[caseId] = aliasMatches[caseId];
             }
-            matches.forEach(m =>
-                aliasAttributeNames.push(
-                    m.attributeDisplayName || m.attributeId
-                )
-            );
         }
         return resolved;
     };
@@ -388,21 +380,6 @@ export function validateLines(
                 ),
             });
         }
-    }
-
-    const aliasCount = _.keys(aliasMatches).length;
-    if (aliasCount > 0) {
-        warningMessages.push({
-            code: CodeEnum.ALIAS_MATCH,
-            message: new Error(
-                `${aliasCount} ${Pluralize(
-                    'entry',
-                    aliasCount
-                )} matched by ${_.uniq(aliasAttributeNames).join(
-                    ' / '
-                )} instead of ${caseType.toLowerCase()} ID.`
-            ),
-        });
     }
 
     if (!_.isEmpty(ambiguousAliases)) {

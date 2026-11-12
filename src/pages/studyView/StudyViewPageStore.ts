@@ -9691,10 +9691,6 @@ export class StudyViewPageStore
                         identifiers,
                     },
                 });
-                const displayNames = _.keyBy(
-                    attributes,
-                    a => a.clinicalAttributeId
-                );
                 return data
                     .filter(d => isUsableAliasValue(d.value))
                     .map(d => ({
@@ -9702,8 +9698,6 @@ export class StudyViewPageStore
                         caseId: isPatient ? d.patientId : d.sampleId,
                         alias: d.value.trim(),
                         attributeId: d.clinicalAttributeId,
-                        attributeDisplayName:
-                            displayNames[d.clinicalAttributeId]?.displayName,
                     }));
             };
             const [sample, patient] = await Promise.all([
