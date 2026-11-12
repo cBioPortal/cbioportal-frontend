@@ -1156,6 +1156,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                                     .result
                                             }
                                             submitButtonText={'Add Chart'}
+                                            caseIdAliases={
+                                                this.props.store.caseIdAliases
+                                            }
                                             queriedStudies={
                                                 this.props.store
                                                     .queriedPhysicalStudyIds

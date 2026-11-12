@@ -14,7 +14,9 @@ type Code =
     | 'TOO_MANY_INVALID_CASE_ID'
     | 'STUDY_NOT_SELECTED'
     | 'INPUT_ERROR'
-    | 'NO_CHART_NAME';
+    | 'NO_CHART_NAME'
+    | 'ALIAS_MATCH'
+    | 'AMBIGUOUS_ALIAS';
 
 export const DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT = 'custom_value';
 export const DEFAULT_GROUP_NAME_WITH_USER_INPUT = 'Unselected';
@@ -28,6 +30,79 @@ export enum CodeEnum {
     INPUT_ERROR = 'INPUT_ERROR',
     NO_CHART_NAME = 'NO_CHART_NAME',
     NO_GROUP_NAME = 'NO_GROUP_NAME',
+    ALIAS_MATCH = 'ALIAS_MATCH',
+    AMBIGUOUS_ALIAS = 'AMBIGUOUS_ALIAS',
+}
+
+/**
+ * Clinical attributes whose values are accepted in place of the internal
+ * sample / patient ID, in order of precedence.
+ */
+export const SAMPLE_ID_ALIAS_ATTRIBUTES = [
+    'SAMPLE_DISPLAY_NAME',
+    'DISPLAY_SAMPLE_NAME',
+    'OTHER_SAMPLE_ID',
+];
+export const PATIENT_ID_ALIAS_ATTRIBUTES = [
+    'PATIENT_DISPLAY_NAME',
+    'OTHER_PATIENT_ID',
+];
+
+export function getCaseIdAliasAttributeIds(caseType: ClinicalDataType) {
+    return caseType === ClinicalDataTypeEnum.PATIENT
+        ? PATIENT_ID_ALIAS_ATTRIBUTES
+        : SAMPLE_ID_ALIAS_ATTRIBUTES;
+}
+
+const EMPTY_ALIAS_VALUES = ['', 'NA', 'N/A', 'NAN', 'NULL', 'NONE'];
+
+export type CaseIdAlias = {
+    studyId: string;
+    // internal sample or patient ID
+    caseId: string;
+    // the alternative identifier, e.g. a SAMPLE_DISPLAY_NAME value
+    alias: string;
+    attributeId: string;
+    attributeDisplayName?: string;
+};
+
+export type CaseIdAliases = {
+    [ClinicalDataTypeEnum.SAMPLE]: CaseIdAlias[];
+    [ClinicalDataTypeEnum.PATIENT]: CaseIdAlias[];
+};
+
+export function isUsableAliasValue(value: string | undefined) {
+    return (
+        value !== undefined &&
+        !EMPTY_ALIAS_VALUES.includes(value.trim().toUpperCase())
+    );
+}
+
+/**
+ * Maps `studyId:alias` to the internal case IDs it refers to.
+ * When an alias value occurs under several alias attributes, the attribute
+ * listed first in the precedence list wins.
+ */
+export function getAliasMap(
+    aliases: CaseIdAlias[],
+    caseType: ClinicalDataType
+): { [studyIdAlias: string]: CaseIdAlias[] } {
+    const precedence = getCaseIdAliasAttributeIds(caseType);
+    const rank = (a: CaseIdAlias) => {
+        const i = precedence.indexOf(a.attributeId);
+        return i === -1 ? precedence.length : i;
+    };
+    const grouped = _.groupBy(
+        aliases.filter(a => isUsableAliasValue(a.alias)),
+        a => getUniqueCaseId(a.studyId, a.alias.trim())
+    );
+    return _.mapValues(grouped, group => {
+        const bestRank = _.min(group.map(rank));
+        return _.uniqBy(
+            group.filter(a => rank(a) === bestRank),
+            a => a.caseId
+        );
+    });
 }
 
 export type ValidationMessage = {
@@ -110,7 +185,8 @@ export function validateLines(
     caseType: ClinicalDataType,
     allSamples: Sample[],
     isSingleStudy: boolean,
-    selectedStudies: string[]
+    selectedStudies: string[],
+    caseIdAliases: CaseIdAlias[] = []
 ): ValidationResult {
     let errorMessages: ValidationMessage[] = [];
     let warningMessages: ValidationMessage[] = [];
@@ -134,6 +210,38 @@ export function validateLines(
         {} as { [key: string]: boolean }
     );
 
+    const aliasMap = getAliasMap(caseIdAliases, caseType);
+    // input alias -> resolved case IDs, for the validation messages
+    const aliasMatches: { [alias: string]: string[] } = {};
+    const ambiguousAliases: { [alias: string]: string[] } = {};
+    const aliasAttributeNames: string[] = [];
+
+    // Returns the internal case IDs that `caseId` refers to in `studyId`.
+    // An exact internal ID match always takes precedence over an alias.
+    const resolveCaseIds = (studyId: string, caseId: string): string[] => {
+        if (validPair[getUniqueCaseId(studyId, caseId)]) {
+            return [caseId];
+        }
+        const matches = aliasMap[getUniqueCaseId(studyId, caseId)] || [];
+        const resolved = matches
+            .map(m => m.caseId)
+            .filter(id => validPair[getUniqueCaseId(studyId, id)]);
+        if (resolved.length > 0) {
+            aliasMatches[caseId] = _.uniq(
+                (aliasMatches[caseId] || []).concat(resolved)
+            );
+            if (aliasMatches[caseId].length > 1) {
+                ambiguousAliases[caseId] = aliasMatches[caseId];
+            }
+            matches.forEach(m =>
+                aliasAttributeNames.push(
+                    m.attributeDisplayName || m.attributeId
+                )
+            );
+        }
+        return resolved;
+    };
+
     let occurrence: { [key: string]: number } = {};
     let validLines: { [key: string]: InputLine } = {};
     let multiStudyCases: string[] = [];
@@ -150,8 +258,9 @@ export function validateLines(
             if (line.studyId === undefined || line.studyId === '') {
                 let validCaseCount = 0;
                 selectedStudies.map(studyId => {
-                    _case = getUniqueCaseId(studyId, line.caseId);
-                    if (validPair[_case]) {
+                    const resolved = resolveCaseIds(studyId, line.caseId);
+                    resolved.forEach(caseId => {
+                        _case = getUniqueCaseId(studyId, caseId);
                         if (occurrence[_case] === undefined) {
                             occurrence[_case] = 0;
                         }
@@ -159,8 +268,10 @@ export function validateLines(
 
                         let newLine = _.cloneDeep(line);
                         newLine.studyId = studyId;
+                        newLine.caseId = caseId;
                         newLines.push(newLine);
-
+                    });
+                    if (resolved.length > 0) {
                         validCaseCount += 1;
                         validLine = true;
                     }
@@ -183,17 +294,24 @@ export function validateLines(
                         ),
                     });
                 } else {
-                    _case = getUniqueCaseId(line.studyId, line.caseId);
-                    if (validPair[_case] !== undefined) {
+                    const studyId = line.studyId;
+                    const resolved = resolveCaseIds(studyId, line.caseId);
+                    resolved.forEach(caseId => {
+                        _case = getUniqueCaseId(studyId, caseId);
                         if (occurrence[_case] === undefined) {
                             occurrence[_case] = 0;
                         }
                         occurrence[_case]++;
+
+                        let newLine = _.cloneDeep(line);
+                        newLine.caseId = caseId;
+                        newLines.push(newLine);
+                    });
+                    if (resolved.length > 0) {
                         validLine = true;
                     } else {
                         invalidCases.push(line.caseId);
                     }
-                    newLines.push(_.cloneDeep(line));
                 }
             }
 
@@ -272,6 +390,38 @@ export function validateLines(
         }
     }
 
+    const aliasCount = _.keys(aliasMatches).length;
+    if (aliasCount > 0) {
+        warningMessages.push({
+            code: CodeEnum.ALIAS_MATCH,
+            message: new Error(
+                `${aliasCount} ${Pluralize(
+                    'entry',
+                    aliasCount
+                )} matched by ${_.uniq(aliasAttributeNames).join(
+                    ' / '
+                )} instead of ${caseType.toLowerCase()} ID.`
+            ),
+        });
+    }
+
+    if (!_.isEmpty(ambiguousAliases)) {
+        warningMessages.push({
+            code: CodeEnum.AMBIGUOUS_ALIAS,
+            message: new Error(
+                `The following ${Pluralize(
+                    'name',
+                    _.size(ambiguousAliases)
+                )} matched multiple ${Pluralize(
+                    caseType.toLowerCase()
+                )}, all of which will be selected: ${_.map(
+                    ambiguousAliases,
+                    (ids, alias) => `${alias} (${ids.join(', ')})`
+                ).join('; ')}`
+            ),
+        });
+    }
+
     if (invalidCases.length > 0) {
         warningMessages.push({
             code: CodeEnum.INVALID_CASE_ID,
@@ -344,7 +494,8 @@ export function parseContent(
     selectedStudies: string[],
     caseType: ClinicalDataType,
     allSamples: Sample[],
-    isSingleStudy: boolean
+    isSingleStudy: boolean,
+    caseIdAliases: CaseIdAlias[] = []
 ): ParseResult {
     let validationResult: ValidationResult = {
         error: [],
@@ -358,7 +509,8 @@ export function parseContent(
                 caseType,
                 allSamples,
                 isSingleStudy,
-                selectedStudies
+                selectedStudies,
+                caseIdAliases
             );
             validationResult.warning.push(...result.warning);
             validationResult.error.push(...result.error);
