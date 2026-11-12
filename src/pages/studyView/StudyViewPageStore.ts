@@ -1,4 +1,10 @@
 import _ from 'lodash';
+import {
+    CaseIdAlias,
+    CaseIdAliases,
+    getCaseIdAliasAttributeIds,
+    isUsableAliasValue,
+} from './addChartButton/customCaseSelection/CustomCaseSelectionUtils';
 import { isWsiResourceId } from 'shared/lib/ResourcePolicy';
 import { getClient } from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
@@ -580,9 +586,9 @@ enum CustomDataTypeEnum {
 }
 
 export enum SampleListCategoryType {
-    'w_mut' = 'w_mut',
-    'w_cna' = 'w_cna',
-    'w_mut_cna' = 'w_mut_cna',
+    w_mut = 'w_mut',
+    w_cna = 'w_cna',
+    w_mut_cna = 'w_mut_cna',
 }
 
 export const SampleListCategoryTypeToFullId = {
@@ -3960,7 +3966,9 @@ export class StudyViewPageStore
 
     private getGenericAssayFrequencyTableProfileMap(
         chart: GenericAssayChart
-    ): { [studyId: string]: MolecularProfile } {
+    ): {
+        [studyId: string]: MolecularProfile;
+    } {
         return _.chain(this.genericAssayProfiles.result)
             .filter(
                 profile =>
@@ -9642,6 +9650,70 @@ export class StudyViewPageStore
         },
         onError: () => {},
         default: [],
+    });
+
+    /**
+     * Alternative case identifiers (e.g. SAMPLE_DISPLAY_NAME, OTHER_PATIENT_ID)
+     * that Custom Selection accepts in place of internal sample / patient IDs.
+     * Only attributes present in the queried studies are fetched.
+     */
+    readonly caseIdAliases = remoteData<CaseIdAliases>({
+        await: () => [this.clinicalAttributes, this.samples],
+        invoke: async () => {
+            const fetchAliases = async (
+                clinicalDataType: ClinicalDataTypeEnum
+            ): Promise<CaseIdAlias[]> => {
+                const isPatient =
+                    clinicalDataType === ClinicalDataTypeEnum.PATIENT;
+                const attributes = this.clinicalAttributes.result!.filter(
+                    attr =>
+                        attr.patientAttribute === isPatient &&
+                        getCaseIdAliasAttributeIds(clinicalDataType).includes(
+                            attr.clinicalAttributeId
+                        )
+                );
+                if (attributes.length === 0) {
+                    return [];
+                }
+                const identifiers = _.uniqBy(
+                    this.samples.result!.map(s => ({
+                        studyId: s.studyId,
+                        entityId: isPatient ? s.patientId : s.sampleId,
+                    })),
+                    id => `${id.studyId}:${id.entityId}`
+                );
+                const data = await getClient().fetchClinicalDataUsingPOST({
+                    clinicalDataType,
+                    clinicalDataMultiStudyFilter: {
+                        attributeIds: attributes.map(
+                            a => a.clinicalAttributeId
+                        ),
+                        identifiers,
+                    },
+                });
+                return data
+                    .filter(d => isUsableAliasValue(d.value))
+                    .map(d => ({
+                        studyId: d.studyId,
+                        caseId: isPatient ? d.patientId : d.sampleId,
+                        alias: d.value.trim(),
+                        attributeId: d.clinicalAttributeId,
+                    }));
+            };
+            const [sample, patient] = await Promise.all([
+                fetchAliases(ClinicalDataTypeEnum.SAMPLE),
+                fetchAliases(ClinicalDataTypeEnum.PATIENT),
+            ]);
+            return {
+                [ClinicalDataTypeEnum.SAMPLE]: sample,
+                [ClinicalDataTypeEnum.PATIENT]: patient,
+            };
+        },
+        onError: () => {},
+        default: {
+            [ClinicalDataTypeEnum.SAMPLE]: [],
+            [ClinicalDataTypeEnum.PATIENT]: [],
+        },
     });
 
     public readonly sampleSet = remoteData({

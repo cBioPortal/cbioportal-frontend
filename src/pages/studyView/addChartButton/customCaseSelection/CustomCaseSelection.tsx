@@ -7,6 +7,7 @@ import { action, computed, makeObservable, observable } from 'mobx';
 import { ButtonGroup, Radio } from 'react-bootstrap';
 import {
     DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT,
+    CaseIdAliases,
     CodeEnum,
     parseContent,
     ParseResult,
@@ -21,6 +22,7 @@ import {
     DataType,
 } from '../../StudyViewUtils';
 import { CustomChartData } from 'shared/api/session-service/sessionServiceModels';
+import { MobxPromise } from 'cbioportal-frontend-commons';
 
 export interface ICustomCaseSelectionProps {
     allSamples: Sample[];
@@ -33,6 +35,8 @@ export interface ICustomCaseSelectionProps {
     getDefaultChartName?: () => string;
     isChartNameValid?: (chartName: string) => boolean;
     contentNormalizer?: (content: string) => string;
+    // alternative identifiers (e.g. SAMPLE_DISPLAY_NAME) accepted in place of internal IDs
+    caseIdAliases?: MobxPromise<CaseIdAliases>;
 }
 
 // This is the selection tool that is used to switch between bar and pie charts for categorical and numerical data.
@@ -99,9 +103,24 @@ export default class CustomCaseSelection extends React.Component<
             this.props.queriedStudies,
             this.caseIdsMode,
             this.props.allSamples,
-            this.isSingleStudy
+            this.isSingleStudy,
+            this.caseIdAliases
         );
     }
+
+    @computed
+    get caseIdAliases() {
+        const aliases = this.props.caseIdAliases;
+        return aliases && aliases.isComplete
+            ? aliases.result![this.caseIdsMode]
+            : [];
+    }
+
+    @computed
+    get caseIdAliasesPending() {
+        return !!this.props.caseIdAliases && this.props.caseIdAliases.isPending;
+    }
+
     @computed
     get newChartInfo(): CustomChartData {
         const displayName = this.chartName
@@ -204,6 +223,7 @@ export default class CustomCaseSelection extends React.Component<
     get addChartButtonDisabled() {
         return (
             !!this.props.disableSubmitButton ||
+            this.caseIdAliasesPending ||
             this.result.validationResult.error.length > 0 ||
             this.newChartInfo.data.length === 0 ||
             this.chartNameValidation.error.length > 0
