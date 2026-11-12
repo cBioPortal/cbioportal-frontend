@@ -37,7 +37,6 @@ declare const styles: {
   readonly "geneCount": string;
   readonly "geneSet": string;
   readonly "geneToggle": string;
-  readonly "genomeSpace": string;
   readonly "gisticTable": string;
   readonly "group": string;
   readonly "groupName": string;
