@@ -149,6 +149,10 @@ export function buildPathRows(
             ? buildSampleUrl(studyId, sample.sample_id, patientId)
             : undefined;
     const block = normalizeBlockLabel(slide.block_label, slide.block_number);
+    // The block has its own row; the Sample row's hover adds only the sample type.
+    const sampleTip = sample.sample_type
+        ? `Type: ${sample.sample_type}`
+        : undefined;
 
     // A generated "Part <n>" description names no anatomical site and repeats the Part row.
     const partDesc = realPartDescription(slide.part_description);
@@ -165,11 +169,14 @@ export function buildPathRows(
         {
             label: 'Sample',
             labelTip: sampleUrl
-                ? 'Click for cBioPortal sample view'
+                ? sampleTip
+                    ? 'Click for cBioPortal sample view — hover for sample type'
+                    : 'Click for cBioPortal sample view'
                 : 'Tumor sample identifier',
             value: isUnmatchedSample
                 ? 'Unmatched pathology slides'
                 : sample.sample_id || '—',
+            valueTip: sampleTip,
             href: sampleUrl,
         },
     ];
@@ -216,5 +223,39 @@ export function buildPathRows(
         });
     }
 
+    return freezeMetaRows(rows);
+}
+
+export function buildSeqRows(sample: Sample, sampleUrl?: string): MetaRow[] {
+    const rows: MetaRow[] = [];
+    if (sample.tumor_purity) {
+        rows.push({
+            label: 'Tumor purity',
+            labelTip: 'Estimated fraction of tumor cells in this sample',
+            value: `${sample.tumor_purity}%`,
+        });
+    }
+    if (sample.tmb_score) {
+        rows.push({
+            label: 'TMB',
+            labelTip:
+                'Tumor mutational burden — click to view mutations in cBioPortal',
+            value: `${sample.tmb_score} mut/Mb`,
+            href: sampleUrl,
+        });
+    }
+    if (sample.msi_type) {
+        rows.push({
+            label: 'MSI',
+            labelTip: 'Microsatellite instability status',
+            value: sample.msi_type,
+        });
+    }
+    if (
+        sample.metastatic_site &&
+        sample.metastatic_site.toLowerCase() !== 'not applicable'
+    ) {
+        rows.push({ label: 'Metastatic site', value: sample.metastatic_site });
+    }
     return freezeMetaRows(rows);
 }

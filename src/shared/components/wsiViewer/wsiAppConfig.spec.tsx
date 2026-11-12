@@ -5,6 +5,7 @@ import * as React from 'react';
 import { act, render, screen } from '@testing-library/react';
 import {
     AppWsiViewer,
+    buildWsiMolecularServices,
     buildWsiViewerConfig,
     wsiAuthScope,
 } from './wsiAppConfig';
@@ -54,6 +55,21 @@ describe('buildWsiViewerConfig', () => {
 
         delete mockServerConfig.user_display_name;
         expect(wsiAuthScope()).toBe('anonymousUser');
+    });
+});
+
+describe('buildWsiMolecularServices', () => {
+    it('simplifies mutation types like the rest of the portal', () => {
+        const services = buildWsiMolecularServices();
+
+        expect(services.getSimplifiedMutationType('Frame_Shift_Del')).toBe(
+            'frameshift'
+        );
+        expect(buildWsiViewerConfig().molecular).toEqual(
+            expect.objectContaining({
+                getSimplifiedMutationType: expect.any(Function),
+            })
+        );
     });
 });
 

@@ -1,5 +1,11 @@
 import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { Sample, WsiMutationDataStatus } from './wsiViewerTypes';
+import {
+    CnaTable,
+    MutationTable,
+    StructuralVariantTable,
+} from './wsiMolecularTables';
 
 import { WSI_THEME } from './wsiTheme';
 import { useWsiPanelFlag, WsiPanelHeader } from './wsiPanelChrome';
@@ -164,6 +170,24 @@ function WithTip({
     );
 }
 
+function hasMolecularContent(
+    sample: Sample | null,
+    seqRows: MetaRow[],
+    mutationDataStatus: WsiMutationDataStatus
+) {
+    return (
+        seqRows.length > 0 ||
+        !!(
+            sample?.oncogenic_mutations &&
+            sample.oncogenic_mutation_details !== undefined
+        ) ||
+        !!sample?.cna_alterations?.length ||
+        !!sample?.structural_variants?.length ||
+        (sample !== null && mutationDataStatus === 'loading') ||
+        (sample !== null && mutationDataStatus === 'error')
+    );
+}
+
 /** Key-value rows, striped like the portal's clinical attribute tables. */
 function MetaTable({ rows }: { rows: ReadonlyArray<MetaRow> }) {
     return (
@@ -273,6 +297,10 @@ function WsiMetaSidebarComponent({
     wsiRows,
     showPathology,
     pathRows,
+    seqRows,
+    sample,
+    mutationDataStatus,
+    dataVersion,
     clinicalRows,
     onHide,
 }: {
@@ -281,11 +309,26 @@ function WsiMetaSidebarComponent({
     wsiRows: MetaRow[];
     showPathology: boolean;
     pathRows: MetaRow[];
+    seqRows: MetaRow[];
+    sample: Sample | null;
+    mutationDataStatus: WsiMutationDataStatus;
+    /** Invalidates the memoized sidebar when enrichment mutates a sample in place. */
+    dataVersion?: number;
     /** Patient clinical rows; unset (e.g. still loading) hides the section. */
     clinicalRows?: ReadonlyArray<MetaRow>;
     /** Shows a header button that hides the sidebar. */
     onHide?: () => void;
 }) {
+    // Keep the version in the component's props so React.memo observes
+    // staged molecular/CNA/SV updates even when the sample object is mutated
+    // in place to preserve hierarchy identity.
+    void dataVersion;
+    const showMolecular = hasMolecularContent(
+        sample,
+        seqRows,
+        mutationDataStatus
+    );
+
     return (
         <div
             data-testid="wsi-metadata-sidebar"
@@ -328,6 +371,24 @@ function WsiMetaSidebarComponent({
                     ) : (
                         <EmptyState />
                     )}
+                </SbSection>
+            )}
+
+            {showMolecular && (
+                <SbSection id="molecular" title="Molecular">
+                    {seqRows.length > 0 && <MetaTable rows={seqRows} />}
+                    {sample && (
+                        <MutationTable
+                            sample={sample}
+                            mutationDataStatus={mutationDataStatus}
+                        />
+                    )}
+                    {sample?.cna_alterations?.length ? (
+                        <CnaTable sample={sample} />
+                    ) : null}
+                    {sample?.structural_variants?.length ? (
+                        <StructuralVariantTable sample={sample} />
+                    ) : null}
                 </SbSection>
             )}
         </div>

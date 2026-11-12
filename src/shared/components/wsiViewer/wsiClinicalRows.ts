@@ -25,7 +25,8 @@ export interface WsiPatientClinicalData {
 /**
  * Attributes left out of the Clinical section: sequencing QC and
  * administrative fields that say nothing about the patient or the tissue on
- * the slide, and PATH_SLIDE_EXISTS, which the viewer itself already answers.
+ * the slide, PATH_SLIDE_EXISTS, which the viewer itself already answers,
+ * and the molecular summary the Molecular section already shows.
  */
 const WSI_CLINICAL_EXCLUDED_ATTRIBUTE_IDS: ReadonlySet<string> = new Set([
     'GENE_PANEL',
@@ -34,6 +35,16 @@ const WSI_CLINICAL_EXCLUDED_ATTRIBUTE_IDS: ReadonlySet<string> = new Set([
     'PATH_SLIDE_EXISTS',
     'SAMPLE_COVERAGE',
     'SOMATIC_STATUS',
+    // Shown in the sidebar's Molecular section.
+    'CVR_TMB_SCORE',
+    'CVR_TUMOR_PURITY',
+    'METASTATIC_SITE',
+    'MSI_SCORE',
+    'MSI_STATUS',
+    'MSI_TYPE',
+    'TMB_NONSYNONYMOUS',
+    'TMB_SCORE',
+    'TUMOR_PURITY',
 ]);
 
 /** Consent flags, e.g. PARTA_CONSENTED_12_245. */

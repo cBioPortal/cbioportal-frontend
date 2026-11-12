@@ -1,15 +1,25 @@
 import * as React from 'react';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
-import { WsiViewerConfig, WsiViewerProps } from 'cbioportal-wsi-viewer';
+import {
+    WsiMolecularServices,
+    WsiViewerConfig,
+    WsiViewerProps,
+} from 'cbioportal-wsi-viewer';
 import { getServerConfig } from 'config/config';
 import { buildCBioPortalAPIUrl, buildCBioPortalPageUrl } from 'shared/api/urls';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import { getSimplifiedMutationType } from 'shared/lib/oql/AccessorsForOqlFilter';
 import { useWsiClinicalRows, WsiPatientClinicalData } from './wsiClinicalRows';
 
 const WSI_OSD_PREFIX_URL = '/reactapp/osd-images/';
 
 function renderWsiLoading() {
     return <LoadingIndicator isLoading={true} center={true} size="big" />;
+}
+
+/** Molecular services for the viewer's tables. */
+export function buildWsiMolecularServices(): WsiMolecularServices {
+    return { getSimplifiedMutationType };
 }
 
 /** Viewer services from the portal configuration, installed at startup. */
@@ -19,6 +29,7 @@ export function buildWsiViewerConfig(): WsiViewerConfig {
         buildPageUrl: (path: string, query: Record<string, string>) =>
             buildCBioPortalPageUrl(path, query),
         osdPrefixUrl: WSI_OSD_PREFIX_URL,
+        molecular: buildWsiMolecularServices(),
     };
 }
 

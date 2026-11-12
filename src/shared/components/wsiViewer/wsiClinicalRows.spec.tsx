@@ -109,7 +109,7 @@ describe('selectWsiClinicalAttributes', () => {
     it('keeps default attributes (priority above 0), highest priority first', () => {
         const selected = selectWsiClinicalAttributes(
             [
-                attribute('TUMOR_PURITY', 1),
+                attribute('MUTATION_COUNT', 1),
                 attribute('PRIMARY_SITE', 0),
                 attribute('HIDDEN', -1),
                 attribute('SAMPLE_TYPE', 990),
@@ -118,7 +118,7 @@ describe('selectWsiClinicalAttributes', () => {
             ],
             [],
             sampleValues(
-                'TUMOR_PURITY',
+                'MUTATION_COUNT',
                 'PRIMARY_SITE',
                 'HIDDEN',
                 'SAMPLE_TYPE',
@@ -128,7 +128,7 @@ describe('selectWsiClinicalAttributes', () => {
         expect(selected.map(a => a.clinicalAttributeId)).toEqual([
             'CANCER_TYPE',
             'SAMPLE_TYPE',
-            'TUMOR_PURITY',
+            'MUTATION_COUNT',
         ]);
     });
 
@@ -166,6 +166,9 @@ describe('selectWsiClinicalAttributes', () => {
                 attribute('PATH_SLIDE_EXISTS', 1),
                 attribute('PARTC_CONSENTED_12_245', 1, true),
                 attribute('SAMPLE_COUNT', 1, true),
+                attribute('CVR_TMB_SCORE', 1),
+                attribute('MSI_TYPE', 1),
+                attribute('TUMOR_PURITY', 1),
             ],
             [
                 datum('PARTC_CONSENTED_12_245', 'YES'),
