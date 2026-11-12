@@ -573,5 +573,44 @@ describe('EmbeddingPlotUtils', () => {
             assert.equal(result[0].displayLabel, 'Colorectal Cancer');
             assert.equal(result[1].displayLabel, 'Melanoma');
         });
+
+        it('assigns shapes based on a shape-by attribute independent of coloring', () => {
+            const embeddingData: PatientEmbeddingData = {
+                embedding_type: 'patients',
+                title: 'Test UMAP',
+                studyIds: ['study1'],
+                description: 'Test embedding',
+                totalPatients: 2,
+                sampleSize: 2,
+                data: [
+                    { patientId: 'patient1', x: 1.0, y: 2.0 },
+                    { patientId: 'patient2', x: 3.0, y: 4.0 },
+                ],
+            };
+
+            const store = createMockStore();
+
+            const shapeOption = {
+                clinicalAttributeId: 'TREATMENT',
+                displayName: 'Treatment',
+                datatype: 'STRING',
+                patientAttribute: true,
+            } as any;
+
+            const result = makeEmbeddingScatterPlotData(
+                embeddingData,
+                store,
+                undefined, // no coloring option - shape works independently
+                shapeOption
+            );
+
+            assert.equal(result.length, 2);
+
+            // 'Treated' sorts before 'Untreated' -> triangle, diamond
+            assert.equal(result[0].patientId, 'patient1');
+            assert.equal(result[0].shape, 'triangle');
+            assert.equal(result[1].patientId, 'patient2');
+            assert.equal(result[1].shape, 'diamond');
+        });
     });
 });

@@ -45,6 +45,47 @@ const getVUSColor = (displayLabel: string): string | undefined => {
     return undefined;
 };
 
+// Renders a small static swatch for the shape legend key. Gray/neutral on
+// purpose - shape is independent of color, so this key shouldn't imply any
+// color meaning.
+const ShapeSwatch: React.FC<{ shape: string }> = ({ shape }) => {
+    if (shape === 'triangle') {
+        return (
+            <div
+                style={{
+                    width: 0,
+                    height: 0,
+                    borderLeft: '6px solid transparent',
+                    borderRight: '6px solid transparent',
+                    borderBottom: '10px solid #555',
+                }}
+            />
+        );
+    }
+    if (shape === 'diamond') {
+        return (
+            <div
+                style={{
+                    width: '8px',
+                    height: '8px',
+                    backgroundColor: '#555',
+                    transform: 'rotate(45deg)',
+                }}
+            />
+        );
+    }
+    return (
+        <div
+            style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                backgroundColor: '#555',
+            }}
+        />
+    );
+};
+
 const ROW_ACTION_STYLE: React.CSSProperties = {
     marginLeft: '4px',
     flexShrink: 0,
@@ -535,6 +576,11 @@ export interface LegendPanelProps {
     onCollapsedChange?: (collapsed: boolean) => void;
     // Colored border cue when a cross-panel sample filter is active.
     isFilterActive?: boolean;
+    // Shape-by static key, e.g.
+    // [{ value: 'Female', shape: 'triangle' }, { value: 'Male', shape: 'diamond' }].
+    // Independent of the category list above - not selectable/hideable.
+    shapeLegendEntries?: { value: string; shape: string }[];
+    shapeAttributeDisplayName?: string;
 }
 
 export const LegendPanel: React.FC<LegendPanelProps> = ({
@@ -568,6 +614,8 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
     isCollapsed: controlledIsCollapsed,
     onCollapsedChange,
     isFilterActive = false,
+    shapeLegendEntries,
+    shapeAttributeDisplayName,
 }) => {
     const [isConfigExpanded, setIsConfigExpanded] = React.useState(false);
     const [localIsCollapsed, setLocalIsCollapsed] = React.useState(false);
@@ -933,6 +981,58 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                             );
                         }
                     )}
+                </div>
+            )}
+
+            {/* Shape-by static key, independent of the
+                category list above - not selectable/hideable. */}
+            {shapeLegendEntries && shapeLegendEntries.length > 0 && (
+                <div
+                    style={{
+                        borderTop: '1px solid #eee',
+                        paddingTop: '8px',
+                        marginTop: '8px',
+                        flexShrink: 0,
+                    }}
+                >
+                    <div
+                        style={{
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            color: '#666',
+                            marginBottom: '4px',
+                        }}
+                    >
+                        Shape{shapeAttributeDisplayName &&
+                            `: ${shapeAttributeDisplayName}`}
+                    </div>
+                    {shapeLegendEntries.map(entry => (
+                        <div
+                            key={entry.value}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                marginBottom: '2px',
+                                padding: '2px',
+                            }}
+                        >
+                            <div
+                                style={{
+                                    width: '10px',
+                                    height: '10px',
+                                    marginRight: '6px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <ShapeSwatch shape={entry.shape} />
+                            </div>
+                            <span style={{ fontSize: '12px' }}>
+                                {entry.value}
+                            </span>
+                        </div>
+                    ))}
                 </div>
             )}
 

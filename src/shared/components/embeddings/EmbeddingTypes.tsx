@@ -3,6 +3,19 @@
  */
 
 import { GradientOverride } from './controls/GradientRangeEditor';
+import { ClinicalAttribute } from 'cbioportal-ts-api-client';
+
+// Mirrors ColoringMenuOmnibarOption's shape, but narrower - shape only
+// ever supports clinical attributes, never genes - so a dropdown selection
+// carries the full attribute back directly instead of needing a reverse
+// lookup into a candidate list.
+export type ShapeMenuOption = {
+    label: string;
+    value: string;
+    info: {
+        clinicalAttribute: ClinicalAttribute;
+    };
+};
 
 interface BaseEmbeddingData {
     studyIds: string[];
@@ -47,6 +60,7 @@ export interface EmbeddingPoint {
     patientId?: string;
     sampleId?: string;
     uniqueSampleKey?: string;
+    shape?: string;
     color?: string;
     strokeColor?: string;
     displayLabel?: string;
@@ -84,6 +98,12 @@ export interface EmbeddingVisualizationProps {
         string,
         { fillColor: string; strokeColor: string; hasStroke: boolean }
     >;
+    // Shape-by. See shapeIconAtlas.ts / createIconLayer.
+    shapeByEnabled?: boolean;
+    // Static legend key, e.g. [{ value: 'Female', shape: 'triangle' }, ...].
+    // Independent of the color category list - not selectable/hideable.
+    shapeLegendEntries?: { value: string; shape: string }[];
+    shapeAttributeDisplayName?: string;
     hiddenCategories?: Set<string>;
     onToggleCategoryVisibility?: (category: string) => void;
     selectedCategories?: Set<string>;
