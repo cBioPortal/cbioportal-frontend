@@ -1,8 +1,47 @@
 import * as React from 'react';
 import { parse } from 'query-string';
+import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import { getServerConfig } from 'config/config';
+import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import { AppWsiViewer } from 'shared/components/wsiViewer/wsiAppConfig';
 import { capWsiViewerHeight } from 'cbioportal-wsi-viewer';
+
+/**
+ * Loads the patient's clinical events for sample acquisition/sequencing
+ * days. The viewer renders without them, and a failed request leaves them
+ * unset, so the viewer shows no sample days.
+ */
+function usePatientClinicalEvents(
+    studyId: string,
+    patientId: string
+): ClinicalEvent[] | undefined {
+    const [events, setEvents] = React.useState<ClinicalEvent[] | undefined>();
+    React.useEffect(() => {
+        setEvents(undefined);
+        if (!studyId || !patientId) {
+            return;
+        }
+        let cancelled = false;
+        internalClient
+            .getAllClinicalEventsOfPatientInStudyUsingGET({
+                studyId,
+                patientId,
+                projection: 'DETAILED',
+            })
+            .then(
+                result => {
+                    if (!cancelled) {
+                        setEvents(result);
+                    }
+                },
+                () => undefined
+            );
+        return () => {
+            cancelled = true;
+        };
+    }, [studyId, patientId]);
+    return events;
+}
 
 interface Props {
     match: { params: { patientId: string } };
@@ -24,6 +63,10 @@ export default function WsiPatientViewRoute({ match, location }: Props) {
             ? query.slideKey
             : undefined;
     const tileServerUrl = getServerConfig().wsi_tile_server_url;
+    const clinicalEvents = usePatientClinicalEvents(
+        tileServerUrl ? studyId : '',
+        match.params.patientId
+    );
 
     if (!studyId || !tileServerUrl) {
         return (
@@ -48,6 +91,7 @@ export default function WsiPatientViewRoute({ match, location }: Props) {
             tileServerUrl={tileServerUrl}
             height={height}
             requestedSlideKey={requestedSlideKey}
+            clinicalEvents={clinicalEvents}
         />
     );
 }

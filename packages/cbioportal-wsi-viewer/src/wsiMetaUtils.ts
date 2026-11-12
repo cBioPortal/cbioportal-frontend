@@ -6,12 +6,19 @@ import {
     UNMATCHED_SAMPLE_ID,
     WsiStainKind,
 } from './wsiViewerTypes';
-import { cleanStain, fmtFileSize, normalizeBlockLabel } from './wsiNavUtils';
+import {
+    cleanStain,
+    DAY_ZERO_TOOLTIP,
+    fmtFileSize,
+    formatDaysSinceDiagnosis,
+    normalizeBlockLabel,
+} from './wsiNavUtils';
 import { blockName, realPartDescription } from './wsiSpecimenUtils';
 import { formatSlideId } from './wsiSlideId';
 import { WSI_STAIN_COLORS } from './wsiTheme';
 import { nativeObjectivePower } from './wsiScaleUtils';
 import { getWsiViewerRuntime } from './wsiViewerConfig';
+import { WsiSampleTimeline } from './wsiSampleTimeline';
 
 function freezeMetaRows(rows: MetaRow[]): MetaRow[] {
     rows.forEach(row => Object.freeze(row));
@@ -139,7 +146,8 @@ export function buildPathRows(
     slide: Slide,
     sample: Sample,
     patientId: string,
-    studyId: string
+    studyId: string,
+    sampleTimeline?: WsiSampleTimeline
 ): MetaRow[] {
     const isUnmatchedSample = sample.sample_id === UNMATCHED_SAMPLE_ID;
     const stainBadge = getStainBadge(slide);
@@ -173,6 +181,12 @@ export function buildPathRows(
             href: sampleUrl,
         },
     ];
+    const timeline = isUnmatchedSample
+        ? undefined
+        : buildSampleTimelineRow(sampleTimeline);
+    if (timeline) {
+        rows.push(timeline);
+    }
     if (part) {
         rows.push({
             label: 'Part',
@@ -217,4 +231,37 @@ export function buildPathRows(
     }
 
     return freezeMetaRows(rows);
+}
+
+/**
+ * One row for the sample's acquisition and sequencing days from the patient
+ * timeline, or undefined when it has neither.
+ */
+function buildSampleTimelineRow(
+    sampleTimeline: WsiSampleTimeline | undefined
+): MetaRow | undefined {
+    const parts: string[] = [];
+    if (sampleTimeline?.acquisitionDays != null) {
+        parts.push(
+            `acquired ${formatDaysSinceDiagnosis(
+                sampleTimeline.acquisitionDays
+            )}`
+        );
+    }
+    if (sampleTimeline?.sequencingDays != null) {
+        parts.push(
+            `sequenced ${formatDaysSinceDiagnosis(
+                sampleTimeline.sequencingDays
+            )}`
+        );
+    }
+    if (parts.length === 0) {
+        return undefined;
+    }
+    return {
+        label: 'Timeline',
+        labelTip: 'Sample acquisition and sequencing days',
+        value: parts.join(' · '),
+        valueTip: DAY_ZERO_TOOLTIP,
+    };
 }

@@ -1098,6 +1098,77 @@ describe('WsiNavPanel', () => {
         ]);
     });
 
+    describe('sample sequencing context', () => {
+        function renderWithTimelines(
+            samples: Sample[],
+            sampleTimelines?: Map<
+                string,
+                { acquisitionDays?: number; sequencingDays?: number }
+            >
+        ) {
+            return TestRenderer.create(
+                <WsiNavPanel
+                    hierarchy={makeHierarchy(samples)}
+                    selectedSlide={null}
+                    stainFilter="all"
+                    onFilterChange={() => {}}
+                    onSelectSlide={() => {}}
+                    sampleTimelines={sampleTimelines}
+                    {...navContext}
+                />
+            );
+        }
+
+        it('shows the sample sequencing day in the sample header', () => {
+            const renderer = renderWithTimelines(
+                [makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })])],
+                new Map([['S-1', { sequencingDays: 7 }]])
+            );
+
+            expect(findButtonText(renderer, 'wsi-sample-sequenced-S-1')).toBe(
+                'sequenced d+7'
+            );
+            const tooltip = renderer.root
+                .findAllByType(DefaultTooltip)
+                .find(
+                    node =>
+                        node.findAll(
+                            child =>
+                                child.props['data-testid'] ===
+                                'wsi-sample-sequenced-S-1'
+                        ).length
+                )!;
+            expect(
+                flattenRenderedText(
+                    TestRenderer.create(tooltip.props.overlay).toJSON()
+                )
+            ).toContain('first tumor sequencing (d0)');
+        });
+
+        it('shows no sequencing day without one, or for unmatched slides', () => {
+            const renderer = renderWithTimelines(
+                [
+                    makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })]),
+                    makeSample('UNMATCHED', [
+                        makeSlide({ slide_key: 'slide-u' }),
+                    ]),
+                ],
+                new Map([
+                    ['S-1', { acquisitionDays: -242 }],
+                    ['UNMATCHED', { sequencingDays: 7 }],
+                ])
+            );
+
+            ['S-1', 'UNMATCHED'].forEach(sampleId =>
+                expect(
+                    renderer.root.findAllByProps({
+                        'data-testid': `wsi-sample-sequenced-${sampleId}`,
+                    })
+                ).toHaveLength(0)
+            );
+        });
+    });
+
     it('offers an explicit show-all action when route filters are active', () => {
         const onClearFilters = jest.fn();
         const renderer = TestRenderer.create(

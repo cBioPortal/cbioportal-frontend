@@ -123,6 +123,61 @@ describe('WSIViewer foundation behavior', () => {
         });
     });
 
+    describe('sample timeline', () => {
+        function textOf(node: any): string {
+            if (typeof node === 'string') {
+                return node;
+            }
+            return (node?.children || []).map(textOf).join(' ');
+        }
+
+        function renderSelected(sampleTimelines?: Map<string, any>) {
+            const slide = testSlide('slide-a');
+            const instance = makeInstance({ sampleTimelines });
+            action(() => {
+                instance.viewerState.hierarchy = hierarchyOf([slide]);
+                instance.viewerState.loading = false;
+                instance.viewerState.selectedSlide = slide;
+                instance.viewerState.selectedSample =
+                    instance.viewerState.hierarchy.samples[0];
+            })();
+            return TestRenderer.create(instance.render());
+        }
+
+        it('shows the sample sequencing context in the list and pathology panel', () => {
+            const rendered = renderSelected(
+                new Map([['S-1', { acquisitionDays: -242, sequencingDays: 7 }]])
+            );
+            const sidebar = textOf(
+                rendered.root.findByProps({
+                    'data-testid': 'wsi-metadata-sidebar',
+                })
+            );
+            expect(sidebar).toContain(
+                'Timeline acquired d-242 · sequenced d+7'
+            );
+
+            expect(
+                textOf(
+                    rendered.root.findByProps({
+                        'data-testid': 'wsi-sample-sequenced-S-1',
+                    })
+                )
+            ).toBe('sequenced d+7');
+        });
+
+        it('has no timeline context without timeline data', () => {
+            const rendered = renderSelected();
+            const sidebar = textOf(
+                rendered.root.findByProps({
+                    'data-testid': 'wsi-metadata-sidebar',
+                })
+            );
+            expect(sidebar).not.toContain('Timeline');
+            expect(sidebar).not.toContain('sequenced');
+        });
+    });
+
     describe('linked sample scope', () => {
         function scopedInstance(pathologyFilter?: Record<string, string>) {
             const instance = makeInstance({ pathologyFilter });

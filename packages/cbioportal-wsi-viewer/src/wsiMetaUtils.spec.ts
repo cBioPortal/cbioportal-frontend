@@ -279,6 +279,55 @@ describe('buildPathRows', () => {
     });
 });
 
+describe('buildPathRows timeline row', () => {
+    function timeline(rows: ReturnType<typeof buildPathRows>) {
+        return rows.find(row => row.label === 'Timeline')?.value;
+    }
+
+    it('shows the sample acquisition and sequencing days in one row', () => {
+        const rows = buildPathRows({ ...slide }, sample, 'P-1', 'study-1', {
+            acquisitionDays: -242,
+            sequencingDays: 7,
+        });
+
+        expect(timeline(rows)).toBe('acquired d-242 · sequenced d+7');
+        const labels = rows.map(row => row.label);
+        ['Acquired', 'Sequenced'].forEach(label =>
+            expect(labels).not.toContain(label)
+        );
+    });
+
+    it('shows only the known day', () => {
+        expect(
+            timeline(
+                buildPathRows({ ...slide }, sample, 'P-1', 'study-1', {
+                    sequencingDays: 7,
+                })
+            )
+        ).toBe('sequenced d+7');
+    });
+
+    it('has no timeline row for unmatched slides', () => {
+        expect(
+            timeline(
+                buildPathRows(
+                    { ...slide },
+                    { ...sample, sample_id: 'UNMATCHED' },
+                    'P-1',
+                    'study-1',
+                    { acquisitionDays: 1, sequencingDays: 7 }
+                )
+            )
+        ).toBe(undefined);
+    });
+
+    it('has no timeline row without the sample timeline', () => {
+        expect(
+            timeline(buildPathRows({ ...slide }, sample, 'P-1', 'study-1'))
+        ).toBe(undefined);
+    });
+});
+
 describe('buildWsiRows', () => {
     it('shows dimensions, magnification and scanner', () => {
         expect(buildWsiRows(slide, metadata)).toEqual([

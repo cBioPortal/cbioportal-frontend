@@ -24,6 +24,11 @@ import {
     sortTracks,
 } from 'pages/patientView/timeline/timeline_helpers';
 import { downloadZippedTracks } from './timelineDataUtils';
+import {
+    hasPathologySlideEvents,
+    pathologySlidesTrackConfig,
+    withoutPathologySlideLinkouts,
+} from './pathologySlidesTimeline';
 
 export interface ISampleMetaDeta {
     color: { [sampleId: string]: string };
@@ -40,6 +45,11 @@ export interface ITimelineProps {
     samples: Sample[];
     mutationProfileId: string;
     headerWidth?: number;
+    /**
+     * Draws the PATHOLOGY SLIDES events in `data` as the slide track, linked
+     * to the Pathology Slides tab; set when the portal serves slides.
+     */
+    showPathologySlides?: boolean;
 }
 
 const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
@@ -49,6 +59,7 @@ const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
         sampleManager,
         width,
         headerWidth,
+        showPathologySlides,
     }: ITimelineProps) {
         const [events, setEvents] = useState<
             TimelineTrackSpecification[] | null
@@ -72,7 +83,10 @@ const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
 
             const baseConfig: ITimelineConfig = buildBaseConfig(
                 sampleManager,
-                caseMetaData
+                caseMetaData,
+                showPathologySlides && hasPathologySlideEvents(data)
+                    ? [pathologySlidesTrackConfig(caseMetaData, data)]
+                    : []
             );
 
             if (isGenieBpcStudy) {
@@ -110,7 +124,10 @@ const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
                 configureTimelineToxicityColors(baseConfig);
             }
 
-            const trackSpecifications = sortTracks(baseConfig, data);
+            const trackSpecifications = sortTracks(
+                baseConfig,
+                showPathologySlides ? data : withoutPathologySlideLinkouts(data)
+            );
 
             configureTracks(trackSpecifications, baseConfig);
 
