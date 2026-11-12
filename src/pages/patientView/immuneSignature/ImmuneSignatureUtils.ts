@@ -19,8 +19,9 @@ export const MFP_CLASS_SCORE_ATTRIBUTES: Record<string, string> = {
     'IE/F': 'ISIG_PROB_IE_F',
 };
 
-// Entities read from the ISIG_PROBABILITY generic assay profile. All other
-// fields, including the KNN confidence, are read from sample clinical data.
+// Entities read from the ISIG_PROBABILITY generic assay profile, and only from
+// there. All other fields, including the KNN class and confidence, are read
+// from sample clinical data.
 const GENERIC_ASSAY_ATTRIBUTES = new Set<string>(
     Object.values(MFP_CLASS_SCORE_ATTRIBUTES)
 );
@@ -55,9 +56,9 @@ function toNumber(value: string | undefined): number | undefined {
     return isNaN(n) ? undefined : n;
 }
 
-// Generic assay values take precedence over clinical data for the
-// GENERIC_ASSAY_ATTRIBUTES, whose entity stable ids match the attribute ids.
-// The class is the clinical KNN class, or else the most probable class.
+// Probabilities come only from the GENERIC_ASSAY_ATTRIBUTES of the generic
+// assay data; clinical attributes with the same ids are ignored. The class is
+// the clinical KNN class, or else the most probable class.
 // Returns undefined when the sample has neither a class nor probabilities.
 export function getImmuneSignature(
     sampleClinicalData: ClinicalData[],
@@ -65,7 +66,9 @@ export function getImmuneSignature(
 ): ImmuneSignature | undefined {
     const values: Record<string, string> = {};
     sampleClinicalData.forEach(d => {
-        values[d.clinicalAttributeId] = d.value;
+        if (!GENERIC_ASSAY_ATTRIBUTES.has(d.clinicalAttributeId)) {
+            values[d.clinicalAttributeId] = d.value;
+        }
     });
     sampleGenericAssayData.forEach(d => {
         if (GENERIC_ASSAY_ATTRIBUTES.has(d.stableId)) {

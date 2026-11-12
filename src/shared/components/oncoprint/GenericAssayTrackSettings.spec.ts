@@ -54,6 +54,17 @@ describe('GenericAssayTrackSettings', () => {
                 {}
             );
         });
+
+        it('drops profile entries that are not objects', () => {
+            const settings = parseGenericAssayTrackSettings({
+                generic_assay_track_settings:
+                    '{"p1":null,"p2":"bars","p3":[],"p4":{"chartType":"bars"}}',
+            });
+            assert.deepEqual(settings, { p4: { chartType: 'bars' } });
+            assert.deepEqual(getProfilesWithChartType(settings, 'bars'), {
+                p4: true,
+            });
+        });
     });
 
     describe('serializeGenericAssayTrackSettings', () => {

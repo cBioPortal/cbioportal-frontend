@@ -62,7 +62,7 @@ export function parseGenericAssayTrackSettings(
     }
     try {
         const parsed = JSON.parse(query.generic_assay_track_settings);
-        return _.isPlainObject(parsed) ? parsed : {};
+        return _.isPlainObject(parsed) ? _.pickBy(parsed, _.isPlainObject) : {};
     } catch (e) {
         return {};
     }
