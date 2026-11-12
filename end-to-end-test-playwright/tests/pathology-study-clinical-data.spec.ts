@@ -412,7 +412,7 @@ test.describe('study clinical data pathology columns', () => {
     });
 });
 
-test.describe('private MSK-IMPACT clinical data sorting', () => {
+test.describe('filtered study clinical data sorting', () => {
     test.beforeEach(async ({ page }) => {
         await installStudyMocks(page);
     });
