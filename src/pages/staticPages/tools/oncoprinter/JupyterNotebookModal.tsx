@@ -10,6 +10,9 @@ import {
 } from 'react-bootstrap';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 
+const JUPYTERLITE_URL = 'https://cbio-jupyter.netlify.app/lite/lab/index.html';
+const JUPYTERLITE_ORIGIN = new URL(JUPYTERLITE_URL).origin;
+
 interface FilenameModalProps {
     show: boolean;
     fileContent: string;
@@ -70,16 +73,21 @@ class JupyterNoteBookModal extends React.Component<
             folderName: folderName,
         };
 
-        const jupyterNotebookTool = window.open(
-            'https://cbio-jupyter.netlify.app/lite/lab/index.html',
-            '_blank'
-        );
+        const jupyterNotebookTool = window.open(JUPYTERLITE_URL, '_blank');
 
         if (jupyterNotebookTool) {
             const receiveMessage = (event: MessageEvent) => {
-                if (event.data.type === 'jupyterlite-ready') {
+                // Only answer the JupyterLite window we opened, and only send
+                // the data to its origin.
+                if (
+                    event.source !== jupyterNotebookTool ||
+                    event.origin !== JUPYTERLITE_ORIGIN
+                ) {
+                    return;
+                }
+                if (event.data?.type === 'jupyterlite-ready') {
                     console.log('Now sending the data...');
-                    jupyterNotebookTool.postMessage(data, '*');
+                    jupyterNotebookTool.postMessage(data, JUPYTERLITE_ORIGIN);
                     window.removeEventListener('message', receiveMessage);
                     this.props.handleClose();
                 }
