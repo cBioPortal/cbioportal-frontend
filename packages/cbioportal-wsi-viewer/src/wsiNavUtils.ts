@@ -8,7 +8,7 @@ export function formatDaysSinceDiagnosis(days: number): string {
 
 /** Explains the day notation wherever a sample day is shown. */
 export const DAY_ZERO_TOOLTIP =
-    "Days are counted from the patient's first tumor sequencing (d0): " +
+    "Days are counted from day 0 (d0) of the patient's timeline: " +
     'd-242 is 242 days before it, d+7 is 7 days after.';
 
 /**

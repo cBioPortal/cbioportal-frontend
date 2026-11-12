@@ -1142,7 +1142,7 @@ describe('WsiNavPanel', () => {
                 flattenRenderedText(
                     TestRenderer.create(tooltip.props.overlay).toJSON()
                 )
-            ).toContain('first tumor sequencing (d0)');
+            ).toContain("day 0 (d0) of the patient's timeline");
         });
 
         it('shows no sequencing day without one, or for unmatched slides', () => {
