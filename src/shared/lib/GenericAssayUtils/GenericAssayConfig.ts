@@ -14,11 +14,19 @@ export const GenericAssayTypeConstants: { [s: string]: string } = {
     ARMLEVEL_CNA: 'ARMLEVEL_CNA',
     LOH_HLA: 'LOH_HLA',
     METHYLATION: 'METHYLATION',
+    ISIG_PROBABILITY: 'ISIG_PROBABILITY',
 };
 
 export type GenericAssayTypeConfig = {
     // Add more Generic Assay type specific config at here
     displayTitleText?: string;
+    // Entities whose values are categories of one classification, in display
+    // order, with their labels and colors. Used by the stacked bar and
+    // dominant category oncoprint tracks and by derived entities.
+    categories?: GenericAssayCategory[];
+    // Entities computed in the frontend from the profile's data, offered in
+    // the plots tab next to the profile's own entities.
+    derivedEntities?: GenericAssayDerivedEntity[];
     globalConfig?: GlobalConfig;
     oncoprintTrackConfig?: OncoprintTrackConfig;
     plotsTabConfig?: PlotsTabConfig;
@@ -27,9 +35,49 @@ export type GenericAssayTypeConfig = {
     downloadTabConfig?: DownloadTabConfig;
 };
 
+export type GenericAssayOncoprintChartType =
+    | 'heatmap'
+    | 'bars'
+    | 'composition'
+    | 'absolute'
+    | 'dominant'
+    | 'composition_dominant';
+
+export const GENERIC_ASSAY_CHART_TYPE_LABELS: {
+    [type in GenericAssayOncoprintChartType]: string;
+} = {
+    heatmap: 'Separate rows (heatmap)',
+    bars: 'Separate rows (bar chart)',
+    composition: 'Stacked bar (composition)',
+    absolute: 'Stacked bar (absolute)',
+    dominant: 'Dominant category',
+    composition_dominant: 'Dominant category + stacked bar',
+};
+
+export type GenericAssayCategory = {
+    stableId: string;
+    label: string;
+    color: string;
+};
+
+export type GenericAssayDerivedEntity = {
+    // Must start with DERIVED_GENERIC_ASSAY_ENTITY_PREFIX.
+    stableId: string;
+    name: string;
+    description?: string;
+    // dominantCategory: the label of the category with the highest value.
+    derivation: 'dominantCategory';
+};
+
+export const DERIVED_GENERIC_ASSAY_ENTITY_PREFIX = 'DERIVED_';
+
 export type OncoprintTrackConfig = {
     formatNameUsingCompactLabel?: boolean;
     formatDescriptionUsingCommonLabel?: boolean;
+    // Chart types offered for the profile, in menu order. The first one is
+    // used when tracks are added. Defaults to every type except 'dominant'
+    // and 'composition_dominant'.
+    chartTypes?: GenericAssayOncoprintChartType[];
 };
 
 export type PlotsTabConfig = {
@@ -146,6 +194,43 @@ const DEFAULT_GENERIC_ASSAY_CONFIG: GenericAssayConfig = {
                 formatDownloadHeaderUsingCompactLabel: true,
             },
         },
+        [GenericAssayTypeConstants.ISIG_PROBABILITY]: {
+            displayTitleText: 'Immune Signature',
+            categories: [
+                {
+                    stableId: 'ISIG_PROB_D',
+                    label: 'Desert (D)',
+                    color: '#c8b631',
+                },
+                {
+                    stableId: 'ISIG_PROB_F',
+                    label: 'Fibrotic (F)',
+                    color: '#c4375b',
+                },
+                {
+                    stableId: 'ISIG_PROB_IE',
+                    label: 'Immune Enriched (IE)',
+                    color: '#3b4fb8',
+                },
+                {
+                    stableId: 'ISIG_PROB_IE_F',
+                    label: 'Immune Enriched / Fibrotic (IE/F)',
+                    color: '#2a9d8f',
+                },
+            ],
+            derivedEntities: [
+                {
+                    stableId: 'DERIVED_ISIG_DOMINANT',
+                    name: 'Dominant immune signature',
+                    description:
+                        'Immune signature class with the highest probability',
+                    derivation: 'dominantCategory',
+                },
+            ],
+            oncoprintTrackConfig: {
+                chartTypes: ['composition_dominant'],
+            },
+        },
     },
 };
 
@@ -153,6 +238,65 @@ export const GENERIC_ASSAY_CONFIG: GenericAssayConfig = _.merge(
     DEFAULT_GENE_RELATED_CONFIG,
     DEFAULT_GENERIC_ASSAY_CONFIG
 );
+
+// 'absolute' is left out for fraction-like data, where every stacked bar
+// would be full height.
+export function getGenericAssayChartTypes(
+    genericAssayType: string | undefined,
+    isFractionLike: boolean = false
+): GenericAssayOncoprintChartType[] {
+    const configured = genericAssayType
+        ? GENERIC_ASSAY_CONFIG.genericAssayConfigByType[genericAssayType]
+              ?.oncoprintTrackConfig?.chartTypes
+        : undefined;
+    const types: GenericAssayOncoprintChartType[] = configured || [
+        'heatmap',
+        'bars',
+        'composition',
+        'absolute',
+    ];
+    return isFractionLike ? types.filter(t => t !== 'absolute') : types;
+}
+
+// Chart types whose tracks show all of a type's configured categories, so
+// the entities are fixed rather than picked by the user.
+export function chartTypeShowsAllCategories(
+    chartType: GenericAssayOncoprintChartType
+): boolean {
+    return (
+        chartType === 'composition' ||
+        chartType === 'dominant' ||
+        chartType === 'composition_dominant'
+    );
+}
+
+export function getGenericAssayCategories(
+    genericAssayType: string | undefined
+): GenericAssayCategory[] | undefined {
+    return genericAssayType
+        ? GENERIC_ASSAY_CONFIG.genericAssayConfigByType[genericAssayType]
+              ?.categories
+        : undefined;
+}
+
+export function getGenericAssayDerivedEntities(
+    genericAssayType: string | undefined
+): GenericAssayDerivedEntity[] {
+    return (
+        (genericAssayType &&
+            GENERIC_ASSAY_CONFIG.genericAssayConfigByType[genericAssayType]
+                ?.derivedEntities) ||
+        []
+    );
+}
+
+export function isDerivedGenericAssayEntityId(
+    stableId: string | undefined
+): boolean {
+    return (
+        !!stableId && stableId.startsWith(DERIVED_GENERIC_ASSAY_ENTITY_PREFIX)
+    );
+}
 
 export function getFrequencyTableCategoryPriority(
     genericAssayType?: string

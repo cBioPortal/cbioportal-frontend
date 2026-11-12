@@ -8,7 +8,14 @@ import { MolecularProfileOption } from 'pages/studyView/StudyViewUtils';
 import numeral from 'numeral';
 import styles from './styles.module.scss';
 import { doesOptionMatchSearchText } from 'shared/lib/GenericAssayUtils/GenericAssaySelectionUtils';
-import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import {
+    GENERIC_ASSAY_CHART_TYPE_LABELS,
+    GENERIC_ASSAY_CONFIG,
+    GenericAssayOncoprintChartType,
+    chartTypeShowsAllCategories,
+    getGenericAssayCategories,
+    getGenericAssayChartTypes,
+} from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import {
     COMMON_GENERIC_ASSAY_PROPERTY,
     deriveDisplayTextFromGenericAssayType,
@@ -50,17 +57,11 @@ export interface IGenericAssaySelectionProps {
     ) => void;
 }
 
-export type GenericAssayChartType =
-    | 'heatmap'
-    | 'bar'
-    | 'stacked_composition'
-    | 'stacked_absolute';
-
 export type GenericAssayTrackInfo = {
     profileId: string;
     genericAssayType: string;
     genericAssayEntityId: string;
-    chartType?: GenericAssayChartType;
+    chartType?: GenericAssayOncoprintChartType;
 };
 
 interface ISelectOption {
@@ -98,7 +99,10 @@ export default class GenericAssaySelection extends React.Component<
 
     @observable.ref private _selectedGenericAssayEntityIds: string[] = [];
     @observable private _genericAssaySearchText: string = '';
-    @observable private _chartType: GenericAssayChartType = 'heatmap';
+    @observable
+    private _chartType: GenericAssayOncoprintChartType = getGenericAssayChartTypes(
+        this.props.genericAssayType
+    )[0];
     private overridePlaceHolderText =
         GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
             this.props.genericAssayType
@@ -107,10 +111,15 @@ export default class GenericAssaySelection extends React.Component<
     @action.bound
     private onSubmit() {
         if (this.selectedProfileOption !== undefined) {
-            const option = this.selectedProfileOption as MolecularProfileOption & {
+            const option = this
+                .selectedProfileOption as MolecularProfileOption & {
                 profileName: string;
             };
-            const selectedIds = this.validSelectedGenericAssayEntityIds;
+            const selectedIds = this.entitiesFixedByChartType
+                ? getGenericAssayCategories(this.props.genericAssayType)!.map(
+                      c => c.stableId
+                  )
+                : this.validSelectedGenericAssayEntityIds;
             const shouldAddFrequencyTable = Boolean(
                 this.props.onFrequencyTableSubmit &&
                     selectedIds.includes(GENERIC_ASSAY_FREQUENCY_TABLE_OPTION)
@@ -123,33 +132,30 @@ export default class GenericAssaySelection extends React.Component<
                 this.props.onFrequencyTableSubmit!(option);
             }
             if (this.props.onChartSubmit && selectedEntityIds.length > 0) {
-                const charts = selectedEntityIds.map(
-                    entityId => {
-                        const entityName = GENERIC_ASSAY_CONFIG
-                            .genericAssayConfigByType[
-                            this.props.genericAssayType
-                        ]?.selectionConfig?.formatChartNameUsingCompactLabel
-                            ? formatGenericAssayCompactLabelByNameAndId(
-                                  entityId,
-                                  getGenericAssayPropertyOrDefault(
-                                      this.props.entityMap[entityId]
-                                          .genericEntityMetaProperties,
-                                      COMMON_GENERIC_ASSAY_PROPERTY.NAME,
-                                      entityId
-                                  )
+                const charts = selectedEntityIds.map(entityId => {
+                    const entityName = GENERIC_ASSAY_CONFIG
+                        .genericAssayConfigByType[this.props.genericAssayType]
+                        ?.selectionConfig?.formatChartNameUsingCompactLabel
+                        ? formatGenericAssayCompactLabelByNameAndId(
+                              entityId,
+                              getGenericAssayPropertyOrDefault(
+                                  this.props.entityMap[entityId]
+                                      .genericEntityMetaProperties,
+                                  COMMON_GENERIC_ASSAY_PROPERTY.NAME,
+                                  entityId
                               )
-                            : entityId;
-                        return {
-                            name: entityName + ': ' + option.profileName,
-                            description: option.description,
-                            profileType: option.value,
-                            genericAssayType: this.props.genericAssayType,
-                            dataType: option.dataType,
-                            genericAssayEntityId: entityId,
-                            patientLevel: option.patientLevel,
-                        };
-                    }
-                );
+                          )
+                        : entityId;
+                    return {
+                        name: entityName + ': ' + option.profileName,
+                        description: option.description,
+                        profileType: option.value,
+                        genericAssayType: this.props.genericAssayType,
+                        dataType: option.dataType,
+                        genericAssayEntityId: entityId,
+                        patientLevel: option.patientLevel,
+                    };
+                });
                 this.props.onChartSubmit(charts);
             }
             if (shouldAddFrequencyTable || selectedEntityIds.length > 0) {
@@ -233,7 +239,7 @@ export default class GenericAssaySelection extends React.Component<
     @computed
     private get buttonDisabled() {
         // disable button only when we don't allow empty submissions and has zero selected entities
-        if (this.props.allowEmptySubmission) {
+        if (this.props.allowEmptySubmission || this.entitiesFixedByChartType) {
             return false;
         } else {
             return _.isEmpty(this.validSelectedGenericAssayEntityIds);
@@ -246,6 +252,16 @@ export default class GenericAssaySelection extends React.Component<
         return _.keyBy(
             this.genericAssayOptions,
             (option: ISelectOption) => option.value
+        );
+    }
+
+    // Stacked bar and dominant category tracks of a type with configured
+    // categories always show those categories, so there is nothing to pick.
+    @computed get entitiesFixedByChartType(): boolean {
+        return (
+            !!this.props.showChartTypeSelector &&
+            !!getGenericAssayCategories(this.props.genericAssayType) &&
+            chartTypeShowsAllCategories(this._chartType)
         );
     }
 
@@ -300,7 +316,8 @@ export default class GenericAssaySelection extends React.Component<
     @computed get genericAssayOptions() {
         // add select all option only when options have been filtered and has at least one filtered option
         // one generic assay profile usually contains hundreds of options, we don't want user try to add all options without filtering the option
-        let allOptionsInSelectedProfile = this.selectedProfileSupportsFrequencyTable
+        let allOptionsInSelectedProfile = this
+            .selectedProfileSupportsFrequencyTable
             ? _.concat(
                   {
                       value: GENERIC_ASSAY_FREQUENCY_TABLE_OPTION,
@@ -445,7 +462,9 @@ export default class GenericAssaySelection extends React.Component<
                 </div>
                 <div
                     style={{
-                        display: 'flex',
+                        display: this.entitiesFixedByChartType
+                            ? 'none'
+                            : 'flex',
                         marginTop: 10,
                         alignItems: 'center',
                     }}
@@ -516,63 +535,61 @@ export default class GenericAssaySelection extends React.Component<
                         </button>
                     )}
                 </div>
-                {this.props.showChartTypeSelector && (
-                    <div
-                        style={{
-                            marginTop: 12,
-                            fontSize: 12,
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            alignItems: 'center',
-                            columnGap: 14,
-                            rowGap: 4,
-                        }}
-                        data-test="GenericAssayChartTypeSelector"
-                    >
-                        <span style={{ fontWeight: 600 }}>Chart type:</span>
-                        {[
-                            {
-                                value: 'heatmap',
-                                label: 'Separate rows (heatmap)',
-                            },
-                            {
-                                value: 'bar',
-                                label: 'Separate rows (bar chart)',
-                            },
-                            {
-                                value: 'stacked_composition',
-                                label: 'Stacked bar (composition)',
-                            },
-                            {
-                                value: 'stacked_absolute',
-                                label: 'Stacked bar (absolute)',
-                            },
-                        ].map(opt => (
-                            <label
-                                key={opt.value}
-                                style={{
-                                    fontWeight: 'normal',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    marginBottom: 0,
-                                    cursor: 'pointer',
-                                }}
-                            >
-                                <input
-                                    type="radio"
-                                    name="ga-chart-type"
-                                    value={opt.value}
-                                    checked={this._chartType === opt.value}
-                                    onChange={action(() => {
-                                        this._chartType = opt.value as GenericAssayChartType;
-                                    })}
-                                    style={{ marginRight: 5, marginTop: 0 }}
-                                />
-                                {opt.label}
-                            </label>
-                        ))}
-                    </div>
-                )}
+                {this.props.showChartTypeSelector &&
+                    getGenericAssayChartTypes(this.props.genericAssayType)
+                        .length > 1 && (
+                        <div
+                            style={{
+                                marginTop: 12,
+                                fontSize: 12,
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                alignItems: 'center',
+                                columnGap: 14,
+                                rowGap: 4,
+                            }}
+                            data-test="GenericAssayChartTypeSelector"
+                        >
+                            <span style={{ fontWeight: 600 }}>Chart type:</span>
+                            {getGenericAssayChartTypes(
+                                this.props.genericAssayType
+                            )
+                                .map(type => ({
+                                    value: type,
+                                    label:
+                                        GENERIC_ASSAY_CHART_TYPE_LABELS[type],
+                                }))
+                                .map(opt => (
+                                    <label
+                                        key={opt.value}
+                                        style={{
+                                            fontWeight: 'normal',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            marginBottom: 0,
+                                            cursor: 'pointer',
+                                        }}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="ga-chart-type"
+                                            value={opt.value}
+                                            checked={
+                                                this._chartType === opt.value
+                                            }
+                                            onChange={action(() => {
+                                                this._chartType = opt.value;
+                                            })}
+                                            style={{
+                                                marginRight: 5,
+                                                marginTop: 0,
+                                            }}
+                                        />
+                                        {opt.label}
+                                    </label>
+                                ))}
+                        </div>
+                    )}
                 <div style={{ display: 'flex', marginTop: 12 }}>
                     <button
                         disabled={this.buttonDisabled}

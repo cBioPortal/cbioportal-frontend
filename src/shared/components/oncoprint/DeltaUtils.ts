@@ -208,31 +208,52 @@ export function transitionShowSublabels(
 type TrackSpecsWithDynamicGroups = {
     heatmapTracks: { trackGroupIndex: number }[];
     genesetHeatmapTracks: { trackGroupIndex: number }[];
+    categoricalTracks?: { trackGroupIndex: number }[];
 };
+
+// Groups added below the genetic tracks (heatmaps, generic assay categorical
+// and stacked bar tracks) sort before the genetic tracks, in display order.
+function getDynamicTrackGroups(props: Partial<TrackSpecsWithDynamicGroups>) {
+    return _.sortBy(
+        _.uniq(
+            (props.heatmapTracks || [])
+                .concat(props.genesetHeatmapTracks || [])
+                .concat(props.categoricalTracks || [])
+                .map(x => x.trackGroupIndex)
+        )
+    );
+}
 
 type GenericAssayProfileToTrackIdMap = {
     [molecularProfileId: string]: undefined | TrackId;
 };
+
+// The track whose rule set each generic assay profile's categorical tracks
+// share. Stacked bar tracks have their own rule sets, which a single-category
+// track of the same profile must not share.
+export function getGenericAssayCategoricalRuleSetTrackIds(
+    categoricalTracks: ICategoricalTrackSpec[],
+    trackSpecKeyToTrackId: { [key: string]: TrackId }
+): GenericAssayProfileToTrackIdMap {
+    return _.chain(categoricalTracks)
+        .filter(
+            (s: ICategoricalTrackSpec) =>
+                s.molecularAlterationType ===
+                    AlterationTypeConstants.GENERIC_ASSAY && !s.stackedBar
+        )
+        .groupBy((track: ICategoricalTrackSpec) => track.molecularProfileId)
+        .mapValues((o: ICategoricalTrackSpec[]) => _.last(o))
+        .mapValues((o: ICategoricalTrackSpec) => trackSpecKeyToTrackId[o.key])
+        .value();
+}
 
 export function transitionTrackGroupSortPriority(
     nextProps: TrackSpecsWithDynamicGroups,
     prevProps: Partial<TrackSpecsWithDynamicGroups>,
     oncoprint: OncoprintJS
 ) {
-    const prevHeatmapTrackGroups = _.sortBy(
-        _.uniq(
-            (prevProps.heatmapTracks || [])
-                .concat(prevProps.genesetHeatmapTracks || [])
-                .map(x => x.trackGroupIndex)
-        )
-    );
-    const nextHeatmapTrackGroups = _.sortBy(
-        _.uniq(
-            nextProps.heatmapTracks
-                .concat(nextProps.genesetHeatmapTracks)
-                .map(x => x.trackGroupIndex)
-        )
-    );
+    const prevHeatmapTrackGroups = getDynamicTrackGroups(prevProps);
+    const nextHeatmapTrackGroups = getDynamicTrackGroups(nextProps);
     if (_.xor(nextHeatmapTrackGroups, prevHeatmapTrackGroups).length) {
         // if track groups have changed
         oncoprint.setTrackGroupSortPriority(
@@ -704,18 +725,10 @@ function transitionTracks(
         .mapValues((o: IHeatmapTrackSpec) => trackSpecKeyToTrackId[o.key])
         .value();
 
-    trackIdForRuleSetSharing.genericAssayCategorical = _.chain(
-        prevProps.categoricalTracks
-    )
-        .filter(
-            (s: ICategoricalTrackSpec) =>
-                s.molecularAlterationType ===
-                AlterationTypeConstants.GENERIC_ASSAY
-        )
-        .groupBy((track: ICategoricalTrackSpec) => track.molecularProfileId)
-        .mapValues((o: ICategoricalTrackSpec[]) => _.last(o))
-        .mapValues((o: ICategoricalTrackSpec) => trackSpecKeyToTrackId[o.key])
-        .value();
+    trackIdForRuleSetSharing.genericAssayCategorical = getGenericAssayCategoricalRuleSetTrackIds(
+        prevProps.categoricalTracks || [],
+        trackSpecKeyToTrackId
+    );
 
     const genericAssayProfilesMap = _.chain(nextProps.heatmapTracks)
         .filter(
