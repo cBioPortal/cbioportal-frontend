@@ -144,9 +144,9 @@ function handleMouseEvents(
     }
 }
 
-const hoverCallback = (
+export const hoverCallback = (
     e: React.MouseEvent<Element, MouseEvent>,
-    styleTag: MutableRefObject<null>,
+    styleTag: MutableRefObject<HTMLStyleElement | null>,
     uniqueId: string
 ) => {
     // this is pretty hacky but turns out to be fastest way to handle hover behavior
@@ -183,8 +183,8 @@ const hoverCallback = (
                 // mouseleave event. we treat it as if it's part of the track element
                 if (
                     e.type === 'mouseleave' &&
-                    (e?.relatedTarget as Element).getAttribute('class') ===
-                        'arrow'
+                    e.relatedTarget instanceof Element &&
+                    e.relatedTarget.classList.contains('arrow')
                 ) {
                     break;
                 } else {

@@ -1,4 +1,9 @@
-import { compareSamplesForNavigation, fmtFileSize } from './wsiNavUtils';
+import {
+    compareSamplesForNavigation,
+    fmtFileSize,
+    formatDaysSinceDiagnosis,
+    formatDaysSinceDiagnosisShort,
+} from './wsiNavUtils';
 import { makeSample } from './wsiTestFixtures';
 
 describe('wsiNavUtils', () => {
@@ -7,6 +12,25 @@ describe('wsiNavUtils', () => {
             expect(fmtFileSize(26.2 * 1024 * 1024)).toBe('26.2 MB');
             expect(fmtFileSize(1407 * 1024 * 1024)).toBe('1.4 GB');
             expect(fmtFileSize(null)).toBe('—');
+        });
+    });
+
+    describe('formatDaysSinceDiagnosis', () => {
+        it('writes days in d-notation', () => {
+            expect(formatDaysSinceDiagnosis(0)).toBe('d0');
+            expect(formatDaysSinceDiagnosis(7)).toBe('d+7');
+            expect(formatDaysSinceDiagnosis(-242)).toBe('d-242');
+        });
+    });
+
+    describe('formatDaysSinceDiagnosisShort', () => {
+        it('keeps d-notation within a year and uses years past it', () => {
+            expect(formatDaysSinceDiagnosisShort(0)).toBe('d0');
+            expect(formatDaysSinceDiagnosisShort(364)).toBe('d+364');
+            expect(formatDaysSinceDiagnosisShort(-364)).toBe('d-364');
+            expect(formatDaysSinceDiagnosisShort(365)).toBe('+1y');
+            expect(formatDaysSinceDiagnosisShort(1096)).toBe('+3y');
+            expect(formatDaysSinceDiagnosisShort(-2393)).toBe('-6.6y');
         });
     });
 

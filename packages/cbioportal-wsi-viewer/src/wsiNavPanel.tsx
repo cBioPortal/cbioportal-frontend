@@ -5,6 +5,7 @@ import {
     PathologySlideMatchFilter,
     Sample,
     Slide,
+    UNMATCHED_SAMPLE_ID,
     WsiStainFilter,
     WsiSlideSource,
 } from './wsiViewerTypes';
@@ -24,6 +25,12 @@ import {
     stainQualifier,
 } from './wsiNavUtils';
 import { getStainDotColor } from './wsiMetaUtils';
+import {
+    sampleSequencedText,
+    sampleSequencedTooltip,
+    WsiSampleTimeline,
+    WsiSampleTimelineMap,
+} from './wsiSampleTimeline';
 import { partDisplayName } from './wsiSpecimenUtils';
 import { scheduleThumbnailRequest } from './thumbnailRequestLimiter';
 import { getWsiSlideSource } from './wsiAuth';
@@ -64,6 +71,8 @@ export interface WsiNavPanelProps {
     tileServerBase: string;
     studyId: string;
     authScope: string;
+    /** Sample acquisition/sequencing days from the patient timeline. */
+    sampleTimelines?: WsiSampleTimelineMap;
     /** Shows a header button that hides the panel. */
     onHide?: () => void;
     /** The host's badge for a sample, e.g. patient view's numbered sample icon. */
@@ -198,6 +207,7 @@ function WsiNavPanelComponent({
     tileServerBase,
     studyId,
     authScope,
+    sampleTimelines,
     onHide,
     renderSampleLabel,
 }: WsiNavPanelProps) {
@@ -515,6 +525,11 @@ function WsiNavPanelComponent({
                             filteredSlides={filteredSlides}
                             sampleIndex={index}
                             selectedSlide={selectedSlide}
+                            sampleTimeline={
+                                sample.sample_id === UNMATCHED_SAMPLE_ID
+                                    ? undefined
+                                    : sampleTimelines?.get(sample.sample_id)
+                            }
                             onSelectSlide={onSelectSlide}
                             tileServerBase={tileServerBase}
                             studyId={studyId}
@@ -650,6 +665,7 @@ function SampleNode({
     sampleIndex,
     selectedSlide,
     filteredSlides,
+    sampleTimeline,
     onSelectSlide,
     tileServerBase,
     studyId,
@@ -661,6 +677,7 @@ function SampleNode({
     filteredSlides: Array<{ slide: Slide; blockLabel: string | null }>;
     sampleIndex: number;
     selectedSlide: Slide | null;
+    sampleTimeline?: WsiSampleTimeline;
     onSelectSlide: (slide: Slide, sample: Sample) => void;
     tileServerBase: string;
     studyId: string;
@@ -691,6 +708,9 @@ function SampleNode({
         }
     }, [selectedSlideKey]);
 
+    const sequencedText = sampleSequencedText(sampleTimeline);
+    const sequencedTooltip = sampleSequencedTooltip(sampleTimeline);
+
     const multiPart = React.useMemo(
         () =>
             open || containsSelectedSlide
@@ -718,7 +738,9 @@ function SampleNode({
                 role="button"
                 tabIndex={0}
                 aria-expanded={open}
-                aria-label={`${sample.sample_id || 'Sample'} slides`}
+                aria-label={`${sample.sample_id || 'Sample'} slides${
+                    sequencedText ? `, sequenced ${sequencedText}` : ''
+                }`}
                 style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -757,6 +779,24 @@ function SampleNode({
                         }}
                     >
                         {sample.sample_id || '—'}
+                        {sequencedText && (
+                            <DefaultTooltip
+                                trigger={['hover']}
+                                placement="top"
+                                overlay={<span>{sequencedTooltip}</span>}
+                            >
+                                <span
+                                    data-testid={`wsi-sample-sequenced-${sample.sample_id}`}
+                                    style={{
+                                        fontWeight: 400,
+                                        color: theme.muted,
+                                        marginLeft: 6,
+                                    }}
+                                >
+                                    {sequencedText}
+                                </span>
+                            </DefaultTooltip>
+                        )}
                     </div>
                 </div>
                 <DefaultTooltip
@@ -806,6 +846,7 @@ const MemoSampleNode = React.memo(SampleNode, (prev, next) => {
         prev.containsSelectedSlide !== next.containsSelectedSlide ||
         prev.sampleIndex !== next.sampleIndex ||
         prev.filteredSlides !== next.filteredSlides ||
+        prev.sampleTimeline !== next.sampleTimeline ||
         prev.onSelectSlide !== next.onSelectSlide ||
         prev.tileServerBase !== next.tileServerBase ||
         prev.studyId !== next.studyId ||

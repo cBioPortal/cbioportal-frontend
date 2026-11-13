@@ -24,6 +24,10 @@ import {
     sortTracks,
 } from 'pages/patientView/timeline/timeline_helpers';
 import { downloadZippedTracks } from './timelineDataUtils';
+import {
+    pathologySlidesTrackConfig,
+    withoutPathologySlideLinkouts,
+} from './pathologySlidesTimeline';
 
 export interface ISampleMetaDeta {
     color: { [sampleId: string]: string };
@@ -40,6 +44,13 @@ export interface ITimelineProps {
     samples: Sample[];
     mutationProfileId: string;
     headerWidth?: number;
+    /**
+     * Draws the PATHOLOGY SLIDES events in `data` as the slide track, linked
+     * to the Pathology Slides tab; set only when that tab is shown. Unset,
+     * they are drawn as a generic track and their LINKOUT is dropped, also
+     * from the downloaded tracks. Read once, when the timeline mounts.
+     */
+    showPathologySlides?: boolean;
 }
 
 const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
@@ -49,12 +60,16 @@ const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
         sampleManager,
         width,
         headerWidth,
+        showPathologySlides,
     }: ITimelineProps) {
         const [events, setEvents] = useState<
             TimelineTrackSpecification[] | null
         >(null);
 
         const [store, setStore] = useState<TimelineStore | null>(null);
+
+        const linkedData = () =>
+            showPathologySlides ? data : withoutPathologySlideLinkouts(data);
 
         useEffect(() => {
             const isGenieBpcStudy = window.location.href.includes('genie_bpc');
@@ -72,7 +87,10 @@ const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
 
             const baseConfig: ITimelineConfig = buildBaseConfig(
                 sampleManager,
-                caseMetaData
+                caseMetaData,
+                showPathologySlides
+                    ? [pathologySlidesTrackConfig(caseMetaData, data)]
+                    : []
             );
 
             if (isGenieBpcStudy) {
@@ -110,7 +128,7 @@ const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
                 configureTimelineToxicityColors(baseConfig);
             }
 
-            const trackSpecifications = sortTracks(baseConfig, data);
+            const trackSpecifications = sortTracks(baseConfig, linkedData());
 
             configureTracks(trackSpecifications, baseConfig);
 
@@ -129,7 +147,7 @@ const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
                                 width={width}
                                 headerWidth={headerWidth}
                                 onClickDownload={() =>
-                                    downloadZippedTracks(data)
+                                    downloadZippedTracks(linkedData())
                                 }
                             />
                         </div>
