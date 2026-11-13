@@ -13,6 +13,7 @@ import {
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { fetchGenericAssayMetaFirstPageWithGenes } from 'shared/lib/GenericAssayUtils/GenericAssayMetaFirstPage';
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import { makeDerivedGenericAssayMetas } from 'shared/lib/GenericAssayUtils/GenericAssayDerivedEntityUtils';
 import {
     DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING,
     GENERIC_ASSAY_SEARCH_DEBOUNCE_MS,
@@ -254,6 +255,15 @@ export class GenericAssayAxisOptions {
         );
     }
 
+    // entities computed in the frontend from the profile's data; they are
+    // listed first, so a derived entity is the default option
+    @computed private get derivedEntities(): GenericAssayMeta[] {
+        const profile = _.first(this.context.profiles.slice());
+        return profile
+            ? makeDerivedGenericAssayMetas(profile.genericAssayType)
+            : [];
+    }
+
     // deep-linked selection that is not in the default options
     readonly urlOptionMeta = remoteData<GenericAssayMeta | undefined>({
         await: () => [
@@ -268,6 +278,7 @@ export class GenericAssayAxisOptions {
                 value === SAME_SELECTED_OPTION_STRING_VALUE ||
                 this.pickedOptions[value] ||
                 [
+                    ...this.derivedEntities,
                     ...this.defaultEntities,
                     ...this.selectedEntitiesMeta.result!,
                 ].some(m => m.stableId === value)
@@ -298,15 +309,18 @@ export class GenericAssayAxisOptions {
     private arrange(metas: GenericAssayMeta[], searchText?: string) {
         const sameOption = this.context.sameOption;
         return arrangeGenericAssayOptions({
-            options: this.makeOptions(
-                sortByStableId(
+            options: this.makeOptions([
+                ...this.derivedEntities.filter(m =>
+                    doesGenericAssayMetaMatchSearchTerm(m, searchText)
+                ),
+                ...sortByStableId(
                     _.unionBy(
                         this.selectedEntitiesMeta.result!,
                         metas,
                         m => m.stableId
                     )
-                )
-            ),
+                ),
+            ]),
             queriedHugoGeneSymbols: this.context.queriedHugoGeneSymbols,
             hasNoQueriedGenes: this.context.hasNoQueriedGenes,
             otherAxisHugoGeneSymbol: this.context.otherAxisHugoGeneSymbol,
@@ -336,9 +350,12 @@ export class GenericAssayAxisOptions {
     }
 
     // the flat option list the default selection is picked from: "Same" first
-    // on the vertical axis, then entities in server order
+    // on the vertical axis, then derived entities, then entities in server order
     @computed get defaultPickOptions(): GenericAssayPlotsOption[] {
-        const options = this.makeOptions(this.defaultEntities);
+        const options = this.makeOptions([
+            ...this.derivedEntities,
+            ...this.defaultEntities,
+        ]);
         return this.context.sameOption
             ? [this.context.sameOption, ...options]
             : options;
@@ -416,15 +433,20 @@ export class GenericAssayAxisOptions {
         const selectedMatching = this.selectedEntitiesMeta.result!.filter(m =>
             doesGenericAssayMetaMatchSearchTerm(m, searchText)
         ).length;
+        const derivedMatching = this.derivedEntities.filter(m =>
+            doesGenericAssayMetaMatchSearchTerm(m, searchText)
+        ).length;
         return {
             display: groupAndCapGenericAssayOptions(
                 visibleOptions,
                 selectedIds,
                 DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING
             ),
-            shownCount: matchingTotal - selectedMatching + sameCount,
+            shownCount:
+                matchingTotal - selectedMatching + derivedMatching + sameCount,
             totalCount:
                 this.defaultPage.result!.totalItems +
+                this.derivedEntities.length +
                 (this.context.sameOption ? 1 : 0),
         };
     }
@@ -439,6 +461,7 @@ export class GenericAssayAxisOptions {
     @computed get metaById(): { [stableId: string]: GenericAssayMeta } {
         return _.keyBy(
             [
+                ...this.derivedEntities,
                 ...this.selectedEntitiesMeta.result!,
                 ...this.defaultPage.result!.items,
                 ...this.otherAxisGenePage.result!,

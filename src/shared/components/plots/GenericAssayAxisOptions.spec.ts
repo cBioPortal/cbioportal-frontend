@@ -20,6 +20,7 @@ import {
     IGenericAssayAxisContext,
 } from './GenericAssayAxisOptions';
 import { SAME_SELECTED_OPTION_STRING_VALUE } from './PlotsTabTypes';
+import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 
 jest.mock('shared/lib/GenericAssayUtils/GenericAssayCommonUtils', () => ({
     ...jest.requireActual(
@@ -365,6 +366,39 @@ describe('GenericAssayAxisOptions', () => {
         );
         await when(() => !store.isLoading);
         assert.equal(store.menu.totalCount, 501);
+        store.onInputChange('cg9', { action: 'input-change' });
+        await when(() => !store.isLoading, { timeout: 2000 });
+        assert.deepEqual(menuValues(), ['cg9']);
+    });
+
+    it('lists derived entities first unless the search excludes them', async () => {
+        runInAction(() => {
+            context.profiles = [
+                {
+                    ...profile,
+                    genericAssayType:
+                        GenericAssayTypeConstants.ISIG_PROBABILITY,
+                },
+            ];
+            context.genericAssayType =
+                GenericAssayTypeConstants.ISIG_PROBABILITY;
+        });
+        await when(() => !store.isLoading);
+        assert.deepEqual(menuValues(), ['DERIVED_ISIG_DOMINANT', 'cg0', 'cg9']);
+        assert.equal(store.menu.totalCount, 501);
+        assert.equal(
+            values(store.defaultPickOptions)[0],
+            'DERIVED_ISIG_DOMINANT'
+        );
+        assert.include(
+            store.resolveOption('DERIVED_ISIG_DOMINANT')!.label,
+            'Dominant immune signature'
+        );
+        assert.isFalse(
+            fetchByIdsInProfiles.mock.calls.some(([ids]) =>
+                ids.includes('DERIVED_ISIG_DOMINANT')
+            )
+        );
         store.onInputChange('cg9', { action: 'input-change' });
         await when(() => !store.isLoading, { timeout: 2000 });
         assert.deepEqual(menuValues(), ['cg9']);
