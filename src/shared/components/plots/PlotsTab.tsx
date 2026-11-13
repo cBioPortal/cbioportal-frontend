@@ -68,6 +68,7 @@ import {
     logScalePossibleForProfile,
     isGenericAssaySelected,
     isLimitValueGenericAssaySelected,
+    isLimitValueGenericAssayProfileSelected,
     showWaterfallPlot,
     getOption,
 } from './PlotsTabUtils';
@@ -2082,7 +2083,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             // listen to updates of `dataTypeOptions` and on the selected data type for the vertical axis
             if (
                 this.dataTypeOptions.result &&
-                (isLimitValueGenericAssaySelected(this.vertSelection) ||
+                (isLimitValueGenericAssayProfileSelected(this.vertSelection) ||
                     (this.vertSelection.dataType &&
                         this.vertSelection.dataType ===
                             AlterationTypeConstants.MRNA_EXPRESSION))
@@ -2108,7 +2109,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             // listen to updates of `dataTypeOptions` and on the selected data type for the horzontal axis
             if (
                 this.dataTypeOptions.result &&
-                (isLimitValueGenericAssaySelected(this.horzSelection) ||
+                (isLimitValueGenericAssayProfileSelected(this.horzSelection) ||
                     (this.horzSelection.dataType &&
                         this.horzSelection.dataType ===
                             AlterationTypeConstants.MRNA_EXPRESSION))
