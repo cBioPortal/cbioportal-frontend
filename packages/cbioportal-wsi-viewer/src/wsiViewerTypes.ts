@@ -73,6 +73,30 @@ export interface Part {
     blocks: Block[];
 }
 
+/** A mutation's position, as the portal's mutation API reports it. */
+export interface WsiGenomicLocation {
+    /** Without a `chr` prefix. */
+    chromosome: string;
+    start: number;
+    end: number;
+    referenceAllele: string;
+    variantAllele: string;
+}
+
+/** A mutation to look up in Cancer Hotspots. */
+export interface WsiHotspotQuery {
+    gene: string;
+    /** The portal's mutation type, e.g. `Splice_Site`. */
+    mutationType?: string;
+    genomicLocation: WsiGenomicLocation;
+}
+
+/** A mutation's Cancer Hotspots flags. */
+export interface WsiHotspotFlags {
+    recurrent: boolean;
+    threeD: boolean;
+}
+
 export interface MutationDetail {
     /** Gene and protein change, e.g. "KRAS G12D"; unique within a sample. */
     token: string;
@@ -98,6 +122,12 @@ export interface MutationDetail {
     mutationEffect?: string;
     /** OncoKB's hotspot flag. */
     hotspot?: boolean;
+    /** Position in the genome, for the Cancer Hotspots lookup. */
+    genomicLocation?: WsiGenomicLocation;
+    /** Cancer Hotspots: a recurrent (single residue, indel or splice) hotspot. */
+    recurrentHotspot?: boolean;
+    /** Cancer Hotspots: a 3D clustered hotspot. */
+    hotspot3d?: boolean;
     geneSummary?: string;
     variantSummary?: string;
     /** The CIViC gene and variant entry; null when CIViC has none. */

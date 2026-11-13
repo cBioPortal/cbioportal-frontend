@@ -110,6 +110,32 @@ describe('wsiDataMergeUtils', () => {
             ]);
         });
 
+        it('keeps the genomic location for the hotspot lookup', () => {
+            const row = {
+                sampleId: 'S-1',
+                gene: { hugoGeneSymbol: 'NOTCH1' },
+                proteinChange: 'C456Y',
+                chr: 'chr9',
+                startPosition: 139412270,
+                endPosition: 139412270,
+                referenceAllele: 'C',
+                variantAllele: 'T',
+            };
+            const [withLocation] = buildMutationsBySample([row]).get('S-1')!;
+            expect(withLocation.genomicLocation).toEqual({
+                chromosome: '9',
+                start: 139412270,
+                end: 139412270,
+                referenceAllele: 'C',
+                variantAllele: 'T',
+            });
+
+            const [partial] = buildMutationsBySample([
+                { ...row, variantAllele: undefined },
+            ]).get('S-1')!;
+            expect(partial.genomicLocation).toBeUndefined();
+        });
+
         it('orders equal-VAF mutation rows deterministically', () => {
             const result = buildMutationsBySample([
                 {

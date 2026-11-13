@@ -1,5 +1,6 @@
 import { ICivicVariantIndex, ICivicVariantSummary } from 'cbioportal-utils';
 import { getWsiViewerRuntime, WsiOncoKbClient } from './wsiViewerConfig';
+import { WsiHotspotFlags, WsiHotspotQuery } from './wsiViewerTypes';
 
 // Accessors for the host's molecular annotation services, with the
 // behaviour of a host that provides none.
@@ -10,6 +11,25 @@ export function isWsiOncoKbEnabled(): boolean {
     return (
         !!molecular && molecular.showOncoKb() && !!molecular.getOncoKbApiUrl()
     );
+}
+
+/** Cancer Hotspots flags are on: the host enables them and can look them up. */
+export function isWsiHotspotEnabled(): boolean {
+    const molecular = getWsiViewerRuntime().molecular;
+    return !!molecular?.getHotspots && !!molecular.showHotspots?.();
+}
+
+/** The mutations' Cancer Hotspots flags from the host; none without a lookup. */
+export function fetchWsiHotspots(
+    mutations: ReadonlyArray<WsiHotspotQuery>,
+    referenceGenome: string | null
+): Promise<WsiHotspotFlags[]> {
+    const getHotspots = getWsiViewerRuntime().molecular?.getHotspots;
+    return getHotspots
+        ? getHotspots(mutations, referenceGenome)
+        : Promise.resolve(
+              mutations.map(() => ({ recurrent: false, threeD: false }))
+          );
 }
 
 export function isWsiCivicEnabled(): boolean {

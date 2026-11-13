@@ -4,6 +4,8 @@ import {
     MutationDetail,
     Sample,
     StructuralVariantDetail,
+    WsiGenomicLocation,
+    WsiHotspotFlags,
     WsiSampleClinicalDatum,
 } from './wsiViewerTypes';
 import {
@@ -93,6 +95,39 @@ export function applyOncoKbMutationAnnotations(
             if (!annotation) continue;
             applyOncoKbAnnotation(mutation, annotation);
             mutation.hotspot = annotation.hotspot;
+        }
+    }
+}
+
+/** Key of a hotspot lookup: the location and the mutation type. */
+export function hotspotKey(
+    location: WsiGenomicLocation,
+    mutationType: string | undefined
+): string {
+    return [
+        location.chromosome,
+        location.start,
+        location.end,
+        location.referenceAllele,
+        location.variantAllele,
+        mutationType || '',
+    ].join('\u0000');
+}
+
+/** Sets each mutation's Cancer Hotspots flags, by `hotspotKey`. */
+export function applyHotspotAnnotations(
+    samples: Sample[],
+    flagsByKey: ReadonlyMap<string, WsiHotspotFlags>
+): void {
+    for (const sample of samples) {
+        for (const mutation of sample.mutations ?? []) {
+            if (!mutation.genomicLocation) continue;
+            const flags = flagsByKey.get(
+                hotspotKey(mutation.genomicLocation, mutation.consequence)
+            );
+            if (!flags) continue;
+            mutation.recurrentHotspot = flags.recurrent;
+            mutation.hotspot3d = flags.threeD;
         }
     }
 }

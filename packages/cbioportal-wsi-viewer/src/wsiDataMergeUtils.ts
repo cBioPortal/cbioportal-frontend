@@ -3,6 +3,7 @@ import {
     MutationDetail,
     Sample,
     StructuralVariantDetail,
+    WsiGenomicLocation,
     WsiSampleClinicalDatum,
 } from './wsiViewerTypes';
 import { formatMutationType } from './wsiMolecularUtils';
@@ -21,7 +22,41 @@ export type MutationApiRecord = {
     tumorRefCount?: number;
     proteinPosStart?: number;
     proteinPosEnd?: number;
+    chr?: string;
+    startPosition?: number;
+    endPosition?: number;
+    referenceAllele?: string;
+    variantAllele?: string;
 };
+
+/** The mutation's genomic location, when the API reported all of it. */
+export function mutationGenomicLocation(
+    mutation: MutationApiRecord
+): WsiGenomicLocation | undefined {
+    const {
+        chr,
+        startPosition,
+        endPosition,
+        referenceAllele,
+        variantAllele,
+    } = mutation;
+    if (
+        !chr ||
+        !startPosition ||
+        !endPosition ||
+        !referenceAllele ||
+        !variantAllele
+    ) {
+        return undefined;
+    }
+    return {
+        chromosome: chr.replace(/^chr/i, ''),
+        start: startPosition,
+        end: endPosition,
+        referenceAllele,
+        variantAllele,
+    };
+}
 
 export type CnaApiRecord = {
     sampleId: string;
@@ -179,6 +214,7 @@ export function buildMutationsBySample(
                 keyword: mutation.keyword || undefined,
                 proteinStart: mutation.proteinPosStart,
                 proteinEnd: mutation.proteinPosEnd,
+                genomicLocation: mutationGenomicLocation(mutation),
             });
         }
     }

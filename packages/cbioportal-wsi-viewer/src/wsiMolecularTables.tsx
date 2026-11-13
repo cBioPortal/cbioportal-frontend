@@ -223,11 +223,17 @@ const annotCellStyle: React.CSSProperties = {
     whiteSpace: 'nowrap',
 };
 
-function isHotspot(mutation: MutationDetail): boolean {
+/** A recurrent hotspot, from Cancer Hotspots, OncoKB or the driver annotation. */
+function isRecurrentHotspot(mutation: MutationDetail): boolean {
     return (
+        mutation.recurrentHotspot === true ||
         mutation.hotspot === true ||
         !!mutation.annotation?.toLowerCase().includes('hotspot')
     );
+}
+
+function isHotspot(mutation: MutationDetail): boolean {
+    return isRecurrentHotspot(mutation) || mutation.hotspot3d === true;
 }
 
 function oncoKbSortScore(mutation: MutationDetail): number {
@@ -310,12 +316,13 @@ function MutationAnnotations({
             )}
             {isHotspot(mutation) && (
                 <span
+                    data-testid="wsi-hotspot-annotation"
                     style={{ display: 'inline-block', verticalAlign: 'middle' }}
                 >
                     <HotspotAnnotation
                         status="complete"
-                        isHotspot={true}
-                        is3dHotspot={false}
+                        isHotspot={isRecurrentHotspot(mutation)}
+                        is3dHotspot={mutation.hotspot3d === true}
                     />
                 </span>
             )}
@@ -383,7 +390,7 @@ export function MutationTable({
     const mutations = [...sample.mutations].sort(compareAnnotatedMutations);
     const showOncoKb = isWsiOncoKbEnabled();
     const showCivic = isWsiCivicEnabled();
-    // The column stays for the portal's hotspot flags without either service.
+    // The column stays for hotspot flags without OncoKB or CIViC.
     const showAnnotations =
         showOncoKb || showCivic || mutations.some(isHotspot);
 

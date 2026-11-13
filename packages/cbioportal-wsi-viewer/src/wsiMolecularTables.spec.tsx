@@ -268,6 +268,20 @@ describe('annotation column', () => {
         expect(container.querySelector('a[href*="oncokb.org"]')).toBeNull();
     });
 
+    it('shows a 3D hotspot from Cancer Hotspots without either service', () => {
+        configureAnnotations(false, false);
+        render(
+            <MutationTable
+                sample={makeSample({
+                    mutations: [{ ...KRAS, hotspot3d: true }],
+                })}
+            />
+        );
+
+        expect(screen.getByText('Annot')).toBeTruthy();
+        expect(screen.getByTestId('wsi-hotspot-annotation')).toBeTruthy();
+    });
+
     it('shows CIViC without OncoKB when only CIViC is on', () => {
         configureAnnotations(false, true);
         const { container } = renderTables(annotatedSample());

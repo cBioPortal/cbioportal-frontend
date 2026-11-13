@@ -12,6 +12,8 @@ import {
     MutationDetail,
     WsiMutationDataStatus,
     WsiClinicalRow,
+    WsiHotspotFlags,
+    WsiHotspotQuery,
     WsiSampleClinicalDatum,
     WsiStainFilter,
 } from './wsiViewerTypes';
@@ -65,12 +67,14 @@ import {
     applyCivicCnaAnnotations,
     applyCivicMutationAnnotations,
     applyClinicalDataRecords,
+    applyHotspotAnnotations,
     applyCnaData,
     applyMutationData,
     applyOncoKbCnaAnnotations,
     applyOncoKbMutationAnnotations,
     applyOncoKbStructuralVariantAnnotations,
     applyStructuralVariantData,
+    hotspotKey,
     sampleTumorType,
 } from './wsiHierarchyUpdateUtils';
 import {
@@ -86,7 +90,12 @@ import {
     oncoKbReferenceGenome,
     WithTumorType,
 } from './wsiMolecularAnnotationFetchUtils';
-import { isWsiCivicEnabled, isWsiOncoKbEnabled } from './wsiMolecularServices';
+import {
+    fetchWsiHotspots,
+    isWsiCivicEnabled,
+    isWsiHotspotEnabled,
+    isWsiOncoKbEnabled,
+} from './wsiMolecularServices';
 import {
     WSI_FONT_FAMILY,
     WSI_SIDEBAR_MAX_WIDTH,
@@ -1144,6 +1153,11 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                 this.fetchAndMergeCivicAnnotations(shouldContinueForHierarchy)
             );
         }
+        if (isWsiHotspotEnabled()) {
+            lastStage.push(
+                this.fetchAndMergeHotspots(studyId, shouldContinueForHierarchy)
+            );
+        }
         await Promise.all(lastStage);
     }
 
@@ -1333,6 +1347,54 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                 }, shouldContinue);
             }),
         ]);
+    }
+
+    /**
+     * Flags the samples' recurrent and 3D Cancer Hotspots, looked up by the
+     * host as for the patient view's mutation table. A failed lookup leaves
+     * the mutations unflagged.
+     */
+    private async fetchAndMergeHotspots(
+        studyId: string,
+        shouldContinue: () => boolean
+    ): Promise<void> {
+        const queries = new Map<string, WsiHotspotQuery>();
+        for (const sample of this.viewerState.hierarchy?.samples ?? []) {
+            for (const mutation of sample.mutations ?? []) {
+                if (!mutation.genomicLocation) continue;
+                queries.set(
+                    hotspotKey(mutation.genomicLocation, mutation.consequence),
+                    {
+                        gene: mutation.gene,
+                        mutationType: mutation.consequence,
+                        genomicLocation: mutation.genomicLocation,
+                    }
+                );
+            }
+        }
+        if (queries.size === 0) return;
+
+        let flags: WsiHotspotFlags[];
+        try {
+            const { referenceGenome } = await fetchStudyMolecularProfiles(
+                studyId
+            );
+            flags = await fetchWsiHotspots(
+                Array.from(queries.values()),
+                referenceGenome
+            );
+        } catch (error) {
+            console.debug('[WSI] hotspot lookup failed', error);
+            return;
+        }
+        if (!shouldContinue()) return;
+        const keys = Array.from(queries.keys());
+        const flagsByKey = new Map(
+            keys.map((key, i) => [key, flags[i]] as [string, WsiHotspotFlags])
+        );
+        this.applyHierarchyMutationAndRefresh(samples => {
+            applyHotspotAnnotations(samples, flagsByKey);
+        }, shouldContinue);
     }
 
     /**

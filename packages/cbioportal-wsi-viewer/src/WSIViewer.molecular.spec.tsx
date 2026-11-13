@@ -1098,6 +1098,36 @@ describe('WSIViewer — OncoKB and CIViC annotations', () => {
         expect(civicSpy).toHaveBeenCalledWith(expect.any(Function));
     });
 
+    it('looks up hotspots only when the host enables them', async () => {
+        let hotspotsEnabled = false;
+        configureTestRuntime({
+            molecular: {
+                ...testMolecularServices,
+                showHotspots: () => hotspotsEnabled,
+                getHotspots: () => Promise.resolve([]),
+            },
+        });
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        inst.viewerState.hierarchy = makeHierarchy(
+            [makeSlide({ slide_key: 'A' })],
+            'P-1'
+        );
+        stubDataStages(inst);
+        const hotspotSpy = jest
+            .spyOn(inst, 'fetchAndMergeHotspots')
+            .mockResolvedValue(undefined);
+
+        await inst.runSampleEnrichment('study-1', 'P-1', ['S-1'], () => true);
+        expect(hotspotSpy).not.toHaveBeenCalled();
+
+        hotspotsEnabled = true;
+        await inst.runSampleEnrichment('study-1', 'P-1', ['S-1'], () => true);
+        expect(hotspotSpy).toHaveBeenCalledWith(
+            'study-1',
+            expect.any(Function)
+        );
+    });
+
     it("annotates for the sample's OncoTree code and the study's genome", async () => {
         annotationsEnabled = true;
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
@@ -1148,6 +1178,111 @@ describe('WSIViewer — OncoKB and CIViC annotations', () => {
             inst.viewerState.hierarchy.samples[0].mutations[0].oncogenic
         ).toBe('Oncogenic');
         inst.cancelScheduledHierarchyRefresh();
+    });
+
+    it("flags the host's recurrent and 3D hotspots for the study's genome", async () => {
+        const getHotspots = jest
+            .fn()
+            .mockResolvedValue([{ recurrent: false, threeD: true }]);
+        configureTestRuntime({
+            molecular: {
+                ...testMolecularServices,
+                showHotspots: () => true,
+                getHotspots,
+            },
+        });
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const hierarchy = makeHierarchy([makeSlide({ slide_key: 'A' })], 'P-1');
+        const genomicLocation = {
+            chromosome: '9',
+            start: 139412270,
+            end: 139412270,
+            referenceAllele: 'C',
+            variantAllele: 'T',
+        };
+        hierarchy.samples[0].mutations = [
+            {
+                token: 'NOTCH1 C456Y',
+                gene: 'NOTCH1',
+                proteinChange: 'C456Y',
+                consequence: 'Missense_Mutation',
+                genomicLocation,
+            },
+            // Without a genomic location it is not looked up.
+            { token: 'TP53 X', gene: 'TP53', proteinChange: 'X' },
+        ];
+        inst.viewerState.hierarchy = hierarchy;
+        jest.spyOn(
+            wsiCbioportalDataUtils,
+            'fetchStudyMolecularProfiles'
+        ).mockResolvedValue({
+            mutation: 'study_mutations',
+            discreteCna: null,
+            structuralVariant: null,
+            referenceGenome: 'hg19',
+        });
+
+        await inst.fetchAndMergeHotspots('study-1', () => true);
+
+        expect(getHotspots).toHaveBeenCalledWith(
+            [
+                {
+                    gene: 'NOTCH1',
+                    mutationType: 'Missense_Mutation',
+                    genomicLocation,
+                },
+            ],
+            'hg19'
+        );
+        const [notch1, tp53] = inst.viewerState.hierarchy.samples[0].mutations;
+        expect(notch1.hotspot3d).toBe(true);
+        expect(notch1.recurrentHotspot).toBe(false);
+        expect(tp53.hotspot3d).toBeUndefined();
+        inst.cancelScheduledHierarchyRefresh();
+    });
+
+    it('leaves mutations unflagged when the hotspot lookup fails', async () => {
+        configureTestRuntime({
+            molecular: {
+                ...testMolecularServices,
+                showHotspots: () => true,
+                getHotspots: () => Promise.reject(new Error('down')),
+            },
+        });
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const hierarchy = makeHierarchy([makeSlide({ slide_key: 'A' })], 'P-1');
+        hierarchy.samples[0].mutations = [
+            {
+                token: 'NOTCH1 C456Y',
+                gene: 'NOTCH1',
+                proteinChange: 'C456Y',
+                genomicLocation: {
+                    chromosome: '9',
+                    start: 1,
+                    end: 1,
+                    referenceAllele: 'C',
+                    variantAllele: 'T',
+                },
+            },
+        ];
+        inst.viewerState.hierarchy = hierarchy;
+        jest.spyOn(
+            wsiCbioportalDataUtils,
+            'fetchStudyMolecularProfiles'
+        ).mockResolvedValue({
+            mutation: 'study_mutations',
+            discreteCna: null,
+            structuralVariant: null,
+            referenceGenome: null,
+        });
+        const debug = jest.spyOn(console, 'debug').mockImplementation(() => {});
+
+        await inst.fetchAndMergeHotspots('study-1', () => true);
+
+        expect(
+            inst.viewerState.hierarchy.samples[0].mutations[0].hotspot3d
+        ).toBeUndefined();
+        debug.mockRestore();
     });
 
     it('drops annotations that arrive after the patient changed', async () => {

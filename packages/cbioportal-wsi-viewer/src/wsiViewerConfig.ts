@@ -1,5 +1,6 @@
 import { ICivicVariantIndex, ICivicVariantSummary } from 'cbioportal-utils';
 import { OncoKbAPI } from 'oncokb-ts-api-client';
+import { WsiHotspotFlags, WsiHotspotQuery } from './wsiViewerTypes';
 
 /** The OncoKB annotation endpoints the viewer calls. */
 export type WsiOncoKbClient = Pick<
@@ -40,6 +41,20 @@ export interface WsiMolecularServices {
     ) => { [name: string]: ICivicVariantSummary };
     /** Simplified mutation type (`missense`, `frameshift`, ...). */
     getSimplifiedMutationType: (mutationType: string) => string;
+    /**
+     * Whether to flag Cancer Hotspots; read like `showOncoKb`. A host without
+     * `getHotspots` shows no hotspot flags beyond OncoKB's.
+     */
+    showHotspots?: () => boolean;
+    /**
+     * Each mutation's Cancer Hotspots flags, in the order given, for the
+     * study's reference genome (`hg19`, `hg38`, ...; null when unknown). A
+     * rejected promise leaves the mutations unflagged.
+     */
+    getHotspots?: (
+        mutations: ReadonlyArray<WsiHotspotQuery>,
+        referenceGenome: string | null
+    ) => Promise<WsiHotspotFlags[]>;
 }
 
 /**
