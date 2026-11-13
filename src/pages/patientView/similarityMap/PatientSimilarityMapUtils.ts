@@ -170,6 +170,34 @@ export function getClinicalColorsBySampleId(
     return { colors, values };
 }
 
+/**
+ * Runs `fn` over `items` with at most `limit` in flight, keeping input order.
+ *
+ * The API rate-limits a burst: firing one request per study at once loses
+ * several to 429 and silently leaves those samples uncoloured.
+ */
+export async function mapWithConcurrency<T, R>(
+    items: T[],
+    limit: number,
+    fn: (item: T) => Promise<R>
+): Promise<R[]> {
+    const results = new Array<R>(items.length);
+    let next = 0;
+    const worker = async () => {
+        while (true) {
+            const index = next++;
+            if (index >= items.length) {
+                return;
+            }
+            results[index] = await fn(items[index]);
+        }
+    };
+    await Promise.all(
+        _.range(Math.min(Math.max(limit, 1), items.length)).map(worker)
+    );
+    return results;
+}
+
 export interface LassoPoint {
     x: number;
     y: number;

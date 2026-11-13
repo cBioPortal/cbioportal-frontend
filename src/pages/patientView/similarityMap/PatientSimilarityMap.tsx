@@ -32,6 +32,7 @@ import {
     getReferenceCategoryColors,
     getSamplesInLasso,
     LassoPoint,
+    mapWithConcurrency,
     getStudyViewMapUrl,
     SampleEmbeddingOption,
 } from './PatientSimilarityMapUtils';
@@ -52,6 +53,11 @@ const DIMMED_ALPHA = 0.12;
 const REFERENCE_COLORING_VALUE = '';
 // A pan-cancer map has hundreds of detailed types; the rest sit behind a count.
 const LEGEND_MAX_ENTRIES = 20;
+// The API answers a burst of per-study requests with 429s, which would leave
+// whole studies uncoloured, so they go a few at a time and a failure is retried.
+const CLINICAL_FETCH_CONCURRENCY = 3;
+const CLINICAL_FETCH_ATTEMPTS = 3;
+const CLINICAL_FETCH_BACKOFF_MS = 400;
 const COLORING_SELECT_STYLES = {
     control: (base: any) => ({
         ...base,
@@ -64,6 +70,14 @@ const COLORING_SELECT_STYLES = {
     menuPortal: (base: any) => ({ ...base, zIndex: 20 }),
     container: (base: any) => ({ ...base, width: '220px' }),
 };
+
+// Which studies the colouring could not be read from, so the map can say so
+// instead of showing their samples as though they had no value.
+type MapColoringEntry = ClinicalDataCacheEntry & { failedStudyIds: string[] };
+
+function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 export interface IPatientSimilarityMapProps {
     studyId: string;
@@ -158,27 +172,42 @@ export default class PatientSimilarityMap extends React.Component<
     // studies colours a sliver of the points and greys the rest.
     private readonly mapClinicalData = new MobxPromiseCache<
         { attribute: ClinicalAttribute; studyIds: string[] },
-        ClinicalDataCacheEntry
+        MapColoringEntry
     >(
         q => ({
             invoke: async () => {
-                const perStudy = await Promise.all(
-                    q.studyIds.map(studyId =>
-                        getClient()
-                            .getAllClinicalDataInStudyUsingGET({
-                                studyId,
-                                attributeId: q.attribute.clinicalAttributeId,
-                                clinicalDataType: 'SAMPLE',
-                                projection: 'SUMMARY',
-                            })
-                            // Not every study defines the attribute, and one
-                            // failing should not leave the map uncoloured.
-                            .catch(() => [] as ClinicalData[])
-                    )
+                const failedStudyIds: string[] = [];
+                const perStudy = await mapWithConcurrency(
+                    q.studyIds,
+                    CLINICAL_FETCH_CONCURRENCY,
+                    async studyId => {
+                        for (let attempt = 0; ; attempt++) {
+                            try {
+                                return await getClient().getAllClinicalDataInStudyUsingGET(
+                                    {
+                                        studyId,
+                                        attributeId:
+                                            q.attribute.clinicalAttributeId,
+                                        clinicalDataType: 'SAMPLE',
+                                        projection: 'SUMMARY',
+                                    }
+                                );
+                            } catch (e) {
+                                if (attempt + 1 >= CLINICAL_FETCH_ATTEMPTS) {
+                                    failedStudyIds.push(studyId);
+                                    return [] as ClinicalData[];
+                                }
+                                await sleep(
+                                    CLINICAL_FETCH_BACKOFF_MS * (attempt + 1)
+                                );
+                            }
+                        }
+                    }
                 );
                 const data = _.flatten(perStudy);
                 return {
                     data,
+                    failedStudyIds,
                     ...getClinicalAttributeColoring(data, q.attribute.datatype),
                 };
             },
@@ -219,6 +248,15 @@ export default class PatientSimilarityMap extends React.Component<
     @computed get isColoringPending(): boolean {
         const query = this.coloringQuery;
         return !!query && this.mapClinicalData.get(query).isPending;
+    }
+
+    @computed get failedStudyCount(): number {
+        const query = this.coloringQuery;
+        if (!query) {
+            return 0;
+        }
+        const entry = this.mapClinicalData.get(query);
+        return entry.result?.failedStudyIds.length ?? 0;
     }
 
     @computed get selectedOption(): SampleEmbeddingOption | undefined {
@@ -471,15 +509,18 @@ export default class PatientSimilarityMap extends React.Component<
         if (!clinical) {
             return this.categoryColors;
         }
+        // Over the map's points: the studies hold more samples than the map
+        // draws, and counting those would describe a different cohort.
         const counts: { [c: string]: { color: string; count: number } } = {};
-        clinical.values.forEach((value, sampleId) => {
-            const color = clinical.colors.get(sampleId);
-            if (!color) {
-                return;
+        for (const point of this.selectedOption?.data.data ?? []) {
+            const value = clinical.values.get(point.sampleId);
+            const color = clinical.colors.get(point.sampleId);
+            if (value === undefined || !color) {
+                continue;
             }
             counts[value] = counts[value] || { color, count: 0 };
             counts[value].count += 1;
-        });
+        }
         return _.orderBy(
             Object.keys(counts).map(category => ({
                 category,
@@ -616,6 +657,16 @@ export default class PatientSimilarityMap extends React.Component<
                     <div style={{ color: '#999', marginTop: 4 }}>
                         {`+ ${this.legendEntries.length -
                             LEGEND_MAX_ENTRIES} more`}
+                    </div>
+                )}
+                {this.failedStudyCount > 0 && (
+                    <div
+                        style={{ color: '#a94442', marginTop: 6 }}
+                        data-test="patient-similarity-map-coloring-incomplete"
+                    >
+                        {`${this.failedStudyCount} of ${this.coloringQuery
+                            ?.studyIds.length ??
+                            0} studies could not be loaded; their samples are grey.`}
                     </div>
                 )}
             </div>

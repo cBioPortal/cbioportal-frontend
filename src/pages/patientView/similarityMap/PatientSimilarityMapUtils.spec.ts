@@ -8,6 +8,7 @@ import {
     getSamplesInLasso,
     isInsidePolygon,
     getStudyViewMapUrl,
+    mapWithConcurrency,
     SampleEmbeddingPoint,
 } from './PatientSimilarityMapUtils';
 
@@ -199,6 +200,26 @@ describe('getClinicalColorsBySampleId', () => {
             ['msktarget']
         );
         assert.isUndefined(colors.get('S_not_in_cohort'));
+    });
+});
+
+describe('mapWithConcurrency', () => {
+    it('keeps input order and never exceeds the limit', async () => {
+        let inFlight = 0;
+        let peak = 0;
+        const result = await mapWithConcurrency([1, 2, 3, 4, 5, 6], 2, async n => {
+            inFlight++;
+            peak = Math.max(peak, inFlight);
+            await new Promise(resolve => setTimeout(resolve, (7 - n) * 5));
+            inFlight--;
+            return n * 10;
+        });
+        assert.deepEqual(result, [10, 20, 30, 40, 50, 60]);
+        assert.isAtMost(peak, 2);
+    });
+
+    it('returns an empty array for no items', async () => {
+        assert.deepEqual(await mapWithConcurrency([], 3, async () => 1), []);
     });
 });
 
