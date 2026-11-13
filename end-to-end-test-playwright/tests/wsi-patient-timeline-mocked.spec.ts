@@ -355,7 +355,7 @@ if (process.env.PW_SUITE === 'wsi') {
             );
             await expect(tooltip).toContainText(SAMPLE_ID);
             await expect(tooltip).toContainText(
-                'd-10 — 10 d before sequencing (d0)'
+                '-10 days (d-10) — 10 days before sequencing (d0)'
             );
             await expect(tooltip).toContainText('Part 1 / Block A1');
             await expect(tooltip).toContainText('1 of 1 viewable');

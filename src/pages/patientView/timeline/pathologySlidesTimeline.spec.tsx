@@ -372,7 +372,9 @@ describe('PATHOLOGY SLIDES timeline track', () => {
         ).toBeTruthy();
         expect(screen.getByText(SAMPLE)).toBeTruthy();
         expect(
-            screen.getByText('d+920 — 42 d before sequencing (d+962)')
+            screen.getByText(
+                '2 years, 6 months, 10 days (d+920) — 1 month, 12 days before sequencing (d+962)'
+            )
         ).toBeTruthy();
         expect(screen.getByText('Part 1')).toBeTruthy();
         expect(screen.getByText('1 of 1 viewable')).toBeTruthy();
@@ -424,7 +426,9 @@ describe('PATHOLOGY SLIDES timeline track', () => {
         expect(
             screen.getByText('Unmatched (not linked to a sequenced sample)')
         ).toBeTruthy();
-        expect(screen.getByText('d+920')).toBeTruthy();
+        expect(
+            screen.getByText('2 years, 6 months, 10 days (d+920)')
+        ).toBeTruthy();
         fireEvent.click(
             screen.getByRole('link', { name: 'Open slides (H&E, Unmatched)' })
         );
@@ -463,7 +467,9 @@ describe('PATHOLOGY SLIDES events with other attributes', () => {
         expect(screen.getByText('Pathology slides · H&E')).toBeTruthy();
         expect(screen.getByText(SAMPLE)).toBeTruthy();
         expect(
-            screen.getByText('d+920 — 42 d before sequencing (d+962)')
+            screen.getByText(
+                '2 years, 6 months, 10 days (d+920) — 1 month, 12 days before sequencing (d+962)'
+            )
         ).toBeTruthy();
         expect(document.body.textContent).not.toContain('matched');
     });

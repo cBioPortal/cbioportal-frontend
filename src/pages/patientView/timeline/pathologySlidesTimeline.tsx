@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import _ from 'lodash';
 import {
+    formatDate,
     getAttributeValue,
     ITrackEventConfig,
     renderStack,
@@ -201,8 +202,9 @@ const MATCH_LABELS: Record<string, { text: string; note: string }> = {
 const UNMATCHED_SAMPLE_TEXT = 'Unmatched (not linked to a sequenced sample)';
 
 /**
- * Procedure offset from sequencing, e.g. "42 d before sequencing (d+962)".
- * Empty when the sequencing day is unknown.
+ * Procedure offset from sequencing in the timeline's date format, e.g.
+ * "1 month, 12 days before sequencing (d+962)". Empty when the sequencing
+ * day is unknown.
  */
 function sequencingRelation(
     procedureDays: number,
@@ -216,7 +218,7 @@ function sequencingRelation(
     if (delta === 0) {
         return `same day as sequencing (${day})`;
     }
-    return `${Math.abs(delta)} d ${
+    return `${formatDate(Math.abs(delta))} ${
         delta > 0 ? 'before' : 'after'
     } sequencing (${day})`;
 }
@@ -326,7 +328,10 @@ export function buildPathologySlideTooltipContent(
             days,
             sampleId ? sampleTimelines.get(sampleId)?.sequencingDays : undefined
         );
-        const procedure = formatDaysSinceDiagnosis(days);
+        // The timeline's date format, as on its other events, then the day.
+        const procedure = `${formatDate(days)} (${formatDaysSinceDiagnosis(
+            days
+        )})`;
         lines.push({
             label: 'Procedure',
             value: relation ? `${procedure} — ${relation}` : procedure,
