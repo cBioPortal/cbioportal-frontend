@@ -11,6 +11,7 @@ import {
     DAY_ZERO_TOOLTIP,
     fmtFileSize,
     formatDaysSinceDiagnosis,
+    formatDaysSinceDiagnosisShort,
     normalizeBlockLabel,
 } from './wsiNavUtils';
 import { blockName, realPartDescription } from './wsiSpecimenUtils';
@@ -240,28 +241,30 @@ export function buildPathRows(
 function buildSampleTimelineRow(
     sampleTimeline: WsiSampleTimeline | undefined
 ): MetaRow | undefined {
-    const parts: string[] = [];
+    const days: Array<[string, number]> = [];
     if (sampleTimeline?.acquisitionDays != null) {
-        parts.push(
-            `acquired ${formatDaysSinceDiagnosis(
-                sampleTimeline.acquisitionDays
-            )}`
-        );
+        days.push(['acquired', sampleTimeline.acquisitionDays]);
     }
     if (sampleTimeline?.sequencingDays != null) {
-        parts.push(
-            `sequenced ${formatDaysSinceDiagnosis(
-                sampleTimeline.sequencingDays
-            )}`
-        );
+        days.push(['sequenced', sampleTimeline.sequencingDays]);
     }
-    if (parts.length === 0) {
+    if (days.length === 0) {
         return undefined;
     }
+    // Years past a year, as in the slide list; the tooltip keeps the days.
+    const exact = days
+        .map(([what, day]) => `${what} ${formatDaysSinceDiagnosis(day)}`)
+        .join(' · ');
     return {
         label: 'Timeline',
         labelTip: 'Sample acquisition and sequencing days',
-        value: parts.join(' · '),
-        valueTip: DAY_ZERO_TOOLTIP,
+        value: days
+            .map(
+                ([what, day]) => `${what} ${formatDaysSinceDiagnosisShort(day)}`
+            )
+            .join(' · '),
+        valueTip: `${exact[0].toUpperCase()}${exact.slice(
+            1
+        )}. ${DAY_ZERO_TOOLTIP}`,
     };
 }

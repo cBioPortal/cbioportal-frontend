@@ -297,6 +297,18 @@ describe('buildPathRows timeline row', () => {
         );
     });
 
+    it('shows days past a year in years, with the exact days on hover', () => {
+        const rows = buildPathRows({ ...slide }, sample, 'P-1', 'study-1', {
+            acquisitionDays: -2393,
+            sequencingDays: 0,
+        });
+        const row = rows.find(r => r.label === 'Timeline')!;
+
+        expect(row.value).toBe('acquired -6.6y · sequenced d0');
+        expect(row.valueTip).toContain('Acquired d-2393 · sequenced d0.');
+        expect(row.valueTip).toContain("day 0 (d0) of the patient's timeline");
+    });
+
     it('shows only the known day', () => {
         expect(
             timeline(
