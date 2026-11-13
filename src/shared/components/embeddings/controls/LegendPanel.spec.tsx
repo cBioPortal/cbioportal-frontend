@@ -100,14 +100,20 @@ describe('LegendPanel', () => {
         assert.notInclude(row.text(), 'Select');
     });
 
-    it('swaps the count out for the actions on hover, and back on leave', () => {
+    it('overlays the actions on hover without removing the count', () => {
         const wrapper = mount(<LegendPanel {...makeProps()} />);
-        assert.include(findRow(wrapper, 'Lung').text(), '10');
+        const hideButtons = () =>
+            findRow(wrapper.update(), 'Lung').find(
+                '[data-test="embeddings-legend-hide-button"]'
+            );
+        assert.equal(hideButtons().length, 0);
 
         findRow(wrapper, 'Lung').simulate('mouseenter');
-        assert.notInclude(findRow(wrapper.update(), 'Lung').text(), '10');
+        assert.equal(hideButtons().length, 1);
+        assert.include(findRow(wrapper.update(), 'Lung').text(), '10');
 
         findRow(wrapper.update(), 'Lung').simulate('mouseleave');
+        assert.equal(hideButtons().length, 0);
         assert.include(findRow(wrapper.update(), 'Lung').text(), '10');
     });
 

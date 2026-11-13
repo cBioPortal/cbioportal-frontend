@@ -30,6 +30,9 @@ export interface SampleEmbeddingData extends BaseEmbeddingData {
         x: number;
         y: number;
         data?: Record<string, any>;
+        // Clinical values keyed by cBioPortal attribute id, used only when the
+        // portal has no such sample (e.g. a reference map's own cohort).
+        referenceData?: Record<string, string | number>;
     }[];
 }
 
@@ -54,6 +57,10 @@ export interface EmbeddingPoint {
     // Rendered smaller/more transparent, without changing color or label.
     isDeemphasized?: boolean;
     [key: string]: any; // Allow additional properties for extensibility
+    // Out-of-cohort points only: the value the embedding itself records for the
+    // coloring attribute (its `referenceData`), and that value's legend color.
+    referenceLabel?: string;
+    referenceColor?: string;
 }
 
 export interface ViewState {
@@ -65,6 +72,9 @@ export interface ViewState {
 
 export interface EmbeddingVisualizationProps {
     data: EmbeddingPoint[];
+    // Derived from the whole embedding, not `data`, so hiding or filtering points never resizes the rest.
+    pointScale?: number;
+    contextPointBoost?: number;
     title?: string;
     xAxisLabel?: string;
     yAxisLabel?: string;

@@ -98,6 +98,7 @@ import ResourceViewerTab from 'shared/components/resourceViewer/ResourceViewerTa
 import resourceViewerStyles from 'shared/components/resourceViewer/styles.module.scss';
 import { ResourceTableTab } from 'shared/api/resourceTableClient';
 import { isStudyWideResource } from 'shared/lib/ResourceTableUtils';
+import { hasEmbeddingForStudies } from 'shared/components/embeddings/embeddingSources';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -558,23 +559,15 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get hasEmbeddingSupport() {
-        // Check if EMBEDDINGS feature flag is enabled
-        if (
-            !this.props.appStore.featureFlagStore.has(
+        // Decided from the manifest, so the tab is hidden for studies no map
+        // covers without fetching one to find out. The EMBEDDINGS flag gates
+        // only the maps that ask for it.
+        return hasEmbeddingForStudies({
+            studyIds: this.store.studyIds,
+            hasFeatureFlag: this.props.appStore.featureFlagStore.has(
                 FeatureFlagEnum.EMBEDDINGS
-            )
-        ) {
-            return false;
-        }
-
-        // Check if we have any studies
-        if (this.store.studyIds.length === 0) {
-            return false;
-        }
-
-        // Embeddings tab itself will handle checking if the remote data
-        // supports the current studies, so we just enable the tab here
-        return true;
+            ),
+        });
     }
 
     @computed get isLoading() {

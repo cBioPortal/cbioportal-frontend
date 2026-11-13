@@ -33,10 +33,13 @@ export interface EmbeddingControlStackProps {
     mutationTypeEnabled: boolean;
     copyNumberEnabled: boolean;
     structuralVariantEnabled: boolean;
+    mrnaDataExists: boolean;
+    mrnaEnabled: boolean;
     onColoringSelectionChange: (option?: ColoringMenuOmnibarOption) => void;
     onMutationTypeToggle: (enabled: boolean) => void;
     onCopyNumberToggle: (enabled: boolean) => void;
     onStructuralVariantToggle: (enabled: boolean) => void;
+    onMrnaToggle: (enabled: boolean) => void;
 
     // Tooltip fields
     tooltipFieldGroups: {
@@ -104,10 +107,13 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
     mutationTypeEnabled,
     copyNumberEnabled,
     structuralVariantEnabled,
+    mrnaDataExists,
+    mrnaEnabled,
     onColoringSelectionChange,
     onMutationTypeToggle,
     onCopyNumberToggle,
     onStructuralVariantToggle,
+    onMrnaToggle,
     tooltipFieldGroups,
     selectedTooltipFields,
     onTooltipFieldsChange,
@@ -164,11 +170,14 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
                         mutationTypeEnabled={mutationTypeEnabled}
                         copyNumberEnabled={copyNumberEnabled}
                         structuralVariantEnabled={structuralVariantEnabled}
+                        mrnaDataExists={mrnaDataExists}
+                        mrnaEnabled={mrnaEnabled}
                         stacked
                         onSelectionChange={onColoringSelectionChange}
                         onMutationTypeToggle={onMutationTypeToggle}
                         onCopyNumberToggle={onCopyNumberToggle}
                         onStructuralVariantToggle={onStructuralVariantToggle}
+                        onMrnaToggle={onMrnaToggle}
                         hideLabel
                         selectStyles={SELECT_STYLES}
                     />
