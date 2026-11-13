@@ -41,6 +41,7 @@ import {
 } from './wsiTheme';
 import { WsiPanelHeader } from './wsiPanelChrome';
 import { WsiFilterChipGroup } from './wsiFilterChips';
+import { WsiMatchLevelInfo } from './wsiMatchLevelInfo';
 
 export interface WsiNavPanelProps {
     hierarchy: PatientHierarchy;
@@ -426,7 +427,11 @@ function WsiNavPanelComponent({
                         </WsiFilterRow>
                     )}
                     {matchChoices.length > 0 && (
-                        <WsiFilterRow label="Match" style={{ marginTop: 5 }}>
+                        <WsiFilterRow
+                            label="Match"
+                            info={<WsiMatchLevelInfo />}
+                            style={{ marginTop: 5 }}
+                        >
                             <WsiFilterChipGroup
                                 label="Filter slides by match level"
                                 testId="wsi-match-filter-row"
@@ -613,10 +618,13 @@ function filterChoices<K extends string>(
 /** A labelled line of filter chips. Clicking the active chip clears it. */
 function WsiFilterRow({
     label,
+    info,
     style,
     children,
 }: {
     label: string;
+    /** Shown after the label, e.g. an info icon. */
+    info?: React.ReactNode;
     style?: React.CSSProperties;
     children: React.ReactNode;
 }) {
@@ -631,13 +639,15 @@ function WsiFilterRow({
         >
             <span
                 style={{
-                    width: 40,
+                    width: 54,
                     flexShrink: 0,
                     fontSize: 12,
                     color: theme.muted,
+                    whiteSpace: 'nowrap',
                 }}
             >
                 {label}
+                {info && <span style={{ marginLeft: 4 }}>{info}</span>}
             </span>
             {children}
         </div>
