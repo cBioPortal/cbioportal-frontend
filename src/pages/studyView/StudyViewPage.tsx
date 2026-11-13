@@ -559,11 +559,14 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get hasEmbeddingSupport() {
-        // Decided from the manifest, so the tab is hidden for studies no map
-        // covers without fetching one to find out. The EMBEDDINGS flag gates
-        // only the maps that ask for it.
+        // queriedPhysicalStudyIds, not studyIds: the latter holds the virtual
+        // study's own id when one is queried, which matches no map. Keep the tab
+        // while it resolves so a deep link does not land on a blank page.
+        if (!this.store.queriedPhysicalStudyIds.isComplete) {
+            return true;
+        }
         return hasEmbeddingForStudies({
-            studyIds: this.store.studyIds,
+            studyIds: this.store.queriedPhysicalStudyIds.result,
             hasFeatureFlag: this.props.appStore.featureFlagStore.has(
                 FeatureFlagEnum.EMBEDDINGS
             ),
