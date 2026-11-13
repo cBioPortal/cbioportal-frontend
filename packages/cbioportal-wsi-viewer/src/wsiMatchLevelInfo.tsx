@@ -1,13 +1,16 @@
 import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { WSI_THEME } from './wsiTheme';
+import { MatchLevel } from './wsiViewerTypes';
 
 /** What the match levels mean, for readers who don't work in pathology. */
 export const WSI_MATCH_LEVEL_HELP: ReadonlyArray<{
+    matchLevel: MatchLevel;
     level: string;
     text: string;
 }> = [
     {
+        matchLevel: 'BLOCK',
         level: 'Block',
         text:
             'Cut from the same tissue block that was sequenced (or the only ' +
@@ -15,19 +18,29 @@ export const WSI_MATCH_LEVEL_HELP: ReadonlyArray<{
             'match to the tissue behind the genomic results.',
     },
     {
+        matchLevel: 'PART',
         level: 'Part',
         text:
-            'From the same part of the specimen as the sequenced sample, but ' +
+            'From the same part as the sequenced sample, but ' +
             'not known to come from the sequenced block. It shows the same ' +
             'tissue from the same site and procedure.',
     },
     {
+        matchLevel: 'UNMATCHED',
         level: 'Unmatched',
         text:
             'From this patient, but not linked to a sequenced sample, for ' +
             'example from another biopsy or surgery.',
     },
 ];
+
+/** The plain-language explanation of one match level. */
+export function matchLevelHelpText(matchLevel: MatchLevel): string {
+    return (
+        WSI_MATCH_LEVEL_HELP.find(help => help.matchLevel === matchLevel)
+            ?.text || ''
+    );
+}
 
 /** An info icon whose tooltip explains the match levels. */
 export function WsiMatchLevelInfo({ style }: { style?: React.CSSProperties }) {
@@ -41,8 +54,8 @@ export function WsiMatchLevelInfo({ style }: { style?: React.CSSProperties }) {
                     style={{ maxWidth: 320 }}
                 >
                     <div style={{ marginBottom: 6 }}>
-                        How a slide relates to a sequenced sample. A specimen (a
-                        biopsy or surgical resection) is divided into parts,
+                        How a slide relates to a sequenced sample. Tissue
+                        removed in a biopsy or surgery is divided into parts,
                         separate pieces of tissue. Each part is embedded in one
                         or more paraffin blocks, and slides are thin sections
                         cut from a block.

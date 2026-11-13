@@ -101,6 +101,22 @@ describe('buildPathRows', () => {
         );
     });
 
+    it('explains part, block and match in plain language', () => {
+        const rows = buildPathRows(
+            placedSlide('BLOCK', { part_number: '6', block_label: 'Block 1' }),
+            sample,
+            'P-1',
+            'study-1'
+        );
+        const labelTip = (label: string) =>
+            rows.find(row => row.label === label)?.labelTip;
+
+        expect(labelTip('Part')).toContain('biopsy or surgery');
+        expect(labelTip('Block')).toContain('paraffin block');
+        expect(labelTip('Match')).toContain('Block-matched');
+        expect(labelTip('Match')).toContain('Part-matched');
+    });
+
     it('explains every pathology row with a tooltip', () => {
         const rows = buildPathRows(
             placedSlide('BLOCK', {
