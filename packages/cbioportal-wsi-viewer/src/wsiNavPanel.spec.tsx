@@ -448,6 +448,52 @@ describe('WsiNavPanel', () => {
         expect(onMatchFilterChange).toHaveBeenCalledWith('all');
     });
 
+    it('links to OncoTree from the badge tooltip, not a native title', () => {
+        const sample = {
+            ...makeSample('S-1', [placedSlide('block-slide', 'BLOCK')]),
+            oncotree_code: 'LUAD',
+            cancer_type_detailed: 'Lung Adenocarcinoma',
+            primary_site: 'Lung',
+        };
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([sample])}
+                selectedSlide={null}
+                stainFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                {...navContext}
+            />
+        );
+
+        const badge = renderer.root.findByProps({
+            'data-testid': 'wsi-oncotree-badge',
+        });
+        expect(badge.props.title).toBeUndefined();
+        const tooltip = renderer.root.findAllByType(DefaultTooltip).find(
+            node =>
+                node.findAllByProps({
+                    'data-testid': 'wsi-oncotree-badge',
+                }).length > 0
+        )!;
+        const overlay = TestRenderer.create(tooltip.props.overlay);
+        expect(flattenRenderedText(overlay.toJSON())).toContain(
+            'LUAD — Lung Adenocarcinoma'
+        );
+        expect(flattenRenderedText(overlay.toJSON())).toContain('Site: Lung');
+        expect(overlay.root.findByType('a').props.href).toBe(
+            'https://oncotree.info/'
+        );
+        // The row has no room for the cancer name next to the badge.
+        const header = renderer.root.findByProps({
+            'data-testid': 'wsi-sample-node-S-1',
+        });
+        const headerText = flattenRenderedText(header.children[0]);
+        expect(headerText).toContain('S-1');
+        expect(headerText).toContain('LUAD');
+        expect(headerText).not.toContain('Lung Adenocarcinoma');
+    });
+
     it('keeps the stain chips when the match filter leaves only one stain', () => {
         // As for a patient whose unmatched slides are all H&E.
         const sample = makeSample('S-1', [
