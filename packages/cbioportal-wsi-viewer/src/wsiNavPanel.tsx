@@ -44,6 +44,8 @@ import { WsiFilterChipGroup } from './wsiFilterChips';
 
 export interface WsiNavPanelProps {
     hierarchy: PatientHierarchy;
+    /** Bumped when enrichment updates the hierarchy's samples in place. */
+    dataVersion?: number;
     selectedSlide: Slide | null;
     stainFilter: WsiStainFilter;
     sampleIdFilter?: string;
@@ -182,6 +184,7 @@ function narrowSampleEntries(
 
 function WsiNavPanelComponent({
     hierarchy,
+    dataVersion = 0,
     selectedSlide,
     stainFilter,
     sampleIdFilter,
@@ -513,6 +516,7 @@ function WsiNavPanelComponent({
                                 filteredSlideIds.has(selectedSlideId)
                             }
                             filteredSlides={filteredSlides}
+                            dataVersion={dataVersion}
                             sampleIndex={index}
                             selectedSlide={selectedSlide}
                             onSelectSlide={onSelectSlide}
@@ -644,6 +648,79 @@ function WsiFilterRow({
     );
 }
 
+const ONCOTREE_URL = 'https://oncotree.info/';
+
+/**
+ * A sample's OncoTree code. Its tooltip names the cancer type and site, which
+ * the sample row has no room for, and links to OncoTree; clicks inside it
+ * don't toggle the sample row.
+ */
+function WsiOncoTreeBadge({
+    code,
+    name,
+    site,
+}: {
+    code: string;
+    name?: string;
+    site?: string;
+}) {
+    const stopRowToggle = (e: React.SyntheticEvent) => e.stopPropagation();
+    return (
+        <DefaultTooltip
+            trigger={['hover', 'focus']}
+            placement="top"
+            // Long enough to move the pointer from the badge to the link.
+            mouseLeaveDelay={0.6}
+            overlay={
+                <div
+                    data-testid="wsi-oncotree-tooltip"
+                    onClick={stopRowToggle}
+                    onKeyDown={stopRowToggle}
+                >
+                    <div>
+                        <b>{code}</b>
+                        {name ? ` — ${name}` : ''}
+                    </div>
+                    {site && <div>Site: {site}</div>}
+                    <a
+                        href={ONCOTREE_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        View OncoTree{' '}
+                        <i className="fa fa-external-link" aria-hidden="true" />
+                    </a>
+                </div>
+            }
+        >
+            <a
+                href={ONCOTREE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`OncoTree code ${code}${
+                    name ? `, ${name}` : ''
+                }: view OncoTree (opens in a new tab)`}
+                data-testid="wsi-oncotree-badge"
+                onClick={stopRowToggle}
+                style={{
+                    display: 'inline-block',
+                    background: theme.headerBg,
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: 3,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    padding: '0 4px',
+                    color: theme.text,
+                    marginRight: 4,
+                    textDecoration: 'none',
+                }}
+            >
+                {code}
+            </a>
+        </DefaultTooltip>
+    );
+}
+
 function SampleNode({
     sample,
     containsSelectedSlide,
@@ -659,6 +736,7 @@ function SampleNode({
     sample: Sample;
     containsSelectedSlide: boolean;
     filteredSlides: Array<{ slide: Slide; blockLabel: string | null }>;
+    dataVersion: number;
     sampleIndex: number;
     selectedSlide: Slide | null;
     onSelectSlide: (slide: Slide, sample: Sample) => void;
@@ -690,6 +768,14 @@ function SampleNode({
             setOpen(true);
         }
     }, [selectedSlideKey]);
+
+    const isPrimarySample =
+        (sample.sample_type || '').toLowerCase() === 'primary';
+
+    const cancerTypeName = sample.cancer_type_detailed || sample.cancer_type;
+    const sampleDescription = [cancerTypeName, sample.primary_site]
+        .filter(Boolean)
+        .join(' · ');
 
     const multiPart = React.useMemo(
         () =>
@@ -738,25 +824,72 @@ function SampleNode({
                         width: 8,
                     }}
                 />
-                <div
-                    style={{
-                        flex: 1,
-                        minWidth: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 5,
-                    }}
-                >
-                    {sample.sample_id && renderSampleLabel?.(sample.sample_id)}
+                {/* The sample ID gets its own line; the badges and cancer
+                    type share one truncated line below it. */}
+                <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                         style={{
-                            fontSize: 13,
-                            fontWeight: 600,
-                            color: theme.blue,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 5,
+                            minWidth: 0,
+                        }}
+                    >
+                        {sample.sample_id &&
+                            renderSampleLabel?.(sample.sample_id)}
+                        <div
+                            style={{
+                                fontSize: 13,
+                                fontWeight: 600,
+                                color: theme.blue,
+                                ...ellipsisStyle,
+                            }}
+                        >
+                            {sample.sample_id || '—'}
+                        </div>
+                    </div>
+                    <div
+                        style={{
+                            fontSize: 11,
+                            color: theme.muted,
+                            marginTop: 2,
                             ...ellipsisStyle,
                         }}
                     >
-                        {sample.sample_id || '—'}
+                        {sample.sample_type && (
+                            <span
+                                style={{
+                                    display: 'inline-block',
+                                    fontSize: 10,
+                                    fontWeight: 700,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '.4px',
+                                    padding: '1px 5px',
+                                    borderRadius: 3,
+                                    background: isPrimarySample
+                                        ? theme.blueLight
+                                        : theme.headerBg,
+                                    color: isPrimarySample
+                                        ? theme.blue
+                                        : theme.muted,
+                                    marginRight: 4,
+                                }}
+                            >
+                                {sample.sample_type}
+                            </span>
+                        )}
+                        {sample.oncotree_code && (
+                            <WsiOncoTreeBadge
+                                code={sample.oncotree_code}
+                                name={cancerTypeName}
+                                site={sample.primary_site}
+                            />
+                        )}
+                        {!sample.oncotree_code && sampleDescription && (
+                            <span title={sampleDescription}>
+                                {sampleDescription}
+                            </span>
+                        )}
                     </div>
                 </div>
                 <DefaultTooltip
@@ -804,6 +937,7 @@ const MemoSampleNode = React.memo(SampleNode, (prev, next) => {
     if (
         prev.sample !== next.sample ||
         prev.containsSelectedSlide !== next.containsSelectedSlide ||
+        prev.dataVersion !== next.dataVersion ||
         prev.sampleIndex !== next.sampleIndex ||
         prev.filteredSlides !== next.filteredSlides ||
         prev.onSelectSlide !== next.onSelectSlide ||

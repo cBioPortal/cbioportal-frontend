@@ -10,6 +10,7 @@ import {
     buildWsiPatientClinicalRows,
     selectWsiClinicalAttributes,
     selectWsiMoreClinicalAttributes,
+    useWsiClinicalData,
     useWsiClinicalRows,
     WsiPatientClinicalData,
 } from './wsiClinicalRows';
@@ -109,7 +110,7 @@ describe('selectWsiClinicalAttributes', () => {
     it('keeps default attributes (priority above 0), highest priority first', () => {
         const selected = selectWsiClinicalAttributes(
             [
-                attribute('TUMOR_PURITY', 1),
+                attribute('MUTATION_COUNT', 1),
                 attribute('PRIMARY_SITE', 0),
                 attribute('HIDDEN', -1),
                 attribute('SAMPLE_TYPE', 990),
@@ -118,7 +119,7 @@ describe('selectWsiClinicalAttributes', () => {
             ],
             [],
             sampleValues(
-                'TUMOR_PURITY',
+                'MUTATION_COUNT',
                 'PRIMARY_SITE',
                 'HIDDEN',
                 'SAMPLE_TYPE',
@@ -128,7 +129,7 @@ describe('selectWsiClinicalAttributes', () => {
         expect(selected.map(a => a.clinicalAttributeId)).toEqual([
             'CANCER_TYPE',
             'SAMPLE_TYPE',
-            'TUMOR_PURITY',
+            'MUTATION_COUNT',
         ]);
     });
 
@@ -166,6 +167,9 @@ describe('selectWsiClinicalAttributes', () => {
                 attribute('PATH_SLIDE_EXISTS', 1),
                 attribute('PARTC_CONSENTED_12_245', 1, true),
                 attribute('SAMPLE_COUNT', 1, true),
+                attribute('TMB_NONSYNONYMOUS', 1),
+                attribute('MSI_TYPE', 1),
+                attribute('TUMOR_PURITY', 1),
             ],
             [
                 datum('PARTC_CONSENTED_12_245', 'YES'),
@@ -419,5 +423,37 @@ describe('useWsiClinicalRows', () => {
             'PRIMARY_SITE',
         ]);
         consoleError.mockRestore();
+    });
+});
+
+describe('useWsiClinicalData', () => {
+    beforeEach(() => {
+        clearWsiClinicalRowsCache();
+        Object.values(mockClient).forEach(fn => fn.mockReset());
+    });
+
+    it('returns the sample data the rows were built from', async () => {
+        mockClient.getAllClinicalAttributesInStudyUsingGET.mockResolvedValue([
+            attribute('TMB_NONSYNONYMOUS', 1),
+        ]);
+        mockClient.getAllClinicalDataOfPatientInStudyUsingGET.mockResolvedValue(
+            []
+        );
+        mockClient.getAllSamplesOfPatientInStudyUsingGET.mockResolvedValue([
+            { sampleId: 'S-1' },
+        ]);
+        const sampleData = [datum('TMB_NONSYNONYMOUS', '8.2', 'S-1')];
+        mockClient.fetchClinicalDataUsingPOST.mockResolvedValue(sampleData);
+
+        let current: ReturnType<typeof useWsiClinicalData>;
+        function Probe() {
+            current = useWsiClinicalData('study', 'P-1');
+            return null;
+        }
+        render(<Probe />);
+        await act(async () => {});
+
+        // TMB is left to the viewer's Molecular section.
+        expect(current!).toEqual({ rows: [], sampleData });
     });
 });

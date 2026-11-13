@@ -5,6 +5,7 @@ import * as React from 'react';
 import { act, render, screen } from '@testing-library/react';
 import {
     AppWsiViewer,
+    buildWsiMolecularServices,
     buildWsiViewerConfig,
     wsiAuthScope,
 } from './wsiAppConfig';
@@ -21,8 +22,18 @@ jest.mock('shared/api/urls', () => ({
         `https://portal.example/beta/${path}`,
 }));
 
+const mockSampleData = [
+    {
+        sampleId: 'S-1',
+        clinicalAttributeId: 'TMB_NONSYNONYMOUS',
+        value: '8.2',
+    },
+];
 jest.mock('./wsiClinicalRows', () => ({
-    useWsiClinicalRows: () => [{ label: 'Sex', value: 'Female' }],
+    useWsiClinicalData: () => ({
+        rows: [{ label: 'Sex', value: 'Female' }],
+        sampleData: mockSampleData,
+    }),
 }));
 
 jest.mock('cbioportal-wsi-viewer/viewer', () => ({
@@ -54,6 +65,21 @@ describe('buildWsiViewerConfig', () => {
 
         delete mockServerConfig.user_display_name;
         expect(wsiAuthScope()).toBe('anonymousUser');
+    });
+});
+
+describe('buildWsiMolecularServices', () => {
+    it('simplifies mutation types like the rest of the portal', () => {
+        const services = buildWsiMolecularServices();
+
+        expect(services.getSimplifiedMutationType('Frame_Shift_Del')).toBe(
+            'frameshift'
+        );
+        expect(buildWsiViewerConfig().molecular).toEqual(
+            expect.objectContaining({
+                getSimplifiedMutationType: expect.any(Function),
+            })
+        );
     });
 });
 
@@ -106,6 +132,7 @@ describe('AppWsiViewer', () => {
                 showDownload: true,
                 renderLoading: expect.any(Function),
                 clinicalRows: [{ label: 'Sex', value: 'Female' }],
+                sampleClinicalData: mockSampleData,
             })
         );
     });

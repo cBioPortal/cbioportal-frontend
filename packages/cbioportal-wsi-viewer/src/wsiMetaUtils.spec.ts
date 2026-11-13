@@ -1,6 +1,7 @@
 import {
     buildPathRows,
     buildSampleUrl,
+    buildSeqRows,
     buildWsiRows,
     stainValue,
 } from './wsiMetaUtils';
@@ -24,6 +25,7 @@ const slide: Slide = {
 
 const sample: Sample = {
     sample_id: 'S-1',
+    sample_type: 'Primary',
     parts: [],
 };
 
@@ -119,7 +121,7 @@ describe('buildPathRows', () => {
         );
     });
 
-    it('links the sample and leaves the block to its own row', () => {
+    it('links the sample, shows its type on hover and leaves the block to its own row', () => {
         const rows = buildPathRows(
             placedSlide('BLOCK'),
             sample,
@@ -128,8 +130,10 @@ describe('buildPathRows', () => {
         );
 
         const sampleRow = rows.find(row => row.label === 'Sample');
-        expect(sampleRow?.labelTip).toBe('Click for cBioPortal sample view');
-        expect(sampleRow?.valueTip).toBeUndefined();
+        expect(sampleRow?.labelTip).toBe(
+            'Click for cBioPortal sample view — hover for sample type'
+        );
+        expect(sampleRow?.valueTip).toBe('Type: Primary');
         rows.forEach(row => {
             expect(`${row.labelTip} ${row.valueTip} ${row.value}`).not.toMatch(
                 /Accession|Barcode|Image ID/
@@ -213,7 +217,13 @@ describe('buildPathRows', () => {
     it('leaves patient, study and cancer type to the page and Clinical section', () => {
         const labels = buildPathRows(
             placedSlide('BLOCK'),
-            sample,
+            {
+                ...sample,
+                cancer_type: 'Melanoma',
+                cancer_type_detailed: 'Cutaneous Melanoma',
+                oncotree_code: 'SKCM',
+                primary_site: 'Skin',
+            },
             'P-1',
             'study-1'
         ).map(row => row.label);
@@ -276,6 +286,53 @@ describe('buildPathRows', () => {
         );
 
         expect(JSON.stringify(rows)).not.toMatch(/specimen/i);
+    });
+});
+
+describe('buildSeqRows', () => {
+    it('lists the sequencing properties of an enriched sample', () => {
+        const enrichedSample = {
+            ...sample,
+            tumor_purity: '65',
+            tmb_score: '7.123',
+            metastatic_site: 'Not Applicable',
+        } as Sample;
+
+        expect(buildSeqRows(enrichedSample, '/patient?sampleId=S-1')).toEqual([
+            expect.objectContaining({ label: 'Tumor purity', value: '65%' }),
+            expect.objectContaining({
+                label: 'TMB',
+                value: '7.1 mut/Mb',
+                href: '/patient?sampleId=S-1',
+            }),
+        ]);
+    });
+
+    it('scales a fractional purity to a percentage', () => {
+        expect(buildSeqRows({ ...sample, tumor_purity: '0.42' })[0].value).toBe(
+            '42%'
+        );
+        expect(buildSeqRows({ ...sample, tumor_purity: '1' })[0].value).toBe(
+            '100%'
+        );
+        expect(buildSeqRows({ ...sample, tumor_purity: 'High' })[0].value).toBe(
+            'High'
+        );
+    });
+
+    it('rounds TMB and shows the MSI score in its own row', () => {
+        const rows = buildSeqRows({
+            ...sample,
+            tmb_score: '12',
+            msi_type: 'Stable',
+            msi_score: '0.31234',
+        });
+
+        expect(rows.map(row => [row.label, row.value])).toEqual([
+            ['TMB', '12 mut/Mb'],
+            ['MSI', 'Stable'],
+            ['MSI score', '0.31'],
+        ]);
     });
 });
 

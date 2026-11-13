@@ -39,6 +39,24 @@ export type WsiStainKind = 'hne' | 'ihc' | 'other' | 'unknown';
 
 export type WsiStainFilter = 'all' | WsiStainKind;
 export type PathologySlideMatchFilter = 'all' | 'part' | 'block' | 'unmatched';
+/**
+ * Mutation data of the patient's samples: `unprofiled` when the study has no
+ * mutation profile.
+ */
+export type WsiMutationDataStatus =
+    | 'idle'
+    | 'loading'
+    | 'ready'
+    | 'unprofiled'
+    | 'error';
+
+/** A sample clinical attribute value, as the portal API returns it. */
+export interface WsiSampleClinicalDatum {
+    sampleId: string;
+    clinicalAttributeId: string;
+    value: string;
+}
+
 export interface Block {
     block_number: string;
     block_label: string;
@@ -53,8 +71,92 @@ export interface Part {
     blocks: Block[];
 }
 
+export interface MutationDetail {
+    /** Gene and protein change, e.g. "KRAS G12D"; unique within a sample. */
+    token: string;
+    gene: string;
+    /** Protein change without the `p.` prefix; empty when there is none. */
+    proteinChange: string;
+    type?: string; // human-readable mutation type, e.g. "Missense"
+    vaf?: number; // 0–100 percent
+    annotation?: string; // driverFilterAnnotation, e.g. "KRAS G13D is a hotspot"
+    entrezGeneId?: number;
+    consequence?: string; // e.g. "Missense_Mutation"
+    /** The portal's mutation keyword, e.g. "KRAS G12 missense". */
+    keyword?: string;
+    proteinStart?: number;
+    proteinEnd?: number;
+    /** Samples of the study's mutation profile with the same variant. */
+    cohortAlteredCount?: number;
+    /** Samples of the study's mutation profile. */
+    cohortProfiledCount?: number;
+}
+
+/** Single discrete copy-number alteration event from the study's CNA profile. */
+export interface CNADetail {
+    gene: string;
+    entrezGeneId?: number;
+    /** GISTIC value: -2=DeepDel, -1=ShallowDel, 1=Gain, 2=Amp */
+    cnaValue: number;
+    /** Samples of the study's CNA profile with the same alteration of the gene. */
+    cohortAlteredCount?: number;
+    /** Samples of the study's CNA profile. */
+    cohortProfiledCount?: number;
+}
+
+export interface StructuralVariantDetail {
+    gene1: string;
+    gene2: string;
+    site1EntrezGeneId?: number;
+    site2EntrezGeneId?: number;
+    variantClass: string;
+    annotation?: string;
+    breakpointType?: string;
+    connectionType?: string;
+    eventInfo?: string;
+    length?: number;
+    comments?: string;
+    svStatus?: string;
+    dnaSupport?: string;
+    rnaSupport?: string;
+    tumorVariantCount?: number;
+    normalVariantCount?: number;
+    tumorReadCount?: number;
+    normalReadCount?: number;
+    tumorPairedEndReadCount?: number;
+    tumorSplitReadCount?: number;
+    site1Description?: string;
+    site2Description?: string;
+    site1Chromosome?: string;
+    site1Position?: number;
+    site2Chromosome?: string;
+    site2Position?: number;
+    ncbiBuild?: string;
+}
+
 export interface Sample {
     sample_id: string;
+    cancer_type?: string;
+    cancer_type_detailed?: string;
+    oncotree_code?: string;
+    primary_site?: string;
+    sample_type?: string;
+    metastatic_site?: string;
+    /** TUMOR_PURITY: a fraction (0–1) or a percentage. */
+    tumor_purity?: string;
+    /** TMB_NONSYNONYMOUS, in mutations per megabase. */
+    tmb_score?: string;
+    msi_type?: string;
+    msi_score?: string;
+    /**
+     * The sample's mutations; unset until loaded or when the study has no
+     * mutation profile.
+     */
+    mutations?: MutationDetail[];
+    /** Significant CNA events (value ≠ 0) from the study's GISTIC/CNA profile. */
+    cna_alterations?: CNADetail[];
+    /** Structural variants with tumor evidence from the study's SV profile. */
+    structural_variants?: StructuralVariantDetail[];
     parts: Part[];
 }
 
