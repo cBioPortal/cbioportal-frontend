@@ -699,6 +699,13 @@ function SampleNode({
     const isPrimarySample =
         (sample.sample_type || '').toLowerCase() === 'primary';
 
+    const sampleDescription = [
+        sample.cancer_type_detailed || sample.cancer_type,
+        sample.primary_site,
+    ]
+        .filter(Boolean)
+        .join(' · ');
+
     const multiPart = React.useMemo(
         () =>
             open || containsSelectedSlide
@@ -746,31 +753,37 @@ function SampleNode({
                         width: 8,
                     }}
                 />
-                <div
-                    style={{
-                        flex: 1,
-                        minWidth: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 5,
-                    }}
-                >
-                    {sample.sample_id && renderSampleLabel?.(sample.sample_id)}
+                {/* The sample ID gets its own line; the badges and cancer
+                    type share one truncated line below it. */}
+                <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                         style={{
-                            fontSize: 13,
-                            fontWeight: 600,
-                            color: theme.blue,
-                            ...ellipsisStyle,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 5,
+                            minWidth: 0,
                         }}
                     >
-                        {sample.sample_id || '—'}
+                        {sample.sample_id &&
+                            renderSampleLabel?.(sample.sample_id)}
+                        <div
+                            style={{
+                                fontSize: 13,
+                                fontWeight: 600,
+                                color: theme.blue,
+                                ...ellipsisStyle,
+                            }}
+                        >
+                            {sample.sample_id || '—'}
+                        </div>
                     </div>
                     <div
+                        title={sampleDescription || undefined}
                         style={{
                             fontSize: 11,
                             color: theme.muted,
-                            marginTop: 1,
+                            marginTop: 2,
+                            ...ellipsisStyle,
                         }}
                     >
                         {sample.sample_type && (
@@ -829,15 +842,8 @@ function SampleNode({
                                 {sample.oncotree_code}
                             </a>
                         )}
-                        {sample.cancer_type_detailed ||
-                            sample.cancer_type ||
-                            ''}
+                        {sampleDescription}
                     </div>
-                    {sample.primary_site && (
-                        <div style={{ fontSize: 11, color: theme.muted }}>
-                            {sample.primary_site}
-                        </div>
-                    )}
                 </div>
                 <DefaultTooltip
                     trigger={['hover']}
