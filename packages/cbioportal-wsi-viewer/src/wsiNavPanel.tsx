@@ -41,7 +41,7 @@ import {
 } from './wsiTheme';
 import { WsiPanelHeader } from './wsiPanelChrome';
 import { WsiFilterChipGroup } from './wsiFilterChips';
-import { WsiMatchLevelInfo } from './wsiMatchLevelInfo';
+import { WsiMatchLevelInfo, WsiStainInfo } from './wsiFilterHelp';
 
 export interface WsiNavPanelProps {
     hierarchy: PatientHierarchy;
@@ -411,7 +411,11 @@ function WsiNavPanelComponent({
                     }}
                 >
                     {stainChoices.length > 0 && (
-                        <WsiFilterRow label="Stain" style={{ marginTop: 4 }}>
+                        <WsiFilterRow
+                            label="Stain"
+                            info={<WsiStainInfo />}
+                            style={{ marginTop: 4 }}
+                        >
                             <WsiFilterChipGroup
                                 label="Filter slides by stain"
                                 testId="wsi-stain-filter-row"
