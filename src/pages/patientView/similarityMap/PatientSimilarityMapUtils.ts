@@ -155,3 +155,55 @@ export function getClinicalColorsBySampleId(
     });
     return { colors, values };
 }
+
+export interface LassoPoint {
+    x: number;
+    y: number;
+}
+
+/**
+ * Whether a point falls inside a freehand polygon, by ray casting.
+ *
+ * The polygon is treated as closed, so the stroke does not have to return to
+ * where it started.
+ */
+export function isInsidePolygon(
+    point: LassoPoint,
+    polygon: LassoPoint[]
+): boolean {
+    if (polygon.length < 3) {
+        return false;
+    }
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const a = polygon[i];
+        const b = polygon[j];
+        const straddles = a.y > point.y !== b.y > point.y;
+        if (
+            straddles &&
+            point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y) + a.x
+        ) {
+            inside = !inside;
+        }
+    }
+    return inside;
+}
+
+/** Sample ids whose screen position falls inside the lasso. */
+export function getSamplesInLasso(
+    points: { sampleId: string; x: number; y: number }[],
+    polygon: LassoPoint[],
+    toScreen: (x: number, y: number) => [number, number]
+): string[] {
+    if (polygon.length < 3) {
+        return [];
+    }
+    const selected: string[] = [];
+    for (const p of points) {
+        const [x, y] = toScreen(p.x, p.y);
+        if (isInsidePolygon({ x, y }, polygon)) {
+            selected.push(p.sampleId);
+        }
+    }
+    return selected;
+}

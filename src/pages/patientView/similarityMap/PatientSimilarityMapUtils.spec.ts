@@ -5,6 +5,8 @@ import {
     getEmbeddingOptionsForSamples,
     getReferenceCategoryColors,
     getClinicalColorsBySampleId,
+    getSamplesInLasso,
+    isInsidePolygon,
     getStudyViewMapUrl,
     SampleEmbeddingPoint,
 } from './PatientSimilarityMapUtils';
@@ -180,5 +182,71 @@ describe('getClinicalColorsBySampleId', () => {
             'msktarget'
         );
         assert.isUndefined(colors.get('S_not_in_cohort'));
+    });
+});
+
+describe('isInsidePolygon', () => {
+    const square = [
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        { x: 10, y: 10 },
+        { x: 0, y: 10 },
+    ];
+
+    it('accepts a point inside and rejects one outside', () => {
+        assert.isTrue(isInsidePolygon({ x: 5, y: 5 }, square));
+        assert.isFalse(isInsidePolygon({ x: 15, y: 5 }, square));
+    });
+
+    it('handles a concave shape', () => {
+        const u = [
+            { x: 0, y: 0 },
+            { x: 10, y: 0 },
+            { x: 10, y: 10 },
+            { x: 6, y: 10 },
+            { x: 6, y: 3 },
+            { x: 4, y: 3 },
+            { x: 4, y: 10 },
+            { x: 0, y: 10 },
+        ];
+        assert.isTrue(isInsidePolygon({ x: 2, y: 8 }, u), 'left arm');
+        assert.isFalse(isInsidePolygon({ x: 5, y: 8 }, u), 'the notch');
+    });
+
+    it('rejects everything for a degenerate polygon', () => {
+        assert.isFalse(isInsidePolygon({ x: 1, y: 1 }, []));
+        assert.isFalse(
+            isInsidePolygon({ x: 1, y: 1 }, [{ x: 0, y: 0 }, { x: 2, y: 2 }])
+        );
+    });
+});
+
+describe('getSamplesInLasso', () => {
+    it('selects the points whose screen position is enclosed', () => {
+        const points = [
+            { sampleId: 'A', x: 0, y: 0 },
+            { sampleId: 'B', x: 100, y: 100 },
+        ];
+        // identity projection
+        const toScreen = (x: number, y: number): [number, number] => [x, y];
+        const selected = getSamplesInLasso(
+            points,
+            [
+                { x: -5, y: -5 },
+                { x: 5, y: -5 },
+                { x: 5, y: 5 },
+                { x: -5, y: 5 },
+            ],
+            toScreen
+        );
+        assert.deepEqual(selected, ['A']);
+    });
+
+    it('selects nothing for a stroke too short to enclose anything', () => {
+        const toScreen = (x: number, y: number): [number, number] => [x, y];
+        assert.deepEqual(
+            getSamplesInLasso([{ sampleId: 'A', x: 0, y: 0 }], [], toScreen),
+            []
+        );
     });
 });

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import _ from 'lodash';
-import { action, computed, makeObservable, observable } from 'mobx';
+import { action, autorun, computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import SampleManager from 'pages/patientView/SampleManager';
 import Select from 'react-select';
@@ -16,6 +16,8 @@ import {
     getEmbeddingOptionsForSamples,
     getClinicalColorsBySampleId,
     getReferenceCategoryColors,
+    getSamplesInLasso,
+    LassoPoint,
     getStudyViewMapUrl,
     SampleEmbeddingOption,
 } from './PatientSimilarityMapUtils';
@@ -32,6 +34,7 @@ const REFERENCE_COLOR_ATTRIBUTE_ID = 'CANCER_TYPE';
 // SampleLabelHTML draws a 12px icon; enlarged so it stands out on a dense map.
 const SAMPLE_ICON_SIZE = 12;
 const SAMPLE_ICON_SCALE = 1.5;
+const DIMMED_ALPHA = 0.12;
 const REFERENCE_COLORING_VALUE = '';
 const COLORING_SELECT_STYLES = {
     control: (base: any) => ({
@@ -43,12 +46,7 @@ const COLORING_SELECT_STYLES = {
     }),
     menu: (base: any) => ({ ...base, fontSize: '12px' }),
     menuPortal: (base: any) => ({ ...base, zIndex: 20 }),
-    container: (base: any) => ({
-        ...base,
-        width: '260px',
-        display: 'inline-block',
-        verticalAlign: 'middle',
-    }),
+    container: (base: any) => ({ ...base, width: '220px' }),
 };
 
 export interface IPatientSimilarityMapProps {
@@ -66,10 +64,23 @@ export default class PatientSimilarityMap extends React.Component<
 > {
     @observable private selectedValue: string | undefined;
     @observable private coloringAttributeId: string | undefined;
+    @observable.ref private lassoPath: LassoPoint[] = [];
+    @observable.ref private lassoSelection: string[] = [];
+    @observable private isLassoing = false;
+
+    private lassoDisposer?: () => void;
 
     constructor(props: IPatientSimilarityMapProps) {
         super(props);
         makeObservable(this);
+    }
+
+    componentDidMount() {
+        this.lassoDisposer = autorun(() => this.paintLasso());
+    }
+
+    componentWillUnmount() {
+        this.lassoDisposer?.();
     }
 
     @computed get sampleIds(): string[] {
@@ -205,6 +216,63 @@ export default class PatientSimilarityMap extends React.Component<
         this.coloringAttributeId = option?.value || undefined;
     }
 
+    private lassoPointFrom(event: React.MouseEvent): LassoPoint {
+        const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+        return {
+            x: event.clientX - rect.left,
+            y: event.clientY - rect.top,
+        };
+    }
+
+    @action.bound
+    private onLassoStart(event: React.MouseEvent) {
+        if (event.button !== 0) {
+            return;
+        }
+        event.preventDefault();
+        this.isLassoing = true;
+        this.lassoPath = [this.lassoPointFrom(event)];
+    }
+
+    @action.bound
+    private onLassoMove(event: React.MouseEvent) {
+        if (!this.isLassoing) {
+            return;
+        }
+        this.lassoPath = [...this.lassoPath, this.lassoPointFrom(event)];
+    }
+
+    @action.bound
+    private onLassoEnd() {
+        if (!this.isLassoing) {
+            return;
+        }
+        this.isLassoing = false;
+        const option = this.selectedOption;
+        this.lassoSelection = option
+            ? getSamplesInLasso(
+                  option.data.data,
+                  this.lassoPath,
+                  this.projection.toScreen
+              )
+            : [];
+        this.lassoPath = [];
+    }
+
+    @action.bound
+    private clearLasso() {
+        this.lassoSelection = [];
+        this.lassoPath = [];
+    }
+
+    // The link carries the lasso when there is one, so a neighbourhood picked
+    // here opens as a selection there; otherwise it carries the patient.
+    @computed get studyViewSampleIds(): string[] {
+        return this.lassoSelection.length > 0
+            ? this.lassoSelection
+            : this.sampleIds;
+    }
+
     private drawPoints = (canvas: HTMLCanvasElement | null) => {
         const option = this.selectedOption;
         if (!canvas || !option) {
@@ -224,6 +292,7 @@ export default class PatientSimilarityMap extends React.Component<
             this.categoryColors.map(c => [c.category, c.color])
         );
         const clinical = this.clinicalColors;
+        const selected = new Set(this.lassoSelection);
         for (const p of option.data.data) {
             const category = p.referenceData?.[REFERENCE_COLOR_ATTRIBUTE_ID];
             ctx.fillStyle = clinical
@@ -232,11 +301,64 @@ export default class PatientSimilarityMap extends React.Component<
                       colorByCategory.get(String(category))) ||
                   UNCOLORED_POINT_COLOR;
             const [x, y] = this.projection.toScreen(p.x, p.y);
+            const isSelected = selected.has(p.sampleId);
+            ctx.globalAlpha =
+                selected.size > 0 && !isSelected ? DIMMED_ALPHA : POINT_ALPHA;
             ctx.beginPath();
-            ctx.arc(x, y, POINT_RADIUS, 0, 2 * Math.PI);
+            ctx.arc(
+                x,
+                y,
+                isSelected ? POINT_RADIUS + 1 : POINT_RADIUS,
+                0,
+                2 * Math.PI
+            );
             ctx.fill();
+            if (isSelected) {
+                ctx.globalAlpha = 1;
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = '#333333';
+                ctx.stroke();
+            }
         }
+        ctx.globalAlpha = 1;
     };
+
+    private drawLasso = (canvas: HTMLCanvasElement | null) => {
+        this.lassoCanvas = canvas;
+        this.paintLasso();
+    };
+
+    private lassoCanvas: HTMLCanvasElement | null = null;
+
+    private paintLasso() {
+        const path = this.lassoPath;
+        const canvas = this.lassoCanvas;
+        if (!canvas) {
+            return;
+        }
+        const ratio = window.devicePixelRatio || 1;
+        canvas.width = MAP_WIDTH * ratio;
+        canvas.height = MAP_HEIGHT * ratio;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            return;
+        }
+        ctx.scale(ratio, ratio);
+        ctx.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
+        if (path.length < 2) {
+            return;
+        }
+        ctx.strokeStyle = '#2a78d6';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.moveTo(path[0].x, path[0].y);
+        for (const point of path.slice(1)) {
+            ctx.lineTo(point.x, point.y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+    }
 
     @computed get legendEntries(): {
         category: string;
@@ -264,6 +386,43 @@ export default class PatientSimilarityMap extends React.Component<
             })),
             e => e.count,
             'desc'
+        );
+    }
+
+    private renderColoringSelector() {
+        if (this.coloringAttributes.length === 0) {
+            return null;
+        }
+        return (
+            <div style={{ marginBottom: 8 }}>
+                <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
+                    Color samples by
+                </div>
+                <Select
+                    name="patient-similarity-map-coloring"
+                    className="patient-similarity-map-coloring"
+                    value={this.selectedColoringOption}
+                    options={this.coloringOptions}
+                    onChange={this.onSelectColoring}
+                    isSearchable={true}
+                    isClearable={false}
+                    placeholder="Search for a clinical attribute"
+                    styles={COLORING_SELECT_STYLES}
+                    menuPortalTarget={
+                        typeof document !== 'undefined'
+                            ? document.body
+                            : undefined
+                    }
+                />
+                {this.isColoringPending && (
+                    <div
+                        style={{ color: '#666', marginTop: 2 }}
+                        data-test="patient-similarity-map-coloring-pending"
+                    >
+                        loading…
+                    </div>
+                )}
+            </div>
         );
     }
 
@@ -339,58 +498,34 @@ export default class PatientSimilarityMap extends React.Component<
                     ) : (
                         <strong>{option.label}</strong>
                     )}
-                    {this.coloringAttributes.length > 0 && (
-                        <span
-                            style={{
-                                marginLeft: 10,
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 6,
-                            }}
-                        >
-                            Color samples by:
-                            <Select
-                                name="patient-similarity-map-coloring"
-                                className="patient-similarity-map-coloring"
-                                value={this.selectedColoringOption}
-                                options={this.coloringOptions}
-                                onChange={this.onSelectColoring}
-                                isSearchable={true}
-                                isClearable={false}
-                                placeholder="Search for a clinical attribute"
-                                styles={COLORING_SELECT_STYLES}
-                                menuPortalTarget={
-                                    typeof document !== 'undefined'
-                                        ? document.body
-                                        : undefined
-                                }
-                            />
-                            {this.isColoringPending && (
-                                <span
-                                    style={{ color: '#666' }}
-                                    data-test="patient-similarity-map-coloring-pending"
-                                >
-                                    loading…
-                                </span>
-                            )}
-                        </span>
-                    )}
                     <a
                         data-test="patient-similarity-map-study-view-link"
                         href={getStudyViewMapUrl(
                             this.props.studyId,
-                            this.sampleIds,
+                            this.studyViewSampleIds,
                             option.value
                         )}
                         style={{ marginLeft: 10 }}
                     >
-                        Open in study view
+                        {this.lassoSelection.length > 0
+                            ? `Open ${this.lassoSelection.length} selected in study view`
+                            : 'Open in study view'}
                     </a>
+                    {this.lassoSelection.length > 0 && (
+                        <a
+                            data-test="patient-similarity-map-clear-lasso"
+                            onClick={this.clearLasso}
+                            style={{ marginLeft: 8, cursor: 'pointer' }}
+                        >
+                            Clear selection
+                        </a>
+                    )}
                     <div style={{ color: '#666', marginTop: 4 }}>
                         {option.data.description.replace(/\.?\s*$/, '.')}{' '}
-                        Icons mark this patient's samples. The study view opens
-                        the same map with these samples selected, where it can
-                        be filtered and recoloured.
+                        Icons mark this patient's samples. Drag on the map to
+                        select a neighbourhood; the study view opens the same
+                        map with the selection, where it can be filtered and
+                        recoloured.
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 20 }}>
@@ -405,9 +540,26 @@ export default class PatientSimilarityMap extends React.Component<
                     >
                         <canvas
                             key={`${option.value}:${this.coloringAttributeId ||
-                                ''}:${this.clinicalColors ? 'c' : 'r'}`}
+                                ''}:${this.clinicalColors ? 'c' : 'r'}:${
+                                this.lassoSelection.length
+                            }`}
                             ref={this.drawPoints}
                             style={{ width: MAP_WIDTH, height: MAP_HEIGHT }}
+                        />
+                        <canvas
+                            ref={this.drawLasso}
+                            data-test="patient-similarity-map-lasso"
+                            onMouseDown={this.onLassoStart}
+                            onMouseMove={this.onLassoMove}
+                            onMouseUp={this.onLassoEnd}
+                            onMouseLeave={this.onLassoEnd}
+                            style={{
+                                position: 'absolute',
+                                inset: 0,
+                                width: MAP_WIDTH,
+                                height: MAP_HEIGHT,
+                                cursor: 'crosshair',
+                            }}
                         />
                         {this.placedSamples.map(({ sampleId, left, top }) => (
                             <div
@@ -427,7 +579,10 @@ export default class PatientSimilarityMap extends React.Component<
                             </div>
                         ))}
                     </div>
-                    {this.renderLegend()}
+                    <div>
+                        {this.renderColoringSelector()}
+                        {this.renderLegend()}
+                    </div>
                 </div>
                 {this.unplacedSampleIds.length > 0 && (
                     <div style={{ marginTop: 8, color: '#666' }}>
