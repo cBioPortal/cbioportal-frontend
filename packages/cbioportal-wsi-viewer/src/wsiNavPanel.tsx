@@ -651,10 +651,19 @@ function WsiFilterRow({
 const ONCOTREE_URL = 'https://oncotree.info/';
 
 /**
- * A sample's OncoTree code. Its tooltip names the cancer type and links to
- * OncoTree; clicks inside it don't toggle the sample row.
+ * A sample's OncoTree code. Its tooltip names the cancer type and site, which
+ * the sample row has no room for, and links to OncoTree; clicks inside it
+ * don't toggle the sample row.
  */
-function WsiOncoTreeBadge({ code, name }: { code: string; name?: string }) {
+function WsiOncoTreeBadge({
+    code,
+    name,
+    site,
+}: {
+    code: string;
+    name?: string;
+    site?: string;
+}) {
     const stopRowToggle = (e: React.SyntheticEvent) => e.stopPropagation();
     return (
         <DefaultTooltip
@@ -671,6 +680,7 @@ function WsiOncoTreeBadge({ code, name }: { code: string; name?: string }) {
                         <b>{code}</b>
                         {name ? ` — ${name}` : ''}
                     </div>
+                    {site && <div>Site: {site}</div>}
                     <a
                         href={ONCOTREE_URL}
                         target="_blank"
@@ -761,10 +771,8 @@ function SampleNode({
     const isPrimarySample =
         (sample.sample_type || '').toLowerCase() === 'primary';
 
-    const sampleDescription = [
-        sample.cancer_type_detailed || sample.cancer_type,
-        sample.primary_site,
-    ]
+    const cancerTypeName = sample.cancer_type_detailed || sample.cancer_type;
+    const sampleDescription = [cancerTypeName, sample.primary_site]
         .filter(Boolean)
         .join(' · ');
 
@@ -872,12 +880,15 @@ function SampleNode({
                         {sample.oncotree_code && (
                             <WsiOncoTreeBadge
                                 code={sample.oncotree_code}
-                                name={sample.cancer_type_detailed}
+                                name={cancerTypeName}
+                                site={sample.primary_site}
                             />
                         )}
-                        <span title={sampleDescription || undefined}>
-                            {sampleDescription}
-                        </span>
+                        {!sample.oncotree_code && sampleDescription && (
+                            <span title={sampleDescription}>
+                                {sampleDescription}
+                            </span>
+                        )}
                     </div>
                 </div>
                 <DefaultTooltip
