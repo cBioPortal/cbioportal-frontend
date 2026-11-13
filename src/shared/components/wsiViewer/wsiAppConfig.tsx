@@ -4,6 +4,7 @@ import { WsiViewerConfig, WsiViewerProps } from 'cbioportal-wsi-viewer';
 import { getServerConfig } from 'config/config';
 import { buildCBioPortalAPIUrl, buildCBioPortalPageUrl } from 'shared/api/urls';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import { redirectToLogin } from 'shared/lib/redirectHelpers';
 import { useWsiClinicalRows, WsiPatientClinicalData } from './wsiClinicalRows';
 
 const WSI_OSD_PREFIX_URL = '/reactapp/osd-images/';
@@ -19,6 +20,9 @@ export function buildWsiViewerConfig(): WsiViewerConfig {
         buildPageUrl: (path: string, query: Record<string, string>) =>
             buildCBioPortalPageUrl(path, query),
         osdPrefixUrl: WSI_OSD_PREFIX_URL,
+        // Slides are authorized by the portal session, so an expired session
+        // signs in again the way the portal's own 401s do.
+        onSessionExpired: redirectToLogin,
     };
 }
 
