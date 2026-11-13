@@ -84,11 +84,17 @@ const LegendItemRow: React.FC<LegendItemRowProps> = ({
     const [isHovered, setIsHovered] = React.useState(false);
     const isDimmed = isHidden;
     const canSelect = isClickable && !isHidden && !!onToggleCategorySelected;
+    const rowBackground = isSelected
+        ? '#e7f1ff'
+        : isHovered
+        ? '#f5f5f5'
+        : 'transparent';
     return (
         <div
             key={displayLabel}
             data-test="embeddings-legend-item"
             style={{
+                position: 'relative',
                 display: 'flex',
                 alignItems: 'center',
                 marginBottom: '2px',
@@ -99,11 +105,7 @@ const LegendItemRow: React.FC<LegendItemRowProps> = ({
                 border: isSelected
                     ? '1px solid #007bff'
                     : '1px solid transparent',
-                backgroundColor: isSelected
-                    ? '#e7f1ff'
-                    : isHovered
-                    ? '#f5f5f5'
-                    : 'transparent',
+                backgroundColor: rowBackground,
             }}
             onClick={() => {
                 if (canSelect && onToggleCategorySelected) {
@@ -174,52 +176,63 @@ const LegendItemRow: React.FC<LegendItemRowProps> = ({
                 >
                     {displayLabel}
                 </span>
-                {/* The count gives way to the actions on hover - the row is too narrow for both. */}
-                {isClickable && isHovered ? (
-                    <span style={{ display: 'flex', flexShrink: 0 }}>
-                        {canSelect && (
-                            <span
-                                data-test="embeddings-legend-select-button"
-                                style={ROW_ACTION_STYLE}
-                                onClick={e => {
-                                    e.stopPropagation();
-                                    onToggleCategorySelected!(displayLabel);
-                                }}
-                            >
-                                {isSelected ? 'Unselect' : 'Select'}
-                            </span>
-                        )}
+                <span
+                    style={{
+                        marginLeft: '8px',
+                        color: isDimmed ? '#CCCCCC' : '#666',
+                        fontWeight: 500,
+                        opacity: isDimmed ? 0.6 : 1,
+                        fontSize: '11px',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                    }}
+                >
+                    {visibleCount !== undefined && visibleCount !== count
+                        ? `${formatCount(visibleCount)} / ${formatCount(count)}`
+                        : formatCount(count)}
+                </span>
+            </div>
+            {/* Overlaid on the row's right end rather than in the flow, so hovering
+                doesn't resize the row or re-truncate the label. */}
+            {isClickable && isHovered && (
+                <span
+                    style={{
+                        position: 'absolute',
+                        right: '2px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        display: 'flex',
+                        paddingLeft: '6px',
+                        backgroundColor:
+                            rowBackground === 'transparent'
+                                ? 'white'
+                                : rowBackground,
+                    }}
+                >
+                    {canSelect && (
                         <span
-                            data-test="embeddings-legend-hide-button"
+                            data-test="embeddings-legend-select-button"
                             style={ROW_ACTION_STYLE}
                             onClick={e => {
                                 e.stopPropagation();
-                                onToggleCategoryVisibility!(displayLabel);
+                                onToggleCategorySelected!(displayLabel);
                             }}
                         >
-                            {isHidden ? 'Show' : 'Hide'}
+                            {isSelected ? 'Unselect' : 'Select'}
                         </span>
-                    </span>
-                ) : (
+                    )}
                     <span
-                        style={{
-                            marginLeft: '8px',
-                            color: isDimmed ? '#CCCCCC' : '#666',
-                            fontWeight: 500,
-                            opacity: isDimmed ? 0.6 : 1,
-                            fontSize: '11px',
-                            whiteSpace: 'nowrap',
-                            flexShrink: 0,
+                        data-test="embeddings-legend-hide-button"
+                        style={ROW_ACTION_STYLE}
+                        onClick={e => {
+                            e.stopPropagation();
+                            onToggleCategoryVisibility!(displayLabel);
                         }}
                     >
-                        {visibleCount !== undefined && visibleCount !== count
-                            ? `${formatCount(visibleCount)} / ${formatCount(
-                                  count
-                              )}`
-                            : formatCount(count)}
+                        {isHidden ? 'Show' : 'Hide'}
                     </span>
-                )}
-            </div>
+                </span>
+            )}
         </div>
     );
 };
@@ -259,7 +272,12 @@ const renderGradientLegend = (
         );
     }
 
-    const gradientId = `gradient-${displayLabel.replace(/\s+/g, '-')}`;
+    // Strip everything but alphanumerics: parentheses in a label would otherwise close
+    // the url(#...) reference early and the rect falls back to black.
+    const gradientId = `gradient-${displayLabel.replace(
+        /[^a-zA-Z0-9]+/g,
+        '-'
+    )}`;
 
     const barAndHistogram = (() => {
         const COLOR_BAR_Y = 3;

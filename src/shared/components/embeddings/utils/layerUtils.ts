@@ -2,6 +2,17 @@ import { ScatterplotLayer } from '@deck.gl/layers';
 import { EmbeddingPoint } from '../EmbeddingTypes';
 import { colorToRgb } from './coordinateUtils';
 
+// Samples outside the cohort that the embedding labels itself: colored like
+// cohort points, but smaller and translucent so the cohort still stands out.
+const REFERENCE_POINT_RADIUS = 0.02;
+const REFERENCE_POINT_ALPHA = 140;
+
+// Points of a sample-level map carry no patientId, so selection is tracked by
+// whichever id the point has.
+function pointKey(d: EmbeddingPoint): string | undefined {
+    return d.patientId || d.sampleId;
+}
+
 /**
  * Create the scatterplot layer for the embedding visualization
  */
@@ -10,36 +21,46 @@ export function createScatterplotLayer(
     selectedPoints: EmbeddingPoint[],
     selectedPatientIds: string[] = [],
     onHover: (info: any) => void,
-    onClick: (info: any) => void
+    onClick: (info: any) => void,
+    pointScale: number = 1,
+    contextPointBoost: number = 1
 ) {
     // Convert to Sets for O(1) lookup performance (computed once per layer creation)
-    const localSelectedSet = new Set(selectedPoints.map(p => p.patientId));
+    const localSelectedSet = new Set(selectedPoints.map(pointKey));
     const externalSelectedSet = new Set(selectedPatientIds);
     const hasAnySelection =
         selectedPoints.length > 0 || selectedPatientIds.length > 0;
+    const contextPointRadius = 0.003 * contextPointBoost;
 
     return new ScatterplotLayer({
         id: 'embedding-scatter',
         data,
         getPosition: (d: EmbeddingPoint) => [d.x, d.y],
         getRadius: (d: EmbeddingPoint) => {
-            // Non-cohort samples never participate in selection - make them 10x smaller
+            // Non-cohort samples never participate in selection - draw them as a small backdrop
             if (d.isInCohort === false) {
-                return 0.003;
+                return d.referenceColor
+                    ? REFERENCE_POINT_RADIUS
+                    : contextPointRadius;
             }
 
             if (d.isDeemphasized) {
                 return 0.018;
             }
 
+            const key = pointKey(d);
             const isSelected =
-                (d.patientId && localSelectedSet.has(d.patientId)) ||
-                (d.patientId && externalSelectedSet.has(d.patientId));
+                !!key &&
+                (localSelectedSet.has(key) || externalSelectedSet.has(key));
             return isSelected ? 0.05 : 0.03;
         },
         getFillColor: (d: EmbeddingPoint) => {
             // Non-cohort samples always show their dark gray color
             if (d.isInCohort === false) {
+                if (d.referenceColor) {
+                    const rgb = colorToRgb(d.referenceColor);
+                    return [rgb[0], rgb[1], rgb[2], REFERENCE_POINT_ALPHA];
+                }
                 const color = d.color || '#666666';
                 const rgb = colorToRgb(color);
                 return [rgb[0], rgb[1], rgb[2], 255];
@@ -52,9 +73,10 @@ export function createScatterplotLayer(
                 return [rgb[0], rgb[1], rgb[2], 110];
             }
 
+            const key = pointKey(d);
             const isSelected =
-                (d.patientId && localSelectedSet.has(d.patientId)) ||
-                (d.patientId && externalSelectedSet.has(d.patientId));
+                !!key &&
+                (localSelectedSet.has(key) || externalSelectedSet.has(key));
 
             // If there's an active selection and this point is not selected, make it light gray
             if (hasAnySelection && !isSelected) {
@@ -67,6 +89,10 @@ export function createScatterplotLayer(
         getLineColor: (d: EmbeddingPoint) => {
             // Non-cohort samples always show their dark gray color
             if (d.isInCohort === false) {
+                if (d.referenceColor) {
+                    const rgb = colorToRgb(d.referenceColor);
+                    return [rgb[0], rgb[1], rgb[2], REFERENCE_POINT_ALPHA];
+                }
                 const color = d.color || '#666666';
                 return colorToRgb(color); // Use same color for stroke and fill for consistency
             }
@@ -76,9 +102,10 @@ export function createScatterplotLayer(
                 return colorToRgb(color);
             }
 
+            const key = pointKey(d);
             const isSelected =
-                (d.patientId && localSelectedSet.has(d.patientId)) ||
-                (d.patientId && externalSelectedSet.has(d.patientId));
+                !!key &&
+                (localSelectedSet.has(key) || externalSelectedSet.has(key));
 
             // If there's an active selection and this point is not selected, make it light gray
             if (hasAnySelection && !isSelected) {
@@ -90,9 +117,10 @@ export function createScatterplotLayer(
             return colorToRgb(color);
         },
         getLineWidth: (d: EmbeddingPoint) => {
+            const key = pointKey(d);
             const isSelected =
-                (d.patientId && localSelectedSet.has(d.patientId)) ||
-                (d.patientId && externalSelectedSet.has(d.patientId));
+                !!key &&
+                (localSelectedSet.has(key) || externalSelectedSet.has(key));
 
             if (isSelected) {
                 return 0.01; // Thicker border for selected points
@@ -115,6 +143,8 @@ export function createScatterplotLayer(
             // Make all other points have a very thin consistent stroke width as in plots tab
             return 0.003; // Small consistent border width for most points
         },
+        radiusScale: pointScale,
+        lineWidthScale: pointScale,
         filled: true,
         stroked: true,
         pickable: true,
@@ -124,7 +154,7 @@ export function createScatterplotLayer(
             getFillColor: [data, selectedPoints, selectedPatientIds],
             getLineColor: [data, selectedPoints, selectedPatientIds],
             getLineWidth: [data, selectedPoints, selectedPatientIds],
-            getRadius: [selectedPoints, selectedPatientIds],
+            getRadius: [data, selectedPoints, selectedPatientIds],
         },
     } as any);
 }

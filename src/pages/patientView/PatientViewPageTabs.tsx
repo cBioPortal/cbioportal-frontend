@@ -40,6 +40,9 @@ import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
+import PatientSimilarityMap from './similarityMap/PatientSimilarityMap';
+import { getEmbeddingOptionsForSamples } from './similarityMap/PatientSimilarityMapUtils';
+import { getLoadedEmbeddingOptions } from 'shared/components/embeddings/embeddingSources';
 import PatientWsiSlidesTab from 'pages/patientView/PatientWsiSlidesTab';
 import { capWsiViewerHeight } from 'cbioportal-wsi-viewer';
 import { PatientViewPageTabs } from './PatientViewPageTabIds';
@@ -897,6 +900,48 @@ export function tabs(
                 )}
             </MSKTab>
         );
+
+    // Shown once a loaded map holds one of this patient's samples, or at once
+    // when deep-linked so the link doesn't fall back to Summary meanwhile. The
+    // EMBEDDINGS flag now gates only the maps that ask for it, not the tab.
+    const hasEmbeddingsFlag = pageComponent.props.appStore.featureFlagStore.has(
+        FeatureFlagEnum.EMBEDDINGS
+    );
+    if (
+        sampleManager &&
+        (urlWrapper.activeTabId === PatientViewPageTabs.SimilarityMap ||
+            getEmbeddingOptionsForSamples(
+                getLoadedEmbeddingOptions({
+                    studyIds: [pageComponent.patientViewPageStore.studyId],
+                    hasFeatureFlag: hasEmbeddingsFlag,
+                }),
+                pageComponent.patientViewPageStore.studyId,
+                sampleManager.getSampleIdsInOrder()
+            ).length > 0)
+    ) {
+        tabs.push(
+            <MSKTab
+                key={12}
+                id={PatientViewPageTabs.SimilarityMap}
+                linkText={
+                    <span>
+                        Similarity Map{' '}
+                        <strong className={'beta-text'}>Beta!</strong>
+                    </span>
+                }
+            >
+                <PatientSimilarityMap
+                    studyId={pageComponent.patientViewPageStore.studyId}
+                    sampleManager={sampleManager}
+                    hasEmbeddingsFeatureFlag={hasEmbeddingsFlag}
+                    clinicalAttributes={
+                        pageComponent.patientViewPageStore.clinicalAttributes
+                            .result || []
+                    }
+                />
+            </MSKTab>
+        );
+    }
 
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */
