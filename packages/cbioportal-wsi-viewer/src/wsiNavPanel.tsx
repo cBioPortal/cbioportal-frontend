@@ -669,7 +669,8 @@ function WsiOncoTreeBadge({
         <DefaultTooltip
             trigger={['hover', 'focus']}
             placement="top"
-            mouseLeaveDelay={0.2}
+            // Long enough to move the pointer from the badge to the link.
+            mouseLeaveDelay={0.6}
             overlay={
                 <div
                     data-testid="wsi-oncotree-tooltip"
