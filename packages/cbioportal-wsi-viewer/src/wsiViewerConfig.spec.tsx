@@ -100,6 +100,28 @@ describe('WSI viewer runtime', () => {
             expect.objectContaining({ credentials: 'same-origin' })
         );
     });
+
+    it('reports a 401 from its fetch as an expired session', async () => {
+        const statuses = [401, 403, 200];
+        const fetchImpl = (jest.fn(async () => ({
+            status: statuses.shift(),
+        })) as unknown) as typeof fetch;
+        const onSessionExpired = jest.fn();
+        configureWsiViewerRuntime(makeConfig({ fetchImpl, onSessionExpired }));
+        const runtimeFetch = getWsiViewerRuntime().fetchImpl;
+
+        expect((await runtimeFetch('/a')).status).toBe(401);
+        expect(onSessionExpired).toHaveBeenCalledTimes(1);
+        await runtimeFetch('/b');
+        await runtimeFetch('/c');
+        expect(onSessionExpired).toHaveBeenCalledTimes(1);
+    });
+
+    it('uses the host fetch as is without a session hook', () => {
+        const fetchImpl = (jest.fn() as unknown) as typeof fetch;
+        configureWsiViewerRuntime(makeConfig({ fetchImpl }));
+        expect(getWsiViewerRuntime().fetchImpl).toBe(fetchImpl);
+    });
 });
 
 describe('hashUrlState', () => {

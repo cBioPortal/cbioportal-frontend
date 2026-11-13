@@ -30,6 +30,7 @@ import {
     WsiInitialSlideLoadPerformance,
     WsiViewerController,
     WsiViewerControllerHost,
+    WSI_SESSION_EXPIRED_MESSAGE,
 } from './wsiViewerController';
 import { WsiViewerState } from './wsiViewerState';
 import { loadOpenSeadragon } from './wsiOpenSeadragonLoader';
@@ -250,6 +251,11 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
     private unsubscribeUrlState: (() => void) | null = null;
     private readonly handleRetryViewer = () => {
         void this.controller.retrySelectedSlide();
+    };
+    // Only a page load sends an expired session back through sign-in;
+    // remounting the slide would be refused again.
+    private readonly handleReloadPage = () => {
+        window.location.reload();
     };
     private readonly handleChangeX = action((v: string) => {
         this.viewerState.coordInputX = v;
@@ -1101,12 +1107,21 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                             }}
                         >
                             <span style={{ color: C.text }}>{error}</span>
-                            <button
-                                className="btn btn-primary btn-sm"
-                                onClick={this.handleRetryViewer}
-                            >
-                                Retry
-                            </button>
+                            {error === WSI_SESSION_EXPIRED_MESSAGE ? (
+                                <button
+                                    className="btn btn-primary btn-sm"
+                                    onClick={this.handleReloadPage}
+                                >
+                                    Reload page
+                                </button>
+                            ) : (
+                                <button
+                                    className="btn btn-primary btn-sm"
+                                    onClick={this.handleRetryViewer}
+                                >
+                                    Retry
+                                </button>
+                            )}
                         </div>
                     )}
                     {!selectedSlide && (
