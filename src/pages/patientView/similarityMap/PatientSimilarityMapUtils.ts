@@ -106,19 +106,25 @@ export function getStudyViewMapUrl(
     sampleIds: string[],
     mapValue?: string
 ): string {
-    const query: { [key: string]: string } = {
-        id: studyId,
-        filters: JSON.stringify({
+    const query: { [key: string]: string } = { id: studyId };
+    if (mapValue) {
+        query.embeddings_map = mapValue;
+    }
+    // The selection rides in the fragment, which the browser never sends: a
+    // few thousand sample ids in the query string exceed what a server accepts.
+    const filterJson = encodeURIComponent(
+        JSON.stringify({
             sampleIdentifiers: sampleIds.map(sampleId => ({
                 studyId,
                 sampleId,
             })),
-        }),
-    };
-    if (mapValue) {
-        query.embeddings_map = mapValue;
-    }
-    return buildCBioPortalPageUrl('study/embeddings', query);
+        })
+    );
+    return buildCBioPortalPageUrl(
+        'study/embeddings',
+        query,
+        `filterJson=${filterJson}`
+    );
 }
 
 /**

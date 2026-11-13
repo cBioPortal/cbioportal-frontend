@@ -134,8 +134,14 @@ describe('getStudyViewMapUrl', () => {
         assert.include(url, 'id=msktarget');
         assert.include(url, 'embeddings_map=msktarget_rna_tsne_mpath');
 
+        const [query, hash] = url.split('#');
+        assert.notInclude(
+            query,
+            'filterJson',
+            'the selection stays out of the query string'
+        );
         const filters = JSON.parse(
-            decodeURIComponent(url.split('filters=')[1].split('&')[0])
+            decodeURIComponent(hash.replace('filterJson=', ''))
         );
         assert.deepEqual(filters, {
             sampleIdentifiers: [
@@ -147,7 +153,7 @@ describe('getStudyViewMapUrl', () => {
 
     it('omits the map when none is given', () => {
         const url = getStudyViewMapUrl('msktarget', ['P-1-T01-IM7']);
-        assert.notInclude(url, 'embeddings_map');
+        assert.notInclude(url.split('#')[0], 'embeddings_map');
     });
 });
 

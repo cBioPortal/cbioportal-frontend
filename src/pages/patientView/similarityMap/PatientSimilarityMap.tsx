@@ -1,10 +1,18 @@
 import * as React from 'react';
 import _ from 'lodash';
-import { action, autorun, computed, makeObservable, observable } from 'mobx';
+import {
+    action,
+    autorun,
+    computed,
+    makeObservable,
+    observable,
+    runInAction,
+} from 'mobx';
 import { observer } from 'mobx-react';
 import SampleManager from 'pages/patientView/SampleManager';
 import Select from 'react-select';
-import { ClinicalAttribute } from 'cbioportal-ts-api-client';
+import { ClinicalAttribute, SampleFilter } from 'cbioportal-ts-api-client';
+import { getClient } from 'shared/api/cbioportalClientInstance';
 import ClinicalDataCache from 'shared/cache/ClinicalDataCache';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
@@ -66,9 +74,12 @@ export default class PatientSimilarityMap extends React.Component<
     @observable private coloringAttributeId: string | undefined;
     @observable.ref private lassoPath: LassoPoint[] = [];
     @observable.ref private lassoSelection: string[] = [];
+    @observable.ref private lassoStudySampleIds: string[] = [];
+    @observable private isResolvingLasso = false;
     @observable private isLassoing = false;
 
     private lassoDisposer?: () => void;
+    private lassoToken = 0;
 
     constructor(props: IPatientSimilarityMapProps) {
         super(props);
@@ -257,11 +268,51 @@ export default class PatientSimilarityMap extends React.Component<
               )
             : [];
         this.lassoPath = [];
+        this.resolveLassoSelection(this.lassoSelection);
+    }
+
+    // A map can cover many studies, so a lassoed point need not be a sample of
+    // this one. The study view is opened on this study, so ask which of them it
+    // actually holds rather than sending ids it would silently drop.
+    private async resolveLassoSelection(sampleIds: string[]) {
+        const token = ++this.lassoToken;
+        runInAction(() => {
+            this.isResolvingLasso = sampleIds.length > 0;
+            this.lassoStudySampleIds = [];
+        });
+        if (sampleIds.length === 0) {
+            return;
+        }
+        let found: string[] = [];
+        try {
+            const samples = await getClient().fetchSamplesUsingPOST({
+                projection: 'ID',
+                sampleFilter: {
+                    sampleIdentifiers: sampleIds.map(sampleId => ({
+                        sampleId,
+                        studyId: this.props.studyId,
+                    })),
+                } as SampleFilter,
+            });
+            found = samples.map(s => s.sampleId);
+        } catch (e) {
+            found = [];
+        }
+        if (token !== this.lassoToken) {
+            return;
+        }
+        runInAction(() => {
+            this.lassoStudySampleIds = found;
+            this.isResolvingLasso = false;
+        });
     }
 
     @action.bound
     private clearLasso() {
+        this.lassoToken++;
         this.lassoSelection = [];
+        this.lassoStudySampleIds = [];
+        this.isResolvingLasso = false;
         this.lassoPath = [];
     }
 
@@ -269,7 +320,7 @@ export default class PatientSimilarityMap extends React.Component<
     // here opens as a selection there; otherwise it carries the patient.
     @computed get studyViewSampleIds(): string[] {
         return this.lassoSelection.length > 0
-            ? this.lassoSelection
+            ? this.lassoStudySampleIds
             : this.sampleIds;
     }
 
@@ -389,6 +440,51 @@ export default class PatientSimilarityMap extends React.Component<
         );
     }
 
+    private renderStudyViewLink(mapValue: string) {
+        const style = { marginLeft: 10, color: '#666' };
+        if (this.lassoSelection.length === 0) {
+            return (
+                <a
+                    data-test="patient-similarity-map-study-view-link"
+                    href={getStudyViewMapUrl(
+                        this.props.studyId,
+                        this.studyViewSampleIds,
+                        mapValue
+                    )}
+                    style={{ marginLeft: 10 }}
+                >
+                    Open in study view
+                </a>
+            );
+        }
+        if (this.isResolvingLasso) {
+            return <span style={style}>Checking the selection…</span>;
+        }
+        if (this.lassoStudySampleIds.length === 0) {
+            return (
+                <span
+                    style={style}
+                    data-test="patient-similarity-map-empty-selection"
+                >
+                    No selected sample belongs to this study
+                </span>
+            );
+        }
+        return (
+            <a
+                data-test="patient-similarity-map-study-view-link"
+                href={getStudyViewMapUrl(
+                    this.props.studyId,
+                    this.studyViewSampleIds,
+                    mapValue
+                )}
+                style={{ marginLeft: 10 }}
+            >
+                {`Open ${this.lassoStudySampleIds.length} selected in study view`}
+            </a>
+        );
+    }
+
     private renderColoringSelector() {
         if (this.coloringAttributes.length === 0) {
             return null;
@@ -498,19 +594,7 @@ export default class PatientSimilarityMap extends React.Component<
                     ) : (
                         <strong>{option.label}</strong>
                     )}
-                    <a
-                        data-test="patient-similarity-map-study-view-link"
-                        href={getStudyViewMapUrl(
-                            this.props.studyId,
-                            this.studyViewSampleIds,
-                            option.value
-                        )}
-                        style={{ marginLeft: 10 }}
-                    >
-                        {this.lassoSelection.length > 0
-                            ? `Open ${this.lassoSelection.length} selected in study view`
-                            : 'Open in study view'}
-                    </a>
+                    {this.renderStudyViewLink(option.value)}
                     {this.lassoSelection.length > 0 && (
                         <a
                             data-test="patient-similarity-map-clear-lasso"
@@ -524,8 +608,8 @@ export default class PatientSimilarityMap extends React.Component<
                         {option.data.description.replace(/\.?\s*$/, '.')}{' '}
                         Icons mark this patient's samples. Drag on the map to
                         select a neighbourhood; the study view opens the same
-                        map with the selection, where it can be filtered and
-                        recoloured.
+                        map with whichever of the selected samples belong to
+                        this study, where they can be filtered and recoloured.
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 20 }}>
