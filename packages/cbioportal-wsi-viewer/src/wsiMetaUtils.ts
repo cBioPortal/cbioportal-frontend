@@ -9,7 +9,7 @@ import {
 import { cleanStain, fmtFileSize, normalizeBlockLabel } from './wsiNavUtils';
 import { blockName, realPartDescription } from './wsiSpecimenUtils';
 import { formatSlideId } from './wsiSlideId';
-import { matchLevelHelpText } from './wsiMatchLevelInfo';
+import { matchLevelHelpText, stainHelpText } from './wsiFilterHelp';
 import { WSI_STAIN_COLORS } from './wsiTheme';
 import { nativeObjectivePower } from './wsiScaleUtils';
 import { getWsiViewerRuntime } from './wsiViewerConfig';
@@ -161,7 +161,8 @@ export function buildPathRows(
             label: 'Stain',
             labelTip: 'Staining protocol used for this slide',
             value: stainValue(stainBadge, stainName),
-            valueTip: `Stain group: ${stainBadge}. Stain: ${stainName || '—'}`,
+            valueTip: `Stain group: ${stainBadge}. Stain: ${stainName ||
+                '—'}. ${stainHelpText(slide.stain_kind)}`,
         },
         {
             label: 'Sample',
@@ -178,7 +179,7 @@ export function buildPathRows(
         rows.push({
             label: 'Part',
             labelTip:
-                'The part this slide comes from. Tissue removed in a biopsy or surgery is divided into parts, separate pieces of tissue, often from different sites.',
+                'The part this slide comes from, often called the specimen. Tissue removed in a biopsy or surgery is divided into parts, separate pieces of tissue, often from different sites.',
             value: part,
         });
     }

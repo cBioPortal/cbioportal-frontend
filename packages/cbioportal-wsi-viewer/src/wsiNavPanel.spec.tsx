@@ -483,6 +483,42 @@ describe('WsiNavPanel', () => {
         expect(tooltipText).toContain('Unmatched: From this patient');
     });
 
+    it('explains the stain groups next to the stain filter', () => {
+        const sample = makeSample('S-1', [
+            placedSlide('hne-slide', 'BLOCK'),
+            {
+                ...placedSlide('ihc-slide', 'BLOCK'),
+                stain_name: 'IHC',
+                stain_kind: 'ihc',
+            },
+        ]);
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([sample])}
+                selectedSlide={null}
+                stainFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                {...navContext}
+            />
+        );
+
+        const row = renderer.root.findByProps({
+            testId: 'wsi-stain-filter-row',
+        }).parent!;
+        const tooltip = row.findByType(DefaultTooltip);
+        expect(
+            tooltip.findAllByProps({ 'data-testid': 'wsi-stain-info' })
+        ).toHaveLength(1);
+        const tooltipText = flattenRenderedText(
+            TestRenderer.create(tooltip.props.overlay).toJSON()
+        );
+        expect(tooltipText).toContain('H&E: Hematoxylin and eosin');
+        expect(tooltipText).toContain('IHC: Immunohistochemistry');
+        expect(tooltipText).toContain('Other (known):');
+        expect(tooltipText).toContain('Unknown:');
+    });
+
     it('keeps the stain chips when the match filter leaves only one stain', () => {
         // As for a patient whose unmatched slides are all H&E.
         const sample = makeSample('S-1', [

@@ -97,7 +97,7 @@ describe('buildPathRows', () => {
         expect(match?.valueTip).toContain(
             matchLevel === 'BLOCK'
                 ? 'same tissue block that was sequenced'
-                : 'same part as the sequenced sample'
+                : 'as the sequenced sample, but not known to come from the sequenced block'
         );
     });
 
@@ -130,9 +130,9 @@ describe('buildPathRows', () => {
         );
 
         rows.forEach(row => expect(row.labelTip).toBeTruthy());
-        expect(rows.find(row => row.label === 'Stain')?.valueTip).toContain(
-            'Stain group:'
-        );
+        const stainTip = rows.find(row => row.label === 'Stain')?.valueTip;
+        expect(stainTip).toContain('Stain group:');
+        expect(stainTip).toContain('Hematoxylin and eosin');
     });
 
     it('links the sample and leaves the block to its own row', () => {
@@ -279,7 +279,7 @@ describe('buildPathRows', () => {
         }
     );
 
-    it('never says "specimen" in the pathology rows', () => {
+    it('labels and values never say "specimen"; the Part tip relates the terms', () => {
         const rows = buildPathRows(
             placedSlide('BLOCK', {
                 part_number: '6',
@@ -291,7 +291,12 @@ describe('buildPathRows', () => {
             'study-1'
         );
 
-        expect(JSON.stringify(rows)).not.toMatch(/specimen/i);
+        rows.forEach(row =>
+            expect(`${row.label} ${row.value}`).not.toMatch(/specimen/i)
+        );
+        expect(rows.find(row => row.label === 'Part')?.labelTip).toContain(
+            'often called the specimen'
+        );
     });
 });
 
