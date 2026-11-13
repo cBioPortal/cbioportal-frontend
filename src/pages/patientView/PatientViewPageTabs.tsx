@@ -656,6 +656,7 @@ export function tabs(
                     clinicalEvents={
                         pageComponent.patientViewPageStore.clinicalEvents.result
                     }
+                    linkPathologySlides={timelinePathologySlides === true}
                 />
             )}
         </MSKTab>

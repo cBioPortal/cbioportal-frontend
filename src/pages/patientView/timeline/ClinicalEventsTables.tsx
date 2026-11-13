@@ -1,18 +1,40 @@
 import React, { useContext } from 'react';
+import { Link } from 'react-router-dom';
 import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import { groupTimelineData } from 'pages/patientView/timeline/timelineDataUtils';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import _ from 'lodash';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
 import { getServerConfig } from 'config/config';
+import {
+    PATHOLOGY_SLIDES_EVENT_TYPE,
+    pathologySlideOpenPath,
+    withoutPathologySlideLinkouts,
+} from './pathologySlidesTimeline';
 
 class EventsTable extends LazyMobXTable<{}> {}
 
-function makeColumns(data: string[][]) {
+/** A PATHOLOGY SLIDES LINKOUT as a link to the Pathology Slides tab. */
+function renderPathologySlidesLinkout(value: string) {
+    const path = pathologySlideOpenPath({
+        attributes: [{ key: 'LINKOUT', value }],
+    });
+    return path ? <Link to={path}>Open slides</Link> : <span>{value}</span>;
+}
+
+function makeColumns(data: string[][], eventType: string) {
     return data[0].map((item, i: number) => {
+        const linkout =
+            item === 'LINKOUT' &&
+            eventType.toUpperCase() === PATHOLOGY_SLIDES_EVENT_TYPE;
         return {
             name: item,
-            render: (data: string[]) => <span>{data[i]}</span>,
+            render: (data: string[]) =>
+                linkout ? (
+                    renderPathologySlidesLinkout(data[i])
+                ) : (
+                    <span>{data[i]}</span>
+                ),
             download: (data: string[]) => data[i],
             sortBy: (data: string[]) => data[i],
             filter: (
@@ -30,8 +52,17 @@ function makeColumns(data: string[][]) {
 
 const ClinicalEventsTables: React.FunctionComponent<{
     clinicalEvents: ClinicalEvent[];
-}> = function({ clinicalEvents }) {
-    const data = groupTimelineData(clinicalEvents);
+    /**
+     * Links PATHOLOGY SLIDES events to the Pathology Slides tab; set only
+     * when that tab is shown. Unset, their LINKOUT is left out.
+     */
+    linkPathologySlides?: boolean;
+}> = function({ clinicalEvents, linkPathologySlides }) {
+    const data = groupTimelineData(
+        linkPathologySlides
+            ? clinicalEvents
+            : withoutPathologySlideLinkouts(clinicalEvents)
+    );
 
     return (
         <div>
@@ -66,7 +97,7 @@ const ClinicalEventsTables: React.FunctionComponent<{
                         </h3>
                         <EventsTable
                             data={cleanedDataCategory.slice(1)}
-                            columns={makeColumns(cleanedDataCategory)}
+                            columns={makeColumns(cleanedDataCategory, key)}
                             showPagination={false}
                             showColumnVisibility={false}
                             showFilter={true}
