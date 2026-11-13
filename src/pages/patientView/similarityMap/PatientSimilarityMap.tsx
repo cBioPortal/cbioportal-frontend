@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { action, computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import SampleManager from 'pages/patientView/SampleManager';
+import Select from 'react-select';
 import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 import ClinicalDataCache from 'shared/cache/ClinicalDataCache';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
@@ -31,6 +32,24 @@ const REFERENCE_COLOR_ATTRIBUTE_ID = 'CANCER_TYPE';
 // SampleLabelHTML draws a 12px icon; enlarged so it stands out on a dense map.
 const SAMPLE_ICON_SIZE = 12;
 const SAMPLE_ICON_SCALE = 1.5;
+const REFERENCE_COLORING_VALUE = '';
+const COLORING_SELECT_STYLES = {
+    control: (base: any) => ({
+        ...base,
+        fontSize: '12px',
+        minHeight: '30px',
+        boxShadow: 'none',
+        border: '1px solid #ccc',
+    }),
+    menu: (base: any) => ({ ...base, fontSize: '12px' }),
+    menuPortal: (base: any) => ({ ...base, zIndex: 20 }),
+    container: (base: any) => ({
+        ...base,
+        width: '260px',
+        display: 'inline-block',
+        verticalAlign: 'middle',
+    }),
+};
 
 export interface IPatientSimilarityMapProps {
     studyId: string;
@@ -78,6 +97,24 @@ export default class PatientSimilarityMap extends React.Component<
         return _.sortBy(
             this.props.clinicalAttributes.filter(a => !a.patientAttribute),
             a => a.displayName
+        );
+    }
+
+    @computed get coloringOptions(): { value: string; label: string }[] {
+        return [
+            { value: REFERENCE_COLORING_VALUE, label: 'Reference map' },
+            ...this.coloringAttributes.map(a => ({
+                value: a.clinicalAttributeId,
+                label: a.displayName,
+            })),
+        ];
+    }
+
+    @computed get selectedColoringOption() {
+        return (
+            this.coloringOptions.find(
+                o => o.value === (this.coloringAttributeId || REFERENCE_COLORING_VALUE)
+            ) || this.coloringOptions[0]
         );
     }
 
@@ -164,8 +201,8 @@ export default class PatientSimilarityMap extends React.Component<
     }
 
     @action.bound
-    private onSelectColoring(event: React.ChangeEvent<HTMLSelectElement>) {
-        this.coloringAttributeId = event.target.value || undefined;
+    private onSelectColoring(option: { value: string } | null) {
+        this.coloringAttributeId = option?.value || undefined;
     }
 
     private drawPoints = (canvas: HTMLCanvasElement | null) => {
@@ -303,37 +340,40 @@ export default class PatientSimilarityMap extends React.Component<
                         <strong>{option.label}</strong>
                     )}
                     {this.coloringAttributes.length > 0 && (
-                        <>
-                            <span style={{ marginLeft: 10 }}>Color by</span>{' '}
-                            <select
-                                data-test="patient-similarity-map-coloring"
-                                className="form-control input-sm"
-                                style={{
-                                    width: 'auto',
-                                    display: 'inline-block',
-                                }}
-                                value={this.coloringAttributeId || ''}
+                        <span
+                            style={{
+                                marginLeft: 10,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 6,
+                            }}
+                        >
+                            Color samples by:
+                            <Select
+                                name="patient-similarity-map-coloring"
+                                className="patient-similarity-map-coloring"
+                                value={this.selectedColoringOption}
+                                options={this.coloringOptions}
                                 onChange={this.onSelectColoring}
-                            >
-                                <option value="">Reference map</option>
-                                {this.coloringAttributes.map(a => (
-                                    <option
-                                        key={a.clinicalAttributeId}
-                                        value={a.clinicalAttributeId}
-                                    >
-                                        {a.displayName}
-                                    </option>
-                                ))}
-                            </select>
+                                isSearchable={true}
+                                isClearable={false}
+                                placeholder="Search for a clinical attribute"
+                                styles={COLORING_SELECT_STYLES}
+                                menuPortalTarget={
+                                    typeof document !== 'undefined'
+                                        ? document.body
+                                        : undefined
+                                }
+                            />
                             {this.isColoringPending && (
                                 <span
-                                    style={{ marginLeft: 6, color: '#666' }}
+                                    style={{ color: '#666' }}
                                     data-test="patient-similarity-map-coloring-pending"
                                 >
                                     loading…
                                 </span>
                             )}
-                        </>
+                        </span>
                     )}
                     <a
                         data-test="patient-similarity-map-study-view-link"
