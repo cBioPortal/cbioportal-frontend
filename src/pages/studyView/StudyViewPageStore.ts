@@ -8303,11 +8303,9 @@ export class StudyViewPageStore
         onError: () => {
             // fail silently when an error occurs
         },
-        onResult: () => {
+        onResult: settings => {
             const groupColorFromSession =
-                this.userSettings.isComplete && this.userSettings.result
-                    ? this.userSettings.result.groupColors
-                    : {};
+                (settings && settings.groupColors) || {};
             _.forIn(
                 groupColorFromSession,
                 (value, key) => (this.userGroupColors[key] = value)
