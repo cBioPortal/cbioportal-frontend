@@ -1,5 +1,9 @@
 /* tslint:disable: indent linebreak-style */
 import _ from 'lodash';
+import {
+    fetchCaseIdAliasesInStudies,
+    getAliasMap,
+} from 'shared/lib/CaseIdAliasUtils';
 import { getClient } from '../../api/cbioportalClientInstance';
 import {
     action,
@@ -1366,6 +1370,123 @@ export class QueryStore {
             );
     }
 
+    private async fetchSamplesForCases(
+        cases: { id: string; study: string }[],
+        caseIdsMode: 'sample' | 'patient'
+    ) {
+        const caseOrder = stringListToIndexSet(
+            cases.map(x => `${x.study}:${x.id}`)
+        );
+        let retSamples: { sampleId: string; studyId: string }[] = [];
+        const validIds: { [studyColonId: string]: boolean } = {};
+        if (caseIdsMode === 'sample') {
+            const sampleIdentifiers = cases.map(c => ({
+                studyId: c.study,
+                sampleId: c.id,
+            }));
+            if (sampleIdentifiers.length) {
+                let sampleObjs = await chunkMapReduce(
+                    sampleIdentifiers,
+                    chunk =>
+                        getClient().fetchSamplesUsingPOST({
+                            sampleFilter: {
+                                sampleIdentifiers: chunk,
+                            } as SampleFilter,
+                            projection: 'SUMMARY',
+                        }),
+                    990
+                );
+                // sort by input order
+                sampleObjs = _.sortBy(
+                    sampleObjs,
+                    sampleObj =>
+                        caseOrder[`${sampleObj.studyId}:${sampleObj.sampleId}`]
+                );
+
+                for (const sample of sampleObjs) {
+                    retSamples.push({
+                        studyId: sample.studyId,
+                        sampleId: sample.sampleId,
+                    });
+                    validIds[`${sample.studyId}:${sample.sampleId}`] = true;
+                }
+            }
+        } else {
+            // convert patient IDs to sample IDs
+            const samplesPromises = cases.map(c =>
+                this.getSamplesForStudyAndPatient(c.study, c.id)
+            );
+            let result: {
+                studyId: string;
+                patientId: string;
+                samples: Sample[];
+                error?: Error;
+            }[] = await Promise.all(samplesPromises);
+            // sort by input order
+            result = _.sortBy(
+                result,
+                obj => caseOrder[`${obj.studyId}:${obj.patientId}`]
+            );
+
+            for (const { studyId, patientId, samples, error } of result) {
+                if (!error && samples.length) {
+                    retSamples = retSamples.concat(
+                        samples.map(sample => {
+                            validIds[
+                                `${sample.studyId}:${sample.patientId}`
+                            ] = true;
+                            return {
+                                studyId: sample.studyId,
+                                sampleId: sample.sampleId,
+                            };
+                        })
+                    );
+                }
+            }
+        }
+
+        return { retSamples, validIds };
+    }
+
+    /**
+     * Replaces entries that aren't internal IDs but match an alias (e.g. a
+     * SAMPLE_DISPLAY_NAME) with the internal IDs they refer to. Unresolved
+     * entries are kept so they are reported as invalid.
+     */
+    private async resolveCaseIdAliases(
+        cases: { id: string; study: string }[],
+        validIds: { [studyColonId: string]: boolean },
+        caseIdsMode: 'sample' | 'patient'
+    ): Promise<{ id: string; study: string }[] | undefined> {
+        const unmatched = cases.filter(c => !validIds[`${c.study}:${c.id}`]);
+        if (unmatched.length === 0) {
+            return undefined;
+        }
+        const caseType = caseIdsMode === 'patient' ? 'PATIENT' : 'SAMPLE';
+        const aliasMap = getAliasMap(
+            await fetchCaseIdAliasesInStudies(
+                _.uniq(unmatched.map(c => c.study)),
+                caseType
+            ),
+            caseType
+        );
+        let resolvedAny = false;
+        const resolved = _.flatMap(cases, c => {
+            if (validIds[`${c.study}:${c.id}`]) {
+                return [c];
+            }
+            const matches = aliasMap[`${c.study}:${c.id}`];
+            if (!matches) {
+                return [c];
+            }
+            resolvedAny = true;
+            return matches.map(m => ({ id: m.caseId, study: c.study }));
+        });
+        return resolvedAny
+            ? _.uniqBy(resolved, c => `${c.study}:${c.id}`)
+            : undefined;
+    }
+
     asyncCustomCaseSet = remoteData<{ sampleId: string; studyId: string }[]>({
         invoke: async () => {
             if (
@@ -1397,7 +1518,7 @@ export class QueryStore {
             const studyIdsInSelectionSet = stringListToSet(
                 this.physicalStudyIdsInSelection
             );
-            const cases: { id: string; study: string }[] = entities.map(
+            let cases: { id: string; study: string }[] = entities.map(
                 entity => {
                     let splitEntity = entity.split(':');
                     if (splitEntity.length === 1) {
@@ -1436,79 +1557,23 @@ export class QueryStore {
                     }
                 }
             );
-            const caseOrder = stringListToIndexSet(
-                cases.map(x => `${x.study}:${x.id}`)
+            let { retSamples, validIds } = await this.fetchSamplesForCases(
+                cases,
+                params.caseIdsMode
             );
-            let retSamples: { sampleId: string; studyId: string }[] = [];
-            const validIds: { [studyColonId: string]: boolean } = {};
-            let invalidIds: { id: string; study: string }[] = [];
-            if (params.caseIdsMode === 'sample') {
-                const sampleIdentifiers = cases.map(c => ({
-                    studyId: c.study,
-                    sampleId: c.id,
-                }));
-                if (sampleIdentifiers.length) {
-                    let sampleObjs = await chunkMapReduce(
-                        sampleIdentifiers,
-                        chunk =>
-                            getClient().fetchSamplesUsingPOST({
-                                sampleFilter: {
-                                    sampleIdentifiers: chunk,
-                                } as SampleFilter,
-                                projection: 'SUMMARY',
-                            }),
-                        990
-                    );
-                    // sort by input order
-                    sampleObjs = _.sortBy(
-                        sampleObjs,
-                        sampleObj =>
-                            caseOrder[
-                                `${sampleObj.studyId}:${sampleObj.sampleId}`
-                            ]
-                    );
-
-                    for (const sample of sampleObjs) {
-                        retSamples.push({
-                            studyId: sample.studyId,
-                            sampleId: sample.sampleId,
-                        });
-                        validIds[`${sample.studyId}:${sample.sampleId}`] = true;
-                    }
-                }
-            } else {
-                // convert patient IDs to sample IDs
-                const samplesPromises = cases.map(c =>
-                    this.getSamplesForStudyAndPatient(c.study, c.id)
-                );
-                let result: {
-                    studyId: string;
-                    patientId: string;
-                    samples: Sample[];
-                    error?: Error;
-                }[] = await Promise.all(samplesPromises);
-                // sort by input order
-                result = _.sortBy(
-                    result,
-                    obj => caseOrder[`${obj.studyId}:${obj.patientId}`]
-                );
-
-                for (const { studyId, patientId, samples, error } of result) {
-                    if (!error && samples.length) {
-                        retSamples = retSamples.concat(
-                            samples.map(sample => {
-                                validIds[
-                                    `${sample.studyId}:${sample.patientId}`
-                                ] = true;
-                                return {
-                                    studyId: sample.studyId,
-                                    sampleId: sample.sampleId,
-                                };
-                            })
-                        );
-                    }
-                }
+            const casesWithAliasesResolved = await this.resolveCaseIdAliases(
+                cases,
+                validIds,
+                params.caseIdsMode
+            );
+            if (casesWithAliasesResolved) {
+                cases = casesWithAliasesResolved;
+                ({ retSamples, validIds } = await this.fetchSamplesForCases(
+                    cases,
+                    params.caseIdsMode
+                ));
             }
+            let invalidIds: { id: string; study: string }[] = [];
 
             invalidIds = invalidIds.concat(
                 cases.filter(x => !validIds[`${x.study}:${x.id}`])
