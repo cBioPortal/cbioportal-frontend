@@ -186,6 +186,36 @@ describe('selectWsiClinicalAttributes', () => {
         ]);
     });
 
+    it('leaves out the whole-slide image slide counts, even under "Show more"', () => {
+        const attributes = [
+            attribute('CANCER_TYPE', 3000),
+            attribute('WSI_PATIENT_SLIDE_COUNT', 2, true),
+            attribute('WSI_PATIENT_BLOCK_MATCHED_SLIDE_COUNT', 0, true),
+            attribute('WSI_SAMPLE_SLIDE_COUNT', 1),
+            attribute('WSI_SAMPLE_PART_MATCHED_SLIDE_COUNT', 0),
+        ];
+        const patientData = [
+            datum('WSI_PATIENT_SLIDE_COUNT', '6'),
+            datum('WSI_PATIENT_BLOCK_MATCHED_SLIDE_COUNT', '2'),
+        ];
+        const sampleData = sampleValues(
+            'CANCER_TYPE',
+            'WSI_SAMPLE_SLIDE_COUNT',
+            'WSI_SAMPLE_PART_MATCHED_SLIDE_COUNT'
+        );
+
+        expect(
+            selectWsiClinicalAttributes(
+                attributes,
+                patientData,
+                sampleData
+            ).map(a => a.clinicalAttributeId)
+        ).toEqual(['CANCER_TYPE']);
+        expect(
+            selectWsiMoreClinicalAttributes(attributes, patientData, sampleData)
+        ).toEqual([]);
+    });
+
     it('caps the populated attributes at the study view chart count', () => {
         const selected = selectWsiClinicalAttributes(
             [
