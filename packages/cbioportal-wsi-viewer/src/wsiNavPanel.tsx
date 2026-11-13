@@ -648,6 +648,68 @@ function WsiFilterRow({
     );
 }
 
+const ONCOTREE_URL = 'https://oncotree.info/';
+
+/**
+ * A sample's OncoTree code. Its tooltip names the cancer type and links to
+ * OncoTree; clicks inside it don't toggle the sample row.
+ */
+function WsiOncoTreeBadge({ code, name }: { code: string; name?: string }) {
+    const stopRowToggle = (e: React.SyntheticEvent) => e.stopPropagation();
+    return (
+        <DefaultTooltip
+            trigger={['hover', 'focus']}
+            placement="top"
+            mouseLeaveDelay={0.2}
+            overlay={
+                <div
+                    data-testid="wsi-oncotree-tooltip"
+                    onClick={stopRowToggle}
+                    onKeyDown={stopRowToggle}
+                >
+                    <div>
+                        <b>{code}</b>
+                        {name ? ` — ${name}` : ''}
+                    </div>
+                    <a
+                        href={ONCOTREE_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        View OncoTree{' '}
+                        <i className="fa fa-external-link" aria-hidden="true" />
+                    </a>
+                </div>
+            }
+        >
+            <a
+                href={ONCOTREE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`OncoTree code ${code}${
+                    name ? `, ${name}` : ''
+                }: view OncoTree (opens in a new tab)`}
+                data-testid="wsi-oncotree-badge"
+                onClick={stopRowToggle}
+                style={{
+                    display: 'inline-block',
+                    background: theme.headerBg,
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: 3,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    padding: '0 4px',
+                    color: theme.text,
+                    marginRight: 4,
+                    textDecoration: 'none',
+                }}
+            >
+                {code}
+            </a>
+        </DefaultTooltip>
+    );
+}
+
 function SampleNode({
     sample,
     containsSelectedSlide,
@@ -778,7 +840,6 @@ function SampleNode({
                         </div>
                     </div>
                     <div
-                        title={sampleDescription || undefined}
                         style={{
                             fontSize: 11,
                             color: theme.muted,
@@ -809,40 +870,14 @@ function SampleNode({
                             </span>
                         )}
                         {sample.oncotree_code && (
-                            <a
-                                href="https://oncotree.info/"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                title={`${sample.oncotree_code}${
-                                    sample.cancer_type_detailed
-                                        ? ` — ${sample.cancer_type_detailed}`
-                                        : ''
-                                }\nView OncoTree`}
-                                aria-label={`OncoTree code ${
-                                    sample.oncotree_code
-                                }${
-                                    sample.cancer_type_detailed
-                                        ? `, ${sample.cancer_type_detailed}`
-                                        : ''
-                                }: view OncoTree (opens in a new tab)`}
-                                onClick={e => e.stopPropagation()}
-                                style={{
-                                    display: 'inline-block',
-                                    background: theme.headerBg,
-                                    border: `1px solid ${theme.border}`,
-                                    borderRadius: 3,
-                                    fontSize: 10,
-                                    fontWeight: 700,
-                                    padding: '0 4px',
-                                    color: theme.text,
-                                    marginRight: 4,
-                                    textDecoration: 'none',
-                                }}
-                            >
-                                {sample.oncotree_code}
-                            </a>
+                            <WsiOncoTreeBadge
+                                code={sample.oncotree_code}
+                                name={sample.cancer_type_detailed}
+                            />
                         )}
-                        {sampleDescription}
+                        <span title={sampleDescription || undefined}>
+                            {sampleDescription}
+                        </span>
                     </div>
                 </div>
                 <DefaultTooltip
