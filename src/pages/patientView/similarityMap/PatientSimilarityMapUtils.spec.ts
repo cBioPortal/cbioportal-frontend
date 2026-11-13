@@ -4,6 +4,7 @@ import {
     fitProjection,
     getEmbeddingOptionsForSamples,
     getReferenceCategoryColors,
+    getStudyViewMapUrl,
     SampleEmbeddingPoint,
 } from './PatientSimilarityMapUtils';
 
@@ -116,5 +117,33 @@ describe('getReferenceCategoryColors', () => {
 
     it('is empty when the map carries no such attribute', () => {
         assert.lengthOf(getReferenceCategoryColors(points, 'MISSING'), 0);
+    });
+});
+
+describe('getStudyViewMapUrl', () => {
+    it('carries the study, the map and the samples as a selection', () => {
+        const url = getStudyViewMapUrl(
+            'msktarget',
+            ['P-1-T01-IM7', 'P-1-T02-IM7'],
+            'msktarget_rna_tsne_mpath'
+        );
+        assert.include(url, 'study/embeddings');
+        assert.include(url, 'id=msktarget');
+        assert.include(url, 'embeddings_map=msktarget_rna_tsne_mpath');
+
+        const filters = JSON.parse(
+            decodeURIComponent(url.split('filters=')[1].split('&')[0])
+        );
+        assert.deepEqual(filters, {
+            sampleIdentifiers: [
+                { studyId: 'msktarget', sampleId: 'P-1-T01-IM7' },
+                { studyId: 'msktarget', sampleId: 'P-1-T02-IM7' },
+            ],
+        });
+    });
+
+    it('omits the map when none is given', () => {
+        const url = getStudyViewMapUrl('msktarget', ['P-1-T01-IM7']);
+        assert.notInclude(url, 'embeddings_map');
     });
 });

@@ -5,6 +5,7 @@ import {
 } from 'shared/components/embeddings/EmbeddingTypes';
 import { makeUniqueColorGetter } from 'shared/components/plots/PlotUtils';
 import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
+import { buildCBioPortalPageUrl } from 'shared/api/urls';
 
 export type SampleEmbeddingPoint = SampleEmbeddingData['data'][number];
 
@@ -90,4 +91,31 @@ export function getReferenceCategoryColors(
         color: RESERVED_CLINICAL_VALUE_COLORS[category] ?? colorGetter(),
         count: counts[category],
     }));
+}
+
+/**
+ * Link to the same map in the study view, with these samples selected.
+ *
+ * The study view is where filtering, colouring and selection live; this page
+ * deliberately loads none of that, so it hands off rather than reimplementing.
+ * The selection travels as a StudyViewFilter in the `filters` query parameter.
+ */
+export function getStudyViewMapUrl(
+    studyId: string,
+    sampleIds: string[],
+    mapValue?: string
+): string {
+    const query: { [key: string]: string } = {
+        id: studyId,
+        filters: JSON.stringify({
+            sampleIdentifiers: sampleIds.map(sampleId => ({
+                studyId,
+                sampleId,
+            })),
+        }),
+    };
+    if (mapValue) {
+        query.embeddings_map = mapValue;
+    }
+    return buildCBioPortalPageUrl('study/embeddings', query);
 }

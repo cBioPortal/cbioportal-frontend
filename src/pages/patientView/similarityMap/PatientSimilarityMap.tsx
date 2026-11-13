@@ -11,6 +11,7 @@ import {
     fitProjection,
     getEmbeddingOptionsForSamples,
     getReferenceCategoryColors,
+    getStudyViewMapUrl,
     SampleEmbeddingOption,
 } from './PatientSimilarityMapUtils';
 
@@ -217,9 +218,22 @@ export default class PatientSimilarityMap extends React.Component<
                     ) : (
                         <strong>{option.label}</strong>
                     )}
+                    <a
+                        data-test="patient-similarity-map-study-view-link"
+                        href={getStudyViewMapUrl(
+                            this.props.studyId,
+                            this.sampleIds,
+                            option.value
+                        )}
+                        style={{ marginLeft: 10 }}
+                    >
+                        Open in study view
+                    </a>
                     <div style={{ color: '#666', marginTop: 4 }}>
                         {option.data.description.replace(/\.?\s*$/, '.')}{' '}
-                        Icons mark this patient's samples.
+                        Icons mark this patient's samples. The study view opens
+                        the same map with these samples selected, where it can
+                        be filtered and recoloured.
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 20 }}>
