@@ -934,6 +934,13 @@ export function tabs(
                     studyId={pageComponent.patientViewPageStore.studyId}
                     sampleManager={sampleManager}
                     hasEmbeddingsFeatureFlag={hasEmbeddingsFlag}
+                    clinicalAttributes={
+                        pageComponent.patientViewPageStore.clinicalAttributes
+                            .result || []
+                    }
+                    clinicalDataCache={
+                        pageComponent.patientViewPageStore.clinicalDataCache
+                    }
                 />
             </MSKTab>
         );

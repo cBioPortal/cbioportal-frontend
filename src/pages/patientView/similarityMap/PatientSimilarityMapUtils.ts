@@ -5,6 +5,7 @@ import {
 } from 'shared/components/embeddings/EmbeddingTypes';
 import { makeUniqueColorGetter } from 'shared/components/plots/PlotUtils';
 import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
+import { preComputeClinicalDataMaps } from 'shared/lib/PatientMolecularDataUtils';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 
 export type SampleEmbeddingPoint = SampleEmbeddingData['data'][number];
@@ -118,4 +119,39 @@ export function getStudyViewMapUrl(
         query.embeddings_map = mapValue;
     }
     return buildCBioPortalPageUrl('study/embeddings', query);
+}
+
+/**
+ * Colour per sample id for a clinical attribute, from the cohort's clinical
+ * data cache. Keys drop the study prefix the cache uses, since a map's points
+ * carry a bare sample id and all belong to one study.
+ *
+ * Samples the cohort has no value for are absent, and the caller greys them:
+ * the cohort the patient view loads can be narrower than the map.
+ */
+export function getClinicalColorsBySampleId(
+    clinicalData: { studyId: string; sampleId: string; value: string }[],
+    categoryToColor: { [value: string]: string } | undefined,
+    numericalValueToColor: ((x: number) => string) | undefined,
+    studyId: string
+): { colors: Map<string, string>; values: Map<string, string> } {
+    const { colorMap, valueMap } = preComputeClinicalDataMaps(
+        clinicalData,
+        categoryToColor,
+        numericalValueToColor
+    );
+    const prefix = `${studyId}:`;
+    const colors = new Map<string, string>();
+    const values = new Map<string, string>();
+    colorMap.forEach((color, key) => {
+        if (key.startsWith(prefix)) {
+            colors.set(key.slice(prefix.length), color);
+        }
+    });
+    valueMap.forEach((value, key) => {
+        if (key.startsWith(prefix)) {
+            values.set(key.slice(prefix.length), value);
+        }
+    });
+    return { colors, values };
 }

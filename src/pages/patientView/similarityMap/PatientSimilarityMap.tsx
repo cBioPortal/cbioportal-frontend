@@ -1,7 +1,10 @@
 import * as React from 'react';
+import _ from 'lodash';
 import { action, computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import SampleManager from 'pages/patientView/SampleManager';
+import { ClinicalAttribute } from 'cbioportal-ts-api-client';
+import ClinicalDataCache from 'shared/cache/ClinicalDataCache';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
     getLoadedEmbeddingOptions,
@@ -10,6 +13,7 @@ import {
 import {
     fitProjection,
     getEmbeddingOptionsForSamples,
+    getClinicalColorsBySampleId,
     getReferenceCategoryColors,
     getStudyViewMapUrl,
     SampleEmbeddingOption,
@@ -32,6 +36,8 @@ export interface IPatientSimilarityMapProps {
     studyId: string;
     sampleManager: SampleManager;
     hasEmbeddingsFeatureFlag: boolean;
+    clinicalAttributes: ClinicalAttribute[];
+    clinicalDataCache: ClinicalDataCache;
 }
 
 @observer
@@ -40,6 +46,7 @@ export default class PatientSimilarityMap extends React.Component<
     {}
 > {
     @observable private selectedValue: string | undefined;
+    @observable private coloringAttributeId: string | undefined;
 
     constructor(props: IPatientSimilarityMapProps) {
         super(props);
@@ -63,6 +70,45 @@ export default class PatientSimilarityMap extends React.Component<
             this.props.studyId,
             this.sampleIds
         );
+    }
+
+    // Sample-level only: a point is a sample, and a patient attribute would
+    // colour every sample of a patient alike without saying so.
+    @computed get coloringAttributes(): ClinicalAttribute[] {
+        return _.sortBy(
+            this.props.clinicalAttributes.filter(a => !a.patientAttribute),
+            a => a.displayName
+        );
+    }
+
+    @computed get coloringAttribute(): ClinicalAttribute | undefined {
+        return this.coloringAttributes.find(
+            a => a.clinicalAttributeId === this.coloringAttributeId
+        );
+    }
+
+    @computed get clinicalColors():
+        | { colors: Map<string, string>; values: Map<string, string> }
+        | undefined {
+        const attribute = this.coloringAttribute;
+        if (!attribute) {
+            return undefined;
+        }
+        const entry = this.props.clinicalDataCache.get(attribute);
+        if (!entry.isComplete || !entry.result) {
+            return undefined;
+        }
+        return getClinicalColorsBySampleId(
+            entry.result.data as any,
+            entry.result.categoryToColor,
+            entry.result.numericalValueToColor,
+            this.props.studyId
+        );
+    }
+
+    @computed get isColoringPending(): boolean {
+        const attribute = this.coloringAttribute;
+        return !!attribute && this.props.clinicalDataCache.get(attribute).isPending;
     }
 
     @computed get selectedOption(): SampleEmbeddingOption | undefined {
@@ -117,6 +163,11 @@ export default class PatientSimilarityMap extends React.Component<
         this.selectedValue = event.target.value;
     }
 
+    @action.bound
+    private onSelectColoring(event: React.ChangeEvent<HTMLSelectElement>) {
+        this.coloringAttributeId = event.target.value || undefined;
+    }
+
     private drawPoints = (canvas: HTMLCanvasElement | null) => {
         const option = this.selectedOption;
         if (!canvas || !option) {
@@ -135,12 +186,14 @@ export default class PatientSimilarityMap extends React.Component<
         const colorByCategory = new Map(
             this.categoryColors.map(c => [c.category, c.color])
         );
+        const clinical = this.clinicalColors;
         for (const p of option.data.data) {
             const category = p.referenceData?.[REFERENCE_COLOR_ATTRIBUTE_ID];
-            ctx.fillStyle =
-                (category !== undefined &&
-                    colorByCategory.get(String(category))) ||
-                UNCOLORED_POINT_COLOR;
+            ctx.fillStyle = clinical
+                ? clinical.colors.get(p.sampleId) || UNCOLORED_POINT_COLOR
+                : (category !== undefined &&
+                      colorByCategory.get(String(category))) ||
+                  UNCOLORED_POINT_COLOR;
             const [x, y] = this.projection.toScreen(p.x, p.y);
             ctx.beginPath();
             ctx.arc(x, y, POINT_RADIUS, 0, 2 * Math.PI);
@@ -148,8 +201,37 @@ export default class PatientSimilarityMap extends React.Component<
         }
     };
 
+    @computed get legendEntries(): {
+        category: string;
+        color: string;
+        count: number;
+    }[] {
+        const clinical = this.clinicalColors;
+        if (!clinical) {
+            return this.categoryColors;
+        }
+        const counts: { [c: string]: { color: string; count: number } } = {};
+        clinical.values.forEach((value, sampleId) => {
+            const color = clinical.colors.get(sampleId);
+            if (!color) {
+                return;
+            }
+            counts[value] = counts[value] || { color, count: 0 };
+            counts[value].count += 1;
+        });
+        return _.orderBy(
+            Object.keys(counts).map(category => ({
+                category,
+                color: counts[category].color,
+                count: counts[category].count,
+            })),
+            e => e.count,
+            'desc'
+        );
+    }
+
     private renderLegend() {
-        if (this.categoryColors.length === 0) {
+        if (this.legendEntries.length === 0) {
             return null;
         }
         return (
@@ -158,9 +240,11 @@ export default class PatientSimilarityMap extends React.Component<
                 style={{ fontSize: 12, maxHeight: MAP_HEIGHT, overflowY: 'auto' }}
             >
                 <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
-                    Cancer Type (reference map)
+                    {this.coloringAttribute
+                        ? this.coloringAttribute.displayName
+                        : 'Cancer Type (reference map)'}
                 </div>
-                {this.categoryColors.map(({ category, color, count }) => (
+                {this.legendEntries.map(({ category, color, count }) => (
                     <div
                         key={category}
                         style={{
@@ -218,6 +302,39 @@ export default class PatientSimilarityMap extends React.Component<
                     ) : (
                         <strong>{option.label}</strong>
                     )}
+                    {this.coloringAttributes.length > 0 && (
+                        <>
+                            <span style={{ marginLeft: 10 }}>Color by</span>{' '}
+                            <select
+                                data-test="patient-similarity-map-coloring"
+                                className="form-control input-sm"
+                                style={{
+                                    width: 'auto',
+                                    display: 'inline-block',
+                                }}
+                                value={this.coloringAttributeId || ''}
+                                onChange={this.onSelectColoring}
+                            >
+                                <option value="">Reference map</option>
+                                {this.coloringAttributes.map(a => (
+                                    <option
+                                        key={a.clinicalAttributeId}
+                                        value={a.clinicalAttributeId}
+                                    >
+                                        {a.displayName}
+                                    </option>
+                                ))}
+                            </select>
+                            {this.isColoringPending && (
+                                <span
+                                    style={{ marginLeft: 6, color: '#666' }}
+                                    data-test="patient-similarity-map-coloring-pending"
+                                >
+                                    loading…
+                                </span>
+                            )}
+                        </>
+                    )}
                     <a
                         data-test="patient-similarity-map-study-view-link"
                         href={getStudyViewMapUrl(
@@ -247,7 +364,8 @@ export default class PatientSimilarityMap extends React.Component<
                         }}
                     >
                         <canvas
-                            key={option.value}
+                            key={`${option.value}:${this.coloringAttributeId ||
+                                ''}:${this.clinicalColors ? 'c' : 'r'}`}
                             ref={this.drawPoints}
                             style={{ width: MAP_WIDTH, height: MAP_HEIGHT }}
                         />

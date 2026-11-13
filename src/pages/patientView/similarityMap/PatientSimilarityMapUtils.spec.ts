@@ -4,6 +4,7 @@ import {
     fitProjection,
     getEmbeddingOptionsForSamples,
     getReferenceCategoryColors,
+    getClinicalColorsBySampleId,
     getStudyViewMapUrl,
     SampleEmbeddingPoint,
 } from './PatientSimilarityMapUtils';
@@ -145,5 +146,39 @@ describe('getStudyViewMapUrl', () => {
     it('omits the map when none is given', () => {
         const url = getStudyViewMapUrl('msktarget', ['P-1-T01-IM7']);
         assert.notInclude(url, 'embeddings_map');
+    });
+});
+
+describe('getClinicalColorsBySampleId', () => {
+    const data = [
+        { studyId: 'msktarget', sampleId: 'S1', value: 'Male' },
+        { studyId: 'msktarget', sampleId: 'S2', value: 'Female' },
+        { studyId: 'other', sampleId: 'S3', value: 'Male' },
+    ];
+
+    it('keys by bare sample id and drops other studies', () => {
+        const { colors, values } = getClinicalColorsBySampleId(
+            data,
+            { Male: '#111111', Female: '#222222' },
+            undefined,
+            'msktarget'
+        );
+        assert.deepEqual(Array.from(values.entries()).sort(), [
+            ['S1', 'Male'],
+            ['S2', 'Female'],
+        ].sort());
+        assert.equal(colors.get('S1'), '#111111');
+        assert.equal(colors.get('S2'), '#222222');
+        assert.isUndefined(colors.get('S3'), 'other studies are excluded');
+    });
+
+    it('leaves samples with no value absent so the caller can grey them', () => {
+        const { colors } = getClinicalColorsBySampleId(
+            [{ studyId: 'msktarget', sampleId: 'S1', value: 'Male' }],
+            { Male: '#111111' },
+            undefined,
+            'msktarget'
+        );
+        assert.isUndefined(colors.get('S_not_in_cohort'));
     });
 });
