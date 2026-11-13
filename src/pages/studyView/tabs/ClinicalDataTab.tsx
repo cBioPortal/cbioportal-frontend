@@ -31,6 +31,7 @@ import { getServerConfig } from 'config/config';
 import { StudyViewPageTabKeyEnum } from '../StudyViewPageTabs';
 import { computed, makeObservable, observable } from 'mobx';
 import {
+    ClinicalAttribute,
     ClinicalData,
     Sample,
     StudyViewFilter,
@@ -46,7 +47,7 @@ class ClinicalDataTabTableComponent extends LazyMobXTable<{
 
 const CLINICAL_DATA_RECORD_LIMIT = 500;
 
-const WSI_PATIENT_SLIDE_COLUMNS = [
+const SLIDE_COUNT_COLUMNS = [
     {
         attributeId: 'WSI_SAMPLE_SLIDE_COUNT',
         displayName: 'WSI Slides per Sample',
@@ -77,18 +78,104 @@ const WSI_PATIENT_SLIDE_COLUMNS = [
         displayName: 'WSI Slides per Patient, Block-matched',
         visible: false,
     },
-] as const;
+];
 
-const WSI_PATIENT_SLIDE_ATTRIBUTE_IDS = new Set<string>(
-    WSI_PATIENT_SLIDE_COLUMNS.map(column => column.attributeId)
+const SLIDE_COUNT_ATTRIBUTE_IDS = new Set<string>(
+    SLIDE_COUNT_COLUMNS.map(column => column.attributeId)
 );
+
+export type SlideCountColumnSpec = {
+    attributeId: string;
+    displayName: string;
+    description: string;
+    visible: boolean;
+};
+
+/**
+ * The WSI slide-count columns for the attributes a study has, in a fixed
+ * order. Names and descriptions come from the study's attribute metadata;
+ * a name that is missing or only repeats the id falls back to a built-in one.
+ */
+export function getSlideCountColumnSpecs(
+    clinicalAttributes: Pick<
+        ClinicalAttribute,
+        'clinicalAttributeId' | 'displayName' | 'description'
+    >[]
+): SlideCountColumnSpec[] {
+    const attributesById = _.keyBy(
+        clinicalAttributes.filter(attribute =>
+            SLIDE_COUNT_ATTRIBUTE_IDS.has(attribute.clinicalAttributeId)
+        ),
+        attribute => attribute.clinicalAttributeId
+    );
+    return SLIDE_COUNT_COLUMNS.filter(
+        column => attributesById[column.attributeId] !== undefined
+    ).map(column => {
+        const attribute = attributesById[column.attributeId];
+        const ownName = (attribute.displayName || '').trim();
+        const ownDescription = (attribute.description || '').trim();
+        const displayName =
+            ownName && ownName !== column.attributeId
+                ? ownName
+                : column.displayName;
+        return {
+            attributeId: column.attributeId,
+            displayName,
+            description:
+                ownDescription && ownDescription !== column.attributeId
+                    ? ownDescription
+                    : '',
+            visible: column.visible,
+        };
+    });
+}
+
+export function isSlideCountChartMeta(chartMeta: ChartMeta): boolean {
+    return (
+        chartMeta.clinicalAttribute !== undefined &&
+        SLIDE_COUNT_ATTRIBUTE_IDS.has(
+            chartMeta.clinicalAttribute.clinicalAttributeId
+        )
+    );
+}
+
+/**
+ * Maps a sorted column's header name to the attribute id the server sorts
+ * by. Slide-count columns resolve by their own id first, so another
+ * attribute with the same display name cannot take their place.
+ */
+export function getClinicalDataSortAttributeId(
+    field: string | undefined,
+    slideCountColumns: SlideCountColumnSpec[],
+    clinicalAttributeByDisplayName:
+        | { [displayName: string]: ClinicalAttribute }
+        | undefined
+): string | undefined {
+    if (!field) {
+        return undefined;
+    }
+    // Patient ID and Sample ID are not clinical attributes
+    if (field === 'Patient ID') {
+        return 'patientId';
+    }
+    if (field === 'Sample ID') {
+        return 'sampleId';
+    }
+    const slideCountColumn = slideCountColumns.find(
+        column => column.displayName === field
+    );
+    if (slideCountColumn) {
+        return slideCountColumn.attributeId;
+    }
+    return clinicalAttributeByDisplayName?.[field]?.clinicalAttributeId;
+}
 
 type SortCriteria = {
     field: string | undefined;
     direction: SortDirection | undefined;
 };
 
-export async function fetchClinicalDataForStudyViewClinicalDataTab(
+async function fetchClinicalDataForStudyViewClinicalDataTab(
     filters: StudyViewFilter,
     sampleSetByKey: { [sampleId: string]: Sample },
     searchTerm: string | undefined,
@@ -200,28 +287,20 @@ export class ClinicalDataTab extends React.Component<
     };
 
     @computed
+    get slideCountColumns(): SlideCountColumnSpec[] {
+        return getSlideCountColumnSpecs(
+            this.props.store.clinicalAttributes.result || []
+        );
+    }
+
+    @computed
     get clinicalDataSortAttributeId(): string | undefined {
-        switch (this.clinicalDataSortCriteria?.field) {
-            // these first two are special cases where we are not filtering
-            // by an attribute
-            case 'Patient ID':
-                return 'patientId';
-            case 'Sample ID':
-                return 'sampleId';
-            default:
-                if (!this.clinicalDataSortCriteria?.field) return undefined;
-                return (
-                    this.props.store
-                        .clinicalAttributeDisplayNameToClinicalAttribute
-                        .result?.[this.clinicalDataSortCriteria.field]
-                        ?.clinicalAttributeId ||
-                    WSI_PATIENT_SLIDE_COLUMNS.find(
-                        column =>
-                            column.displayName ===
-                            this.clinicalDataSortCriteria?.field
-                    )?.attributeId
-                );
-        }
+        return getClinicalDataSortAttributeId(
+            this.clinicalDataSortCriteria?.field,
+            this.slideCountColumns,
+            this.props.store.clinicalAttributeDisplayNameToClinicalAttribute
+                .result
+        );
     }
 
     @computed
@@ -257,6 +336,7 @@ export class ClinicalDataTab extends React.Component<
     // this problem is that the visible attributes are not yet populated.
 
     readonly columns = remoteData({
+        await: () => [this.props.store.clinicalAttributes],
         invoke: async () => {
             let defaultColumns: Column<{ [id: string]: string }>[] = [
                 {
@@ -307,20 +387,15 @@ export class ClinicalDataTab extends React.Component<
             }
             const defaultColumnCount = defaultColumns.length;
             const clinicalColumns = _.reduce(
-                this.props.store.visibleAttributesForClinicalData.sort(
-                    chartMetaComparator
-                ),
+                this.props.store.visibleAttributesForClinicalData
+                    .filter(chartMeta => !isSlideCountChartMeta(chartMeta))
+                    .sort(chartMetaComparator),
                 (
                     acc: Column<{ [id: string]: string }>[],
                     chartMeta: ChartMeta,
                     index: number
                 ) => {
-                    if (
-                        chartMeta.clinicalAttribute !== undefined &&
-                        !WSI_PATIENT_SLIDE_ATTRIBUTE_IDS.has(
-                            chartMeta.clinicalAttribute.clinicalAttributeId
-                        )
-                    ) {
+                    if (chartMeta.clinicalAttribute !== undefined) {
                         acc.push({
                             ...this.getDefaultColumnConfig(
                                 getUniqueKey(chartMeta.clinicalAttribute),
@@ -345,31 +420,27 @@ export class ClinicalDataTab extends React.Component<
                 defaultColumns
             );
 
-            const hasWsiAttributes = this.props.store.visibleAttributesForClinicalData.some(
-                chartMeta =>
-                    chartMeta.clinicalAttribute !== undefined &&
-                    WSI_PATIENT_SLIDE_ATTRIBUTE_IDS.has(
-                        chartMeta.clinicalAttribute.clinicalAttributeId
-                    )
+            const slideCountColumns = this.slideCountColumns.map(column => ({
+                ...this.getDefaultColumnConfig(
+                    column.attributeId,
+                    column.displayName,
+                    true
+                ),
+                tooltip: getClinicalAttributeOverlay(
+                    column.displayName,
+                    column.description,
+                    column.attributeId
+                ),
+                visible: column.visible,
+            }));
+            clinicalColumns.splice(
+                defaultColumnCount,
+                0,
+                ...slideCountColumns.filter(column => column.visible)
             );
-            if (hasWsiAttributes) {
-                const wsiColumns = WSI_PATIENT_SLIDE_COLUMNS.map(column => ({
-                    ...this.getDefaultColumnConfig(
-                        column.attributeId,
-                        column.displayName,
-                        true
-                    ),
-                    visible: column.visible,
-                }));
-                clinicalColumns.splice(
-                    defaultColumnCount,
-                    0,
-                    ...wsiColumns.filter(column => column.visible)
-                );
-                clinicalColumns.push(
-                    ...wsiColumns.filter(column => !column.visible)
-                );
-            }
+            clinicalColumns.push(
+                ...slideCountColumns.filter(column => !column.visible)
+            );
             return clinicalColumns;
         },
         default: [],
@@ -472,7 +543,9 @@ export class ClinicalDataTab extends React.Component<
                                             DownloadControlOption.SHOW_ALL
                                         }
                                         showCountHeader={false}
-                                        showColumnVisibility={true}
+                                        showColumnVisibility={
+                                            this.slideCountColumns.length > 0
+                                        }
                                         onFilterTextChange={searchTerm =>
                                             (this.clinicalDataTabSearchTerm = searchTerm)
                                         }

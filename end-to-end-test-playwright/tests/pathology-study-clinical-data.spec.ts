@@ -47,22 +47,75 @@ const filteredSamples = [
     })),
 ];
 
-const clinicalAttributes = [
-    'WSI_SAMPLE_SLIDE_COUNT',
-    'WSI_PATIENT_SLIDE_COUNT',
-    'WSI_SAMPLE_PART_MATCHED_SLIDE_COUNT',
-    'WSI_SAMPLE_BLOCK_MATCHED_SLIDE_COUNT',
-    'WSI_PATIENT_PART_MATCHED_SLIDE_COUNT',
-    'WSI_PATIENT_BLOCK_MATCHED_SLIDE_COUNT',
-].map(clinicalAttributeId => ({
-    clinicalAttributeId,
-    displayName: clinicalAttributeId,
-    description: clinicalAttributeId,
-    datatype: 'NUMBER',
-    patientAttribute: true,
-    priority: 1,
+const slideCountAttributeNames: { [clinicalAttributeId: string]: string } = {
+    WSI_SAMPLE_SLIDE_COUNT: 'WSI Slides per Sample',
+    WSI_PATIENT_SLIDE_COUNT: 'WSI Slides per Patient',
+    WSI_SAMPLE_PART_MATCHED_SLIDE_COUNT: 'WSI Slides per Sample, Part-matched',
+    WSI_SAMPLE_BLOCK_MATCHED_SLIDE_COUNT:
+        'WSI Slides per Sample, Block-matched',
+    WSI_PATIENT_PART_MATCHED_SLIDE_COUNT:
+        'WSI Slides per Patient, Part-matched',
+    WSI_PATIENT_BLOCK_MATCHED_SLIDE_COUNT:
+        'WSI Slides per Patient, Block-matched',
+};
+
+const cancerTypeAttribute = {
+    clinicalAttributeId: 'CANCER_TYPE',
+    displayName: 'Cancer Type',
+    description: 'Cancer Type',
+    datatype: 'STRING',
+    patientAttribute: false,
+    priority: '1',
     studyId: DEV_STUDY.studyId,
-}));
+};
+
+type StudyMockOptions = {
+    // whether the study has the slide-count attributes at all
+    slideAttributes: boolean;
+    // whether the saved Summary layout shows a slide-count chart
+    slideChartOnSummary: boolean;
+};
+
+const DEFAULT_MOCK_OPTIONS: StudyMockOptions = {
+    slideAttributes: true,
+    slideChartOnSummary: true,
+};
+
+function clinicalAttributesFor(options: StudyMockOptions) {
+    const slideCountAttributes = options.slideAttributes
+        ? Object.entries(slideCountAttributeNames).map(
+              ([clinicalAttributeId, displayName]) => ({
+                  clinicalAttributeId,
+                  displayName,
+                  description: displayName,
+                  datatype: 'NUMBER',
+                  patientAttribute: true,
+                  // priority 0 keeps a chart off the Summary tab by default
+                  priority: options.slideChartOnSummary ? '1' : '0',
+                  studyId: DEV_STUDY.studyId,
+              })
+          )
+        : [];
+    return [cancerTypeAttribute, ...slideCountAttributes];
+}
+
+function chartSettingsFor(options: StudyMockOptions) {
+    return options.slideAttributes && options.slideChartOnSummary
+        ? [
+              {
+                  id: 'WSI_PATIENT_SLIDE_COUNT',
+                  chartType: 'BAR_CHART',
+                  patientAttribute: true,
+              },
+          ]
+        : [
+              {
+                  id: 'CANCER_TYPE',
+                  chartType: 'PIE_CHART',
+                  patientAttribute: false,
+              },
+          ];
+}
 
 const sampleClinicalData = {
     [samples[0].uniqueSampleKey]: [
@@ -139,7 +192,10 @@ const filteredSampleClinicalData = Object.fromEntries(
     ])
 );
 
-async function installStudyMocks(page: Page) {
+async function installStudyMocks(
+    page: Page,
+    options: StudyMockOptions = DEFAULT_MOCK_OPTIONS
+) {
     await page.addInitScript(() => {
         const win = window as any;
         let frontendConfig = win.frontendConfig || {};
@@ -202,7 +258,7 @@ async function installStudyMocks(page: Page) {
                 return route.fulfill({
                     status: 200,
                     contentType: 'application/json',
-                    body: JSON.stringify(clinicalAttributes),
+                    body: JSON.stringify(clinicalAttributesFor(options)),
                 });
             }
             if (pathname === '/api/clinical-data-table/fetch') {
@@ -230,13 +286,7 @@ async function installStudyMocks(page: Page) {
                     status: 200,
                     contentType: 'application/json',
                     body: JSON.stringify({
-                        chartSettings: [
-                            {
-                                id: 'WSI_PATIENT_SLIDE_COUNT',
-                                chartType: 'BAR_CHART',
-                                patientAttribute: true,
-                            },
-                        ],
+                        chartSettings: chartSettingsFor(options),
                         groupColors: {},
                     }),
                 });
@@ -492,5 +542,61 @@ test.describe('filtered study clinical data sorting', () => {
             ).toHaveCount(0);
         }
         expect(directionsSeen.size).toBe(2);
+    });
+});
+
+test.describe('study clinical data slide-count column detection', () => {
+    test('shows the slide columns when no slide-count chart is on the Summary tab', async ({
+        page,
+    }) => {
+        await installStudyMocks(page, {
+            slideAttributes: true,
+            slideChartOnSummary: false,
+        });
+        await page.goto(studyClinicalDataUrl());
+        await waitForClinicalDataTable(page);
+
+        // the Summary layout is the Cancer Type chart only
+        await expect(page.locator('[data-test="Cancer Type"]')).toBeVisible();
+        await expect(
+            page.locator('[data-test="WSI Slides per Patient"]')
+        ).toBeVisible();
+        await expect
+            .poll(async () =>
+                (
+                    await getColumnValuesByHeader(
+                        page,
+                        'WSI Slides per Patient'
+                    )
+                ).sort()
+            )
+            .toEqual(['2', '7']);
+
+        await clickColumnsButton(page);
+        await toggleColumn(page, 'WSI Slides per Sample');
+        await clickColumnsButton(page);
+        await expect(
+            page.locator('[data-test="WSI Slides per Sample"]')
+        ).toBeVisible();
+    });
+
+    test('keeps the table unchanged for a study without slide-count attributes', async ({
+        page,
+    }) => {
+        await installStudyMocks(page, {
+            slideAttributes: false,
+            slideChartOnSummary: false,
+        });
+        await page.goto(studyClinicalDataUrl());
+        await waitForClinicalDataTable(page);
+
+        await expect(page.locator('[data-test="Cancer Type"]')).toBeVisible();
+        const headers = await getVisibleHeaderNames(page);
+        expect(headers.filter(header => header.startsWith('WSI '))).toEqual([]);
+        await expect(
+            page.locator('[data-test="clinical-data-tab-content"] button', {
+                hasText: 'Columns',
+            })
+        ).toHaveCount(0);
     });
 });
