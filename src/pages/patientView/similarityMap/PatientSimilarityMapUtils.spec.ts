@@ -1,15 +1,11 @@
 import { assert } from 'chai';
 import { EmbeddingDataOption } from 'shared/components/embeddings/EmbeddingTypes';
 import {
-    fitProjection,
     getEmbeddingOptionsForSamples,
-    getReferenceCategoryColors,
     getClinicalColorsBySampleId,
-    getSamplesInLasso,
-    isInsidePolygon,
     getStudyViewMapUrl,
     mapWithConcurrency,
-    SampleEmbeddingPoint,
+    projectToScreen,
 } from './PatientSimilarityMapUtils';
 
 function option(
@@ -59,68 +55,6 @@ describe('getEmbeddingOptionsForSamples', () => {
             getEmbeddingOptionsForSamples(options, 'study_a', ['S2']),
             0
         );
-    });
-});
-
-describe('fitProjection', () => {
-    it('maps the bounding box into the padded area with y growing downward', () => {
-        const { toScreen } = fitProjection(
-            [
-                { x: 0, y: 0 },
-                { x: 10, y: 10 },
-            ],
-            120,
-            120,
-            10
-        );
-        assert.deepEqual(toScreen(0, 0), [10, 10]);
-        assert.deepEqual(toScreen(10, 10), [110, 110]);
-        assert.deepEqual(toScreen(5, 0), [60, 10]);
-    });
-
-    it('keeps the aspect ratio and centres the short axis', () => {
-        const { toScreen } = fitProjection(
-            [
-                { x: 0, y: 0 },
-                { x: 10, y: 5 },
-            ],
-            100,
-            100,
-            0
-        );
-        assert.deepEqual(toScreen(0, 0), [0, 25]);
-        assert.deepEqual(toScreen(10, 5), [100, 75]);
-    });
-
-    it('handles a single point', () => {
-        const { toScreen } = fitProjection([{ x: 3, y: 4 }], 100, 100, 10);
-        assert.deepEqual(toScreen(3, 4), [50, 50]);
-    });
-});
-
-describe('getReferenceCategoryColors', () => {
-    const points: SampleEmbeddingPoint[] = [
-        { sampleId: 'a', x: 0, y: 0, referenceData: { CANCER_TYPE: 'B' } },
-        { sampleId: 'b', x: 0, y: 0, referenceData: { CANCER_TYPE: 'A' } },
-        { sampleId: 'c', x: 0, y: 0, referenceData: { CANCER_TYPE: 'A' } },
-        { sampleId: 'd', x: 0, y: 0, referenceData: { OTHER: 'x' } },
-        { sampleId: 'e', x: 0, y: 0 },
-    ];
-
-    it('lists categories most frequent first, each with a distinct color', () => {
-        const colors = getReferenceCategoryColors(points, 'CANCER_TYPE');
-        assert.deepEqual(
-            colors.map(c => [c.category, c.count]),
-            [
-                ['A', 2],
-                ['B', 1],
-            ]
-        );
-        assert.notEqual(colors[0].color, colors[1].color);
-    });
-
-    it('is empty when the map carries no such attribute', () => {
-        assert.lengthOf(getReferenceCategoryColors(points, 'MISSING'), 0);
     });
 });
 
@@ -223,68 +157,25 @@ describe('mapWithConcurrency', () => {
     });
 });
 
-describe('isInsidePolygon', () => {
-    const square = [
-        { x: 0, y: 0 },
-        { x: 10, y: 0 },
-        { x: 10, y: 10 },
-        { x: 0, y: 10 },
-    ];
+describe('projectToScreen', () => {
+    const viewState = { target: [0, 0, 0], zoom: 0 };
 
-    it('accepts a point inside and rejects one outside', () => {
-        assert.isTrue(isInsidePolygon({ x: 5, y: 5 }, square));
-        assert.isFalse(isInsidePolygon({ x: 15, y: 5 }, square));
+    it('puts the view target at the centre', () => {
+        assert.deepEqual(projectToScreen(0, 0, viewState, 800, 560), [
+            400,
+            280,
+        ]);
     });
 
-    it('handles a concave shape', () => {
-        const u = [
-            { x: 0, y: 0 },
-            { x: 10, y: 0 },
-            { x: 10, y: 10 },
-            { x: 6, y: 10 },
-            { x: 6, y: 3 },
-            { x: 4, y: 3 },
-            { x: 4, y: 10 },
-            { x: 0, y: 10 },
-        ];
-        assert.isTrue(isInsidePolygon({ x: 2, y: 8 }, u), 'left arm');
-        assert.isFalse(isInsidePolygon({ x: 5, y: 8 }, u), 'the notch');
+    it('grows y downward, as the viewer draws it', () => {
+        const [, top] = projectToScreen(0, 10, viewState, 800, 560);
+        assert.isAbove(top, 280);
     });
 
-    it('rejects everything for a degenerate polygon', () => {
-        assert.isFalse(isInsidePolygon({ x: 1, y: 1 }, []));
-        assert.isFalse(
-            isInsidePolygon({ x: 1, y: 1 }, [{ x: 0, y: 0 }, { x: 2, y: 2 }])
-        );
-    });
-});
-
-describe('getSamplesInLasso', () => {
-    it('selects the points whose screen position is enclosed', () => {
-        const points = [
-            { sampleId: 'A', x: 0, y: 0 },
-            { sampleId: 'B', x: 100, y: 100 },
-        ];
-        // identity projection
-        const toScreen = (x: number, y: number): [number, number] => [x, y];
-        const selected = getSamplesInLasso(
-            points,
-            [
-                { x: -5, y: -5 },
-                { x: 5, y: -5 },
-                { x: 5, y: 5 },
-                { x: -5, y: 5 },
-            ],
-            toScreen
-        );
-        assert.deepEqual(selected, ['A']);
-    });
-
-    it('selects nothing for a stroke too short to enclose anything', () => {
-        const toScreen = (x: number, y: number): [number, number] => [x, y];
+    it('scales by two per zoom step', () => {
         assert.deepEqual(
-            getSamplesInLasso([{ sampleId: 'A', x: 0, y: 0 }], [], toScreen),
-            []
+            projectToScreen(10, 0, { target: [0, 0, 0], zoom: 1 }, 800, 560),
+            [420, 280]
         );
     });
 });

@@ -7,6 +7,12 @@ import { colorToRgb } from './coordinateUtils';
 const REFERENCE_POINT_RADIUS = 0.02;
 const REFERENCE_POINT_ALPHA = 140;
 
+// Points of a sample-level map carry no patientId, so selection is tracked by
+// whichever id the point has.
+function pointKey(d: EmbeddingPoint): string | undefined {
+    return d.patientId || d.sampleId;
+}
+
 /**
  * Create the scatterplot layer for the embedding visualization
  */
@@ -20,7 +26,7 @@ export function createScatterplotLayer(
     contextPointBoost: number = 1
 ) {
     // Convert to Sets for O(1) lookup performance (computed once per layer creation)
-    const localSelectedSet = new Set(selectedPoints.map(p => p.patientId));
+    const localSelectedSet = new Set(selectedPoints.map(pointKey));
     const externalSelectedSet = new Set(selectedPatientIds);
     const hasAnySelection =
         selectedPoints.length > 0 || selectedPatientIds.length > 0;
@@ -42,9 +48,10 @@ export function createScatterplotLayer(
                 return 0.018;
             }
 
+            const key = pointKey(d);
             const isSelected =
-                (d.patientId && localSelectedSet.has(d.patientId)) ||
-                (d.patientId && externalSelectedSet.has(d.patientId));
+                !!key &&
+                (localSelectedSet.has(key) || externalSelectedSet.has(key));
             return isSelected ? 0.05 : 0.03;
         },
         getFillColor: (d: EmbeddingPoint) => {
@@ -66,9 +73,10 @@ export function createScatterplotLayer(
                 return [rgb[0], rgb[1], rgb[2], 110];
             }
 
+            const key = pointKey(d);
             const isSelected =
-                (d.patientId && localSelectedSet.has(d.patientId)) ||
-                (d.patientId && externalSelectedSet.has(d.patientId));
+                !!key &&
+                (localSelectedSet.has(key) || externalSelectedSet.has(key));
 
             // If there's an active selection and this point is not selected, make it light gray
             if (hasAnySelection && !isSelected) {
@@ -94,9 +102,10 @@ export function createScatterplotLayer(
                 return colorToRgb(color);
             }
 
+            const key = pointKey(d);
             const isSelected =
-                (d.patientId && localSelectedSet.has(d.patientId)) ||
-                (d.patientId && externalSelectedSet.has(d.patientId));
+                !!key &&
+                (localSelectedSet.has(key) || externalSelectedSet.has(key));
 
             // If there's an active selection and this point is not selected, make it light gray
             if (hasAnySelection && !isSelected) {
@@ -108,9 +117,10 @@ export function createScatterplotLayer(
             return colorToRgb(color);
         },
         getLineWidth: (d: EmbeddingPoint) => {
+            const key = pointKey(d);
             const isSelected =
-                (d.patientId && localSelectedSet.has(d.patientId)) ||
-                (d.patientId && externalSelectedSet.has(d.patientId));
+                !!key &&
+                (localSelectedSet.has(key) || externalSelectedSet.has(key));
 
             if (isSelected) {
                 return 0.01; // Thicker border for selected points
