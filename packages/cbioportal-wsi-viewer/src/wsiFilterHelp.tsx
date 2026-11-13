@@ -58,9 +58,9 @@ export const WSI_STAIN_HELP: ReadonlyArray<WsiFilterHelpEntry<WsiStainKind>> = [
         key: 'other',
         label: 'Other (known)',
         text:
-            'A recorded stain that is neither H&E nor IHC, such as a special ' +
-            'stain (PAS, trichrome), a cytology preparation or an unstained ' +
-            'recut.',
+            'A stain that is neither H&E nor IHC, such as a special stain ' +
+            '(PAS, trichrome), a cytology preparation or an unstained recut, ' +
+            'named in the pathology records or recognized from the image.',
     },
     {
         key: 'unknown',
