@@ -18,6 +18,7 @@ import {
     pathologySlideGroupMarker,
     pathologySlideMarkerSample,
     pathologySlidesTrackConfig,
+    timelineShowsPathologySlides,
     UNMATCHED_MARKER_COLOR,
     withoutPathologySlideLinkouts,
 } from './pathologySlidesTimeline';
@@ -46,12 +47,13 @@ const TestPortal = (Portal as unknown) as React.ComponentType<
     React.PropsWithChildren<{ container: HTMLElement }>
 >;
 
-const SAMPLE = 'P-0000081-T02-IM6';
-/** A LINKOUT as written by pdm's generate_pathology_timeline_files.py. */
-function pdmLinkout(matchLevel: string, sampleId?: string): string {
+const SAMPLE = 'PATIENT-1-S2';
+const OTHER_SAMPLE = 'PATIENT-1-S1';
+/** A LINKOUT to the patient's Pathology Slides tab, scoped to the slides. */
+function slidesTabLinkout(matchLevel: string, sampleId?: string): string {
     const params = new URLSearchParams({
-        studyId: 'mskimpact',
-        caseId: 'P-0000081',
+        studyId: 'study_1',
+        caseId: 'PATIENT-1',
         ...(sampleId ? { sampleId } : {}),
         pathologySlideSettings: JSON.stringify({
             stainFilter: 'hne',
@@ -62,7 +64,7 @@ function pdmLinkout(matchLevel: string, sampleId?: string): string {
     return `/patient/wsiHESlides?${params.toString()}`;
 }
 
-const LINKOUT = pdmLinkout('PART', SAMPLE);
+const LINKOUT = slidesTabLinkout('PART', SAMPLE);
 
 /** Attributes of a pathology timeline file row. */
 interface SlideRow {
@@ -78,7 +80,7 @@ interface SlideRow {
 const UNMATCHED: Partial<SlideRow> = {
     matchLevel: 'Unmatched',
     sampleId: 'Unmatched',
-    linkout: pdmLinkout('Unmatched'),
+    linkout: slidesTabLinkout('Unmatched'),
 };
 
 /** A PATHOLOGY SLIDES clinical event imported from the timeline file. */
@@ -101,15 +103,15 @@ function slide(row: Partial<SlideRow>, days = 920): ClinicalEvent {
         IMAGE_COUNT: String(r.viewable),
         NON_SERVABLE_IMAGE_COUNT: String(r.total - r.viewable),
         TOTAL_IMAGE_COUNT: String(r.total),
-        TIMEPOINT_SOURCE: 'Procedure date relative to first ICD-O diagnosis',
+        TIMEPOINT_SOURCE: 'Procedure date relative to diagnosis',
         LINKOUT: r.viewable > 0 ? r.linkout : '',
     });
 }
 
 const CASE_META: ISampleMetaDeta = {
-    color: { [SAMPLE]: '#ff0000', 'P-0000081-T01-IM3': '#0000ff' },
-    label: { [SAMPLE]: '2', 'P-0000081-T01-IM3': '1' },
-    index: { [SAMPLE]: 1, 'P-0000081-T01-IM3': 0 },
+    color: { [SAMPLE]: '#ff0000', [OTHER_SAMPLE]: '#0000ff' },
+    label: { [SAMPLE]: '2', [OTHER_SAMPLE]: '1' },
+    index: { [SAMPLE]: 1, [OTHER_SAMPLE]: 0 },
 };
 
 const SEQUENCING = event('Sequencing', 962, { SAMPLE_ID: SAMPLE });
@@ -190,7 +192,7 @@ describe('pathologySlideMarkerSample', () => {
         ).toBeNull();
         expect(
             pathologySlideMarkerSample(
-                slide({ sampleId: 'P-OTHER' }),
+                slide({ sampleId: 'OTHER-PATIENT-S1' }),
                 CASE_META
             )
         ).toBeNull();
@@ -199,7 +201,7 @@ describe('pathologySlideMarkerSample', () => {
 
 describe('pathologySlideGroupMarker', () => {
     const sample1 = {
-        sampleId: 'P-0000081-T01-IM3',
+        sampleId: OTHER_SAMPLE,
         color: '#0000ff',
         label: '1',
     };
@@ -220,7 +222,7 @@ describe('pathologySlideGroupMarker', () => {
                 [
                     slide({}),
                     slide({ stain: 'IHC' }),
-                    slide({ sampleId: 'P-0000081-T01-IM3' }),
+                    slide({ sampleId: OTHER_SAMPLE }),
                     slide(UNMATCHED),
                 ],
                 CASE_META
@@ -234,7 +236,7 @@ describe('pathologySlideGroupMarker', () => {
     it('marks groups without a patient sample as unmatched', () => {
         expect(
             pathologySlideGroupMarker(
-                [slide(UNMATCHED), slide({ sampleId: 'P-OTHER' })],
+                [slide(UNMATCHED), slide({ sampleId: 'OTHER-PATIENT-S1' })],
                 CASE_META
             )
         ).toEqual({ kind: 'unmatched', count: 2 });
@@ -279,7 +281,7 @@ describe('PATHOLOGY SLIDES timeline track', () => {
         const mixed = renderMarker([
             slide({}),
             slide({ specimen: 'Part 2' }),
-            slide({ sampleId: 'P-0000081-T01-IM3' }),
+            slide({ sampleId: OTHER_SAMPLE }),
         ]);
         // The sample tracks' multi-sample marker writes consecutive
         // numbers as a range.
@@ -314,7 +316,7 @@ describe('PATHOLOGY SLIDES timeline track', () => {
     it('orders simultaneous events by sample number', () => {
         const track = pathologyTrack([
             slide(UNMATCHED),
-            slide({ sampleId: 'P-0000081-T01-IM3' }),
+            slide({ sampleId: OTHER_SAMPLE }),
             slide({}),
         ]);
         const sorted = track.sortSimultaneousEvents!(track.items);
@@ -323,7 +325,7 @@ describe('PATHOLOGY SLIDES timeline track', () => {
         expect(
             sorted.map(e => `${attr(e, 'SAMPLE_ID')} ${attr(e, 'MATCH_LEVEL')}`)
         ).toEqual([
-            'P-0000081-T01-IM3 PART',
+            `${OTHER_SAMPLE} PART`,
             `${SAMPLE} PART`,
             'Unmatched Unmatched',
         ]);
@@ -378,7 +380,9 @@ describe('PATHOLOGY SLIDES timeline track', () => {
 
         // The timeline renders tooltips in a portal; the router context
         // still reaches the link, so it navigates without a page load.
-        fireEvent.click(screen.getByRole('link', { name: /Open H&E slides/ }));
+        fireEvent.click(
+            screen.getByRole('link', { name: `Open slides (H&E, ${SAMPLE})` })
+        );
         expect(location()?.pathname).toBe('/patient/wsiHESlides');
         expect(location()?.search).toBe(
             LINKOUT.split('/patient/wsiHESlides')[1]
@@ -404,9 +408,11 @@ describe('PATHOLOGY SLIDES timeline track', () => {
     it('explains slides that are not viewable', () => {
         const track = pathologyTrack([slide({ viewable: 1, total: 3 })]);
         renderTooltip(track, track.items[0]);
-        expect(screen.getByText('1 of 3 viewable').getAttribute('title')).toBe(
-            '2 slides are not viewable: no scanned image is available.'
-        );
+        expect(
+            screen.getByText(
+                '2 slides are not viewable: no scanned image is available.'
+            )
+        ).toBeTruthy();
     });
 
     it('describes unmatched slides in the tooltip', () => {
@@ -420,12 +426,161 @@ describe('PATHOLOGY SLIDES timeline track', () => {
         ).toBeTruthy();
         expect(screen.getByText('d+920')).toBeTruthy();
         fireEvent.click(
-            screen.getByRole('link', { name: /Open H&E slides for Unmatched/ })
+            screen.getByRole('link', { name: 'Open slides (H&E, Unmatched)' })
         );
         const settings = new URLSearchParams(location()?.search).get(
             'pathologySlideSettings'
         );
         expect(JSON.parse(settings!).matchLevel).toBe('Unmatched');
+    });
+});
+
+describe('PATHOLOGY SLIDES events with other attributes', () => {
+    /** An event with only the given attributes. */
+    function bareSlide(attributes: Record<string, string>, days = 920) {
+        return event('PATHOLOGY SLIDES', days, {
+            SUBTYPE: 'H&E',
+            ...attributes,
+        });
+    }
+
+    function tooltipRowHeaders() {
+        return screen
+            .getAllByRole('rowheader')
+            .map(header => header.textContent);
+    }
+
+    it("links slides without MATCH_LEVEL to the patient's sample, with no level", () => {
+        const matched = bareSlide({ SAMPLE_ID: SAMPLE, LINKOUT });
+        expect(pathologySlideMarkerSample(matched, CASE_META)).toEqual({
+            sampleId: SAMPLE,
+            color: '#ff0000',
+            label: '2',
+        });
+
+        const track = pathologyTrack([matched]);
+        renderTooltip(track, track.items[0]);
+        expect(screen.getByText('Pathology slides · H&E')).toBeTruthy();
+        expect(screen.getByText(SAMPLE)).toBeTruthy();
+        expect(
+            screen.getByText('d+920 — 42 d before sequencing (d+962)')
+        ).toBeTruthy();
+        expect(document.body.textContent).not.toContain('matched');
+    });
+
+    it('treats slides without MATCH_LEVEL naming another sample as unmatched', () => {
+        const other = bareSlide({ SAMPLE_ID: 'OTHER-PATIENT-S1' });
+        expect(pathologySlideMarkerSample(other, CASE_META)).toBeNull();
+
+        const track = pathologyTrack([other]);
+        renderTooltip(track, track.items[0]);
+        expect(
+            screen.getByText('Pathology slides · H&E · Unmatched')
+        ).toBeTruthy();
+        expect(
+            screen.getByText('Unmatched (not linked to a sequenced sample)')
+        ).toBeTruthy();
+    });
+
+    it('keeps a stated Unmatched level even for a patient sample', () => {
+        const unmatched = bareSlide({
+            SAMPLE_ID: SAMPLE,
+            MATCH_LEVEL: 'Unmatched',
+        });
+        expect(pathologySlideMarkerSample(unmatched, CASE_META)).toBeNull();
+    });
+
+    it('leaves out the Slides line without counts and still links', () => {
+        const track = pathologyTrack([
+            bareSlide({ SAMPLE_ID: SAMPLE, LINKOUT }),
+        ]);
+        renderTooltip(track, track.items[0]);
+        expect(tooltipRowHeaders()).toEqual(['Sample', 'Procedure']);
+        expect(
+            screen.getByRole('link', { name: `Open slides (H&E, ${SAMPLE})` })
+        ).toBeTruthy();
+    });
+
+    it('shows the counts it has', () => {
+        const viewableOnly = pathologyTrack([
+            bareSlide({ SAMPLE_ID: SAMPLE, IMAGE_COUNT: '2', LINKOUT }),
+        ]);
+        renderTooltip(viewableOnly, viewableOnly.items[0]);
+        expect(screen.getByText('2 viewable')).toBeTruthy();
+        expect(screen.getByRole('link')).toBeTruthy();
+    });
+
+    it('lists the remaining attributes after the slide lines', () => {
+        const track = pathologyTrack([
+            bareSlide({
+                SAMPLE_ID: SAMPLE,
+                MATCH_LEVEL: 'BLOCK',
+                SPECIMEN: 'Part 1',
+                IMAGE_COUNT: '1',
+                TOTAL_IMAGE_COUNT: '1',
+                NON_SERVABLE_IMAGE_COUNT: '0',
+                TIMEPOINT_SOURCE: 'Procedure date',
+                LINKOUT,
+                STYLE_COLOR: '#00ff00',
+                SCANNER: 'Scanner A',
+                REVIEWED_BY: 'Pathologist',
+            }),
+        ]);
+        renderTooltip(track, track.items[0]);
+        expect(tooltipRowHeaders()).toEqual([
+            'Sample',
+            'Procedure',
+            'Part',
+            'Slides',
+            'SCANNER',
+            'REVIEWED BY',
+        ]);
+        expect(screen.getByText('Scanner A')).toBeTruthy();
+        expect(document.body.textContent).not.toContain('wsiHESlides');
+        expect(document.body.textContent).not.toContain('#00ff00');
+    });
+
+    it('shows explanations as text, not only as hover titles', () => {
+        const track = pathologyTrack([slide({ matchLevel: 'BLOCK' })]);
+        renderTooltip(track, track.items[0]);
+        expect(
+            screen.getByText(
+                'The slide was cut from the same tissue block that was sequenced for this sample.'
+            )
+        ).toBeTruthy();
+        expect(
+            screen.getByText('Procedure date relative to diagnosis')
+        ).toBeTruthy();
+        expect(screen.getByText(/^Days are counted from day 0/)).toBeTruthy();
+        expect(document.querySelector('[title]')).toBeNull();
+        expect(screen.getByRole('link').getAttribute('aria-label')).toMatch(
+            /^Open slides/
+        );
+    });
+});
+
+describe('timelineShowsPathologySlides', () => {
+    const tab = { configured: true, pending: false, shown: true };
+
+    it('links slide events only when the Pathology Slides tab is shown', () => {
+        expect(timelineShowsPathologySlides([slide({})], tab)).toBe(true);
+        expect(
+            timelineShowsPathologySlides([slide({})], { ...tab, shown: false })
+        ).toBe(false);
+        expect(
+            timelineShowsPathologySlides([slide({})], {
+                ...tab,
+                configured: false,
+            })
+        ).toBe(false);
+    });
+
+    it('waits for the tab decision only when there are slide events', () => {
+        const pending = { ...tab, pending: true };
+        expect(
+            timelineShowsPathologySlides([slide({})], pending)
+        ).toBeUndefined();
+        expect(timelineShowsPathologySlides([SEQUENCING], pending)).toBe(false);
     });
 });
 

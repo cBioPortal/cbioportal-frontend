@@ -55,7 +55,7 @@ const PART_2 = { number: '2', description: 'Recurrence specimen', block: 'B1' };
 
 /**
  * Sample 1, block A1: an H&E and an IHC slide. Sample 2, part 2: an H&E
- * slide. The slide rows carry no timing; the timeline file does.
+ * slide. The slide rows carry no timing; the clinical events do.
  */
 const slideRows = [
     slideRow(HNE_KEY, 'H&E', SAMPLE_ID, 'BLOCK', BLOCK_SPECIMEN_KEY, PART_1),
@@ -71,10 +71,10 @@ const slideRows = [
 ];
 
 /**
- * LINKOUT as pdm's generate_pathology_timeline_files.py writes it: the
- * Pathology Slides tab with its scope in the `pathologySlideSettings` node.
+ * A PATHOLOGY SLIDES LINKOUT: the Pathology Slides tab with its scope in the
+ * `pathologySlideSettings` node.
  */
-function pdmLinkout(
+function slidesTabLinkout(
     stainFilter: string,
     matchLevel: string,
     specimenKey: string,
@@ -93,7 +93,12 @@ function pdmLinkout(
     return `/patient/wsiHESlides?${params.toString()}`;
 }
 
-const HNE_LINKOUT = pdmLinkout('hne', 'BLOCK', BLOCK_SPECIMEN_KEY, SAMPLE_ID);
+const HNE_LINKOUT = slidesTabLinkout(
+    'hne',
+    'BLOCK',
+    BLOCK_SPECIMEN_KEY,
+    SAMPLE_ID
+);
 
 function clinicalEvent(
     eventType: string,
@@ -113,7 +118,7 @@ function clinicalEvent(
     };
 }
 
-/** A row of the pdm pathology timeline file, as an imported event. */
+/** A PATHOLOGY SLIDES clinical event: one stain's slides of a procedure. */
 function pathologySlidesEvent(
     days: number,
     sampleId: string,
@@ -130,7 +135,7 @@ function pathologySlidesEvent(
         IMAGE_COUNT: '1',
         NON_SERVABLE_IMAGE_COUNT: '0',
         TOTAL_IMAGE_COUNT: '1',
-        TIMEPOINT_SOURCE: 'Procedure date relative to first ICD-O diagnosis',
+        TIMEPOINT_SOURCE: 'Procedure date relative to diagnosis',
         LINKOUT: linkout,
     });
 }
@@ -151,7 +156,7 @@ const clinicalEvents = [
         'IHC',
         'BLOCK',
         'Part 1 / Block A1',
-        pdmLinkout('ihc', 'BLOCK', BLOCK_SPECIMEN_KEY, SAMPLE_ID)
+        slidesTabLinkout('ihc', 'BLOCK', BLOCK_SPECIMEN_KEY, SAMPLE_ID)
     ),
     pathologySlidesEvent(
         200,
@@ -159,7 +164,7 @@ const clinicalEvents = [
         'H&E',
         'PART',
         'Part 2',
-        pdmLinkout('hne', 'PART', PART_SPECIMEN_KEY, LATER_SAMPLE_ID)
+        slidesTabLinkout('hne', 'PART', PART_SPECIMEN_KEY, LATER_SAMPLE_ID)
     ),
 ];
 
@@ -204,7 +209,7 @@ const samples = [SAMPLE_ID, LATER_SAMPLE_ID].map(sampleId => ({
 /**
  * The patient page around the foundation slide mocks: every other portal
  * API answers empty, the patient has two samples, and the clinical events
- * include the PATHOLOGY SLIDES events of the pdm pathology timeline file.
+ * include PATHOLOGY SLIDES events.
  */
 async function installPatientPageMocks(
     page: Page,
@@ -354,8 +359,10 @@ if (process.env.PW_SUITE === 'wsi') {
             );
             await expect(tooltip).toContainText('Part 1 / Block A1');
             await expect(tooltip).toContainText('1 of 1 viewable');
-            const link = tooltip.getByRole('link', { name: /Open H&E slides/ });
-            // The link is the event's LINKOUT, as the timeline file has it.
+            const link = tooltip.getByRole('link', {
+                name: `Open slides (H&E, ${SAMPLE_ID})`,
+            });
+            // The link is the event's LINKOUT.
             expect(await link.getAttribute('href')).toBe(HNE_LINKOUT);
             // No slide is opened while the Summary tab is showing.
             expect(tileServerRequests).toEqual([]);

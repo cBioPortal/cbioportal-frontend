@@ -25,27 +25,45 @@ import {
 import { ISampleMetaDeta } from './TimelineWrapper';
 import { PatientViewPageTabs } from 'pages/patientView/PatientViewPageTabIds';
 
-// The PATHOLOGY SLIDES events are the patient's clinical events imported
-// from the pathology timeline file (data_clinical_timeline_pathology_slides),
-// one per procedure day, sample, match level, specimen and stain: SAMPLE_ID
-// ("Unmatched" when not linked to a sequenced sample), SUBTYPE (the stain
-// row), MATCH_LEVEL, SPECIMEN, IMAGE_COUNT (viewable slides),
-// TOTAL_IMAGE_COUNT, TIMEPOINT_SOURCE and LINKOUT (the Pathology Slides
-// tab, scoped to the event).
+/*
+ * PATHOLOGY SLIDES clinical events: the slides of one procedure day, drawn on
+ * the patient timeline as one row per stain. The track reads these event
+ * attributes; every one is optional:
+ *
+ * - SUBTYPE: the stain; it names the stain row ("H&E", "IHC", ...).
+ * - SAMPLE_ID: the sequenced sample the slides are linked to, or "Unmatched".
+ * - MATCH_LEVEL: how the slides are linked to SAMPLE_ID: BLOCK (cut from the
+ *   sequenced block), PART (same part, block not confirmed) or UNMATCHED.
+ *   Without it, slides whose SAMPLE_ID is one of the patient's samples are
+ *   linked to that sample with no level, and other slides are unmatched.
+ * - SPECIMEN: the part the slides come from.
+ * - IMAGE_COUNT: slides with a scanned image that the viewer can open; at 0
+ *   the tooltip has no Open slides link.
+ * - TOTAL_IMAGE_COUNT: all slides, viewable or not. NON_SERVABLE_IMAGE_COUNT
+ *   (slides without a scanned image) is covered by the same Slides line.
+ *   Without either count, the tooltip has no Slides line.
+ * - TIMEPOINT_SOURCE: how the procedure day was derived.
+ * - LINKOUT: an in-app link to the patient's Pathology Slides tab,
+ *   `/patient/wsiHESlides?...`, scoped to the event's slides. Other links
+ *   are not followed.
+ *
+ * Any other attribute is listed after these in the tooltip.
+ */
 
 export const PATHOLOGY_SLIDES_EVENT_TYPE = 'PATHOLOGY SLIDES';
 
 /** Whether the events include PATHOLOGY SLIDES events. */
-export function hasPathologySlideEvents(events: ClinicalEvent[]): boolean {
+export function hasPathologySlideEvents(
+    events: Array<{ eventType?: string }>
+): boolean {
     return events.some(
         e => e.eventType?.toUpperCase() === PATHOLOGY_SLIDES_EVENT_TYPE
     );
 }
 
 /**
- * The events with LINKOUT dropped from PATHOLOGY SLIDES events, for a portal
- * that serves no slides: the link points at a Pathology Slides tab it does
- * not have.
+ * The events with LINKOUT dropped from PATHOLOGY SLIDES events, for a patient
+ * view without a Pathology Slides tab for the link to open.
  */
 export function withoutPathologySlideLinkouts(
     events: ClinicalEvent[]
@@ -63,6 +81,22 @@ export function withoutPathologySlideLinkouts(
 }
 
 /**
+ * Whether the Summary timeline draws PATHOLOGY SLIDES events linked to the
+ * Pathology Slides tab: only when that tab is shown, so a link never points
+ * at a missing tab. Undefined while the tab's decision is pending for events
+ * that include slides; the timeline builds its tracks once, so it waits.
+ */
+export function timelineShowsPathologySlides(
+    events: ClinicalEvent[],
+    slidesTab: { configured: boolean; pending: boolean; shown: boolean }
+): boolean | undefined {
+    if (!slidesTab.configured || !hasPathologySlideEvents(events)) {
+        return false;
+    }
+    return slidesTab.pending ? undefined : slidesTab.shown;
+}
+
+/**
  * A PATHOLOGY SLIDES event; only the fields the track reads, satisfied by
  * both a clinical event and a timeline item's event.
  */
@@ -71,36 +105,71 @@ export interface PathologySlideEvent {
     startNumberOfDaysSinceDiagnosis?: number;
 }
 
-function attribute(event: PathologySlideEvent, key: string): string {
-    const found = (event.attributes || []).find(
+/** Whether a sample ID names one of the patient's samples. */
+export type IsPatientSample = (sampleId: string) => boolean;
+
+function findAttribute(event: PathologySlideEvent, key: string) {
+    return (event.attributes || []).find(
         attr => attr.key.toUpperCase() === key
     );
-    return (found?.value || '').trim();
 }
 
-function countAttribute(event: PathologySlideEvent, key: string): number {
-    const count = parseInt(attribute(event, key), 10);
-    return Number.isFinite(count) && count > 0 ? count : 0;
+function attribute(event: PathologySlideEvent, key: string): string {
+    return (findAttribute(event, key)?.value || '').trim();
+}
+
+/** A non-negative count attribute; undefined when absent or not a count. */
+function countAttribute(
+    event: PathologySlideEvent,
+    key: string
+): number | undefined {
+    const value = attribute(event, key);
+    if (!/^\d+$/.test(value)) {
+        return undefined;
+    }
+    return parseInt(value, 10);
 }
 
 const UNMATCHED_LABEL = 'Unmatched';
 
-/** BLOCK, PART or UNMATCHED. */
-function matchLevel(event: PathologySlideEvent): string {
+type StatedMatchLevel = 'BLOCK' | 'PART' | 'UNMATCHED';
+
+/** The event's MATCH_LEVEL; undefined when absent or not a known level. */
+function statedMatchLevel(
+    event: PathologySlideEvent
+): StatedMatchLevel | undefined {
     const level = attribute(event, 'MATCH_LEVEL').toUpperCase();
-    return level === 'BLOCK' || level === 'PART' ? level : 'UNMATCHED';
+    return level === 'BLOCK' || level === 'PART' || level === 'UNMATCHED'
+        ? level
+        : undefined;
 }
 
-/** Sequenced sample of a BLOCK- or PART-matched event; unset when unmatched. */
+/**
+ * The sequenced sample a PATHOLOGY SLIDES event is linked to: its SAMPLE_ID
+ * when MATCH_LEVEL is BLOCK or PART, or, without a MATCH_LEVEL, when
+ * SAMPLE_ID is one of the patient's samples. Unset when unmatched.
+ */
 export function pathologySlideSampleId(
-    event: PathologySlideEvent
+    event: PathologySlideEvent,
+    isPatientSample: IsPatientSample
 ): string | undefined {
     const sampleId = attribute(event, 'SAMPLE_ID');
-    return matchLevel(event) !== 'UNMATCHED' &&
-        sampleId &&
-        sampleId.toUpperCase() !== 'UNMATCHED'
-        ? sampleId
-        : undefined;
+    if (!sampleId || sampleId.toUpperCase() === 'UNMATCHED') {
+        return undefined;
+    }
+    const level = statedMatchLevel(event);
+    if (level === undefined) {
+        return isPatientSample(sampleId) ? sampleId : undefined;
+    }
+    return level === 'UNMATCHED' ? undefined : sampleId;
+}
+
+/** The patient's samples, from the timeline's sample metadata. */
+export function patientSamplesOf(
+    caseMetaData: ISampleMetaDeta
+): IsPatientSample {
+    return sampleId =>
+        Object.prototype.hasOwnProperty.call(caseMetaData.label, sampleId);
 }
 
 const SLIDES_TAB_PATH = `/patient/${PatientViewPageTabs.WSIHESlides}`;
@@ -116,20 +185,19 @@ export function pathologySlideOpenPath(
     return linkout.startsWith(`${SLIDES_TAB_PATH}?`) ? linkout : undefined;
 }
 
-const MATCH_LABELS: Record<string, { text: string; tooltip: string }> = {
+const MATCH_LABELS: Record<string, { text: string; note: string }> = {
     BLOCK: {
         text: 'Block',
-        tooltip:
-            'The slide was cut from the same tissue block that was sequenced for this sample',
+        note:
+            'The slide was cut from the same tissue block that was sequenced for this sample.',
     },
     PART: {
         text: 'Part',
-        tooltip:
-            'The slide comes from the same part as the sequenced sample; the sequenced block is not confirmed',
+        note:
+            'The slide comes from the same part as the sequenced sample; the sequenced block is not confirmed.',
     },
 };
 
-const UNMATCHED_TOOLTIP = 'Not linked to a sequenced sample';
 const UNMATCHED_SAMPLE_TEXT = 'Unmatched (not linked to a sequenced sample)';
 
 /**
@@ -157,45 +225,101 @@ function sequencingRelation(
 export interface PathologySlideTooltipLine {
     label: string;
     value: string;
-    /** Hover explanation for the value. */
-    tooltip?: string;
+    /** Explanation shown under the value. */
+    note?: string;
 }
 
 export interface PathologySlideTooltipContent {
     title: string;
+    /** The slide lines, then the event's other attributes. */
     lines: PathologySlideTooltipLine[];
-    /** In-app path to the Pathology Slides tab; unset when nothing is viewable. */
+    /** Explanation of the day notation, when a day is shown. */
+    footnote?: string;
+    /** In-app path to the Pathology Slides tab; unset when not linked. */
     openPath?: string;
+    /** Accessible name of the link; it starts with the visible text. */
     openLabel: string;
+}
+
+/** Attributes the timeline styles events with, never listed. */
+const STYLE_ATTRIBUTE_KEYS = ['STYLE_COLOR', 'STYLE_SHAPE'];
+
+/** "1 of 3 viewable", "2 viewable" or "3"; undefined without counts. */
+function slideCountLine(
+    event: PathologySlideEvent
+): { line: PathologySlideTooltipLine; keys: string[] } | undefined {
+    const viewable = countAttribute(event, 'IMAGE_COUNT');
+    const total = countAttribute(event, 'TOTAL_IMAGE_COUNT');
+    if (viewable === undefined && total === undefined) {
+        return undefined;
+    }
+    if (viewable === undefined) {
+        return {
+            line: { label: 'Slides', value: String(total) },
+            keys: ['TOTAL_IMAGE_COUNT'],
+        };
+    }
+    if (total === undefined) {
+        return {
+            line: { label: 'Slides', value: `${viewable} viewable` },
+            keys: ['IMAGE_COUNT'],
+        };
+    }
+    const shownTotal = Math.max(total, viewable);
+    const nonViewable = shownTotal - viewable;
+    return {
+        line: {
+            label: 'Slides',
+            value: `${viewable} of ${shownTotal} viewable`,
+            note:
+                nonViewable > 0
+                    ? `${nonViewable} ${
+                          nonViewable === 1 ? 'slide is' : 'slides are'
+                      } not viewable: no scanned image is available.`
+                    : undefined,
+        },
+        keys: ['IMAGE_COUNT', 'TOTAL_IMAGE_COUNT', 'NON_SERVABLE_IMAGE_COUNT'],
+    };
 }
 
 /**
  * Timeline tooltip content for one PATHOLOGY SLIDES event, e.g.
  * "Pathology slides · H&E · Part-matched" followed by Sample, Procedure,
- * Part and Slides lines.
+ * Part and Slides lines, then the event's other attributes.
  */
 export function buildPathologySlideTooltipContent(
     event: PathologySlideEvent,
-    sampleTimelines: WsiSampleTimelineMap
+    sampleTimelines: WsiSampleTimelineMap,
+    isPatientSample: IsPatientSample
 ): PathologySlideTooltipContent {
-    const match = MATCH_LABELS[matchLevel(event)];
-    const sampleId = pathologySlideSampleId(event);
+    const sampleId = pathologySlideSampleId(event, isPatientSample);
+    const match = sampleId
+        ? MATCH_LABELS[statedMatchLevel(event) || '']
+        : undefined;
     const stain = attribute(event, 'SUBTYPE');
     const title = [
         'Pathology slides',
         stain,
-        match ? `${match.text}-matched` : UNMATCHED_LABEL,
+        match ? `${match.text}-matched` : sampleId ? '' : UNMATCHED_LABEL,
     ]
         .filter(Boolean)
         .join(' · ');
 
+    const shownKeys = [
+        'SAMPLE_ID',
+        'SUBTYPE',
+        'MATCH_LEVEL',
+        'LINKOUT',
+        ...STYLE_ATTRIBUTE_KEYS,
+    ];
     const lines: PathologySlideTooltipLine[] = [
         {
             label: 'Sample',
             value: sampleId || UNMATCHED_SAMPLE_TEXT,
-            tooltip: match ? match.tooltip : UNMATCHED_TOOLTIP,
+            note: match?.note,
         },
     ];
+    let footnote: string | undefined;
     const days = event.startNumberOfDaysSinceDiagnosis;
     if (typeof days === 'number' && Number.isFinite(days)) {
         const relation = sequencingRelation(
@@ -206,38 +330,41 @@ export function buildPathologySlideTooltipContent(
         lines.push({
             label: 'Procedure',
             value: relation ? `${procedure} — ${relation}` : procedure,
-            tooltip: [attribute(event, 'TIMEPOINT_SOURCE'), DAY_ZERO_TOOLTIP]
-                .filter(Boolean)
-                .join('. '),
+            note: attribute(event, 'TIMEPOINT_SOURCE') || undefined,
         });
+        shownKeys.push('TIMEPOINT_SOURCE');
+        footnote = DAY_ZERO_TOOLTIP;
     }
     const specimen = attribute(event, 'SPECIMEN');
     if (specimen) {
         lines.push({ label: 'Part', value: specimen });
+        shownKeys.push('SPECIMEN');
     }
-    const viewable = countAttribute(event, 'IMAGE_COUNT');
-    const total = Math.max(
-        countAttribute(event, 'TOTAL_IMAGE_COUNT'),
-        viewable
-    );
-    const nonViewable = total - viewable;
-    lines.push({
-        label: 'Slides',
-        value: `${viewable} of ${total} viewable`,
-        tooltip:
-            nonViewable > 0
-                ? `${nonViewable} ${
-                      nonViewable === 1 ? 'slide is' : 'slides are'
-                  } not viewable: no scanned image is available.`
-                : undefined,
+    const counts = slideCountLine(event);
+    if (counts) {
+        lines.push(counts.line);
+        shownKeys.push(...counts.keys);
+    }
+    (event.attributes || []).forEach(attr => {
+        const key = attr.key.toUpperCase();
+        const value = (attr.value || '').trim();
+        if (value && !shownKeys.includes(key)) {
+            lines.push({ label: attr.key.replace(/_/g, ' '), value });
+        }
     });
 
     return {
         title,
         lines,
-        openPath: viewable > 0 ? pathologySlideOpenPath(event) : undefined,
-        openLabel: `Open ${stain || 'pathology'} slides for ${sampleId ||
-            UNMATCHED_LABEL}`,
+        footnote,
+        // A known zero viewable count has nothing to open.
+        openPath:
+            countAttribute(event, 'IMAGE_COUNT') === 0
+                ? undefined
+                : pathologySlideOpenPath(event),
+        openLabel: `Open slides (${[stain, sampleId || UNMATCHED_LABEL]
+            .filter(Boolean)
+            .join(', ')})`,
     };
 }
 
@@ -256,7 +383,10 @@ export function pathologySlideMarkerSample(
     event: PathologySlideEvent,
     caseMetaData: ISampleMetaDeta
 ): PathologySlideMarkerSample | null {
-    const sampleId = pathologySlideSampleId(event);
+    const sampleId = pathologySlideSampleId(
+        event,
+        patientSamplesOf(caseMetaData)
+    );
     const label = sampleId ? caseMetaData.label[sampleId] : undefined;
     if (!sampleId || !label) {
         return null;
@@ -376,40 +506,63 @@ export function renderPathologySlideGroupMarker(
     );
 }
 
+const NOTE_STYLE: React.CSSProperties = { maxWidth: 320 };
+
 export const PathologySlideTooltip: React.FunctionComponent<{
     event: PathologySlideEvent;
     sampleTimelines: WsiSampleTimelineMap;
-}> = function({ event, sampleTimelines }) {
-    const content = buildPathologySlideTooltipContent(event, sampleTimelines);
+    isPatientSample: IsPatientSample;
+}> = function({ event, sampleTimelines, isPatientSample }) {
+    const content = buildPathologySlideTooltipContent(
+        event,
+        sampleTimelines,
+        isPatientSample
+    );
     return (
         <div data-test="pathology-slide-tooltip">
             <strong>{content.title}</strong>
             <table style={{ marginTop: 5 }}>
                 <tbody>
-                    {content.lines.map(line => (
-                        <tr key={line.label}>
-                            <th style={{ paddingRight: 10 }}>{line.label}</th>
-                            <td
-                                title={line.tooltip}
-                                style={
-                                    line.tooltip
-                                        ? { cursor: 'help' }
-                                        : undefined
-                                }
+                    {content.lines.map((line, i) => (
+                        <tr key={i}>
+                            <th
+                                scope="row"
+                                style={{
+                                    paddingRight: 10,
+                                    verticalAlign: 'top',
+                                }}
                             >
+                                {line.label}
+                            </th>
+                            <td>
                                 {line.value}
+                                {line.note && (
+                                    <div
+                                        className="text-muted small"
+                                        style={NOTE_STYLE}
+                                    >
+                                        {line.note}
+                                    </div>
+                                )}
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
+            {content.footnote && (
+                <div
+                    className="text-muted small"
+                    style={{ ...NOTE_STYLE, marginTop: 5 }}
+                >
+                    {content.footnote}
+                </div>
+            )}
             {content.openPath && (
                 <div style={{ marginTop: 5 }}>
                     <Link
                         to={content.openPath}
                         className="btn btn-default btn-xs"
                         aria-label={content.openLabel}
-                        title={content.openLabel}
                     >
                         Open slides
                     </Link>
@@ -456,6 +609,7 @@ export function pathologySlidesTrackConfig(
         trackTypeMatch: new RegExp(`^${PATHOLOGY_SLIDES_EVENT_TYPE}$`, 'i'),
         configureTrack: (root: TimelineTrackSpecification) => {
             const sampleTimelines = buildWsiSampleTimelineMap(clinicalEvents);
+            const isPatientSample = patientSamplesOf(caseMetaData);
             const markerSample = (e: TimelineEvent) =>
                 pathologySlideMarkerSample(e.event, caseMetaData);
 
@@ -469,7 +623,8 @@ export function pathologySlidesTrackConfig(
                     _.sortBy<TimelineEvent>(events, [
                         (e: TimelineEvent) => {
                             const label = parseInt(
-                                markerSample(e)?.label || ''
+                                markerSample(e)?.label || '',
+                                10
                             );
                             return isNaN(label)
                                 ? Number.POSITIVE_INFINITY
@@ -492,6 +647,7 @@ export function pathologySlidesTrackConfig(
                     <PathologySlideTooltip
                         event={e.event}
                         sampleTimelines={sampleTimelines}
+                        isPatientSample={isPatientSample}
                     />
                 );
 

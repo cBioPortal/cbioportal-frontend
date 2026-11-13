@@ -12,6 +12,7 @@ import PatientViewPathwayMapper from 'pages/patientView/pathwayMapper/PatientVie
 import ClinicalInformationPatientTable from 'pages/patientView/clinicalInformation/ClinicalInformationPatientTable';
 import ClinicalInformationSamples from 'pages/patientView/clinicalInformation/ClinicalInformationSamplesTable';
 import ClinicalEventsTables from 'pages/patientView/timeline/ClinicalEventsTables';
+import { timelineShowsPathologySlides } from 'pages/patientView/timeline/pathologySlidesTimeline';
 import ResourcesTab, {
     RESOURCES_TAB_NAME,
 } from 'pages/patientView/resources/ResourcesTab';
@@ -161,18 +162,32 @@ export function tabs(
     urlWrapper: PatientViewUrlWrapper
 ) {
     const tabs: JSX.Element[] = [];
+    const tileServerUrl = getServerConfig().wsi_tile_server_url;
+    const clinicalEvents = pageComponent.patientViewPageStore.clinicalEvents;
+    const timelinePathologySlides = clinicalEvents.isComplete
+        ? timelineShowsPathologySlides(clinicalEvents.result, {
+              configured: !!tileServerUrl,
+              pending:
+                  !!tileServerUrl &&
+                  pageComponent.patientViewPageStore.hasPathologySlides
+                      .isPending,
+              shown: pageComponent.shouldShowPathologySlides,
+          })
+        : undefined;
     tabs.push(
         <MSKTab key={0} id={PatientViewPageTabs.Summary} linkText="Summary">
             <LoadingIndicator
                 isLoading={
-                    pageComponent.patientViewPageStore.clinicalEvents.isPending
+                    clinicalEvents.isPending ||
+                    (clinicalEvents.isComplete &&
+                        timelinePathologySlides === undefined)
                 }
             />
 
             {!!sampleManager &&
-                pageComponent.patientViewPageStore.clinicalEvents.isComplete &&
-                pageComponent.patientViewPageStore.clinicalEvents.result
-                    .length > 0 && (
+                clinicalEvents.isComplete &&
+                clinicalEvents.result.length > 0 &&
+                timelinePathologySlides !== undefined && (
                     <div>
                         <div
                             style={{
@@ -193,9 +208,7 @@ export function tabs(
                                     pageComponent.patientViewPageStore
                                         .clinicalEvents.result
                                 }
-                                showPathologySlides={
-                                    !!getServerConfig().wsi_tile_server_url
-                                }
+                                showPathologySlides={timelinePathologySlides}
                                 sampleManager={sampleManager}
                                 width={WindowStore.size.width}
                                 samples={
@@ -648,7 +661,6 @@ export function tabs(
         </MSKTab>
     );
 
-    const tileServerUrl = getServerConfig().wsi_tile_server_url;
     if (tileServerUrl && pageComponent.shouldShowPathologySlides) {
         tabs.push(
             <MSKTab

@@ -1,5 +1,14 @@
-import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import { DAY_ZERO_TOOLTIP, formatDaysSinceDiagnosis } from './wsiNavUtils';
+
+/**
+ * The fields of a patient clinical event (the cBioPortal API's
+ * ClinicalEvent) that sample days are read from.
+ */
+export interface WsiClinicalEvent {
+    eventType?: string;
+    startNumberOfDaysSinceDiagnosis?: number;
+    attributes?: Array<{ key: string; value: string }>;
+}
 
 /** Per-sample acquisition and sequencing days from the patient timeline. */
 export interface WsiSampleTimeline {
@@ -21,7 +30,7 @@ const ACQUISITION_SAMPLE_KEYS = [
 ];
 const SEQUENCING_SAMPLE_KEYS = ['SAMPLE_ID'];
 
-function eventSampleIds(event: ClinicalEvent, keys: string[]): string[] {
+function eventSampleIds(event: WsiClinicalEvent, keys: string[]): string[] {
     return (event.attributes || [])
         .filter(attr => keys.includes(attr.key) && !!attr.value)
         .map(attr => attr.value);
@@ -44,10 +53,13 @@ function keepEarliest(
 /**
  * Builds sample acquisition and sequencing days (days since diagnosis, the
  * patient timeline coordinate) from clinical events. When a sample has
- * several events of one kind, the earliest day wins.
+ * several events of one kind, the earliest day wins whatever the event
+ * order: a sample is acquired before any later re-collection or re-run is
+ * recorded, and the patient view's sample ordering (SampleManager) uses the
+ * same rule.
  */
 export function buildWsiSampleTimelineMap(
-    events?: ClinicalEvent[] | null
+    events?: WsiClinicalEvent[] | null
 ): Map<string, WsiSampleTimeline> {
     const map = new Map<string, WsiSampleTimeline>();
     (events || []).forEach(event => {

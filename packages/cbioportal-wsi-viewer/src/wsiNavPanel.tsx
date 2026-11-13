@@ -5,6 +5,7 @@ import {
     PathologySlideMatchFilter,
     Sample,
     Slide,
+    UNMATCHED_SAMPLE_ID,
     WsiStainFilter,
     WsiSlideSource,
 } from './wsiViewerTypes';
@@ -525,7 +526,7 @@ function WsiNavPanelComponent({
                             sampleIndex={index}
                             selectedSlide={selectedSlide}
                             sampleTimeline={
-                                sample.sample_id === 'UNMATCHED'
+                                sample.sample_id === UNMATCHED_SAMPLE_ID
                                     ? undefined
                                     : sampleTimelines?.get(sample.sample_id)
                             }

@@ -47,6 +47,28 @@ describe('SampleManager', () => {
             1
         );
     });
+
+    it('keeps the earliest specimen day of a sample whatever the event order', () => {
+        const at = (days: number) => ({
+            ...getClinicalEvent('TCGA-BK-A0CC-01'),
+            startNumberOfDaysSinceDiagnosis: days,
+        });
+        const sampleIds = ['TCGA-BK-A0CC-01'];
+        assert.equal(
+            getSpecimenCollectionDayMap(sampleIds, [
+                at(30),
+                at(-5),
+                at(12),
+            ]).get('TCGA-BK-A0CC-01'),
+            -5
+        );
+        assert.equal(
+            getSpecimenCollectionDayMap(sampleIds, [at(-5), at(30)]).get(
+                'TCGA-BK-A0CC-01'
+            ),
+            -5
+        );
+    });
 });
 
 function getClinicalEvent(sampleID: string): ClinicalEvent {

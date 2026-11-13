@@ -1,6 +1,8 @@
 import * as React from 'react';
-import { ClinicalEvent } from 'cbioportal-ts-api-client';
-import { buildWsiSampleTimelineMap } from './wsiSampleTimeline';
+import {
+    buildWsiSampleTimelineMap,
+    WsiClinicalEvent,
+} from './wsiSampleTimeline';
 import WSIViewer, { WsiViewerProps as ViewerProps } from './WSIViewer';
 
 export type WsiViewerProps = Omit<ViewerProps, 'sampleTimelines'> & {
@@ -8,7 +10,7 @@ export type WsiViewerProps = Omit<ViewerProps, 'sampleTimelines'> & {
      * Patient clinical events; sample acquisition and sequencing days are
      * read from them to relate each slide's procedure to its sample.
      */
-    clinicalEvents?: ClinicalEvent[];
+    clinicalEvents?: WsiClinicalEvent[];
 };
 
 /**

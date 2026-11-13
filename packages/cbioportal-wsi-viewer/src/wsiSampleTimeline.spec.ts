@@ -1,29 +1,24 @@
-import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import { DAY_ZERO_TOOLTIP } from './wsiNavUtils';
 import {
     buildWsiSampleTimelineMap,
     sampleSequencedText,
     sampleSequencedTooltip,
+    WsiClinicalEvent,
 } from './wsiSampleTimeline';
 
 function event(
     eventType: string,
     startDays: number,
     attributes: Record<string, string>
-): ClinicalEvent {
-    return ({
+): WsiClinicalEvent {
+    return {
         eventType,
         startNumberOfDaysSinceDiagnosis: startDays,
-        endNumberOfDaysSinceDiagnosis: startDays,
-        patientId: 'P-1',
-        studyId: 'study',
-        uniquePatientKey: 'P-1',
-        uniqueSampleKey: '',
         attributes: Object.entries(attributes).map(([key, value]) => ({
             key,
             value,
         })),
-    } as unknown) as ClinicalEvent;
+    };
 }
 
 describe('buildWsiSampleTimelineMap', () => {

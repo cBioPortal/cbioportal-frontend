@@ -7,6 +7,7 @@ export { WsiViewerProps } from './WsiViewerEntry';
 export { DAY_ZERO_TOOLTIP, formatDaysSinceDiagnosis } from './wsiNavUtils';
 export {
     buildWsiSampleTimelineMap,
+    WsiClinicalEvent,
     WsiSampleTimeline,
     WsiSampleTimelineMap,
 } from './wsiSampleTimeline';
