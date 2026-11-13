@@ -29,6 +29,18 @@ export type TutorialPoint = {
     target?: Target;
     /** more elements the same point refers to, outlined but not highlighted */
     also?: Target[];
+    /** an element shown as hovered while the step is open */
+    hover?: Target;
+};
+
+/** A user action, as the tutorial capture runner replays it. */
+export type TutorialAction = {
+    click?: Target;
+    hover?: Target;
+    type?: { into: Target; text: string };
+    scroll_to?: Target;
+    press?: string;
+    wait?: number | Target;
 };
 
 export type TutorialLink = { label: string; text?: string; url?: string };
@@ -39,6 +51,8 @@ export type TutorialBeat = {
     /** the page this beat happens on; the tour navigates there */
     page?: string;
     points?: TutorialPoint[];
+    /** the actions that lead to the state the beat shows: open a menu, apply a filter */
+    reveal?: TutorialAction[];
     bullets?: string[];
     foot?: string;
     links?: TutorialLink[];

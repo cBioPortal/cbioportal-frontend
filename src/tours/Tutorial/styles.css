@@ -35,7 +35,7 @@
 
 .tutorial-tour-proxy,
 .tutorial-tour-also {
-    position: absolute;
+    position: fixed;
     pointer-events: none;
 }
 

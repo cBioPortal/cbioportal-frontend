@@ -1,10 +1,17 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import Tour from 'reactour';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import { closeBeat, reveal } from './actions';
 import { findAll, targetBox } from './targets';
 import { navigationFor, tutorialSteps } from './steps';
-import { Box, Target, TutorialScript, TutorialStep } from './types';
+import {
+    Box,
+    Target,
+    TutorialBeat,
+    TutorialScript,
+    TutorialStep,
+} from './types';
 import tutorial1 from './tutorial1';
 import '../Tour/styles.css';
 import './styles.css';
@@ -19,6 +26,8 @@ const STORAGE_KEY = 'web-tour-tutorial';
 const RESUME_MS = 12 * 60 * 60 * 1000;
 const PROXY_ID = 'tutorial-tour-target';
 const MEASURE_MS = 500;
+// how long a target may be missing before the tour does the beat's actions to show it
+const REVEAL_AFTER_MS = 1200;
 
 type Progress = { id: string; step: number };
 
@@ -57,14 +66,17 @@ function saveProgress(p: Progress | null) {
     }
 }
 
-/** a viewport box in document px, so it stays put when the window scrolls */
-function toPage(b: Box): Box {
-    return [
-        b[0] + window.scrollX,
-        b[1] + window.scrollY,
-        b[2] + window.scrollX,
-        b[3] + window.scrollY,
-    ];
+function onScreen(b: Box): boolean {
+    return (
+        b[2] > 0 &&
+        b[3] > 0 &&
+        b[0] < window.innerWidth &&
+        b[1] < window.innerHeight
+    );
+}
+
+function rounded(b: Box | null): Box | null {
+    return b && (b.map(Math.round) as Box);
 }
 
 function boxStyle(b: Box): React.CSSProperties {
@@ -92,8 +104,8 @@ const StepContent: React.FunctionComponent<{
             {point && <p>{point.say}</p>}
             {point && point.target && !found && (
                 <p className="tutorial-missing">
-                    This part of the page is not shown yet. Follow the previous
-                    steps, or click Next.
+                    Showing this part of the page... If it doesn't appear,
+                    follow the previous steps, or click Next.
                 </p>
             )}
             {beat.bullets && (
@@ -142,6 +154,7 @@ export default function TutorialTour() {
     const current = progress ? progress.step : null;
     const [box, setBox] = useState<Box | null>(null);
     const [also, setAlso] = useState<Box[]>([]);
+    const shownBeat = useRef<TutorialBeat | null>(null);
 
     useEffect(() => {
         saveProgress(progress);
@@ -152,29 +165,60 @@ export default function TutorialTour() {
             return;
         }
         const step = steps[current];
+        const left = shownBeat.current;
+        shownBeat.current = step.beat;
         const routing = getBrowserWindow().routingStore;
-        const dest = navigationFor(step.beat.page, routing.location);
-        if (dest) {
-            routing.push(dest);
-        }
+        (left && left !== step.beat ? closeBeat(left) : Promise.resolve()).then(
+            () => {
+                const dest = navigationFor(step.beat.page, routing.location);
+                if (dest) {
+                    routing.push(dest);
+                }
+            }
+        );
         const target = step.point && step.point.target;
+        const hoverTarget = step.point && step.point.hover;
+        const hovered: Element[] = [];
+        // the element itself: the script's pads fit the window its captures were taken in
+        const boxOf = (t: Target) => targetBox(t, false, false);
+        const actions = step.beat.reveal || [];
         let scrolled = false;
+        let missingSince = Date.now();
+        let revealed = false;
+        let cancelled = false;
         const same = (a: Box | null, b: Box | null) =>
             a === b || (!!a && !!b && a.every((v, i) => v === b[i]));
         const measure = () => {
-            let b = target ? targetBox(target) : null;
+            const h = hoverTarget && findAll(hoverTarget)[0];
+            if (h && !h.hasAttribute('data-tour-hover')) {
+                h.setAttribute('data-tour-hover', '');
+                h.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+                hovered.push(h);
+            }
+            let b = target ? boxOf(target) : null;
             if (b && !scrolled) {
                 // scroll containers inside the page too, not only the window
                 scrolled = true;
                 findAll(target!)[0].scrollIntoView({ block: 'nearest' });
-                b = targetBox(target!);
+                b = boxOf(target!);
             }
-            const pb = b && toPage(b);
-            setBox(prev => (same(prev, pb) ? prev : pb));
+            if (target && !b && !revealed && actions.length) {
+                if (Date.now() - missingSince > REVEAL_AFTER_MS) {
+                    revealed = true;
+                    reveal(
+                        actions,
+                        () => !!boxOf(target),
+                        () => cancelled
+                    ).then(measure);
+                }
+            } else if (b) {
+                missingSince = Date.now();
+            }
+            const vb = rounded(b);
+            setBox(prev => (same(prev, vb) ? prev : vb));
             const ab = ((step.point && step.point.also) || [])
-                .map((t: Target) => targetBox(t))
-                .filter((x): x is Box => !!x)
-                .map(toPage);
+                .map((t: Target) => rounded(boxOf(t)))
+                .filter((x): x is Box => !!x);
             setAlso(prev =>
                 prev.length === ab.length &&
                 prev.every((p, i) => same(p, ab[i]))
@@ -182,9 +226,26 @@ export default function TutorialTour() {
                     : ab
             );
         };
+        let frame = 0;
+        const onScroll = () => {
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(measure);
+        };
         measure();
         const timer = setInterval(measure, MEASURE_MS);
-        return () => clearInterval(timer);
+        window.addEventListener('scroll', onScroll, true);
+        window.addEventListener('resize', onScroll);
+        return () => {
+            cancelled = true;
+            clearInterval(timer);
+            cancelAnimationFrame(frame);
+            window.removeEventListener('scroll', onScroll, true);
+            window.removeEventListener('resize', onScroll);
+            for (const h of hovered) {
+                h.removeAttribute('data-tour-hover');
+                h.dispatchEvent(new MouseEvent('mouseout', { bubbles: true }));
+            }
+        };
     }, [current, steps]);
 
     if (!progress || current == null) {
@@ -192,7 +253,8 @@ export default function TutorialTour() {
     }
 
     const tourSteps = steps.map((step, i) => ({
-        selector: i === current && box ? '#' + PROXY_ID : '',
+        // only a target on screen: reactour would scroll back to one the user scrolled away from
+        selector: i === current && box && onScreen(box) ? '#' + PROXY_ID : '',
         content: (
             <StepContent
                 step={step}
@@ -234,6 +296,7 @@ export default function TutorialTour() {
                     setProgress(p => p && { ...p, step })
                 }
                 update={`${current}:${box ? box.join(',') : ''}`}
+                inViewThreshold={-100000}
                 onRequestClose={() => setProgress(null)}
                 rounded={8}
                 maskSpace={4}

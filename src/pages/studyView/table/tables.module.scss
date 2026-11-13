@@ -107,7 +107,9 @@ $study-view-table-icon-size: 10px;
 .row {
     font-size: 13px;
 
-    &:hover {
+    // data-tour-hover: a guided tour shows the row as hovered
+    &:hover,
+    &[data-tour-hover] {
         .addGeneUI {
             @extend %addGeneUIHover;
         }

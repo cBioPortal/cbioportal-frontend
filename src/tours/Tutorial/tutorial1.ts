@@ -113,6 +113,24 @@ const tutorial1: TutorialScript = {
                     ],
                 },
             ],
+            reveal: [
+                {
+                    type: {
+                        into: '[data-test=study-search-input]',
+                        text: 'lower grade glioma',
+                    },
+                },
+                {
+                    click: {
+                        css: 'input',
+                        within: {
+                            css: '[data-test=StudySelect]',
+                            has:
+                                'Brain Lower Grade Glioma (TCGA, PanCancer Atlas)',
+                        },
+                    },
+                },
+            ],
         },
         {
             title: 'Selecting a study: filter by data type',
@@ -161,6 +179,23 @@ const tutorial1: TutorialScript = {
                                 'Brain Lower Grade Glioma (TCGA, PanCancer Atlas)',
                         },
                         pad: 3,
+                    },
+                },
+            ],
+            reveal: [
+                {
+                    click: '[data-test=dropdown-data-type-filter] button',
+                },
+                {
+                    click: {
+                        css: 'label',
+                        text: 'RNA-Seq',
+                    },
+                },
+                {
+                    scroll_to: {
+                        css: '[data-test=StudySelect]',
+                        has: 'Brain Lower Grade Glioma (TCGA, PanCancer Atlas)',
                     },
                 },
             ],
@@ -273,6 +308,14 @@ const tutorial1: TutorialScript = {
                     },
                 },
             ],
+            reveal: [
+                {
+                    click: {
+                        css: 'button',
+                        text: 'Groups ▾',
+                    },
+                },
+            ],
         },
         {
             title: 'Summary tab: adding charts',
@@ -315,6 +358,14 @@ const tutorial1: TutorialScript = {
                     target: {
                         css: '[data-test=save-chart-settings-to-session]',
                         pad: [1, 1, 1, 0],
+                    },
+                },
+            ],
+            reveal: [
+                {
+                    click: {
+                        css: 'button',
+                        text: 'Charts ▾',
                     },
                 },
             ],
@@ -381,6 +432,18 @@ const tutorial1: TutorialScript = {
                     },
                 },
             ],
+            reveal: [
+                {
+                    hover: {
+                        css: '.chartTitle',
+                        within: '[data-test=chart-container-SEX]',
+                    },
+                },
+                {
+                    hover:
+                        '[data-test=chart-container-SEX] [data-test=chart-header-hamburger-icon]',
+                },
+            ],
         },
         {
             title: 'Summary tab: selecting a subset of samples',
@@ -413,6 +476,25 @@ const tutorial1: TutorialScript = {
                     say:
                         'All charts update to the IDH1-mutant samples. Add more filters to narrow down.',
                     target: '[data-test=selected-info]',
+                },
+            ],
+            reveal: [
+                {
+                    click: {
+                        css: 'input',
+                        within: {
+                            css: '[role=row]',
+                            has: 'IDH1',
+                            within: '[data-test=mutations-table]',
+                        },
+                    },
+                },
+                {
+                    click: {
+                        css: 'button',
+                        text: 'Select Samples',
+                        within: '[data-test=mutations-table]',
+                    },
                 },
             ],
         },
@@ -457,6 +539,11 @@ const tutorial1: TutorialScript = {
                     },
                 },
             ],
+            reveal: [
+                {
+                    click: 'a.tabAnchor_clinicalData',
+                },
+            ],
         },
         {
             title: 'CN Segments tab',
@@ -479,6 +566,11 @@ const tutorial1: TutorialScript = {
                         css: 'div.igv-column-container',
                         pad: [4, -1, -10, -20],
                     },
+                },
+            ],
+            reveal: [
+                {
+                    click: 'a.tabAnchor_cnSegments',
                 },
             ],
         },
@@ -530,6 +622,17 @@ const tutorial1: TutorialScript = {
                         css:
                             '[data-test=PlotsTabPlotDiv] .btn.btn-default.btn-xs',
                         pad: [0, 0, 1, 0],
+                    },
+                },
+            ],
+            reveal: [
+                {
+                    click: 'a.tabAnchor_plots',
+                },
+                {
+                    click: {
+                        css: 'a',
+                        text: 'Mut# vs Dx',
                     },
                 },
             ],
@@ -593,6 +696,14 @@ const tutorial1: TutorialScript = {
                     },
                 },
             ],
+            reveal: [
+                {
+                    click: {
+                        css: 'a.tabAnchor',
+                        text: 'Slide Microscopy',
+                    },
+                },
+            ],
         },
         {
             title: 'Study view: run a query',
@@ -617,6 +728,11 @@ const tutorial1: TutorialScript = {
                         ],
                         pad: [10, 5, -34, 5],
                     },
+                    hover: {
+                        css: '[role=row]',
+                        has: 'IDH1',
+                        within: '[data-test=mutations-table]',
+                    },
                 },
                 {
                     n: 2,
@@ -628,6 +744,14 @@ const tutorial1: TutorialScript = {
                     say:
                         'Then click Query. See Tutorial 2: Single Study Query.',
                     target: '[data-test=geneSetSubmit]',
+                },
+            ],
+            reveal: [
+                {
+                    type: {
+                        into: '[data-test=geneSet]',
+                        text: 'IDH1 TP53 ATRX',
+                    },
                 },
             ],
         },

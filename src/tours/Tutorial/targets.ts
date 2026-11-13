@@ -77,9 +77,14 @@ function padOf(t: TargetSpec): Box {
 /**
  * The box around the elements a target finds, plus its pad, in viewport px; null when any
  * part of it is missing. With clip, the box is clipped to the window before it is padded,
- * as the capture runner measures it.
+ * as the capture runner measures it. Without withPad, the pad is left off: pads reproduce
+ * boxes drawn on a capture of one window size.
  */
-export function targetBox(target: Target, clip = false): Box | null {
+export function targetBox(
+    target: Target,
+    clip = false,
+    withPad = true
+): Box | null {
     const t = spec(target);
     const els = t.union ? t.union.map(u => findAll(u)[0]) : findAll(t);
     if (!els.length || els.some(e => !e)) {
@@ -104,6 +109,6 @@ export function targetBox(target: Target, clip = false): Box | null {
             Math.min(window.innerHeight, b[3]),
         ].map(Math.round) as Box;
     }
-    const p = padOf(t);
+    const p = withPad ? padOf(t) : [0, 0, 0, 0];
     return [b[0] - p[0], b[1] - p[1], b[2] + p[2], b[3] + p[3]];
 }
