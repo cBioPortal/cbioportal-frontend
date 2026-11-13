@@ -1,4 +1,8 @@
-import { DAY_ZERO_TOOLTIP, formatDaysSinceDiagnosis } from './wsiNavUtils';
+import {
+    DAY_ZERO_TOOLTIP,
+    formatDaysSinceDiagnosis,
+    formatDaysSinceDiagnosisShort,
+} from './wsiNavUtils';
 
 /**
  * The fields of a patient clinical event (the cBioPortal API's
@@ -81,7 +85,7 @@ export function buildWsiSampleTimelineMap(
     return map;
 }
 
-/** Tooltip for a sample's "sequenced d+7" label. */
+/** Tooltip for a sample's sequencing day label, with the exact day. */
 export function sampleSequencedTooltip(
     timeline: WsiSampleTimeline | undefined
 ): string | undefined {
@@ -92,11 +96,14 @@ export function sampleSequencedTooltip(
         : undefined;
 }
 
-/** "sequenced d+7" for a sample group header, or null when unknown. */
+/**
+ * The sample's sequencing day for its slide list header, e.g. "d+7" or
+ * "+3.4y"; "sequenced" is left to the tooltip. Null when unknown.
+ */
 export function sampleSequencedText(
     timeline: WsiSampleTimeline | undefined
 ): string | null {
     return timeline?.sequencingDays != null
-        ? `sequenced ${formatDaysSinceDiagnosis(timeline.sequencingDays)}`
+        ? formatDaysSinceDiagnosisShort(timeline.sequencingDays)
         : null;
 }

@@ -80,14 +80,12 @@ describe('sample timeline text', () => {
         expect(sampleSequencedTooltip({ acquisitionDays: 3 })).toBeUndefined();
     });
 
-    it('describes the sample sequencing day in d-notation', () => {
-        expect(sampleSequencedText({ sequencingDays: 7 })).toBe(
-            'sequenced d+7'
-        );
-        expect(sampleSequencedText({ sequencingDays: 0 })).toBe('sequenced d0');
-        expect(sampleSequencedText({ sequencingDays: -14 })).toBe(
-            'sequenced d-14'
-        );
+    it('gives the sample sequencing day, in years past a year', () => {
+        expect(sampleSequencedText({ sequencingDays: 7 })).toBe('d+7');
+        expect(sampleSequencedText({ sequencingDays: 0 })).toBe('d0');
+        expect(sampleSequencedText({ sequencingDays: -14 })).toBe('d-14');
+        expect(sampleSequencedText({ sequencingDays: 1242 })).toBe('+3.4y');
+        expect(sampleSequencedText({ sequencingDays: -2393 })).toBe('-6.6y');
         expect(sampleSequencedText({ acquisitionDays: 3 })).toBeNull();
         expect(sampleSequencedText(undefined)).toBeNull();
     });

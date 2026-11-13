@@ -739,7 +739,7 @@ function SampleNode({
                 tabIndex={0}
                 aria-expanded={open}
                 aria-label={`${sample.sample_id || 'Sample'} slides${
-                    sequencedText ? `, ${sequencedText}` : ''
+                    sequencedText ? `, sequenced ${sequencedText}` : ''
                 }`}
                 style={{
                     display: 'flex',

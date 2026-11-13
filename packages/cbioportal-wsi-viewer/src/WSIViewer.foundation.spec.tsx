@@ -163,7 +163,7 @@ describe('WSIViewer foundation behavior', () => {
                         'data-testid': 'wsi-sample-sequenced-S-1',
                     })
                 )
-            ).toBe('sequenced d+7');
+            ).toBe('d+7');
         });
 
         it('has no timeline context without timeline data', () => {

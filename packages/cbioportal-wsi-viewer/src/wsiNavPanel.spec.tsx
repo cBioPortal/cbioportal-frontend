@@ -1126,7 +1126,7 @@ describe('WsiNavPanel', () => {
             );
 
             expect(findButtonText(renderer, 'wsi-sample-sequenced-S-1')).toBe(
-                'sequenced d+7'
+                'd+7'
             );
             const tooltip = renderer.root
                 .findAllByType(DefaultTooltip)
@@ -1143,6 +1143,11 @@ describe('WsiNavPanel', () => {
                     TestRenderer.create(tooltip.props.overlay).toJSON()
                 )
             ).toContain("day 0 (d0) of the patient's timeline");
+            expect(
+                flattenRenderedText(
+                    TestRenderer.create(tooltip.props.overlay).toJSON()
+                )
+            ).toContain('sequenced on d+7');
         });
 
         it('shows no sequencing day without one, or for unmatched slides', () => {

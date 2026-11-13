@@ -2,6 +2,7 @@ import {
     compareSamplesForNavigation,
     fmtFileSize,
     formatDaysSinceDiagnosis,
+    formatDaysSinceDiagnosisShort,
 } from './wsiNavUtils';
 import { makeSample } from './wsiTestFixtures';
 
@@ -19,6 +20,17 @@ describe('wsiNavUtils', () => {
             expect(formatDaysSinceDiagnosis(0)).toBe('d0');
             expect(formatDaysSinceDiagnosis(7)).toBe('d+7');
             expect(formatDaysSinceDiagnosis(-242)).toBe('d-242');
+        });
+    });
+
+    describe('formatDaysSinceDiagnosisShort', () => {
+        it('keeps d-notation within a year and uses years past it', () => {
+            expect(formatDaysSinceDiagnosisShort(0)).toBe('d0');
+            expect(formatDaysSinceDiagnosisShort(364)).toBe('d+364');
+            expect(formatDaysSinceDiagnosisShort(-364)).toBe('d-364');
+            expect(formatDaysSinceDiagnosisShort(365)).toBe('+1y');
+            expect(formatDaysSinceDiagnosisShort(1096)).toBe('+3y');
+            expect(formatDaysSinceDiagnosisShort(-2393)).toBe('-6.6y');
         });
     });
 

@@ -6,6 +6,16 @@ export function formatDaysSinceDiagnosis(days: number): string {
     return days > 0 ? `d+${days}` : `d${days}`;
 }
 
+/**
+ * A timeline day short enough for the slide list: d-notation within a year,
+ * else years to one decimal (-6.5y, +3y), as on the patient timeline's axis.
+ */
+export function formatDaysSinceDiagnosisShort(days: number): string {
+    if (Math.abs(days) < 365) return formatDaysSinceDiagnosis(days);
+    const years = Math.round((days / 365.25) * 10) / 10;
+    return `${years > 0 ? '+' : ''}${years}y`;
+}
+
 /** Explains the day notation wherever a sample day is shown. */
 export const DAY_ZERO_TOOLTIP =
     "Days are counted from day 0 (d0) of the patient's timeline: " +
