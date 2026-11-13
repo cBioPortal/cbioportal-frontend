@@ -1,3 +1,62 @@
+import { ICivicVariantIndex, ICivicVariantSummary } from 'cbioportal-utils';
+import { OncoKbAPI } from 'oncokb-ts-api-client';
+import { WsiHotspotFlags, WsiHotspotQuery } from './wsiViewerTypes';
+
+/** The OncoKB annotation endpoints the viewer calls. */
+export type WsiOncoKbClient = Pick<
+    OncoKbAPI,
+    | 'annotateMutationsByProteinChangePostUsingPOST_1'
+    | 'annotateCopyNumberAlterationsPostUsingPOST_1'
+    | 'annotateStructuralVariantsPostUsingPOST_1'
+>;
+
+/**
+ * Host services for the molecular tables' OncoKB and CIViC annotations and
+ * mutation type colors. Without them, the tables show the portal's sample
+ * molecular data unannotated.
+ */
+export interface WsiMolecularServices {
+    /**
+     * Whether to annotate variants with OncoKB. Read each time annotations
+     * are requested or drawn, so a configuration change after startup holds.
+     */
+    showOncoKb: () => boolean;
+    /** Whether to annotate variants with CIViC; read like `showOncoKb`. */
+    showCivic: () => boolean;
+    /**
+     * OncoKB API URL, also the namespace of the viewer's annotation caches.
+     * An empty URL disables OncoKB annotations.
+     */
+    getOncoKbApiUrl: () => string;
+    /**
+     * OncoKB client for that URL. Annotations are optional, so failures
+     * should not reach the host's global error reporting.
+     */
+    getOncoKbClient: () => WsiOncoKbClient;
+    /** CIViC variants of one gene for a copy number alteration (2 or -2). */
+    getCivicCnaVariants: (
+        alteration: number,
+        geneSymbol: string,
+        civicVariants: ICivicVariantIndex
+    ) => { [name: string]: ICivicVariantSummary };
+    /** Simplified mutation type (`missense`, `frameshift`, ...). */
+    getSimplifiedMutationType: (mutationType: string) => string;
+    /**
+     * Whether to flag Cancer Hotspots; read like `showOncoKb`. A host without
+     * `getHotspots` shows no hotspot flags beyond OncoKB's.
+     */
+    showHotspots?: () => boolean;
+    /**
+     * Each mutation's Cancer Hotspots flags, in the order given, for the
+     * study's reference genome (`hg19`, `hg38`, ...; null when unknown). A
+     * rejected promise leaves the mutations unflagged.
+     */
+    getHotspots?: (
+        mutations: ReadonlyArray<WsiHotspotQuery>,
+        referenceGenome: string | null
+    ) => Promise<WsiHotspotFlags[]>;
+}
+
 /**
  * Host services shared by every viewer on the page. Hosts install them once,
  * at startup, with `configureWsiViewerRuntime`.
@@ -20,6 +79,11 @@ export interface WsiViewerConfig {
      * global `fetch` when unset. OpenSeadragon loads tiles itself.
      */
     fetchImpl?: typeof fetch;
+    /**
+     * Molecular annotation services. Portal molecular data is fetched
+     * through `buildApiUrl` and `fetchImpl` either way.
+     */
+    molecular?: WsiMolecularServices;
 }
 
 /** Services read by the viewer's module-level caches and controller. */
@@ -28,6 +92,7 @@ export interface WsiViewerRuntime {
     buildPageUrl: (path: string, query: Record<string, string>) => string;
     fetchImpl: typeof fetch;
     osdPrefixUrl?: string;
+    molecular?: WsiMolecularServices;
 }
 
 // Resolves the global at call time so a replaced `window.fetch` is used.
@@ -66,6 +131,7 @@ export function configureWsiViewerRuntime(config: WsiViewerConfig): void {
         buildPageUrl: config.buildPageUrl ?? rootRelativePageUrl,
         fetchImpl: config.fetchImpl ?? globalFetch,
         osdPrefixUrl: config.osdPrefixUrl,
+        molecular: config.molecular,
     };
 }
 

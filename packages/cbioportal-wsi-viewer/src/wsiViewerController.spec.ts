@@ -124,6 +124,8 @@ function makeHarness() {
         getTileServerBase: () => 'https://tiles.example.com',
         getViewerContainerElement: () => container,
         chooseInitialServableSlide: () => undefined,
+        setMutationDataStatus: jest.fn(),
+        runSampleEnrichment: jest.fn(() => Promise.resolve()),
         reportInitialSlideLoadPerformance: jest.fn(),
     };
     const viewers: FakeViewer[] = [];

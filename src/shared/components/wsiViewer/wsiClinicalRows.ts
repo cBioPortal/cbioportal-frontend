@@ -25,7 +25,8 @@ export interface WsiPatientClinicalData {
 /**
  * Attributes left out of the Clinical section: sequencing QC and
  * administrative fields that say nothing about the patient or the tissue on
- * the slide, and PATH_SLIDE_EXISTS, which the viewer itself already answers.
+ * the slide, PATH_SLIDE_EXISTS, which the viewer itself already answers,
+ * and the molecular summary the Molecular section already shows.
  */
 const WSI_CLINICAL_EXCLUDED_ATTRIBUTE_IDS: ReadonlySet<string> = new Set([
     'GENE_PANEL',
@@ -34,6 +35,12 @@ const WSI_CLINICAL_EXCLUDED_ATTRIBUTE_IDS: ReadonlySet<string> = new Set([
     'PATH_SLIDE_EXISTS',
     'SAMPLE_COVERAGE',
     'SOMATIC_STATUS',
+    // Shown in the sidebar's Molecular section.
+    'METASTATIC_SITE',
+    'MSI_SCORE',
+    'MSI_TYPE',
+    'TMB_NONSYNONYMOUS',
+    'TUMOR_PURITY',
 ]);
 
 /** Consent flags, e.g. PARTA_CONSENTED_12_245. */
@@ -243,13 +250,28 @@ export function buildWsiPatientClinicalRows({
     ];
 }
 
-// A failed request is retried the next time it is needed.
-const clinicalRowsRequests = createPromiseCache<WsiClinicalRow[]>();
+/** The patient's sidebar rows and the sample data they were built from. */
+export interface WsiClinicalState {
+    rows: WsiClinicalRow[];
+    sampleData: ReadonlyArray<ClinicalData>;
+}
 
-function fetchWsiClinicalRows(
+function buildWsiClinicalState(
+    clinicalData: WsiPatientClinicalData
+): WsiClinicalState {
+    return {
+        rows: buildWsiPatientClinicalRows(clinicalData),
+        sampleData: clinicalData.sampleData,
+    };
+}
+
+// A failed request is retried the next time it is needed.
+const clinicalRowsRequests = createPromiseCache<WsiClinicalState>();
+
+function fetchWsiClinicalState(
     studyId: string,
     patientId: string
-): Promise<WsiClinicalRow[]> {
+): Promise<WsiClinicalState> {
     return clinicalRowsRequests.get(
         `${studyId}\u0000${patientId}`,
         async () => {
@@ -278,7 +300,7 @@ function fetchWsiClinicalRows(
                           } as ClinicalDataMultiStudyFilter,
                       })
                     : [];
-            return buildWsiPatientClinicalRows({
+            return buildWsiClinicalState({
                 attributes,
                 patientData,
                 sampleData,
@@ -292,27 +314,24 @@ export function clearWsiClinicalRowsCache(): void {
 }
 
 /**
- * The patient's Clinical rows; undefined while loading or after a failed
- * request, which hides the section. Rows come from `clinicalData` when the
- * host has loaded it (`null` while it is still loading); when it is unset
- * the patient's data is fetched here.
+ * The patient's Clinical rows and sample data; undefined while loading or
+ * after a failed request, which hides the section. They come from
+ * `clinicalData` when the host has loaded it (`null` while it is still
+ * loading); when it is unset the patient's data is fetched here.
  */
-export function useWsiClinicalRows(
+export function useWsiClinicalData(
     studyId: string,
     patientId: string,
     clinicalData?: WsiPatientClinicalData | null
-): WsiClinicalRow[] | undefined {
+): WsiClinicalState | undefined {
     const [state, setState] = React.useState<{
         key: string;
-        rows: WsiClinicalRow[];
+        clinical: WsiClinicalState;
     }>();
     const key = `${studyId}\u0000${patientId}`;
     const hostLoads = clinicalData !== undefined;
-    const hostRows = React.useMemo(
-        () =>
-            clinicalData
-                ? buildWsiPatientClinicalRows(clinicalData)
-                : undefined,
+    const hostState = React.useMemo(
+        () => (clinicalData ? buildWsiClinicalState(clinicalData) : undefined),
         [
             clinicalData?.attributes,
             clinicalData?.patientData,
@@ -323,9 +342,9 @@ export function useWsiClinicalRows(
     React.useEffect(() => {
         if (hostLoads || !studyId || !patientId) return;
         let cancelled = false;
-        fetchWsiClinicalRows(studyId, patientId).then(
-            rows => {
-                if (!cancelled) setState({ key, rows });
+        fetchWsiClinicalState(studyId, patientId).then(
+            clinical => {
+                if (!cancelled) setState({ key, clinical });
             },
             error => {
                 console.error(
@@ -339,6 +358,15 @@ export function useWsiClinicalRows(
         };
     }, [key, hostLoads]);
 
-    if (hostLoads) return hostRows;
-    return state?.key === key ? state.rows : undefined;
+    if (hostLoads) return hostState;
+    return state?.key === key ? state.clinical : undefined;
+}
+
+/** The patient's Clinical rows; see `useWsiClinicalData`. */
+export function useWsiClinicalRows(
+    studyId: string,
+    patientId: string,
+    clinicalData?: WsiPatientClinicalData | null
+): WsiClinicalRow[] | undefined {
+    return useWsiClinicalData(studyId, patientId, clinicalData)?.rows;
 }

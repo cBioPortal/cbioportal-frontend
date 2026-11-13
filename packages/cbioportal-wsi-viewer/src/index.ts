@@ -1,7 +1,12 @@
 // Light entry: types and helpers that hosts import statically. The viewer
 // itself is in the `cbioportal-wsi-viewer/viewer` entry, loaded lazily.
 export * from './wsiViewerTypes';
-export { configureWsiViewerRuntime, WsiViewerConfig } from './wsiViewerConfig';
+export {
+    configureWsiViewerRuntime,
+    WsiMolecularServices,
+    WsiOncoKbClient,
+    WsiViewerConfig,
+} from './wsiViewerConfig';
 // Type-only: the component itself is in the viewer entry.
 export { WsiViewerProps } from './WsiViewerEntry';
 export {

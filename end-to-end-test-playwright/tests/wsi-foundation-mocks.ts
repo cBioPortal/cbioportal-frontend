@@ -211,6 +211,7 @@ export async function installFoundationMocks(
                 : [];
         return route.fulfill(json(rows));
     });
+    // The smoke study has no molecular profiles.
     await page.route(`**/api/studies/${STUDY_ID}/molecular-profiles**`, route =>
         route.fulfill({
             status: 200,
