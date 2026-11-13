@@ -3,6 +3,7 @@ import { Sample } from 'cbioportal-ts-api-client';
 import { ClinicalDataType, ClinicalDataTypeEnum } from '../../StudyViewUtils';
 import Pluralize from 'pluralize';
 import { CustomChartIdentifierWithValue } from 'shared/api/session-service/sessionServiceModels';
+import { CaseIdAlias, getAliasMap } from 'shared/lib/CaseIdAliasUtils';
 
 type Code =
     | 'MULTI_NAME'
@@ -30,76 +31,6 @@ export enum CodeEnum {
     NO_CHART_NAME = 'NO_CHART_NAME',
     NO_GROUP_NAME = 'NO_GROUP_NAME',
     AMBIGUOUS_ALIAS = 'AMBIGUOUS_ALIAS',
-}
-
-/**
- * Clinical attributes whose values are accepted in place of the internal
- * sample / patient ID, in order of precedence.
- */
-export const SAMPLE_ID_ALIAS_ATTRIBUTES = [
-    'SAMPLE_DISPLAY_NAME',
-    'DISPLAY_SAMPLE_NAME',
-    'OTHER_SAMPLE_ID',
-];
-export const PATIENT_ID_ALIAS_ATTRIBUTES = [
-    'PATIENT_DISPLAY_NAME',
-    'OTHER_PATIENT_ID',
-];
-
-export function getCaseIdAliasAttributeIds(caseType: ClinicalDataType) {
-    return caseType === ClinicalDataTypeEnum.PATIENT
-        ? PATIENT_ID_ALIAS_ATTRIBUTES
-        : SAMPLE_ID_ALIAS_ATTRIBUTES;
-}
-
-const EMPTY_ALIAS_VALUES = ['', 'NA', 'N/A', 'NAN', 'NULL', 'NONE'];
-
-export type CaseIdAlias = {
-    studyId: string;
-    // internal sample or patient ID
-    caseId: string;
-    // the alternative identifier, e.g. a SAMPLE_DISPLAY_NAME value
-    alias: string;
-    attributeId: string;
-};
-
-export type CaseIdAliases = {
-    [ClinicalDataTypeEnum.SAMPLE]: CaseIdAlias[];
-    [ClinicalDataTypeEnum.PATIENT]: CaseIdAlias[];
-};
-
-export function isUsableAliasValue(value: string | undefined) {
-    return (
-        value !== undefined &&
-        !EMPTY_ALIAS_VALUES.includes(value.trim().toUpperCase())
-    );
-}
-
-/**
- * Maps `studyId:alias` to the internal case IDs it refers to.
- * When an alias value occurs under several alias attributes, the attribute
- * listed first in the precedence list wins.
- */
-export function getAliasMap(
-    aliases: CaseIdAlias[],
-    caseType: ClinicalDataType
-): { [studyIdAlias: string]: CaseIdAlias[] } {
-    const precedence = getCaseIdAliasAttributeIds(caseType);
-    const rank = (a: CaseIdAlias) => {
-        const i = precedence.indexOf(a.attributeId);
-        return i === -1 ? precedence.length : i;
-    };
-    const grouped = _.groupBy(
-        aliases.filter(a => isUsableAliasValue(a.alias)),
-        a => getUniqueCaseId(a.studyId, a.alias.trim())
-    );
-    return _.mapValues(grouped, group => {
-        const bestRank = _.min(group.map(rank));
-        return _.uniqBy(
-            group.filter(a => rank(a) === bestRank),
-            a => a.caseId
-        );
-    });
 }
 
 export type ValidationMessage = {

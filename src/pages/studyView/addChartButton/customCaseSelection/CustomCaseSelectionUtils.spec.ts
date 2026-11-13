@@ -3,9 +3,7 @@ import _ from 'lodash';
 import {
     DEFAULT_GROUP_NAME_WITH_USER_INPUT,
     DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT,
-    CaseIdAlias,
     CodeEnum,
-    getAliasMap,
     getData,
     parseContent,
     getLine,
@@ -15,6 +13,7 @@ import {
     ValidationResult,
     validateLines,
 } from './CustomCaseSelectionUtils';
+import { CaseIdAlias, getAliasMap } from 'shared/lib/CaseIdAliasUtils';
 import { ClinicalDataTypeEnum } from '../../StudyViewUtils';
 import { Sample } from 'cbioportal-ts-api-client';
 
