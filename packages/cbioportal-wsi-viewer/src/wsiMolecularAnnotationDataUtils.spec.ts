@@ -5,16 +5,15 @@ import {
     clearWsiMolecularAnnotationRequestCaches,
     fetchCivicCnaAnnotations,
     fetchCivicMutationAnnotations,
-    fetchCivicMutationAnnotationsReadOnly,
     fetchOncoKbCnaAnnotations,
     fetchOncoKbMutationAnnotations,
-    fetchOncoKbMutationAnnotationsReadOnly,
     fetchOncoKbStructuralVariantAnnotations,
 } from './wsiMolecularAnnotationDataUtils';
 import {
     configureWsiViewerRuntime,
     resetWsiViewerRuntime,
 } from './wsiViewerConfig';
+import { MutationDetail } from './wsiViewerTypes';
 
 jest.mock('cbioportal-utils', () => {
     const actual = jest.requireActual('cbioportal-utils');
@@ -27,607 +26,201 @@ jest.mock('cbioportal-utils', () => {
 });
 
 const mockOncoKbClient = {
-    annotateMutationsByProteinChangePostUsingPOST_1: jest.fn(({ body }: any) =>
-        (globalThis.fetch as any)('/annotate/mutations/byProteinChange', {
-            method: 'POST',
-            body: JSON.stringify(body),
-        }).then((response: any) => response.json())
-    ),
-    annotateCopyNumberAlterationsPostUsingPOST_1: jest.fn(({ body }: any) =>
-        (globalThis.fetch as any)('/annotate/copyNumberAlterations', {
-            method: 'POST',
-            body: JSON.stringify(body),
-        }).then((response: any) => response.json())
-    ),
-    annotateStructuralVariantsPostUsingPOST_1: jest.fn(({ body }: any) =>
-        (globalThis.fetch as any)('/annotate/structuralVariants', {
-            method: 'POST',
-            body: JSON.stringify(body),
-        }).then((response: any) => response.json())
-    ),
+    annotateMutationsByProteinChangePostUsingPOST_1: jest.fn(),
+    annotateCopyNumberAlterationsPostUsingPOST_1: jest.fn(),
+    annotateStructuralVariantsPostUsingPOST_1: jest.fn(),
 };
 const mockGetCivicCnaVariants = jest.fn();
+const civicUtils = jest.requireMock('cbioportal-utils');
 
-function configureRuntime() {
+const indicator = (id: string) => ({
+    query: { id },
+    oncogenic: 'Oncogenic',
+    mutationEffect: { knownEffect: 'Gain-of-function' },
+    hotspot: true,
+    geneSummary: 'Gene summary',
+    variantSummary: 'Variant summary',
+});
+
+const KRAS: MutationDetail = {
+    token: 'KRAS G12D',
+    gene: 'KRAS',
+    proteinChange: 'G12D',
+    entrezGeneId: 3845,
+    consequence: 'Missense_Mutation',
+};
+
+beforeEach(() => {
+    clearWsiMolecularAnnotationRequestCaches();
+    Object.values(mockOncoKbClient).forEach(fn => fn.mockReset());
+    mockGetCivicCnaVariants.mockReset();
+    civicUtils.getCivicGenes.mockReset();
+    civicUtils.getCivicVariants.mockReset();
     configureWsiViewerRuntime({
         buildApiUrl: (path: string) => `/${path}`,
         molecular: {
-            showOncoKb: true,
-            showCivic: true,
+            showOncoKb: () => true,
+            showCivic: () => true,
             getOncoKbApiUrl: () => '/proxy/oncokb',
             getOncoKbClient: () => mockOncoKbClient as any,
             getCivicCnaVariants: mockGetCivicCnaVariants,
             getSimplifiedMutationType: (type: string) => type.toLowerCase(),
         },
     });
-}
+});
 
-describe('wsiMolecularAnnotationDataUtils request caching', () => {
-    let originalFetch: typeof globalThis.fetch;
-    let getCivicGenesMock: jest.Mock;
-    let getCivicVariantsMock: jest.Mock;
-    let getCivicCNAVariantsMock: jest.Mock;
+afterEach(() => {
+    jest.restoreAllMocks();
+    resetWsiViewerRuntime();
+});
 
-    beforeEach(() => {
-        originalFetch = (global as any).fetch;
-        clearWsiMolecularAnnotationRequestCaches();
+describe('OncoKB annotations', () => {
+    it('annotates mutations with the tumor type and genome, once per variant set', async () => {
+        mockOncoKbClient.annotateMutationsByProteinChangePostUsingPOST_1.mockResolvedValue(
+            [indicator('3845_G12D_Missense_Mutation_COAD')]
+        );
 
-        const civicUtils = jest.requireMock('cbioportal-utils');
-        getCivicGenesMock = civicUtils.getCivicGenes;
-        getCivicVariantsMock = civicUtils.getCivicVariants;
-        getCivicGenesMock.mockReset();
-        getCivicVariantsMock.mockReset();
+        const annotations = await fetchOncoKbMutationAnnotations(
+            [{ entry: KRAS, tumorType: 'COAD' }],
+            'GRCh38'
+        );
+        await fetchOncoKbMutationAnnotations(
+            [
+                { entry: KRAS, tumorType: 'COAD' },
+                { entry: KRAS, tumorType: 'COAD' },
+            ],
+            'GRCh38'
+        );
 
-        getCivicCNAVariantsMock = mockGetCivicCnaVariants;
-        getCivicCNAVariantsMock.mockReset();
-        configureRuntime();
-    });
-
-    afterEach(() => {
-        (global as any).fetch = originalFetch;
-        clearWsiMolecularAnnotationRequestCaches();
-        resetWsiViewerRuntime();
-    });
-
-    it('reuses the OncoKB mutation annotation request for the same detail set', async () => {
-        const fetchMock = jest.fn().mockResolvedValue({
-            ok: true,
-            json: () =>
-                Promise.resolve([
-                    {
-                        query: { id: '3845_G12D_Missense_Mutation' },
-                        oncogenic: 'Oncogenic',
-                    },
-                ]),
+        expect(
+            mockOncoKbClient.annotateMutationsByProteinChangePostUsingPOST_1
+        ).toHaveBeenCalledTimes(1);
+        expect(
+            mockOncoKbClient.annotateMutationsByProteinChangePostUsingPOST_1
+        ).toHaveBeenCalledWith({
+            body: [
+                expect.objectContaining({
+                    alteration: 'G12D',
+                    tumorType: 'COAD',
+                    referenceGenome: 'GRCh38',
+                }),
+            ],
         });
-        (global as any).fetch = fetchMock;
-
-        const details = [
+        expect(annotations).toEqual([
             {
-                token: 'KRAS p.G12D',
-                entrezGeneId: 3845,
-                consequence: 'Missense_Mutation',
-            },
-        ] as any;
-
-        const oncoKbProxy = 'http://portal.example/api/proxy/oncokb';
-        await fetchOncoKbMutationAnnotations(oncoKbProxy, details);
-        await fetchOncoKbMutationAnnotations(oncoKbProxy, details);
-
-        expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(fetchMock.mock.calls[0][0]).toBe(
-            '/annotate/mutations/byProteinChange'
-        );
-    });
-
-    it('returns cloned OncoKB mutation annotations so callers cannot mutate the shared cache', async () => {
-        const fetchMock = jest.fn().mockResolvedValue({
-            ok: true,
-            json: () =>
-                Promise.resolve([
-                    {
-                        query: { id: '3845_G12D_Missense_Mutation' },
-                        oncogenic: 'Oncogenic',
-                        mutationEffect: { knownEffect: 'Gain-of-function' },
-                    },
-                ]),
-        });
-        (global as any).fetch = fetchMock;
-
-        const details = [
-            {
-                token: 'KRAS p.G12D',
-                entrezGeneId: 3845,
-                consequence: 'Missense_Mutation',
-            },
-        ] as any;
-
-        const first = await fetchOncoKbMutationAnnotations(
-            'http://tile',
-            details
-        );
-        expect(first).not.toBeNull();
-        first![0].oncogenic = 'Mutated';
-
-        const second = await fetchOncoKbMutationAnnotations(
-            'http://tile',
-            details
-        );
-
-        expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(second).toEqual([
-            {
-                id: '3845_G12D_Missense_Mutation',
+                id: '3845_G12D_Missense_Mutation_COAD',
                 oncogenic: 'Oncogenic',
                 mutationEffect: 'Gain-of-function',
-                hotspot: undefined,
-                geneSummary: undefined,
-                variantSummary: undefined,
-                variantExist: undefined,
-            },
-        ]);
-        expect(second).not.toBe(first);
-    });
-
-    it('reuses the cached OncoKB mutation annotation reference for read-only callers', async () => {
-        const fetchMock = jest.fn().mockResolvedValue({
-            ok: true,
-            json: () =>
-                Promise.resolve([
-                    {
-                        query: { id: '3845_G12D_Missense_Mutation' },
-                        oncogenic: 'Oncogenic',
-                    },
-                ]),
-        });
-        (global as any).fetch = fetchMock;
-
-        const details = [
-            {
-                token: 'KRAS p.G12D',
-                entrezGeneId: 3845,
-                consequence: 'Missense_Mutation',
-            },
-        ] as any;
-
-        const first = await fetchOncoKbMutationAnnotationsReadOnly(
-            'http://tile',
-            details
-        );
-        const second = await fetchOncoKbMutationAnnotationsReadOnly(
-            'http://tile',
-            details
-        );
-
-        expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(second).toBe(first);
-    });
-
-    it('reuses the OncoKB mutation annotation request when the same details arrive in a different order', async () => {
-        const fetchMock = jest.fn().mockResolvedValue({
-            ok: true,
-            json: () =>
-                Promise.resolve([
-                    {
-                        query: { id: '3845_G12D_Missense_Mutation' },
-                        oncogenic: 'Oncogenic',
-                    },
-                    {
-                        query: { id: '1956_L858R_Missense_Mutation' },
-                        oncogenic: 'Oncogenic',
-                    },
-                ]),
-        });
-        (global as any).fetch = fetchMock;
-
-        const firstDetails = [
-            {
-                token: 'KRAS p.G12D',
-                entrezGeneId: 3845,
-                consequence: 'Missense_Mutation',
-            },
-            {
-                token: 'EGFR p.L858R',
-                entrezGeneId: 1956,
-                consequence: 'Missense_Mutation',
-            },
-        ] as any;
-        const secondDetails = [...firstDetails].reverse() as any;
-
-        await fetchOncoKbMutationAnnotations('http://tile', firstDetails);
-        await fetchOncoKbMutationAnnotations('http://tile', secondDetails);
-
-        expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual([
-            {
-                id: '1956_L858R_Missense_Mutation',
-                alteration: 'L858R',
-                consequence: 'Missense_Mutation',
-                gene: { entrezGeneId: 1956 },
-                tumorType: null,
-            },
-            {
-                id: '3845_G12D_Missense_Mutation',
-                alteration: 'G12D',
-                consequence: 'Missense_Mutation',
-                gene: { entrezGeneId: 3845 },
-                tumorType: null,
+                hotspot: true,
+                geneSummary: 'Gene summary',
+                variantSummary: 'Variant summary',
             },
         ]);
     });
 
-    it('reuses the CIViC mutation lookup for the same detail set', async () => {
-        getCivicGenesMock.mockResolvedValue({
-            KRAS: { description: 'KRAS summary' },
-        });
-        getCivicVariantsMock.mockResolvedValue({
-            KRAS: { G12D: { id: 1 } },
-        });
-
-        const details = [{ token: 'KRAS p.G12D' }] as any;
-
-        await fetchCivicMutationAnnotations(details);
-        await fetchCivicMutationAnnotations(details);
-
-        expect(getCivicGenesMock).toHaveBeenCalledTimes(1);
-        expect(getCivicVariantsMock).toHaveBeenCalledTimes(1);
-    });
-
-    it('returns cloned CIViC mutation annotations so callers cannot mutate the shared cache', async () => {
-        getCivicGenesMock.mockResolvedValue({
-            KRAS: { description: 'KRAS summary' },
-        });
-        getCivicVariantsMock.mockResolvedValue({
-            KRAS: { G12D: { id: 1 } },
-        });
-
-        const details = [{ token: 'KRAS p.G12D' }] as any;
-
-        const first = await fetchCivicMutationAnnotations(details);
-        expect(first).not.toBeNull();
-        first![0].hasCivic = false;
-        if (first![0].civicEntry) {
-            (first![0].civicEntry as any).variants = {};
-        }
-
-        const second = await fetchCivicMutationAnnotations(details);
-
-        expect(getCivicGenesMock).toHaveBeenCalledTimes(1);
-        expect(getCivicVariantsMock).toHaveBeenCalledTimes(1);
-        expect(second?.[0].hasCivic).toBe(true);
-        expect(second?.[0].civicEntry).toEqual({
-            variants: { G12D: { id: 1 } },
-        });
-        expect(second).not.toBe(first);
-    });
-
-    it('reuses the cached CIViC mutation annotation reference for read-only callers', async () => {
-        getCivicGenesMock.mockResolvedValue({
-            KRAS: { description: 'KRAS summary' },
-        });
-        getCivicVariantsMock.mockResolvedValue({
-            KRAS: { G12D: { id: 1 } },
-        });
-
-        const details = [{ token: 'KRAS p.G12D' }] as any;
-
-        const first = await fetchCivicMutationAnnotationsReadOnly(details);
-        const second = await fetchCivicMutationAnnotationsReadOnly(details);
-
-        expect(getCivicGenesMock).toHaveBeenCalledTimes(1);
-        expect(getCivicVariantsMock).toHaveBeenCalledTimes(1);
-        expect(second).toBe(first);
-    });
-
-    it('reuses the CIViC mutation lookup when the same details arrive in a different order', async () => {
-        getCivicGenesMock.mockResolvedValue({
-            EGFR: { description: 'EGFR summary' },
-            KRAS: { description: 'KRAS summary' },
-        });
-        getCivicVariantsMock.mockResolvedValue({
-            EGFR: { L858R: { id: 2 } },
-            KRAS: { G12D: { id: 1 } },
-        });
-
-        const firstDetails = [
-            { token: 'KRAS p.G12D' },
-            { token: 'EGFR p.L858R' },
-        ] as any;
-        const secondDetails = [...firstDetails].reverse() as any;
-
-        await fetchCivicMutationAnnotations(firstDetails);
-        await fetchCivicMutationAnnotations(secondDetails);
-
-        expect(getCivicGenesMock).toHaveBeenCalledTimes(1);
-        expect(getCivicVariantsMock).toHaveBeenCalledTimes(1);
-        expect(getCivicGenesMock.mock.calls[0][0]).toEqual(['EGFR', 'KRAS']);
-        expect(getCivicVariantsMock.mock.calls[0][1]).toEqual([
-            {
-                gene: { hugoGeneSymbol: 'EGFR' },
-                proteinChange: 'L858R',
-            },
-            {
-                gene: { hugoGeneSymbol: 'KRAS' },
-                proteinChange: 'G12D',
-            },
-        ]);
-    });
-
-    it('reuses the CIViC mutation lookup when duplicate details are present', async () => {
-        getCivicGenesMock.mockResolvedValue({
-            KRAS: { description: 'KRAS summary' },
-        });
-        getCivicVariantsMock.mockResolvedValue({
-            KRAS: { G12D: { id: 1 } },
-        });
-
-        const dedupedDetails = [{ token: 'KRAS p.G12D' }] as any;
-        const duplicateDetails = [
-            { token: 'KRAS p.G12D' },
-            { token: 'KRAS p.G12D' },
-        ] as any;
-
-        await fetchCivicMutationAnnotations(dedupedDetails);
-        await fetchCivicMutationAnnotations(duplicateDetails);
-
-        expect(getCivicGenesMock).toHaveBeenCalledTimes(1);
-        expect(getCivicVariantsMock).toHaveBeenCalledTimes(1);
-        expect(getCivicVariantsMock.mock.calls[0][1]).toEqual([
-            {
-                gene: { hugoGeneSymbol: 'KRAS' },
-                proteinChange: 'G12D',
-            },
-        ]);
-    });
-
-    it('reuses the OncoKB CNA annotation request for the same CNA set', async () => {
-        const fetchMock = jest.fn().mockResolvedValue({
-            ok: true,
-            json: () =>
-                Promise.resolve([
-                    {
-                        query: { id: '672_AMPLIFICATION' },
-                        oncogenic: 'Likely Oncogenic',
-                    },
-                ]),
-        });
-        (global as any).fetch = fetchMock;
-
+    it('logs a failed request, resolves it to null and asks again next time', async () => {
+        const debug = jest.spyOn(console, 'debug').mockImplementation(() => {});
+        mockOncoKbClient.annotateCopyNumberAlterationsPostUsingPOST_1
+            .mockRejectedValueOnce(new Error('503'))
+            .mockResolvedValueOnce([indicator('2064_AMPLIFICATION_')]);
         const cnas = [
             {
-                gene: 'BRCA1',
-                entrezGeneId: 672,
-                cnaValue: 2,
+                entry: { gene: 'ERBB2', entrezGeneId: 2064, cnaValue: 2 },
+                tumorType: null,
             },
-        ] as any;
+        ];
 
-        await fetchOncoKbCnaAnnotations('http://tile', cnas);
-        await fetchOncoKbCnaAnnotations('http://tile', cnas);
-
-        expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(fetchMock.mock.calls[0][0]).toBe(
-            '/annotate/copyNumberAlterations'
+        await expect(
+            fetchOncoKbCnaAnnotations(cnas, 'GRCh37')
+        ).resolves.toBeNull();
+        expect(debug).toHaveBeenCalledWith(
+            '[WSI] OncoKB cna annotation unavailable',
+            expect.any(Error)
         );
+        await expect(
+            fetchOncoKbCnaAnnotations(cnas, 'GRCh37')
+        ).resolves.toEqual([
+            expect.objectContaining({ id: '2064_AMPLIFICATION_' }),
+        ]);
     });
 
-    it('reuses the OncoKB CNA annotation request when the same CNAs arrive in a different order', async () => {
-        const fetchMock = jest.fn().mockResolvedValue({
-            ok: true,
-            json: () =>
-                Promise.resolve([
+    it('makes no request without annotatable variants', async () => {
+        await expect(
+            fetchOncoKbStructuralVariantAnnotations(
+                [
                     {
-                        query: { id: '672_AMPLIFICATION' },
-                        oncogenic: 'Likely Oncogenic',
+                        entry: { gene1: '—', gene2: '—', variantClass: 'SV' },
+                        tumorType: null,
                     },
-                    {
-                        query: { id: '1956_AMPLIFICATION' },
-                        oncogenic: 'Likely Oncogenic',
-                    },
-                ]),
+                ],
+                'GRCh37'
+            )
+        ).resolves.toBeNull();
+        expect(
+            mockOncoKbClient.annotateStructuralVariantsPostUsingPOST_1
+        ).not.toHaveBeenCalled();
+    });
+});
+
+describe('CIViC annotations', () => {
+    it('looks up the mutations once per variant set', async () => {
+        civicUtils.getCivicGenes.mockResolvedValue({ KRAS: { name: 'KRAS' } });
+        civicUtils.getCivicVariants.mockResolvedValue({
+            KRAS: { G12D: { id: 1 } },
         });
-        (global as any).fetch = fetchMock;
 
-        const firstCnas = [
-            {
-                gene: 'BRCA1',
-                entrezGeneId: 672,
-                cnaValue: 2,
-            },
-            {
-                gene: 'EGFR',
-                entrezGeneId: 1956,
-                cnaValue: 2,
-            },
-        ] as any;
-        const secondCnas = [...firstCnas].reverse() as any;
+        const annotations = await fetchCivicMutationAnnotations([KRAS]);
+        await fetchCivicMutationAnnotations([KRAS, KRAS]);
 
-        await fetchOncoKbCnaAnnotations('http://tile', firstCnas);
-        await fetchOncoKbCnaAnnotations('http://tile', secondCnas);
-
-        expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual([
+        expect(civicUtils.getCivicGenes).toHaveBeenCalledTimes(1);
+        expect(civicUtils.getCivicGenes).toHaveBeenCalledWith(['KRAS']);
+        expect(annotations).toEqual([
             {
-                id: '672_AMPLIFICATION',
-                copyNameAlterationType: 'AMPLIFICATION',
-                gene: { entrezGeneId: 672 },
-                referenceGenome: 'GRCh37',
-                tumorType: null,
-            },
-            {
-                id: '1956_AMPLIFICATION',
-                copyNameAlterationType: 'AMPLIFICATION',
-                gene: { entrezGeneId: 1956 },
-                referenceGenome: 'GRCh37',
-                tumorType: null,
+                token: 'KRAS G12D',
+                civicEntry: { variants: { G12D: { id: 1 } } },
             },
         ]);
     });
 
-    it('reuses the CIViC CNA lookup for the same CNA set', async () => {
-        getCivicGenesMock.mockResolvedValue({
-            BRCA1: { description: 'BRCA1 summary' },
+    it('requests only the genes of amplifications and deep deletions', async () => {
+        civicUtils.getCivicGenes.mockResolvedValue({
+            ERBB2: { name: 'ERBB2', description: 'gene' },
         });
-        getCivicVariantsMock.mockResolvedValue({
-            BRCA1: { amplification: { id: 1 } },
-        });
-        getCivicCNAVariantsMock.mockReturnValue({ amplification: { id: 1 } });
+        civicUtils.getCivicVariants.mockResolvedValue({});
+        mockGetCivicCnaVariants.mockReturnValue({ ERBB2: { id: 2 } });
 
-        const cnas = [{ gene: 'BRCA1', cnaValue: 2 }] as any;
+        const annotations = await fetchCivicCnaAnnotations([
+            { gene: 'ERBB2', cnaValue: 2 },
+            { gene: 'MYC', cnaValue: 1 },
+            { gene: 'PTEN', cnaValue: -1 },
+        ]);
 
-        await fetchCivicCnaAnnotations(cnas);
-        await fetchCivicCnaAnnotations(cnas);
-
-        expect(getCivicGenesMock).toHaveBeenCalledTimes(1);
-        expect(getCivicVariantsMock).toHaveBeenCalledTimes(1);
-    });
-
-    it('reuses the CIViC CNA lookup when the same CNAs arrive in a different order', async () => {
-        getCivicGenesMock.mockResolvedValue({
-            BRCA1: { description: 'BRCA1 summary' },
-            EGFR: { description: 'EGFR summary' },
-        });
-        getCivicVariantsMock.mockResolvedValue({
-            BRCA1: { amplification: { id: 1 } },
-            EGFR: { amplification: { id: 2 } },
-        });
-        getCivicCNAVariantsMock.mockReturnValue({ amplification: { id: 1 } });
-
-        const firstCnas = [
-            { gene: 'BRCA1', cnaValue: 2 },
-            { gene: 'EGFR', cnaValue: 2 },
-        ] as any;
-        const secondCnas = [...firstCnas].reverse() as any;
-
-        await fetchCivicCnaAnnotations(firstCnas);
-        await fetchCivicCnaAnnotations(secondCnas);
-
-        expect(getCivicGenesMock).toHaveBeenCalledTimes(1);
-        expect(getCivicVariantsMock).toHaveBeenCalledTimes(1);
-        expect(getCivicGenesMock.mock.calls[0][0]).toEqual(['BRCA1', 'EGFR']);
-    });
-
-    it('reuses the CIViC CNA lookup when duplicate CNAs are present', async () => {
-        getCivicGenesMock.mockResolvedValue({
-            BRCA1: { description: 'BRCA1 summary' },
-        });
-        getCivicVariantsMock.mockResolvedValue({
-            BRCA1: { amplification: { id: 1 } },
-        });
-        getCivicCNAVariantsMock.mockReturnValue({ amplification: { id: 1 } });
-
-        const dedupedCnas = [{ gene: 'BRCA1', cnaValue: 2 }] as any;
-        const duplicateCnas = [
-            { gene: 'BRCA1', cnaValue: 2 },
-            { gene: 'BRCA1', cnaValue: 2 },
-        ] as any;
-
-        await fetchCivicCnaAnnotations(dedupedCnas);
-        await fetchCivicCnaAnnotations(duplicateCnas);
-
-        expect(getCivicGenesMock).toHaveBeenCalledTimes(1);
-        expect(getCivicVariantsMock).toHaveBeenCalledTimes(1);
-    });
-
-    it('reuses the OncoKB structural variant annotation request for the same variant set', async () => {
-        const fetchMock = jest.fn().mockResolvedValue({
-            ok: true,
-            json: () =>
-                Promise.resolve([
-                    {
-                        query: { id: 'ALK--EML4-fusion' },
-                        oncogenic: 'Oncogenic',
-                    },
-                ]),
-        });
-        (global as any).fetch = fetchMock;
-
-        const structuralVariants = [
+        expect(civicUtils.getCivicGenes).toHaveBeenCalledWith(['ERBB2']);
+        expect(annotations).toEqual([
             {
-                gene1: 'EML4',
-                gene2: 'ALK',
-                site1EntrezGeneId: 27436,
-                site2EntrezGeneId: 238,
-                variantClass: 'Fusion',
-            },
-        ] as any;
-
-        await fetchOncoKbStructuralVariantAnnotations(
-            'http://tile',
-            structuralVariants
-        );
-        await fetchOncoKbStructuralVariantAnnotations(
-            'http://tile',
-            structuralVariants
-        );
-
-        expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(fetchMock.mock.calls[0][0]).toBe('/annotate/structuralVariants');
-    });
-
-    it('reuses the OncoKB structural variant annotation request when the same variants arrive in a different order', async () => {
-        const fetchMock = jest.fn().mockResolvedValue({
-            ok: true,
-            json: () =>
-                Promise.resolve([
-                    {
-                        query: { id: 'ALK--EML4-fusion' },
-                        oncogenic: 'Oncogenic',
-                    },
-                    {
-                        query: { id: 'RET--CCDC6-fusion' },
-                        oncogenic: 'Oncogenic',
-                    },
-                ]),
-        });
-        (global as any).fetch = fetchMock;
-
-        const firstStructuralVariants = [
-            {
-                gene1: 'EML4',
-                gene2: 'ALK',
-                site1EntrezGeneId: 27436,
-                site2EntrezGeneId: 238,
-                variantClass: 'Fusion',
-            },
-            {
-                gene1: 'CCDC6',
-                gene2: 'RET',
-                site1EntrezGeneId: 8030,
-                site2EntrezGeneId: 5979,
-                variantClass: 'Fusion',
-            },
-        ] as any;
-        const secondStructuralVariants = [
-            ...firstStructuralVariants,
-        ].reverse() as any;
-
-        await fetchOncoKbStructuralVariantAnnotations(
-            'http://tile',
-            firstStructuralVariants
-        );
-        await fetchOncoKbStructuralVariantAnnotations(
-            'http://tile',
-            secondStructuralVariants
-        );
-
-        expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual([
-            {
-                id: '8030_5979_FUSION',
-                geneA: { entrezGeneId: 8030 },
-                geneB: { entrezGeneId: 5979 },
-                structuralVariantType: 'FUSION',
-                functionalFusion: true,
-                tumorType: null,
-            },
-            {
-                id: '27436_238_FUSION',
-                geneA: { entrezGeneId: 27436 },
-                geneB: { entrezGeneId: 238 },
-                structuralVariantType: 'FUSION',
-                functionalFusion: true,
-                tumorType: null,
+                gene: 'ERBB2',
+                cnaValue: 2,
+                civicEntry: { variants: { ERBB2: { id: 2 } } },
+                hasCivicVariants: true,
             },
         ]);
+    });
+
+    it('makes no request for gains and shallow losses only', async () => {
+        await expect(
+            fetchCivicCnaAnnotations([{ gene: 'MYC', cnaValue: 1 }])
+        ).resolves.toBeNull();
+        expect(civicUtils.getCivicGenes).not.toHaveBeenCalled();
+    });
+
+    it('logs a failed lookup and resolves it to null', async () => {
+        const debug = jest.spyOn(console, 'debug').mockImplementation(() => {});
+        civicUtils.getCivicGenes.mockRejectedValue(new Error('offline'));
+
+        await expect(fetchCivicMutationAnnotations([KRAS])).resolves.toBeNull();
+        expect(debug).toHaveBeenCalledWith(
+            '[WSI] CIViC mutation annotation unavailable',
+            expect.any(Error)
+        );
     });
 });

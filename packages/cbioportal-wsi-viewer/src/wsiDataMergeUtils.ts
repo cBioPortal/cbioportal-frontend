@@ -3,29 +3,19 @@ import {
     MutationDetail,
     Sample,
     StructuralVariantDetail,
+    WsiSampleClinicalDatum,
 } from './wsiViewerTypes';
 import { formatMutationType } from './wsiMolecularUtils';
 
 export type SampleIdentifier = { studyId: string; sampleId: string };
 
-export type MutationFrequencyQuery = {
-    entrezGeneId: number;
-    proteinPosStart: number;
-    proteinPosEnd: number;
-};
-
-type ClinicalDataRecord = {
-    sampleId: string;
-    clinicalAttributeId: string;
-    value: string;
-};
-
-type MutationApiRecord = {
+export type MutationApiRecord = {
     sampleId: string;
     entrezGeneId?: number;
     gene?: { hugoGeneSymbol: string; entrezGeneId?: number } | null;
-    proteinChange: string;
+    proteinChange?: string | null;
     mutationType?: string;
+    keyword?: string;
     driverFilterAnnotation?: string;
     tumorAltCount?: number;
     tumorRefCount?: number;
@@ -33,28 +23,33 @@ type MutationApiRecord = {
     proteinPosEnd?: number;
 };
 
-type CnaApiRecord = {
+export type CnaApiRecord = {
     sampleId: string;
     value: number;
     entrezGeneId?: number;
     gene?: {
         entrezGeneId?: number;
         hugoGeneSymbol: string;
-        cytoband?: string;
     } | null;
 };
 
-type CnaCountRecord = {
-    alteration: number;
-    cytoband?: string;
+/** `discrete-copy-number-counts/fetch` row. */
+export type CopyNumberCountRecord = {
     entrezGeneId: number;
-    hugoGeneSymbol: string;
-    numberOfAlteredCases?: number;
-    numberOfProfiledCases?: number;
-    totalCount?: number;
+    alteration: number;
+    numberOfSamples?: number;
+    numberOfSamplesWithAlterationInGene?: number;
 };
 
-type StructuralVariantApiRecord = {
+/** `variant-counts/fetch` row. */
+export type VariantCountRecord = {
+    entrezGeneId: number;
+    keyword: string;
+    numberOfSamples?: number;
+    numberOfSamplesWithKeyword?: number;
+};
+
+export type StructuralVariantApiRecord = {
     sampleId: string;
     site1HugoSymbol?: string;
     site2HugoSymbol?: string;
@@ -85,177 +80,149 @@ type StructuralVariantApiRecord = {
     ncbiBuild?: string;
 };
 
+/**
+ * Sample attributes the viewer shows, by their cBioPortal attribute IDs. The
+ * first ID with a value wins.
+ */
+const SAMPLE_ATTRIBUTE_IDS: Array<[keyof Sample, string[]]> = [
+    ['cancer_type', ['CANCER_TYPE']],
+    ['cancer_type_detailed', ['CANCER_TYPE_DETAILED']],
+    ['oncotree_code', ['ONCOTREE_CODE']],
+    ['primary_site', ['PRIMARY_SITE']],
+    ['sample_type', ['SAMPLE_TYPE']],
+    ['metastatic_site', ['METASTATIC_SITE']],
+    ['tumor_purity', ['TUMOR_PURITY']],
+    ['tmb_score', ['TMB_NONSYNONYMOUS']],
+    ['msi_type', ['MSI_TYPE']],
+    ['msi_score', ['MSI_SCORE']],
+];
+
+/** The sample attribute IDs the viewer reads. */
+export const WSI_SAMPLE_ATTRIBUTE_IDS: ReadonlyArray<string> = ([] as string[]).concat(
+    ...SAMPLE_ATTRIBUTE_IDS.map(([, ids]) => ids)
+);
+
 export function mergeClinicalDataIntoSamples(
     samples: Sample[],
-    data: ClinicalDataRecord[]
+    data: ReadonlyArray<WsiSampleClinicalDatum>
 ): void {
     const byId = new Map<string, Map<string, string>>();
     for (const item of data) {
-        if (!byId.has(item.sampleId)) {
-            byId.set(item.sampleId, new Map());
+        if (item.value == null || item.value === '') continue;
+        let attrs = byId.get(item.sampleId);
+        if (!attrs) {
+            attrs = new Map();
+            byId.set(item.sampleId, attrs);
         }
-        byId.get(item.sampleId)!.set(item.clinicalAttributeId, item.value);
+        attrs.set(item.clinicalAttributeId, String(item.value));
     }
-
-    const get = (
-        attrs: Map<string, string>,
-        ids: string[]
-    ): string | undefined => {
-        for (let index = 0; index < ids.length; index += 1) {
-            const value = attrs.get(ids[index]);
-            if (value != null && value !== '') {
-                return value;
-            }
-        }
-        return undefined;
-    };
-    const getNumber = (
-        attrs: Map<string, string>,
-        ids: string[]
-    ): number | undefined => {
-        const value = get(attrs, ids);
-        if (value === undefined) {
-            return undefined;
-        }
-        const parsed = Number(value);
-        return Number.isFinite(parsed) ? parsed : undefined;
-    };
 
     for (const sample of samples) {
         const attrs = byId.get(sample.sample_id);
         if (!attrs) continue;
-        const set = <K extends keyof Sample>(key: K, ids: string[]): void => {
-            const value = get(attrs, ids);
-            if (value !== undefined) {
-                sample[key] = value as Sample[K];
+        for (const [key, ids] of SAMPLE_ATTRIBUTE_IDS) {
+            const id = ids.find(candidate => attrs.has(candidate));
+            if (id !== undefined) {
+                (sample as Record<keyof Sample, unknown>)[key] = attrs.get(id);
             }
-        };
-        set('cancer_type', ['CANCER_TYPE']);
-        set('cancer_type_detailed', ['CANCER_TYPE_DETAILED']);
-        set('oncotree_code', ['ONCOTREE_CODE']);
-        set('primary_site', ['PRIMARY_SITE']);
-        set('sample_type', ['SAMPLE_TYPE']);
-        set('metastatic_site', ['METASTATIC_SITE']);
-        set('tumor_purity', ['TUMOR_PURITY', 'CVR_TUMOR_PURITY']);
-        set('tmb_score', ['CVR_TMB_SCORE', 'TMB_NONSYNONYMOUS', 'TMB_SCORE']);
-        set('msi_type', ['MSI_TYPE', 'MSI_SCORE', 'MSI_STATUS']);
-        set('oncogenic_mutations', [
-            'ONCOGENIC_MUTATIONS',
-            'CVR_ONCOGENIC_MUTATIONS',
-        ]);
-        set('num_oncogenic_mutations', [
-            'NUM_ONCOGENIC_MUTATIONS',
-            'CVR_NUM_ONCOGENIC_MUTATIONS',
-        ]);
+        }
     }
 }
 
-export function buildMutationMaps(
-    mutations: MutationApiRecord[]
-): {
-    allMutsBySample: Map<string, Array<{ token: string; vaf: number }>>;
-    detailsBySample: Map<string, Map<string, MutationDetail>>;
-} {
-    const allMutsBySample = new Map<
-        string,
-        Array<{ token: string; vaf: number }>
-    >();
-    const vafByTokenBySample = new Map<string, Map<string, number>>();
-    const detailsBySample = new Map<string, Map<string, MutationDetail>>();
+/** A protein change as shown: without the `p.` prefix. */
+export function displayProteinChange(
+    proteinChange: string | null | undefined
+): string {
+    const value = (proteinChange || '').trim();
+    return value.startsWith('p.') ? value.slice(2) : value;
+}
+
+/**
+ * Each sample's mutations, one per gene and protein change (the highest VAF
+ * kept), highest VAF first, then by gene and protein change.
+ */
+export function buildMutationsBySample(
+    mutations: ReadonlyArray<MutationApiRecord>
+): Map<string, MutationDetail[]> {
+    const byTokenBySample = new Map<string, Map<string, MutationDetail>>();
 
     for (const mutation of mutations) {
-        const geneSymbol = mutation.gene?.hugoGeneSymbol;
-        if (!geneSymbol) continue;
+        const gene = mutation.gene?.hugoGeneSymbol;
+        if (!gene) continue;
 
-        const proteinChange = mutation.proteinChange.startsWith('p.')
-            ? mutation.proteinChange
-            : `p.${mutation.proteinChange}`;
-        const token = `${geneSymbol} ${proteinChange}`;
-        const total =
-            (mutation.tumorAltCount ?? 0) + (mutation.tumorRefCount ?? 0);
+        const proteinChange = displayProteinChange(mutation.proteinChange);
+        const token = proteinChange ? `${gene} ${proteinChange}` : gene;
+        const altCount = mutation.tumorAltCount;
+        const total = (altCount ?? 0) + (mutation.tumorRefCount ?? 0);
         const vaf =
-            total > 0 ? Math.round((mutation.tumorAltCount! / total) * 100) : 0;
+            altCount != null && altCount >= 0 && total > 0
+                ? Math.round((altCount / total) * 100)
+                : undefined;
 
-        let sampleDetails = detailsBySample.get(mutation.sampleId);
-        if (!sampleDetails) {
-            sampleDetails = new Map();
-            detailsBySample.set(mutation.sampleId, sampleDetails);
+        let byToken = byTokenBySample.get(mutation.sampleId);
+        if (!byToken) {
+            byToken = new Map();
+            byTokenBySample.set(mutation.sampleId, byToken);
         }
-        const currentDetail = sampleDetails.get(token);
-        if (!currentDetail || (currentDetail.vaf ?? -1) < vaf) {
-            sampleDetails.set(token, {
+        const current = byToken.get(token);
+        if (!current || (current.vaf ?? -1) < (vaf ?? -1)) {
+            byToken.set(token, {
                 token,
+                gene,
+                proteinChange,
                 type: formatMutationType(mutation.mutationType ?? ''),
-                vaf: total > 0 ? vaf : undefined,
+                vaf,
                 annotation: mutation.driverFilterAnnotation || undefined,
                 entrezGeneId:
                     mutation.gene?.entrezGeneId ?? mutation.entrezGeneId,
                 consequence: mutation.mutationType,
+                keyword: mutation.keyword || undefined,
                 proteinStart: mutation.proteinPosStart,
                 proteinEnd: mutation.proteinPosEnd,
             });
         }
-
-        let sampleVafs = vafByTokenBySample.get(mutation.sampleId);
-        if (!sampleVafs) {
-            sampleVafs = new Map();
-            vafByTokenBySample.set(mutation.sampleId, sampleVafs);
-        }
-        const existingVaf = sampleVafs.get(token);
-        if (existingVaf == null || vaf > existingVaf) {
-            sampleVafs.set(token, vaf);
-        }
     }
 
-    for (const [sampleId, vafByToken] of vafByTokenBySample.entries()) {
-        const mutations: Array<{ token: string; vaf: number }> = [];
-        vafByToken.forEach((vaf, token) => {
-            mutations.push({ token, vaf });
-        });
-        allMutsBySample.set(sampleId, mutations);
-    }
-
-    for (const muts of allMutsBySample.values()) {
-        muts.sort((a, b) => b.vaf - a.vaf || a.token.localeCompare(b.token));
-    }
-
-    return { allMutsBySample, detailsBySample };
+    const bySample = new Map<string, MutationDetail[]>();
+    byTokenBySample.forEach((byToken, sampleId) => {
+        bySample.set(
+            sampleId,
+            Array.from(byToken.values()).sort(
+                (a, b) =>
+                    (b.vaf ?? -1) - (a.vaf ?? -1) ||
+                    a.token.localeCompare(b.token)
+            )
+        );
+    });
+    return bySample;
 }
 
+/**
+ * Each sample's non-zero copy-number alterations, strongest first, with the
+ * study counts from `countFor`.
+ */
 export function buildCnaBySample(
-    rows: CnaApiRecord[],
-    countRows: CnaCountRecord[] | null | undefined
+    rows: ReadonlyArray<CnaApiRecord>,
+    countFor: (
+        entrezGeneId: number,
+        alteration: number
+    ) => CopyNumberCountRecord | undefined = () => undefined
 ): Map<string, CNADetail[]> {
-    const cnaGeneByAlteration = new Map<string, CnaCountRecord>();
-    for (const row of countRows ?? []) {
-        cnaGeneByAlteration.set(`${row.entrezGeneId}:${row.alteration}`, row);
-        cnaGeneByAlteration.set(`${row.hugoGeneSymbol}:${row.alteration}`, row);
-    }
-
     const bySample = new Map<string, CNADetail[]>();
-    const seenBySample = new Map<string, Set<string>>();
+    const seen = new Set<string>();
     for (const row of rows) {
         if (row.value === 0) continue;
         const gene = row.gene?.hugoGeneSymbol;
         if (!gene) continue;
+        const key = `${row.sampleId}:${gene}:${row.value}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+
         const entrezGeneId = row.gene?.entrezGeneId ?? row.entrezGeneId;
-        const countRow =
-            (entrezGeneId != null
-                ? cnaGeneByAlteration.get(`${entrezGeneId}:${row.value}`)
-                : undefined) ?? cnaGeneByAlteration.get(`${gene}:${row.value}`);
-        const cohortProfiledCount = countRow?.numberOfProfiledCases;
-        const cohortAlteredCount =
-            countRow?.numberOfAlteredCases ?? countRow?.totalCount;
-        const key = `${gene}:${row.value}:${row.sampleId}`;
-        let sampleSeen = seenBySample.get(row.sampleId);
-        if (!sampleSeen) {
-            sampleSeen = new Set();
-            seenBySample.set(row.sampleId, sampleSeen);
-        }
-        if (sampleSeen.has(key)) {
-            continue;
-        }
-        sampleSeen.add(key);
+        const count =
+            entrezGeneId != null
+                ? countFor(entrezGeneId, row.value)
+                : undefined;
         let sampleCnas = bySample.get(row.sampleId);
         if (!sampleCnas) {
             sampleCnas = [];
@@ -265,24 +232,18 @@ export function buildCnaBySample(
             gene,
             entrezGeneId,
             cnaValue: row.value,
-            cytoband: countRow?.cytoband ?? row.gene?.cytoband,
-            cohortAlteredCount,
-            cohortProfiledCount,
-            cohortFrequency:
-                cohortAlteredCount != null && cohortProfiledCount
-                    ? cohortAlteredCount / cohortProfiledCount
-                    : undefined,
+            cohortAlteredCount: count?.numberOfSamplesWithAlterationInGene,
+            cohortProfiledCount: count?.numberOfSamples,
         });
     }
 
-    for (const cnList of bySample.values()) {
-        cnList.sort(
+    bySample.forEach(cnas =>
+        cnas.sort(
             (a, b) =>
                 Math.abs(b.cnaValue) - Math.abs(a.cnaValue) ||
                 a.gene.localeCompare(b.gene)
-        );
-    }
-
+        )
+    );
     return bySample;
 }
 
@@ -362,61 +323,23 @@ export function buildStructuralVariantBySample(
     return bySample;
 }
 
-export function buildMutationFrequencyQuery(
-    samples: Sample[]
-): MutationFrequencyQuery[] {
-    const posMap = new Map<string, MutationFrequencyQuery>();
-
-    for (const sample of samples) {
-        for (const detail of sample.oncogenic_mutation_details ?? []) {
-            if (
-                detail.entrezGeneId &&
-                detail.proteinStart != null &&
-                detail.proteinEnd != null
-            ) {
-                const key = `${detail.entrezGeneId}_${detail.proteinStart}_${detail.proteinEnd}`;
-                posMap.set(key, {
-                    entrezGeneId: detail.entrezGeneId,
-                    proteinPosStart: detail.proteinStart,
-                    proteinPosEnd: detail.proteinEnd,
-                });
-            }
-        }
-    }
-
-    return [...posMap.values()];
-}
-
-export function applyMutationFrequencies(
+/**
+ * Sets each mutation's study counts: how many samples of the mutation profile
+ * have the same variant (`countFor` looks up the mutation's count).
+ */
+export function applyVariantCounts(
     samples: Sample[],
-    counts: Array<{
-        entrezGeneId: number;
-        proteinPosStart: number;
-        proteinPosEnd: number;
-        count: number;
-    }>,
-    totalSequencedSamples: number
+    countFor: (mutation: MutationDetail) => VariantCountRecord | undefined
 ): void {
-    if (!totalSequencedSamples) return;
-
-    const freqByKey = new Map<string, number>();
-    for (const countRow of counts) {
-        const key = `${countRow.entrezGeneId}_${countRow.proteinPosStart}_${countRow.proteinPosEnd}`;
-        freqByKey.set(key, countRow.count / totalSequencedSamples);
-    }
-
     for (const sample of samples) {
-        for (const detail of sample.oncogenic_mutation_details ?? []) {
+        for (const mutation of sample.mutations ?? []) {
+            const count = countFor(mutation);
             if (
-                detail.entrezGeneId &&
-                detail.proteinStart != null &&
-                detail.proteinEnd != null
+                count?.numberOfSamples &&
+                count.numberOfSamplesWithKeyword != null
             ) {
-                const key = `${detail.entrezGeneId}_${detail.proteinStart}_${detail.proteinEnd}`;
-                const frequency = freqByKey.get(key);
-                if (frequency !== undefined) {
-                    detail.cohortFrequency = frequency;
-                }
+                mutation.cohortAlteredCount = count.numberOfSamplesWithKeyword;
+                mutation.cohortProfiledCount = count.numberOfSamples;
             }
         }
     }

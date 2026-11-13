@@ -1,20 +1,16 @@
-import {
-    applyMutationFrequencies,
-    mergeClinicalDataIntoSamples,
-} from './wsiDataMergeUtils';
-import { parseMutationTokens } from './wsiMolecularUtils';
+import { mergeClinicalDataIntoSamples } from './wsiDataMergeUtils';
 import {
     CNADetail,
     MutationDetail,
     Sample,
     StructuralVariantDetail,
+    WsiSampleClinicalDatum,
 } from './wsiViewerTypes';
 import {
     CivicCnaAnnotation,
     CivicMutationAnnotation,
-    OncoKbCnaAnnotation,
+    OncoKbAnnotation,
     OncoKbMutationAnnotation,
-    OncoKbStructuralVariantAnnotation,
 } from './wsiMolecularAnnotationDataUtils';
 import {
     cnaOncoKbId,
@@ -24,71 +20,23 @@ import {
 
 export function applyClinicalDataRecords(
     samples: Sample[],
-    data: Array<{
-        sampleId: string;
-        clinicalAttributeId: string;
-        value: string;
-    }>
+    data: ReadonlyArray<WsiSampleClinicalDatum>
 ): void {
     mergeClinicalDataIntoSamples(samples, data);
 }
 
+/**
+ * Sets the mutations of the requested samples; a requested sample without
+ * mutations gets an empty list.
+ */
 export function applyMutationData(
     samples: Sample[],
-    allMutsBySample: Map<string, Array<{ token: string; vaf: number }>>,
-    detailsBySample: Map<string, Map<string, MutationDetail>>
+    requestedSampleIds: ReadonlySet<string>,
+    bySample: Map<string, MutationDetail[]>
 ): void {
     for (const sample of samples) {
-        const apiMuts = allMutsBySample.get(sample.sample_id);
-        if (apiMuts?.length) {
-            sample.oncogenic_mutations = apiMuts.map(m => m.token).join('; ');
-        }
-        if (sample.oncogenic_mutations) {
-            const sampleDetails = detailsBySample.get(sample.sample_id);
-            const tokens = parseMutationTokens(sample.oncogenic_mutations);
-            sample.oncogenic_mutation_details = tokens.map(
-                t => sampleDetails?.get(t) ?? { token: t }
-            );
-        }
-    }
-}
-
-export function applyOncoKbMutationAnnotations(
-    samples: Sample[],
-    annotations: OncoKbMutationAnnotation[]
-): void {
-    const byId = new Map(
-        annotations.map(annotation => [annotation.id, annotation])
-    );
-    for (const sample of samples) {
-        for (const detail of sample.oncogenic_mutation_details ?? []) {
-            const id = mutationOncoKbId(detail);
-            if (!id) continue;
-            const annotation = byId.get(id);
-            if (!annotation) continue;
-            detail.oncogenic = annotation.oncogenic;
-            detail.mutationEffect = annotation.mutationEffect;
-            detail.hotspot = annotation.hotspot;
-            detail.geneSummary = annotation.geneSummary;
-            detail.variantSummary = annotation.variantSummary;
-            detail.hasCivic = annotation.variantExist === true;
-        }
-    }
-}
-
-export function applyCivicMutationAnnotations(
-    samples: Sample[],
-    annotations: CivicMutationAnnotation[]
-): void {
-    const byToken = new Map(
-        annotations.map(annotation => [annotation.token, annotation])
-    );
-    for (const sample of samples) {
-        for (const detail of sample.oncogenic_mutation_details ?? []) {
-            const annotation = byToken.get(detail.token);
-            if (!annotation) continue;
-            detail.civicEntry = annotation.civicEntry;
-            detail.hasCivic = annotation.hasCivic;
+        if (requestedSampleIds.has(sample.sample_id)) {
+            sample.mutations = bySample.get(sample.sample_id) ?? [];
         }
     }
 }
@@ -103,49 +51,6 @@ export function applyCnaData(
     }
 }
 
-export function applyCivicCnaAnnotations(
-    samples: Sample[],
-    annotations: CivicCnaAnnotation[]
-): void {
-    const byGeneAndValue = new Map(
-        annotations.map(annotation => [
-            `${annotation.gene}:${annotation.cnaValue}`,
-            annotation,
-        ])
-    );
-    for (const sample of samples) {
-        for (const cna of sample.cna_alterations ?? []) {
-            const annotation = byGeneAndValue.get(
-                `${cna.gene}:${cna.cnaValue}`
-            );
-            if (!annotation) continue;
-            cna.civicEntry = annotation.civicEntry;
-            cna.hasCivicVariants = annotation.hasCivicVariants;
-        }
-    }
-}
-
-export function applyOncoKbCnaAnnotations(
-    samples: Sample[],
-    annotations: OncoKbCnaAnnotation[]
-): void {
-    const byId = new Map(
-        annotations.map(annotation => [annotation.id, annotation])
-    );
-    for (const sample of samples) {
-        for (const cna of sample.cna_alterations ?? []) {
-            const id = cnaOncoKbId(cna);
-            if (!id) continue;
-            const annotation = byId.get(id);
-            if (!annotation) continue;
-            cna.oncogenic = annotation.oncogenic;
-            cna.mutationEffect = annotation.mutationEffect;
-            cna.geneSummary = annotation.geneSummary;
-            cna.variantSummary = annotation.variantSummary;
-        }
-    }
-}
-
 export function applyStructuralVariantData(
     samples: Sample[],
     bySample: Map<string, StructuralVariantDetail[]>
@@ -156,36 +61,101 @@ export function applyStructuralVariantData(
     }
 }
 
-export function applyOncoKbStructuralVariantAnnotations(
+/** The sample's OncoTree code, OncoKB's tumor type; null when it has none. */
+export function sampleTumorType(sample: Sample): string | null {
+    return sample.oncotree_code || null;
+}
+
+function annotationMap<T extends { id: string }>(annotations: T[]) {
+    return new Map(annotations.map(annotation => [annotation.id, annotation]));
+}
+
+function applyOncoKbAnnotation(
+    target: Omit<OncoKbAnnotation, 'id'>,
+    annotation: OncoKbAnnotation | undefined
+) {
+    if (!annotation) return;
+    target.oncogenic = annotation.oncogenic;
+    target.mutationEffect = annotation.mutationEffect;
+    target.geneSummary = annotation.geneSummary;
+    target.variantSummary = annotation.variantSummary;
+}
+
+export function applyOncoKbMutationAnnotations(
     samples: Sample[],
-    annotations: OncoKbStructuralVariantAnnotation[]
+    annotations: OncoKbMutationAnnotation[]
 ): void {
-    const byId = new Map(
-        annotations.map(annotation => [annotation.id, annotation])
-    );
+    const byId = annotationMap(annotations);
     for (const sample of samples) {
-        for (const structuralVariant of sample.structural_variants ?? []) {
-            const id = structuralVariantOncoKbId(structuralVariant);
-            if (!id) continue;
-            const annotation = byId.get(id);
+        for (const mutation of sample.mutations ?? []) {
+            const id = mutationOncoKbId(mutation, sampleTumorType(sample));
+            const annotation = id ? byId.get(id) : undefined;
             if (!annotation) continue;
-            structuralVariant.oncogenic = annotation.oncogenic;
-            structuralVariant.mutationEffect = annotation.mutationEffect;
-            structuralVariant.geneSummary = annotation.geneSummary;
-            structuralVariant.variantSummary = annotation.variantSummary;
+            applyOncoKbAnnotation(mutation, annotation);
+            mutation.hotspot = annotation.hotspot;
         }
     }
 }
 
-export function applyMutationFrequencyData(
+export function applyCivicMutationAnnotations(
     samples: Sample[],
-    counts: Array<{
-        entrezGeneId: number;
-        proteinPosStart: number;
-        proteinPosEnd: number;
-        count: number;
-    }>,
-    total: number
+    annotations: CivicMutationAnnotation[]
 ): void {
-    applyMutationFrequencies(samples, counts, total);
+    const byToken = new Map(
+        annotations.map(annotation => [annotation.token, annotation])
+    );
+    for (const sample of samples) {
+        for (const mutation of sample.mutations ?? []) {
+            const annotation = byToken.get(mutation.token);
+            if (annotation) {
+                mutation.civicEntry = annotation.civicEntry;
+            }
+        }
+    }
+}
+
+export function applyOncoKbCnaAnnotations(
+    samples: Sample[],
+    annotations: OncoKbAnnotation[]
+): void {
+    const byId = annotationMap(annotations);
+    for (const sample of samples) {
+        for (const cna of sample.cna_alterations ?? []) {
+            const id = cnaOncoKbId(cna, sampleTumorType(sample));
+            applyOncoKbAnnotation(cna, id ? byId.get(id) : undefined);
+        }
+    }
+}
+
+export function applyCivicCnaAnnotations(
+    samples: Sample[],
+    annotations: CivicCnaAnnotation[]
+): void {
+    const byAlteration = new Map(
+        annotations.map(annotation => [
+            `${annotation.gene}:${annotation.cnaValue}`,
+            annotation,
+        ])
+    );
+    for (const sample of samples) {
+        for (const cna of sample.cna_alterations ?? []) {
+            const annotation = byAlteration.get(`${cna.gene}:${cna.cnaValue}`);
+            if (!annotation) continue;
+            cna.civicEntry = annotation.civicEntry;
+            cna.hasCivicVariants = annotation.hasCivicVariants;
+        }
+    }
+}
+
+export function applyOncoKbStructuralVariantAnnotations(
+    samples: Sample[],
+    annotations: OncoKbAnnotation[]
+): void {
+    const byId = annotationMap(annotations);
+    for (const sample of samples) {
+        for (const sv of sample.structural_variants ?? []) {
+            const id = structuralVariantOncoKbId(sv, sampleTumorType(sample));
+            applyOncoKbAnnotation(sv, id ? byId.get(id) : undefined);
+        }
+    }
 }

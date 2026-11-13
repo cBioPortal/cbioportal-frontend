@@ -41,8 +41,8 @@ describe('wsiMolecularServices', () => {
             ERBB2: { id: 1 } as any,
         }));
         configureRuntime({
-            showOncoKb: true,
-            showCivic: true,
+            showOncoKb: () => true,
+            showCivic: () => true,
             getOncoKbApiUrl: () => 'https://portal.example/proxy/oncokb',
             getOncoKbClient: () => client,
             getCivicCnaVariants: getCivicCnaVariantsMock,
@@ -58,5 +58,35 @@ describe('wsiMolecularServices', () => {
         });
         expect(getCivicCnaVariantsMock).toHaveBeenCalledWith(2, 'ERBB2', {});
         expect(getSimplifiedMutationType('Frame_Shift_Del')).toBe('frameshift');
+    });
+
+    it('reads the host flags each time', () => {
+        let enabled = false;
+        configureRuntime({
+            showOncoKb: () => enabled,
+            showCivic: () => enabled,
+            getOncoKbApiUrl: () => '/proxy/oncokb',
+            getOncoKbClient: () => ({} as any),
+            getCivicCnaVariants: () => ({}),
+            getSimplifiedMutationType: type => type,
+        });
+
+        expect(isWsiOncoKbEnabled()).toBe(false);
+        enabled = true;
+        expect(isWsiOncoKbEnabled()).toBe(true);
+        expect(isWsiCivicEnabled()).toBe(true);
+    });
+
+    it('disables OncoKB without an API URL', () => {
+        configureRuntime({
+            showOncoKb: () => true,
+            showCivic: () => false,
+            getOncoKbApiUrl: () => '',
+            getOncoKbClient: () => ({} as any),
+            getCivicCnaVariants: () => ({}),
+            getSimplifiedMutationType: type => type,
+        });
+
+        expect(isWsiOncoKbEnabled()).toBe(false);
     });
 });

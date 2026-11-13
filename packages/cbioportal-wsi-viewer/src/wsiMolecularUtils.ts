@@ -3,46 +3,11 @@ import {
     getCanonicalMutationType,
 } from 'cbioportal-frontend-commons';
 
-/** Build an OncoKB gene/variant URL. */
+/** OncoKB page of a gene, or of one of its variants. */
 export function buildOncoKbUrl(gene: string, variant?: string): string {
     return `https://www.oncokb.org/gene/${encodeURIComponent(gene)}${
         variant ? '/' + encodeURIComponent(variant) : ''
     }`;
-}
-
-/** Split a `"GENE variant"` mutation token into `{ gene, variant }`. */
-export function parseMutationToken(
-    token: string
-): {
-    gene: string;
-    variant: string;
-} {
-    const spaceIdx = token.indexOf(' ');
-    return spaceIdx > 0
-        ? { gene: token.slice(0, spaceIdx), variant: token.slice(spaceIdx + 1) }
-        : { gene: token, variant: '' };
-}
-
-/** Split a semicolon/comma-delimited mutation list into individual tokens. */
-export function parseMutationTokens(
-    value: string | null | undefined
-): string[] {
-    const source = value ?? '';
-    if (!source) {
-        return [];
-    }
-
-    const rawTokens = source.split(/[;,]\s*/);
-    const tokens: string[] = [];
-
-    for (let index = 0; index < rawTokens.length; index += 1) {
-        const trimmed = rawTokens[index].trim();
-        if (trimmed) {
-            tokens.push(trimmed);
-        }
-    }
-
-    return tokens;
 }
 
 const CANONICAL_MUTATION_TYPE_LABELS: Partial<Record<

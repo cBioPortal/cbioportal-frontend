@@ -3,20 +3,15 @@ import {
     getCivicGenes,
     getCivicVariants,
     ICivicEntry,
-    ICivicGeneIndex,
-    ICivicVariantIndex,
 } from 'cbioportal-utils';
 import {
     buildCivicMutationSpecs,
     buildOncoKbCnaItems,
     buildOncoKbMutationItems,
     buildOncoKbStructuralVariantItems,
-    cnaOncoKbAlteration,
-    cnaOncoKbId,
-    mutationOncoKbId,
-    structuralVariantOncoKbId,
+    OncoKbReferenceGenome,
+    WithTumorType,
 } from './wsiMolecularAnnotationFetchUtils';
-import { parseMutationToken } from './wsiMolecularUtils';
 import {
     CNADetail,
     MutationDetail,
@@ -24,6 +19,7 @@ import {
 } from './wsiViewerTypes';
 import {
     getCivicCnaVariants,
+    getOncoKbApiUrl,
     getWsiOncoKbClient,
 } from './wsiMolecularServices';
 
@@ -34,61 +30,51 @@ type CachedRequestEntry<T> = {
     promise: Promise<T>;
 };
 
-const oncoKbMutationAnnotationRequestCache = new Map<
+export type OncoKbAnnotation = {
+    id: string;
+    oncogenic?: string;
+    mutationEffect?: string;
+    geneSummary?: string;
+    variantSummary?: string;
+};
+
+export type OncoKbMutationAnnotation = OncoKbAnnotation & {
+    hotspot?: boolean;
+};
+
+export type CivicMutationAnnotation = {
+    token: string;
+    civicEntry: ICivicEntry | null;
+};
+
+export type CivicCnaAnnotation = {
+    gene: string;
+    cnaValue: number;
+    civicEntry: ICivicEntry | null;
+    hasCivicVariants: boolean;
+};
+
+type OncoKbIndicator = {
+    query: { id: string };
+    oncogenic?: string;
+    mutationEffect?: { knownEffect?: string };
+    hotspot?: boolean;
+    geneSummary?: string;
+    variantSummary?: string;
+};
+
+const oncoKbRequestCache = new Map<
     string,
-    CachedRequestEntry<OncoKbMutationAnnotation[] | null>
+    CachedRequestEntry<OncoKbIndicator[] | null>
 >();
-const civicMutationAnnotationRequestCache = new Map<
+const civicMutationRequestCache = new Map<
     string,
     CachedRequestEntry<CivicMutationAnnotation[] | null>
 >();
-const oncoKbCnaAnnotationRequestCache = new Map<
-    string,
-    CachedRequestEntry<OncoKbCnaAnnotation[] | null>
->();
-const civicCnaAnnotationRequestCache = new Map<
+const civicCnaRequestCache = new Map<
     string,
     CachedRequestEntry<CivicCnaAnnotation[] | null>
 >();
-const oncoKbStructuralVariantAnnotationRequestCache = new Map<
-    string,
-    CachedRequestEntry<OncoKbStructuralVariantAnnotation[] | null>
->();
-
-function cloneCachedValue<T>(value: T): T {
-    if (
-        value == null ||
-        typeof value === 'string' ||
-        typeof value === 'number' ||
-        typeof value === 'boolean'
-    ) {
-        return value;
-    }
-
-    if (typeof structuredClone === 'function') {
-        return structuredClone(value) as T;
-    }
-
-    if (Array.isArray(value)) {
-        const cloned = new Array(value.length);
-        for (let index = 0; index < value.length; index += 1) {
-            cloned[index] = cloneCachedValue(value[index]);
-        }
-        return cloned as T;
-    }
-
-    if (typeof value === 'object') {
-        const cloned: Record<string, unknown> = {};
-        const entries = Object.entries(value as Record<string, unknown>);
-        for (let index = 0; index < entries.length; index += 1) {
-            const [key, objectValue] = entries[index];
-            cloned[key] = cloneCachedValue(objectValue);
-        }
-        return cloned as T;
-    }
-
-    return value;
-}
 
 function getCachedRequest<T>(
     cache: Map<string, CachedRequestEntry<T>>,
@@ -100,484 +86,203 @@ function getCachedRequest<T>(
     if (cached && cached.expiresAt > now) {
         return cached.promise;
     }
-
-    const promise = factory().catch(error => {
-        const current = cache.get(cacheKey);
-        if (current?.promise === promise) {
-            cache.delete(cacheKey);
-        }
-        throw error;
-    });
-
     cache.set(cacheKey, {
         expiresAt: now + WSI_ANNOTATION_REQUEST_CACHE_TTL_MS,
-        promise,
+        promise: factory(),
     });
-    return promise;
+    return cache.get(cacheKey)!.promise;
 }
 
-function buildOrderedListCacheKey(values: Array<string | number>): string {
-    const deduped = new Set<string>();
-    for (let index = 0; index < values.length; index += 1) {
-        deduped.add(String(values[index]));
-    }
-
-    const ordered = Array.from(deduped);
-    ordered.sort();
-
-    let cacheKey = '';
-    for (let index = 0; index < ordered.length; index += 1) {
-        if (index > 0) {
-            cacheKey += '|';
-        }
-        cacheKey += ordered[index];
-    }
-
-    return cacheKey;
-}
-
-function buildOrderedListCacheKeyFromItems<T>(
-    items: T[],
-    getValue: (item: T) => string | number
-): string {
-    const values = new Array<string | number>(items.length);
-    for (let index = 0; index < items.length; index += 1) {
-        values[index] = getValue(items[index]);
-    }
-    return buildOrderedListCacheKey(values);
-}
-
-function buildUniqueSortedStringList<T>(
-    items: T[],
-    getValue: (item: T) => string | undefined | null
-): string[] {
-    const deduped = new Set<string>();
-    for (let index = 0; index < items.length; index += 1) {
-        const value = getValue(items[index]);
-        if (value) {
-            deduped.add(value);
-        }
-    }
-
-    const ordered = Array.from(deduped);
-    ordered.sort();
-    return ordered;
-}
-
-export type OncoKbMutationAnnotation = {
-    id: string;
-    oncogenic?: string;
-    mutationEffect?: string;
-    hotspot?: boolean;
-    geneSummary?: string;
-    variantSummary?: string;
-    variantExist?: boolean;
-};
-
-export type CivicMutationAnnotation = {
-    token: string;
-    civicEntry: ICivicEntry | null;
-    hasCivic: boolean;
-};
-
-export type OncoKbCnaAnnotation = {
-    id: string;
-    oncogenic?: string;
-    mutationEffect?: string;
-    geneSummary?: string;
-    variantSummary?: string;
-};
-
-export type CivicCnaAnnotation = {
-    gene: string;
-    cnaValue: number;
-    civicEntry: ICivicEntry | null;
-    hasCivicVariants: boolean;
-};
-
-export type OncoKbStructuralVariantAnnotation = {
-    id: string;
-    oncogenic?: string;
-    mutationEffect?: string;
-    geneSummary?: string;
-    variantSummary?: string;
-};
-
-export async function fetchOncoKbMutationAnnotationsReadOnly(
-    oncoKbBase: string,
-    details: MutationDetail[]
-): Promise<OncoKbMutationAnnotation[] | null> {
-    const queryableDetails = details.filter(detail => detail.entrezGeneId);
-    if (!queryableDetails.length) return null;
-
-    const items = buildOncoKbMutationItems(queryableDetails);
-    if (!items.length) return null;
-
-    const cacheKey = [
-        oncoKbBase,
-        'oncokb-mutation',
-        buildOrderedListCacheKeyFromItems(items, item => item.id),
-    ].join('::');
-
-    const annotations = await getCachedRequest(
-        oncoKbMutationAnnotationRequestCache,
-        cacheKey,
-        async () => {
-            let annotations: Array<{
-                query: { id: string };
-                oncogenic?: string;
-                mutationEffect?: { knownEffect?: string };
-                hotspot?: boolean;
-                geneSummary?: string;
-                variantSummary?: string;
-                variantExist?: boolean;
-            }>;
-            try {
-                annotations =
-                    (await getWsiOncoKbClient().annotateMutationsByProteinChangePostUsingPOST_1(
-                        {
-                            body: items as any,
-                        }
-                    )) ?? [];
-            } catch {
-                return null;
-            }
-
-            return annotations.map(annotation => ({
-                id: annotation.query.id,
-                oncogenic: annotation.oncogenic,
-                mutationEffect: annotation.mutationEffect?.knownEffect,
-                hotspot: annotation.hotspot,
-                geneSummary: annotation.geneSummary,
-                variantSummary: annotation.variantSummary,
-                variantExist: annotation.variantExist,
-            }));
-        }
+/**
+ * Resolves a failed annotation request to null and evicts it from `cache`, so
+ * the next load asks again. Annotations are optional, so the failure is only
+ * logged at debug level.
+ */
+function optional<T>(
+    cache: Map<string, CachedRequestEntry<T | null>>,
+    cacheKey: string,
+    label: string,
+    request: () => Promise<T>
+): Promise<T | null> {
+    return getCachedRequest(cache, cacheKey, () =>
+        request().catch(error => {
+            console.debug(`[WSI] ${label} unavailable`, error);
+            cache.delete(cacheKey);
+            return null;
+        })
     );
+}
 
-    return annotations;
+function sortedKey(values: Iterable<string>): string {
+    return Array.from(new Set(values))
+        .sort()
+        .join('|');
+}
+
+/** OncoKB indicators for `items`, cached per API URL and item set. */
+function fetchOncoKbIndicators<T extends { id: string }>(
+    kind: string,
+    items: T[],
+    request: (items: T[]) => Promise<OncoKbIndicator[]>
+): Promise<OncoKbIndicator[] | null> {
+    if (!items.length) return Promise.resolve(null);
+    const cacheKey = [
+        getOncoKbApiUrl(),
+        kind,
+        sortedKey(items.map(item => item.id)),
+    ].join('::');
+    return optional(
+        oncoKbRequestCache,
+        cacheKey,
+        `OncoKB ${kind} annotation`,
+        async () => (await request(items)) ?? []
+    );
+}
+
+function toOncoKbAnnotation(indicator: OncoKbIndicator): OncoKbAnnotation {
+    return {
+        id: indicator.query.id,
+        oncogenic: indicator.oncogenic,
+        mutationEffect: indicator.mutationEffect?.knownEffect,
+        geneSummary: indicator.geneSummary,
+        variantSummary: indicator.variantSummary,
+    };
 }
 
 export async function fetchOncoKbMutationAnnotations(
-    tileOrigin: string,
-    details: MutationDetail[]
+    mutations: Array<WithTumorType<MutationDetail>>,
+    referenceGenome: OncoKbReferenceGenome
 ): Promise<OncoKbMutationAnnotation[] | null> {
-    return cloneCachedValue(
-        await fetchOncoKbMutationAnnotationsReadOnly(tileOrigin, details)
+    const indicators = await fetchOncoKbIndicators(
+        'mutation',
+        buildOncoKbMutationItems(mutations, referenceGenome),
+        body =>
+            getWsiOncoKbClient().annotateMutationsByProteinChangePostUsingPOST_1(
+                { body: body as any }
+            )
+    );
+    return (
+        indicators?.map(indicator => ({
+            ...toOncoKbAnnotation(indicator),
+            hotspot: indicator.hotspot,
+        })) ?? null
     );
 }
 
-export async function fetchCivicMutationAnnotationsReadOnly(
+export async function fetchOncoKbCnaAnnotations(
+    cnas: Array<WithTumorType<CNADetail>>,
+    referenceGenome: OncoKbReferenceGenome
+): Promise<OncoKbAnnotation[] | null> {
+    const indicators = await fetchOncoKbIndicators(
+        'cna',
+        buildOncoKbCnaItems(cnas, referenceGenome),
+        body =>
+            getWsiOncoKbClient().annotateCopyNumberAlterationsPostUsingPOST_1({
+                body: body as any,
+            })
+    );
+    return indicators?.map(toOncoKbAnnotation) ?? null;
+}
+
+export async function fetchOncoKbStructuralVariantAnnotations(
+    structuralVariants: Array<WithTumorType<StructuralVariantDetail>>,
+    referenceGenome: OncoKbReferenceGenome
+): Promise<OncoKbAnnotation[] | null> {
+    const indicators = await fetchOncoKbIndicators(
+        'structural-variant',
+        buildOncoKbStructuralVariantItems(structuralVariants, referenceGenome),
+        body =>
+            getWsiOncoKbClient().annotateStructuralVariantsPostUsingPOST_1({
+                body: body as any,
+            })
+    );
+    return indicators?.map(toOncoKbAnnotation) ?? null;
+}
+
+/** CIViC entries of the mutations' variants, keyed by mutation token. */
+export function fetchCivicMutationAnnotations(
     details: MutationDetail[]
 ): Promise<CivicMutationAnnotation[] | null> {
-    if (!details.length) return null;
+    const specs = buildCivicMutationSpecs(details);
+    if (!specs.length) return Promise.resolve(null);
 
-    const mutationSpecs = buildCivicMutationSpecs(details);
-    if (!mutationSpecs.length) return null;
-
-    const cacheKey = [
-        'civic-mutation',
-        buildOrderedListCacheKey(details.map(detail => detail.token)),
-    ].join('::');
-
-    const annotations = await getCachedRequest(
-        civicMutationAnnotationRequestCache,
-        cacheKey,
+    return optional(
+        civicMutationRequestCache,
+        sortedKey(details.map(detail => detail.token)),
+        'CIViC mutation annotation',
         async () => {
-            let civicGenes: ICivicGeneIndex;
-            let civicVariants: ICivicVariantIndex;
-            try {
-                civicGenes = await getCivicGenes(
-                    buildUniqueSortedStringList(
-                        mutationSpecs,
-                        spec => spec.gene.hugoGeneSymbol
-                    )
-                );
-                civicVariants = await getCivicVariants(
-                    civicGenes,
-                    mutationSpecs
-                );
-            } catch {
-                return null;
-            }
-
+            const civicGenes = await getCivicGenes(
+                Array.from(
+                    new Set(specs.map(spec => spec.gene.hugoGeneSymbol))
+                ).sort()
+            );
+            const civicVariants = await getCivicVariants(civicGenes, specs);
             return details.map(detail => {
-                const { gene, variant } = parseMutationToken(detail.token);
-                const proteinChange = variant.startsWith('p.')
-                    ? variant.slice(2)
-                    : variant;
-                const geneEntry = civicGenes[gene];
-                const variantEntry = civicVariants[gene]?.[proteinChange];
-                if (!geneEntry || !variantEntry) {
-                    return {
-                        token: detail.token,
-                        civicEntry: null,
-                        hasCivic: false,
-                    };
-                }
-
+                const geneEntry = civicGenes[detail.gene];
+                const variantEntry =
+                    civicVariants[detail.gene]?.[detail.proteinChange];
                 return {
                     token: detail.token,
-                    civicEntry: buildCivicEntry(geneEntry, {
-                        [proteinChange]: variantEntry,
-                    }) as ICivicEntry,
-                    hasCivic: true,
+                    civicEntry:
+                        geneEntry && variantEntry
+                            ? (buildCivicEntry(geneEntry, {
+                                  [detail.proteinChange]: variantEntry,
+                              }) as ICivicEntry)
+                            : null,
                 };
             });
         }
     );
-
-    return annotations;
 }
 
-export async function fetchCivicMutationAnnotations(
-    details: MutationDetail[]
-): Promise<CivicMutationAnnotation[] | null> {
-    return cloneCachedValue(
-        await fetchCivicMutationAnnotationsReadOnly(details)
-    );
-}
-
-export async function fetchOncoKbCnaAnnotationsReadOnly(
-    oncoKbBase: string,
-    cnas: CNADetail[]
-): Promise<OncoKbCnaAnnotation[] | null> {
-    const queryableCnas = cnas.filter(
-        cna => cna.entrezGeneId && cnaOncoKbAlteration(cna.cnaValue)
-    );
-    if (!queryableCnas.length) return null;
-
-    const items = buildOncoKbCnaItems(queryableCnas);
-    if (!items.length) return null;
-
-    const cacheKey = [
-        oncoKbBase,
-        'oncokb-cna',
-        buildOrderedListCacheKeyFromItems(items, item => item.id),
-    ].join('::');
-
-    const annotations = await getCachedRequest(
-        oncoKbCnaAnnotationRequestCache,
-        cacheKey,
-        async () => {
-            let annotations: Array<{
-                query: { id: string };
-                oncogenic?: string;
-                mutationEffect?: { knownEffect?: string };
-                geneSummary?: string;
-                variantSummary?: string;
-            }>;
-            try {
-                annotations =
-                    (await getWsiOncoKbClient().annotateCopyNumberAlterationsPostUsingPOST_1(
-                        {
-                            body: items as any,
-                        }
-                    )) ?? [];
-            } catch {
-                return null;
-            }
-
-            return annotations.map(annotation => ({
-                id: annotation.query.id,
-                oncogenic: annotation.oncogenic,
-                mutationEffect: annotation.mutationEffect?.knownEffect,
-                geneSummary: annotation.geneSummary,
-                variantSummary: annotation.variantSummary,
-            }));
-        }
-    );
-
-    return annotations;
-}
-
-export async function fetchOncoKbCnaAnnotations(
-    tileOrigin: string,
-    cnas: CNADetail[]
-): Promise<OncoKbCnaAnnotation[] | null> {
-    return cloneCachedValue(
-        await fetchOncoKbCnaAnnotationsReadOnly(tileOrigin, cnas)
-    );
-}
-
-export async function fetchCivicCnaAnnotationsReadOnly(
+/**
+ * CIViC entries of the amplifications and deep deletions (CIViC has no
+ * entries for gains and shallow losses); only their genes are requested.
+ */
+export function fetchCivicCnaAnnotations(
     cnas: CNADetail[]
 ): Promise<CivicCnaAnnotation[] | null> {
-    if (!cnas.length) return null;
+    const annotatable = cnas.filter(cna => Math.abs(cna.cnaValue) === 2);
+    if (!annotatable.length) return Promise.resolve(null);
 
-    const cacheKey = [
-        'civic-cna',
-        buildOrderedListCacheKeyFromItems(
-            cnas,
-            cna => `${cna.gene}:${cna.cnaValue}`
-        ),
-    ].join('::');
-
-    const annotations = await getCachedRequest(
-        civicCnaAnnotationRequestCache,
-        cacheKey,
+    return optional(
+        civicCnaRequestCache,
+        sortedKey(annotatable.map(cna => `${cna.gene}:${cna.cnaValue}`)),
+        'CIViC copy-number annotation',
         async () => {
-            let civicGenes: ICivicGeneIndex;
-            let civicVariants: ICivicVariantIndex;
-            try {
-                civicGenes = await getCivicGenes(
-                    buildUniqueSortedStringList(cnas, cna => cna.gene)
-                );
-                civicVariants = await getCivicVariants(civicGenes);
-            } catch {
-                return null;
-            }
-
-            return cnas.map(cna => {
+            const civicGenes = await getCivicGenes(
+                Array.from(new Set(annotatable.map(cna => cna.gene))).sort()
+            );
+            // Without mutation specs, only the genes' CNA variants are kept.
+            const civicVariants = await getCivicVariants(civicGenes);
+            return annotatable.map(cna => {
                 const geneSummary = civicGenes[cna.gene];
-                const civicGeneVariants = getCivicCnaVariants(
+                const variants = getCivicCnaVariants(
                     cna.cnaValue,
                     cna.gene,
                     civicVariants
                 );
-
-                if (
-                    geneSummary &&
-                    (Object.keys(civicGeneVariants).length > 0 ||
-                        geneSummary.description !== '')
-                ) {
-                    return {
-                        gene: cna.gene,
-                        cnaValue: cna.cnaValue,
-                        civicEntry: buildCivicEntry(
-                            geneSummary,
-                            civicGeneVariants
-                        ) as ICivicEntry,
-                        hasCivicVariants:
-                            Object.keys(civicGeneVariants).length > 0,
-                    };
-                }
-
+                const hasCivicVariants = Object.keys(variants).length > 0;
                 return {
                     gene: cna.gene,
                     cnaValue: cna.cnaValue,
-                    civicEntry: null,
-                    hasCivicVariants: false,
+                    civicEntry:
+                        geneSummary &&
+                        (hasCivicVariants || geneSummary.description !== '')
+                            ? (buildCivicEntry(
+                                  geneSummary,
+                                  variants
+                              ) as ICivicEntry)
+                            : null,
+                    hasCivicVariants,
                 };
             });
         }
     );
-
-    return annotations;
-}
-
-export async function fetchCivicCnaAnnotations(
-    cnas: CNADetail[]
-): Promise<CivicCnaAnnotation[] | null> {
-    return cloneCachedValue(await fetchCivicCnaAnnotationsReadOnly(cnas));
-}
-
-export async function fetchOncoKbStructuralVariantAnnotationsReadOnly(
-    oncoKbBase: string,
-    structuralVariants: StructuralVariantDetail[]
-): Promise<OncoKbStructuralVariantAnnotation[] | null> {
-    const queryableStructuralVariants = structuralVariants.filter(
-        sv => sv.site1EntrezGeneId || sv.site2EntrezGeneId
-    );
-    if (!queryableStructuralVariants.length) return null;
-
-    const items = buildOncoKbStructuralVariantItems(
-        queryableStructuralVariants
-    );
-    if (!items.length) return null;
-
-    const cacheKey = [
-        oncoKbBase,
-        'oncokb-structural-variant',
-        buildOrderedListCacheKeyFromItems(items, item => item.id),
-    ].join('::');
-
-    const annotations = await getCachedRequest(
-        oncoKbStructuralVariantAnnotationRequestCache,
-        cacheKey,
-        async () => {
-            let annotations: Array<{
-                query: { id: string };
-                oncogenic?: string;
-                mutationEffect?: { knownEffect?: string };
-                geneSummary?: string;
-                variantSummary?: string;
-            }>;
-            try {
-                annotations =
-                    (await getWsiOncoKbClient().annotateStructuralVariantsPostUsingPOST_1(
-                        {
-                            body: items as any,
-                        }
-                    )) ?? [];
-            } catch {
-                return null;
-            }
-
-            return annotations.map(annotation => ({
-                id: annotation.query.id,
-                oncogenic: annotation.oncogenic,
-                mutationEffect: annotation.mutationEffect?.knownEffect,
-                geneSummary: annotation.geneSummary,
-                variantSummary: annotation.variantSummary,
-            }));
-        }
-    );
-
-    return annotations;
-}
-
-export async function fetchOncoKbStructuralVariantAnnotations(
-    tileOrigin: string,
-    structuralVariants: StructuralVariantDetail[]
-): Promise<OncoKbStructuralVariantAnnotation[] | null> {
-    return cloneCachedValue(
-        await fetchOncoKbStructuralVariantAnnotationsReadOnly(
-            tileOrigin,
-            structuralVariants
-        )
-    );
 }
 
 export function clearWsiMolecularAnnotationRequestCaches() {
-    oncoKbMutationAnnotationRequestCache.clear();
-    civicMutationAnnotationRequestCache.clear();
-    oncoKbCnaAnnotationRequestCache.clear();
-    civicCnaAnnotationRequestCache.clear();
-    oncoKbStructuralVariantAnnotationRequestCache.clear();
+    oncoKbRequestCache.clear();
+    civicMutationRequestCache.clear();
+    civicCnaRequestCache.clear();
 }
-
-export function annotationMapById<T extends { id: string }>(
-    annotations: T[]
-): Map<string, T> {
-    const map = new Map<string, T>();
-    for (let index = 0; index < annotations.length; index += 1) {
-        const annotation = annotations[index];
-        map.set(annotation.id, annotation);
-    }
-    return map;
-}
-
-export function civicMutationAnnotationMapByToken(
-    annotations: CivicMutationAnnotation[]
-): Map<string, CivicMutationAnnotation> {
-    const map = new Map<string, CivicMutationAnnotation>();
-    for (let index = 0; index < annotations.length; index += 1) {
-        const annotation = annotations[index];
-        map.set(annotation.token, annotation);
-    }
-    return map;
-}
-
-export function civicCnaAnnotationMap(
-    annotations: CivicCnaAnnotation[]
-): Map<string, CivicCnaAnnotation> {
-    const map = new Map<string, CivicCnaAnnotation>();
-    for (let index = 0; index < annotations.length; index += 1) {
-        const annotation = annotations[index];
-        map.set(`${annotation.gene}:${annotation.cnaValue}`, annotation);
-    }
-    return map;
-}
-
-export { cnaOncoKbId, mutationOncoKbId, structuralVariantOncoKbId };

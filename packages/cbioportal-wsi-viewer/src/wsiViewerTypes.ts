@@ -41,7 +41,23 @@ export type WsiStainKind = 'hne' | 'ihc' | 'other' | 'unknown';
 
 export type WsiStainFilter = 'all' | WsiStainKind;
 export type PathologySlideMatchFilter = 'all' | 'part' | 'block' | 'unmatched';
-export type WsiMutationDataStatus = 'idle' | 'loading' | 'ready' | 'error';
+/**
+ * Mutation data of the patient's samples: `unprofiled` when the study has no
+ * mutation profile.
+ */
+export type WsiMutationDataStatus =
+    | 'idle'
+    | 'loading'
+    | 'ready'
+    | 'unprofiled'
+    | 'error';
+
+/** A sample clinical attribute value, as the portal API returns it. */
+export interface WsiSampleClinicalDatum {
+    sampleId: string;
+    clinicalAttributeId: string;
+    value: string;
+}
 
 export interface Block {
     block_number: string;
@@ -58,24 +74,34 @@ export interface Part {
 }
 
 export interface MutationDetail {
+    /** Gene and protein change, e.g. "KRAS G12D"; unique within a sample. */
     token: string;
+    gene: string;
+    /** Protein change without the `p.` prefix; empty when there is none. */
+    proteinChange: string;
     type?: string; // human-readable mutation type, e.g. "Missense"
     vaf?: number; // 0–100 percent
     annotation?: string; // driverFilterAnnotation, e.g. "KRAS G13D is a hotspot"
-    cohortFrequency?: number; // fraction 0–1: how often this position mutated in study cohort
-    // OncoKB annotation fields (populated by fetchAndMergeOncoKbAnnotations)
-    oncogenic?: string; // "Oncogenic" | "Likely Oncogenic" | "Likely Neutral" | "Unknown"
-    mutationEffect?: string; // "Gain-of-function" | "Loss-of-function" | "Unknown"
-    hotspot?: boolean;
-    hasCivic?: boolean; // true when OncoKB variantExist=true (CIViC DB has an entry)
-    civicEntry?: ICivicEntry | null;
-    geneSummary?: string;
-    variantSummary?: string;
-    // Fields used internally to build the OncoKB batch request (not displayed)
     entrezGeneId?: number;
     consequence?: string; // e.g. "Missense_Mutation"
+    /** The portal's mutation keyword, e.g. "KRAS G12 missense". */
+    keyword?: string;
     proteinStart?: number;
     proteinEnd?: number;
+    /** Samples of the study's mutation profile with the same variant. */
+    cohortAlteredCount?: number;
+    /** Samples of the study's mutation profile. */
+    cohortProfiledCount?: number;
+    /** OncoKB oncogenicity, e.g. "Oncogenic" or "Likely Neutral". */
+    oncogenic?: string;
+    /** OncoKB mutation effect, e.g. "Gain-of-function". */
+    mutationEffect?: string;
+    /** OncoKB's hotspot flag. */
+    hotspot?: boolean;
+    geneSummary?: string;
+    variantSummary?: string;
+    /** The CIViC gene and variant entry; null when CIViC has none. */
+    civicEntry?: ICivicEntry | null;
 }
 
 /** Single discrete copy-number alteration event from the study's CNA profile. */
@@ -84,16 +110,19 @@ export interface CNADetail {
     entrezGeneId?: number;
     /** GISTIC value: -2=DeepDel, -1=ShallowDel, 1=Gain, 2=Amp */
     cnaValue: number;
-    cytoband?: string;
+    /** Samples of the study's CNA profile with the same alteration of the gene. */
     cohortAlteredCount?: number;
+    /** Samples of the study's CNA profile. */
     cohortProfiledCount?: number;
-    cohortFrequency?: number;
+    /** OncoKB annotation, as on MutationDetail. */
     oncogenic?: string;
     mutationEffect?: string;
-    civicEntry?: ICivicEntry | null;
-    hasCivicVariants?: boolean;
     geneSummary?: string;
     variantSummary?: string;
+    /** The CIViC gene entry with its variants for this alteration. */
+    civicEntry?: ICivicEntry | null;
+    /** CIViC has a variant for this alteration, not only the gene. */
+    hasCivicVariants?: boolean;
 }
 
 export interface StructuralVariantDetail {
@@ -124,6 +153,7 @@ export interface StructuralVariantDetail {
     site2Chromosome?: string;
     site2Position?: number;
     ncbiBuild?: string;
+    /** OncoKB annotation, as on MutationDetail. */
     oncogenic?: string;
     mutationEffect?: string;
     geneSummary?: string;
@@ -132,18 +162,23 @@ export interface StructuralVariantDetail {
 
 export interface Sample {
     sample_id: string;
-    cancer_type: string;
-    cancer_type_detailed: string;
-    oncotree_code: string;
-    primary_site: string;
-    sample_type: string;
+    cancer_type?: string;
+    cancer_type_detailed?: string;
+    oncotree_code?: string;
+    primary_site?: string;
+    sample_type?: string;
     metastatic_site?: string;
+    /** TUMOR_PURITY: a fraction (0–1) or a percentage. */
     tumor_purity?: string;
-    oncogenic_mutations?: string;
-    oncogenic_mutation_details?: MutationDetail[];
-    num_oncogenic_mutations?: string;
+    /** TMB_NONSYNONYMOUS, in mutations per megabase. */
     tmb_score?: string;
     msi_type?: string;
+    msi_score?: string;
+    /**
+     * The sample's mutations; unset until loaded or when the study has no
+     * mutation profile.
+     */
+    mutations?: MutationDetail[];
     /** Significant CNA events (value ≠ 0) from the study's GISTIC/CNA profile. */
     cna_alterations?: CNADetail[];
     /** Structural variants with tumor evidence from the study's SV profile. */

@@ -28,8 +28,18 @@ jest.mock('shared/api/wsiOncoKbClientInstance', () => ({
     getWsiOncoKbClient: () => mockOncoKbClient,
 }));
 
+const mockSampleData = [
+    {
+        sampleId: 'S-1',
+        clinicalAttributeId: 'TMB_NONSYNONYMOUS',
+        value: '8.2',
+    },
+];
 jest.mock('./wsiClinicalRows', () => ({
-    useWsiClinicalRows: () => [{ label: 'Sex', value: 'Female' }],
+    useWsiClinicalData: () => ({
+        rows: [{ label: 'Sex', value: 'Female' }],
+        sampleData: mockSampleData,
+    }),
 }));
 
 jest.mock('cbioportal-wsi-viewer/viewer', () => ({
@@ -71,24 +81,22 @@ describe('buildWsiMolecularServices', () => {
         );
     });
 
-    it('follows the portal OncoKB and CIViC settings', () => {
-        expect(buildWsiMolecularServices()).toEqual(
-            expect.objectContaining({ showOncoKb: false, showCivic: false })
-        );
+    it('follows the portal OncoKB and CIViC settings when they are read', () => {
+        const services = buildWsiMolecularServices();
+        expect(services.showOncoKb()).toBe(false);
+        expect(services.showCivic()).toBe(false);
 
+        // Custom JS can change the settings after the services are built.
         mockServerConfig.show_oncokb = true;
         mockServerConfig.show_civic = true;
-        const services = buildWsiMolecularServices();
 
-        expect(services.showOncoKb).toBe(true);
-        expect(services.showCivic).toBe(true);
+        expect(services.showOncoKb()).toBe(true);
+        expect(services.showCivic()).toBe(true);
         expect(services.getOncoKbApiUrl()).toBe(
             'https://portal.example/beta/proxy/oncokb'
         );
         expect(services.getOncoKbClient()).toBe(mockOncoKbClient);
-        expect(buildWsiViewerConfig().molecular).toEqual(
-            expect.objectContaining({ showOncoKb: true, showCivic: true })
-        );
+        expect(buildWsiViewerConfig().molecular!.showOncoKb()).toBe(true);
     });
 
     it('resolves CIViC copy number variants and mutation types', () => {
@@ -160,6 +168,7 @@ describe('AppWsiViewer', () => {
                 showDownload: true,
                 renderLoading: expect.any(Function),
                 clinicalRows: [{ label: 'Sex', value: 'Female' }],
+                sampleClinicalData: mockSampleData,
             })
         );
     });

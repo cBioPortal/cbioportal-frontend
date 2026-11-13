@@ -7,17 +7,21 @@ import WSIViewer from './WSIViewer';
 import { WsiViewerController } from './wsiViewerController';
 import * as wsiMetaUtils from './wsiMetaUtils';
 import * as wsiSlideUtils from './wsiSlideUtils';
-import * as wsiMolecularAnnotationDataUtils from './wsiMolecularAnnotationDataUtils';
 import * as wsiCbioportalDataUtils from './wsiCbioportalDataUtils';
+import * as wsiMolecularAnnotationDataUtils from './wsiMolecularAnnotationDataUtils';
 import { clearPatientHierarchyCache } from './wsiHierarchyFetchCache';
-import {
-    clearMolecularProfileIdCache,
-    clearWsiCbioportalRequestCaches,
-} from './wsiCbioportalDataUtils';
+import { clearWsiCbioportalRequestCaches } from './wsiCbioportalDataUtils';
 import { clearWsiSlideSources } from './wsiAuth';
 import { clearWsiThumbnailFetchCache } from './wsiThumbnailFetchCache';
 import { slideRowsFor } from './wsiTestFixtures';
-import { PatientHierarchy, Block, Part, Sample, Slide } from './wsiViewerTypes';
+import {
+    PatientHierarchy,
+    Block,
+    MutationDetail,
+    Part,
+    Sample,
+    Slide,
+} from './wsiViewerTypes';
 import {
     configureWsiViewerRuntime,
     WsiMolecularServices,
@@ -25,9 +29,10 @@ import {
 } from './wsiViewerConfig';
 
 // Component tests use a synthetic origin, so keep portal API URLs relative.
+let annotationsEnabled = false;
 const testMolecularServices: WsiMolecularServices = {
-    showOncoKb: false,
-    showCivic: false,
+    showOncoKb: () => annotationsEnabled,
+    showCivic: () => annotationsEnabled,
     getOncoKbApiUrl: () => '/proxy/oncokb',
     getOncoKbClient: () => {
         throw new Error('OncoKB client is not used by these tests');
@@ -45,7 +50,10 @@ function configureTestRuntime(overrides: Partial<WsiViewerConfig> = {}) {
 }
 
 configureTestRuntime();
-beforeEach(() => configureTestRuntime());
+beforeEach(() => {
+    annotationsEnabled = false;
+    configureTestRuntime();
+});
 
 // Controllers that started a hierarchy load, a mount or sample enrichment are
 // disposed after each test, so their background requests and retries cannot
@@ -230,7 +238,7 @@ beforeEach(() => {
             .fetchWsiPatientHierarchy(...args)
     );
     clearPatientHierarchyCache();
-    clearMolecularProfileIdCache();
+    clearWsiCbioportalRequestCaches();
     clearWsiThumbnailFetchCache();
     clearWsiSlideSources();
 });
@@ -451,7 +459,7 @@ describe('WSIViewer — cached sidebar data', () => {
         expect((inst as any).hierarchyDataVersion).toBe(initialVersion + 1);
     });
 
-    it('defers Molecular sidebar content until the first tile is ready', () => {
+    it('defers the molecular tables, not the summary rows, until the first tile is ready', () => {
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
         const hierarchy = makeHierarchy([makeSlide({ slide_key: 'A' })], 'P-1');
         const sample = hierarchy.samples[0];
@@ -467,8 +475,11 @@ describe('WSIViewer — cached sidebar data', () => {
             })();
         });
 
-        expect((inst as any).sidebarImpactSample).toBeNull();
-        expect((inst as any).sidebarSeqRowsForRender).toEqual([]);
+        expect((inst as any).sidebarTableSample).toBeNull();
+        // A slide whose tiles never load still shows TMB, MSI and purity.
+        expect((inst as any).selectedSeqRows).toContainEqual(
+            expect.objectContaining({ label: 'TMB', value: '12.3 mut/Mb' })
+        );
 
         act(() => {
             mobxAction(() => {
@@ -476,11 +487,8 @@ describe('WSIViewer — cached sidebar data', () => {
             })();
         });
 
-        expect((inst as any).sidebarImpactSample?.sample_id).toBe(
+        expect((inst as any).sidebarTableSample?.sample_id).toBe(
             sample.sample_id
-        );
-        expect((inst as any).sidebarSeqRowsForRender).toEqual(
-            (inst as any).selectedSeqRows
         );
     });
 
@@ -491,8 +499,7 @@ describe('WSIViewer — cached sidebar data', () => {
             makePart([makeBlock([slide])]),
         ]);
         const reference = makeSample('P-1-T02-IM5', []);
-        reference.oncogenic_mutations = 'KRAS p.G12D';
-        reference.oncogenic_mutation_details = [];
+        reference.mutations = [];
         const hierarchy: PatientHierarchy = {
             patient_id: 'P-1',
             reference_sample_id: reference.sample_id,
@@ -508,12 +515,20 @@ describe('WSIViewer — cached sidebar data', () => {
             })();
         });
 
-        expect((inst as any).sidebarImpactSample?.sample_id).toBe(
+        expect((inst as any).sidebarTableSample?.sample_id).toBe(
             reference.sample_id
         );
         expect((inst as any).selectedSampleUrl).toContain(
             encodeURIComponent(reference.sample_id)
         );
+
+        act(() => {
+            mobxAction(() => {
+                hierarchy.reference_sample_id = undefined;
+                inst.viewerState.hierarchy = { ...hierarchy };
+            })();
+        });
+        expect((inst as any).sidebarTableSample).toBeNull();
     });
 });
 
@@ -578,35 +593,41 @@ describe('WSIViewer — loadHierarchy enrichment', () => {
 });
 
 describe('WSIViewer — sample enrichment scheduling', () => {
-    beforeEach(() => {
-        configureTestRuntime({
-            molecular: {
-                ...testMolecularServices,
-                showOncoKb: true,
-                showCivic: true,
-            },
-        });
-    });
-
     afterEach(() => {
         jest.restoreAllMocks();
     });
 
-    it('does not apply stale mutation frequency or annotation results to a new hierarchy', async () => {
+    const TP53: MutationDetail = {
+        token: 'TP53 R175H',
+        gene: 'TP53',
+        proteinChange: 'R175H',
+        entrezGeneId: 7157,
+        keyword: 'TP53 R175 missense',
+    };
+    const tp53Counts = () =>
+        new Map([
+            [
+                wsiCbioportalDataUtils.variantCountKey(
+                    'study_mutations',
+                    7157,
+                    'TP53 R175 missense'
+                ),
+                {
+                    entrezGeneId: 7157,
+                    keyword: 'TP53 R175 missense',
+                    numberOfSamples: 4,
+                    numberOfSamplesWithKeyword: 2,
+                },
+            ],
+        ]);
+
+    it('does not apply stale variant counts to a new hierarchy', async () => {
         const makeEnrichmentHierarchy = (patientId: string) => {
             const hierarchy = makeHierarchy(
                 [makeSlide({ slide_key: `${patientId}-slide` })],
                 patientId
             );
-            hierarchy.samples[0].oncogenic_mutation_details = [
-                {
-                    token: 'TP53 p.R175H',
-                    entrezGeneId: 7157,
-                    consequence: 'missense_variant',
-                    proteinStart: 175,
-                    proteinEnd: 175,
-                },
-            ];
+            hierarchy.samples[0].mutations = [{ ...TP53 }];
             return hierarchy;
         };
 
@@ -615,143 +636,71 @@ describe('WSIViewer — sample enrichment scheduling', () => {
         const hierarchyB = makeEnrichmentHierarchy('P-B');
         inst.viewerState.hierarchy = hierarchyA;
 
-        const frequency = deferredPromise<{
-            counts: Array<{
-                entrezGeneId: number;
-                proteinPosStart: number;
-                proteinPosEnd: number;
-                count: number;
-            }>;
-            total: number;
-        }>();
-        const annotations = deferredPromise<any[]>();
-        const frequencySpy = jest
-            .spyOn(wsiCbioportalDataUtils, 'fetchMutationFrequencyDataReadOnly')
-            .mockReturnValue(frequency.promise);
-        const annotationSpy = jest
-            .spyOn(
-                wsiMolecularAnnotationDataUtils,
-                'fetchOncoKbMutationAnnotationsReadOnly'
-            )
-            .mockReturnValue(annotations.promise);
-        const stageSpies = [
-            'fetchAndMergeClinicalData',
-            'fetchAndMergeMutations',
-            'fetchAndMergeCNA',
-            'fetchAndMergeStructuralVariants',
-            'fetchAndMergeCivicAnnotations',
-            'fetchAndMergeCnaOncoKbAnnotations',
-            'fetchAndMergeCnaCivicAnnotations',
-            'fetchAndMergeStructuralVariantOncoKbAnnotations',
-        ].map(methodName =>
-            jest.spyOn(inst as any, methodName).mockResolvedValue(undefined)
+        const counts = deferredPromise<ReturnType<typeof tp53Counts>>();
+        const countsSpy = jest
+            .spyOn(wsiCbioportalDataUtils, 'fetchVariantCounts')
+            .mockReturnValue(counts.promise);
+        jest.spyOn(inst as any, 'fetchAndMergeClinicalData').mockResolvedValue(
+            undefined
         );
+        jest.spyOn(inst as any, 'fetchAndMergeMutations').mockResolvedValue(
+            'study_mutations'
+        );
+        jest.spyOn(inst as any, 'fetchAndMergeCNA').mockResolvedValue(
+            undefined
+        );
+        jest.spyOn(
+            inst as any,
+            'fetchAndMergeStructuralVariants'
+        ).mockResolvedValue(undefined);
 
         const enrichmentPromise = (inst as any).runSampleEnrichment(
-            '',
             'study-1',
             'P-A',
             ['S-123456-T01'],
             () => true
         );
-        await enrichmentPromise;
-        await Promise.resolve();
-        await Promise.resolve();
+        for (let tick = 0; tick < 10; tick += 1) {
+            await Promise.resolve();
+        }
 
-        expect(frequencySpy).toHaveBeenCalledTimes(1);
-        expect(annotationSpy).toHaveBeenCalledTimes(1);
+        expect(countsSpy).toHaveBeenCalledWith('study_mutations', [TP53]);
 
         inst.viewerState.hierarchy = hierarchyB;
-        frequency.resolve({
-            counts: [
-                {
-                    entrezGeneId: 7157,
-                    proteinPosStart: 175,
-                    proteinPosEnd: 175,
-                    count: 2,
-                },
-            ],
-            total: 4,
-        });
-        annotations.resolve([
-            {
-                id: '7157_R175H_missense_variant',
-                oncogenic: 'Oncogenic',
-            },
-        ]);
+        counts.resolve(tp53Counts());
         await enrichmentPromise;
-        await Promise.resolve();
-        await Promise.resolve();
 
-        const nextDetail = inst.viewerState.hierarchy.samples[0]
-            .oncogenic_mutation_details![0];
-        expect(nextDetail.cohortFrequency).toBeUndefined();
-        expect(nextDetail.oncogenic).toBeUndefined();
-
-        stageSpies.forEach(spy => spy.mockRestore());
-        frequencySpy.mockRestore();
-        annotationSpy.mockRestore();
+        expect(
+            inst.viewerState.hierarchy.samples[0].mutations![0]
+                .cohortAlteredCount
+        ).toBeUndefined();
     });
 
-    it('applies enrichment results when the hierarchy is still current', async () => {
+    it('applies the variant counts when the hierarchy is still current', async () => {
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
         const hierarchy = makeHierarchy(
             [makeSlide({ slide_key: 'current-slide' })],
             'P-current'
         );
-        hierarchy.samples[0].oncogenic_mutation_details = [
-            {
-                token: 'TP53 p.R175H',
-                entrezGeneId: 7157,
-                consequence: 'missense_variant',
-                proteinStart: 175,
-                proteinEnd: 175,
-            },
-        ];
+        hierarchy.samples[0].mutations = [{ ...TP53 }];
         inst.viewerState.hierarchy = hierarchy;
 
-        const frequencySpy = jest
-            .spyOn(wsiCbioportalDataUtils, 'fetchMutationFrequencyDataReadOnly')
-            .mockResolvedValue({
-                counts: [
-                    {
-                        entrezGeneId: 7157,
-                        proteinPosStart: 175,
-                        proteinPosEnd: 175,
-                        count: 2,
-                    },
-                ],
-                total: 4,
-            });
-        const annotationSpy = jest
-            .spyOn(
-                wsiMolecularAnnotationDataUtils,
-                'fetchOncoKbMutationAnnotationsReadOnly'
-            )
-            .mockResolvedValue([
-                {
-                    id: '7157_R175H_missense_variant',
-                    oncogenic: 'Oncogenic',
-                },
-            ]);
+        const countsSpy = jest
+            .spyOn(wsiCbioportalDataUtils, 'fetchVariantCounts')
+            .mockResolvedValue(tp53Counts());
 
-        await (inst as any).fetchAndMergeMutationFrequency(
-            '',
-            'study-1',
+        await (inst as any).fetchAndMergeVariantCounts(
+            'study_mutations',
             () => true
         );
-        expect(frequencySpy).toHaveBeenCalledTimes(1);
-        await (inst as any).fetchAndMergeOncoKbAnnotations(() => true);
-        expect(annotationSpy).toHaveBeenCalledTimes(1);
+        expect(countsSpy).toHaveBeenCalledTimes(1);
 
-        const detail = inst.viewerState.hierarchy.samples[0]
-            .oncogenic_mutation_details![0];
-        expect(detail.cohortFrequency).toBe(0.5);
-        expect(detail.oncogenic).toBe('Oncogenic');
-
-        (inst as any).cancelScheduledHierarchyRefresh();
-        frequencySpy.mockRestore();
-        annotationSpy.mockRestore();
+        expect(inst.viewerState.hierarchy.samples[0].mutations![0]).toEqual(
+            expect.objectContaining({
+                cohortAlteredCount: 2,
+                cohortProfiledCount: 4,
+            })
+        );
     });
 
     it('runs independent enrichment fetches in parallel stages', async () => {
@@ -771,17 +720,11 @@ describe('WSIViewer — sample enrichment scheduling', () => {
         jest.spyOn(inst as any, 'fetchAndMergeMutations').mockImplementation(
             () => {
                 order.push('mutations');
-                return mutations.promise;
+                return mutations.promise.then(() => 'study_mutations');
             }
         );
-        const civicSpy = jest
-            .spyOn(inst as any, 'fetchAndMergeCivicAnnotations')
-            .mockResolvedValue(undefined);
         const frequencySpy = jest
-            .spyOn(inst as any, 'fetchAndMergeMutationFrequency')
-            .mockResolvedValue(undefined);
-        const oncoKbSpy = jest
-            .spyOn(inst as any, 'fetchAndMergeOncoKbAnnotations')
+            .spyOn(inst as any, 'fetchAndMergeVariantCounts')
             .mockResolvedValue(undefined);
         jest.spyOn(inst as any, 'fetchAndMergeCNA').mockImplementation(() => {
             order.push('cna');
@@ -794,21 +737,8 @@ describe('WSIViewer — sample enrichment scheduling', () => {
             order.push('sv');
             return structuralVariants.promise;
         });
-        const cnaOncoKbSpy = jest
-            .spyOn(inst as any, 'fetchAndMergeCnaOncoKbAnnotations')
-            .mockResolvedValue(undefined);
-        const cnaCivicSpy = jest
-            .spyOn(inst as any, 'fetchAndMergeCnaCivicAnnotations')
-            .mockResolvedValue(undefined);
-        const svOncoKbSpy = jest
-            .spyOn(
-                inst as any,
-                'fetchAndMergeStructuralVariantOncoKbAnnotations'
-            )
-            .mockResolvedValue(undefined);
 
         const enrichmentPromise = (inst as any).runSampleEnrichment(
-            '',
             'study-1',
             'P-1',
             ['S-1'],
@@ -829,32 +759,24 @@ describe('WSIViewer — sample enrichment scheduling', () => {
         mutations.resolve();
         await Promise.resolve();
         await Promise.resolve();
+        await Promise.resolve();
         expect(order).toEqual(['clinical', 'mutations', 'cna', 'sv']);
-        expect(oncoKbSpy).not.toHaveBeenCalled();
-        expect(civicSpy).not.toHaveBeenCalled();
         expect(frequencySpy).not.toHaveBeenCalled();
 
         cna.resolve();
         await Promise.resolve();
-        expect(cnaOncoKbSpy).not.toHaveBeenCalled();
-        expect(cnaCivicSpy).not.toHaveBeenCalled();
-        expect(svOncoKbSpy).not.toHaveBeenCalled();
-        expect(oncoKbSpy).not.toHaveBeenCalled();
-        expect(civicSpy).not.toHaveBeenCalled();
         expect(frequencySpy).not.toHaveBeenCalled();
 
         structuralVariants.resolve();
         await enrichmentPromise;
 
-        expect(oncoKbSpy).toHaveBeenCalledTimes(1);
-        expect(civicSpy).toHaveBeenCalledTimes(1);
-        expect(frequencySpy).toHaveBeenCalledTimes(1);
-        expect(cnaOncoKbSpy).toHaveBeenCalledTimes(1);
-        expect(cnaCivicSpy).toHaveBeenCalledTimes(1);
-        expect(svOncoKbSpy).toHaveBeenCalledTimes(1);
+        expect(frequencySpy).toHaveBeenCalledWith(
+            'study_mutations',
+            expect.any(Function)
+        );
     });
 
-    it('skips mutation hierarchy updates when no mutation data and no existing mutation text are available', async () => {
+    it('reports a study without a mutation profile as not profiled, without retrying', async () => {
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
         inst.viewerState.hierarchy = makeHierarchy(
             [makeSlide({ slide_key: 'A' })],
@@ -867,36 +789,73 @@ describe('WSIViewer — sample enrichment scheduling', () => {
             },
         ];
         const originalFetch = (global as any).fetch;
-        clearMolecularProfileIdCache();
-        clearWsiCbioportalRequestCaches();
-        const fetchMock = jest
-            .fn()
-            .mockResolvedValueOnce({
-                ok: true,
-                json: async () => [],
-            })
-            .mockResolvedValueOnce({
-                ok: true,
-                json: async () => [],
-            });
+        const fetchMock = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => [
+                {
+                    molecularProfileId: 'study_log2CNA',
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    datatype: 'LOG2-VALUE',
+                },
+            ],
+        });
         (global as any).fetch = fetchMock;
 
         const applySpy = jest.spyOn(inst as any, 'applyHierarchyMutation');
         try {
-            await (inst as any).fetchAndMergeMutations(
-                '',
-                'study-1',
-                sampleIdentifiers
-            );
+            await expect(
+                (inst as any).fetchAndMergeMutations(
+                    'study-1',
+                    sampleIdentifiers,
+                    () => true
+                )
+            ).resolves.toBeNull();
 
             expect(applySpy).not.toHaveBeenCalled();
-            expect((inst as any).mutationDataStatus).toBe('ready');
+            expect((inst as any).mutationDataStatus).toBe('unprofiled');
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+            expect(fetchMock.mock.calls[0][0]).toBe(
+                '/api/studies/study-1/molecular-profiles?projection=DETAILED'
+            );
         } finally {
             applySpy.mockRestore();
             (global as any).fetch = originalFetch;
-            clearMolecularProfileIdCache();
-            clearWsiCbioportalRequestCaches();
         }
+    });
+
+    it('gives profiled samples without mutations an empty list', async () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        inst.viewerState.hierarchy = makeHierarchy(
+            [makeSlide({ slide_key: 'A' })],
+            'P-1'
+        );
+        const sampleId = inst.viewerState.hierarchy.samples[0].sample_id;
+        const originalFetch = (global as any).fetch;
+        (global as any).fetch = jest
+            .fn()
+            .mockResolvedValueOnce({
+                ok: true,
+                json: async () => [
+                    {
+                        molecularProfileId: 'study_mutations',
+                        molecularAlterationType: 'MUTATION_EXTENDED',
+                    },
+                ],
+            })
+            .mockResolvedValueOnce({ ok: true, json: async () => [] });
+
+        try {
+            await (inst as any).fetchAndMergeMutations(
+                'study-1',
+                [{ studyId: 'study-1', sampleId }],
+                () => true
+            );
+        } finally {
+            (global as any).fetch = originalFetch;
+        }
+
+        expect((inst as any).mutationDataStatus).toBe('ready');
+        expect(inst.viewerState.hierarchy.samples[0].mutations).toEqual([]);
     });
 
     it('retries a transient mutation profile response before giving up', async () => {
@@ -911,7 +870,7 @@ describe('WSIViewer — sample enrichment scheduling', () => {
                 sampleId: inst.viewerState.hierarchy.samples[0].sample_id,
             },
         ];
-        clearMolecularProfileIdCache();
+        clearWsiCbioportalRequestCaches();
         clearWsiCbioportalRequestCaches();
         const originalFetch = (global as any).fetch;
         const fetchMock = jest
@@ -943,27 +902,24 @@ describe('WSIViewer — sample enrichment scheduling', () => {
 
         try {
             await (inst as any).fetchAndMergeMutations(
-                '',
                 'study-1',
-                sampleIdentifiers
+                sampleIdentifiers,
+                () => true
             );
         } finally {
             (global as any).fetch = originalFetch;
-            clearMolecularProfileIdCache();
+            clearWsiCbioportalRequestCaches();
             clearWsiCbioportalRequestCaches();
         }
 
-        expect(inst.viewerState.hierarchy.samples[0].oncogenic_mutations).toBe(
-            'TP53 p.R175H'
-        );
-        expect(
-            inst.viewerState.hierarchy.samples[0].oncogenic_mutation_details
-        ).toEqual([
+        expect(inst.viewerState.hierarchy.samples[0].mutations).toEqual([
             expect.objectContaining({
-                token: 'TP53 p.R175H',
+                token: 'TP53 R175H',
+                proteinChange: 'R175H',
                 type: 'Missense',
             }),
         ]);
+        expect((inst as any).mutationDataStatus).toBe('ready');
         expect(fetchMock).toHaveBeenCalledTimes(3);
     });
 
@@ -979,7 +935,7 @@ describe('WSIViewer — sample enrichment scheduling', () => {
                 sampleId: inst.viewerState.hierarchy.samples[0].sample_id,
             },
         ];
-        clearMolecularProfileIdCache();
+        clearWsiCbioportalRequestCaches();
         clearWsiCbioportalRequestCaches();
         const originalFetch = (global as any).fetch;
         const fetchMock = jest
@@ -989,16 +945,16 @@ describe('WSIViewer — sample enrichment scheduling', () => {
 
         try {
             await (inst as any).fetchAndMergeMutations(
-                '',
                 'study-1',
-                sampleIdentifiers
+                sampleIdentifiers,
+                () => true
             );
 
             expect((inst as any).mutationDataStatus).toBe('error');
             expect(fetchMock).toHaveBeenCalledTimes(2);
         } finally {
             (global as any).fetch = originalFetch;
-            clearMolecularProfileIdCache();
+            clearWsiCbioportalRequestCaches();
             clearWsiCbioportalRequestCaches();
         }
     });
@@ -1022,33 +978,11 @@ describe('WSIViewer — sample enrichment scheduling', () => {
         const structuralVariantSpy = jest
             .spyOn(inst as any, 'fetchAndMergeStructuralVariants')
             .mockResolvedValue(undefined);
-        jest.spyOn(
-            inst as any,
-            'fetchAndMergeOncoKbAnnotations'
-        ).mockResolvedValue(undefined);
-        jest.spyOn(
-            inst as any,
-            'fetchAndMergeCivicAnnotations'
-        ).mockResolvedValue(undefined);
-        jest.spyOn(
-            inst as any,
-            'fetchAndMergeMutationFrequency'
-        ).mockResolvedValue(undefined);
-        jest.spyOn(
-            inst as any,
-            'fetchAndMergeCnaOncoKbAnnotations'
-        ).mockResolvedValue(undefined);
-        jest.spyOn(
-            inst as any,
-            'fetchAndMergeCnaCivicAnnotations'
-        ).mockResolvedValue(undefined);
-        jest.spyOn(
-            inst as any,
-            'fetchAndMergeStructuralVariantOncoKbAnnotations'
-        ).mockResolvedValue(undefined);
+        jest.spyOn(inst as any, 'fetchAndMergeVariantCounts').mockResolvedValue(
+            undefined
+        );
 
         await (inst as any).runSampleEnrichment(
-            '',
             'study-1',
             'P-1',
             ['S-1', 'S-1', 'S-2'],
@@ -1056,28 +990,218 @@ describe('WSIViewer — sample enrichment scheduling', () => {
         );
 
         expect(clinicalSpy).toHaveBeenCalledWith(
-            '',
-            'study-1',
             dedupedIdentifiers,
             expect.any(Function)
         );
         expect(mutationSpy).toHaveBeenCalledWith(
-            '',
             'study-1',
             dedupedIdentifiers,
             expect.any(Function)
         );
         expect(cnaSpy).toHaveBeenCalledWith(
-            '',
             'study-1',
             dedupedIdentifiers,
             expect.any(Function)
         );
         expect(structuralVariantSpy).toHaveBeenCalledWith(
-            '',
             'study-1',
             dedupedIdentifiers,
             expect.any(Function)
         );
+    });
+
+    it('reads the sample attributes from the host clinical data without requesting them', async () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1', {
+            sampleClinicalData: null,
+        });
+        inst.viewerState.hierarchy = makeHierarchy(
+            [makeSlide({ slide_key: 'A' })],
+            'P-1'
+        );
+        const sampleId = inst.viewerState.hierarchy.samples[0].sample_id;
+        const originalFetch = (global as any).fetch;
+        const fetchMock = jest.fn();
+        (global as any).fetch = fetchMock;
+
+        try {
+            await (inst as any).fetchAndMergeClinicalData(
+                [{ studyId: 'study', sampleId }],
+                () => true
+            );
+            expect(inst.viewerState.hierarchy.samples[0].tmb_score).toBe(
+                undefined
+            );
+
+            const prevProps = inst.props;
+            inst.props = {
+                ...prevProps,
+                sampleClinicalData: [
+                    {
+                        sampleId,
+                        clinicalAttributeId: 'TMB_NONSYNONYMOUS',
+                        value: '8.2',
+                    },
+                ],
+            };
+            inst.componentDidUpdate(prevProps);
+        } finally {
+            (global as any).fetch = originalFetch;
+        }
+
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(inst.viewerState.hierarchy.samples[0].tmb_score).toBe('8.2');
+    });
+});
+
+describe('WSIViewer — OncoKB and CIViC annotations', () => {
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
+    function stubDataStages(inst: any) {
+        jest.spyOn(inst, 'fetchAndMergeClinicalData').mockResolvedValue(
+            undefined
+        );
+        jest.spyOn(inst, 'fetchAndMergeMutations').mockResolvedValue(
+            'study_mutations'
+        );
+        jest.spyOn(inst, 'fetchAndMergeCNA').mockResolvedValue(undefined);
+        jest.spyOn(inst, 'fetchAndMergeStructuralVariants').mockResolvedValue(
+            undefined
+        );
+        jest.spyOn(inst, 'fetchAndMergeVariantCounts').mockResolvedValue(
+            undefined
+        );
+    }
+
+    it('reads the OncoKB and CIViC settings when a patient loads', async () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        inst.viewerState.hierarchy = makeHierarchy(
+            [makeSlide({ slide_key: 'A' })],
+            'P-1'
+        );
+        stubDataStages(inst);
+        const oncoKbSpy = jest
+            .spyOn(inst, 'fetchAndMergeOncoKbAnnotations')
+            .mockResolvedValue(undefined);
+        const civicSpy = jest
+            .spyOn(inst, 'fetchAndMergeCivicAnnotations')
+            .mockResolvedValue(undefined);
+
+        await inst.runSampleEnrichment('study-1', 'P-1', ['S-1'], () => true);
+        expect(oncoKbSpy).not.toHaveBeenCalled();
+        expect(civicSpy).not.toHaveBeenCalled();
+
+        annotationsEnabled = true;
+        await inst.runSampleEnrichment('study-1', 'P-1', ['S-1'], () => true);
+        expect(oncoKbSpy).toHaveBeenCalledWith('study-1', expect.any(Function));
+        expect(civicSpy).toHaveBeenCalledWith(expect.any(Function));
+    });
+
+    it("annotates for the sample's OncoTree code and the study's genome", async () => {
+        annotationsEnabled = true;
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const hierarchy = makeHierarchy([makeSlide({ slide_key: 'A' })], 'P-1');
+        hierarchy.samples[0].mutations = [
+            {
+                token: 'KRAS G12D',
+                gene: 'KRAS',
+                proteinChange: 'G12D',
+                entrezGeneId: 3845,
+                consequence: 'Missense_Mutation',
+            },
+        ];
+        inst.viewerState.hierarchy = hierarchy;
+        jest.spyOn(
+            wsiCbioportalDataUtils,
+            'fetchStudyMolecularProfiles'
+        ).mockResolvedValue({
+            mutation: 'study_mutations',
+            discreteCna: null,
+            structuralVariant: null,
+            referenceGenome: 'hg38',
+        });
+        const mutationSpy = jest
+            .spyOn(
+                wsiMolecularAnnotationDataUtils,
+                'fetchOncoKbMutationAnnotations'
+            )
+            .mockResolvedValue([
+                {
+                    id: '3845_G12D_Missense_Mutation_COAD',
+                    oncogenic: 'Oncogenic',
+                },
+            ]);
+
+        await inst.fetchAndMergeOncoKbAnnotations('study-1', () => true);
+
+        expect(mutationSpy).toHaveBeenCalledWith(
+            [
+                {
+                    entry: expect.objectContaining({ token: 'KRAS G12D' }),
+                    tumorType: 'COAD',
+                },
+            ],
+            'GRCh38'
+        );
+        expect(
+            inst.viewerState.hierarchy.samples[0].mutations[0].oncogenic
+        ).toBe('Oncogenic');
+        inst.cancelScheduledHierarchyRefresh();
+    });
+
+    it('drops annotations that arrive after the patient changed', async () => {
+        annotationsEnabled = true;
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const makeAnnotatedHierarchy = (patientId: string) => {
+            const hierarchy = makeHierarchy(
+                [makeSlide({ slide_key: `${patientId}-slide` })],
+                patientId
+            );
+            hierarchy.samples[0].mutations = [
+                {
+                    token: 'KRAS G12D',
+                    gene: 'KRAS',
+                    proteinChange: 'G12D',
+                    entrezGeneId: 3845,
+                },
+            ];
+            return hierarchy;
+        };
+        inst.viewerState.hierarchy = makeAnnotatedHierarchy('P-A');
+        // The observable copy the viewer holds.
+        const hierarchyA = inst.viewerState.hierarchy;
+        jest.spyOn(
+            wsiCbioportalDataUtils,
+            'fetchStudyMolecularProfiles'
+        ).mockResolvedValue({
+            mutation: 'study_mutations',
+            discreteCna: null,
+            structuralVariant: null,
+            referenceGenome: 'hg19',
+        });
+        const annotations = deferredPromise<any[]>();
+        jest.spyOn(
+            wsiMolecularAnnotationDataUtils,
+            'fetchOncoKbMutationAnnotations'
+        ).mockReturnValue(annotations.promise);
+
+        const pending = inst.fetchAndMergeOncoKbAnnotations(
+            'study-1',
+            () => inst.viewerState.hierarchy === hierarchyA
+        );
+        for (let tick = 0; tick < 5; tick += 1) {
+            await Promise.resolve();
+        }
+        inst.viewerState.hierarchy = makeAnnotatedHierarchy('P-B');
+        annotations.resolve([
+            { id: '3845_G12D__COAD', oncogenic: 'Oncogenic' },
+        ]);
+        await pending;
+
+        expect(hierarchyA.samples[0].mutations[0].oncogenic).toBeUndefined();
+        expect(
+            inst.viewerState.hierarchy.samples[0].mutations[0].oncogenic
+        ).toBeUndefined();
     });
 });

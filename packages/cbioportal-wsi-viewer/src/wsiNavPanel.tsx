@@ -696,19 +696,8 @@ function SampleNode({
         }
     }, [selectedSlideKey]);
 
-    const stLower = (sample.sample_type || '').toLowerCase();
-    const stClass =
-        stLower === 'primary'
-            ? theme.blue
-            : stLower.includes('metastas') || stLower === 'local recurrence'
-            ? '#c05000'
-            : theme.muted;
-    const stBg =
-        stLower === 'primary'
-            ? theme.blueLight
-            : stLower.includes('metastas') || stLower === 'local recurrence'
-            ? '#fef0e8'
-            : '#f0f0f0';
+    const isPrimarySample =
+        (sample.sample_type || '').toLowerCase() === 'primary';
 
     const multiPart = React.useMemo(
         () =>
@@ -794,8 +783,12 @@ function SampleNode({
                                     letterSpacing: '.4px',
                                     padding: '1px 5px',
                                     borderRadius: 3,
-                                    background: stBg,
-                                    color: stClass,
+                                    background: isPrimarySample
+                                        ? theme.blueLight
+                                        : theme.headerBg,
+                                    color: isPrimarySample
+                                        ? theme.blue
+                                        : theme.muted,
                                     marginRight: 4,
                                 }}
                             >
@@ -804,7 +797,7 @@ function SampleNode({
                         )}
                         {sample.oncotree_code && (
                             <a
-                                href="https://oncotree.mskcc.org/"
+                                href="https://oncotree.info/"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title={`${sample.oncotree_code}${
@@ -812,10 +805,17 @@ function SampleNode({
                                         ? ` — ${sample.cancer_type_detailed}`
                                         : ''
                                 }\nView OncoTree`}
+                                aria-label={`OncoTree code ${
+                                    sample.oncotree_code
+                                }${
+                                    sample.cancer_type_detailed
+                                        ? `, ${sample.cancer_type_detailed}`
+                                        : ''
+                                }: view OncoTree (opens in a new tab)`}
                                 onClick={e => e.stopPropagation()}
                                 style={{
                                     display: 'inline-block',
-                                    background: '#f0f0f0',
+                                    background: theme.headerBg,
                                     border: `1px solid ${theme.border}`,
                                     borderRadius: 3,
                                     fontSize: 10,

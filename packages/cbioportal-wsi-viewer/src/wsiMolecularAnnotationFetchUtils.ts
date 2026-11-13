@@ -7,7 +7,14 @@ import {
     MutationDetail,
     StructuralVariantDetail,
 } from './wsiViewerTypes';
-import { parseMutationToken } from './wsiMolecularUtils';
+
+export type OncoKbReferenceGenome = 'GRCh37' | 'GRCh38';
+
+/**
+ * A variant with the sample's OncoTree code, OncoKB's tumor type; null
+ * when the sample has none, which annotates the variant without a tumor type.
+ */
+export type WithTumorType<T> = { entry: T; tumorType: string | null };
 
 export interface OncoKbMutationItem {
     id: string;
@@ -16,7 +23,8 @@ export interface OncoKbMutationItem {
     gene: { entrezGeneId: number };
     proteinStart?: number;
     proteinEnd?: number;
-    tumorType: null;
+    referenceGenome: OncoKbReferenceGenome;
+    tumorType: string | null;
 }
 
 export interface CivicMutationSpec {
@@ -28,8 +36,8 @@ export interface OncoKbCnaItem {
     id: string;
     copyNameAlterationType: string;
     gene: { entrezGeneId: number };
-    referenceGenome: 'GRCh37';
-    tumorType: null;
+    referenceGenome: OncoKbReferenceGenome;
+    tumorType: string | null;
 }
 
 export interface OncoKbStructuralVariantItem {
@@ -38,83 +46,63 @@ export interface OncoKbStructuralVariantItem {
     geneB: { entrezGeneId?: number };
     structuralVariantType: string;
     functionalFusion: boolean;
-    tumorType: null;
+    referenceGenome: OncoKbReferenceGenome;
+    tumorType: string | null;
 }
 
-function trimProteinPrefix(variant: string): string {
-    return variant.startsWith('p.') ? variant.slice(2) : variant;
+/** OncoKB's build for a study reference genome (`hg19`, `hg38`, `GRCh38`). */
+export function oncoKbReferenceGenome(
+    studyReferenceGenome: string | null | undefined
+): OncoKbReferenceGenome {
+    return /38/.test(studyReferenceGenome || '') ? 'GRCh38' : 'GRCh37';
 }
 
-export function mutationOncoKbId(detail: MutationDetail): string | null {
-    if (!detail.entrezGeneId) return null;
-    const { variant } = parseMutationToken(detail.token);
-    const alteration = trimProteinPrefix(variant);
-    return `${detail.entrezGeneId}_${alteration}_${detail.consequence ?? ''}`;
+export function mutationOncoKbId(
+    detail: MutationDetail,
+    tumorType: string | null
+): string | null {
+    if (!detail.entrezGeneId || !detail.proteinChange) return null;
+    return `${detail.entrezGeneId}_${
+        detail.proteinChange
+    }_${detail.consequence ?? ''}_${tumorType ?? ''}`;
 }
 
 export function buildOncoKbMutationItems(
-    details: MutationDetail[]
+    mutations: Array<WithTumorType<MutationDetail>>,
+    referenceGenome: OncoKbReferenceGenome
 ): OncoKbMutationItem[] {
-    const seen = new Set<string>();
-    const items: OncoKbMutationItem[] = [];
-
-    for (const detail of details) {
-        if (!detail.entrezGeneId) continue;
-        const { variant } = parseMutationToken(detail.token);
-        const alteration = trimProteinPrefix(variant);
-        const id = mutationOncoKbId(detail);
-        if (!id || seen.has(id)) continue;
-        seen.add(id);
-        items.push({
+    const items = new Map<string, OncoKbMutationItem>();
+    for (const { entry: detail, tumorType } of mutations) {
+        const id = mutationOncoKbId(detail, tumorType);
+        if (!id || items.has(id)) continue;
+        items.set(id, {
             id,
-            alteration,
+            alteration: detail.proteinChange,
             consequence: detail.consequence,
-            gene: { entrezGeneId: detail.entrezGeneId },
+            gene: { entrezGeneId: detail.entrezGeneId! },
             proteinStart: detail.proteinStart,
             proteinEnd: detail.proteinEnd,
-            tumorType: null,
+            referenceGenome,
+            tumorType,
         });
     }
-
-    items.sort(
-        (a, b) =>
-            a.gene.entrezGeneId - b.gene.entrezGeneId ||
-            a.alteration.localeCompare(b.alteration) ||
-            (a.consequence || '').localeCompare(b.consequence || '')
-    );
-    return items;
+    return Array.from(items.values()).sort((a, b) => a.id.localeCompare(b.id));
 }
 
 export function buildCivicMutationSpecs(
     details: MutationDetail[]
 ): CivicMutationSpec[] {
-    const seen = new Set<string>();
-    const specs: CivicMutationSpec[] = [];
-
-    for (const detail of details) {
-        const { gene, variant } = parseMutationToken(detail.token);
-        const proteinChange = trimProteinPrefix(variant);
-        if (!gene || !proteinChange) {
-            continue;
-        }
-
+    const specs = new Map<string, CivicMutationSpec>();
+    for (const { gene, proteinChange } of details) {
         const key = `${gene}::${proteinChange}`;
-        if (seen.has(key)) {
-            continue;
-        }
-        seen.add(key);
-        specs.push({
-            gene: { hugoGeneSymbol: gene },
-            proteinChange,
-        });
+        if (!gene || !proteinChange || specs.has(key)) continue;
+        specs.set(key, { gene: { hugoGeneSymbol: gene }, proteinChange });
     }
-
-    specs.sort(
+    return Array.from(specs.values()).sort(
         (a, b) =>
             a.gene.hugoGeneSymbol.localeCompare(b.gene.hugoGeneSymbol) ||
             a.proteinChange.localeCompare(b.proteinChange)
     );
-    return specs;
 }
 
 export function cnaOncoKbAlteration(cnaValue: number): string | null {
@@ -125,77 +113,68 @@ export function cnaOncoKbAlteration(cnaValue: number): string | null {
     return null;
 }
 
-export function cnaOncoKbId(cna: CNADetail): string | null {
+export function cnaOncoKbId(
+    cna: CNADetail,
+    tumorType: string | null
+): string | null {
     const alteration = cnaOncoKbAlteration(cna.cnaValue);
     if (!cna.entrezGeneId || !alteration) return null;
-    return `${cna.entrezGeneId}_${alteration}`;
+    return `${cna.entrezGeneId}_${alteration}_${tumorType ?? ''}`;
 }
 
-export function buildOncoKbCnaItems(cnas: CNADetail[]): OncoKbCnaItem[] {
-    const seen = new Set<string>();
-    const items: OncoKbCnaItem[] = [];
-
-    for (const cna of cnas) {
-        const alteration = cnaOncoKbAlteration(cna.cnaValue);
-        const id = cnaOncoKbId(cna);
-        if (!alteration || !id || seen.has(id)) continue;
-        seen.add(id);
-        items.push({
+export function buildOncoKbCnaItems(
+    cnas: Array<WithTumorType<CNADetail>>,
+    referenceGenome: OncoKbReferenceGenome
+): OncoKbCnaItem[] {
+    const items = new Map<string, OncoKbCnaItem>();
+    for (const { entry: cna, tumorType } of cnas) {
+        const id = cnaOncoKbId(cna, tumorType);
+        if (!id || items.has(id)) continue;
+        items.set(id, {
             id,
-            copyNameAlterationType: alteration,
+            copyNameAlterationType: cnaOncoKbAlteration(cna.cnaValue)!,
             gene: { entrezGeneId: cna.entrezGeneId! },
-            referenceGenome: 'GRCh37',
-            tumorType: null,
+            referenceGenome,
+            tumorType,
         });
     }
-
-    items.sort(
-        (a, b) =>
-            a.gene.entrezGeneId - b.gene.entrezGeneId ||
-            a.copyNameAlterationType.localeCompare(b.copyNameAlterationType)
-    );
-    return items;
+    return Array.from(items.values()).sort((a, b) => a.id.localeCompare(b.id));
 }
 
-export function structuralVariantOncoKbId(
-    sv: StructuralVariantDetail
-): string | null {
-    const structuralVariantType = deriveStructuralVariantType({
+function structuralVariantType(sv: StructuralVariantDetail): string {
+    return deriveStructuralVariantType({
         site1HugoSymbol: sv.gene1 === '—' ? undefined : sv.gene1,
         site2HugoSymbol: sv.gene2 === '—' ? undefined : sv.gene2,
         site1EntrezGeneId: sv.site1EntrezGeneId,
         site2EntrezGeneId: sv.site2EntrezGeneId,
         variantClass: sv.variantClass,
-    } as any);
+    } as Parameters<typeof deriveStructuralVariantType>[0]);
+}
+
+export function structuralVariantOncoKbId(
+    sv: StructuralVariantDetail,
+    tumorType: string | null
+): string | null {
     const site1EntrezGeneId = sv.site1EntrezGeneId ?? sv.site2EntrezGeneId;
     const site2EntrezGeneId = sv.site2EntrezGeneId ?? sv.site1EntrezGeneId;
     if (!site1EntrezGeneId || !site2EntrezGeneId) return null;
     return generateQueryStructuralVariantId(
         site1EntrezGeneId,
         site2EntrezGeneId,
-        null,
-        structuralVariantType
+        tumorType,
+        structuralVariantType(sv)
     );
 }
 
 export function buildOncoKbStructuralVariantItems(
-    structuralVariants: StructuralVariantDetail[]
+    structuralVariants: Array<WithTumorType<StructuralVariantDetail>>,
+    referenceGenome: OncoKbReferenceGenome
 ): OncoKbStructuralVariantItem[] {
-    const seen = new Set<string>();
-    const items: OncoKbStructuralVariantItem[] = [];
-
-    for (const sv of structuralVariants) {
-        const structuralVariantType = deriveStructuralVariantType({
-            site1HugoSymbol: sv.gene1 === '—' ? undefined : sv.gene1,
-            site2HugoSymbol: sv.gene2 === '—' ? undefined : sv.gene2,
-            site1EntrezGeneId: sv.site1EntrezGeneId,
-            site2EntrezGeneId: sv.site2EntrezGeneId,
-            variantClass: sv.variantClass,
-        } as any);
-        const id = structuralVariantOncoKbId(sv);
-        if (!id || seen.has(id)) continue;
-        seen.add(id);
-        items.push({
+    const items = new Map<string, OncoKbStructuralVariantItem>();
+    for (const { entry: sv, tumorType } of structuralVariants) {
+        const id = structuralVariantOncoKbId(sv, tumorType);
+        if (!id || items.has(id)) continue;
+        items.set(id, {
             id,
             geneA: {
                 entrezGeneId: sv.site1EntrezGeneId ?? sv.site2EntrezGeneId,
@@ -203,17 +182,11 @@ export function buildOncoKbStructuralVariantItems(
             geneB: {
                 entrezGeneId: sv.site2EntrezGeneId ?? sv.site1EntrezGeneId,
             },
-            structuralVariantType,
+            structuralVariantType: structuralVariantType(sv),
             functionalFusion: !!sv.site1EntrezGeneId && !!sv.site2EntrezGeneId,
-            tumorType: null,
+            referenceGenome,
+            tumorType,
         });
     }
-
-    items.sort(
-        (a, b) =>
-            (a.geneA.entrezGeneId ?? 0) - (b.geneA.entrezGeneId ?? 0) ||
-            (a.geneB.entrezGeneId ?? 0) - (b.geneB.entrezGeneId ?? 0) ||
-            a.structuralVariantType.localeCompare(b.structuralVariantType)
-    );
-    return items;
+    return Array.from(items.values()).sort((a, b) => a.id.localeCompare(b.id));
 }

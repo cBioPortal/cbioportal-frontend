@@ -12,6 +12,7 @@ import {
     MutationDetail,
     WsiMutationDataStatus,
     WsiClinicalRow,
+    WsiSampleClinicalDatum,
     WsiStainFilter,
 } from './wsiViewerTypes';
 import {
@@ -31,7 +32,7 @@ import {
     buildWsiRows,
 } from './wsiMetaUtils';
 import { hashUrlState } from './wsiViewStateUtils';
-import { SampleIdentifier } from './wsiDataMergeUtils';
+import { applyVariantCounts, SampleIdentifier } from './wsiDataMergeUtils';
 import { compareSamplesForNavigation } from './wsiNavUtils';
 import { WsiNavPanel } from './wsiNavPanel';
 import {
@@ -50,36 +51,42 @@ import {
 } from './wsiUrls';
 import { chooseScaleBar, formatMagnification } from './wsiScaleUtils';
 import {
-    fetchClinicalDataRecordsReadOnly,
-    fetchCnaDataReadOnly,
-    fetchMutationDataReadOnly,
-    fetchMutationFrequencyDataReadOnly,
-    fetchStructuralVariantDataReadOnly,
+    clearWsiCbioportalRequestCaches,
+    fetchClinicalDataRecords,
+    fetchStudyMolecularProfiles,
+    fetchCnaData,
+    fetchMutationData,
+    fetchStructuralVariantData,
+    fetchVariantCounts,
+    variantCountKey,
+    WsiMutationData,
 } from './wsiCbioportalDataUtils';
 import {
-    fetchCivicCnaAnnotationsReadOnly,
-    fetchCivicMutationAnnotationsReadOnly,
-    fetchOncoKbCnaAnnotationsReadOnly,
-    fetchOncoKbMutationAnnotationsReadOnly,
-    fetchOncoKbStructuralVariantAnnotationsReadOnly,
-} from './wsiMolecularAnnotationDataUtils';
-import {
-    applyClinicalDataRecords,
     applyCivicCnaAnnotations,
     applyCivicMutationAnnotations,
+    applyClinicalDataRecords,
     applyCnaData,
     applyMutationData,
-    applyMutationFrequencyData,
     applyOncoKbCnaAnnotations,
     applyOncoKbMutationAnnotations,
     applyOncoKbStructuralVariantAnnotations,
     applyStructuralVariantData,
+    sampleTumorType,
 } from './wsiHierarchyUpdateUtils';
 import {
-    getOncoKbApiUrl,
-    isWsiCivicEnabled,
-    isWsiOncoKbEnabled,
-} from './wsiMolecularServices';
+    clearWsiMolecularAnnotationRequestCaches,
+    fetchCivicCnaAnnotations,
+    fetchCivicMutationAnnotations,
+    fetchOncoKbCnaAnnotations,
+    fetchOncoKbMutationAnnotations,
+    fetchOncoKbStructuralVariantAnnotations,
+} from './wsiMolecularAnnotationDataUtils';
+import {
+    OncoKbReferenceGenome,
+    oncoKbReferenceGenome,
+    WithTumorType,
+} from './wsiMolecularAnnotationFetchUtils';
+import { isWsiCivicEnabled, isWsiOncoKbEnabled } from './wsiMolecularServices';
 import {
     WSI_FONT_FAMILY,
     WSI_SIDEBAR_MAX_WIDTH,
@@ -152,6 +159,13 @@ export interface WsiViewerProps {
      * list shows it with no values.
      */
     clinicalRows?: ReadonlyArray<WsiClinicalRow>;
+    /**
+     * The patient's sample clinical data, when the host has loaded it (`null`
+     * while it is still loading). The viewer reads its sample attributes
+     * (cancer type, OncoTree code, tumor purity, TMB, MSI, ...) from it; when
+     * it is unset the viewer requests them itself.
+     */
+    sampleClinicalData?: ReadonlyArray<WsiSampleClinicalDatum> | null;
     /** Shows the "download view" control. */
     showDownload?: boolean;
     /** Indicator shown while the hierarchy loads. */
@@ -408,14 +422,12 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                 this.chooseInitialServableSlide(allSlides),
             setMutationDataStatus: status => this.setMutationDataStatus(status),
             runSampleEnrichment: (
-                base,
                 studyId,
                 patientId,
                 sampleIds,
                 shouldContinue
             ) =>
                 this.runSampleEnrichment(
-                    base,
                     studyId,
                     patientId,
                     sampleIds,
@@ -546,8 +558,14 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             this.requestedSlideNoticeDismissed = false;
         }
 
+        if (prev.sampleClinicalData !== this.props.sampleClinicalData) {
+            this.applyHostSampleClinicalData();
+        }
+
         if (authScopeChanged) {
             clearPatientHierarchyCache();
+            clearWsiCbioportalRequestCaches();
+            clearWsiMolecularAnnotationRequestCaches();
             clearWsiSlideSources();
             clearWsiThumbnailFetchCache();
         }
@@ -861,39 +879,6 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         return identifiers;
     }
 
-    private collectSampleEntries<T>(
-        getEntries: (sample: Sample) => T[] | undefined,
-        includeEntry?: (entry: T) => boolean
-    ): T[] {
-        const hierarchy = this.viewerState.hierarchy;
-        if (!hierarchy) {
-            return [];
-        }
-
-        const result: T[] = [];
-        for (
-            let sampleIndex = 0;
-            sampleIndex < hierarchy.samples.length;
-            sampleIndex += 1
-        ) {
-            const entries = getEntries(hierarchy.samples[sampleIndex]);
-            if (!entries?.length) {
-                continue;
-            }
-            for (
-                let entryIndex = 0;
-                entryIndex < entries.length;
-                entryIndex += 1
-            ) {
-                const entry = entries[entryIndex];
-                if (!includeEntry || includeEntry(entry)) {
-                    result.push(entry);
-                }
-            }
-        }
-        return result;
-    }
-
     @computed get servableSlides(): Array<{ slide: Slide; sample: Sample }> {
         if (!this.viewerState.hierarchy) return [];
         return [...this.viewerState.hierarchy.samples]
@@ -934,21 +919,23 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         return normalizeWsiTileServerBase(this.props.tileServerUrl);
     }
 
+    /**
+     * The sample whose molecular data the sidebar shows: the selected one, or
+     * for unmatched slides the patient's reference sample, if any.
+     */
     @computed
     private get sidebarMolecularSample(): Sample | null {
-        if (!this.viewerState.selectedSample || !this.viewerState.hierarchy) {
-            return this.viewerState.selectedSample;
+        const selectedSample = this.viewerState.selectedSample;
+        if (!selectedSample || selectedSample.sample_id !== 'UNMATCHED') {
+            return selectedSample;
         }
-        if (this.viewerState.selectedSample.sample_id !== 'UNMATCHED') {
-            return this.viewerState.selectedSample;
-        }
-
-        const referenceSampleId = this.viewerState.hierarchy
-            .reference_sample_id;
+        const hierarchy = this.viewerState.hierarchy;
         return (
-            this.viewerState.hierarchy.samples.find(
-                sample => sample.sample_id === referenceSampleId
-            ) || this.viewerState.selectedSample
+            hierarchy?.samples.find(
+                sample =>
+                    sample.sample_id !== 'UNMATCHED' &&
+                    sample.sample_id === hierarchy.reference_sample_id
+            ) || null
         );
     }
 
@@ -961,12 +948,9 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             : undefined;
     }
 
-    private get sidebarImpactSample(): Sample | null {
+    /** The molecular tables' sample, once the first tiles are drawn. */
+    private get sidebarTableSample(): Sample | null {
         return this.viewerState.tilesReady ? this.sidebarMolecularSample : null;
-    }
-
-    private get sidebarSeqRowsForRender(): MetaRow[] {
-        return this.viewerState.tilesReady ? this.selectedSeqRows : [];
     }
 
     @computed
@@ -1079,16 +1063,14 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
     }
 
     /**
-     * Enrich sample metadata (TMB, MSI, tumor purity, mutations, …) from
-     * cBioPortal's REST API so the sidebar reflects the same data shown
-     * elsewhere in cBioPortal.
-     *
-     * Runs as a fire-and-forget background task as soon as the tile-server
-     * hierarchy is loaded. If cBioPortal is unavailable, the tile-server data
-     * remains as-is.
+     * Loads the patient's sample attributes and molecular data from the
+     * portal API and merges them into the hierarchy's samples, in the
+     * background: attributes and mutations first, then copy-number
+     * alterations and structural variants, then the study counts of the
+     * mutations. `shouldContinue` drops results once the user has moved to
+     * another patient.
      */
     private async runSampleEnrichment(
-        base: string,
         studyId: string,
         _patientId: string,
         sampleIds: string[],
@@ -1111,39 +1093,26 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
 
         this.setMutationDataStatus('loading');
 
-        await Promise.allSettled([
+        const [, mutationProfileId] = await Promise.all([
             this.fetchAndMergeClinicalData(
-                base,
-                studyId,
                 sampleIdentifiers,
                 shouldContinueForHierarchy
             ),
             this.fetchAndMergeMutations(
-                base,
                 studyId,
                 sampleIdentifiers,
                 shouldContinueForHierarchy
             ),
         ]);
-        if (
-            shouldContinueForHierarchy() &&
-            this.mutationDataStatus === 'loading'
-        ) {
-            // Keep mocked/custom enrichment hosts from leaving the sidebar in a
-            // permanent loading state when they do not own mutation status.
-            this.setMutationDataStatus('ready');
-        }
         if (!shouldContinueForHierarchy()) return;
 
-        await Promise.allSettled([
+        await Promise.all([
             this.fetchAndMergeCNA(
-                base,
                 studyId,
                 sampleIdentifiers,
                 shouldContinueForHierarchy
             ),
             this.fetchAndMergeStructuralVariants(
-                base,
                 studyId,
                 sampleIdentifiers,
                 shouldContinueForHierarchy
@@ -1151,50 +1120,57 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         ]);
         if (!shouldContinueForHierarchy()) return;
 
+        // The flags are read now, so a configuration change after startup
+        // holds for the next patient.
+        const lastStage: Array<Promise<void>> = [];
+        if (mutationProfileId) {
+            lastStage.push(
+                this.fetchAndMergeVariantCounts(
+                    mutationProfileId,
+                    shouldContinueForHierarchy
+                )
+            );
+        }
         if (isWsiOncoKbEnabled()) {
-            void this.fetchAndMergeOncoKbAnnotations(
-                shouldContinueForHierarchy
+            lastStage.push(
+                this.fetchAndMergeOncoKbAnnotations(
+                    studyId,
+                    shouldContinueForHierarchy
+                )
             );
         }
         if (isWsiCivicEnabled()) {
-            void this.fetchAndMergeCivicAnnotations(shouldContinueForHierarchy);
-        }
-        void this.fetchAndMergeMutationFrequency(
-            base,
-            studyId,
-            shouldContinueForHierarchy
-        );
-        if (isWsiOncoKbEnabled()) {
-            void this.fetchAndMergeCnaOncoKbAnnotations(
-                shouldContinueForHierarchy
-            );
-            void this.fetchAndMergeStructuralVariantOncoKbAnnotations(
-                shouldContinueForHierarchy
+            lastStage.push(
+                this.fetchAndMergeCivicAnnotations(shouldContinueForHierarchy)
             );
         }
-        if (isWsiCivicEnabled()) {
-            void this.fetchAndMergeCnaCivicAnnotations(
-                shouldContinueForHierarchy
+        await Promise.all(lastStage);
+    }
+
+    /** Merges the host's sample clinical data into the hierarchy's samples. */
+    private applyHostSampleClinicalData() {
+        const data = this.props.sampleClinicalData;
+        if (data && this.viewerState.hierarchy) {
+            this.applyHierarchyMutation(samples =>
+                applyClinicalDataRecords(samples, data)
             );
         }
     }
 
     /**
-     * Fetch sample-level clinical attributes from cBioPortal and merge them into
-     * the in-memory hierarchy samples.  Only attributes present in the response
-     * are updated; missing attributes keep their tile-server values.
+     * Merges the samples' clinical attributes into the hierarchy's samples:
+     * from the host's `sampleClinicalData` when it provides it, otherwise
+     * from the portal API. Only attributes with a value are updated.
      */
     private async fetchAndMergeClinicalData(
-        base: string,
-        _studyId: string,
         sampleIdentifiers: SampleIdentifier[],
-        shouldContinue: () => boolean = () => true
+        shouldContinue: () => boolean
     ): Promise<void> {
-        if (!shouldContinue()) return;
-        const data = await fetchClinicalDataRecordsReadOnly(
-            base,
-            sampleIdentifiers
-        );
+        if (this.props.sampleClinicalData !== undefined) {
+            this.applyHostSampleClinicalData();
+            return;
+        }
+        const data = await fetchClinicalDataRecords(sampleIdentifiers);
         if (!data || !shouldContinue()) return;
 
         this.applyHierarchyMutation(samples => {
@@ -1203,174 +1179,66 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
     }
 
     /**
-     * Fetch somatic mutations from cBioPortal mutations API.
-     * Populates `oncogenic_mutations` (the display list) from ALL mutations returned by the
-     * API — matching what cBioPortal's patient page shows — and sets `oncogenic_mutation_details`
-     * (type, VAF per mutation) for tooltip display.  If the API returns no data, falls back to
-     * whatever `fetchAndMergeClinicalData` already placed in `oncogenic_mutations`.
+     * Merges the samples' mutations into the hierarchy's samples and sets the
+     * mutation status. A failed request is retried once. Resolves to the
+     * study's mutation profile, or null when it has none or the data could
+     * not be loaded.
      */
     private async fetchAndMergeMutations(
-        base: string,
         studyId: string,
         sampleIdentifiers: SampleIdentifier[],
-        shouldContinue: () => boolean = () => true
-    ): Promise<void> {
-        if (!shouldContinue()) return;
-        // Declare maps here so the finally block can always mark details as ready,
-        // even when the function returns early due to an error or missing data.
-        const allMutsBySample = new Map<
-            string,
-            Array<{ token: string; vaf: number }>
-        >();
-        const detailsBySample = new Map<string, Map<string, MutationDetail>>();
-        let mutationData: Awaited<ReturnType<
-            typeof fetchMutationDataReadOnly
-        >> = null;
+        shouldContinue: () => boolean
+    ): Promise<string | null> {
+        let mutationData: WsiMutationData | null = null;
         let lastError: unknown;
-        try {
-            // A cold portal load can briefly return a failed profile/data request
-            // while the same request succeeds on refresh. Retry once with a
-            // cache bypass so a transient response cannot permanently suppress
-            // the variant table for the five-minute request-cache TTL.
-            for (let attempt = 0; attempt < 2; attempt += 1) {
-                if (!shouldContinue()) return;
-                try {
-                    mutationData = await fetchMutationDataReadOnly(
-                        base,
-                        studyId,
-                        sampleIdentifiers,
-                        {
-                            forceRefresh: attempt > 0,
-                            throwOnHttpError: true,
-                        }
-                    );
-                    lastError = undefined;
-                } catch (error) {
-                    lastError = error;
-                    mutationData = null;
-                }
-                if (mutationData !== null || attempt === 1) break;
+        for (let attempt = 0; attempt < 2 && !mutationData; attempt += 1) {
+            if (attempt > 0) {
                 await new Promise(resolve =>
                     setTimeout(resolve, MUTATION_RETRY_DELAY_MS)
                 );
             }
-            if (!mutationData && lastError) {
-                throw lastError;
+            if (!shouldContinue()) return null;
+            try {
+                mutationData = await fetchMutationData(
+                    studyId,
+                    sampleIdentifiers
+                );
+            } catch (error) {
+                lastError = error;
             }
-            if (!mutationData) return;
-
-            mutationData.allMutsBySample.forEach(
-                (value: Array<{ token: string; vaf: number }>, key: string) =>
-                    allMutsBySample.set(key, value)
-            );
-            mutationData.detailsBySample.forEach(
-                (value: Map<string, MutationDetail>, key: string) =>
-                    detailsBySample.set(key, value)
-            );
-        } catch (e) {
-            lastError = e;
-            console.error('[WSIViewer] fetchAndMergeMutations failed:', e);
-        } finally {
-            if (!shouldContinue()) {
-                return;
-            }
-            const hasApiMutationData =
-                allMutsBySample.size > 0 || detailsBySample.size > 0;
-            const hasExistingMutationText = (
-                this.viewerState.hierarchy?.samples ?? []
-            ).some(sample => !!sample.oncogenic_mutations);
-            if (!hasApiMutationData && !hasExistingMutationText) {
-                this.setMutationDataStatus(lastError ? 'error' : 'ready');
-                return;
-            }
-            this.applyHierarchyMutation(samples => {
-                applyMutationData(samples, allMutsBySample, detailsBySample);
-            });
-            this.setMutationDataStatus(lastError ? 'error' : 'ready');
         }
-    }
+        if (!shouldContinue()) return null;
 
-    /**
-     * Fetch OncoKB annotations for all mutations collected by fetchAndMergeMutations and
-     * merge oncogenic / mutationEffect / hotspot / geneSummary / variantSummary into each
-     * MutationDetail object in-place so that MutationTable can show rich tooltips.
-     *
-     * Routes through the portal's configured OncoKB proxy to preserve the same
-     * request path, credentials and response contract used by the rest of the
-     * frontend. The tile origin is never used as an annotation host.
-     *
-     * Silently no-ops when the portal proxy is unavailable or returns an optional-service
-     * failure, or when the hierarchy has no mutations with entrezGeneId.
-     */
-    private async fetchAndMergeOncoKbAnnotations(
-        shouldContinue: () => boolean = () => true
-    ): Promise<void> {
-        if (!shouldContinue()) return;
-        const allDetails = this.collectSampleEntries(
-            sample => sample.oncogenic_mutation_details,
-            detail => !!detail.entrezGeneId
-        );
-        if (!allDetails.length) return;
-
-        let oncoKbBase: string;
-        try {
-            oncoKbBase = getOncoKbApiUrl();
-        } catch {
-            // Embedded viewers may not have portal config yet; enrichment is optional.
-            return;
+        if (!mutationData) {
+            console.error('[WSIViewer] mutation data unavailable:', lastError);
+            this.setMutationDataStatus('error');
+            return null;
         }
-        if (!oncoKbBase) return;
-
-        const annotations = await fetchOncoKbMutationAnnotationsReadOnly(
-            oncoKbBase,
-            allDetails
+        const { profileId, bySample } = mutationData;
+        if (!profileId) {
+            this.setMutationDataStatus('unprofiled');
+            return null;
+        }
+        const requestedSampleIds = new Set(
+            sampleIdentifiers.map(({ sampleId }) => sampleId)
         );
-        if (!annotations?.length || !shouldContinue()) return;
-
-        this.applyHierarchyMutationAndRefresh(samples => {
-            applyOncoKbMutationAnnotations(samples, annotations);
-        }, shouldContinue);
+        this.applyHierarchyMutation(samples => {
+            applyMutationData(samples, requestedSampleIds, bySample);
+        });
+        this.setMutationDataStatus('ready');
+        return profileId;
     }
 
     /**
-     * Fetch CIViC gene/variant records for WSI mutation details so the compact
-     * metadata table can reuse the same detailed CIViC card used elsewhere.
-     */
-    private async fetchAndMergeCivicAnnotations(
-        shouldContinue: () => boolean = () => true
-    ): Promise<void> {
-        if (!shouldContinue()) return;
-        const allDetails = this.collectSampleEntries(
-            sample => sample.oncogenic_mutation_details
-        );
-        if (!allDetails.length) return;
-
-        const annotations = await fetchCivicMutationAnnotationsReadOnly(
-            allDetails
-        );
-        if (!annotations?.length || !shouldContinue()) return;
-
-        this.applyHierarchyMutationAndRefresh(samples => {
-            applyCivicMutationAnnotations(samples, annotations);
-        }, shouldContinue);
-    }
-
-    /**
-     * Fetch significant discrete copy-number alterations (value ≠ 0) from cBioPortal
-     * and merge them into each sample's `cna_alterations` field.
+     * Merges the samples' non-zero discrete copy-number alterations into each
+     * sample's `cna_alterations`.
      */
     private async fetchAndMergeCNA(
-        base: string,
         studyId: string,
         sampleIdentifiers: SampleIdentifier[],
-        shouldContinue: () => boolean = () => true
+        shouldContinue: () => boolean
     ): Promise<void> {
-        if (!shouldContinue()) return;
-        const bySample = await fetchCnaDataReadOnly(
-            base,
-            studyId,
-            sampleIdentifiers
-        );
+        const bySample = await fetchCnaData(studyId, sampleIdentifiers);
         if (!bySample || !shouldContinue()) return;
 
         this.applyHierarchyMutationAndRefresh(samples => {
@@ -1378,65 +1246,16 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         }, shouldContinue);
     }
 
-    private async fetchAndMergeCnaCivicAnnotations(
-        shouldContinue: () => boolean = () => true
-    ): Promise<void> {
-        if (!shouldContinue()) return;
-        const allCnas = this.collectSampleEntries(
-            sample => sample.cna_alterations
-        );
-        if (!allCnas.length) return;
-
-        const annotations = await fetchCivicCnaAnnotationsReadOnly(allCnas);
-        if (!annotations?.length || !shouldContinue()) return;
-
-        this.applyHierarchyMutationAndRefresh(samples => {
-            applyCivicCnaAnnotations(samples, annotations);
-        }, shouldContinue);
-    }
-
     /**
-     * Fetch OncoKB annotations for CNA events so CNA annotation mouseover
-     * matches the SNV annotation card.
-     */
-    private async fetchAndMergeCnaOncoKbAnnotations(
-        shouldContinue: () => boolean = () => true
-    ): Promise<void> {
-        if (!shouldContinue()) return;
-        const allCnas = this.collectSampleEntries(
-            sample => sample.cna_alterations
-        );
-        let oncoKbBase: string;
-        try {
-            oncoKbBase = getOncoKbApiUrl();
-        } catch {
-            // Embedded viewers may not have portal config yet; enrichment is optional.
-            return;
-        }
-        if (!oncoKbBase) return;
-
-        const annotations = await fetchOncoKbCnaAnnotationsReadOnly(
-            oncoKbBase,
-            allCnas
-        );
-        if (!annotations?.length || !shouldContinue()) return;
-        this.applyHierarchyMutationAndRefresh(samples => {
-            applyOncoKbCnaAnnotations(samples, annotations);
-        }, shouldContinue);
-    }
-    /**
-     * Fetch sample-level structural variants from cBioPortal and merge them into
-     * each sample's `structural_variants` field.
+     * Merges the samples' structural variants into each sample's
+     * `structural_variants`.
      */
     private async fetchAndMergeStructuralVariants(
-        base: string,
         studyId: string,
         sampleIdentifiers: SampleIdentifier[],
-        shouldContinue: () => boolean = () => true
+        shouldContinue: () => boolean
     ): Promise<void> {
-        if (!shouldContinue()) return;
-        const bySample = await fetchStructuralVariantDataReadOnly(
-            base,
+        const bySample = await fetchStructuralVariantData(
             studyId,
             sampleIdentifiers
         );
@@ -1447,59 +1266,138 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         }, shouldContinue);
     }
 
-    private async fetchAndMergeStructuralVariantOncoKbAnnotations(
-        shouldContinue: () => boolean = () => true
+    /** The hierarchy samples' entries, each with its sample's tumor type. */
+    private collectSampleEntries<T>(
+        getEntries: (sample: Sample) => T[] | undefined
+    ): Array<WithTumorType<T>> {
+        const result: Array<WithTumorType<T>> = [];
+        for (const sample of this.viewerState.hierarchy?.samples ?? []) {
+            const tumorType = sampleTumorType(sample);
+            for (const entry of getEntries(sample) ?? []) {
+                result.push({ entry, tumorType });
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Merges OncoKB annotations of the samples' mutations, copy-number
+     * alterations and structural variants, annotated for each sample's
+     * OncoTree code and the study's reference genome. Requests go through
+     * the host's OncoKB client; a failed request leaves the rows unannotated.
+     */
+    private async fetchAndMergeOncoKbAnnotations(
+        studyId: string,
+        shouldContinue: () => boolean
     ): Promise<void> {
-        if (!shouldContinue()) return;
-        const allStructuralVariants = this.collectSampleEntries(
-            sample => sample.structural_variants
-        );
-        let oncoKbBase: string;
+        let referenceGenome: OncoKbReferenceGenome;
         try {
-            oncoKbBase = getOncoKbApiUrl();
-        } catch {
-            // Embedded viewers may not have portal config yet; enrichment is optional.
+            referenceGenome = oncoKbReferenceGenome(
+                (await fetchStudyMolecularProfiles(studyId)).referenceGenome
+            );
+        } catch (error) {
+            console.debug('[WSI] study reference genome unavailable', error);
             return;
         }
-        if (!oncoKbBase) return;
+        if (!shouldContinue()) return;
 
-        const annotations = await fetchOncoKbStructuralVariantAnnotationsReadOnly(
-            oncoKbBase,
-            allStructuralVariants
-        );
-        if (!annotations?.length || !shouldContinue()) return;
-        this.applyHierarchyMutationAndRefresh(samples => {
-            applyOncoKbStructuralVariantAnnotations(samples, annotations);
-        }, shouldContinue);
+        await Promise.all([
+            fetchOncoKbMutationAnnotations(
+                this.collectSampleEntries(sample => sample.mutations),
+                referenceGenome
+            ).then(annotations => {
+                if (!annotations?.length || !shouldContinue()) return;
+                this.applyHierarchyMutationAndRefresh(samples => {
+                    applyOncoKbMutationAnnotations(samples, annotations);
+                }, shouldContinue);
+            }),
+            fetchOncoKbCnaAnnotations(
+                this.collectSampleEntries(sample => sample.cna_alterations),
+                referenceGenome
+            ).then(annotations => {
+                if (!annotations?.length || !shouldContinue()) return;
+                this.applyHierarchyMutationAndRefresh(samples => {
+                    applyOncoKbCnaAnnotations(samples, annotations);
+                }, shouldContinue);
+            }),
+            fetchOncoKbStructuralVariantAnnotations(
+                this.collectSampleEntries(sample => sample.structural_variants),
+                referenceGenome
+            ).then(annotations => {
+                if (!annotations?.length || !shouldContinue()) return;
+                this.applyHierarchyMutationAndRefresh(samples => {
+                    applyOncoKbStructuralVariantAnnotations(
+                        samples,
+                        annotations
+                    );
+                }, shouldContinue);
+            }),
+        ]);
     }
+
     /**
-     * Fetch cohort mutation frequencies for all mutations and store as fraction (0–1)
-     * in each MutationDetail's `cohortFrequency` field.
-     * Uses /api/mutation-counts-by-position/fetch and the study's sequencedSampleCount.
+     * Merges the CIViC entries of the samples' mutations and of their
+     * amplifications and deep deletions.
      */
-    private async fetchAndMergeMutationFrequency(
-        base: string,
-        studyId: string,
-        shouldContinue: () => boolean = () => true
+    private async fetchAndMergeCivicAnnotations(
+        shouldContinue: () => boolean
     ): Promise<void> {
+        await Promise.all([
+            fetchCivicMutationAnnotations(
+                this.collectSampleEntries(sample => sample.mutations).map(
+                    ({ entry }) => entry
+                )
+            ).then(annotations => {
+                if (!annotations?.length || !shouldContinue()) return;
+                this.applyHierarchyMutationAndRefresh(samples => {
+                    applyCivicMutationAnnotations(samples, annotations);
+                }, shouldContinue);
+            }),
+            fetchCivicCnaAnnotations(
+                this.collectSampleEntries(sample => sample.cna_alterations).map(
+                    ({ entry }) => entry
+                )
+            ).then(annotations => {
+                if (!annotations?.length || !shouldContinue()) return;
+                this.applyHierarchyMutationAndRefresh(samples => {
+                    applyCivicCnaAnnotations(samples, annotations);
+                }, shouldContinue);
+            }),
+        ]);
+    }
+
+    /**
+     * Sets each mutation's study counts: how many samples of the mutation
+     * profile have the same variant (the portal's variant counts).
+     */
+    private async fetchAndMergeVariantCounts(
+        profileId: string,
+        shouldContinue: () => boolean
+    ): Promise<void> {
+        const mutations: MutationDetail[] = [];
+        for (const sample of this.viewerState.hierarchy?.samples ?? []) {
+            mutations.push(...(sample.mutations ?? []));
+        }
         try {
-            if (!shouldContinue()) return;
-            const mutationFrequencyData = await fetchMutationFrequencyDataReadOnly(
-                base,
-                studyId,
-                this.viewerState.hierarchy?.samples ?? []
-            );
-            if (!mutationFrequencyData || !shouldContinue()) return;
+            const counts = await fetchVariantCounts(profileId, mutations);
+            if (!counts.size || !shouldContinue()) return;
 
             this.applyHierarchyMutation(samples => {
-                applyMutationFrequencyData(
-                    samples,
-                    mutationFrequencyData.counts,
-                    mutationFrequencyData.total
+                applyVariantCounts(samples, mutation =>
+                    mutation.entrezGeneId != null && mutation.keyword
+                        ? counts.get(
+                              variantCountKey(
+                                  profileId,
+                                  mutation.entrezGeneId,
+                                  mutation.keyword
+                              )
+                          )
+                        : undefined
                 );
             });
-        } catch {
-            // Non-critical — cohort % simply won't appear
+        } catch (error) {
+            // The study counts are optional in the tooltips.
+            console.debug('[WSI] variant counts unavailable', error);
         }
     }
 
@@ -1849,8 +1747,8 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
 
                         {/* Right metadata sidebar */}
                         <WsiMetaSidebar
-                            seqRows={this.sidebarSeqRowsForRender}
-                            sample={this.sidebarImpactSample}
+                            seqRows={this.selectedSeqRows}
+                            sample={this.sidebarTableSample}
                             mutationDataStatus={this.mutationDataStatus}
                             dataVersion={this.hierarchyDataVersion}
                             width={this.sidebarWidth}

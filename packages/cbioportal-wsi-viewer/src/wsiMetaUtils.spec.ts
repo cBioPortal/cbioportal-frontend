@@ -25,10 +25,6 @@ const slide: Slide = {
 
 const sample: Sample = {
     sample_id: 'S-1',
-    cancer_type: '',
-    cancer_type_detailed: '',
-    oncotree_code: '',
-    primary_site: '',
     sample_type: 'Primary',
     parts: [],
 };
@@ -298,7 +294,7 @@ describe('buildSeqRows', () => {
         const enrichedSample = {
             ...sample,
             tumor_purity: '65',
-            tmb_score: '7.1',
+            tmb_score: '7.123',
             metastatic_site: 'Not Applicable',
         } as Sample;
 
@@ -309,6 +305,33 @@ describe('buildSeqRows', () => {
                 value: '7.1 mut/Mb',
                 href: '/patient?sampleId=S-1',
             }),
+        ]);
+    });
+
+    it('scales a fractional purity to a percentage', () => {
+        expect(buildSeqRows({ ...sample, tumor_purity: '0.42' })[0].value).toBe(
+            '42%'
+        );
+        expect(buildSeqRows({ ...sample, tumor_purity: '1' })[0].value).toBe(
+            '100%'
+        );
+        expect(buildSeqRows({ ...sample, tumor_purity: 'High' })[0].value).toBe(
+            'High'
+        );
+    });
+
+    it('rounds TMB and shows the MSI score in its own row', () => {
+        const rows = buildSeqRows({
+            ...sample,
+            tmb_score: '12',
+            msi_type: 'Stable',
+            msi_score: '0.31234',
+        });
+
+        expect(rows.map(row => [row.label, row.value])).toEqual([
+            ['TMB', '12 mut/Mb'],
+            ['MSI', 'Stable'],
+            ['MSI score', '0.31'],
         ]);
     });
 });

@@ -3,12 +3,7 @@
  */
 import { assert } from 'chai';
 
-import {
-    buildOncoKbUrl,
-    formatMutationType,
-    parseMutationToken,
-    parseMutationTokens,
-} from './wsiMolecularUtils';
+import { buildOncoKbUrl, formatMutationType } from './wsiMolecularUtils';
 
 describe('wsiMolecularUtils', () => {
     describe('buildOncoKbUrl', () => {
@@ -21,31 +16,13 @@ describe('wsiMolecularUtils', () => {
 
         it('builds variant-level URLs with encoding', () => {
             assert.equal(
-                buildOncoKbUrl('MTOR', 'p.E2419K'),
-                'https://www.oncokb.org/gene/MTOR/p.E2419K'
+                buildOncoKbUrl('MTOR', 'E2419K'),
+                'https://www.oncokb.org/gene/MTOR/E2419K'
             );
-        });
-    });
-
-    describe('parseMutationToken', () => {
-        it('splits gene and variant tokens', () => {
-            assert.deepEqual(parseMutationToken('KRAS p.G13D'), {
-                gene: 'KRAS',
-                variant: 'p.G13D',
-            });
-        });
-    });
-
-    describe('parseMutationTokens', () => {
-        it('splits comma and semicolon separated lists', () => {
-            assert.deepEqual(parseMutationTokens('KRAS p.G13D; TP53 p.R175H'), [
-                'KRAS p.G13D',
-                'TP53 p.R175H',
-            ]);
-            assert.deepEqual(parseMutationTokens('KRAS p.G13D,TP53 p.R175H'), [
-                'KRAS p.G13D',
-                'TP53 p.R175H',
-            ]);
+            assert.equal(
+                buildOncoKbUrl('EGFR', 'E746_A750del'),
+                'https://www.oncokb.org/gene/EGFR/E746_A750del'
+            );
         });
     });
 

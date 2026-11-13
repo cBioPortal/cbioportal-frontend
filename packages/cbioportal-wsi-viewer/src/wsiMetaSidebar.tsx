@@ -177,14 +177,13 @@ function hasMolecularContent(
 ) {
     return (
         seqRows.length > 0 ||
-        !!(
-            sample?.oncogenic_mutations &&
-            sample.oncogenic_mutation_details !== undefined
-        ) ||
-        !!sample?.cna_alterations?.length ||
-        !!sample?.structural_variants?.length ||
-        (sample !== null && mutationDataStatus === 'loading') ||
-        (sample !== null && mutationDataStatus === 'error')
+        (sample !== null &&
+            (sample.mutations !== undefined ||
+                !!sample.cna_alterations?.length ||
+                !!sample.structural_variants?.length ||
+                mutationDataStatus === 'loading' ||
+                mutationDataStatus === 'unprofiled' ||
+                mutationDataStatus === 'error'))
     );
 }
 

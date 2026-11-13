@@ -4,12 +4,16 @@ import { getWsiViewerRuntime, WsiOncoKbClient } from './wsiViewerConfig';
 // Accessors for the host's molecular annotation services, with the
 // behaviour of a host that provides none.
 
+/** OncoKB annotations are on: the host enables them and has an API URL. */
 export function isWsiOncoKbEnabled(): boolean {
-    return !!getWsiViewerRuntime().molecular?.showOncoKb;
+    const molecular = getWsiViewerRuntime().molecular;
+    return (
+        !!molecular && molecular.showOncoKb() && !!molecular.getOncoKbApiUrl()
+    );
 }
 
 export function isWsiCivicEnabled(): boolean {
-    return !!getWsiViewerRuntime().molecular?.showCivic;
+    return !!getWsiViewerRuntime().molecular?.showCivic();
 }
 
 /** The configured OncoKB API URL; empty when OncoKB is unavailable. */

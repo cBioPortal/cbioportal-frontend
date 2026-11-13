@@ -15,10 +15,13 @@ export type WsiOncoKbClient = Pick<
  * molecular data unannotated.
  */
 export interface WsiMolecularServices {
-    /** Annotate variants with OncoKB. */
-    showOncoKb: boolean;
-    /** Annotate variants with CIViC. */
-    showCivic: boolean;
+    /**
+     * Whether to annotate variants with OncoKB. Read each time annotations
+     * are requested or drawn, so a configuration change after startup holds.
+     */
+    showOncoKb: () => boolean;
+    /** Whether to annotate variants with CIViC; read like `showOncoKb`. */
+    showCivic: () => boolean;
     /**
      * OncoKB API URL, also the namespace of the viewer's annotation caches.
      * An empty URL disables OncoKB annotations.

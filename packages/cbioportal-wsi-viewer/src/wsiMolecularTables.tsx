@@ -4,13 +4,24 @@ import {
     CNA_COLOR_GAIN,
     CNA_COLOR_HETLOSS,
     CNA_COLOR_HOMDEL,
+    STRUCTURAL_VARIANT_COLOR,
 } from 'cbioportal-frontend-commons';
 import {
     Civic,
-    HotspotAnnotation,
     DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
+    HotspotAnnotation,
 } from 'react-mutation-mapper';
-import { getSimplifiedMutationType } from './wsiMolecularServices';
+import {
+    getSimplifiedMutationType,
+    isWsiCivicEnabled,
+    isWsiOncoKbEnabled,
+} from './wsiMolecularServices';
+import {
+    AnnotationIconSlot,
+    OncoKbAnnotationLink,
+    OncoKbCard,
+    ScrollClosingTooltip,
+} from './wsiMolecularAnnotationUtils';
 import {
     CNADetail,
     MutationDetail,
@@ -18,31 +29,8 @@ import {
     StructuralVariantDetail,
     WsiMutationDataStatus,
 } from './wsiViewerTypes';
-import {
-    AnnotationBadgeRow,
-    AnnotationFooterLink,
-    AnnotationIconSlot,
-    AnnotationLinkIcon,
-    AnnotationSummaryText,
-    hasOncoKbAnnotationContent,
-} from './wsiMolecularAnnotationUtils';
-import {
-    buildOncoKbUrl,
-    cnaLabel,
-    parseMutationToken,
-    parseMutationTokens,
-} from './wsiMolecularUtils';
-
-const TABLE_COLORS = {
-    border: '#ddd',
-    muted: '#737373',
-    text: '#333',
-} as const;
-
-const inlineIconStyle: React.CSSProperties = {
-    verticalAlign: 'middle',
-    display: 'inline-block',
-};
+import { buildOncoKbUrl, cnaLabel } from './wsiMolecularUtils';
+import { WSI_THEME } from './wsiTheme';
 
 const ellipsisStyle: React.CSSProperties = {
     overflow: 'hidden',
@@ -52,7 +40,7 @@ const ellipsisStyle: React.CSSProperties = {
 
 const compactThStyle: React.CSSProperties = {
     fontSize: 10,
-    color: TABLE_COLORS.muted,
+    color: WSI_THEME.muted,
     fontWeight: 600,
     textAlign: 'left',
     paddingBottom: 4,
@@ -63,7 +51,15 @@ const compactTdBase: React.CSSProperties = {
     fontSize: 11,
     paddingTop: 3,
     paddingBottom: 3,
+    paddingRight: 4,
     verticalAlign: 'middle',
+};
+
+const geneCellStyle: React.CSSProperties = {
+    ...compactTdBase,
+    ...ellipsisStyle,
+    fontWeight: 600,
+    color: WSI_THEME.text,
 };
 
 const compactTableStyle: React.CSSProperties = {
@@ -73,120 +69,66 @@ const compactTableStyle: React.CSSProperties = {
     tableLayout: 'fixed',
 };
 
+const rowStyle: React.CSSProperties = {
+    borderTop: `1px solid ${WSI_THEME.border}`,
+};
+
 const emptyStateStyle: React.CSSProperties = {
-    color: TABLE_COLORS.muted,
+    color: WSI_THEME.muted,
     fontSize: 11,
+    marginTop: 8,
 };
 
-const FIXED_TOOLTIP_MARGIN = 8;
-const FIXED_TOOLTIP_WIDTH = 340;
-const FIXED_TOOLTIP_MIN_HEIGHT = 120;
-const FIXED_TOOLTIP_ESTIMATED_HEIGHT = 260;
-
-type FixedTooltipAnchor = {
-    x: number;
-    top?: number;
-    bottom?: number;
-    maxHeight: number;
+/** Hidden on screen, read by screen readers. */
+const visuallyHiddenStyle: React.CSSProperties = {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    padding: 0,
+    margin: -1,
+    overflow: 'hidden',
+    clip: 'rect(0, 0, 0, 0)',
+    whiteSpace: 'nowrap',
+    border: 0,
 };
 
-function makeFixedTooltipAnchor(
-    rect: Pick<DOMRect, 'left' | 'top' | 'bottom'>,
-    estimatedHeight = FIXED_TOOLTIP_ESTIMATED_HEIGHT
-): FixedTooltipAnchor {
-    const viewportHeight = window.innerHeight || 0;
-    const canFitBelow =
-        rect.bottom + estimatedHeight + FIXED_TOOLTIP_MARGIN <= viewportHeight;
-    const shouldPlaceAbove =
-        !canFitBelow &&
-        (rect.top > viewportHeight / 2 ||
-            rect.top - estimatedHeight > FIXED_TOOLTIP_MARGIN);
-
-    if (shouldPlaceAbove) {
-        return {
-            x: rect.left,
-            bottom: Math.max(
-                FIXED_TOOLTIP_MARGIN,
-                viewportHeight - rect.top + 4
-            ),
-            maxHeight: Math.max(
-                FIXED_TOOLTIP_MIN_HEIGHT,
-                rect.top - FIXED_TOOLTIP_MARGIN * 2
-            ),
-        };
-    }
-
-    return {
-        x: rect.left,
-        top: rect.bottom + 4,
-        maxHeight: Math.max(
-            FIXED_TOOLTIP_MIN_HEIGHT,
-            viewportHeight - rect.bottom - FIXED_TOOLTIP_MARGIN * 2
-        ),
-    };
-}
-
-function fixedTooltipViewportStyle(
-    anchor: FixedTooltipAnchor
-): React.CSSProperties {
-    const maxLeft = Math.max(
-        FIXED_TOOLTIP_MARGIN,
-        window.innerWidth - FIXED_TOOLTIP_WIDTH - FIXED_TOOLTIP_MARGIN
-    );
-    return {
-        position: 'fixed',
-        left: Math.max(FIXED_TOOLTIP_MARGIN, Math.min(anchor.x, maxLeft)),
-        top: anchor.top,
-        bottom: anchor.bottom,
-        maxHeight: anchor.maxHeight,
-        overflowY: 'auto',
-        boxSizing: 'border-box',
-    };
-}
-
-function FixedTooltipCard({
-    anchor,
-    onMouseEnter,
-    onMouseLeave,
-    whiteSpace,
+/**
+ * A cell value with its details in a tooltip that opens on hover and on
+ * keyboard focus. Screen readers read the details with the value.
+ */
+function DetailTip({
+    details,
     children,
 }: {
-    anchor: FixedTooltipAnchor;
-    onMouseEnter: () => void;
-    onMouseLeave: () => void;
-    whiteSpace?: React.CSSProperties['whiteSpace'];
+    details: string[];
     children: React.ReactNode;
 }) {
+    if (details.length === 0) {
+        return <>{children}</>;
+    }
     return (
-        <div
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={onMouseLeave}
-            style={{
-                ...fixedTooltipViewportStyle(anchor),
-                zIndex: 9999,
-                background: '#fff',
-                border: '1px solid #d4d4d4',
-                borderRadius: 4,
-                boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
-                padding: '10px 14px',
-                maxWidth: 320,
-                fontSize: 11.5,
-                fontFamily: 'Arial, sans-serif',
-                lineHeight: 1.45,
-                color: '#333',
-                pointerEvents: 'auto',
-                whiteSpace,
-            }}
+        <ScrollClosingTooltip
+            overlay={
+                <div style={{ fontSize: 11.5, lineHeight: 1.45 }}>
+                    {details.map(detail => (
+                        <div key={detail}>{detail}</div>
+                    ))}
+                </div>
+            }
         >
-            {children}
-        </div>
+            <span tabIndex={0} style={{ cursor: 'help', outlineOffset: 1 }}>
+                {children}
+                <span style={visuallyHiddenStyle}>
+                    {`: ${details.join('; ')}`}
+                </span>
+            </span>
+        </ScrollClosingTooltip>
     );
 }
 
 function mutationTypeColor(type: string | undefined): string | undefined {
     if (!type) return undefined;
-    const simplified = getSimplifiedMutationType(type);
-    switch (simplified) {
+    switch (getSimplifiedMutationType(type)) {
         case 'missense':
             return DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.missenseColor;
         case 'frameshift':
@@ -207,120 +149,225 @@ function mutationTypeColor(type: string | undefined): string | undefined {
     }
 }
 
-function oncokbCircleColor(
-    oncogenic?: string
-): { stroke: string; rings: 3 | 1 } {
-    const level = (oncogenic || '')
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, '-');
-    if (['oncogenic', 'likely-oncogenic', 'resistance'].includes(level)) {
-        return { stroke: '#0968C3', rings: 3 };
-    }
-    if (['neutral', 'likely-neutral'].includes(level)) {
-        return { stroke: '#696969', rings: 3 };
-    }
-    if (level === 'inconclusive') return { stroke: '#aaa', rings: 3 };
-    if (level === 'vus') return { stroke: '#696969', rings: 1 };
-    return { stroke: '#ccc', rings: 1 };
+function cnaColor(value: number): string {
+    if (value <= -2) return CNA_COLOR_HOMDEL;
+    if (value === -1) return CNA_COLOR_HETLOSS;
+    if (value >= 2) return CNA_COLOR_AMP;
+    if (value === 1) return CNA_COLOR_GAIN;
+    return WSI_THEME.muted;
 }
 
-const OncoKbIcon = ({ oncogenic }: { oncogenic?: string }) => {
-    const { stroke, rings } = oncokbCircleColor(oncogenic);
-    return (
-        <svg
-            width="14"
-            height="14"
-            viewBox="-9 -9 18 18"
-            style={inlineIconStyle}
-        >
-            <circle r="7" fill="none" strokeWidth="2" stroke={stroke} />
-            {rings === 3 && (
-                <>
-                    <circle r="4" fill="none" strokeWidth="2" stroke={stroke} />
-                    <circle r="2" fill={stroke} />
-                </>
-            )}
-        </svg>
+/** "3/120 (2.5%)", or null without study counts. */
+function formatStudyCount(
+    altered: number | undefined,
+    profiled: number | undefined
+): string | null {
+    if (altered == null || !profiled) {
+        return null;
+    }
+    return `${altered}/${profiled} (${((altered / profiled) * 100).toFixed(
+        1
+    )}%)`;
+}
+
+function mutationDetails(
+    mutation: MutationDetail,
+    cna: CNADetail | undefined
+): string[] {
+    const details: string[] = [];
+    if (mutation.type) {
+        details.push(`Type: ${mutation.type}`);
+    }
+    if (mutation.vaf != null) {
+        details.push(`VAF: ${mutation.vaf}%`);
+    }
+    if (cna) {
+        details.push(`Copy number: ${cnaLabel(cna.cnaValue)}`);
+    }
+    const studyCount = formatStudyCount(
+        mutation.cohortAlteredCount,
+        mutation.cohortProfiledCount
     );
+    if (studyCount) {
+        details.push(`Samples in study with this variant: ${studyCount}`);
+    }
+    return details;
+}
+
+function cnaDetails(cna: CNADetail): string[] {
+    const studyCount = formatStudyCount(
+        cna.cohortAlteredCount,
+        cna.cohortProfiledCount
+    );
+    return studyCount
+        ? [`Samples in study with this alteration: ${studyCount}`]
+        : [];
+}
+
+function structuralVariantDetails(sv: StructuralVariantDetail): string[] {
+    const details: string[] = [];
+    const push = (label: string, value: unknown) => {
+        if (value == null || value === '' || value === 'NA' || value === -1)
+            return;
+        details.push(`${label}: ${value}`);
+    };
+    push('Status', sv.svStatus);
+    push('Event info', sv.eventInfo);
+    push('Connection type', sv.connectionType);
+    return details;
+}
+
+const annotCellStyle: React.CSSProperties = {
+    ...compactTdBase,
+    paddingRight: 2,
+    whiteSpace: 'nowrap',
 };
 
-function wsiOncoKbSortScore(detail?: MutationDetail): number {
-    const oncogenic = (detail?.oncogenic || '').trim().toLowerCase();
+function isHotspot(mutation: MutationDetail): boolean {
+    return (
+        mutation.hotspot === true ||
+        !!mutation.annotation?.toLowerCase().includes('hotspot')
+    );
+}
+
+function oncoKbSortScore(mutation: MutationDetail): number {
+    const oncogenic = (mutation.oncogenic || '').trim().toLowerCase();
     if (oncogenic === 'oncogenic') return 5;
     if (oncogenic === 'likely oncogenic' || oncogenic === 'resistance') {
         return 4;
     }
     if (oncogenic === 'predicted oncogenic') return 3;
-    if (detail?.mutationEffect && detail.mutationEffect !== 'Unknown') return 2;
-    if (oncogenic || detail?.mutationEffect) return 1;
-    return 0;
+    if (mutation.mutationEffect && mutation.mutationEffect !== 'Unknown') {
+        return 2;
+    }
+    return oncogenic || mutation.mutationEffect ? 1 : 0;
 }
 
-function wsiMutationAnnotationSortScore(
-    detail?: MutationDetail
-): [number, number, number, number] {
-    return [
-        wsiOncoKbSortScore(detail),
-        detail?.civicEntry ? 1 : 0,
-        detail?.hotspot === true ||
-        !!detail?.annotation?.toLowerCase().includes('hotspot')
-            ? 1
-            : 0,
-        detail?.vaf ?? -1,
-    ];
-}
-
-function compareMutationAnnotationRows(
-    a: { mut: string; detail?: MutationDetail },
-    b: { mut: string; detail?: MutationDetail }
+/** Oncogenic first, then by CIViC entry, hotspot and VAF. */
+function compareAnnotatedMutations(
+    a: MutationDetail,
+    b: MutationDetail
 ): number {
-    const aScore = wsiMutationAnnotationSortScore(a.detail);
-    const bScore = wsiMutationAnnotationSortScore(b.detail);
-    for (let i = 0; i < aScore.length; i++) {
-        if (aScore[i] !== bScore[i]) return bScore[i] - aScore[i];
+    const score = (mutation: MutationDetail) => [
+        oncoKbSortScore(mutation),
+        mutation.civicEntry ? 1 : 0,
+        isHotspot(mutation) ? 1 : 0,
+        mutation.vaf ?? -1,
+    ];
+    const aScore = score(a);
+    const bScore = score(b);
+    for (let index = 0; index < aScore.length; index += 1) {
+        if (aScore[index] !== bScore[index]) {
+            return bScore[index] - aScore[index];
+        }
     }
-    return a.mut.localeCompare(b.mut);
+    return a.token.localeCompare(b.token);
 }
 
-function formatCnaCohort(cna: CNADetail): string | null {
-    if (cna.cohortAlteredCount == null || !cna.cohortProfiledCount) {
-        return null;
-    }
-    const frequency =
-        cna.cohortFrequency != null
-            ? cna.cohortFrequency
-            : cna.cohortAlteredCount / cna.cohortProfiledCount;
-    return `${cna.cohortAlteredCount}/${cna.cohortProfiledCount} (${(
-        frequency * 100
-    ).toFixed(1)}%)`;
+function MutationAnnotations({
+    mutation,
+    showOncoKb,
+    showCivic,
+}: {
+    mutation: MutationDetail;
+    showOncoKb: boolean;
+    showCivic: boolean;
+}) {
+    const variant = mutation.proteinChange || undefined;
+    const href = buildOncoKbUrl(mutation.gene, variant);
+    const label = `${mutation.gene}${variant ? ` ${variant}` : ''}`;
+    return (
+        <>
+            {showOncoKb && (
+                <AnnotationIconSlot>
+                    <OncoKbAnnotationLink
+                        label={label}
+                        annotation={mutation}
+                        href={href}
+                        card={
+                            <OncoKbCard
+                                title={label}
+                                annotation={mutation}
+                                href={href}
+                            />
+                        }
+                    />
+                </AnnotationIconSlot>
+            )}
+            {showCivic && (
+                <AnnotationIconSlot>
+                    {mutation.civicEntry && (
+                        <Civic
+                            civicEntry={mutation.civicEntry}
+                            civicStatus="complete"
+                            hasCivicVariants={
+                                Object.keys(mutation.civicEntry.variants)
+                                    .length > 0
+                            }
+                        />
+                    )}
+                </AnnotationIconSlot>
+            )}
+            {isHotspot(mutation) && (
+                <span
+                    style={{ display: 'inline-block', verticalAlign: 'middle' }}
+                >
+                    <HotspotAnnotation
+                        status="complete"
+                        isHotspot={true}
+                        is3dHotspot={false}
+                    />
+                </span>
+            )}
+        </>
+    );
 }
 
-function cnaTooltip(cna: CNADetail): string | undefined {
-    const parts: string[] = [];
-    if (cna.cytoband) {
-        parts.push(`Cytoband: ${cna.cytoband}`);
-    }
-    const cohort = formatCnaCohort(cna);
-    if (cohort) {
-        parts.push(`Cohort: ${cohort}`);
-    }
-    return parts.length ? parts.join(' | ') : undefined;
+function MutationStatusMessage({
+    testId,
+    children,
+}: {
+    testId: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <div data-testid={testId} style={emptyStateStyle} role="status">
+            {children}
+        </div>
+    );
 }
 
-function pushSvTooltipPart(parts: string[], label: string, value: unknown) {
-    if (value == null || value === '' || value === 'NA' || value === -1) return;
-    parts.push(`${label}: ${value}`);
-}
-
-function structuralVariantTooltip(
-    sv: StructuralVariantDetail
-): string | undefined {
-    const parts: string[] = [];
-    pushSvTooltipPart(parts, 'Status', sv.svStatus);
-    pushSvTooltipPart(parts, 'Event info', sv.eventInfo);
-    pushSvTooltipPart(parts, 'Connection type', sv.connectionType);
-    return parts.length ? parts.join('\n') : undefined;
+/** Renders the empty state when the sample has no mutation rows to show. */
+function mutationEmptyState(
+    sample: Sample,
+    mutationDataStatus: WsiMutationDataStatus
+): React.ReactElement | null {
+    switch (mutationDataStatus) {
+        case 'loading':
+            return (
+                <MutationStatusMessage testId="wsi-mutation-table-loading">
+                    Loading variants…
+                </MutationStatusMessage>
+            );
+        case 'error':
+            return (
+                <MutationStatusMessage testId="wsi-mutation-table-error">
+                    Variant data unavailable.
+                </MutationStatusMessage>
+            );
+        case 'unprofiled':
+            return (
+                <MutationStatusMessage testId="wsi-mutation-table-unprofiled">
+                    Not profiled for mutations.
+                </MutationStatusMessage>
+            );
+        default:
+            return sample.mutations ? (
+                <MutationStatusMessage testId="wsi-mutation-table-empty">
+                    No mutations.
+                </MutationStatusMessage>
+            ) : null;
+    }
 }
 
 export function MutationTable({
@@ -330,257 +377,75 @@ export function MutationTable({
     sample: Sample;
     mutationDataStatus?: WsiMutationDataStatus;
 }): React.ReactElement | null {
-    const muts = parseMutationTokens(sample.oncogenic_mutations);
-    const details = sample.oncogenic_mutation_details;
-    const [tooltip, setTooltip] = React.useState<
-        ({ idx: number } & FixedTooltipAnchor) | null
-    >(null);
-    const hideTooltip = () => setTooltip(null);
-
-    if (!muts.length || details === undefined) {
-        if (mutationDataStatus === 'loading') {
-            return (
-                <div
-                    data-testid="wsi-mutation-table-loading"
-                    style={{ ...emptyStateStyle, marginTop: 8 }}
-                    role="status"
-                >
-                    Loading variants…
-                </div>
-            );
-        }
-        if (mutationDataStatus === 'error') {
-            return (
-                <div
-                    data-testid="wsi-mutation-table-error"
-                    style={{ ...emptyStateStyle, marginTop: 8 }}
-                    role="status"
-                >
-                    Variant data unavailable.
-                </div>
-            );
-        }
-        return null;
+    if (!sample.mutations?.length) {
+        return mutationEmptyState(sample, mutationDataStatus);
     }
-
-    const mutationRows = muts
-        .map((mut, index) => ({ mut, index, detail: details?.[index] }))
-        .sort(compareMutationAnnotationRows);
+    const mutations = [...sample.mutations].sort(compareAnnotatedMutations);
+    const showOncoKb = isWsiOncoKbEnabled();
+    const showCivic = isWsiCivicEnabled();
+    // The column stays for the portal's hotspot flags without either service.
+    const showAnnotations =
+        showOncoKb || showCivic || mutations.some(isHotspot);
 
     return (
-        <div style={{ position: 'relative' }}>
+        <div>
             <table style={compactTableStyle}>
                 <colgroup>
-                    <col style={{ width: '34%' }} />
-                    <col style={{ width: '38%' }} />
-                    <col style={{ width: '28%' }} />
+                    <col style={{ width: showAnnotations ? '34%' : '40%' }} />
+                    <col style={{ width: showAnnotations ? '38%' : '60%' }} />
+                    {showAnnotations && <col style={{ width: '28%' }} />}
                 </colgroup>
                 <thead>
                     <tr>
                         <th style={compactThStyle}>Gene</th>
-                        <th style={compactThStyle}>Variant ⓘ</th>
-                        <th style={compactThStyle}>Annot</th>
+                        <th style={compactThStyle}>Variant</th>
+                        {showAnnotations && (
+                            <th style={compactThStyle}>Annot</th>
+                        )}
                     </tr>
                 </thead>
                 <tbody>
-                    {mutationRows.map(({ mut, index, detail }) => {
-                        const { gene, variant } = parseMutationToken(mut);
-                        const oncoKbUrl = buildOncoKbUrl(gene, variant);
-                        const isHotspot =
-                            detail?.hotspot === true ||
-                            !!detail?.annotation
-                                ?.toLowerCase()
-                                .includes('hotspot');
-                        const hasOncoKbData = hasOncoKbAnnotationContent(
-                            detail
+                    {mutations.map(mutation => {
+                        const cna = sample.cna_alterations?.find(
+                            alteration => alteration.gene === mutation.gene
                         );
-                        const cnaForGene = sample.cna_alterations?.find(
-                            cna => cna.gene === gene
-                        );
-                        const variantTitleParts: string[] = [];
-                        if (detail?.type) {
-                            variantTitleParts.push(`Type: ${detail.type}`);
-                        }
-                        if (detail?.vaf != null) {
-                            variantTitleParts.push(`VAF: ${detail.vaf}%`);
-                        }
-                        if (cnaForGene) {
-                            variantTitleParts.push(
-                                `Copy #: ${cnaLabel(cnaForGene.cnaValue)}`
-                            );
-                        }
-                        if (detail?.cohortFrequency != null) {
-                            variantTitleParts.push(
-                                `Cohort: ${(
-                                    detail.cohortFrequency * 100
-                                ).toFixed(1)}%`
-                            );
-                        }
-                        const variantTitle =
-                            variantTitleParts.join(' | ') || undefined;
-
                         return (
-                            <tr
-                                key={mut}
-                                style={{
-                                    borderTop: `1px solid ${TABLE_COLORS.border}`,
-                                }}
-                            >
+                            <tr key={mutation.token} style={rowStyle}>
+                                <td style={geneCellStyle}>{mutation.gene}</td>
                                 <td
                                     style={{
                                         ...compactTdBase,
-                                        paddingRight: 4,
-                                        ...ellipsisStyle,
-                                        fontWeight: 600,
-                                        color: TABLE_COLORS.text,
-                                    }}
-                                >
-                                    {gene}
-                                </td>
-                                <td
-                                    title={variantTitle}
-                                    style={{
-                                        ...compactTdBase,
-                                        paddingRight: 4,
                                         ...ellipsisStyle,
                                         fontFamily: 'monospace',
                                         fontSize: 10.5,
-                                        color: mutationTypeColor(detail?.type),
-                                        fontWeight: detail?.type
+                                        color: mutationTypeColor(
+                                            mutation.consequence
+                                        ),
+                                        fontWeight: mutation.type
                                             ? 600
                                             : undefined,
-                                        cursor: variantTitle
-                                            ? 'help'
-                                            : undefined,
                                     }}
                                 >
-                                    {(variant.startsWith('p.')
-                                        ? variant.slice(2)
-                                        : variant) || '—'}
-                                </td>
-                                <td
-                                    style={{
-                                        ...compactTdBase,
-                                        paddingRight: 2,
-                                        whiteSpace: 'nowrap',
-                                    }}
-                                >
-                                    <AnnotationLinkIcon
-                                        href={oncoKbUrl}
-                                        icon={
-                                            <OncoKbIcon
-                                                oncogenic={detail?.oncogenic}
-                                            />
-                                        }
-                                        marginRight={3}
-                                        showTooltip={
-                                            hasOncoKbData
-                                                ? event => {
-                                                      const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-                                                      setTooltip({
-                                                          idx: index,
-                                                          ...makeFixedTooltipAnchor(
-                                                              rect
-                                                          ),
-                                                      });
-                                                  }
-                                                : undefined
-                                        }
-                                        hideTooltip={hideTooltip}
-                                    />
-                                    <AnnotationIconSlot
-                                        marginRight={isHotspot ? 3 : 0}
+                                    <DetailTip
+                                        details={mutationDetails(mutation, cna)}
                                     >
-                                        {detail?.civicEntry && (
-                                            <Civic
-                                                civicEntry={detail.civicEntry}
-                                                civicStatus="complete"
-                                                hasCivicVariants={
-                                                    Object.keys(
-                                                        detail.civicEntry
-                                                            .variants
-                                                    ).length > 0
-                                                }
-                                            />
-                                        )}
-                                    </AnnotationIconSlot>
-                                    {isHotspot && (
-                                        <span
-                                            style={inlineIconStyle}
-                                            onClick={event =>
-                                                event.stopPropagation()
-                                            }
-                                        >
-                                            <HotspotAnnotation
-                                                status="complete"
-                                                isHotspot={isHotspot}
-                                                is3dHotspot={false}
-                                            />
-                                        </span>
-                                    )}
+                                        {mutation.proteinChange || '—'}
+                                    </DetailTip>
                                 </td>
+                                {showAnnotations && (
+                                    <td style={annotCellStyle}>
+                                        <MutationAnnotations
+                                            mutation={mutation}
+                                            showOncoKb={showOncoKb}
+                                            showCivic={showCivic}
+                                        />
+                                    </td>
+                                )}
                             </tr>
                         );
                     })}
                 </tbody>
             </table>
-            {mutationDataStatus === 'error' && (
-                <div
-                    data-testid="wsi-mutation-table-error"
-                    style={{ ...emptyStateStyle, marginTop: 8 }}
-                    role="status"
-                >
-                    Variant data unavailable.
-                </div>
-            )}
-            {tooltip !== null &&
-                (() => {
-                    const detail = details?.[tooltip.idx];
-                    if (!hasOncoKbAnnotationContent(detail)) return null;
-                    const { gene, variant } = parseMutationToken(
-                        muts[tooltip.idx] ?? ''
-                    );
-                    const oncoKbUrl = buildOncoKbUrl(
-                        gene,
-                        variant || undefined
-                    );
-                    return (
-                        <FixedTooltipCard
-                            anchor={tooltip}
-                            onMouseEnter={() => setTooltip(current => current)}
-                            onMouseLeave={hideTooltip}
-                        >
-                            <div
-                                style={{
-                                    fontWeight: 700,
-                                    fontSize: 12.5,
-                                    marginBottom: 5,
-                                }}
-                            >
-                                <span>{gene}</span>
-                                {variant && (
-                                    <span
-                                        style={{
-                                            fontFamily: 'monospace',
-                                            marginLeft: 4,
-                                        }}
-                                    >
-                                        {variant}
-                                    </span>
-                                )}
-                            </div>
-                            <AnnotationBadgeRow
-                                oncogenic={detail?.oncogenic}
-                                mutationEffect={detail?.mutationEffect}
-                            />
-                            <AnnotationSummaryText
-                                geneSummary={detail?.geneSummary}
-                                variantSummary={detail?.variantSummary}
-                            />
-                            <AnnotationFooterLink href={oncoKbUrl} />
-                        </FixedTooltipCard>
-                    );
-                })()}
         </div>
     );
 }
@@ -592,104 +457,86 @@ export function CnaTable({
 }): React.ReactElement | null {
     const cnas = sample.cna_alterations;
     if (!cnas?.length) return null;
-
-    const [tooltip, setTooltip] = React.useState<
-        ({ idx: number } & FixedTooltipAnchor) | null
-    >(null);
-    const hideTooltip = () => setTooltip(null);
+    const showOncoKb = isWsiOncoKbEnabled();
+    const showCivic = isWsiCivicEnabled();
+    const showAnnotations = showOncoKb || showCivic;
 
     return (
-        <div style={{ position: 'relative' }}>
+        <div>
             <table style={compactTableStyle}>
                 <colgroup>
-                    <col style={{ width: '42%' }} />
-                    <col style={{ width: '40%' }} />
-                    <col style={{ width: '18%' }} />
+                    <col style={{ width: showAnnotations ? '42%' : '50%' }} />
+                    <col style={{ width: showAnnotations ? '40%' : '50%' }} />
+                    {showAnnotations && <col style={{ width: '18%' }} />}
                 </colgroup>
                 <thead>
                     <tr>
                         <th style={compactThStyle}>Gene</th>
                         <th style={compactThStyle}>CNA</th>
-                        <th style={compactThStyle}>Annot</th>
+                        {showAnnotations && (
+                            <th style={compactThStyle}>Annot</th>
+                        )}
                     </tr>
                 </thead>
                 <tbody>
-                    {cnas.map((cna, index) => {
-                        const href = buildOncoKbUrl(cna.gene);
-                        const label = cnaLabel(cna.cnaValue);
-                        const cnaTitle = cnaTooltip(cna);
-                        const hasOncoKbData = hasOncoKbAnnotationContent(cna);
-                        const color =
-                            cna.cnaValue <= -2
-                                ? CNA_COLOR_HOMDEL
-                                : cna.cnaValue === -1
-                                ? CNA_COLOR_HETLOSS
-                                : cna.cnaValue >= 2
-                                ? CNA_COLOR_AMP
-                                : cna.cnaValue === 1
-                                ? CNA_COLOR_GAIN
-                                : TABLE_COLORS.muted;
-                        return (
-                            <tr
-                                key={`${cna.gene}:${cna.cnaValue}`}
+                    {cnas.map(cna => (
+                        <tr
+                            key={`${cna.gene}:${cna.cnaValue}`}
+                            style={rowStyle}
+                        >
+                            <td style={geneCellStyle}>{cna.gene}</td>
+                            <td
                                 style={{
-                                    borderTop: `1px solid ${TABLE_COLORS.border}`,
+                                    ...compactTdBase,
+                                    color: cnaColor(cna.cnaValue),
+                                    fontWeight: 500,
                                 }}
                             >
-                                <td
-                                    style={{
-                                        ...compactTdBase,
-                                        paddingRight: 4,
-                                        ...ellipsisStyle,
-                                        color: TABLE_COLORS.text,
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    {cna.gene}
-                                </td>
-                                <td
-                                    title={cnaTitle}
-                                    style={{
-                                        ...compactTdBase,
-                                        color,
-                                        cursor: cnaTitle ? 'help' : undefined,
-                                        fontWeight: 500,
-                                    }}
-                                >
-                                    {label}
-                                </td>
-                                <td
-                                    style={{
-                                        ...compactTdBase,
-                                        paddingRight: 2,
-                                        whiteSpace: 'nowrap',
-                                    }}
-                                >
-                                    <AnnotationLinkIcon
-                                        href={href}
-                                        icon={
-                                            <OncoKbIcon
-                                                oncogenic={cna.oncogenic}
+                                <DetailTip details={cnaDetails(cna)}>
+                                    {cnaLabel(cna.cnaValue)}
+                                </DetailTip>
+                            </td>
+                            {showAnnotations && (
+                                <td style={annotCellStyle}>
+                                    {showOncoKb && (
+                                        <AnnotationIconSlot>
+                                            <OncoKbAnnotationLink
+                                                label={`${cna.gene} ${cnaLabel(
+                                                    cna.cnaValue
+                                                )}`}
+                                                annotation={cna}
+                                                href={buildOncoKbUrl(cna.gene)}
+                                                card={
+                                                    <OncoKbCard
+                                                        title={`${
+                                                            cna.gene
+                                                        } ${cnaLabel(
+                                                            cna.cnaValue
+                                                        )}`}
+                                                        annotation={cna}
+                                                        href={buildOncoKbUrl(
+                                                            cna.gene
+                                                        )}
+                                                    >
+                                                        {cnaDetails(cna).map(
+                                                            detail => (
+                                                                <div
+                                                                    key={detail}
+                                                                    style={{
+                                                                        marginBottom: 6,
+                                                                    }}
+                                                                >
+                                                                    {detail}
+                                                                </div>
+                                                            )
+                                                        )}
+                                                    </OncoKbCard>
+                                                }
                                             />
-                                        }
-                                        marginRight={3}
-                                        showTooltip={
-                                            hasOncoKbData
-                                                ? event => {
-                                                      const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-                                                      setTooltip({
-                                                          idx: index,
-                                                          ...makeFixedTooltipAnchor(
-                                                              rect
-                                                          ),
-                                                      });
-                                                  }
-                                                : undefined
-                                        }
-                                        hideTooltip={hideTooltip}
-                                    />
-                                    <AnnotationIconSlot marginRight={3}>
-                                        {cna.civicEntry && (
+                                        </AnnotationIconSlot>
+                                    )}
+                                    {showCivic && cna.civicEntry && (
+                                        <AnnotationIconSlot>
                                             <Civic
                                                 civicEntry={cna.civicEntry}
                                                 civicStatus="complete"
@@ -698,79 +545,14 @@ export function CnaTable({
                                                     false
                                                 }
                                             />
-                                        )}
-                                    </AnnotationIconSlot>
-                                    <AnnotationIconSlot />
+                                        </AnnotationIconSlot>
+                                    )}
                                 </td>
-                            </tr>
-                        );
-                    })}
+                            )}
+                        </tr>
+                    ))}
                 </tbody>
             </table>
-            {tooltip !== null &&
-                (() => {
-                    const cna = cnas[tooltip.idx];
-                    if (!hasOncoKbAnnotationContent(cna)) return null;
-                    const label = cnaLabel(cna.cnaValue);
-                    const oncoKbUrl = buildOncoKbUrl(cna.gene);
-                    const cohortText = formatCnaCohort(cna);
-                    return (
-                        <FixedTooltipCard
-                            anchor={tooltip}
-                            onMouseEnter={() => setTooltip(current => current)}
-                            onMouseLeave={hideTooltip}
-                        >
-                            <div
-                                style={{
-                                    fontWeight: 700,
-                                    fontSize: 12.5,
-                                    marginBottom: 5,
-                                }}
-                            >
-                                <span>{cna.gene}</span>
-                                <span
-                                    style={{
-                                        fontFamily: 'monospace',
-                                        marginLeft: 4,
-                                    }}
-                                >
-                                    {label}
-                                </span>
-                            </div>
-                            <AnnotationBadgeRow
-                                oncogenic={cna.oncogenic}
-                                mutationEffect={cna.mutationEffect}
-                            />
-                            {(cna.cytoband || cohortText) && (
-                                <div
-                                    style={{
-                                        margin: '0 0 6px',
-                                        color: '#444',
-                                        fontSize: 11,
-                                    }}
-                                >
-                                    {cna.cytoband && (
-                                        <div>
-                                            <strong>Cytoband:</strong>{' '}
-                                            {cna.cytoband}
-                                        </div>
-                                    )}
-                                    {cohortText && (
-                                        <div>
-                                            <strong>Cohort:</strong>{' '}
-                                            {cohortText}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                            <AnnotationSummaryText
-                                geneSummary={cna.geneSummary}
-                                variantSummary={cna.variantSummary}
-                            />
-                            <AnnotationFooterLink href={oncoKbUrl} />
-                        </FixedTooltipCard>
-                    );
-                })()}
         </div>
     );
 }
@@ -782,238 +564,82 @@ export function StructuralVariantTable({
 }): React.ReactElement | null {
     const structuralVariants = sample.structural_variants;
     if (!structuralVariants?.length) return null;
-
-    const [tooltip, setTooltip] = React.useState<
-        | ({ idx: number; kind: 'class' | 'annotation' } & FixedTooltipAnchor)
-        | null
-    >(null);
-    const hideTooltip = () => setTooltip(null);
+    const showOncoKb = isWsiOncoKbEnabled();
 
     return (
-        <div style={{ position: 'relative' }}>
+        <div>
             <table style={{ ...compactTableStyle, marginTop: 6 }}>
                 <colgroup>
-                    <col style={{ width: '24%' }} />
-                    <col style={{ width: '24%' }} />
-                    <col style={{ width: '38%' }} />
-                    <col style={{ width: '14%' }} />
+                    <col style={{ width: showOncoKb ? '26%' : '28%' }} />
+                    <col style={{ width: showOncoKb ? '26%' : '28%' }} />
+                    <col style={{ width: showOncoKb ? '36%' : '44%' }} />
+                    {showOncoKb && <col style={{ width: '12%' }} />}
                 </colgroup>
                 <thead>
                     <tr>
                         <th style={compactThStyle}>Gene 1</th>
                         <th style={compactThStyle}>Gene 2</th>
                         <th style={compactThStyle}>Variant Class</th>
-                        <th style={compactThStyle}>Annot</th>
+                        {showOncoKb && <th style={compactThStyle}>Annot</th>}
                     </tr>
                 </thead>
                 <tbody>
-                    {structuralVariants.map((sv, index) => {
-                        const tooltipText = structuralVariantTooltip(sv);
-                        const hasAnnotationTooltip = !!(
-                            (sv.annotation && sv.annotation.trim()) ||
-                            hasOncoKbAnnotationContent(sv)
-                        );
-                        const oncoKbGene =
-                            sv.gene1 !== '—' ? sv.gene1 : sv.gene2;
-                        const oncoKbUrl = oncoKbGene
-                            ? buildOncoKbUrl(oncoKbGene)
-                            : undefined;
-                        return (
-                            <tr
-                                key={`${sv.gene1}:${sv.gene2}:${sv.variantClass}:${index}`}
+                    {structuralVariants.map((sv, index) => (
+                        <tr
+                            key={`${sv.gene1}:${sv.gene2}:${sv.variantClass}:${index}`}
+                            style={rowStyle}
+                        >
+                            <td style={geneCellStyle}>{sv.gene1}</td>
+                            <td style={geneCellStyle}>{sv.gene2}</td>
+                            <td
                                 style={{
-                                    borderTop: `1px solid ${TABLE_COLORS.border}`,
+                                    ...compactTdBase,
+                                    ...ellipsisStyle,
+                                    color: STRUCTURAL_VARIANT_COLOR,
+                                    fontWeight: 500,
                                 }}
                             >
-                                <td
-                                    style={{
-                                        ...compactTdBase,
-                                        paddingRight: 4,
-                                        ...ellipsisStyle,
-                                        color: TABLE_COLORS.text,
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    {sv.gene1}
-                                </td>
-                                <td
-                                    style={{
-                                        ...compactTdBase,
-                                        paddingRight: 4,
-                                        ...ellipsisStyle,
-                                        color: TABLE_COLORS.text,
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    {sv.gene2}
-                                </td>
-                                <td
-                                    style={{
-                                        ...compactTdBase,
-                                        paddingRight: 4,
-                                        ...ellipsisStyle,
-                                        color: '#6a2ca0',
-                                        cursor: tooltipText
-                                            ? 'help'
-                                            : undefined,
-                                        fontWeight: 500,
-                                    }}
-                                    onMouseEnter={event => {
-                                        if (!tooltipText) return;
-                                        const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-                                        setTooltip({
-                                            idx: index,
-                                            kind: 'class',
-                                            ...makeFixedTooltipAnchor(rect),
-                                        });
-                                    }}
-                                    onMouseLeave={hideTooltip}
+                                <DetailTip
+                                    details={structuralVariantDetails(sv)}
                                 >
                                     {sv.variantClass}
+                                </DetailTip>
+                            </td>
+                            {showOncoKb && (
+                                <td style={annotCellStyle}>
+                                    <StructuralVariantOncoKb sv={sv} />
                                 </td>
-                                <td
-                                    style={{
-                                        ...compactTdBase,
-                                        paddingRight: 2,
-                                        whiteSpace: 'nowrap',
-                                    }}
-                                >
-                                    <AnnotationLinkIcon
-                                        href={oncoKbUrl}
-                                        showIcon={
-                                            !!(
-                                                hasAnnotationTooltip ||
-                                                oncoKbUrl
-                                            )
-                                        }
-                                        icon={
-                                            <OncoKbIcon
-                                                oncogenic={sv.oncogenic}
-                                            />
-                                        }
-                                        marginRight={3}
-                                        showTooltip={
-                                            hasAnnotationTooltip
-                                                ? event => {
-                                                      const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-                                                      setTooltip({
-                                                          idx: index,
-                                                          kind: 'annotation',
-                                                          ...makeFixedTooltipAnchor(
-                                                              rect
-                                                          ),
-                                                      });
-                                                  }
-                                                : undefined
-                                        }
-                                        hideTooltip={hideTooltip}
-                                    />
-                                    <AnnotationIconSlot marginRight={3} />
-                                    <AnnotationIconSlot />
-                                </td>
-                            </tr>
-                        );
-                    })}
+                            )}
+                        </tr>
+                    ))}
                 </tbody>
             </table>
-            {tooltip !== null &&
-                (() => {
-                    const sv = structuralVariants[tooltip.idx];
-                    if (!sv) return null;
-                    const annotationText = (sv.annotation ?? '').trim();
-                    const content =
-                        tooltip.kind === 'annotation'
-                            ? annotationText
-                            : structuralVariantTooltip(sv);
-                    const hasOncoKbContent = hasOncoKbAnnotationContent(sv);
-                    if (
-                        tooltip.kind === 'class'
-                            ? !content
-                            : !content && !hasOncoKbContent
-                    ) {
-                        return null;
-                    }
-                    const oncoKbGene = sv.gene1 !== '—' ? sv.gene1 : sv.gene2;
-                    const oncoKbUrl = oncoKbGene
-                        ? buildOncoKbUrl(oncoKbGene)
-                        : undefined;
-                    return (
-                        <FixedTooltipCard
-                            anchor={tooltip}
-                            onMouseEnter={() => setTooltip(current => current)}
-                            onMouseLeave={hideTooltip}
-                            whiteSpace="pre-line"
-                        >
-                            <div
-                                style={{
-                                    fontWeight: 700,
-                                    fontSize: 12.5,
-                                    marginBottom: 5,
-                                }}
-                            >
-                                {tooltip.kind === 'annotation'
-                                    ? `${sv.gene1}${
-                                          sv.gene2 && sv.gene2 !== '—'
-                                              ? ` / ${sv.gene2}`
-                                              : ''
-                                      }`
-                                    : sv.variantClass}
-                            </div>
-                            {tooltip.kind === 'annotation' && (
-                                <>
-                                    <AnnotationBadgeRow
-                                        oncogenic={sv.oncogenic}
-                                        mutationEffect={sv.mutationEffect}
-                                    />
-                                    <div
-                                        style={{
-                                            margin: '0 0 6px',
-                                            color: '#444',
-                                            fontSize: 11,
-                                        }}
-                                    >
-                                        <div>
-                                            <strong>Variant class:</strong>{' '}
-                                            {sv.variantClass}
-                                        </div>
-                                        {sv.svStatus && (
-                                            <div>
-                                                <strong>Status:</strong>{' '}
-                                                {sv.svStatus}
-                                            </div>
-                                        )}
-                                        {sv.eventInfo && (
-                                            <div>
-                                                <strong>Event info:</strong>{' '}
-                                                {sv.eventInfo}
-                                            </div>
-                                        )}
-                                        {sv.connectionType && (
-                                            <div>
-                                                <strong>
-                                                    Connection type:
-                                                </strong>{' '}
-                                                {sv.connectionType}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <AnnotationSummaryText
-                                        geneSummary={sv.geneSummary}
-                                        variantSummary={sv.variantSummary}
-                                    />
-                                </>
-                            )}
-                            {content && (
-                                <div style={{ color: '#444', fontSize: 11 }}>
-                                    {content}
-                                </div>
-                            )}
-                            {tooltip.kind === 'annotation' && (
-                                <AnnotationFooterLink href={oncoKbUrl} />
-                            )}
-                        </FixedTooltipCard>
-                    );
-                })()}
         </div>
+    );
+}
+
+function StructuralVariantOncoKb({ sv }: { sv: StructuralVariantDetail }) {
+    const genes = [sv.gene1, sv.gene2].filter(gene => gene && gene !== '—');
+    if (!genes.length) return null;
+    const href = buildOncoKbUrl(genes[0]);
+    const label = genes.join(' / ');
+    return (
+        <OncoKbAnnotationLink
+            label={label}
+            annotation={sv}
+            href={href}
+            card={
+                <OncoKbCard title={label} annotation={sv} href={href}>
+                    <div style={{ marginBottom: 6 }}>
+                        {[
+                            `Variant class: ${sv.variantClass}`,
+                            ...structuralVariantDetails(sv),
+                        ].map(detail => (
+                            <div key={detail}>{detail}</div>
+                        ))}
+                    </div>
+                </OncoKbCard>
+            }
+        />
     );
 }

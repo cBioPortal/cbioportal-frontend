@@ -6,167 +6,178 @@ import {
     buildOncoKbCnaItems,
     buildOncoKbMutationItems,
     buildOncoKbStructuralVariantItems,
+    mutationOncoKbId,
+    oncoKbReferenceGenome,
 } from './wsiMolecularAnnotationFetchUtils';
-import {
-    CNADetail,
-    MutationDetail,
-    StructuralVariantDetail,
-} from './wsiViewerTypes';
+import { MutationDetail } from './wsiViewerTypes';
+
+function mutation(
+    gene: string,
+    entrezGeneId: number,
+    proteinChange: string
+): MutationDetail {
+    return {
+        token: `${gene} ${proteinChange}`,
+        gene,
+        proteinChange,
+        entrezGeneId,
+        consequence: 'missense_variant',
+    };
+}
 
 describe('wsiMolecularAnnotationFetchUtils', () => {
-    describe('buildOncoKbMutationItems', () => {
-        it('deduplicates and sorts mutation items deterministically', () => {
-            const details: MutationDetail[] = [
-                {
-                    token: 'TP53 p.R175H',
-                    entrezGeneId: 7157,
-                    consequence: 'missense_variant',
-                    proteinStart: 175,
-                    proteinEnd: 175,
-                },
-                {
-                    token: 'BRAF p.V600E',
-                    entrezGeneId: 673,
-                    consequence: 'missense_variant',
-                    proteinStart: 600,
-                    proteinEnd: 600,
-                },
-                {
-                    token: 'TP53 p.R175H',
-                    entrezGeneId: 7157,
-                    consequence: 'missense_variant',
-                    proteinStart: 175,
-                    proteinEnd: 175,
-                },
-                {
-                    token: 'TP53 p.R248Q',
-                    entrezGeneId: 7157,
-                    consequence: 'missense_variant',
-                    proteinStart: 248,
-                    proteinEnd: 248,
-                },
-            ];
+    describe('oncoKbReferenceGenome', () => {
+        it("maps the study's reference genome to OncoKB's build", () => {
+            expect(oncoKbReferenceGenome('hg19')).toBe('GRCh37');
+            expect(oncoKbReferenceGenome('hg38')).toBe('GRCh38');
+            expect(oncoKbReferenceGenome('GRCh38')).toBe('GRCh38');
+            expect(oncoKbReferenceGenome(null)).toBe('GRCh37');
+        });
+    });
 
-            expect(buildOncoKbMutationItems(details)).toEqual([
-                expect.objectContaining({
-                    id: '673_V600E_missense_variant',
+    describe('buildOncoKbMutationItems', () => {
+        it('queries each variant once per tumor type, with the genome', () => {
+            const tp53 = mutation('TP53', 7157, 'R175H');
+            const items = buildOncoKbMutationItems(
+                [
+                    { entry: tp53, tumorType: 'COAD' },
+                    { entry: tp53, tumorType: 'COAD' },
+                    { entry: tp53, tumorType: null },
+                    {
+                        entry: mutation('BRAF', 673, 'V600E'),
+                        tumorType: 'COAD',
+                    },
+                ],
+                'GRCh38'
+            );
+
+            expect(items).toEqual([
+                {
+                    id: '673_V600E_missense_variant_COAD',
                     alteration: 'V600E',
+                    consequence: 'missense_variant',
                     gene: { entrezGeneId: 673 },
+                    proteinStart: undefined,
+                    proteinEnd: undefined,
+                    referenceGenome: 'GRCh38',
+                    tumorType: 'COAD',
+                },
+                expect.objectContaining({
+                    id: '7157_R175H_missense_variant_',
+                    tumorType: null,
                 }),
                 expect.objectContaining({
-                    id: '7157_R175H_missense_variant',
-                    alteration: 'R175H',
-                    gene: { entrezGeneId: 7157 },
-                }),
-                expect.objectContaining({
-                    id: '7157_R248Q_missense_variant',
-                    alteration: 'R248Q',
-                    gene: { entrezGeneId: 7157 },
+                    id: '7157_R175H_missense_variant_COAD',
+                    tumorType: 'COAD',
                 }),
             ]);
+        });
+
+        it('skips mutations without a gene ID or protein change', () => {
+            expect(
+                mutationOncoKbId({ ...mutation('TERT', 7015, '') }, null)
+            ).toBeNull();
+            expect(
+                buildOncoKbMutationItems(
+                    [
+                        {
+                            entry: {
+                                ...mutation('KRAS', 3845, 'G12D'),
+                                entrezGeneId: undefined,
+                            },
+                            tumorType: null,
+                        },
+                    ],
+                    'GRCh37'
+                )
+            ).toEqual([]);
         });
     });
 
     describe('buildCivicMutationSpecs', () => {
-        it('deduplicates and sorts CIViC mutation specs deterministically', () => {
-            const details: MutationDetail[] = [
-                {
-                    token: 'TP53 p.R175H',
-                    entrezGeneId: 7157,
-                    consequence: 'missense_variant',
-                },
-                {
-                    token: 'BRAF p.V600E',
-                    entrezGeneId: 673,
-                    consequence: 'missense_variant',
-                },
-                {
-                    token: 'TP53 p.R175H',
-                    entrezGeneId: 7157,
-                    consequence: 'missense_variant',
-                },
-            ];
-
-            expect(buildCivicMutationSpecs(details)).toEqual([
-                {
-                    gene: { hugoGeneSymbol: 'BRAF' },
-                    proteinChange: 'V600E',
-                },
-                {
-                    gene: { hugoGeneSymbol: 'TP53' },
-                    proteinChange: 'R175H',
-                },
+        it('deduplicates and sorts the specs', () => {
+            expect(
+                buildCivicMutationSpecs([
+                    mutation('TP53', 7157, 'R175H'),
+                    mutation('BRAF', 673, 'V600E'),
+                    mutation('TP53', 7157, 'R175H'),
+                    mutation('NF1', 4763, ''),
+                ])
+            ).toEqual([
+                { gene: { hugoGeneSymbol: 'BRAF' }, proteinChange: 'V600E' },
+                { gene: { hugoGeneSymbol: 'TP53' }, proteinChange: 'R175H' },
             ]);
         });
     });
 
     describe('buildOncoKbCnaItems', () => {
-        it('deduplicates and sorts CNA items deterministically', () => {
-            const cnas: CNADetail[] = [
-                { gene: 'TP53', entrezGeneId: 7157, cnaValue: 2 },
-                { gene: 'BRAF', entrezGeneId: 673, cnaValue: -2 },
-                { gene: 'TP53', entrezGeneId: 7157, cnaValue: 2 },
-                { gene: 'TP53', entrezGeneId: 7157, cnaValue: 1 },
-            ];
-
-            expect(buildOncoKbCnaItems(cnas)).toEqual([
-                expect.objectContaining({
-                    id: '673_DELETION',
-                    copyNameAlterationType: 'DELETION',
-                    gene: { entrezGeneId: 673 },
-                }),
-                expect.objectContaining({
-                    id: '7157_AMPLIFICATION',
+        it('queries each alteration once per tumor type, with the genome', () => {
+            expect(
+                buildOncoKbCnaItems(
+                    [
+                        {
+                            entry: {
+                                gene: 'ERBB2',
+                                entrezGeneId: 2064,
+                                cnaValue: 2,
+                            },
+                            tumorType: 'BRCA',
+                        },
+                        {
+                            entry: {
+                                gene: 'ERBB2',
+                                entrezGeneId: 2064,
+                                cnaValue: 2,
+                            },
+                            tumorType: 'BRCA',
+                        },
+                        {
+                            entry: { gene: 'CDKN2A', cnaValue: -2 },
+                            tumorType: 'BRCA',
+                        },
+                    ],
+                    'GRCh37'
+                )
+            ).toEqual([
+                {
+                    id: '2064_AMPLIFICATION_BRCA',
                     copyNameAlterationType: 'AMPLIFICATION',
-                    gene: { entrezGeneId: 7157 },
-                }),
-                expect.objectContaining({
-                    id: '7157_GAIN',
-                    copyNameAlterationType: 'GAIN',
-                    gene: { entrezGeneId: 7157 },
-                }),
+                    gene: { entrezGeneId: 2064 },
+                    referenceGenome: 'GRCh37',
+                    tumorType: 'BRCA',
+                },
             ]);
         });
     });
 
     describe('buildOncoKbStructuralVariantItems', () => {
-        it('deduplicates and sorts structural variant items deterministically', () => {
-            const variants: StructuralVariantDetail[] = [
-                {
-                    gene1: 'ALK',
-                    gene2: 'EML4',
-                    site1EntrezGeneId: 238,
-                    site2EntrezGeneId: 27436,
-                    variantClass: 'FUSION',
-                },
-                {
-                    gene1: 'BCR',
-                    gene2: 'ABL1',
-                    site1EntrezGeneId: 613,
-                    site2EntrezGeneId: 25,
-                    variantClass: 'FUSION',
-                },
-                {
-                    gene1: 'ALK',
-                    gene2: 'EML4',
-                    site1EntrezGeneId: 238,
-                    site2EntrezGeneId: 27436,
-                    variantClass: 'FUSION',
-                },
-            ];
+        it('queries fusions with both genes and the tumor type', () => {
+            const [item] = buildOncoKbStructuralVariantItems(
+                [
+                    {
+                        entry: {
+                            gene1: 'EML4',
+                            gene2: 'ALK',
+                            site1EntrezGeneId: 27436,
+                            site2EntrezGeneId: 238,
+                            variantClass: 'FUSION',
+                        },
+                        tumorType: 'LUAD',
+                    },
+                ],
+                'GRCh37'
+            );
 
-            expect(buildOncoKbStructuralVariantItems(variants)).toEqual([
+            expect(item).toEqual(
                 expect.objectContaining({
-                    geneA: { entrezGeneId: 238 },
-                    geneB: { entrezGeneId: 27436 },
-                    structuralVariantType: 'FUSION',
-                }),
-                expect.objectContaining({
-                    geneA: { entrezGeneId: 613 },
-                    geneB: { entrezGeneId: 25 },
-                    structuralVariantType: 'FUSION',
-                }),
-            ]);
+                    geneA: { entrezGeneId: 27436 },
+                    geneB: { entrezGeneId: 238 },
+                    functionalFusion: true,
+                    referenceGenome: 'GRCh37',
+                    tumorType: 'LUAD',
+                })
+            );
+            expect(item.id).toContain('LUAD');
         });
     });
 });
