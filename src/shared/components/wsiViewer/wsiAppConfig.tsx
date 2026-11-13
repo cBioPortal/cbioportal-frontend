@@ -9,7 +9,7 @@ import { getServerConfig } from 'config/config';
 import { buildCBioPortalAPIUrl, buildCBioPortalPageUrl } from 'shared/api/urls';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { getSimplifiedMutationType } from 'shared/lib/oql/AccessorsForOqlFilter';
-import { useWsiClinicalRows, WsiPatientClinicalData } from './wsiClinicalRows';
+import { useWsiClinicalData, WsiPatientClinicalData } from './wsiClinicalRows';
 
 const WSI_OSD_PREFIX_URL = '/reactapp/osd-images/';
 
@@ -52,7 +52,11 @@ export const LazyWsiViewer = React.lazy(() => {
 
 export type AppWsiViewerProps = Omit<
     WsiViewerProps,
-    'authScope' | 'showDownload' | 'renderLoading' | 'clinicalRows'
+    | 'authScope'
+    | 'showDownload'
+    | 'renderLoading'
+    | 'clinicalRows'
+    | 'sampleClinicalData'
 > & {
     /** Signed-in user name, when the page knows it. */
     userName?: string;
@@ -69,7 +73,8 @@ export function AppWsiViewer({
     clinicalData,
     ...viewerProps
 }: AppWsiViewerProps) {
-    const clinicalRows = useWsiClinicalRows(
+    // The viewer reads its sample attributes from the same data.
+    const clinical = useWsiClinicalData(
         viewerProps.studyId,
         viewerProps.patientId,
         clinicalData
@@ -90,7 +95,8 @@ export function AppWsiViewer({
                     DownloadControlOption.SHOW_ALL
                 }
                 renderLoading={renderWsiLoading}
-                clinicalRows={clinicalRows}
+                clinicalRows={clinical?.rows}
+                sampleClinicalData={clinical ? clinical.sampleData : null}
             />
         </React.Suspense>
     );

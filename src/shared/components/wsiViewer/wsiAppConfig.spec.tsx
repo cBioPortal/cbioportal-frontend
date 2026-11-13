@@ -22,8 +22,18 @@ jest.mock('shared/api/urls', () => ({
         `https://portal.example/beta/${path}`,
 }));
 
+const mockSampleData = [
+    {
+        sampleId: 'S-1',
+        clinicalAttributeId: 'TMB_NONSYNONYMOUS',
+        value: '8.2',
+    },
+];
 jest.mock('./wsiClinicalRows', () => ({
-    useWsiClinicalRows: () => [{ label: 'Sex', value: 'Female' }],
+    useWsiClinicalData: () => ({
+        rows: [{ label: 'Sex', value: 'Female' }],
+        sampleData: mockSampleData,
+    }),
 }));
 
 jest.mock('cbioportal-wsi-viewer/viewer', () => ({
@@ -122,6 +132,7 @@ describe('AppWsiViewer', () => {
                 showDownload: true,
                 renderLoading: expect.any(Function),
                 clinicalRows: [{ label: 'Sex', value: 'Female' }],
+                sampleClinicalData: mockSampleData,
             })
         );
     });

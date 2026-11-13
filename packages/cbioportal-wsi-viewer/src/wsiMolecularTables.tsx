@@ -4,6 +4,8 @@ import {
     CNA_COLOR_GAIN,
     CNA_COLOR_HETLOSS,
     CNA_COLOR_HOMDEL,
+    DefaultTooltip,
+    STRUCTURAL_VARIANT_COLOR,
 } from 'cbioportal-frontend-commons';
 import { DEFAULT_PROTEIN_IMPACT_TYPE_COLORS } from 'react-mutation-mapper';
 import { getSimplifiedMutationType } from './wsiMolecularServices';
@@ -14,17 +16,8 @@ import {
     StructuralVariantDetail,
     WsiMutationDataStatus,
 } from './wsiViewerTypes';
-import {
-    cnaLabel,
-    parseMutationToken,
-    parseMutationTokens,
-} from './wsiMolecularUtils';
-
-const TABLE_COLORS = {
-    border: '#ddd',
-    muted: '#737373',
-    text: '#333',
-} as const;
+import { cnaLabel } from './wsiMolecularUtils';
+import { WSI_THEME } from './wsiTheme';
 
 const ellipsisStyle: React.CSSProperties = {
     overflow: 'hidden',
@@ -34,7 +27,7 @@ const ellipsisStyle: React.CSSProperties = {
 
 const compactThStyle: React.CSSProperties = {
     fontSize: 10,
-    color: TABLE_COLORS.muted,
+    color: WSI_THEME.muted,
     fontWeight: 600,
     textAlign: 'left',
     paddingBottom: 4,
@@ -45,7 +38,15 @@ const compactTdBase: React.CSSProperties = {
     fontSize: 11,
     paddingTop: 3,
     paddingBottom: 3,
+    paddingRight: 4,
     verticalAlign: 'middle',
+};
+
+const geneCellStyle: React.CSSProperties = {
+    ...compactTdBase,
+    ...ellipsisStyle,
+    fontWeight: 600,
+    color: WSI_THEME.text,
 };
 
 const compactTableStyle: React.CSSProperties = {
@@ -55,120 +56,68 @@ const compactTableStyle: React.CSSProperties = {
     tableLayout: 'fixed',
 };
 
+const rowStyle: React.CSSProperties = {
+    borderTop: `1px solid ${WSI_THEME.border}`,
+};
+
 const emptyStateStyle: React.CSSProperties = {
-    color: TABLE_COLORS.muted,
+    color: WSI_THEME.muted,
     fontSize: 11,
+    marginTop: 8,
 };
 
-const FIXED_TOOLTIP_MARGIN = 8;
-const FIXED_TOOLTIP_WIDTH = 340;
-const FIXED_TOOLTIP_MIN_HEIGHT = 120;
-const FIXED_TOOLTIP_ESTIMATED_HEIGHT = 260;
-
-type FixedTooltipAnchor = {
-    x: number;
-    top?: number;
-    bottom?: number;
-    maxHeight: number;
+/** Hidden on screen, read by screen readers. */
+const visuallyHiddenStyle: React.CSSProperties = {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    padding: 0,
+    margin: -1,
+    overflow: 'hidden',
+    clip: 'rect(0, 0, 0, 0)',
+    whiteSpace: 'nowrap',
+    border: 0,
 };
 
-function makeFixedTooltipAnchor(
-    rect: Pick<DOMRect, 'left' | 'top' | 'bottom'>,
-    estimatedHeight = FIXED_TOOLTIP_ESTIMATED_HEIGHT
-): FixedTooltipAnchor {
-    const viewportHeight = window.innerHeight || 0;
-    const canFitBelow =
-        rect.bottom + estimatedHeight + FIXED_TOOLTIP_MARGIN <= viewportHeight;
-    const shouldPlaceAbove =
-        !canFitBelow &&
-        (rect.top > viewportHeight / 2 ||
-            rect.top - estimatedHeight > FIXED_TOOLTIP_MARGIN);
-
-    if (shouldPlaceAbove) {
-        return {
-            x: rect.left,
-            bottom: Math.max(
-                FIXED_TOOLTIP_MARGIN,
-                viewportHeight - rect.top + 4
-            ),
-            maxHeight: Math.max(
-                FIXED_TOOLTIP_MIN_HEIGHT,
-                rect.top - FIXED_TOOLTIP_MARGIN * 2
-            ),
-        };
-    }
-
-    return {
-        x: rect.left,
-        top: rect.bottom + 4,
-        maxHeight: Math.max(
-            FIXED_TOOLTIP_MIN_HEIGHT,
-            viewportHeight - rect.bottom - FIXED_TOOLTIP_MARGIN * 2
-        ),
-    };
-}
-
-function fixedTooltipViewportStyle(
-    anchor: FixedTooltipAnchor
-): React.CSSProperties {
-    const maxLeft = Math.max(
-        FIXED_TOOLTIP_MARGIN,
-        window.innerWidth - FIXED_TOOLTIP_WIDTH - FIXED_TOOLTIP_MARGIN
-    );
-    return {
-        position: 'fixed',
-        left: Math.max(FIXED_TOOLTIP_MARGIN, Math.min(anchor.x, maxLeft)),
-        top: anchor.top,
-        bottom: anchor.bottom,
-        maxHeight: anchor.maxHeight,
-        overflowY: 'auto',
-        boxSizing: 'border-box',
-    };
-}
-
-function FixedTooltipCard({
-    anchor,
-    onMouseEnter,
-    onMouseLeave,
-    whiteSpace,
+/**
+ * A cell value with its details in a tooltip that opens on hover and on
+ * keyboard focus. Screen readers read the details with the value.
+ */
+function DetailTip({
+    details,
     children,
 }: {
-    anchor: FixedTooltipAnchor;
-    onMouseEnter: () => void;
-    onMouseLeave: () => void;
-    whiteSpace?: React.CSSProperties['whiteSpace'];
+    details: string[];
     children: React.ReactNode;
 }) {
+    if (details.length === 0) {
+        return <>{children}</>;
+    }
     return (
-        <div
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={onMouseLeave}
-            style={{
-                ...fixedTooltipViewportStyle(anchor),
-                zIndex: 9999,
-                background: '#fff',
-                border: '1px solid #d4d4d4',
-                borderRadius: 4,
-                boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
-                padding: '10px 14px',
-                maxWidth: 320,
-                fontSize: 11.5,
-                fontFamily: 'Arial, sans-serif',
-                lineHeight: 1.45,
-                color: '#333',
-                pointerEvents: 'auto',
-                whiteSpace,
-            }}
+        <DefaultTooltip
+            trigger={['hover', 'focus']}
+            placement="left"
+            overlay={
+                <div style={{ fontSize: 11.5, lineHeight: 1.45 }}>
+                    {details.map(detail => (
+                        <div key={detail}>{detail}</div>
+                    ))}
+                </div>
+            }
         >
-            {children}
-        </div>
+            <span tabIndex={0} style={{ cursor: 'help', outlineOffset: 1 }}>
+                {children}
+                <span style={visuallyHiddenStyle}>
+                    {`: ${details.join('; ')}`}
+                </span>
+            </span>
+        </DefaultTooltip>
     );
 }
 
 function mutationTypeColor(type: string | undefined): string | undefined {
     if (!type) return undefined;
-    const simplified = getSimplifiedMutationType(type);
-    switch (simplified) {
+    switch (getSimplifiedMutationType(type)) {
         case 'missense':
             return DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.missenseColor;
         case 'frameshift':
@@ -189,55 +138,119 @@ function mutationTypeColor(type: string | undefined): string | undefined {
     }
 }
 
-/** Highest VAF first, then by gene and variant. */
-function compareMutationRows(
-    a: { mut: string; detail?: MutationDetail },
-    b: { mut: string; detail?: MutationDetail }
-): number {
-    const aVaf = a.detail?.vaf ?? -1;
-    const bVaf = b.detail?.vaf ?? -1;
-    if (aVaf !== bVaf) return bVaf - aVaf;
-    return a.mut.localeCompare(b.mut);
+function cnaColor(value: number): string {
+    if (value <= -2) return CNA_COLOR_HOMDEL;
+    if (value === -1) return CNA_COLOR_HETLOSS;
+    if (value >= 2) return CNA_COLOR_AMP;
+    if (value === 1) return CNA_COLOR_GAIN;
+    return WSI_THEME.muted;
 }
 
-function formatCnaCohort(cna: CNADetail): string | null {
-    if (cna.cohortAlteredCount == null || !cna.cohortProfiledCount) {
+/** "3/120 (2.5%)", or null without study counts. */
+function formatStudyCount(
+    altered: number | undefined,
+    profiled: number | undefined
+): string | null {
+    if (altered == null || !profiled) {
         return null;
     }
-    const frequency =
-        cna.cohortFrequency != null
-            ? cna.cohortFrequency
-            : cna.cohortAlteredCount / cna.cohortProfiledCount;
-    return `${cna.cohortAlteredCount}/${cna.cohortProfiledCount} (${(
-        frequency * 100
-    ).toFixed(1)}%)`;
+    return `${altered}/${profiled} (${((altered / profiled) * 100).toFixed(
+        1
+    )}%)`;
 }
 
-function cnaTooltip(cna: CNADetail): string | undefined {
-    const parts: string[] = [];
-    if (cna.cytoband) {
-        parts.push(`Cytoband: ${cna.cytoband}`);
+function mutationDetails(
+    mutation: MutationDetail,
+    cna: CNADetail | undefined
+): string[] {
+    const details: string[] = [];
+    if (mutation.type) {
+        details.push(`Type: ${mutation.type}`);
     }
-    const cohort = formatCnaCohort(cna);
-    if (cohort) {
-        parts.push(`Cohort: ${cohort}`);
+    if (mutation.vaf != null) {
+        details.push(`VAF: ${mutation.vaf}%`);
     }
-    return parts.length ? parts.join(' | ') : undefined;
+    if (cna) {
+        details.push(`Copy number: ${cnaLabel(cna.cnaValue)}`);
+    }
+    const studyCount = formatStudyCount(
+        mutation.cohortAlteredCount,
+        mutation.cohortProfiledCount
+    );
+    if (studyCount) {
+        details.push(`Samples in study with this variant: ${studyCount}`);
+    }
+    return details;
 }
 
-function pushSvTooltipPart(parts: string[], label: string, value: unknown) {
-    if (value == null || value === '' || value === 'NA' || value === -1) return;
-    parts.push(`${label}: ${value}`);
+function cnaDetails(cna: CNADetail): string[] {
+    const studyCount = formatStudyCount(
+        cna.cohortAlteredCount,
+        cna.cohortProfiledCount
+    );
+    return studyCount
+        ? [`Samples in study with this alteration: ${studyCount}`]
+        : [];
 }
 
-function structuralVariantTooltip(
-    sv: StructuralVariantDetail
-): string | undefined {
-    const parts: string[] = [];
-    pushSvTooltipPart(parts, 'Status', sv.svStatus);
-    pushSvTooltipPart(parts, 'Event info', sv.eventInfo);
-    pushSvTooltipPart(parts, 'Connection type', sv.connectionType);
-    return parts.length ? parts.join('\n') : undefined;
+function structuralVariantDetails(sv: StructuralVariantDetail): string[] {
+    const details: string[] = [];
+    const push = (label: string, value: unknown) => {
+        if (value == null || value === '' || value === 'NA' || value === -1)
+            return;
+        details.push(`${label}: ${value}`);
+    };
+    push('Status', sv.svStatus);
+    push('Event info', sv.eventInfo);
+    push('Connection type', sv.connectionType);
+    return details;
+}
+
+function MutationStatusMessage({
+    testId,
+    children,
+}: {
+    testId: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <div data-testid={testId} style={emptyStateStyle} role="status">
+            {children}
+        </div>
+    );
+}
+
+/** Renders the empty state when the sample has no mutation rows to show. */
+function mutationEmptyState(
+    sample: Sample,
+    mutationDataStatus: WsiMutationDataStatus
+): React.ReactElement | null {
+    switch (mutationDataStatus) {
+        case 'loading':
+            return (
+                <MutationStatusMessage testId="wsi-mutation-table-loading">
+                    Loading variants…
+                </MutationStatusMessage>
+            );
+        case 'error':
+            return (
+                <MutationStatusMessage testId="wsi-mutation-table-error">
+                    Variant data unavailable.
+                </MutationStatusMessage>
+            );
+        case 'unprofiled':
+            return (
+                <MutationStatusMessage testId="wsi-mutation-table-unprofiled">
+                    Not profiled for mutations.
+                </MutationStatusMessage>
+            );
+        default:
+            return sample.mutations ? (
+                <MutationStatusMessage testId="wsi-mutation-table-empty">
+                    No mutations.
+                </MutationStatusMessage>
+            ) : null;
+    }
 }
 
 export function MutationTable({
@@ -247,41 +260,13 @@ export function MutationTable({
     sample: Sample;
     mutationDataStatus?: WsiMutationDataStatus;
 }): React.ReactElement | null {
-    const muts = parseMutationTokens(sample.oncogenic_mutations);
-    const details = sample.oncogenic_mutation_details;
-
-    if (!muts.length || details === undefined) {
-        if (mutationDataStatus === 'loading') {
-            return (
-                <div
-                    data-testid="wsi-mutation-table-loading"
-                    style={{ ...emptyStateStyle, marginTop: 8 }}
-                    role="status"
-                >
-                    Loading variants…
-                </div>
-            );
-        }
-        if (mutationDataStatus === 'error') {
-            return (
-                <div
-                    data-testid="wsi-mutation-table-error"
-                    style={{ ...emptyStateStyle, marginTop: 8 }}
-                    role="status"
-                >
-                    Variant data unavailable.
-                </div>
-            );
-        }
-        return null;
+    const mutations = sample.mutations;
+    if (!mutations?.length) {
+        return mutationEmptyState(sample, mutationDataStatus);
     }
 
-    const mutationRows = muts
-        .map((mut, index) => ({ mut, index, detail: details?.[index] }))
-        .sort(compareMutationRows);
-
     return (
-        <div style={{ position: 'relative' }}>
+        <div>
             <table style={compactTableStyle}>
                 <colgroup>
                     <col style={{ width: '40%' }} />
@@ -290,90 +275,42 @@ export function MutationTable({
                 <thead>
                     <tr>
                         <th style={compactThStyle}>Gene</th>
-                        <th style={compactThStyle}>Variant ⓘ</th>
+                        <th style={compactThStyle}>Variant</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {mutationRows.map(({ mut, detail }) => {
-                        const { gene, variant } = parseMutationToken(mut);
-                        const cnaForGene = sample.cna_alterations?.find(
-                            cna => cna.gene === gene
+                    {mutations.map(mutation => {
+                        const cna = sample.cna_alterations?.find(
+                            alteration => alteration.gene === mutation.gene
                         );
-                        const variantTitleParts: string[] = [];
-                        if (detail?.type) {
-                            variantTitleParts.push(`Type: ${detail.type}`);
-                        }
-                        if (detail?.vaf != null) {
-                            variantTitleParts.push(`VAF: ${detail.vaf}%`);
-                        }
-                        if (cnaForGene) {
-                            variantTitleParts.push(
-                                `Copy #: ${cnaLabel(cnaForGene.cnaValue)}`
-                            );
-                        }
-                        if (detail?.cohortFrequency != null) {
-                            variantTitleParts.push(
-                                `Cohort: ${(
-                                    detail.cohortFrequency * 100
-                                ).toFixed(1)}%`
-                            );
-                        }
-                        const variantTitle =
-                            variantTitleParts.join(' | ') || undefined;
-
                         return (
-                            <tr
-                                key={mut}
-                                style={{
-                                    borderTop: `1px solid ${TABLE_COLORS.border}`,
-                                }}
-                            >
+                            <tr key={mutation.token} style={rowStyle}>
+                                <td style={geneCellStyle}>{mutation.gene}</td>
                                 <td
                                     style={{
                                         ...compactTdBase,
-                                        paddingRight: 4,
-                                        ...ellipsisStyle,
-                                        fontWeight: 600,
-                                        color: TABLE_COLORS.text,
-                                    }}
-                                >
-                                    {gene}
-                                </td>
-                                <td
-                                    title={variantTitle}
-                                    style={{
-                                        ...compactTdBase,
-                                        paddingRight: 4,
                                         ...ellipsisStyle,
                                         fontFamily: 'monospace',
                                         fontSize: 10.5,
-                                        color: mutationTypeColor(detail?.type),
-                                        fontWeight: detail?.type
+                                        color: mutationTypeColor(
+                                            mutation.consequence
+                                        ),
+                                        fontWeight: mutation.type
                                             ? 600
-                                            : undefined,
-                                        cursor: variantTitle
-                                            ? 'help'
                                             : undefined,
                                     }}
                                 >
-                                    {(variant.startsWith('p.')
-                                        ? variant.slice(2)
-                                        : variant) || '—'}
+                                    <DetailTip
+                                        details={mutationDetails(mutation, cna)}
+                                    >
+                                        {mutation.proteinChange || '—'}
+                                    </DetailTip>
                                 </td>
                             </tr>
                         );
                     })}
                 </tbody>
             </table>
-            {mutationDataStatus === 'error' && (
-                <div
-                    data-testid="wsi-mutation-table-error"
-                    style={{ ...emptyStateStyle, marginTop: 8 }}
-                    role="status"
-                >
-                    Variant data unavailable.
-                </div>
-            )}
         </div>
     );
 }
@@ -387,7 +324,7 @@ export function CnaTable({
     if (!cnas?.length) return null;
 
     return (
-        <div style={{ position: 'relative' }}>
+        <div>
             <table style={compactTableStyle}>
                 <colgroup>
                     <col style={{ width: '50%' }} />
@@ -400,51 +337,25 @@ export function CnaTable({
                     </tr>
                 </thead>
                 <tbody>
-                    {cnas.map(cna => {
-                        const label = cnaLabel(cna.cnaValue);
-                        const cnaTitle = cnaTooltip(cna);
-                        const color =
-                            cna.cnaValue <= -2
-                                ? CNA_COLOR_HOMDEL
-                                : cna.cnaValue === -1
-                                ? CNA_COLOR_HETLOSS
-                                : cna.cnaValue >= 2
-                                ? CNA_COLOR_AMP
-                                : cna.cnaValue === 1
-                                ? CNA_COLOR_GAIN
-                                : TABLE_COLORS.muted;
-                        return (
-                            <tr
-                                key={`${cna.gene}:${cna.cnaValue}`}
+                    {cnas.map(cna => (
+                        <tr
+                            key={`${cna.gene}:${cna.cnaValue}`}
+                            style={rowStyle}
+                        >
+                            <td style={geneCellStyle}>{cna.gene}</td>
+                            <td
                                 style={{
-                                    borderTop: `1px solid ${TABLE_COLORS.border}`,
+                                    ...compactTdBase,
+                                    color: cnaColor(cna.cnaValue),
+                                    fontWeight: 500,
                                 }}
                             >
-                                <td
-                                    style={{
-                                        ...compactTdBase,
-                                        paddingRight: 4,
-                                        ...ellipsisStyle,
-                                        color: TABLE_COLORS.text,
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    {cna.gene}
-                                </td>
-                                <td
-                                    title={cnaTitle}
-                                    style={{
-                                        ...compactTdBase,
-                                        color,
-                                        cursor: cnaTitle ? 'help' : undefined,
-                                        fontWeight: 500,
-                                    }}
-                                >
-                                    {label}
-                                </td>
-                            </tr>
-                        );
-                    })}
+                                <DetailTip details={cnaDetails(cna)}>
+                                    {cnaLabel(cna.cnaValue)}
+                                </DetailTip>
+                            </td>
+                        </tr>
+                    ))}
                 </tbody>
             </table>
         </div>
@@ -459,13 +370,8 @@ export function StructuralVariantTable({
     const structuralVariants = sample.structural_variants;
     if (!structuralVariants?.length) return null;
 
-    const [tooltip, setTooltip] = React.useState<
-        ({ idx: number } & FixedTooltipAnchor) | null
-    >(null);
-    const hideTooltip = () => setTooltip(null);
-
     return (
-        <div style={{ position: 'relative' }}>
+        <div>
             <table style={{ ...compactTableStyle, marginTop: 6 }}>
                 <colgroup>
                     <col style={{ width: '28%' }} />
@@ -480,92 +386,31 @@ export function StructuralVariantTable({
                     </tr>
                 </thead>
                 <tbody>
-                    {structuralVariants.map((sv, index) => {
-                        const tooltipText = structuralVariantTooltip(sv);
-                        return (
-                            <tr
-                                key={`${sv.gene1}:${sv.gene2}:${sv.variantClass}:${index}`}
+                    {structuralVariants.map((sv, index) => (
+                        <tr
+                            key={`${sv.gene1}:${sv.gene2}:${sv.variantClass}:${index}`}
+                            style={rowStyle}
+                        >
+                            <td style={geneCellStyle}>{sv.gene1}</td>
+                            <td style={geneCellStyle}>{sv.gene2}</td>
+                            <td
                                 style={{
-                                    borderTop: `1px solid ${TABLE_COLORS.border}`,
+                                    ...compactTdBase,
+                                    ...ellipsisStyle,
+                                    color: STRUCTURAL_VARIANT_COLOR,
+                                    fontWeight: 500,
                                 }}
                             >
-                                <td
-                                    style={{
-                                        ...compactTdBase,
-                                        paddingRight: 4,
-                                        ...ellipsisStyle,
-                                        color: TABLE_COLORS.text,
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    {sv.gene1}
-                                </td>
-                                <td
-                                    style={{
-                                        ...compactTdBase,
-                                        paddingRight: 4,
-                                        ...ellipsisStyle,
-                                        color: TABLE_COLORS.text,
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    {sv.gene2}
-                                </td>
-                                <td
-                                    style={{
-                                        ...compactTdBase,
-                                        paddingRight: 4,
-                                        ...ellipsisStyle,
-                                        color: '#6a2ca0',
-                                        cursor: tooltipText
-                                            ? 'help'
-                                            : undefined,
-                                        fontWeight: 500,
-                                    }}
-                                    onMouseEnter={event => {
-                                        if (!tooltipText) return;
-                                        const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-                                        setTooltip({
-                                            idx: index,
-                                            ...makeFixedTooltipAnchor(rect),
-                                        });
-                                    }}
-                                    onMouseLeave={hideTooltip}
+                                <DetailTip
+                                    details={structuralVariantDetails(sv)}
                                 >
                                     {sv.variantClass}
-                                </td>
-                            </tr>
-                        );
-                    })}
+                                </DetailTip>
+                            </td>
+                        </tr>
+                    ))}
                 </tbody>
             </table>
-            {tooltip !== null &&
-                (() => {
-                    const sv = structuralVariants[tooltip.idx];
-                    const content = sv && structuralVariantTooltip(sv);
-                    if (!content) return null;
-                    return (
-                        <FixedTooltipCard
-                            anchor={tooltip}
-                            onMouseEnter={() => setTooltip(current => current)}
-                            onMouseLeave={hideTooltip}
-                            whiteSpace="pre-line"
-                        >
-                            <div
-                                style={{
-                                    fontWeight: 700,
-                                    fontSize: 12.5,
-                                    marginBottom: 5,
-                                }}
-                            >
-                                {sv.variantClass}
-                            </div>
-                            <div style={{ color: '#444', fontSize: 11 }}>
-                                {content}
-                            </div>
-                        </FixedTooltipCard>
-                    );
-                })()}
         </div>
     );
 }

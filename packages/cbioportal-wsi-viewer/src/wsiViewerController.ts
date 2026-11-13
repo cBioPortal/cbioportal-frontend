@@ -85,7 +85,6 @@ export interface WsiViewerControllerHost {
     ): { slide: Slide; sample: Sample } | undefined;
     setMutationDataStatus(status: WsiMutationDataStatus): void;
     runSampleEnrichment(
-        base: string,
         studyId: string,
         patientId: string,
         sampleIds: string[],
@@ -631,7 +630,6 @@ export class WsiViewerController {
         const shouldContinue = () =>
             this.shouldContinueBackgroundWork(expectedLoadSeq, hierarchy);
 
-        const base = '';
         const sampleIds: string[] = [];
         for (let index = 0; index < hierarchy.samples.length; index += 1) {
             const sampleId = hierarchy.samples[index].sample_id;
@@ -643,14 +641,14 @@ export class WsiViewerController {
 
         try {
             await this.host.runSampleEnrichment(
-                base,
                 studyId,
                 hierarchy.patient_id,
                 sampleIds,
                 shouldContinue
             );
-        } catch {
-            // Silently fall back to tile-server data
+        } catch (error) {
+            // The slides stay viewable without the portal's sample data.
+            console.debug('[WSI] sample enrichment failed', error);
         }
     }
 

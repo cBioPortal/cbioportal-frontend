@@ -2,77 +2,180 @@
  * @jest-environment jsdom
  */
 import * as React from 'react';
-import TestRenderer from 'react-test-renderer';
-import { MutationTable } from './wsiMolecularTables';
-import { Sample } from './wsiViewerTypes';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import {
+    CnaTable,
+    MutationTable,
+    StructuralVariantTable,
+} from './wsiMolecularTables';
+import { MutationDetail, Sample } from './wsiViewerTypes';
 
-function makeSample(): Sample {
-    return {
-        sample_id: 'S-1',
-        cancer_type: 'Test',
-        cancer_type_detailed: 'Test',
-        oncotree_code: 'TEST',
-        primary_site: 'Test',
-        sample_type: 'Primary',
-        parts: [],
-    };
+function makeSample(overrides: Partial<Sample> = {}): Sample {
+    return { sample_id: 'S-1', parts: [], ...overrides };
 }
 
-describe('MutationTable loading states', () => {
-    it('shows a loading status while mutation data is pending', () => {
-        const renderer = TestRenderer.create(
-            <MutationTable sample={makeSample()} mutationDataStatus="loading" />
-        );
+const KRAS: MutationDetail = {
+    token: 'KRAS G12D',
+    gene: 'KRAS',
+    proteinChange: 'G12D',
+    type: 'Missense',
+    consequence: 'Missense_Mutation',
+    vaf: 35,
+    cohortAlteredCount: 3,
+    cohortProfiledCount: 120,
+};
 
-        expect(
-            renderer.root.findByProps({
-                'data-testid': 'wsi-mutation-table-loading',
-            }).children
-        ).toEqual(['Loading variants…']);
+describe('MutationTable states', () => {
+    it.each([
+        ['loading', 'wsi-mutation-table-loading', 'Loading variants…'],
+        ['error', 'wsi-mutation-table-error', 'Variant data unavailable.'],
+        [
+            'unprofiled',
+            'wsi-mutation-table-unprofiled',
+            'Not profiled for mutations.',
+        ],
+    ] as const)('shows the %s status', (status, testId, text) => {
+        render(
+            <MutationTable sample={makeSample()} mutationDataStatus={status} />
+        );
+        expect(screen.getByTestId(testId).textContent).toBe(text);
     });
 
-    it('shows an actionable status when mutation data fails', () => {
-        const renderer = TestRenderer.create(
-            <MutationTable sample={makeSample()} mutationDataStatus="error" />
+    it('tells a sample without mutations from one not profiled', () => {
+        const { rerender } = render(
+            <MutationTable
+                sample={makeSample({ mutations: [] })}
+                mutationDataStatus="ready"
+            />
+        );
+        expect(screen.getByTestId('wsi-mutation-table-empty').textContent).toBe(
+            'No mutations.'
         );
 
+        rerender(
+            <MutationTable
+                sample={makeSample()}
+                mutationDataStatus="unprofiled"
+            />
+        );
+        expect(screen.queryByTestId('wsi-mutation-table-empty')).toBeNull();
         expect(
-            renderer.root.findByProps({
-                'data-testid': 'wsi-mutation-table-error',
-            }).children
-        ).toEqual(['Variant data unavailable.']);
+            screen.getByTestId('wsi-mutation-table-unprofiled')
+        ).toBeTruthy();
     });
 
-    it('handles a loading-to-success update without changing hook order', () => {
+    it('shows nothing for a sample whose mutations were not loaded', () => {
+        const { container } = render(
+            <MutationTable sample={makeSample()} mutationDataStatus="ready" />
+        );
+        expect(container.innerHTML).toBe('');
+    });
+
+    it('goes from loading to the table', () => {
         const sample = makeSample();
-        const renderer = TestRenderer.create(
+        const { rerender } = render(
             <MutationTable sample={sample} mutationDataStatus="loading" />
         );
 
-        sample.oncogenic_mutations = 'TP53 p.R175H';
-        sample.oncogenic_mutation_details = [{ token: 'TP53 p.R175H' }];
-        TestRenderer.act(() => {
-            renderer.update(
-                <MutationTable sample={sample} mutationDataStatus="ready" />
-            );
-        });
-
-        expect(renderer.root.findByType('table')).toBeDefined();
-    });
-
-    it('keeps fallback mutations visible while reporting an API error', () => {
-        const sample = makeSample();
-        sample.oncogenic_mutations = 'TP53 p.R175H';
-        sample.oncogenic_mutation_details = [{ token: 'TP53 p.R175H' }];
-        const renderer = TestRenderer.create(
-            <MutationTable sample={sample} mutationDataStatus="error" />
+        rerender(
+            <MutationTable
+                sample={{ ...sample, mutations: [KRAS] }}
+                mutationDataStatus="ready"
+            />
         );
 
-        expect(renderer.root.findByType('table')).toBeDefined();
-        expect(
-            renderer.root.findByProps({
-                'data-testid': 'wsi-mutation-table-error',
-            }).children
-        ).toEqual(['Variant data unavailable.']);
+        expect(screen.getByRole('table')).toBeTruthy();
+        expect(screen.getByText('G12D')).toBeTruthy();
+    });
+
+    it('shows non-protein changes without a p. prefix', () => {
+        render(
+            <MutationTable
+                sample={makeSample({
+                    mutations: [
+                        {
+                            token: 'TERT Promoter',
+                            gene: 'TERT',
+                            proteinChange: 'Promoter',
+                        },
+                        { token: 'NF1', gene: 'NF1', proteinChange: '' },
+                    ],
+                })}
+            />
+        );
+        expect(screen.getByText('Promoter')).toBeTruthy();
+        expect(screen.getByText('—')).toBeTruthy();
+        expect(screen.queryByText(/p\./)).toBeNull();
+    });
+});
+
+describe('molecular table details', () => {
+    it('gives the mutation details to keyboard and screen reader users', () => {
+        render(
+            <MutationTable
+                sample={makeSample({
+                    mutations: [KRAS],
+                    cna_alterations: [{ gene: 'KRAS', cnaValue: 2 }],
+                })}
+            />
+        );
+
+        const value = screen.getByText('G12D');
+        expect(value.getAttribute('tabindex')).toBe('0');
+        expect(value.textContent).toBe(
+            'G12D: Type: Missense; VAF: 35%; Copy number: AMP; Samples in study with this variant: 3/120 (2.5%)'
+        );
+
+        act(() => {
+            fireEvent.focus(value);
+        });
+        expect(screen.getByRole('tooltip').textContent).toContain(
+            'Samples in study with this variant: 3/120 (2.5%)'
+        );
+    });
+
+    it('gives the copy-number study counts', () => {
+        render(
+            <CnaTable
+                sample={makeSample({
+                    cna_alterations: [
+                        {
+                            gene: 'ERBB2',
+                            cnaValue: 2,
+                            cohortAlteredCount: 10,
+                            cohortProfiledCount: 200,
+                        },
+                    ],
+                })}
+            />
+        );
+        expect(screen.getByText('AMP').textContent).toBe(
+            'AMP: Samples in study with this alteration: 10/200 (5.0%)'
+        );
+    });
+
+    it('renders the structural variant table as its data changes', () => {
+        const sample = makeSample({
+            structural_variants: [
+                {
+                    gene1: 'EML4',
+                    gene2: 'ALK',
+                    variantClass: 'FUSION',
+                    svStatus: 'SOMATIC',
+                },
+            ],
+        });
+        const { rerender, container } = render(
+            <StructuralVariantTable sample={makeSample()} />
+        );
+        expect(container.innerHTML).toBe('');
+
+        rerender(<StructuralVariantTable sample={sample} />);
+        expect(screen.getByText('FUSION').textContent).toBe(
+            'FUSION: Status: SOMATIC'
+        );
+
+        rerender(<StructuralVariantTable sample={makeSample()} />);
+        expect(container.innerHTML).toBe('');
     });
 });

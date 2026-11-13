@@ -226,21 +226,52 @@ export function buildPathRows(
     return freezeMetaRows(rows);
 }
 
+/** `value` rounded to at most `digits` decimals, without trailing zeros. */
+function roundTo(value: number, digits: number): string {
+    return String(Number(value.toFixed(digits)));
+}
+
+function parseNumber(value: string): number | undefined {
+    const parsed = value.trim() === '' ? NaN : Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+/** Tumor purity as a percentage; a value of at most 1 is a fraction. */
+export function formatTumorPurity(value: string): string {
+    const purity = parseNumber(value);
+    if (purity === undefined) return value;
+    return `${roundTo(purity <= 1 ? purity * 100 : purity, 0)}%`;
+}
+
+/** TMB to one decimal, in mutations per megabase. */
+export function formatTmb(value: string): string {
+    const tmb = parseNumber(value);
+    return `${tmb === undefined ? value : roundTo(tmb, 1)} mut/Mb`;
+}
+
+/** MSI score to two decimals. */
+export function formatMsiScore(value: string): string {
+    const score = parseNumber(value);
+    return score === undefined ? value : roundTo(score, 2);
+}
+
+/** The Molecular section's summary rows of the sample. */
 export function buildSeqRows(sample: Sample, sampleUrl?: string): MetaRow[] {
     const rows: MetaRow[] = [];
     if (sample.tumor_purity) {
         rows.push({
             label: 'Tumor purity',
             labelTip: 'Estimated fraction of tumor cells in this sample',
-            value: `${sample.tumor_purity}%`,
+            value: formatTumorPurity(sample.tumor_purity),
         });
     }
     if (sample.tmb_score) {
         rows.push({
             label: 'TMB',
-            labelTip:
-                'Tumor mutational burden — click to view mutations in cBioPortal',
-            value: `${sample.tmb_score} mut/Mb`,
+            labelTip: sampleUrl
+                ? 'Tumor mutational burden (nonsynonymous): click to view the sample in cBioPortal'
+                : 'Tumor mutational burden (nonsynonymous)',
+            value: formatTmb(sample.tmb_score),
             href: sampleUrl,
         });
     }
@@ -249,6 +280,13 @@ export function buildSeqRows(sample: Sample, sampleUrl?: string): MetaRow[] {
             label: 'MSI',
             labelTip: 'Microsatellite instability status',
             value: sample.msi_type,
+        });
+    }
+    if (sample.msi_score) {
+        rows.push({
+            label: 'MSI score',
+            labelTip: 'Microsatellite instability score',
+            value: formatMsiScore(sample.msi_score),
         });
     }
     if (

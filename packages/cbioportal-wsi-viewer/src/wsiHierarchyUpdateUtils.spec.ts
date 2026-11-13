@@ -22,11 +22,6 @@ function makeSample(): Sample {
     };
     return {
         sample_id: 'S-1',
-        cancer_type: '',
-        cancer_type_detailed: '',
-        oncotree_code: '',
-        primary_site: '',
-        sample_type: '',
         parts: [
             {
                 part_number: '1',
@@ -59,8 +54,19 @@ describe('wsiHierarchyUpdateUtils', () => {
         );
         applyMutationData(
             [sample],
-            new Map([['S-1', [{ token: 'KRAS p.G12D', vaf: 0.3 }]]]),
-            new Map()
+            new Set(['S-1']),
+            new Map([
+                [
+                    'S-1',
+                    [
+                        {
+                            token: 'KRAS G12D',
+                            gene: 'KRAS',
+                            proteinChange: 'G12D',
+                        },
+                    ],
+                ],
+            ])
         );
         applyCnaData(
             [sample],
@@ -68,12 +74,24 @@ describe('wsiHierarchyUpdateUtils', () => {
         );
 
         expect(sample.cancer_type).toBe('Colorectal Cancer');
-        expect(sample.oncogenic_mutations).toBe('KRAS p.G12D');
+        expect(sample.mutations).toEqual([
+            { token: 'KRAS G12D', gene: 'KRAS', proteinChange: 'G12D' },
+        ]);
         expect(sample.cna_alterations).toEqual([
             { gene: 'ERBB2', cnaValue: 2 },
         ]);
         expect(sample.parts).toBe(parts);
         expect(sample.parts[0].blocks[0].slides[0]).toBe(slide);
         expect(slide.slide_key).toBe('slide-1');
+    });
+
+    it('gives requested samples without mutations an empty list', () => {
+        const requested = makeSample();
+        const other = { ...makeSample(), sample_id: 'S-2' };
+
+        applyMutationData([requested, other], new Set(['S-1']), new Map());
+
+        expect(requested.mutations).toEqual([]);
+        expect(other.mutations).toBeUndefined();
     });
 });

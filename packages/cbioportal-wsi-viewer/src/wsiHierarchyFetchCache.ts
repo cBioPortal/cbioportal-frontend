@@ -122,15 +122,7 @@ export function buildPatientHierarchy(
         const sampleId = row.sampleId || UNMATCHED_SAMPLE_ID;
         let sample = samples.get(sampleId);
         if (!sample) {
-            sample = {
-                sample_id: sampleId,
-                cancer_type: '',
-                cancer_type_detailed: '',
-                oncotree_code: '',
-                primary_site: '',
-                sample_type: '',
-                parts: [],
-            };
+            sample = { sample_id: sampleId, parts: [] };
             samples.set(sampleId, sample);
         }
         const partKey = `${sampleId}::${text(metadata, 'part_key')}`;

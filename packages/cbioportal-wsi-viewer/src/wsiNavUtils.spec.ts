@@ -25,10 +25,10 @@ describe('wsiNavUtils', () => {
 
         it('keeps the hierarchy order of matched samples', () => {
             const samples = [
-                makeSample('S-2', [], { sample_type: 'Primary' }),
+                makeSample('S-2'),
                 makeSample('UNMATCHED'),
-                makeSample('S-10', [], { sample_type: 'Metastasis' }),
-                makeSample('S-1', [], { sample_type: 'Primary' }),
+                makeSample('S-10'),
+                makeSample('S-1'),
             ];
 
             expect(
