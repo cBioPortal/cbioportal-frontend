@@ -128,35 +128,43 @@ export function getStudyViewMapUrl(
 }
 
 /**
- * Colour per sample id for a clinical attribute, from the cohort's clinical
- * data cache. Keys drop the study prefix the cache uses, since a map's points
- * carry a bare sample id and all belong to one study.
+ * Colour per sample id for a clinical attribute. Keys drop the study prefix
+ * the cache uses, since a map's points carry a bare sample id.
  *
- * Samples the cohort has no value for are absent, and the caller greys them:
- * the cohort the patient view loads can be narrower than the map.
+ * Takes every study the map covers, not just the patient's: on a map built
+ * from many studies, one study's samples are a sliver of the points, and
+ * colouring only those leaves the picture grey where it matters.
+ *
+ * Samples with no value are absent, and the caller greys them.
  */
 export function getClinicalColorsBySampleId(
     clinicalData: { studyId: string; sampleId: string; value: string }[],
     categoryToColor: { [value: string]: string } | undefined,
     numericalValueToColor: ((x: number) => string) | undefined,
-    studyId: string
+    studyIds: string[]
 ): { colors: Map<string, string>; values: Map<string, string> } {
     const { colorMap, valueMap } = preComputeClinicalDataMaps(
         clinicalData,
         categoryToColor,
         numericalValueToColor
     );
-    const prefix = `${studyId}:`;
+    const prefixes = studyIds.map(studyId => `${studyId}:`);
+    const bareId = (key: string) => {
+        const prefix = prefixes.find(p => key.startsWith(p));
+        return prefix === undefined ? undefined : key.slice(prefix.length);
+    };
     const colors = new Map<string, string>();
     const values = new Map<string, string>();
     colorMap.forEach((color, key) => {
-        if (key.startsWith(prefix)) {
-            colors.set(key.slice(prefix.length), color);
+        const id = bareId(key);
+        if (id !== undefined) {
+            colors.set(id, color);
         }
     });
     valueMap.forEach((value, key) => {
-        if (key.startsWith(prefix)) {
-            values.set(key.slice(prefix.length), value);
+        const id = bareId(key);
+        if (id !== undefined) {
+            values.set(id, value);
         }
     });
     return { colors, values };

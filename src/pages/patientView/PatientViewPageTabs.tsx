@@ -938,9 +938,6 @@ export function tabs(
                         pageComponent.patientViewPageStore.clinicalAttributes
                             .result || []
                     }
-                    clinicalDataCache={
-                        pageComponent.patientViewPageStore.clinicalDataCache
-                    }
                 />
             </MSKTab>
         );

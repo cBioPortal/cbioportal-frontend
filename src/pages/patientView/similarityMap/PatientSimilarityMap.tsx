@@ -11,9 +11,15 @@ import {
 import { observer } from 'mobx-react';
 import SampleManager from 'pages/patientView/SampleManager';
 import Select from 'react-select';
-import { ClinicalAttribute, SampleFilter } from 'cbioportal-ts-api-client';
+import {
+    ClinicalAttribute,
+    ClinicalData,
+    SampleFilter,
+} from 'cbioportal-ts-api-client';
 import { getClient } from 'shared/api/cbioportalClientInstance';
-import ClinicalDataCache from 'shared/cache/ClinicalDataCache';
+import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
+import { getClinicalAttributeColoring } from 'shared/cache/ClinicalDataCacheUtils';
+import { ClinicalDataCacheEntry } from 'shared/cache/ClinicalDataCache';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
     getLoadedEmbeddingOptions,
@@ -44,6 +50,8 @@ const SAMPLE_ICON_SIZE = 12;
 const SAMPLE_ICON_SCALE = 1.5;
 const DIMMED_ALPHA = 0.12;
 const REFERENCE_COLORING_VALUE = '';
+// A pan-cancer map has hundreds of detailed types; the rest sit behind a count.
+const LEGEND_MAX_ENTRIES = 20;
 const COLORING_SELECT_STYLES = {
     control: (base: any) => ({
         ...base,
@@ -62,7 +70,6 @@ export interface IPatientSimilarityMapProps {
     sampleManager: SampleManager;
     hasEmbeddingsFeatureFlag: boolean;
     clinicalAttributes: ClinicalAttribute[];
-    clinicalDataCache: ClinicalDataCache;
 }
 
 @observer
@@ -146,14 +153,58 @@ export default class PatientSimilarityMap extends React.Component<
         );
     }
 
+    // One request per study the map covers, kept per attribute. The patient
+    // view's own cache holds this study alone, which on a map built from many
+    // studies colours a sliver of the points and greys the rest.
+    private readonly mapClinicalData = new MobxPromiseCache<
+        { attribute: ClinicalAttribute; studyIds: string[] },
+        ClinicalDataCacheEntry
+    >(
+        q => ({
+            invoke: async () => {
+                const perStudy = await Promise.all(
+                    q.studyIds.map(studyId =>
+                        getClient()
+                            .getAllClinicalDataInStudyUsingGET({
+                                studyId,
+                                attributeId: q.attribute.clinicalAttributeId,
+                                clinicalDataType: 'SAMPLE',
+                                projection: 'SUMMARY',
+                            })
+                            // Not every study defines the attribute, and one
+                            // failing should not leave the map uncoloured.
+                            .catch(() => [] as ClinicalData[])
+                    )
+                );
+                const data = _.flatten(perStudy);
+                return {
+                    data,
+                    ...getClinicalAttributeColoring(data, q.attribute.datatype),
+                };
+            },
+        }),
+        q => `${q.attribute.clinicalAttributeId}|${q.studyIds.join(',')}`
+    );
+
+    @computed get coloringQuery():
+        | { attribute: ClinicalAttribute; studyIds: string[] }
+        | undefined {
+        const attribute = this.coloringAttribute;
+        const option = this.selectedOption;
+        if (!attribute || !option) {
+            return undefined;
+        }
+        return { attribute, studyIds: option.data.studyIds };
+    }
+
     @computed get clinicalColors():
         | { colors: Map<string, string>; values: Map<string, string> }
         | undefined {
-        const attribute = this.coloringAttribute;
-        if (!attribute) {
+        const query = this.coloringQuery;
+        if (!query) {
             return undefined;
         }
-        const entry = this.props.clinicalDataCache.get(attribute);
+        const entry = this.mapClinicalData.get(query);
         if (!entry.isComplete || !entry.result) {
             return undefined;
         }
@@ -161,13 +212,13 @@ export default class PatientSimilarityMap extends React.Component<
             entry.result.data as any,
             entry.result.categoryToColor,
             entry.result.numericalValueToColor,
-            this.props.studyId
+            query.studyIds
         );
     }
 
     @computed get isColoringPending(): boolean {
-        const attribute = this.coloringAttribute;
-        return !!attribute && this.props.clinicalDataCache.get(attribute).isPending;
+        const query = this.coloringQuery;
+        return !!query && this.mapClinicalData.get(query).isPending;
     }
 
     @computed get selectedOption(): SampleEmbeddingOption | undefined {
@@ -536,7 +587,9 @@ export default class PatientSimilarityMap extends React.Component<
                         ? this.coloringAttribute.displayName
                         : 'Cancer Type (reference map)'}
                 </div>
-                {this.legendEntries.map(({ category, color, count }) => (
+                {this.legendEntries
+                    .slice(0, LEGEND_MAX_ENTRIES)
+                    .map(({ category, color, count }) => (
                     <div
                         key={category}
                         style={{
@@ -559,6 +612,12 @@ export default class PatientSimilarityMap extends React.Component<
                         <span style={{ color: '#999' }}>{count}</span>
                     </div>
                 ))}
+                {this.legendEntries.length > LEGEND_MAX_ENTRIES && (
+                    <div style={{ color: '#999', marginTop: 4 }}>
+                        {`+ ${this.legendEntries.length -
+                            LEGEND_MAX_ENTRIES} more`}
+                    </div>
+                )}
             </div>
         );
     }

@@ -164,12 +164,12 @@ describe('getClinicalColorsBySampleId', () => {
         { studyId: 'other', sampleId: 'S3', value: 'Male' },
     ];
 
-    it('keys by bare sample id and drops other studies', () => {
+    it('keys by bare sample id and drops studies the map does not cover', () => {
         const { colors, values } = getClinicalColorsBySampleId(
             data,
             { Male: '#111111', Female: '#222222' },
             undefined,
-            'msktarget'
+            ['msktarget']
         );
         assert.deepEqual(Array.from(values.entries()).sort(), [
             ['S1', 'Male'],
@@ -180,12 +180,23 @@ describe('getClinicalColorsBySampleId', () => {
         assert.isUndefined(colors.get('S3'), 'other studies are excluded');
     });
 
+    it('keeps every study the map covers', () => {
+        const { colors, values } = getClinicalColorsBySampleId(
+            data,
+            { Male: '#111111', Female: '#222222' },
+            undefined,
+            ['msktarget', 'other']
+        );
+        assert.equal(values.get('S3'), 'Male');
+        assert.equal(colors.get('S3'), '#111111');
+    });
+
     it('leaves samples with no value absent so the caller can grey them', () => {
         const { colors } = getClinicalColorsBySampleId(
             [{ studyId: 'msktarget', sampleId: 'S1', value: 'Male' }],
             { Male: '#111111' },
             undefined,
-            'msktarget'
+            ['msktarget']
         );
         assert.isUndefined(colors.get('S_not_in_cohort'));
     });
