@@ -112,7 +112,7 @@ function handleQueryUpdate(props: StudySearchProps, update: QueryUpdate) {
     props.onSearch(updatedQuery);
 }
 
-const SearchMenuToggle: FunctionComponent<{
+export const SearchMenuToggle: FunctionComponent<{
     onClick: () => void;
     open: boolean;
 }> = props => {
@@ -123,6 +123,8 @@ const SearchMenuToggle: FunctionComponent<{
                 type="button"
                 className="dropdown-toggle btn btn-sm btn-default"
                 onMouseDown={props.onClick}
+                aria-label="Toggle study search menu"
+                aria-expanded={props.open}
             >
                 <span className="caret" style={{ transform: arrowDirection }}>
                     &nbsp;
