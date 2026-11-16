@@ -57,7 +57,13 @@ export class ResourceTableStore {
     @observable searchTerm: string = '';
     @observable.ref filters: ResourceColumnFilter[] = [];
 
-    constructor() {
+    /** Resources left out of the table, e.g. ones another view shows. */
+    private readonly hideResource?: (resourceId: string) => boolean;
+
+    constructor(
+        options: { hideResource?: (resourceId: string) => boolean } = {}
+    ) {
+        this.hideResource = options.hideResource;
         makeObservable(this);
     }
 
@@ -176,8 +182,15 @@ export class ResourceTableStore {
         default: [],
     });
 
+    /** The resource tabs the table offers: the fetched ones less the hidden. */
+    @computed get visibleTabs(): ResourceTableTab[] {
+        const tabs = this.tabs.result || [];
+        const hide = this.hideResource;
+        return hide ? tabs.filter(tab => !hide(tab.resourceId)) : tabs;
+    }
+
     @computed get activeResourceId(): string | undefined {
-        return this.selectedResourceId || this.tabs.result?.[0]?.resourceId;
+        return this.selectedResourceId || this.visibleTabs[0]?.resourceId;
     }
 
     /**
@@ -244,12 +257,11 @@ export class ResourceTableStore {
     /** Display name of the resource currently shown, e.g. "Slide Microscopy". */
     @computed get activeResourceLabel(): string | undefined {
         const active = this.activeResourceId;
-        return (this.tabs.result || []).find(tab => tab.resourceId === active)
-            ?.label;
+        return this.visibleTabs.find(tab => tab.resourceId === active)?.label;
     }
 
     @computed get tabsForDisplay(): IResourceTableTab[] {
-        return (this.tabs.result || []).map(tab => ({
+        return this.visibleTabs.map(tab => ({
             id: tab.resourceId,
             label: tab.label,
             totalCount: tab.totalCount,

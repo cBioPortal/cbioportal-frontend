@@ -551,8 +551,6 @@ export class ResultsViewPageStore extends AnalysisStore
                 clinicalAttributes: this.plotClinicalAttributes,
                 customAttributes: this.customAttributes,
                 genesets: this.genesets,
-                genericAssayEntitiesGroupByMolecularProfileId: this
-                    .genericAssayEntitiesGroupByMolecularProfileId,
                 get selectedGenericAssayEntitiesGroupByMolecularProfileId() {
                     return store.selectedGenericAssayEntitiesGroupByMolecularProfileId;
                 },

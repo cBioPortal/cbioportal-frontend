@@ -84,6 +84,7 @@ test.describe('unavailable study, mocked backend', () => {
         await expect(name).toHaveClass(/UnavailableStudy/);
         await expect(name.locator('.fa-refresh')).toBeVisible();
         await expect(row.locator('.ci-pie-chart')).toHaveCount(0);
+        await expect(row.locator('.fa-info-circle, .fa-book')).toHaveCount(0);
 
         await name.hover();
         await expect(

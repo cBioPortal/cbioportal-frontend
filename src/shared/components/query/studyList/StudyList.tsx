@@ -305,6 +305,10 @@ export default class StudyList extends QueryStoreComponent<
     };
 
     renderStudyLinks = (study: CancerStudy) => {
+        // The info tooltip fetches study data, which the backend rejects with 423 while updating.
+        if (this.isStudyUnavailable(study)) {
+            return null;
+        }
         if (this.store.isDeletedVirtualStudy(study.studyId)) {
             return (
                 <DefaultTooltip
@@ -444,7 +448,6 @@ export default class StudyList extends QueryStoreComponent<
                         return content;
                     })}
                     {study.studyId &&
-                        !this.isStudyUnavailable(study) &&
                         (study.readPermission === true ||
                             study.readPermission === undefined) && (
                             <DefaultTooltip

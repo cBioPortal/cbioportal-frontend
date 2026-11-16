@@ -209,6 +209,9 @@ test.describe('unavailable study (HTTP 423)', () => {
             await expect(unavailableRow.locator('.ci-pie-chart')).toHaveCount(
                 0
             );
+            await expect(
+                unavailableRow.locator('.fa-info-circle, .fa-book, .fa-lock')
+            ).toHaveCount(0);
 
             // Available studies are unaffected
             const availableRow = page

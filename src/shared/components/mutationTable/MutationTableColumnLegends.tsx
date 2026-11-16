@@ -74,8 +74,8 @@ export const MutationStatusColumnLegend: React.FunctionComponent = () => (
     <ColumnLegend
         description={
             <span>
-                Mutation Status (MS): whether the mutation was called as somatic
-                or germline.
+                Mutation Status (MS): whether the mutation was called as
+                somatic, germline or clonal hematopoiesis.
             </span>
         }
         categories={[
@@ -89,6 +89,16 @@ export const MutationStatusColumnLegend: React.FunctionComponent = () => (
                 description: 'Inherited; also present in normal tissue',
                 swatch: (
                     <span className={mutationStatusStyles.germline}>G</span>
+                ),
+            },
+            {
+                value: 'Clonal hematopoiesis',
+                description:
+                    'Acquired in blood cells; detected in the matched normal (blood) sample',
+                swatch: (
+                    <span className={mutationStatusStyles.clonalHematopoiesis}>
+                        CH
+                    </span>
                 ),
             },
         ]}
