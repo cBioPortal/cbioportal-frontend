@@ -1,6 +1,10 @@
 import axios from 'axios';
 import { getCbioPortalApiUrl } from 'shared/api/urls';
-import { PatientIdentifier, SampleIdentifier } from 'cbioportal-ts-api-client';
+import {
+    PatientIdentifier,
+    SampleIdentifier,
+    StudyViewFilter,
+} from 'cbioportal-ts-api-client';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -80,17 +84,89 @@ export interface ResourceColumnFilter {
     values: string[];
 }
 
+/**
+ * The request body of query/fetch, metadata/fetch and groups/fetch.
+ *
+ * The cohort is either the identifier lists or `studyViewFilter`, which the backend resolves to its
+ * samples and their patients the way the study-view charts do; when present it replaces the lists.
+ * Sending neither means every case in `studyIds`.
+ *
+ * `resourceId` names one resource; `resourceIds` reads several together as one table, and the two
+ * combine when both are given.
+ */
 export interface ResourceTableQuery {
     studyIds: string[];
-    resourceId: string;
-    patientIdentifiers: PatientIdentifier[];
-    sampleIdentifiers: SampleIdentifier[];
+    resourceId?: string;
+    resourceIds?: string[];
+    patientIdentifiers?: PatientIdentifier[];
+    sampleIdentifiers?: SampleIdentifier[];
+    studyViewFilter?: StudyViewFilter;
     search?: string;
     pageNumber: number;
     pageSize: number;
     sortBy?: string;
     direction?: 'asc' | 'desc';
     filters?: ResourceColumnFilter[];
+    /**
+     * One entry per patient or per sample instead of one per row. Required by groups/fetch; on
+     * metadata/fetch it makes each facet value count the groups carrying it. query/fetch rejects it.
+     */
+    groupBy?: ResourceGroupBy;
+    /** Columns whose values groups/fetch counts per group: `metadata:<key>` or `resourceId`. */
+    groupCounts?: string[];
+    /** A group whose position under the current filters and sort groups/fetch reports. */
+    locate?: ResourceGroupLocator;
+}
+
+export type ResourceGroupBy = 'patient' | 'sample';
+
+/** Columns groups/fetch can sort groups by; `sampleId` only under sample grouping. */
+export type ResourceGroupSort =
+    | 'patientId'
+    | 'sampleId'
+    | 'studyId'
+    | 'rowCount';
+
+/** groups/fetch accepts pages of 1 to this many groups. */
+export const RESOURCE_GROUPS_MAX_PAGE_SIZE = 1000;
+
+/** groups/fetch counts at most this many columns per request. */
+export const RESOURCE_GROUPS_MAX_COUNTS = 10;
+
+/**
+ * A patient under patient grouping or a sample under sample grouping, qualified by its study since
+ * stable ids repeat across studies.
+ */
+export interface ResourceGroupLocator {
+    studyId: string;
+    patientId?: string;
+    sampleId?: string;
+}
+
+/** One patient or sample of a grouped resource table. */
+export interface ResourceTableGroup {
+    studyId: string;
+    patientId: string;
+    /** Present under sample grouping only. */
+    sampleId?: string;
+    /** Rows the group holds once filters and search are applied. */
+    rowCount: number;
+    /** For each requested groupCounts column, how many of the group's rows carry each value. */
+    counts: { [columnId: string]: { [value: string]: number } };
+}
+
+/** One page of a grouped resource table. */
+export interface ResourceTableGroupPage {
+    /** Groups left after filters and search, across every page. */
+    totalGroups: number;
+    /** Rows those groups hold together. */
+    totalRows: number;
+    /**
+     * Zero-based position of the `locate` group under the current filters and sort; null when no
+     * group was asked for or it has been filtered out.
+     */
+    locatedIndex: number | null;
+    groups: ResourceTableGroup[];
 }
 
 // ── API helpers ────────────────────────────────────────────────────────────────
@@ -124,6 +200,16 @@ export async function fetchResourceTableMetadata(
 ): Promise<ResourceTableMetadataResult> {
     const response = await axios.post<ResourceTableMetadataResult>(
         resourceTableApiUrl('metadata/fetch'),
+        query
+    );
+    return response.data;
+}
+
+export async function fetchResourceTableGroups(
+    query: ResourceTableQuery
+): Promise<ResourceTableGroupPage> {
+    const response = await axios.post<ResourceTableGroupPage>(
+        resourceTableApiUrl('groups/fetch'),
         query
     );
     return response.data;

@@ -1,5 +1,6 @@
 import { getServerConfig } from 'config/config';
 import { isNonEmptyString } from './ResourceUtils';
+import { ResourceTableStoreOptions } from './ResourceTableUtils';
 
 // H&E slide resources that the native viewer replaces. Every H&E resource on
 // the public and MSK portals uses one of these IDs.
@@ -35,3 +36,8 @@ export function isHiddenFromResourceViews(resourceId: string): boolean {
         isWsiResourceId(resourceId) || shouldHideLegacyHeResourceTab(resourceId)
     );
 }
+
+/** How study view's resource tables (its resource tabs and Files & Links) list resources. */
+export const STUDY_VIEW_RESOURCE_TABLE_OPTIONS: ResourceTableStoreOptions = {
+    hideResource: isHiddenFromResourceViews,
+};
