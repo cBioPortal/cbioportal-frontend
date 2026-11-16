@@ -40,3 +40,11 @@ export {
     WsiFilterChipGroup,
     WsiStainDot,
 } from './wsiFilterChips';
+export {
+    matchLevelHelpText,
+    stainHelpText,
+    WSI_MATCH_LEVEL_HELP,
+    WSI_STAIN_HELP,
+    WsiMatchLevelInfo,
+    WsiStainInfo,
+} from './wsiFilterHelp';

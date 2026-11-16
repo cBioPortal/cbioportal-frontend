@@ -1167,6 +1167,10 @@ export default class StudyViewPage extends React.Component<
                                                                 disableGrouping={
                                                                     true
                                                                 }
+                                                                caseIdAliases={
+                                                                    this.store
+                                                                        .caseIdAliases
+                                                                }
                                                                 queriedStudies={
                                                                     this.store
                                                                         .queriedPhysicalStudyIds

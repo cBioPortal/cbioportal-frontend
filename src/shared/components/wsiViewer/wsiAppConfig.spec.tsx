@@ -21,6 +21,11 @@ jest.mock('shared/api/urls', () => ({
         `https://portal.example/beta/${path}`,
 }));
 
+const mockRedirectToLogin = jest.fn();
+jest.mock('shared/lib/redirectHelpers', () => ({
+    redirectToLogin: () => mockRedirectToLogin(),
+}));
+
 jest.mock('./wsiClinicalRows', () => ({
     useWsiClinicalRows: () => [{ label: 'Sex', value: 'Female' }],
 }));
@@ -45,6 +50,11 @@ describe('buildWsiViewerConfig', () => {
             'https://portal.example/beta/api/resource-table/query/fetch'
         );
         expect(config.osdPrefixUrl).toBe('/reactapp/osd-images/');
+    });
+
+    it('signs in again when the viewer reports an expired session', () => {
+        buildWsiViewerConfig().onSessionExpired!();
+        expect(mockRedirectToLogin).toHaveBeenCalledTimes(1);
     });
 
     it('scopes caches by the user, the display name or the anonymous user', () => {

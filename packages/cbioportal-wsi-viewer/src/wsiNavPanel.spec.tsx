@@ -448,6 +448,77 @@ describe('WsiNavPanel', () => {
         expect(onMatchFilterChange).toHaveBeenCalledWith('all');
     });
 
+    it('explains the match levels next to the match filter', () => {
+        const sample = makeSample('S-1', [
+            placedSlide('block-slide', 'BLOCK'),
+            placedSlide('part-slide', 'PART'),
+            placedSlide('other-slide', 'UNMATCHED'),
+        ]);
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([sample])}
+                selectedSlide={null}
+                stainFilter="all"
+                matchFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                {...navContext}
+            />
+        );
+
+        const row = renderer.root.findByProps({
+            testId: 'wsi-match-filter-row',
+        }).parent!;
+        const tooltip = row.findByType(DefaultTooltip);
+        expect(
+            tooltip.findAllByProps({
+                'data-testid': 'wsi-match-level-info',
+            })
+        ).toHaveLength(1);
+        const tooltipText = flattenRenderedText(
+            TestRenderer.create(tooltip.props.overlay).toJSON()
+        );
+        expect(tooltipText).toContain('Block: Cut from the same tissue block');
+        expect(tooltipText).toContain('Part: From the same part');
+        expect(tooltipText).toContain('Unmatched: From this patient');
+    });
+
+    it('explains the stain groups next to the stain filter', () => {
+        const sample = makeSample('S-1', [
+            placedSlide('hne-slide', 'BLOCK'),
+            {
+                ...placedSlide('ihc-slide', 'BLOCK'),
+                stain_name: 'IHC',
+                stain_kind: 'ihc',
+            },
+        ]);
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([sample])}
+                selectedSlide={null}
+                stainFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                {...navContext}
+            />
+        );
+
+        const row = renderer.root.findByProps({
+            testId: 'wsi-stain-filter-row',
+        }).parent!;
+        const tooltip = row.findByType(DefaultTooltip);
+        expect(
+            tooltip.findAllByProps({ 'data-testid': 'wsi-stain-info' })
+        ).toHaveLength(1);
+        const tooltipText = flattenRenderedText(
+            TestRenderer.create(tooltip.props.overlay).toJSON()
+        );
+        expect(tooltipText).toContain('H&E: Hematoxylin and eosin');
+        expect(tooltipText).toContain('IHC: Immunohistochemistry');
+        expect(tooltipText).toContain('Other (known):');
+        expect(tooltipText).toContain('Unknown:');
+    });
+
     it('keeps the stain chips when the match filter leaves only one stain', () => {
         // As for a patient whose unmatched slides are all H&E.
         const sample = makeSample('S-1', [
@@ -539,6 +610,7 @@ describe('WsiNavPanel', () => {
 
         expect(hasTestId(renderer, 'wsi-stain-filter-row')).toBe(false);
         expect(hasTestId(renderer, 'wsi-match-filter-row')).toBe(false);
+        expect(hasTestId(renderer, 'wsi-match-level-info')).toBe(false);
     });
 
     it('leaves out the filter area when there is nothing to show in it', () => {

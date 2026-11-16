@@ -97,8 +97,24 @@ describe('buildPathRows', () => {
         expect(match?.valueTip).toContain(
             matchLevel === 'BLOCK'
                 ? 'same tissue block that was sequenced'
-                : 'same part as the sequenced sample'
+                : 'as the sequenced sample, but not known to come from the sequenced block'
         );
+    });
+
+    it('explains part, block and match in plain language', () => {
+        const rows = buildPathRows(
+            placedSlide('BLOCK', { part_number: '6', block_label: 'Block 1' }),
+            sample,
+            'P-1',
+            'study-1'
+        );
+        const labelTip = (label: string) =>
+            rows.find(row => row.label === label)?.labelTip;
+
+        expect(labelTip('Part')).toContain('biopsy or surgery');
+        expect(labelTip('Block')).toContain('paraffin block');
+        expect(labelTip('Match')).toContain('Block-matched');
+        expect(labelTip('Match')).toContain('Part-matched');
     });
 
     it('explains every pathology row with a tooltip', () => {
@@ -114,9 +130,9 @@ describe('buildPathRows', () => {
         );
 
         rows.forEach(row => expect(row.labelTip).toBeTruthy());
-        expect(rows.find(row => row.label === 'Stain')?.valueTip).toContain(
-            'Stain group:'
-        );
+        const stainTip = rows.find(row => row.label === 'Stain')?.valueTip;
+        expect(stainTip).toContain('Stain group:');
+        expect(stainTip).toContain('Hematoxylin and eosin');
     });
 
     it('links the sample and leaves the block to its own row', () => {
@@ -263,7 +279,7 @@ describe('buildPathRows', () => {
         }
     );
 
-    it('never says "specimen" in the pathology rows', () => {
+    it('labels and values never say "specimen"; the Part tip relates the terms', () => {
         const rows = buildPathRows(
             placedSlide('BLOCK', {
                 part_number: '6',
@@ -275,7 +291,12 @@ describe('buildPathRows', () => {
             'study-1'
         );
 
-        expect(JSON.stringify(rows)).not.toMatch(/specimen/i);
+        rows.forEach(row =>
+            expect(`${row.label} ${row.value}`).not.toMatch(/specimen/i)
+        );
+        expect(rows.find(row => row.label === 'Part')?.labelTip).toContain(
+            'often called the specimen'
+        );
     });
 });
 
