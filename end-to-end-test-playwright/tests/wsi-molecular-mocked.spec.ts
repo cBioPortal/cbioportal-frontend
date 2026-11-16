@@ -225,141 +225,149 @@ async function openViewer(page: Page) {
     });
 }
 
-test.describe('WSI viewer molecular data', () => {
-    test('loads the molecular tables from the study profiles without changing tile routing', async ({
-        page,
-    }) => {
-        const {
-            accessRequests,
-            enrichmentRequests,
-            portalRequests,
-        } = await installMolecularMocks(page, MOLECULAR_PROFILES);
-        const errors: string[] = [];
-        page.on('pageerror', error => errors.push(error.message));
-
-        await openViewer(page);
-
-        const molecular = page.getByTestId('wsi-sidebar-section-molecular');
-        await expect(molecular).toContainText('KRAS', { timeout: 30000 });
-        await expect(molecular).toContainText('G12D');
-        await expect(molecular).toContainText('ERBB2');
-        await expect(molecular).toContainText('AMP');
-        await expect(molecular).toContainText('EML4');
-        await expect(molecular).not.toContainText('TP53');
-        // The study counts arrive last, in the variant's details.
-        await expect(molecular.getByText('G12D')).toContainText(
-            'Samples in study with this variant: 3/120 (2.5%)'
-        );
-
-        const requested = (fragment: string) =>
-            portalRequests.filter(url => url.includes(fragment));
-        // One profile list, with no type filter, for all three tables.
-        expect(requested('/molecular-profiles?')).toHaveLength(1);
-        expect(requested('molecularAlterationType')).toEqual([]);
-        expect(requested('/molecular-data/fetch')).toEqual([
-            expect.stringContaining(
-                `/api/molecular-profiles/${STUDY_ID}_gistic/molecular-data/fetch`
-            ),
-        ]);
-        expect(
-            requested(
-                `/api/molecular-profiles/${STUDY_ID}_mutations/variant-counts/fetch`
-            )
-        ).toHaveLength(1);
-        // No study-wide aggregations and no second study request.
-        expect(requested('/cna-genes')).toEqual([]);
-        expect(requested('/mutation-counts-by-position')).toEqual([]);
-        expect(
-            portalRequests.filter(url =>
-                new RegExp(`/api/studies/${STUDY_ID}(\\?|$)`).test(url)
-            )
-        ).toEqual([]);
-        // The viewer reads the sample attributes from the page's clinical data.
-        expect(requested('/clinical-data/fetch')).toHaveLength(1);
-        // OncoKB and CIViC are off: no request, no link, no icon.
-        expect(enrichmentRequests).toEqual([]);
-        await expect(molecular.locator('a[href*="oncokb.org"]')).toHaveCount(0);
-        await expect(
-            molecular.locator('[data-test="oncogenic-icon-image"]')
-        ).toHaveCount(0);
-        await expect(molecular).not.toContainText('Annot');
-        // Tiles are served from the resource row: no slide access request.
-        expect(accessRequests).toEqual([]);
-        expect(errors).toEqual([]);
-    });
-
-    test('shows a study without molecular profiles as not profiled', async ({
-        page,
-    }) => {
-        const { portalRequests } = await installMolecularMocks(page, []);
-        const errors: string[] = [];
-        page.on('pageerror', error => errors.push(error.message));
-
-        await openViewer(page);
-
-        await expect(
-            page.getByTestId('wsi-mutation-table-unprofiled')
-        ).toHaveText('Not profiled for mutations.', { timeout: 30000 });
-        expect(
-            portalRequests.filter(url =>
-                /mutations\/fetch|molecular-data|structural-variant|variant-counts/.test(
-                    url
-                )
-            )
-        ).toEqual([]);
-        expect(
-            portalRequests.filter(url => url.includes('/molecular-profiles?'))
-        ).toHaveLength(1);
-        expect(errors).toEqual([]);
-    });
-
-    test('annotates through the portal OncoKB proxy for the sample tumor type', async ({
-        page,
-    }) => {
-        const { annotationRequests } = await installMolecularMocks(
+// The WSI suite (PW_SUITE=wsi) runs this spec against a static build. On the
+// public portal used by the remote e2e jobs the route shows an error page.
+if (process.env.PW_SUITE === 'wsi') {
+    test.describe('WSI viewer molecular data', () => {
+        test('loads the molecular tables from the study profiles without changing tile routing', async ({
             page,
-            MOLECULAR_PROFILES,
-            { annotations: true }
-        );
-        const errors: string[] = [];
-        page.on('pageerror', error => errors.push(error.message));
+        }) => {
+            const {
+                accessRequests,
+                enrichmentRequests,
+                portalRequests,
+            } = await installMolecularMocks(page, MOLECULAR_PROFILES);
+            const errors: string[] = [];
+            page.on('pageerror', error => errors.push(error.message));
 
-        await openViewer(page);
+            await openViewer(page);
 
-        const molecular = page.getByTestId('wsi-sidebar-section-molecular');
-        const link = molecular.getByRole('link', {
-            name: 'OncoKB: Oncogenic for KRAS G12D (opens in a new tab)',
-        });
-        await expect(link).toHaveAttribute(
-            'href',
-            'https://www.oncokb.org/gene/KRAS/G12D',
-            { timeout: 30000 }
-        );
+            const molecular = page.getByTestId('wsi-sidebar-section-molecular');
+            await expect(molecular).toContainText('KRAS', { timeout: 30000 });
+            await expect(molecular).toContainText('G12D');
+            await expect(molecular).toContainText('ERBB2');
+            await expect(molecular).toContainText('AMP');
+            await expect(molecular).toContainText('EML4');
+            await expect(molecular).not.toContainText('TP53');
+            // The study counts arrive last, in the variant's details.
+            await expect(molecular.getByText('G12D')).toContainText(
+                'Samples in study with this variant: 3/120 (2.5%)'
+            );
 
-        // The portal proxy carries the OncoKB path and body base64-encoded.
-        const decode = (value: string) =>
-            Buffer.from(value, 'base64').toString('utf8');
-        const mutationRequest = annotationRequests.find(
-            request =>
-                request.url.includes('/proxy/') &&
-                decode(request.url.split('/').pop() || '').includes(
-                    '/annotate/mutations/byProteinChange'
+            const requested = (fragment: string) =>
+                portalRequests.filter(url => url.includes(fragment));
+            // One profile list, with no type filter, for all three tables.
+            expect(requested('/molecular-profiles?')).toHaveLength(1);
+            expect(requested('molecularAlterationType')).toEqual([]);
+            expect(requested('/molecular-data/fetch')).toEqual([
+                expect.stringContaining(
+                    `/api/molecular-profiles/${STUDY_ID}_gistic/molecular-data/fetch`
+                ),
+            ]);
+            expect(
+                requested(
+                    `/api/molecular-profiles/${STUDY_ID}_mutations/variant-counts/fetch`
                 )
-        );
-        expect(mutationRequest?.postData).toBeTruthy();
-        expect(JSON.parse(decode(mutationRequest!.postData!))).toEqual([
-            expect.objectContaining({
-                id: '3845_G12D_Missense_Mutation_LUAD',
-                alteration: 'G12D',
-                tumorType: 'LUAD',
-                referenceGenome: 'GRCh37',
-            }),
-        ]);
-        expect(
-            annotationRequests.some(request =>
-                request.url.includes('civicdb.org')
-            )
-        ).toBe(true);
-        expect(errors).toEqual([]);
+            ).toHaveLength(1);
+            // No study-wide aggregations and no second study request.
+            expect(requested('/cna-genes')).toEqual([]);
+            expect(requested('/mutation-counts-by-position')).toEqual([]);
+            expect(
+                portalRequests.filter(url =>
+                    new RegExp(`/api/studies/${STUDY_ID}(\\?|$)`).test(url)
+                )
+            ).toEqual([]);
+            // The viewer reads the sample attributes from the page's clinical data.
+            expect(requested('/clinical-data/fetch')).toHaveLength(1);
+            // OncoKB and CIViC are off: no request, no link, no icon.
+            expect(enrichmentRequests).toEqual([]);
+            await expect(
+                molecular.locator('a[href*="oncokb.org"]')
+            ).toHaveCount(0);
+            await expect(
+                molecular.locator('[data-test="oncogenic-icon-image"]')
+            ).toHaveCount(0);
+            await expect(molecular).not.toContainText('Annot');
+            // Tiles are served from the resource row: no slide access request.
+            expect(accessRequests).toEqual([]);
+            expect(errors).toEqual([]);
+        });
+
+        test('shows a study without molecular profiles as not profiled', async ({
+            page,
+        }) => {
+            const { portalRequests } = await installMolecularMocks(page, []);
+            const errors: string[] = [];
+            page.on('pageerror', error => errors.push(error.message));
+
+            await openViewer(page);
+
+            await expect(
+                page.getByTestId('wsi-mutation-table-unprofiled')
+            ).toHaveText('Not profiled for mutations.', { timeout: 30000 });
+            expect(
+                portalRequests.filter(url =>
+                    /mutations\/fetch|molecular-data|structural-variant|variant-counts/.test(
+                        url
+                    )
+                )
+            ).toEqual([]);
+            expect(
+                portalRequests.filter(url =>
+                    url.includes('/molecular-profiles?')
+                )
+            ).toHaveLength(1);
+            expect(errors).toEqual([]);
+        });
+
+        test('annotates through the portal OncoKB proxy for the sample tumor type', async ({
+            page,
+        }) => {
+            const { annotationRequests } = await installMolecularMocks(
+                page,
+                MOLECULAR_PROFILES,
+                { annotations: true }
+            );
+            const errors: string[] = [];
+            page.on('pageerror', error => errors.push(error.message));
+
+            await openViewer(page);
+
+            const molecular = page.getByTestId('wsi-sidebar-section-molecular');
+            const link = molecular.getByRole('link', {
+                name: 'OncoKB: Oncogenic for KRAS G12D (opens in a new tab)',
+            });
+            await expect(link).toHaveAttribute(
+                'href',
+                'https://www.oncokb.org/gene/KRAS/G12D',
+                { timeout: 30000 }
+            );
+
+            // The portal proxy carries the OncoKB path and body base64-encoded.
+            const decode = (value: string) =>
+                Buffer.from(value, 'base64').toString('utf8');
+            const mutationRequest = annotationRequests.find(
+                request =>
+                    request.url.includes('/proxy/') &&
+                    decode(request.url.split('/').pop() || '').includes(
+                        '/annotate/mutations/byProteinChange'
+                    )
+            );
+            expect(mutationRequest?.postData).toBeTruthy();
+            expect(JSON.parse(decode(mutationRequest!.postData!))).toEqual([
+                expect.objectContaining({
+                    id: '3845_G12D_Missense_Mutation_LUAD',
+                    alteration: 'G12D',
+                    tumorType: 'LUAD',
+                    referenceGenome: 'GRCh37',
+                }),
+            ]);
+            expect(
+                annotationRequests.some(request =>
+                    request.url.includes('civicdb.org')
+                )
+            ).toBe(true);
+            expect(errors).toEqual([]);
+        });
     });
-});
+}
