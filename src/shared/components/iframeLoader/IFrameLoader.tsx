@@ -124,6 +124,7 @@ export default class IFrameLoader extends React.Component<
                 <a
                     href={this.props.url}
                     target="_blank"
+                    className="iframeLoaderNewWindowLink"
                     style={{
                         position: 'absolute',
                         fontSize: 12,

@@ -15,6 +15,38 @@
     padding-bottom: 4px;
 }
 
+// Replaces the document.onmousemove handler that used to reveal a column's filter icon on
+// hover. Applies to every table using these classes, which is what that handler did.
+.cbioportal-frontend
+    .table
+    > thead
+    > tr
+    > th.multilineHeader
+    .headerFilterIcon {
+    visibility: hidden;
+}
+
+.cbioportal-frontend
+    .table
+    > thead
+    > tr
+    > th.multilineHeader:hover
+    .headerFilterIcon,
+.cbioportal-frontend
+    .table
+    > thead
+    > tr
+    > th.multilineHeader
+    .headerFilterIcon.active,
+.cbioportal-frontend
+    .table
+    > thead
+    > tr
+    > th.multilineHeader
+    .headerFilterIcon.open {
+    visibility: visible;
+}
+
 .topPagination {
     .textBetweenButtons {
         opacity: 1 !important;

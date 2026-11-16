@@ -154,7 +154,11 @@ export interface IServerConfig {
     user_display_name: string;
     sessionServiceEnabled: boolean;
     session_url_length_threshold: string;
-    mskWholeSlideViewerToken: string;
+    /**
+     * Base URL of the WSI tile server (absolute, or a path on the portal's
+     * origin such as /wsi). Empty or unset hides the slide viewer.
+     */
+    wsi_tile_server_url: string | null;
     query_product_limit: number;
     clinical_attribute_product_limit: number;
     dat_method: string;
@@ -171,6 +175,7 @@ export interface IServerConfig {
     enable_treatment_groups: boolean;
     referenceGenomeVersion: string;
     skin_home_page_show_unauthorized_studies: boolean;
+    study_availability_enabled: boolean;
     skin_home_page_show_reference_genome: string;
     skin_home_page_unauthorized_studies_global_message: string;
     skin_mutation_table_namespace_column_show_by_default: boolean;

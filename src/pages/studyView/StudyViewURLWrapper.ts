@@ -84,7 +84,7 @@ export default class StudyViewURLWrapper extends URLWrapper<
         );
     }
 
-    public setResourceUrl(resourceUrl: string) {
-        this.updateURL({ resourceUrl });
+    public setResourceUrl(resourceUrl: string, replace = false) {
+        this.updateURL({ resourceUrl }, undefined, false, replace);
     }
 }

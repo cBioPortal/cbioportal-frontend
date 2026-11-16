@@ -31,6 +31,12 @@ const PatientViewPage = SuspenseWrapper(
     // @ts-ignore
     React.lazy(() => import('./pages/patientView/PatientViewPage'))
 );
+const WsiPatientViewRoute = SuspenseWrapper(
+    React.lazy(() => {
+        // @ts-ignore
+        return import('./pages/wsi/WsiPatientViewRoute');
+    })
+);
 const ResultsViewPage = SuspenseWrapper(
     // @ts-ignore
     React.lazy(() => import('./pages/resultsView/ResultsViewPage'))
@@ -111,10 +117,12 @@ import {
 import {
     StudyViewPageTabKeyEnum,
     StudyViewResourceTabPrefix,
+    StudyViewResourceTableTabPrefix,
 } from 'pages/studyView/StudyViewPageTabs';
 import {
     PatientViewPageTabs,
     PatientViewResourceTabPrefix,
+    PatientViewResourceTableTabPrefix,
 } from 'pages/patientView/PatientViewPageTabs';
 import { GroupComparisonTab } from 'pages/groupComparison/GroupComparisonTabs';
 import { CLIN_ATTR_DATA_TYPE } from 'shared/components/plots/PlotsTabUtils';
@@ -264,13 +272,21 @@ function customTabParamValidator(location: Location) {
     const patientViewResourceTabRegex = new RegExp(
         `patient\/${PatientViewResourceTabPrefix}.+`
     );
+    const patientViewResourceTableTabRegex = new RegExp(
+        `patient\/${PatientViewResourceTableTabPrefix}.+`
+    );
     const studyViewResourceTabRegex = new RegExp(
         `study\/${StudyViewResourceTabPrefix}.+`
+    );
+    const studyViewResourceTableTabRegex = new RegExp(
+        `study\/${StudyViewResourceTableTabPrefix}.+`
     );
     const customTabRegex = /.+\/customTab\d/;
     return (
         patientViewResourceTabRegex.test(location.pathname) ||
+        patientViewResourceTableTabRegex.test(location.pathname) ||
         studyViewResourceTabRegex.test(location.pathname) ||
+        studyViewResourceTableTabRegex.test(location.pathname) ||
         customTabRegex.test(location.pathname)
     );
 }
@@ -461,6 +477,10 @@ export const makeRoutes = () => {
                         tabParamValidator(ResultsViewTab),
                         ResultsViewQueryParamsAdjuster
                     )}
+                />
+                <Route
+                    path="/wsi/patient/:patientId"
+                    component={WsiPatientViewRoute}
                 />
                 <Route
                     path={'/' + PagePath.Patient + '/:tab?'}

@@ -108,7 +108,7 @@ export const ClonalElementTooltip: React.FunctionComponent<{
     );
 };
 
-const ClonalCircle: React.FunctionComponent<{
+export const ClonalCircle: React.FunctionComponent<{
     clonalValue: string;
 }> = props => {
     return (

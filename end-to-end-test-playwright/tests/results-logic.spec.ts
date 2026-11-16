@@ -81,13 +81,15 @@ test.describe('single study mutation mapper', () => {
         await queryBtn.click();
 
         await page.locator('a.tabAnchor_mutations').click();
-        await page.locator('[data-test=mutation-rate-summary]').click();
+        const summary = page.locator('[data-test="mutation-rate-summary"]');
+        await summary.click();
 
-        const text = await page
-            .locator('[data-test="mutation-rate-summary"]')
-            .textContent();
-        expect(text).toContain('8.2%');
-        expect(text).toContain('3.5%');
+        // The rates are computed over the "Samples with mutation and CNA
+        // data" case set, which the query form picks once the study's
+        // sample lists have loaded.
+        await expect(page).toHaveURL(/case_set_id=ov_tcga_pub_cna_seq/);
+        await expect(summary).toContainText('8.2%');
+        await expect(summary).toContainText('3.5%');
         await page.close();
     });
 

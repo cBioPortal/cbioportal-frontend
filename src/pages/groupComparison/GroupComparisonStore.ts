@@ -462,11 +462,17 @@ export default class GroupComparisonStore extends ComparisonStore {
         },
     });
 
+    @computed get genesByHugoGeneSymbol(): Map<string, Gene> {
+        return new Map(
+            (this.genes.result || []).map(g => [g.hugoGeneSymbol, g])
+        );
+    }
+
     readonly genesWithMutations = remoteData<Gene[]>({
         await: () => [this.genesSortedByMutationFrequency, this.genes],
         invoke: async () => {
             return this.genesSortedByMutationFrequency.result!.map(
-                gene => this.genes.result!.find(g => gene === g.hugoGeneSymbol)!
+                gene => this.genesByHugoGeneSymbol.get(gene)!
             );
         },
     });

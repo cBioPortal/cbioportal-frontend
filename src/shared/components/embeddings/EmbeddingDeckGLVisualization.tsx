@@ -222,6 +222,8 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 onToggleCategoryVisibility={
                     this.props.onToggleCategoryVisibility
                 }
+                selectedCategories={this.props.selectedCategories}
+                onToggleCategorySelected={this.props.onToggleCategorySelected}
                 onToggleAllCategories={this.props.onToggleAllCategories}
                 hiddenQcCategories={this.props.hiddenQcCategories}
                 onToggleQcCategoryVisibility={

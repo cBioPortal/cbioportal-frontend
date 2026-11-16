@@ -1,4 +1,11 @@
 import _ from 'lodash';
+import {
+    CaseIdAlias,
+    CaseIdAliases,
+    getCaseIdAliasAttributeIds,
+    isUsableAliasValue,
+} from './addChartButton/customCaseSelection/CustomCaseSelectionUtils';
+import { isWsiResourceId } from 'shared/lib/ResourcePolicy';
 import { getClient } from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
 import {
@@ -140,7 +147,7 @@ import {
     getChartSettingsMap,
     getClinicalDataCountWithColorByClinicalDataCount,
     getCNAByAlteration,
-    getCNASamplesCount,
+    getProfiledSamplesCount,
     getDataIntervalFilterValues,
     getDefaultPriorityByUniqueKey,
     getFilteredAndCompressedDataIntervalFilters,
@@ -169,7 +176,6 @@ import {
     getPriorityByClinicalAttribute,
     getRequestedAwaitPromisesForClinicalData,
     getSamplesByExcludingFiltersOnChart,
-    getStructuralVariantSamplesCount,
     getUniqueKey,
     getUniqueKeyFromGeneFilterMolecularProfileIds,
     getUniqueKeyFromMolecularProfileIds,
@@ -317,10 +323,7 @@ import {
     CNA_AMP_VALUE,
     CNA_HOMDEL_VALUE,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
-import {
-    fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
-    fetchGenericAssayMetaGroupedByMolecularProfileIdSuffix,
-} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { fetchGenericAssayMetaByEntityIds } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import {
     buildDriverAnnotationSettings,
     DriverAnnotationSettings,
@@ -407,7 +410,9 @@ export type StudyViewPageTabKey =
     | StudyViewPageTabKeyEnum.CLINICAL_DATA
     | StudyViewPageTabKeyEnum.SUMMARY
     | StudyViewPageTabKeyEnum.HEATMAPS
-    | StudyViewPageTabKeyEnum.CN_SEGMENTS;
+    | StudyViewPageTabKeyEnum.CN_SEGMENTS
+    | StudyViewPageTabKeyEnum.FILES_AND_LINKS
+    | StudyViewPageTabKeyEnum.PLOTS;
 
 export enum StudyViewPageTabDescriptions {
     SUMMARY = 'Summary',
@@ -578,9 +583,9 @@ enum CustomDataTypeEnum {
 }
 
 export enum SampleListCategoryType {
-    'w_mut' = 'w_mut',
-    'w_cna' = 'w_cna',
-    'w_mut_cna' = 'w_mut_cna',
+    w_mut = 'w_mut',
+    w_cna = 'w_cna',
+    w_mut_cna = 'w_mut_cna',
 }
 
 export const SampleListCategoryTypeToFullId = {
@@ -697,8 +702,6 @@ export class StudyViewPageStore
             clinicalAttributes: this.clinicalAttributes,
             customAttributes: this.customAttributes,
             genesets: this.genesets,
-            genericAssayEntitiesGroupByMolecularProfileId: this
-                .genericAssayEntitiesGroupedByProfileId,
             get selectedGenericAssayEntitiesGroupByMolecularProfileId() {
                 return self.selectedGenericAssayEntitiesGroupByMolecularProfileId;
             },
@@ -3180,6 +3183,16 @@ export class StudyViewPageStore
         ChartUniqueKey,
         ChartMeta
     >({}, { deep: false });
+    @observable.ref private _genericAssayEntityMetaByStableId = observable.map<
+        string,
+        GenericAssayMeta
+    >({}, { deep: false });
+    // in-flight and finished meta requests by stable id, so each id is
+    // requested once and concurrent callers wait for the same request
+    private readonly _genericAssayEntityMetaRequests = new Map<
+        string,
+        Promise<void>
+    >();
     private _XvsYViolinChartMap = observable.map<
         ChartUniqueKey,
         XvsYViolinChart
@@ -3958,7 +3971,9 @@ export class StudyViewPageStore
 
     private getGenericAssayFrequencyTableProfileMap(
         chart: GenericAssayChart
-    ): { [studyId: string]: MolecularProfile } {
+    ): {
+        [studyId: string]: MolecularProfile;
+    } {
         return _.chain(this.genericAssayProfiles.result)
             .filter(
                 profile =>
@@ -4448,6 +4463,16 @@ export class StudyViewPageStore
         return (
             this._genericAssayChartMap.get(uniqueKey)?.chartKind ===
             'PROFILE_FREQUENCY_TABLE'
+        );
+    }
+
+    public isGenericAssayEntityChartOfProfileType(
+        uniqueKey: string,
+        profileType: string
+    ): boolean {
+        const chart = this._genericAssayChartMap.get(uniqueKey);
+        return (
+            chart?.profileType === profileType && chart.chartKind === 'ENTITY'
         );
     }
 
@@ -5292,11 +5317,8 @@ export class StudyViewPageStore
             }
         }
 
-        const entityMetaByStableId = _.keyBy(
-            this.genericAssayEntitiesGroupedByProfileIdSuffix.result?.[
-                profileType
-            ] || [],
-            meta => meta.stableId
+        const entityMetaByStableId = this.loadedGenericAssayEntityMeta(
+            stableId
         );
 
         return getGenericAssayChartDisplayName(
@@ -5331,11 +5353,8 @@ export class StudyViewPageStore
         const { stableId, value } = splitGenericAssayFrequencyTableRowUniqueKey(
             rowKey
         );
-        const entityMetaByProfileIdSuffix =
-            this.genericAssayEntitiesGroupedByProfileIdSuffix.result || {};
-        const entityMetaByStableId = _.keyBy(
-            entityMetaByProfileIdSuffix[chart.profileType] || [],
-            meta => meta.stableId
+        const entityMetaByStableId = this.loadedGenericAssayEntityMeta(
+            stableId
         );
         const entityLabel = getGenericAssayEntityLabel(
             stableId,
@@ -6069,10 +6088,7 @@ export class StudyViewPageStore
             this.genericAssayFrequencyTablePromises[
                 chartMeta.uniqueKey
             ] = remoteData<GenericAssayFrequencyTableRow[]>({
-                await: () => [
-                    this.selectedSamples,
-                    this.genericAssayEntitiesGroupedByProfileIdSuffix,
-                ],
+                await: () => [this.selectedSamples],
                 invoke: async () => {
                     const chartInfo = this._genericAssayChartMap.get(
                         chartMeta.uniqueKey
@@ -6084,18 +6100,6 @@ export class StudyViewPageStore
                         return [];
                     }
 
-                    const entityMetaByProfileIdSuffix =
-                        this.genericAssayEntitiesGroupedByProfileIdSuffix
-                            .result || {};
-                    const entityMetaByStableId = _.keyBy(
-                        entityMetaByProfileIdSuffix[chartInfo.profileType] ||
-                            [],
-                        meta => meta.stableId
-                    );
-                    if (_.isEmpty(entityMetaByStableId)) {
-                        return [];
-                    }
-
                     const result = await this.internalClient.fetchGenericAssayDataCountsUsingPOST(
                         {
                             genericAssayDataCountFilter: {
@@ -6104,6 +6108,20 @@ export class StudyViewPageStore
                             } as GenericAssayDataCountFilter,
                         }
                     );
+                    const stableIds = _.uniq(result.map(item => item.stableId));
+                    await this.ensureGenericAssayEntityMetaByStableIds(
+                        stableIds
+                    );
+                    const entityMetaByStableId = _.fromPairs(
+                        stableIds
+                            .map(stableId => [
+                                stableId,
+                                this._genericAssayEntityMetaByStableId.get(
+                                    stableId
+                                ),
+                            ])
+                            .filter(([, meta]) => meta !== undefined)
+                    ) as { [stableId: string]: GenericAssayMeta };
 
                     const totalCount = chartInfo.patientLevel
                         ? this.selectedPatients.length
@@ -6847,12 +6865,18 @@ export class StudyViewPageStore
 
     readonly resourceDefinitions = remoteData({
         await: () => [this.queriedPhysicalStudies],
+        // Pathology slides are one resource row per slide, and have their own
+        // views; they are left out of Files & Links and the resource tabs.
         invoke: () => {
-            return this.internalClient.fetchResourceDefinitionsUsingPOST({
-                studyIds: this.queriedPhysicalStudies.result.map(
-                    study => study.studyId
-                ),
-            });
+            return this.internalClient
+                .fetchResourceDefinitionsUsingPOST({
+                    studyIds: this.queriedPhysicalStudies.result.map(
+                        study => study.studyId
+                    ),
+                })
+                .then(defs =>
+                    defs.filter(def => !isWsiResourceId(def.resourceId))
+                );
         },
         onResult: defs => {
             if (defs) {
@@ -6860,78 +6884,6 @@ export class StudyViewPageStore
                     if (def.openByDefault)
                         this.setResourceTabOpen(def.resourceId, true);
             }
-        },
-    });
-
-    readonly studyResourceData = remoteData<ResourceData[]>({
-        await: () => [this.resourceDefinitions],
-        invoke: () => {
-            const ret: ResourceData[] = [];
-            const studyResourceDefinitions = this.resourceDefinitions.result!.filter(
-                d => d.resourceType === 'STUDY'
-            );
-            const promises = [];
-            for (const resource of studyResourceDefinitions) {
-                promises.push(
-                    this.internalClient
-                        .getAllStudyResourceDataInStudyUsingGET({
-                            studyId: resource.studyId,
-                            resourceId: resource.resourceId,
-                            projection: 'DETAILED',
-                        })
-                        .then(data => ret.push(...data))
-                );
-            }
-            return Promise.all(promises).then(() => ret);
-        },
-    });
-
-    readonly sampleResourceData = remoteData<{
-        [sampleId: string]: ResourceData[];
-    }>({
-        await: () => [this.resourceDefinitions, this.samples],
-        invoke: () => {
-            const sampleResourceDefinitions = this.resourceDefinitions.result!.filter(
-                d => d.resourceType === 'SAMPLE'
-            );
-            if (!sampleResourceDefinitions.length) {
-                return Promise.resolve({});
-            }
-
-            const res = _(this.samples.result!)
-                .map(sample =>
-                    sampleResourceDefinitions.map(resource =>
-                        this.internalClient.getAllResourceDataOfSampleInStudyUsingGET(
-                            {
-                                sampleId: sample.sampleId,
-                                studyId: sample.studyId,
-                                resourceId: resource.resourceId,
-                                projection: 'DETAILED',
-                            }
-                        )
-                    )
-                )
-                .flatten()
-                .value();
-
-            return Promise.all(res).then(resData =>
-                _(resData)
-                    .flatMap()
-                    .groupBy('sampleId')
-                    .mapValues(data => data)
-                    .value()
-            );
-        },
-    });
-
-    readonly resourceIdToResourceData = remoteData<{
-        [resourceId: string]: ResourceData[];
-    }>({
-        await: () => [this.studyResourceData],
-        invoke: () => {
-            return Promise.resolve(
-                _.groupBy(this.studyResourceData.result!, d => d.resourceId)
-            );
         },
     });
 
@@ -7151,28 +7103,6 @@ export class StudyViewPageStore
         default: [],
     });
 
-    readonly genericAssayEntitiesGroupedByProfileId = remoteData<{
-        [profileId: string]: GenericAssayMeta[];
-    }>({
-        await: () => [this.genericAssayProfiles],
-        invoke: async () => {
-            return await fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId(
-                this.genericAssayProfiles.result
-            );
-        },
-    });
-
-    readonly genericAssayEntitiesGroupedByProfileIdSuffix = remoteData<{
-        [profileIdSuffix: string]: GenericAssayMeta[];
-    }>({
-        await: () => [this.genericAssayProfiles],
-        invoke: async () => {
-            return await fetchGenericAssayMetaGroupedByMolecularProfileIdSuffix(
-                this.genericAssayProfiles.result
-            );
-        },
-    });
-
     readonly genericAssayProfiles = remoteData({
         await: () => [this.molecularProfiles],
         invoke: () => {
@@ -7240,6 +7170,55 @@ export class StudyViewPageStore
         },
         default: {},
     });
+
+    // meta of the entity if loaded, keyed by stable id; starts loading it
+    // otherwise
+    private loadedGenericAssayEntityMeta(stableId: string) {
+        void this.ensureGenericAssayEntityMetaByStableIds([stableId]);
+        const entityMeta = this._genericAssayEntityMetaByStableId.get(stableId);
+        return entityMeta ? { [stableId]: entityMeta } : {};
+    }
+
+    private async ensureGenericAssayEntityMetaByStableIds(stableIds: string[]) {
+        const uniqueStableIds = _.uniq(stableIds);
+        const missingStableIds = uniqueStableIds.filter(
+            stableId =>
+                !this._genericAssayEntityMetaByStableId.has(stableId) &&
+                !this._genericAssayEntityMetaRequests.has(stableId)
+        );
+        if (missingStableIds.length > 0) {
+            const request = fetchGenericAssayMetaByEntityIds(
+                missingStableIds
+            ).then(
+                entities =>
+                    runInAction(() =>
+                        entities.forEach(entity =>
+                            this._genericAssayEntityMetaByStableId.set(
+                                entity.stableId,
+                                entity
+                            )
+                        )
+                    ),
+                () =>
+                    // allow a retry after a failed request
+                    missingStableIds.forEach(stableId =>
+                        this._genericAssayEntityMetaRequests.delete(stableId)
+                    )
+            );
+            missingStableIds.forEach(stableId =>
+                this._genericAssayEntityMetaRequests.set(stableId, request)
+            );
+        }
+        await Promise.all(
+            _.uniq(
+                _.compact(
+                    uniqueStableIds.map(stableId =>
+                        this._genericAssayEntityMetaRequests.get(stableId)
+                    )
+                )
+            )
+        );
+    }
 
     @computed({ keepAlive: true })
     get oncokbCancerGeneFilterEnabled(): boolean {
@@ -8359,11 +8338,9 @@ export class StudyViewPageStore
         onError: () => {
             // fail silently when an error occurs
         },
-        onResult: () => {
+        onResult: settings => {
             const groupColorFromSession =
-                this.userSettings.isComplete && this.userSettings.result
-                    ? this.userSettings.result.groupColors
-                    : {};
+                (settings && settings.groupColors) || {};
             _.forIn(
                 groupColorFromSession,
                 (value, key) => (this.userGroupColors[key] = value)
@@ -8871,8 +8848,7 @@ export class StudyViewPageStore
                 this.appStore.featureFlagStore.has(
                     FeatureFlagEnum.GENE_SPECIFIC_VIOLIN_PLOT
                 ) ||
-                (this.studyIds.length === 1 &&
-                    this.studyIds[0] === 'msk_target_test')
+                (this.studyIds.length === 1 && this.studyIds[0] === 'msktarget')
             ) {
                 const isSingleStudy =
                     (this.queriedPhysicalStudyIds.result?.length ?? 0) === 1;
@@ -9707,6 +9683,70 @@ export class StudyViewPageStore
         },
         onError: () => {},
         default: [],
+    });
+
+    /**
+     * Alternative case identifiers (e.g. SAMPLE_DISPLAY_NAME, OTHER_PATIENT_ID)
+     * that Custom Selection accepts in place of internal sample / patient IDs.
+     * Only attributes present in the queried studies are fetched.
+     */
+    readonly caseIdAliases = remoteData<CaseIdAliases>({
+        await: () => [this.clinicalAttributes, this.samples],
+        invoke: async () => {
+            const fetchAliases = async (
+                clinicalDataType: ClinicalDataTypeEnum
+            ): Promise<CaseIdAlias[]> => {
+                const isPatient =
+                    clinicalDataType === ClinicalDataTypeEnum.PATIENT;
+                const attributes = this.clinicalAttributes.result!.filter(
+                    attr =>
+                        attr.patientAttribute === isPatient &&
+                        getCaseIdAliasAttributeIds(clinicalDataType).includes(
+                            attr.clinicalAttributeId
+                        )
+                );
+                if (attributes.length === 0) {
+                    return [];
+                }
+                const identifiers = _.uniqBy(
+                    this.samples.result!.map(s => ({
+                        studyId: s.studyId,
+                        entityId: isPatient ? s.patientId : s.sampleId,
+                    })),
+                    id => `${id.studyId}:${id.entityId}`
+                );
+                const data = await getClient().fetchClinicalDataUsingPOST({
+                    clinicalDataType,
+                    clinicalDataMultiStudyFilter: {
+                        attributeIds: attributes.map(
+                            a => a.clinicalAttributeId
+                        ),
+                        identifiers,
+                    },
+                });
+                return data
+                    .filter(d => isUsableAliasValue(d.value))
+                    .map(d => ({
+                        studyId: d.studyId,
+                        caseId: isPatient ? d.patientId : d.sampleId,
+                        alias: d.value.trim(),
+                        attributeId: d.clinicalAttributeId,
+                    }));
+            };
+            const [sample, patient] = await Promise.all([
+                fetchAliases(ClinicalDataTypeEnum.SAMPLE),
+                fetchAliases(ClinicalDataTypeEnum.PATIENT),
+            ]);
+            return {
+                [ClinicalDataTypeEnum.SAMPLE]: sample,
+                [ClinicalDataTypeEnum.PATIENT]: patient,
+            };
+        },
+        onError: () => {},
+        default: {
+            [ClinicalDataTypeEnum.SAMPLE]: [],
+            [ClinicalDataTypeEnum.PATIENT]: [],
+        },
     });
 
     public readonly sampleSet = remoteData({
@@ -11544,6 +11584,16 @@ export class StudyViewPageStore
                     );
                 }
 
+                // Add counts for gene-specific violin charts
+                this._geneSpecificViolinChartMap.forEach(
+                    (violinChart, uniqueChartKey) => {
+                        ret[uniqueChartKey] =
+                            molecularProfileSamplesSet[
+                                violinChart.profileType
+                            ] || 0;
+                    }
+                );
+
                 // Add counts generic assay data charts
                 if (this._genericAssayChartMap.size > 0) {
                     _.reduce(
@@ -11981,13 +12031,15 @@ export class StudyViewPageStore
                 }
                 case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
                 case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE: {
-                    count = getStructuralVariantSamplesCount(
+                    count = getProfiledSamplesCount(
+                        this.structuralVariantProfiles.result,
                         this.molecularProfileSampleCountSet.result
                     );
                     break;
                 }
                 case ChartTypeEnum.CNA_GENES_TABLE: {
-                    count = getCNASamplesCount(
+                    count = getProfiledSamplesCount(
+                        this.cnaProfiles.result,
                         this.molecularProfileSampleCountSet.result
                     );
                     break;

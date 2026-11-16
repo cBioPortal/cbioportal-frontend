@@ -289,6 +289,7 @@ function addFirstOrderClass() {
 }
 
 export {
+    clean,
     cleanAndDerive,
     getSpanElements,
     getSpanElementsFromCleanData,

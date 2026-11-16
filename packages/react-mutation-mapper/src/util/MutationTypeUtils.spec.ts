@@ -11,6 +11,8 @@ import {
 import {
     MUT_COLOR_MISSENSE,
     MUT_COLOR_TRUNC,
+    MUT_COLOR_PROMOTER,
+    MUT_COLOR_PROMOTER_PASSENGER,
 } from 'cbioportal-frontend-commons';
 
 describe('MutationTypeUtils', () => {
@@ -133,6 +135,28 @@ describe('MutationTypeUtils', () => {
                 ),
                 MUT_COLOR_MISSENSE,
                 'return color should be set to MUT_COLOR_MISSENSE due to driver'
+            );
+        });
+
+        it('gets promoter color for promoter mutations', () => {
+            const promoterMutations: Partial<any>[] = [
+                { mutationType: "5'Flank", proteinChange: 'Promoter' },
+                { mutationType: "5'Flank", proteinChange: 'Promoter' },
+            ];
+
+            assert.equal(
+                getColorForProteinImpactType(promoterMutations),
+                MUT_COLOR_PROMOTER
+            );
+            assert.equal(
+                getColorForProteinImpactType(
+                    promoterMutations,
+                    undefined,
+                    undefined,
+                    () => false
+                ),
+                MUT_COLOR_PROMOTER_PASSENGER,
+                'non-driver promoter mutations should get the passenger color'
             );
         });
     });

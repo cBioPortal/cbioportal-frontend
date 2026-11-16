@@ -3,8 +3,11 @@ import _ from 'lodash';
 import {
     DEFAULT_GROUP_NAME_WITH_USER_INPUT,
     DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT,
+    CaseIdAlias,
     CodeEnum,
+    getAliasMap,
     getData,
+    parseContent,
     getLine,
     getLines,
     InputLine,
@@ -373,6 +376,196 @@ describe('CustomCaseSelectionUtils', () => {
             assert.equal(
                 noGroupNameResult.warning[0].code,
                 CodeEnum.POTENTIAL_OVERLAP
+            );
+        });
+    });
+
+    describe('case ID aliases', () => {
+        const makeSample = (
+            studyId: string,
+            sampleId: string,
+            patientId: string
+        ) =>
+            (({
+                studyId,
+                sampleId,
+                patientId,
+                uniquePatientKey: `${studyId}_${patientId}`,
+                uniqueSampleKey: `${studyId}_${sampleId}`,
+            } as unknown) as Sample);
+
+        const samples = [
+            makeSample('s1', 'P-1-T01', 'P-1'),
+            makeSample('s1', 'P-2-T01', 'P-2'),
+            makeSample('s1', 'P-2-T02', 'P-2'),
+            makeSample('s1', 'P-3-T01', 'P-3'),
+            makeSample('s2', 'P-9-T01', 'P-9'),
+        ];
+
+        const sampleAlias = (
+            studyId: string,
+            caseId: string,
+            alias: string,
+            attributeId = 'SAMPLE_DISPLAY_NAME'
+        ): CaseIdAlias => ({
+            studyId,
+            caseId,
+            alias,
+            attributeId,
+        });
+
+        const sampleAliases = [
+            sampleAlias('s1', 'P-1-T01', 'Tumor_A'),
+            sampleAlias('s1', 'P-2-T01', 'Tumor_B'),
+            sampleAlias('s1', 'P-2-T02', 'Tumor_B'),
+            // display name equal to a different sample's internal ID
+            sampleAlias('s1', 'P-3-T01', 'P-1-T01'),
+            sampleAlias('s1', 'P-3-T01', 'NA'),
+            sampleAlias('s1', 'P-3-T01', 'uuid-3', 'OTHER_SAMPLE_ID'),
+            sampleAlias('s1', 'P-1-T01', 'Tumor_C', 'OTHER_SAMPLE_ID'),
+            sampleAlias('s1', 'P-3-T01', 'Tumor_C'),
+            sampleAlias('s2', 'P-9-T01', 'Tumor_A'),
+        ];
+
+        const parseSamples = (
+            content: string,
+            studies: string[] = ['s1'],
+            aliases = sampleAliases
+        ) =>
+            parseContent(
+                content,
+                true,
+                studies,
+                ClinicalDataTypeEnum.SAMPLE,
+                samples,
+                studies.length === 1,
+                aliases
+            );
+
+        const sampleIds = (data: { studyId: string; sampleId: string }[]) =>
+            _.sortBy(data.map(d => `${d.studyId}:${d.sampleId}`));
+
+        it('ignores empty / NA alias values', () => {
+            const map = getAliasMap(sampleAliases, ClinicalDataTypeEnum.SAMPLE);
+            assert.isUndefined(map['s1:NA']);
+        });
+
+        it('matches samples by display name', () => {
+            const result = parseSamples('Tumor_A');
+            assert.deepEqual(sampleIds(result.data), ['s1:P-1-T01']);
+            assert.equal(result.validationResult.warning.length, 0);
+        });
+
+        it('matches samples by other sample ID', () => {
+            const result = parseSamples('uuid-3');
+            assert.deepEqual(sampleIds(result.data), ['s1:P-3-T01']);
+        });
+
+        it('mixes internal IDs and display names', () => {
+            const result = parseSamples('P-3-T01\nTumor_A');
+            assert.deepEqual(sampleIds(result.data), [
+                's1:P-1-T01',
+                's1:P-3-T01',
+            ]);
+        });
+
+        it('prefers an exact internal ID over a display name', () => {
+            const result = parseSamples('P-1-T01');
+            assert.deepEqual(sampleIds(result.data), ['s1:P-1-T01']);
+            assert.equal(result.validationResult.warning.length, 0);
+        });
+
+        it('prefers display name over other sample ID when values collide', () => {
+            const result = parseSamples('Tumor_C');
+            assert.deepEqual(sampleIds(result.data), ['s1:P-3-T01']);
+        });
+
+        it('selects all samples sharing a display name and warns', () => {
+            const result = parseSamples('Tumor_B');
+            assert.deepEqual(sampleIds(result.data), [
+                's1:P-2-T01',
+                's1:P-2-T02',
+            ]);
+            const ambiguous = result.validationResult.warning.find(
+                w => w.code === CodeEnum.AMBIGUOUS_ALIAS
+            );
+            assert.isDefined(ambiguous);
+            assert.include(
+                ambiguous!.message.message,
+                'Tumor_B (P-2-T01, P-2-T02)'
+            );
+        });
+
+        it('does not duplicate a sample given by both ID and display name', () => {
+            const result = parseSamples('P-1-T01\nTumor_A');
+            assert.deepEqual(sampleIds(result.data), ['s1:P-1-T01']);
+        });
+
+        it('still reports unknown names as invalid', () => {
+            const result = parseSamples('Tumor_A\nnot_a_sample');
+            assert.deepEqual(sampleIds(result.data), ['s1:P-1-T01']);
+            const invalid = result.validationResult.warning.find(
+                w => w.code === CodeEnum.INVALID_CASE_ID
+            );
+            assert.include(invalid!.message.message, 'not_a_sample');
+        });
+
+        it('resolves display names per study in multi-study mode', () => {
+            assert.deepEqual(
+                sampleIds(parseSamples('Tumor_A', ['s1', 's2']).data),
+                ['s1:P-1-T01', 's2:P-9-T01']
+            );
+            assert.deepEqual(
+                sampleIds(parseSamples('s2:Tumor_A', ['s1', 's2']).data),
+                ['s2:P-9-T01']
+            );
+        });
+
+        it('matches patients by patient display name', () => {
+            const result = parseContent(
+                'Patient_Two',
+                true,
+                ['s1'],
+                ClinicalDataTypeEnum.PATIENT,
+                samples,
+                true,
+                [
+                    {
+                        studyId: 's1',
+                        caseId: 'P-2',
+                        alias: 'Patient_Two',
+                        attributeId: 'PATIENT_DISPLAY_NAME',
+                    },
+                ]
+            );
+            assert.deepEqual(sampleIds(result.data), [
+                's1:P-2-T01',
+                's1:P-2-T02',
+            ]);
+            assert.isTrue(result.data.every(d => d.patientId === 'P-2'));
+        });
+
+        it('handles aliases that are names of Object.prototype properties', () => {
+            const result = parseSamples(
+                'constructor\ntoString',
+                ['s1'],
+                [
+                    sampleAlias('s1', 'P-1-T01', 'constructor'),
+                    sampleAlias('s1', 'P-3-T01', 'toString'),
+                ]
+            );
+            assert.deepEqual(sampleIds(result.data), [
+                's1:P-1-T01',
+                's1:P-3-T01',
+            ]);
+        });
+
+        it('behaves as before when no aliases are given', () => {
+            const result = parseSamples('Tumor_A', ['s1'], []);
+            assert.equal(result.data.length, 0);
+            assert.equal(
+                result.validationResult.warning[0].code,
+                CodeEnum.INVALID_CASE_ID
             );
         });
     });
