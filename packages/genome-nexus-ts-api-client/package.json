@@ -1,7 +1,7 @@
 {
   "name": "genome-nexus-ts-api-client",
   "description": "Genome Nexus API Client for TypeScript",
-  "version": "1.1.40",
+  "version": "1.1.41",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -14,7 +14,7 @@
     "dist"
   ],
   "author": "cBioPortal",
-  "license": "AGPL-3.0-or-later",
+  "license": "Apache-2.0",
   "repository": "cBioPortal/cbioportal-frontend",
   "scripts": {
     "build": "cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=2048 pnpm run rollup",

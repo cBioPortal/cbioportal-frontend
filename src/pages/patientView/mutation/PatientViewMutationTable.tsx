@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { getDefaultMutantTotalCopyNumberColumnDefinition } from 'shared/components/mutationTable/column/mutantTotalCopyNumber/MutantTotalCopyNumberColumnFormatter';
 import { computed, makeObservable } from 'mobx';
 import {
     default as MutationTable,
@@ -10,6 +11,7 @@ import SampleManager from '../SampleManager';
 import { Mutation } from 'cbioportal-ts-api-client';
 import AlleleCountColumnFormatter from 'shared/components/mutationTable/column/AlleleCountColumnFormatter';
 import AlleleFreqColumnFormatter from './column/AlleleFreqColumnFormatter';
+import MutationStatusColumnFormatter from 'shared/components/mutationTable/column/MutationStatusColumnFormatter';
 import TumorColumnFormatter from './column/TumorColumnFormatter';
 import PanelColumnFormatter from 'shared/components/mutationTable/column/PanelColumnFormatter';
 import { isUncalled } from 'shared/lib/MutationUtils';
@@ -26,6 +28,7 @@ import _ from 'lodash';
 import { createMutationNamespaceColumns } from 'shared/components/mutationTable/MutationTableUtils';
 import { getServerConfig } from 'config/config';
 import { adjustVisibility } from 'shared/components/alterationsTableUtils';
+import ColumnLegend from 'shared/components/mutationTable/ColumnLegend';
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager: SampleManager | null;
@@ -42,7 +45,18 @@ export interface IPatientViewMutationTableProps extends IMutationTableProps {
 }
 
 export const defaultAlleleFrequencyHeaderTooltip = (
-    <span>Variant allele frequency in the tumor sample</span>
+    <ColumnLegend
+        description={
+            <span>
+                Variant allele frequency in the tumor sample (variant reads /
+                total reads)
+            </span>
+        }
+    />
+);
+
+export const defaultNormalAlleleFrequencyHeaderTooltip = (
+    <span>Variant allele frequency in the matched normal sample</span>
 );
 
 export default class PatientViewMutationTable extends MutationTable<
@@ -87,8 +101,10 @@ export default class PatientViewMutationTable extends MutationTable<
             MutationTableColumnType.CLONAL,
             MutationTableColumnType.CANCER_CELL_FRACTION,
             MutationTableColumnType.EXPECTED_ALT_COPIES,
+            MutationTableColumnType.MUTANT_TOTAL_COPY_NUM,
             MutationTableColumnType.FUNCTIONAL_IMPACT,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
+            MutationTableColumnType.NORMAL_ALLELE_FREQ,
             MutationTableColumnType.SAMPLES,
             MutationTableColumnType.EXON,
             MutationTableColumnType.HGVSC,
@@ -111,6 +127,13 @@ export default class PatientViewMutationTable extends MutationTable<
     protected generateColumns() {
         super.generateColumns();
 
+        const allMutations = this.props.dataStore
+            ? this.props.dataStore.allData
+            : this.props.data;
+        const hasClonalHematopoiesis = MutationStatusColumnFormatter.hasClonalHematopoiesis(
+            allMutations
+        );
+
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ] = {
             name: 'Allele Freq',
             headerRender: this.props.alleleFreqHeaderRender,
@@ -131,10 +154,40 @@ export default class PatientViewMutationTable extends MutationTable<
                 : defaultAlleleFrequencyHeaderTooltip,
             visible: AlleleFreqColumnFormatter.isVisible(
                 this.props.sampleManager,
-                this.props.dataStore
-                    ? this.props.dataStore.allData
-                    : this.props.data
+                allMutations
             ),
+        };
+
+        this._columns[MutationTableColumnType.NORMAL_ALLELE_FREQ] = {
+            name: 'Normal Allele Freq',
+            headerRender: (name: string) => (
+                <span style={{ display: 'inline-block', maxWidth: 55 }}>
+                    {name}
+                </span>
+            ),
+            render: (d: Mutation[]) =>
+                AlleleFreqColumnFormatter.renderFunction(
+                    d,
+                    this.props.sampleManager,
+                    'normal'
+                ),
+            sortBy: (d: Mutation[]) =>
+                AlleleFreqColumnFormatter.getSortValue(
+                    d,
+                    this.props.sampleManager,
+                    'normal'
+                ),
+            download: (d: Mutation[]) =>
+                AlleleFreqColumnFormatter.getFrequency(d, 'normal'),
+            tooltip: defaultNormalAlleleFrequencyHeaderTooltip,
+            // clonal hematopoiesis variants are called in the normal (blood) sample
+            visible: hasClonalHematopoiesis,
+            shouldExclude: () =>
+                !AlleleFreqColumnFormatter.isVisible(
+                    this.props.sampleManager,
+                    allMutations,
+                    'normal'
+                ),
         };
 
         this._columns[MutationTableColumnType.SAMPLES] = {
@@ -179,9 +232,7 @@ export default class PatientViewMutationTable extends MutationTable<
         // This can lead to cases where there are multiple icons/tooltips in a single cell
         // therefore patient view needs sampleManager to indicate which values match which samples
 
-        this._columns[
-            MutationTableColumnType.CANCER_CELL_FRACTION
-        ] = {
+        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION] = {
             ...getDefaultCancerCellFractionColumnDefinition(
                 this.getSamples(),
                 this.props.sampleManager
@@ -200,27 +251,44 @@ export default class PatientViewMutationTable extends MutationTable<
             this.props.sampleManager
         );
 
-        this._columns[
-            MutationTableColumnType.EXPECTED_ALT_COPIES
-        ] = {
+        this._columns[MutationTableColumnType.EXPECTED_ALT_COPIES] = {
             ...getDefaultExpectedAltCopiesColumnDefinition(
                 this.getSamples(),
                 this.props.sampleManager
             ),
-            // Show Expected Alt Copies column by default if data exists
-            visible:
-                this.props.existsSomeMutationWithAscnProperty?.[
-                    ASCNAttributes.EXPECTED_ALT_COPIES_STRING
-                ] ?? false,
         };
 
-        this._columns[
-            MutationTableColumnType.ASCN_COPY_NUM
-        ] = getDefaultASCNCopyNumberColumnDefinition(
-            this.getSamples(),
-            this.props.sampleIdToClinicalDataMap,
-            this.props.sampleManager
-        );
+        this._columns[MutationTableColumnType.ASCN_COPY_NUM] = {
+            ...getDefaultASCNCopyNumberColumnDefinition(
+                this.getSamples(),
+                this.props.sampleIdToClinicalDataMap,
+                this.props.sampleManager
+            ),
+        };
+
+        // mutant and total copies together, shown by default if data exists
+        this._columns[MutationTableColumnType.MUTANT_TOTAL_COPY_NUM] = {
+            ...getDefaultMutantTotalCopyNumberColumnDefinition(
+                this.getSamples(),
+                this.props.sampleIdToClinicalDataMap,
+                this.props.sampleManager
+            ),
+            visible: !!(
+                this.props.existsSomeMutationWithAscnProperty?.[
+                    ASCNAttributes.EXPECTED_ALT_COPIES_STRING
+                ] &&
+                this.props.existsSomeMutationWithAscnProperty?.[
+                    ASCNAttributes.TOTAL_COPY_NUMBER_STRING
+                ]
+            ),
+        };
+        // the ASCN copy numbers are more precise than the putative copy number
+        // call, so hide the latter by default when they are shown
+        if (
+            this._columns[MutationTableColumnType.MUTANT_TOTAL_COPY_NUM].visible
+        ) {
+            this._columns[MutationTableColumnType.COPY_NUM].visible = false;
+        }
 
         // customization for allele count columns
 
@@ -328,16 +396,27 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.HGVSG].order = 81;
         this._columns[MutationTableColumnType.HGVSC].order = 82;
         this._columns[MutationTableColumnType.MUTATION_STATUS].order = 90;
+        if (hasClonalHematopoiesis) {
+            this._columns[
+                MutationTableColumnType.MUTATION_STATUS
+            ].visible = true;
+        }
         this._columns[MutationTableColumnType.VALIDATION_STATUS].order = 100;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 110;
         this._columns[MutationTableColumnType.VARIANT_TYPE].order = 114;
         this._columns[MutationTableColumnType.ASCN_METHOD].order = 115;
         this._columns[MutationTableColumnType.CLONAL].order = 116;
         this._columns[MutationTableColumnType.CANCER_CELL_FRACTION].order = 117;
-        this._columns[MutationTableColumnType.EXPECTED_ALT_COPIES].order = 118;
+        this._columns[
+            MutationTableColumnType.MUTANT_TOTAL_COPY_NUM
+        ].order = 118;
+        this._columns[
+            MutationTableColumnType.EXPECTED_ALT_COPIES
+        ].order = 118.5;
         this._columns[MutationTableColumnType.ASCN_COPY_NUM].order = 119;
         this._columns[MutationTableColumnType.CENTER].order = 120;
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ].order = 130;
+        this._columns[MutationTableColumnType.NORMAL_ALLELE_FREQ].order = 135;
         this._columns[MutationTableColumnType.VAR_READS].order = 140;
         this._columns[MutationTableColumnType.REF_READS].order = 150;
         this._columns[MutationTableColumnType.VAR_READS_N].order = 170;
@@ -379,6 +458,19 @@ export default class PatientViewMutationTable extends MutationTable<
             return !this.props.existsSomeMutationWithAscnProperty[
                 ASCNAttributes.CCF_EXPECTED_COPIES_STRING
             ];
+        };
+
+        this._columns[
+            MutationTableColumnType.MUTANT_TOTAL_COPY_NUM
+        ].shouldExclude = () => {
+            return (
+                !this.props.existsSomeMutationWithAscnProperty[
+                    ASCNAttributes.EXPECTED_ALT_COPIES_STRING
+                ] ||
+                !this.props.existsSomeMutationWithAscnProperty[
+                    ASCNAttributes.TOTAL_COPY_NUMBER_STRING
+                ]
+            );
         };
 
         this._columns[

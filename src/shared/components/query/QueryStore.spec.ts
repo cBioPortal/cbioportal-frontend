@@ -9,6 +9,7 @@ import sessionServiceClient from 'shared/api//sessionServiceInstance';
 import client from '../../api/cbioportalClientInstance';
 import internalClient from '../../api/cbioportalInternalClientInstance';
 import _ from 'lodash';
+import { setServerConfig } from 'config/config';
 import {
     VirtualStudy,
     VirtualStudyData,
@@ -166,6 +167,62 @@ describe('QueryStore', () => {
             assert.isTrue(
                 fetchResourceDefinitionsStub.calledWith({
                     studyIds: ['study1'],
+                })
+            );
+        });
+
+        it('leaves out unavailable studies even when unauthorized studies are shown', async () => {
+            setServerConfig({
+                skin_home_page_show_unauthorized_studies: true,
+                study_availability_enabled: true,
+            });
+            try {
+                const store = new QueryStore();
+                (store as any).cancerStudies = {
+                    result: [
+                        {
+                            studyId: 'readable',
+                            status: 1,
+                            readPermission: true,
+                        },
+                        {
+                            studyId: 'unauthorized',
+                            status: 1,
+                            readPermission: false,
+                        },
+                        {
+                            studyId: 'unavailable',
+                            status: 0,
+                            readPermission: false,
+                        },
+                    ],
+                };
+                await (store.resourceDefinitions as any).invoke();
+                assert.isTrue(
+                    fetchResourceDefinitionsStub.calledWith({
+                        studyIds: ['readable', 'unauthorized'],
+                    })
+                );
+            } finally {
+                setServerConfig({
+                    skin_home_page_show_unauthorized_studies: false,
+                    study_availability_enabled: false,
+                });
+            }
+        });
+
+        it('requests every study when study availability is disabled', async () => {
+            const store = new QueryStore();
+            (store as any).cancerStudies = {
+                result: [
+                    { studyId: 'readable', status: 1, readPermission: true },
+                    { studyId: 'unavailable', status: 0, readPermission: true },
+                ],
+            };
+            await (store.resourceDefinitions as any).invoke();
+            assert.isTrue(
+                fetchResourceDefinitionsStub.calledWith({
+                    studyIds: ['readable', 'unavailable'],
                 })
             );
         });

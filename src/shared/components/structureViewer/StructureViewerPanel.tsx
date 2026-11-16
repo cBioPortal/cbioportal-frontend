@@ -90,6 +90,8 @@ import { getServerConfig } from 'config/config';
 
 export interface IStructureViewerPanelProps extends IProteinImpactTypeColors {
     pdbChainDataStore: ILazyMobXTableApplicationDataStore<IPdbChain>;
+    // Status of the (G2S) request that provides the PDB chains.
+    pdbAlignmentStatus?: 'pending' | 'complete' | 'error';
     pdbAlignmentIndex?: PdbAlignmentIndex;
     mutationDataStore?: MutationMapperDataStore;
     pdbHeaderCache?: PdbHeaderCache;
@@ -144,15 +146,14 @@ export default class StructureViewerPanel extends React.Component<
     @observable protected sideChain: SideChain = SideChain.SELECTED;
     @observable protected mutationColor: MutationColor =
         MutationColor.MUTATION_TYPE;
-    @observable protected selectedMutationLabel: IMutationLabelSpec | null =
-        null;
+    @observable
+    protected selectedMutationLabel: IMutationLabelSpec | null = null;
     // The full roster behind selectedMutationLabel: normally just the one
     // active label, but shift-clicking multiple lollipops/track items in the
     // 2D view can select several positions at once (see
     // handleExternalPositionSelection) — all of them stay listed here so the
     // detail popup can show more than the single most-recently-toggled one.
-    @observable.ref protected selectedMutationLabels: IMutationLabelSpec[] =
-        [];
+    @observable.ref protected selectedMutationLabels: IMutationLabelSpec[] = [];
     @observable protected pinnedResidue: IStructureResiduePin | null = null;
     @observable protected structureSource: StructureSource =
         StructureSource.PDB;
@@ -168,8 +169,10 @@ export default class StructureViewerPanel extends React.Component<
     @observable protected alphafoldAvailable: boolean = true;
     @observable protected plddtByResidue: { [position: number]: number } = {};
     @observable protected paeData: AlphaFoldPaeData | null = null;
-    @observable protected paeFocusCell: { row: number; col: number } | null =
-        null;
+    @observable protected paeFocusCell: {
+        row: number;
+        col: number;
+    } | null = null;
     @observable protected paeLoadStatus:
         | 'idle'
         | 'loading'
@@ -192,8 +195,9 @@ export default class StructureViewerPanel extends React.Component<
 
         makeObservable(this);
 
-        this.structureSource =
-            StructureViewerPanel.resolveInitialStructureSource(props);
+        this.structureSource = StructureViewerPanel.resolveInitialStructureSource(
+            props
+        );
 
         this.containerRefHandler = this.containerRefHandler.bind(this);
         this.toggleCollapse = this.toggleCollapse.bind(this);
@@ -216,8 +220,9 @@ export default class StructureViewerPanel extends React.Component<
         );
         this.setActiveMutationLabel = this.setActiveMutationLabel.bind(this);
         this.handleResidueClick = this.handleResidueClick.bind(this);
-        this.handleStructureBackgroundClick =
-            this.handleStructureBackgroundClick.bind(this);
+        this.handleStructureBackgroundClick = this.handleStructureBackgroundClick.bind(
+            this
+        );
         this.handleBoundMoleculeChange = this.handleBoundMoleculeChange.bind(
             this
         );
@@ -297,7 +302,9 @@ export default class StructureViewerPanel extends React.Component<
     ): StructureSource {
         // Prefer AlphaFold whenever it might be available; loadAlphaFoldPanelData
         // falls back to PDB once it confirms there's no prediction for this protein.
-        return props.uniprotId ? StructureSource.ALPHAFOLD : StructureSource.PDB;
+        return props.uniprotId
+            ? StructureSource.ALPHAFOLD
+            : StructureSource.PDB;
     }
 
     private static getViewportSize(): { width: number; height: number } {
@@ -540,8 +547,8 @@ export default class StructureViewerPanel extends React.Component<
                         {this.selectionTitle(
                             'Isoform',
                             <div style={{ maxWidth: 400 }}>
-                                AlphaFold model fragment (F1, F2, …) for
-                                long or multi-domain proteins.
+                                AlphaFold model fragment (F1, F2, …) for long or
+                                multi-domain proteins.
                             </div>
                         )}
                     </div>
@@ -551,7 +558,8 @@ export default class StructureViewerPanel extends React.Component<
                             componentClass="select"
                             value={`${this.alphafoldIsoform}`}
                             onChange={
-                                this.handleIsoformChange as React.FormEventHandler<
+                                this
+                                    .handleIsoformChange as React.FormEventHandler<
                                     any
                                 >
                             }
@@ -594,7 +602,9 @@ export default class StructureViewerPanel extends React.Component<
                             >
                                 {this.props.uniprotId &&
                                     this.alphafoldAvailable && (
-                                        <option value={StructureSource.ALPHAFOLD}>
+                                        <option
+                                            value={StructureSource.ALPHAFOLD}
+                                        >
                                             AlphaFold (predicted)
                                         </option>
                                     )}
@@ -866,11 +876,16 @@ export default class StructureViewerPanel extends React.Component<
                     <span>3D Structure</span>
                 </div>
                 <div className="col col-sm-2">
-                    <span className="pull-right" style={{ whiteSpace: 'nowrap' }}>
+                    <span
+                        className="pull-right"
+                        style={{ whiteSpace: 'nowrap' }}
+                    >
                         <i
                             className={classnames('fa', {
-                                'fa-down-left-and-up-right-to-center': this.isIncreasedSize,
-                                'fa-up-right-and-down-left-from-center': !this.isIncreasedSize,
+                                'fa-down-left-and-up-right-to-center': this
+                                    .isIncreasedSize,
+                                'fa-up-right-and-down-left-from-center': !this
+                                    .isIncreasedSize,
                             })}
                             onClick={this.toggleDoubleSize}
                             style={{ marginRight: 5, cursor: 'pointer' }}
@@ -1162,6 +1177,23 @@ export default class StructureViewerPanel extends React.Component<
         );
     }
 
+    // Set once the PDB chain request has settled without yielding a chain.
+    // Deliberately not @computed: it reads a React prop, which MobX doesn't track.
+    get pdbUnavailableMessage(): string | undefined {
+        if (
+            this.structureSource !== StructureSource.PDB ||
+            this.pdbChain ||
+            !this.props.pdbAlignmentStatus ||
+            this.props.pdbAlignmentStatus === 'pending'
+        ) {
+            return undefined;
+        }
+
+        return this.props.pdbAlignmentStatus === 'error'
+            ? 'PDB structures could not be loaded. The structure alignment service may be unavailable.'
+            : 'No PDB structures are available for this protein.';
+    }
+
     public structureViewerLoadingContent() {
         const expandedSizeStyle =
             this.isIncreasedSize &&
@@ -1176,8 +1208,8 @@ export default class StructureViewerPanel extends React.Component<
         return (
             <div
                 className={classnames(styles['structure-viewer-loading'], {
-                    [styles['structure-viewer-loading--expanded']]:
-                        this.isIncreasedSize,
+                    [styles['structure-viewer-loading--expanded']]: this
+                        .isIncreasedSize,
                 })}
                 style={expandedSizeStyle}
             >
@@ -1185,6 +1217,17 @@ export default class StructureViewerPanel extends React.Component<
                 !this.props.uniprotId ? (
                     <span className="text-danger">
                         No UniProt accession available for AlphaFold.
+                    </span>
+                ) : this.pdbUnavailableMessage ? (
+                    <span
+                        className={
+                            this.props.pdbAlignmentStatus === 'error'
+                                ? 'text-danger'
+                                : undefined
+                        }
+                        data-test="pdbUnavailableMessage"
+                    >
+                        {this.pdbUnavailableMessage}
                     </span>
                 ) : (
                     <ThreeBounce
@@ -1243,8 +1286,7 @@ export default class StructureViewerPanel extends React.Component<
             return null;
         }
 
-        const isAlphaFold =
-            this.structureSource === StructureSource.ALPHAFOLD;
+        const isAlphaFold = this.structureSource === StructureSource.ALPHAFOLD;
 
         if (this.structureLoadStatus === 'loading') {
             return (
@@ -1294,27 +1336,27 @@ export default class StructureViewerPanel extends React.Component<
                         className={classnames(styles['main-3d-panel'], {
                             [styles['increased-size-panel']]:
                                 this.isIncreasedSize && !this.isCollapsed,
-                            [styles['collapsed-header-panel']]: this.isCollapsed,
+                            [styles['collapsed-header-panel']]: this
+                                .isCollapsed,
                         })}
                         style={
                             this.isCollapsed
                                 ? {
-                                      width: StructureViewerPanel.COLLAPSED_PANEL_WIDTH,
+                                      width:
+                                          StructureViewerPanel.COLLAPSED_PANEL_WIDTH,
                                   }
                                 : this.isIncreasedSize
-                                  ? {
-                                        width: this.expandedPanelWidth,
-                                        maxWidth: this.expandedMaxPanelWidth,
-                                        maxHeight: this.expandedMaxPanelHeight,
-                                    }
-                                  : undefined
+                                ? {
+                                      width: this.expandedPanelWidth,
+                                      maxWidth: this.expandedMaxPanelWidth,
+                                      maxHeight: this.expandedMaxPanelHeight,
+                                  }
+                                : undefined
                         }
                     >
                         <div className="structure-viewer-header row">
                             {this.header()}
-                            <hr
-                                className={styles['panel-header-divider']}
-                            />
+                            <hr className={styles['panel-header-divider']} />
                         </div>
                         <div
                             className={classnames(styles['body'], {
@@ -1543,10 +1585,7 @@ export default class StructureViewerPanel extends React.Component<
         const chainKey = chain.toUpperCase();
         const pinnedKey = this.pinnedResidue?.chain.toUpperCase();
 
-        if (
-            this.pinnedResidue?.resi === resi &&
-            pinnedKey === chainKey
-        ) {
+        if (this.pinnedResidue?.resi === resi && pinnedKey === chainKey) {
             this.clearStructureInteractionSelection();
             return;
         }
@@ -1592,10 +1631,7 @@ export default class StructureViewerPanel extends React.Component<
 
     @action
     private handlePaeCellClick(row: number, col: number) {
-        if (
-            this.paeFocusCell?.row === row &&
-            this.paeFocusCell?.col === col
-        ) {
+        if (this.paeFocusCell?.row === row && this.paeFocusCell?.col === col) {
             this.paeFocusCell = null;
             return;
         }
@@ -1603,7 +1639,9 @@ export default class StructureViewerPanel extends React.Component<
         this.paeFocusCell = { row, col };
     }
 
-    private handleStructureSourceChange(evt: React.FormEvent<HTMLSelectElement>) {
+    private handleStructureSourceChange(
+        evt: React.FormEvent<HTMLSelectElement>
+    ) {
         this.structureSource = parseInt(
             (evt.target as HTMLSelectElement).value,
             10
@@ -1824,15 +1862,13 @@ export default class StructureViewerPanel extends React.Component<
 
     @computed get expandedIdealViewerWidth(): number {
         return Math.floor(
-            this.viewerCanvasWidth *
-                StructureViewerPanel.EXPANDED_WIDTH_SCALE
+            this.viewerCanvasWidth * StructureViewerPanel.EXPANDED_WIDTH_SCALE
         );
     }
 
     @computed get expandedIdealViewerHeight(): number {
         return Math.floor(
-            this.viewerCanvasHeight *
-                StructureViewerPanel.EXPANDED_HEIGHT_SCALE
+            this.viewerCanvasHeight * StructureViewerPanel.EXPANDED_HEIGHT_SCALE
         );
     }
 
@@ -1906,11 +1942,7 @@ export default class StructureViewerPanel extends React.Component<
             return !!this.props.uniprotId;
         }
 
-        return !!(
-            this.pdbId &&
-            this.chainId &&
-            this.residues !== undefined
-        );
+        return !!(this.pdbId && this.chainId && this.residues !== undefined);
     }
 
     @computed get maxMutationCountPerPosition(): number {
@@ -2383,8 +2415,9 @@ export default class StructureViewerPanel extends React.Component<
                         position
                     )
                 ) {
-                    const structurePosition =
-                        this.mapProteinToStructurePosition(position);
+                    const structurePosition = this.mapProteinToStructurePosition(
+                        position
+                    );
 
                     if (structurePosition != null) {
                         rows.add(structurePosition);

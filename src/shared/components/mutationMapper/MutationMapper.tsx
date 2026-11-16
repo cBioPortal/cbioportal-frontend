@@ -398,6 +398,7 @@ export default class MutationMapper<
                 }
                 pdbChainDataStore={this.props.store.pdbChainDataStore}
                 pdbAlignmentIndex={this.props.store.indexedAlignmentData}
+                pdbAlignmentStatus={this.props.store.alignmentData.status}
                 pdbHeaderCache={this.props.pdbHeaderCache}
                 residueMappingCache={this.props.store.residueMappingCache}
                 // store.uniprotId.result is a UniProt *entry name* (e.g.
@@ -509,13 +510,20 @@ export default class MutationMapper<
         ) : null;
     }
 
+    // PDB chains come from G2S; AlphaFold only needs the UniProt accession,
+    // so the 3D view stays usable when G2S is unavailable.
+    @computed get has3dStructureSource(): boolean {
+        return (
+            this.props.store.pdbChainDataStore.allData.length > 0 ||
+            !!this.props.store.canonicalTranscript.result?.uniprotId
+        );
+    }
+
     protected get view3dButton(): JSX.Element | null {
         return (
             <button
                 className="btn btn-default btn-sm"
-                disabled={
-                    this.props.store.pdbChainDataStore.allData.length === 0
-                }
+                disabled={!this.has3dStructureSource}
                 onClick={this.toggle3dPanel}
                 data-test="view3DStructure"
             >

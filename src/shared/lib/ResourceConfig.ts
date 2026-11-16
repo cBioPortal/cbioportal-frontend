@@ -39,29 +39,48 @@ export interface ResourceCustomConfig {
      * Used in: Patient View (resource iframe)
      */
     iframeErrorMessage?: string;
+
+    /**
+     * False when the display name is not something a row is one of, such as a technique
+     * (CyCIF) whose rows are regions of one slide. The count then reads "1-12 of 12 · CyCIF"
+     * rather than "1-12 of 12 CyCIFs".
+     * Used in: resource table count summary
+     */
+    pluralizeDisplayName?: boolean;
+
+    /** Name for one row in the resource table count, pluralized by count. */
+    itemsLabel?: string;
 }
 
+/**
+ * Per-resource overrides keyed by resource id. A resource can also supply them through its own
+ * customMetaData, which wins; that column currently also carries the metadata contract, so a
+ * resource setting an option there must declare `fields` as well. Options that only apply to a
+ * resource the portal already knows about are easier to keep here until the contract has a place
+ * for them.
+ */
 export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {
     MSK_HNE: {
-        customizedDisplayName: 'Samples with H&E Slides',
-        hidePerPatientColumn: true,
-        columnNameMapping: { 'Type Of Resource': 'View' },
-        hideUrlColumn: true,
-        openInNewTab: true,
         iframeErrorMessage:
             'This resource requires VPN access. Please connect to VPN and refresh the page.',
+    },
+    CYCIF: {
+        pluralizeDisplayName: false,
+    },
+    IDC_SLIM: {
+        itemsLabel: 'Slide',
     },
 };
 
 export function getResourceConfig(
-    def: ResourceDefinition
+    def: Pick<ResourceDefinition, 'resourceId'> &
+        Partial<Pick<ResourceDefinition, 'customMetaData'>>
 ): ResourceCustomConfig {
-    let config: ResourceCustomConfig = {};
-
     // 1. Load from local dictionary
-    if (def.resourceId && RESOURCE_CUSTOM_CONFIGS[def.resourceId]) {
-        config = { ...RESOURCE_CUSTOM_CONFIGS[def.resourceId] };
-    }
+    let config: ResourceCustomConfig =
+        def.resourceId && RESOURCE_CUSTOM_CONFIGS[def.resourceId]
+            ? { ...RESOURCE_CUSTOM_CONFIGS[def.resourceId] }
+            : {};
 
     // 2. Override with customMetaData
     if (def.customMetaData) {

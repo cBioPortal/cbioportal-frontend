@@ -6,7 +6,6 @@ import {
     Gene,
     GenePanelData,
     GenePanelDataMultipleStudyFilter,
-    GenericAssayMeta,
     Geneset,
     MolecularDataMultipleStudyFilter,
     MolecularProfile,
@@ -190,11 +189,6 @@ export interface IPlotsTabStoreInput {
     /** Gene sets for this context. */
     genesets: MobxPromise<Geneset[]>;
 
-    /** Generic assay entities grouped by molecular profile ID. */
-    genericAssayEntitiesGroupByMolecularProfileId: MobxPromise<{
-        [profileId: string]: GenericAssayMeta[];
-    }>;
-
     /** Currently selected generic assay entities per molecular profile. Plain computed object, not MobxPromise. */
     selectedGenericAssayEntitiesGroupByMolecularProfileId: {
         [molecularProfileId: string]: string[];
@@ -267,10 +261,6 @@ export class PlotsTabStore {
 
     get genesets() {
         return this.input.genesets;
-    }
-
-    get genericAssayEntitiesGroupByMolecularProfileId() {
-        return this.input.genericAssayEntitiesGroupByMolecularProfileId;
     }
 
     get selectedGenericAssayEntitiesGroupByMolecularProfileId() {

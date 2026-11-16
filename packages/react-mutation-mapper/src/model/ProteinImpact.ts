@@ -11,4 +11,6 @@ export interface IProteinImpactTypeColors {
     fusionVusColor: string;
     otherColor: string;
     otherVusColor: string;
+    promoterColor?: string;
+    promoterVusColor?: string;
 }

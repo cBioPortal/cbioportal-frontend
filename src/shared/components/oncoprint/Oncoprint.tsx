@@ -274,6 +274,11 @@ interface CategoricalTrackSpecBase {
 // Classic single-category track: the datum's `attr_val` is a single string.
 export interface ISingleCategoricalTrackSpec extends CategoricalTrackSpecBase {
     stackedBar?: false;
+    category_to_color?: {
+        [category: string]: [number, number, number, number];
+    };
+    // Set when another track of the profile already shows the legend.
+    categoricalExcludeFromLegend?: boolean;
 }
 
 // Stacked bar variant: the datum's `attr_val` is `{ [category]: number }`,

@@ -23,7 +23,12 @@ import ResultsViewOncoprint, {
 } from 'shared/components/oncoprint/ResultsViewOncoprint';
 import { AlterationTypeConstants } from 'shared/constants';
 import { Group } from 'shared/api/session-service/sessionServiceModels';
-import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import {
+    GENERIC_ASSAY_CHART_TYPE_LABELS,
+    GENERIC_ASSAY_CONFIG,
+    GenericAssayOncoprintChartType,
+    getGenericAssayChartTypes,
+} from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { AlterationTypeText } from 'shared/constants';
 
 export function getAnnotatingProgressMessage(
@@ -320,6 +325,14 @@ export function isGenericAssayHeatmapProfile(m: MolecularProfile) {
     );
 }
 
+const TRACK_GROUP_HEADER_CHART_TYPE_LABELS: {
+    [type in GenericAssayOncoprintChartType]: string;
+} = {
+    ...GENERIC_ASSAY_CHART_TYPE_LABELS,
+    heatmap: 'Heatmap',
+    bars: 'Bar chart',
+};
+
 export function makeTrackGroupHeaders(
     molecularProfileIdToMolecularProfile: { [p: string]: MolecularProfile },
     molecularProfileIdToAdditionalTracks: {
@@ -336,17 +349,37 @@ export function makeTrackGroupHeaders(
     genericAssayStackedProfiles?: { [profileId: string]: true },
     genericAssayStackedAbsoluteProfiles?: { [profileId: string]: true },
     genericAssayBarProfiles?: { [profileId: string]: true },
+    genericAssayDominantProfiles?: { [profileId: string]: true },
+    genericAssayStackedAndDominantProfiles?: { [profileId: string]: true },
     onSetGenericAssayChartType?: (
         profileId: string,
-        type: 'heatmap' | 'bars' | 'composition' | 'absolute'
+        type: GenericAssayOncoprintChartType
     ) => void
 ): { [trackGroupIndex: number]: TrackGroupHeader } {
     var headers = _.reduce(
         molecularProfileIdToAdditionalTracks,
         (headerMap, nextEntry) => {
-            // Stacked-bar tracks are single-row tracks that already carry
-            // their profile name in the track label — the big group header
-            // (and its Cluster/Don't cluster options) is redundant. Skip.
+            // A dominant category track above a stacked bar track gets a
+            // header naming the profile, with only the Delete option.
+            if (
+                genericAssayStackedAndDominantProfiles &&
+                genericAssayStackedAndDominantProfiles[
+                    nextEntry.molecularProfileId
+                ]
+            ) {
+                headerMap[nextEntry.trackGroupIndex] = makeTrackGroupHeader(
+                    'categorical',
+                    nextEntry.molecularProfile.name,
+                    nextEntry.trackGroupIndex,
+                    onClickDeleteCallback,
+                    getClusteredTrackGroupIndex
+                );
+                return headerMap;
+            }
+            // Stacked-bar and dominant category tracks are single-row tracks
+            // that already carry their profile name in the track label — the
+            // big group header (and its Cluster/Don't cluster options) is
+            // redundant. Skip.
             if (
                 (genericAssayStackedProfiles &&
                     genericAssayStackedProfiles[
@@ -355,7 +388,9 @@ export function makeTrackGroupHeaders(
                 (genericAssayStackedAbsoluteProfiles &&
                     genericAssayStackedAbsoluteProfiles[
                         nextEntry.molecularProfileId
-                    ])
+                    ]) ||
+                (genericAssayDominantProfiles &&
+                    genericAssayDominantProfiles[nextEntry.molecularProfileId])
             ) {
                 return headerMap;
             }
@@ -411,34 +446,20 @@ export function makeTrackGroupHeaders(
                 const isBars = !!(
                     genericAssayBarProfiles && genericAssayBarProfiles[pid]
                 );
-                const current:
-                    | 'heatmap'
-                    | 'bars'
-                    | 'composition'
-                    | 'absolute' = isBars ? 'bars' : 'heatmap';
-                const check = (t: typeof current) =>
-                    current === t ? '\u2713 ' : '';
+                const current: GenericAssayOncoprintChartType = isBars
+                    ? 'bars'
+                    : 'heatmap';
                 header.options.push(
                     { separator: true },
-                    {
-                        label: check('heatmap') + 'Heatmap',
-                        onClick: () =>
-                            onSetGenericAssayChartType(pid, 'heatmap'),
-                    },
-                    {
-                        label: check('bars') + 'Bar chart',
-                        onClick: () => onSetGenericAssayChartType(pid, 'bars'),
-                    },
-                    {
-                        label: 'Stacked bar (composition)',
-                        onClick: () =>
-                            onSetGenericAssayChartType(pid, 'composition'),
-                    },
-                    {
-                        label: 'Stacked bar (absolute)',
-                        onClick: () =>
-                            onSetGenericAssayChartType(pid, 'absolute'),
-                    }
+                    ...getGenericAssayChartTypes(profile.genericAssayType).map(
+                        chartType => ({
+                            label:
+                                (current === chartType ? '\u2713 ' : '') +
+                                TRACK_GROUP_HEADER_CHART_TYPE_LABELS[chartType],
+                            onClick: () =>
+                                onSetGenericAssayChartType(pid, chartType),
+                        })
+                    )
                 );
             }
             headerMap[nextEntry.trackGroupIndex] = header;

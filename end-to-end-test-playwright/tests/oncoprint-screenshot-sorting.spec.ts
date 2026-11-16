@@ -5,8 +5,8 @@ import {
     getNthOncoprintTrackOptionsSelectors,
     setDropdownOpen,
     setInputText,
-    waitForNumberOfStudyCheckboxes,
     waitForOncoprint,
+    searchStudies,
 } from './helpers/oncoprint';
 
 /**
@@ -48,8 +48,7 @@ test.describe.serial('sorting flow', () => {
     test('oncoprint should sort patients correctly in coadread_tcga_pub', async () => {
         await page.goto('/');
         const search = 'div[data-test=study-search] input[type="text"]';
-        await setInputText(page, search, 'colorectal tcga nature');
-        await waitForNumberOfStudyCheckboxes(page, 1);
+        await searchStudies(page, search, 'colorectal tcga nature', 1);
         await page.locator('[data-test="StudySelect"] input').click();
         await byTestHandle(page, 'queryByGeneButton').click();
         await setInputText(page, '[data-test="geneSet"]', 'KRAS NRAS BRAF');
@@ -73,8 +72,7 @@ test.describe.serial('sorting flow', () => {
     test('oncoprint should sort patients correctly in gbm_tcga_pub', async () => {
         await page.goto('/');
         const search = 'div[data-test=study-search] input[type="text"]';
-        await setInputText(page, search, 'glio tcga nature 2008');
-        await waitForNumberOfStudyCheckboxes(page, 1);
+        await searchStudies(page, search, 'glio tcga nature 2008', 1);
         await page.locator('[data-test="StudySelect"] input').click();
         await byTestHandle(page, 'queryByGeneButton').click();
         await setInputText(page, '[data-test="geneSet"]', 'TP53 MDM2 MDM4');

@@ -1,5 +1,5 @@
 import autobind from 'autobind-decorator';
-import { MobxCache, Mutation } from 'cbioportal-utils';
+import { getLollipopPosition, MobxCache, Mutation } from 'cbioportal-utils';
 import { PfamDomain, PfamDomainRange } from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
 import { action, computed, observable, makeObservable } from 'mobx';
@@ -166,7 +166,7 @@ export default class LollipopMutationPlot<
         countsByPosition: { [pos: number]: number },
         group?: string
     ): JSX.Element {
-        const codon = mutationsAtPosition[0].proteinPosStart;
+        const codon = getLollipopPosition(mutationsAtPosition[0]);
         const count = countsByPosition[codon];
         const countInfo = this.props.lollipopTooltipCountInfo ? (
             this.props.lollipopTooltipCountInfo(
@@ -258,8 +258,8 @@ export default class LollipopMutationPlot<
         const positionMutations = Object.keys(mutationsByPosition)
             .map(position => mutationsByPosition[parseInt(position, 10)])
             .sort((x, y) =>
-                countsByPosition[x[0].proteinPosStart] <
-                countsByPosition[y[0].proteinPosStart]
+                countsByPosition[getLollipopPosition(x[0])] <
+                countsByPosition[getLollipopPosition(y[0])]
                     ? 1
                     : -1
             );
@@ -296,7 +296,7 @@ export default class LollipopMutationPlot<
         const minMutationsToShowLabel = 0;
 
         positionMutations.forEach((mutations, index) => {
-            const codon = mutations[0].proteinPosStart;
+            const codon = getLollipopPosition(mutations[0]);
             if (this.isInvalidPosition(codon)) {
                 return;
             }
@@ -339,14 +339,14 @@ export default class LollipopMutationPlot<
         // maxCount: max number of mutations at a position
         const maxCount =
             positionMutations && positionMutations[0]
-                ? countsByPosition[positionMutations[0][0].proteinPosStart]
+                ? countsByPosition[getLollipopPosition(positionMutations[0][0])]
                 : 0;
 
         // numLabelCandidates: number of positions with maxCount mutations
         let numLabelCandidates = positionMutations
             ? positionMutations.findIndex(
                   mutations =>
-                      countsByPosition[mutations[0].proteinPosStart] !==
+                      countsByPosition[getLollipopPosition(mutations[0])] !==
                       maxCount
               )
             : -1;
@@ -432,7 +432,7 @@ export default class LollipopMutationPlot<
 
             const domainHasMutations = (domain: PfamDomainRange) =>
                 positionMutations.some(mutation => {
-                    const codon = mutation[0].proteinPosStart;
+                    const codon = getLollipopPosition(mutation[0]);
                     return (
                         codon >= domain.pfamDomainStart &&
                         codon <= domain.pfamDomainEnd

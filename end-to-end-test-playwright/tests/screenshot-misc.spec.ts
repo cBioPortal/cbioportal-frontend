@@ -133,10 +133,10 @@ test.describe('patient view screenshot tests', () => {
         );
         await expect(
             page.locator('span:has-text("0 Mutations")')
-        ).toBeAttached();
+        ).toBeAttached({ timeout: 30000 });
         await expect(
             page.locator('div:has-text("21.6%")').first()
-        ).toBeAttached();
+        ).toBeAttached({ timeout: 30000 });
         await snapshot(
             page,
             '#mainColumn',

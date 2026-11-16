@@ -5,17 +5,23 @@ import {
     percentAltered,
     extractGenericAssaySelections,
     getGenericAssayTrackRuleSetParams,
+    getCategoricalTrackCategoryToColor,
     legendColorDarkBlue,
     legendColorLightBlue,
     legendColorLightRed,
     legendColorDarkRed,
+    makeDominantCategoryTrackData,
 } from './OncoprintUtils';
 import { IKeyValueMap, observable } from 'mobx';
 import _ from 'lodash';
 import { assert } from 'chai';
 import { splitHeatmapTextField } from 'shared/components/oncoprint/OncoprintUtils';
 import { ISelectOption } from 'shared/components/oncoprint/controls/OncoprintControls';
-import { IHeatmapTrackSpec, IBaseHeatmapTrackDatum } from './Oncoprint';
+import {
+    IHeatmapTrackSpec,
+    IBaseHeatmapTrackDatum,
+    CategoricalTrackDatum,
+} from './Oncoprint';
 import { IGradientAndCategoricalRuleSetParams } from 'oncoprintjs';
 import { isMutationProfile } from 'shared/lib/StoreUtils';
 import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
@@ -852,5 +858,79 @@ describe('commonPrefixLength', () => {
     it('handles one string being a prefix of another', () => {
         // Shared prefix = "foo_bar", no divergence within, so no strip.
         assert.equal(commonPrefixLength(['foo_bar', 'foo_bar_baz']), 0);
+    });
+});
+
+describe('getCategoricalTrackCategoryToColor', () => {
+    it('assigns the same colors regardless of category order', () => {
+        const categories = [
+            'not significant',
+            'Mixed',
+            'highly significant',
+            'significant',
+        ];
+        assert.deepEqual(
+            getCategoricalTrackCategoryToColor(categories),
+            getCategoricalTrackCategoryToColor(
+                [...categories, 'Mixed'].reverse()
+            )
+        );
+    });
+
+    it('keeps reserved colors and gives other categories distinct colors', () => {
+        const categoryToColor = getCategoricalTrackCategoryToColor([
+            'true',
+            'false',
+            'Mixed',
+            'other category',
+        ]);
+        assert.notDeepEqual(categoryToColor['true'], categoryToColor['false']);
+        const assigned = [
+            categoryToColor['Mixed'],
+            categoryToColor['other category'],
+            categoryToColor['true'],
+            categoryToColor['false'],
+        ].map(c => c.join(','));
+        assert.equal(new Set(assigned).size, 4);
+    });
+
+    describe('makeDominantCategoryTrackData', () => {
+        const datum = (attr_val?: {
+            [category: string]: number;
+        }): CategoricalTrackDatum => ({
+            entity: 'profile',
+            profile_name: 'Profile',
+            patient: 'P1',
+            uid: 'S1',
+            attr_val_counts: attr_val || {},
+            attr_val,
+            na: attr_val ? undefined : true,
+        });
+
+        it('sets each case to its highest-valued category', () => {
+            const [result] = makeDominantCategoryTrackData(
+                [datum({ A: 0.2, B: 0.5, C: 0.3 })],
+                ['A', 'B', 'C']
+            );
+            assert.equal(result.attr_val, 'B');
+            assert.deepEqual(result.attr_val_counts, { B: 1 });
+        });
+
+        it('picks the first category on a tie', () => {
+            const [result] = makeDominantCategoryTrackData(
+                [datum({ A: 0.5, B: 0.5 })],
+                ['A', 'B']
+            );
+            assert.equal(result.attr_val, 'A');
+        });
+
+        it('leaves cases without data as NA', () => {
+            const [result] = makeDominantCategoryTrackData(
+                [datum()],
+                ['A', 'B']
+            );
+            assert.isTrue(result.na);
+            assert.isUndefined(result.attr_val);
+        });
     });
 });
