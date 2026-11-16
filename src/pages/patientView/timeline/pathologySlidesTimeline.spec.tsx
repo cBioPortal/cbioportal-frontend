@@ -47,6 +47,14 @@ const TestPortal = (Portal as unknown) as React.ComponentType<
     React.PropsWithChildren<{ container: HTMLElement }>
 >;
 
+/** The tooltip's Slides value, or undefined without a Slides line. */
+function slidesValue(): string | null | undefined {
+    const header = screen
+        .queryAllByRole('rowheader')
+        .find(h => h.textContent === 'Slides');
+    return header ? header.nextElementSibling?.textContent : undefined;
+}
+
 const SAMPLE = 'PATIENT-1-S2';
 const OTHER_SAMPLE = 'PATIENT-1-S1';
 /** A LINKOUT to the patient's Pathology Slides tab, scoped to the slides. */
@@ -377,7 +385,7 @@ describe('PATHOLOGY SLIDES timeline track', () => {
             )
         ).toBeTruthy();
         expect(screen.getByText('Part 1')).toBeTruthy();
-        expect(screen.getByText('1 of 1 viewable')).toBeTruthy();
+        expect(slidesValue()).toBe('1');
         expect(document.body.textContent).not.toContain('sk_0123456789abcdef');
 
         // The timeline renders tooltips in a portal; the router context
@@ -394,7 +402,7 @@ describe('PATHOLOGY SLIDES timeline track', () => {
     it('omits Open slides when nothing is viewable', () => {
         const track = pathologyTrack([slide({ viewable: 0 })]);
         renderTooltip(track, track.items[0]);
-        expect(screen.getByText('0 of 1 viewable')).toBeTruthy();
+        expect(slidesValue()).toBe('0');
         expect(screen.queryByRole('link')).toBeNull();
     });
 
@@ -403,18 +411,17 @@ describe('PATHOLOGY SLIDES timeline track', () => {
             slide({ linkout: 'https://example.org/patient/wsiHESlides?x=1' }),
         ]);
         renderTooltip(track, track.items[0]);
-        expect(screen.getByText('1 of 1 viewable')).toBeTruthy();
+        expect(slidesValue()).toBe('1');
         expect(screen.queryByRole('link')).toBeNull();
     });
 
-    it('explains slides that are not viewable', () => {
+    it('counts only viewable slides, also from older files with totals', () => {
         const track = pathologyTrack([slide({ viewable: 1, total: 3 })]);
         renderTooltip(track, track.items[0]);
-        expect(
-            screen.getByText(
-                '2 slides are not viewable: no scanned image is available.'
-            )
-        ).toBeTruthy();
+        expect(slidesValue()).toBe('1');
+        expect(document.body.textContent).not.toContain('not viewable');
+        expect(document.body.textContent).not.toContain('of 3');
+        expect(document.body.textContent).not.toMatch(/TOTAL|NON SERVABLE/);
     });
 
     it('describes unmatched slides in the tooltip', () => {
@@ -512,7 +519,7 @@ describe('PATHOLOGY SLIDES events with other attributes', () => {
             bareSlide({ SAMPLE_ID: SAMPLE, IMAGE_COUNT: '2', LINKOUT }),
         ]);
         renderTooltip(viewableOnly, viewableOnly.items[0]);
-        expect(screen.getByText('2 viewable')).toBeTruthy();
+        expect(slidesValue()).toBe('2');
         expect(screen.getByRole('link')).toBeTruthy();
     });
 

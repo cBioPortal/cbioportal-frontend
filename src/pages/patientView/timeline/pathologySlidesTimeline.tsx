@@ -38,11 +38,10 @@ import { PatientViewPageTabs } from 'pages/patientView/PatientViewPageTabIds';
  *   Without it, slides whose SAMPLE_ID is one of the patient's samples are
  *   linked to that sample with no level, and other slides are unmatched.
  * - SPECIMEN: the part the slides come from.
- * - IMAGE_COUNT: slides with a scanned image that the viewer can open; at 0
- *   the tooltip has no Open slides link.
- * - TOTAL_IMAGE_COUNT: all slides, viewable or not. NON_SERVABLE_IMAGE_COUNT
- *   (slides without a scanned image) is covered by the same Slides line.
- *   Without either count, the tooltip has no Slides line.
+ * - IMAGE_COUNT: the event's slides, all of which the viewer can open; the
+ *   portal shows no other slides. At 0 the tooltip has no Open slides link;
+ *   without it, no Slides line. TOTAL_IMAGE_COUNT and NON_SERVABLE_IMAGE_COUNT,
+ *   from older timeline files, are not shown.
  * - TIMEPOINT_SOURCE: how the procedure day was derived.
  * - LINKOUT: an in-app link to the patient's Pathology Slides tab,
  *   `/patient/wsiHESlides?...`, scoped to the event's slides. Other links
@@ -246,42 +245,20 @@ export interface PathologySlideTooltipContent {
 /** Attributes the timeline styles events with, never listed. */
 const STYLE_ATTRIBUTE_KEYS = ['STYLE_COLOR', 'STYLE_SHAPE'];
 
-/** "1 of 3 viewable", "2 viewable" or "3"; undefined without counts. */
+/** The event's slide count; undefined without IMAGE_COUNT. */
 function slideCountLine(
     event: PathologySlideEvent
-): { line: PathologySlideTooltipLine; keys: string[] } | undefined {
+): { line?: PathologySlideTooltipLine; keys: string[] } {
+    // Older timeline files also count slides the viewer can't open.
+    const keys = [
+        'IMAGE_COUNT',
+        'TOTAL_IMAGE_COUNT',
+        'NON_SERVABLE_IMAGE_COUNT',
+    ];
     const viewable = countAttribute(event, 'IMAGE_COUNT');
-    const total = countAttribute(event, 'TOTAL_IMAGE_COUNT');
-    if (viewable === undefined && total === undefined) {
-        return undefined;
-    }
-    if (viewable === undefined) {
-        return {
-            line: { label: 'Slides', value: String(total) },
-            keys: ['TOTAL_IMAGE_COUNT'],
-        };
-    }
-    if (total === undefined) {
-        return {
-            line: { label: 'Slides', value: `${viewable} viewable` },
-            keys: ['IMAGE_COUNT'],
-        };
-    }
-    const shownTotal = Math.max(total, viewable);
-    const nonViewable = shownTotal - viewable;
-    return {
-        line: {
-            label: 'Slides',
-            value: `${viewable} of ${shownTotal} viewable`,
-            note:
-                nonViewable > 0
-                    ? `${nonViewable} ${
-                          nonViewable === 1 ? 'slide is' : 'slides are'
-                      } not viewable: no scanned image is available.`
-                    : undefined,
-        },
-        keys: ['IMAGE_COUNT', 'TOTAL_IMAGE_COUNT', 'NON_SERVABLE_IMAGE_COUNT'],
-    };
+    return viewable === undefined
+        ? { line: undefined, keys }
+        : { line: { label: 'Slides', value: String(viewable) }, keys };
 }
 
 /**
@@ -346,10 +323,10 @@ export function buildPathologySlideTooltipContent(
         shownKeys.push('SPECIMEN');
     }
     const counts = slideCountLine(event);
-    if (counts) {
+    if (counts.line) {
         lines.push(counts.line);
-        shownKeys.push(...counts.keys);
     }
+    shownKeys.push(...counts.keys);
     (event.attributes || []).forEach(attr => {
         const key = attr.key.toUpperCase();
         const value = (attr.value || '').trim();

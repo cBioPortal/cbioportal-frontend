@@ -358,7 +358,8 @@ if (process.env.PW_SUITE === 'wsi') {
                 '-10 days (d-10) — 10 days before sequencing (d0)'
             );
             await expect(tooltip).toContainText('Part 1 / Block A1');
-            await expect(tooltip).toContainText('1 of 1 viewable');
+            await expect(tooltip).toContainText(/Slides\s*1/);
+            await expect(tooltip).not.toContainText('viewable');
             const link = tooltip.getByRole('link', {
                 name: `Open slides (H&E, ${SAMPLE_ID})`,
             });
