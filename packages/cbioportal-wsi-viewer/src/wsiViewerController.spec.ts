@@ -339,6 +339,38 @@ describe('WsiViewerController refused session', () => {
         }
     );
 
+    it.each([
+        [401, 1],
+        [403, 0],
+    ])(
+        'tells the host the session expired only for a %s tile',
+        async (status, calls) => {
+            fetchWsiThumbnailBlobMock.mockImplementation(
+                () => new Promise(() => {})
+            );
+            const onSessionExpired = jest.fn();
+            configureWsiViewerRuntime({
+                buildApiUrl: path => `/${path}`,
+                onSessionExpired,
+            });
+            try {
+                const { controller, viewers } = makeHarness();
+                await controller.selectSlide(makeSlide('slide-a'), sample);
+
+                viewers[0].raise('tile-load-failed', {
+                    tries: 1,
+                    tileRequest: { status },
+                    tile: { getUrl: () => 'tile-1' },
+                });
+
+                expect(onSessionExpired).toHaveBeenCalledTimes(calls);
+                controller.dispose();
+            } finally {
+                configureWsiViewerRuntime({ buildApiUrl: path => `/${path}` });
+            }
+        }
+    );
+
     it('keeps retrying a tile that failed for another reason', async () => {
         fetchWsiThumbnailBlobMock.mockImplementation(
             () => new Promise(() => {})

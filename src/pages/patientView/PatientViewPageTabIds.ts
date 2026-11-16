@@ -11,6 +11,7 @@ export enum PatientViewPageTabs {
     PathwayMapper = 'pathways',
     MRNA = 'mrna',
     Plots = 'plots',
+    ImmuneSignature = 'immuneSignature',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
