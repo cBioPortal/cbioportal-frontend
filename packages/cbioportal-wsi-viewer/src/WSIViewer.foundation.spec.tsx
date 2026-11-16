@@ -154,7 +154,7 @@ describe('WSIViewer foundation behavior', () => {
                 })
             );
             expect(sidebar).toContain(
-                'Timeline acquired d-242 · sequenced d+7'
+                'Sample dates tissue collected d-242 · sequenced d+7'
             );
 
             expect(
@@ -173,7 +173,7 @@ describe('WSIViewer foundation behavior', () => {
                     'data-testid': 'wsi-metadata-sidebar',
                 })
             );
-            expect(sidebar).not.toContain('Timeline');
+            expect(sidebar).not.toContain('Sample dates');
             expect(sidebar).not.toContain('sequenced');
         });
     });

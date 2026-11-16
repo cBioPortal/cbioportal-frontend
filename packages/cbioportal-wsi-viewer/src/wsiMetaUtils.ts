@@ -235,15 +235,15 @@ export function buildPathRows(
 }
 
 /**
- * One row for the sample's acquisition and sequencing days from the patient
- * timeline, or undefined when it has neither.
+ * One row for when the slide's matched sample was collected and sequenced,
+ * from the patient timeline, or undefined when it has neither.
  */
 function buildSampleTimelineRow(
     sampleTimeline: WsiSampleTimeline | undefined
 ): MetaRow | undefined {
     const days: Array<[string, number]> = [];
     if (sampleTimeline?.acquisitionDays != null) {
-        days.push(['acquired', sampleTimeline.acquisitionDays]);
+        days.push(['tissue collected', sampleTimeline.acquisitionDays]);
     }
     if (sampleTimeline?.sequencingDays != null) {
         days.push(['sequenced', sampleTimeline.sequencingDays]);
@@ -256,15 +256,14 @@ function buildSampleTimelineRow(
         .map(([what, day]) => `${what} ${formatDaysSinceDiagnosis(day)}`)
         .join(' · ');
     return {
-        label: 'Timeline',
-        labelTip: 'Sample acquisition and sequencing days',
+        label: 'Sample dates',
+        labelTip:
+            'When the sequenced sample this slide is matched to was collected and sequenced',
         value: days
             .map(
                 ([what, day]) => `${what} ${formatDaysSinceDiagnosisShort(day)}`
             )
             .join(' · '),
-        valueTip: `${exact[0].toUpperCase()}${exact.slice(
-            1
-        )}. ${DAY_ZERO_TOOLTIP}`,
+        valueTip: `Exact days: ${exact}. ${DAY_ZERO_TOOLTIP}`,
     };
 }

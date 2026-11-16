@@ -281,7 +281,7 @@ describe('buildPathRows', () => {
 
 describe('buildPathRows timeline row', () => {
     function timeline(rows: ReturnType<typeof buildPathRows>) {
-        return rows.find(row => row.label === 'Timeline')?.value;
+        return rows.find(row => row.label === 'Sample dates')?.value;
     }
 
     it('shows the sample acquisition and sequencing days in one row', () => {
@@ -290,7 +290,7 @@ describe('buildPathRows timeline row', () => {
             sequencingDays: 7,
         });
 
-        expect(timeline(rows)).toBe('acquired d-242 · sequenced d+7');
+        expect(timeline(rows)).toBe('tissue collected d-242 · sequenced d+7');
         const labels = rows.map(row => row.label);
         ['Acquired', 'Sequenced'].forEach(label =>
             expect(labels).not.toContain(label)
@@ -302,10 +302,12 @@ describe('buildPathRows timeline row', () => {
             acquisitionDays: -2393,
             sequencingDays: 0,
         });
-        const row = rows.find(r => r.label === 'Timeline')!;
+        const row = rows.find(r => r.label === 'Sample dates')!;
 
-        expect(row.value).toBe('acquired -6.6y · sequenced d0');
-        expect(row.valueTip).toContain('Acquired d-2393 · sequenced d0.');
+        expect(row.value).toBe('tissue collected -6.6y · sequenced d0');
+        expect(row.valueTip).toContain(
+            'Exact days: tissue collected d-2393 · sequenced d0.'
+        );
         expect(row.valueTip).toContain("day 0 (d0) of the patient's timeline");
     });
 
