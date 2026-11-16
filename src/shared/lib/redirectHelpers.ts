@@ -9,6 +9,38 @@ import { ServerConfigHelpers } from 'config/config';
 import { CategorizedConfigItems } from 'config/IAppConfig';
 import _ from 'lodash';
 import client from 'shared/api/cbioportalClientInstance';
+import { buildCBioPortalPageUrl } from 'shared/api/urls';
+
+const LOGIN_REDIRECT_STORAGE_KEY = 'login-redirect';
+let redirectingToLogin = false;
+
+/** True once `redirectToLogin` has sent the page away. */
+export function isRedirectingToLogin(): boolean {
+    return redirectingToLogin;
+}
+
+/**
+ * Sends the page through sign-in, coming back to the current URL through
+ * the /restore route. Later calls do nothing.
+ */
+export function redirectToLogin(): void {
+    if (redirectingToLogin) {
+        return;
+    }
+    const win = getBrowserWindow();
+    win.localStorage.setItem(LOGIN_REDIRECT_STORAGE_KEY, win.location.href);
+    //@ts-ignore because we're using buildCBioPortalPageUrl without a pathname, which is normally required
+    const loginUrl = buildCBioPortalPageUrl({
+        query: {
+            'spring-security-redirect': buildCBioPortalPageUrl({
+                pathname: 'restore',
+                query: { key: LOGIN_REDIRECT_STORAGE_KEY },
+            }),
+        },
+    });
+    redirectingToLogin = true;
+    win.location.href = loginUrl;
+}
 
 export function restoreRouteAfterRedirect(injected: {
     routing: ExtendedRouterStore;

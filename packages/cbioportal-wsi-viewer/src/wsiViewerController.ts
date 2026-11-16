@@ -885,8 +885,10 @@ export class WsiViewerController {
     private handleOsdTileLoadFailed(seq: number, event: any) {
         if (seq !== this.mountSeq) return;
         // Retrying cannot help a session the portal refused.
-        if (isAccessDeniedStatus(event?.tileRequest?.status)) {
+        const status = event?.tileRequest?.status;
+        if (isAccessDeniedStatus(status)) {
             this.failMount(WSI_SESSION_EXPIRED_MESSAGE, 'tile_failed');
+            if (status === 401) getWsiViewerRuntime().onSessionExpired?.();
             return;
         }
         if (

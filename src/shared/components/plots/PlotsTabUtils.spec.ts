@@ -2,6 +2,7 @@ import { assert } from 'chai';
 import {
     CLIN_ATTR_DATA_TYPE,
     getMutationProfileDuplicateSamplesReport,
+    isLimitValueGenericAssaySelected,
     makeAxisDataPromise_Molecular_MakeMutationData,
     makeClinicalAttributeOptions,
     makeScatterPlotData,
@@ -987,6 +988,27 @@ describe('PlotsTabUtils', () => {
                 genericAssayDataType: DataTypeConstants.LIMITVALUE,
             } as any) as AxisMenuSelection;
             assert.isFalse(logScalePossible(axisMenuSelection, axisData));
+        });
+    });
+
+    describe('isLimitValueGenericAssaySelected', () => {
+        const selection = (genericAssayEntityId: string) =>
+            (({
+                dataType: 'ISIG_PROBABILITY',
+                genericAssayDataType: DataTypeConstants.LIMITVALUE,
+                genericAssayEntityId,
+            } as any) as AxisMenuSelection);
+        it('is true for an entity of a limit-value profile', () => {
+            assert.isTrue(
+                isLimitValueGenericAssaySelected(selection('ISIG_PROB_D'))
+            );
+        });
+        it('is false for a derived entity', () => {
+            assert.isFalse(
+                isLimitValueGenericAssaySelected(
+                    selection('DERIVED_ISIG_DOMINANT')
+                )
+            );
         });
     });
 
