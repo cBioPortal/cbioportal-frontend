@@ -143,6 +143,66 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         ).toEqual(new Set(['slide-2']));
     });
 
+    it('filters pathology slides to one part by its part key', () => {
+        const unmatched = (
+            slideKey: string,
+            partKey: string,
+            block: string,
+            canServeTiles = true
+        ) =>
+            makeSlide({
+                slide_key: slideKey,
+                sample_id: null,
+                match_level: 'UNMATCHED',
+                part_key: partKey,
+                specimen_key: `unmatched::${partKey}::block:${block}`,
+                can_serve_tiles: canServeTiles,
+            });
+        const hierarchy: PatientHierarchy = {
+            patient_id: 'P-1',
+            samples: [
+                makeSample('S-1', [
+                    makeSlide({
+                        slide_key: 'matched',
+                        sample_id: 'S-1',
+                        match_level: 'PART',
+                        part_key: 'part:aaaaaaaaaaaa',
+                        specimen_key:
+                            'part::part:aaaaaaaaaaaa::block:aaaaaaaaaaaa',
+                    }),
+                ]),
+                makeSample('UNMATCHED', [
+                    unmatched('block-1', 'part:aaaaaaaaaaaa', '1'),
+                    unmatched('block-2', 'part:aaaaaaaaaaaa', '2'),
+                    unmatched('not-viewable', 'part:aaaaaaaaaaaa', '3', false),
+                    unmatched('other-part', 'part:bbbbbbbbbbbb', '1'),
+                ]),
+            ],
+        };
+
+        const partFilter = {
+            matchLevel: 'Unmatched',
+            partKey: 'part:aaaaaaaaaaaa',
+        };
+        expect(
+            getServableSlideIdsForPathologyFilterReadOnly(hierarchy, partFilter)
+        ).toEqual(new Set(['block-1', 'block-2']));
+        // The part key is part of the cache key.
+        expect(
+            getServableSlideIdsForPathologyFilterReadOnly(hierarchy, {
+                ...partFilter,
+                partKey: 'part:bbbbbbbbbbbb',
+            })
+        ).toEqual(new Set(['other-part']));
+        expect(
+            getServableSlideIdsForPathologyFilterReadOnly(hierarchy, {
+                sampleId: 'S-1',
+                matchLevel: 'PART',
+                partKey: 'part:aaaaaaaaaaaa',
+            })
+        ).toEqual(new Set(['matched']));
+    });
+
     it('matches linkouts whose source sample is represented by the unmatched group', () => {
         const hierarchy: PatientHierarchy = {
             patient_id: 'P-1',

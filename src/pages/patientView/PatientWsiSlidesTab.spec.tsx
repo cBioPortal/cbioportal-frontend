@@ -34,6 +34,25 @@ describe('wsiSlidesTabScopeFromQuery', () => {
         });
     });
 
+    it('maps a part key link to a part filter', () => {
+        expect(
+            wsiSlidesTabScopeFromQuery({
+                stainFilter: 'ihc',
+                matchLevel: 'Unmatched',
+                partKey: 'part:0123456789ab',
+            })
+        ).toEqual({
+            preferredSampleId: undefined,
+            pathologyFilter: {
+                sampleId: undefined,
+                matchLevel: 'Unmatched',
+                specimenKey: undefined,
+                partKey: 'part:0123456789ab',
+            },
+            initialStainFilter: 'ihc',
+        });
+    });
+
     it('scopes the slide list to a linked sample', () => {
         expect(wsiSlidesTabScopeFromQuery({ sampleId: 'P-1-T01' })).toEqual({
             preferredSampleId: 'P-1-T01',

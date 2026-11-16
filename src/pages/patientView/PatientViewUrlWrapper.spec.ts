@@ -44,6 +44,24 @@ describe('PatientViewUrlWrapper pathologySlideSettings', () => {
         expect(urlWrapper.query.sampleId).toBe('P-0000024-T01-IM3');
     });
 
+    it('reads a part key from the nested node', () => {
+        const urlWrapper = open(
+            '/patient/wsiHESlides?studyId=s&caseId=p&pathologySlideSettings=' +
+                encodeURIComponent(
+                    JSON.stringify({
+                        stainFilter: 'ihc',
+                        matchLevel: 'Unmatched',
+                        partKey: 'part:0123456789ab',
+                    })
+                )
+        );
+        expect(urlWrapper.pathologySlideScope).toEqual({
+            stainFilter: 'ihc',
+            matchLevel: 'Unmatched',
+            partKey: 'part:0123456789ab',
+        });
+    });
+
     it('ignores top-level scope params', () => {
         const urlWrapper = open(
             '/patient/wsiHESlides?studyId=s&caseId=p&stainFilter=ihc'

@@ -455,7 +455,9 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             prev.pathologyFilter?.matchLevel !==
                 this.props.pathologyFilter?.matchLevel ||
             prev.pathologyFilter?.specimenKey !==
-                this.props.pathologyFilter?.specimenKey;
+                this.props.pathologyFilter?.specimenKey ||
+            prev.pathologyFilter?.partKey !==
+                this.props.pathologyFilter?.partKey;
         const initialMatchFilterChanged =
             prev.initialMatchFilter !== this.props.initialMatchFilter;
         const requiresHierarchyReload =
@@ -566,7 +568,10 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
      */
     private get scopedSampleId(): string | undefined {
         const filter = this.activePathologyFilter;
-        return filter?.sampleId && !filter.matchLevel && !filter.specimenKey
+        return filter?.sampleId &&
+            !filter.matchLevel &&
+            !filter.specimenKey &&
+            !filter.partKey
             ? filter.sampleId
             : undefined;
     }

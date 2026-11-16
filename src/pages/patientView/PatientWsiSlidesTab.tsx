@@ -28,7 +28,8 @@ function queryValue(value: unknown): string | undefined {
 
 /**
  * Maps pathology slide link params (`sampleId`, plus `matchLevel`,
- * `specimenKey` and `stainFilter` from the `pathologySlideSettings` URL node)
+ * `specimenKey`, `partKey` and `stainFilter` from the `pathologySlideSettings`
+ * URL node)
  * to viewer props. A sample scopes the slide list to that sample, as sample
  * view scopes the rest of the page; the page's sample filter widens it. A
  * slide named by a deep-link `#wsi:slide=` hash wins: the link scope and the
@@ -44,10 +45,11 @@ export function wsiSlidesTabScopeFromQuery(
     }
     const matchLevel = queryValue(query.matchLevel);
     const specimenKey = queryValue(query.specimenKey);
+    const partKey = queryValue(query.partKey);
     const stain = queryValue(query.stainFilter)?.toLowerCase();
     const pathologyFilter: PathologySlideFilter | undefined =
-        sampleId || matchLevel || specimenKey
-            ? { sampleId, matchLevel, specimenKey }
+        sampleId || matchLevel || specimenKey || partKey
+            ? { sampleId, matchLevel, specimenKey, partKey }
             : undefined;
     const initialStainFilter = STAIN_FILTERS.find(filter => filter === stain);
     return {
@@ -85,12 +87,13 @@ export function resetLastWsiSlidesLink() {
 /** Pathology Slides tab: the viewer scoped by the patient view URL. */
 export default function PatientWsiSlidesTab({ query, ...viewerProps }: Props) {
     const { patientId } = viewerProps;
-    const { sampleId, stainFilter, matchLevel, specimenKey } = query;
+    const { sampleId, stainFilter, matchLevel, specimenKey, partKey } = query;
     const linkKey = JSON.stringify([
         sampleId,
         stainFilter,
         matchLevel,
         specimenKey,
+        partKey,
     ]);
     const { deepLink, staleHash } = React.useMemo(() => {
         const hashSlide = !!readWsiHashState()?.slideId;
@@ -112,6 +115,7 @@ export default function PatientWsiSlidesTab({ query, ...viewerProps }: Props) {
                     stainFilter,
                     matchLevel,
                     specimenKey,
+                    partKey,
                 },
                 deepLink ? readWsiHashState()?.slideId : undefined
             ),
