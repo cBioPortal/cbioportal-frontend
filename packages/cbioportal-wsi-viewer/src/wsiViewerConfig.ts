@@ -20,6 +20,13 @@ export interface WsiViewerConfig {
      * global `fetch` when unset. OpenSeadragon loads tiles itself.
      */
     fetchImpl?: typeof fetch;
+    /**
+     * Called when a viewer request is refused with 401: the portal session
+     * that authorizes slides has ended. Hosts send the page through sign-in,
+     * as they do for their own API calls; without it the viewer shows an
+     * error that asks for a page reload.
+     */
+    onSessionExpired?: () => void;
 }
 
 /** Services read by the viewer's module-level caches and controller. */
@@ -28,6 +35,7 @@ export interface WsiViewerRuntime {
     buildPageUrl: (path: string, query: Record<string, string>) => string;
     fetchImpl: typeof fetch;
     osdPrefixUrl?: string;
+    onSessionExpired?: () => void;
 }
 
 // Resolves the global at call time so a replaced `window.fetch` is used.
@@ -61,11 +69,20 @@ let runtime: WsiViewerRuntime = DEFAULT_RUNTIME;
 
 /** Installs the host services. Call once, before any viewer renders. */
 export function configureWsiViewerRuntime(config: WsiViewerConfig): void {
+    const baseFetch = config.fetchImpl ?? globalFetch;
+    const onSessionExpired = config.onSessionExpired;
     runtime = {
         buildApiUrl: config.buildApiUrl,
         buildPageUrl: config.buildPageUrl ?? rootRelativePageUrl,
-        fetchImpl: config.fetchImpl ?? globalFetch,
+        fetchImpl: onSessionExpired
+            ? async (...args: Parameters<typeof fetch>) => {
+                  const response = await baseFetch(...args);
+                  if (response.status === 401) onSessionExpired();
+                  return response;
+              }
+            : baseFetch,
         osdPrefixUrl: config.osdPrefixUrl,
+        onSessionExpired,
     };
 }
 
