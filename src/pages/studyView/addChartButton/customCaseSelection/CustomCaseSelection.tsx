@@ -7,7 +7,6 @@ import { action, computed, makeObservable, observable } from 'mobx';
 import { ButtonGroup, Radio } from 'react-bootstrap';
 import {
     DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT,
-    CaseIdAliases,
     CodeEnum,
     parseContent,
     ParseResult,
@@ -23,6 +22,7 @@ import {
 } from '../../StudyViewUtils';
 import { CustomChartData } from 'shared/api/session-service/sessionServiceModels';
 import { MobxPromise } from 'cbioportal-frontend-commons';
+import { CaseIdAliases } from 'shared/lib/CaseIdAliasUtils';
 
 export interface ICustomCaseSelectionProps {
     allSamples: Sample[];
