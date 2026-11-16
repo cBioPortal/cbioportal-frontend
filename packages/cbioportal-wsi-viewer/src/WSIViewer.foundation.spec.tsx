@@ -5,6 +5,7 @@ import * as React from 'react';
 import { action } from 'mobx';
 import TestRenderer from 'react-test-renderer';
 import WSIViewer from './WSIViewer';
+import { WSI_SESSION_EXPIRED_MESSAGE } from './wsiViewerController';
 import { makeHierarchy, makeSample, makeSlide } from './wsiTestFixtures';
 import { Slide } from './wsiViewerTypes';
 
@@ -49,6 +50,39 @@ describe('WSIViewer foundation behavior', () => {
         expect(JSON.stringify(error.toJSON())).toContain(
             'Hierarchy unavailable'
         );
+    });
+
+    describe('slide error overlay', () => {
+        function failedInstance(error: string) {
+            const instance = makeInstance();
+            const slide = testSlide('slide-a');
+            action(() => {
+                instance.viewerState.hierarchy = hierarchyOf([slide]);
+                instance.viewerState.loading = false;
+                instance.viewerState.selectedSlide = slide;
+                instance.viewerState.error = error;
+            })();
+            const button = TestRenderer.create(instance.render())
+                .root.findByProps({ 'data-testid': 'wsi-viewer-error' })
+                .findByType('button');
+            return { instance, button };
+        }
+
+        it('retries the slide after an ordinary failure', () => {
+            const { instance, button } = failedInstance(
+                'Slide tiles could not be loaded.'
+            );
+            expect(button.children.join('')).toBe('Retry');
+            expect(button.props.onClick).toBe(instance.handleRetryViewer);
+        });
+
+        it('reloads the page when the session was refused', () => {
+            const { instance, button } = failedInstance(
+                WSI_SESSION_EXPIRED_MESSAGE
+            );
+            expect(button.children.join('')).toBe('Reload page');
+            expect(button.props.onClick).toBe(instance.handleReloadPage);
+        });
     });
 
     describe('requested slideKey', () => {

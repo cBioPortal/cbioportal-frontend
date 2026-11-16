@@ -8,7 +8,7 @@ import {
 
 /**
  * Generic Assay entity selectors in Study View (Add Chart), Results View
- * Oncoprint (Add Tracks) and the Plots tab.
+ * Oncoprint (Add Tracks) and the Results View and Patient View Plots tabs.
  *
  * ccle_broad_2019 has 266 treatments per profile, more than the 100
  * options the selector lists at once, so these tests cover searching for
@@ -128,11 +128,12 @@ test.describe('generic assay selection', () => {
             await openStudyViewTreatmentTab(page);
             const selector = visibleSelection(page);
             await openMenu(selector.entity, selector.menu);
-            await expect(
-                selector.menu
-            ).toContainText(/Showing first 100 of \d+ results/, {
-                timeout: LOAD_TIMEOUT,
-            });
+            await expect(selector.menu).toContainText(
+                /Showing first 100 of \d+ results/,
+                {
+                    timeout: LOAD_TIMEOUT,
+                }
+            );
             await expect(selector.options).toHaveCount(100);
         });
 
@@ -230,63 +231,76 @@ test.describe('generic assay selection', () => {
         });
     });
 
-    test.describe('plots tab', () => {
-        const PLOTS_URL =
-            `/results/plots?cancer_study_list=${STUDY_ID}` +
-            `&case_set_id=${STUDY_ID}_all&gene_list=EGFR` +
-            '&tab_index=tab_visualize&Action=Submit' +
-            '&plots_vert_selection=%7B%22selectedGeneOption%22%3A1956%7D' +
-            '&plots_coloring_selection=%7B%7D';
-        // the first axis block is the horizontal axis
-        const HORZ_SELECTION_BOX =
-            'div.axisBlock >> nth=0 >> div.genericAssaySelectBox';
+    const PLOTS_PAGES = [
+        {
+            name: 'results view plots tab',
+            url:
+                `/results/plots?cancer_study_list=${STUDY_ID}` +
+                `&case_set_id=${STUDY_ID}_all&gene_list=EGFR` +
+                '&tab_index=tab_visualize&Action=Submit' +
+                '&plots_vert_selection=%7B%22selectedGeneOption%22%3A1956%7D' +
+                '&plots_coloring_selection=%7B%7D',
+        },
+        {
+            name: 'patient view plots tab',
+            url:
+                `/patient/plots?studyId=${STUDY_ID}&caseId=DMS53_LUNG` +
+                '&featureFlags=patientMRNATab',
+        },
+    ];
+    // the first axis block is the horizontal axis
+    const HORZ_SELECTION_BOX =
+        'div.axisBlock >> nth=0 >> div.genericAssaySelectBox';
 
-        test('shows a treatment from the `plots_horz_selection` URL parameter', async ({
-            page,
-        }) => {
-            const horzSelection = encodeURIComponent(
-                JSON.stringify({
-                    dataType: 'TREATMENT_RESPONSE',
-                    selectedDataSourceOption: IC50_PROFILE_ID,
-                    selectedGenericAssayOption: LATE_TREATMENT_ID,
-                })
-            );
-            await page.goto(
-                `${PLOTS_URL}&plots_horz_selection=${horzSelection}`
-            );
-            await expect(
-                page.locator(HORZ_SELECTION_BOX)
-            ).toHaveText(LATE_TREATMENT_LABEL, { timeout: LOAD_TIMEOUT });
-        });
+    for (const plotsPage of PLOTS_PAGES) {
+        test.describe(plotsPage.name, () => {
+            test('shows a treatment from the `plots_horz_selection` URL parameter', async ({
+                page,
+            }) => {
+                const horzSelection = encodeURIComponent(
+                    JSON.stringify({
+                        dataType: 'TREATMENT_RESPONSE',
+                        selectedDataSourceOption: IC50_PROFILE_ID,
+                        selectedGenericAssayOption: LATE_TREATMENT_ID,
+                    })
+                );
+                await page.goto(
+                    `${plotsPage.url}&plots_horz_selection=${horzSelection}`
+                );
+                await expect(
+                    page.locator(HORZ_SELECTION_BOX)
+                ).toHaveText(LATE_TREATMENT_LABEL, { timeout: LOAD_TIMEOUT });
+            });
 
-        test('selects a treatment found by search', async ({ page }) => {
-            const horzSelection = encodeURIComponent(
-                JSON.stringify({
-                    dataType: 'TREATMENT_RESPONSE',
-                    selectedDataSourceOption: IC50_PROFILE_ID,
-                })
-            );
-            await page.goto(
-                `${PLOTS_URL}&plots_horz_selection=${horzSelection}`
-            );
-            const box = page.locator(HORZ_SELECTION_BOX);
-            await expect(box).toBeVisible({ timeout: LOAD_TIMEOUT });
-            await box.click();
-            await box
-                .locator('input')
-                .first()
-                .pressSequentially(LATE_TREATMENT_ID);
-            await box
-                .locator('div[class$="option"]', {
-                    hasText: LATE_TREATMENT_LABEL,
-                })
-                .click({ timeout: LOAD_TIMEOUT });
-            await expect(box).toHaveText(LATE_TREATMENT_LABEL);
-            await expect(page).toHaveURL(
-                new RegExp(
-                    `selectedGenericAssayOption%22%3A%22${LATE_TREATMENT_ID}`
-                )
-            );
+            test('selects a treatment found by search', async ({ page }) => {
+                const horzSelection = encodeURIComponent(
+                    JSON.stringify({
+                        dataType: 'TREATMENT_RESPONSE',
+                        selectedDataSourceOption: IC50_PROFILE_ID,
+                    })
+                );
+                await page.goto(
+                    `${plotsPage.url}&plots_horz_selection=${horzSelection}`
+                );
+                const box = page.locator(HORZ_SELECTION_BOX);
+                await expect(box).toBeVisible({ timeout: LOAD_TIMEOUT });
+                await box.click();
+                await box
+                    .locator('input')
+                    .first()
+                    .pressSequentially(LATE_TREATMENT_ID);
+                await box
+                    .locator('div[class$="option"]', {
+                        hasText: LATE_TREATMENT_LABEL,
+                    })
+                    .click({ timeout: LOAD_TIMEOUT });
+                await expect(box).toHaveText(LATE_TREATMENT_LABEL);
+                await expect(page).toHaveURL(
+                    new RegExp(
+                        `selectedGenericAssayOption%22%3A%22${LATE_TREATMENT_ID}`
+                    )
+                );
+            });
         });
-    });
+    }
 });
