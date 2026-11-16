@@ -35,6 +35,7 @@ import { ErrorAlert } from 'shared/components/errorScreen/ErrorAlert';
 import { ErrorInfo } from 'react';
 import { observable } from 'mobx';
 import { sendToLoggly } from 'shared/lib/tracking';
+import { TutorialTour } from 'tours';
 
 interface IContainerProps {
     location: Location;
@@ -157,6 +158,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
                                     <ErrorAlert appStore={this.appStore} />
 
                                     {makeRoutes()}
+                                    <TutorialTour />
                                 </div>
                             </Else>
                         </If>
