@@ -277,10 +277,6 @@ export default class ResultsViewPage extends React.Component<
                                     store.plotsTabStore.customAttributes
                                 }
                                 genesets={store.plotsTabStore.genesets}
-                                genericAssayEntitiesGroupByMolecularProfileId={
-                                    store.plotsTabStore
-                                        .genericAssayEntitiesGroupByMolecularProfileId
-                                }
                                 studyIds={store.plotsTabStore.studyIds}
                                 molecularProfilesWithData={
                                     store.plotsTabStore

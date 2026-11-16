@@ -208,7 +208,6 @@ import {
 import {
     getGenericAssayMetaPropertyOrDefault,
     getGenericAssayCategoryFromName,
-    fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 
@@ -433,8 +432,6 @@ export class PatientViewPageStore {
             clinicalAttributes: this.clinicalAttributes,
             customAttributes: this.customAttributes,
             genesets: this.genesets,
-            genericAssayEntitiesGroupByMolecularProfileId: this
-                .genericAssayEntitiesGroupedByProfileId,
             get selectedGenericAssayEntitiesGroupByMolecularProfileId() {
                 return self.selectedGenericAssayEntitiesGroupByMolecularProfileId;
             },
@@ -845,17 +842,6 @@ export class PatientViewPageStore {
             this.genesetCache.addData(genesets);
         },
         default: [],
-    });
-
-    readonly genericAssayEntitiesGroupedByProfileId = remoteData<{
-        [profileId: string]: GenericAssayMeta[];
-    }>({
-        await: () => [this.genericAssayProfiles],
-        invoke: async () => {
-            return await fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId(
-                this.genericAssayProfiles.result
-            );
-        },
     });
 
     readonly genericAssayProfiles = remoteData({

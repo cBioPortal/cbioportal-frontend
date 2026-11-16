@@ -28,6 +28,7 @@ import { getCivicCNAVariants } from 'shared/lib/CivicUtils';
 import { uniqueGenomicLocations } from 'shared/lib/MutationUtils';
 import { getGenomeNexusUrl } from 'shared/lib/StoreUtils';
 import { getSimplifiedMutationType } from 'shared/lib/oql/AccessorsForOqlFilter';
+import { redirectToLogin } from 'shared/lib/redirectHelpers';
 import { useWsiClinicalData, WsiPatientClinicalData } from './wsiClinicalRows';
 
 const WSI_OSD_PREFIX_URL = '/reactapp/osd-images/';
@@ -109,6 +110,9 @@ export function buildWsiViewerConfig(): WsiViewerConfig {
             buildCBioPortalPageUrl(path, query),
         osdPrefixUrl: WSI_OSD_PREFIX_URL,
         molecular: buildWsiMolecularServices(),
+        // Slides are authorized by the portal session, so an expired session
+        // signs in again the way the portal's own 401s do.
+        onSessionExpired: redirectToLogin,
     };
 }
 
