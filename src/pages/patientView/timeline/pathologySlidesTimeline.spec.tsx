@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import * as React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route } from 'react-router-dom';
 import { Portal } from 'react-overlays';
 import {
@@ -17,6 +17,7 @@ import {
     hasPathologySlideEvents,
     pathologySlideGroupMarker,
     pathologySlideMarkerSample,
+    PathologySlidesPatient,
     pathologySlidesTrackConfig,
     timelineShowsPathologySlides,
     UNMATCHED_MARKER_COLOR,
@@ -55,13 +56,21 @@ function slidesValue(): string | null | undefined {
     return header ? header.nextElementSibling?.textContent : undefined;
 }
 
+const PATIENT: PathologySlidesPatient = {
+    studyId: 'study_1',
+    patientId: 'PATIENT-1',
+};
 const SAMPLE = 'PATIENT-1-S2';
 const OTHER_SAMPLE = 'PATIENT-1-S1';
 /** A LINKOUT to the patient's Pathology Slides tab, scoped to the slides. */
-function slidesTabLinkout(matchLevel: string, sampleId?: string): string {
+function slidesTabLinkout(
+    matchLevel: string,
+    sampleId?: string,
+    patient = PATIENT
+): string {
     const params = new URLSearchParams({
-        studyId: 'study_1',
-        caseId: 'PATIENT-1',
+        studyId: patient.studyId,
+        caseId: patient.patientId,
         ...(sampleId ? { sampleId } : {}),
         pathologySlideSettings: JSON.stringify({
             stainFilter: 'hne',
@@ -127,7 +136,7 @@ const SEQUENCING = event('Sequencing', 962, { SAMPLE_ID: SAMPLE });
 function configuredTracks(slides: ClinicalEvent[]) {
     const data = [...slides, SEQUENCING];
     const config = buildBaseConfig({} as SampleManager, CASE_META, [
-        pathologySlidesTrackConfig(CASE_META, data),
+        pathologySlidesTrackConfig(CASE_META, data, PATIENT),
     ]);
     const tracks = sortTracks(config, data);
     configureTracks(tracks, config);
@@ -413,6 +422,24 @@ describe('PATHOLOGY SLIDES timeline track', () => {
         renderTooltip(track, track.items[0]);
         expect(slidesValue()).toBe('1');
         expect(screen.queryByRole('link')).toBeNull();
+    });
+
+    it("does not link to another study's or patient's Pathology Slides tab", () => {
+        const otherStudy = slidesTabLinkout('PART', SAMPLE, {
+            ...PATIENT,
+            studyId: 'study_2',
+        });
+        const otherPatient = slidesTabLinkout('PART', SAMPLE, {
+            ...PATIENT,
+            patientId: 'PATIENT-2',
+        });
+        for (const linkout of [otherStudy, otherPatient]) {
+            const track = pathologyTrack([slide({ linkout })]);
+            renderTooltip(track, track.items[0]);
+            expect(slidesValue()).toBe('1');
+            expect(screen.queryByRole('link')).toBeNull();
+            cleanup();
+        }
     });
 
     it('counts only viewable slides, also from older files with totals', () => {

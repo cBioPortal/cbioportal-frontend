@@ -44,8 +44,9 @@ import { PatientViewPageTabs } from 'pages/patientView/PatientViewPageTabIds';
  *   from older timeline files, are not shown.
  * - TIMEPOINT_SOURCE: how the procedure day was derived.
  * - LINKOUT: an in-app link to the patient's Pathology Slides tab,
- *   `/patient/wsiHESlides?...`, scoped to the event's slides. Other links
- *   are not followed.
+ *   `/patient/wsiHESlides?studyId=...&caseId=...&...`, scoped to the event's
+ *   slides. Other links, including ones to another study or patient, are not
+ *   followed.
  *
  * Any other attribute is listed after these in the tooltip.
  */
@@ -174,15 +175,68 @@ export function patientSamplesOf(
 
 const SLIDES_TAB_PATH = `/patient/${PatientViewPageTabs.WSIHESlides}`;
 
+/** The patient view whose Pathology Slides tab slide links open. */
+export interface PathologySlidesPatient {
+    studyId: string;
+    patientId: string;
+}
+
 /**
- * The event's LINKOUT when it opens the patient Pathology Slides tab;
- * anything else is not linked.
+ * The event's LINKOUT when it opens this patient's Pathology Slides tab:
+ * its studyId and caseId must name the patient. Anything else is not linked.
  */
 export function pathologySlideOpenPath(
-    event: PathologySlideEvent
+    event: PathologySlideEvent,
+    patient: PathologySlidesPatient
 ): string | undefined {
     const linkout = attribute(event, 'LINKOUT');
-    return linkout.startsWith(`${SLIDES_TAB_PATH}?`) ? linkout : undefined;
+    const prefix = `${SLIDES_TAB_PATH}?`;
+    if (!linkout.startsWith(prefix)) {
+        return undefined;
+    }
+    const query = new URLSearchParams(linkout.slice(prefix.length));
+    return query.get('studyId') === patient.studyId &&
+        query.get('caseId') === patient.patientId
+        ? linkout
+        : undefined;
+}
+
+/** A link to the Pathology Slides tab for one PATHOLOGY SLIDES event. */
+export interface PathologySlideOpenLink {
+    /** In-app path to the Pathology Slides tab. */
+    path: string;
+    /**
+     * Accessible name of the link, e.g. "Open slides (H&E, P-1-T01)"; it
+     * starts with the visible text, "Open slides".
+     */
+    label: string;
+}
+
+/**
+ * The event's link to this patient's Pathology Slides tab, or undefined when
+ * its LINKOUT does not open that tab or a known zero viewable count leaves
+ * nothing to open. Used by the timeline tooltip and the Clinical Data table.
+ */
+export function pathologySlideOpenLink(
+    event: PathologySlideEvent,
+    patient: PathologySlidesPatient,
+    isPatientSample: IsPatientSample
+): PathologySlideOpenLink | undefined {
+    if (countAttribute(event, 'IMAGE_COUNT') === 0) {
+        return undefined;
+    }
+    const path = pathologySlideOpenPath(event, patient);
+    if (!path) {
+        return undefined;
+    }
+    const stain = attribute(event, 'SUBTYPE');
+    const sampleId = pathologySlideSampleId(event, isPatientSample);
+    return {
+        path,
+        label: `Open slides (${[stain, sampleId || UNMATCHED_LABEL]
+            .filter(Boolean)
+            .join(', ')})`,
+    };
 }
 
 const MATCH_LABELS: Record<string, { text: string; note: string }> = {
@@ -236,10 +290,8 @@ export interface PathologySlideTooltipContent {
     lines: PathologySlideTooltipLine[];
     /** Explanation of the day notation, when a day is shown. */
     footnote?: string;
-    /** In-app path to the Pathology Slides tab; unset when not linked. */
-    openPath?: string;
-    /** Accessible name of the link; it starts with the visible text. */
-    openLabel: string;
+    /** Link to the Pathology Slides tab; unset when not linked. */
+    open?: PathologySlideOpenLink;
 }
 
 /** Attributes the timeline styles events with, never listed. */
@@ -269,7 +321,8 @@ function slideCountLine(
 export function buildPathologySlideTooltipContent(
     event: PathologySlideEvent,
     sampleTimelines: WsiSampleTimelineMap,
-    isPatientSample: IsPatientSample
+    isPatientSample: IsPatientSample,
+    patient: PathologySlidesPatient
 ): PathologySlideTooltipContent {
     const sampleId = pathologySlideSampleId(event, isPatientSample);
     const match = sampleId
@@ -339,14 +392,7 @@ export function buildPathologySlideTooltipContent(
         title,
         lines,
         footnote,
-        // A known zero viewable count has nothing to open.
-        openPath:
-            countAttribute(event, 'IMAGE_COUNT') === 0
-                ? undefined
-                : pathologySlideOpenPath(event),
-        openLabel: `Open slides (${[stain, sampleId || UNMATCHED_LABEL]
-            .filter(Boolean)
-            .join(', ')})`,
+        open: pathologySlideOpenLink(event, patient, isPatientSample),
     };
 }
 
@@ -494,11 +540,13 @@ export const PathologySlideTooltip: React.FunctionComponent<{
     event: PathologySlideEvent;
     sampleTimelines: WsiSampleTimelineMap;
     isPatientSample: IsPatientSample;
-}> = function({ event, sampleTimelines, isPatientSample }) {
+    patient: PathologySlidesPatient;
+}> = function({ event, sampleTimelines, isPatientSample, patient }) {
     const content = buildPathologySlideTooltipContent(
         event,
         sampleTimelines,
-        isPatientSample
+        isPatientSample,
+        patient
     );
     return (
         <div data-test="pathology-slide-tooltip">
@@ -539,12 +587,12 @@ export const PathologySlideTooltip: React.FunctionComponent<{
                     {content.footnote}
                 </div>
             )}
-            {content.openPath && (
+            {content.open && (
                 <div style={{ marginTop: 5 }}>
                     <Link
-                        to={content.openPath}
+                        to={content.open.path}
                         className="btn btn-default btn-xs"
-                        aria-label={content.openLabel}
+                        aria-label={content.open.label}
                     >
                         Open slides
                     </Link>
@@ -581,11 +629,13 @@ export function sortPathologyStainTracks(
  * PATHOLOGY SLIDES track, split into one row per stain (SUBTYPE) by the
  * timeline's track structure. Events are drawn with the SampleManager's
  * numbered, colored sample markers (see pathologySlideGroupMarker), with a
- * count when several share a day.
+ * count when several share a day. Tooltips link to `patient`'s Pathology
+ * Slides tab.
  */
 export function pathologySlidesTrackConfig(
     caseMetaData: ISampleMetaDeta,
-    clinicalEvents: ClinicalEvent[] | undefined
+    clinicalEvents: ClinicalEvent[] | undefined,
+    patient: PathologySlidesPatient
 ): ITrackEventConfig {
     return {
         trackTypeMatch: new RegExp(`^${PATHOLOGY_SLIDES_EVENT_TYPE}$`, 'i'),
@@ -630,6 +680,7 @@ export function pathologySlidesTrackConfig(
                         event={e.event}
                         sampleTimelines={sampleTimelines}
                         isPatientSample={isPatientSample}
+                        patient={patient}
                     />
                 );
 

@@ -72,7 +72,11 @@ function renderWrapper(showPathologySlides: boolean) {
             width={1000}
             samples={[]}
             mutationProfileId="study_1_mutations"
-            showPathologySlides={showPathologySlides}
+            pathologySlides={
+                showPathologySlides
+                    ? { studyId: 'study_1', patientId: 'PATIENT-1' }
+                    : undefined
+            }
         />
     );
     const props =

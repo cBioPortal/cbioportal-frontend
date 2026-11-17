@@ -19,7 +19,14 @@ jest.mock('config/config', () => ({
 const SLIDES_PATH =
     '/patient/wsiHESlides?studyId=study&caseId=P-1&sampleId=P-1-T01';
 
-function event(eventType: string, linkout: string): ClinicalEvent {
+const PATIENT = { studyId: 'study', patientId: 'P-1' };
+
+function event(
+    eventType: string,
+    linkout: string,
+    attributes: Record<string, string> = {},
+    linkoutKey = 'LINKOUT'
+): ClinicalEvent {
     return ({
         eventType,
         patientId: 'P-1',
@@ -27,7 +34,12 @@ function event(eventType: string, linkout: string): ClinicalEvent {
         startNumberOfDaysSinceDiagnosis: -505,
         attributes: [
             { key: 'SUBTYPE', value: 'H&E' },
-            { key: 'LINKOUT', value: linkout },
+            { key: 'SAMPLE_ID', value: 'P-1-T01' },
+            ...Object.entries(attributes).map(([key, value]) => ({
+                key,
+                value,
+            })),
+            { key: linkoutKey, value: linkout },
         ],
     } as unknown) as ClinicalEvent;
 }
@@ -37,7 +49,8 @@ function renderTables(events: ClinicalEvent[], linkPathologySlides: boolean) {
         <TestRouter>
             <ClinicalEventsTables
                 clinicalEvents={events}
-                linkPathologySlides={linkPathologySlides}
+                pathologySlides={linkPathologySlides ? PATIENT : undefined}
+                sampleIds={['P-1-T01']}
             />
         </TestRouter>
     );
@@ -50,6 +63,70 @@ describe('ClinicalEventsTables', () => {
         const link = screen.getByText('Open slides');
         expect(link.closest('a')!.getAttribute('href')).toBe(SLIDES_PATH);
         expect(screen.queryByText(SLIDES_PATH)).toBeNull();
+    });
+
+    it('names the stain and sample in the link, like the timeline tooltip', () => {
+        renderTables(
+            [
+                event('PATHOLOGY SLIDES', SLIDES_PATH),
+                event('PATHOLOGY SLIDES', SLIDES_PATH, {
+                    SAMPLE_ID: 'Unmatched',
+                    MATCH_LEVEL: 'Unmatched',
+                }),
+            ],
+            true
+        );
+
+        expect(
+            screen.getByRole('link', { name: 'Open slides (H&E, P-1-T01)' })
+        ).toBeTruthy();
+        expect(
+            screen.getByRole('link', { name: 'Open slides (H&E, Unmatched)' })
+        ).toBeTruthy();
+    });
+
+    it('does not link slides with no viewable slide', () => {
+        renderTables(
+            [
+                event('PATHOLOGY SLIDES', SLIDES_PATH, { IMAGE_COUNT: '0' }),
+                event('PATHOLOGY SLIDES', SLIDES_PATH, { IMAGE_COUNT: '2' }),
+            ],
+            true
+        );
+
+        expect(screen.getAllByRole('link')).toHaveLength(1);
+        expect(screen.getByText(SLIDES_PATH)).toBeTruthy();
+    });
+
+    it("does not link to another study's or patient's Pathology Slides tab", () => {
+        const otherStudy =
+            '/patient/wsiHESlides?studyId=other&caseId=P-1&sampleId=P-1-T01';
+        const otherPatient =
+            '/patient/wsiHESlides?studyId=study&caseId=P-2&sampleId=P-2-T01';
+        renderTables(
+            [
+                event('PATHOLOGY SLIDES', otherStudy),
+                event('PATHOLOGY SLIDES', otherPatient),
+            ],
+            true
+        );
+
+        expect(screen.queryByText('Open slides')).toBeNull();
+        expect(screen.getByText(otherStudy)).toBeTruthy();
+        expect(screen.getByText(otherPatient)).toBeTruthy();
+    });
+
+    it('reads the LINKOUT column in any case', () => {
+        renderTables(
+            [event('Pathology Slides', SLIDES_PATH, {}, 'linkout')],
+            true
+        );
+
+        expect(
+            screen
+                .getByRole('link', { name: 'Open slides (H&E, P-1-T01)' })
+                .getAttribute('href')
+        ).toBe(SLIDES_PATH);
     });
 
     it('does not link other LINKOUT values', () => {

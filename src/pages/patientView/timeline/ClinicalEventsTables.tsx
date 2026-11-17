@@ -7,31 +7,62 @@ import _ from 'lodash';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
 import { getServerConfig } from 'config/config';
 import {
+    IsPatientSample,
     PATHOLOGY_SLIDES_EVENT_TYPE,
-    pathologySlideOpenPath,
+    pathologySlideOpenLink,
+    PathologySlidesPatient,
     withoutPathologySlideLinkouts,
 } from './pathologySlidesTimeline';
 
 class EventsTable extends LazyMobXTable<{}> {}
 
-/** A PATHOLOGY SLIDES LINKOUT as a link to the Pathology Slides tab. */
-function renderPathologySlidesLinkout(value: string) {
-    const path = pathologySlideOpenPath({
-        attributes: [{ key: 'LINKOUT', value }],
-    });
-    return path ? <Link to={path}>Open slides</Link> : <span>{value}</span>;
+/** Where the Clinical Data table's PATHOLOGY SLIDES links lead. */
+interface PathologySlidesLinking {
+    patient: PathologySlidesPatient;
+    isPatientSample: IsPatientSample;
 }
 
-function makeColumns(data: string[][], eventType: string) {
-    return data[0].map((item, i: number) => {
+/**
+ * A PATHOLOGY SLIDES row's LINKOUT as a link to the Pathology Slides tab,
+ * read with the row's other columns (IMAGE_COUNT, SUBTYPE, SAMPLE_ID, ...)
+ * like the timeline tooltip's link. Anything else is shown as text.
+ */
+function renderPathologySlidesLinkout(
+    header: string[],
+    row: string[],
+    linkoutIndex: number,
+    linking: PathologySlidesLinking
+) {
+    const link = pathologySlideOpenLink(
+        { attributes: header.map((key, i) => ({ key, value: row[i] })) },
+        linking.patient,
+        linking.isPatientSample
+    );
+    return link ? (
+        <Link to={link.path} aria-label={link.label}>
+            Open slides
+        </Link>
+    ) : (
+        <span>{row[linkoutIndex]}</span>
+    );
+}
+
+function makeColumns(
+    data: string[][],
+    eventType: string,
+    linking: PathologySlidesLinking | undefined
+) {
+    const header = data[0];
+    return header.map((item, i: number) => {
         const linkout =
-            item === 'LINKOUT' &&
+            linking &&
+            item.toUpperCase() === 'LINKOUT' &&
             eventType.toUpperCase() === PATHOLOGY_SLIDES_EVENT_TYPE;
         return {
             name: item,
             render: (data: string[]) =>
                 linkout ? (
-                    renderPathologySlidesLinkout(data[i])
+                    renderPathologySlidesLinkout(header, data, i, linking!)
                 ) : (
                     <span>{data[i]}</span>
                 ),
@@ -53,16 +84,22 @@ function makeColumns(data: string[][], eventType: string) {
 const ClinicalEventsTables: React.FunctionComponent<{
     clinicalEvents: ClinicalEvent[];
     /**
-     * Links PATHOLOGY SLIDES events to the Pathology Slides tab; set only
-     * when that tab is shown. Unset, their LINKOUT is left out.
+     * The patient whose Pathology Slides tab PATHOLOGY SLIDES events link to;
+     * set only when that tab is shown. Unset, their LINKOUT is left out.
      */
-    linkPathologySlides?: boolean;
-}> = function({ clinicalEvents, linkPathologySlides }) {
+    pathologySlides?: PathologySlidesPatient;
+    /** The patient's samples, named in the slide links' accessible names. */
+    sampleIds?: string[];
+}> = function({ clinicalEvents, pathologySlides, sampleIds }) {
     const data = groupTimelineData(
-        linkPathologySlides
+        pathologySlides
             ? clinicalEvents
             : withoutPathologySlideLinkouts(clinicalEvents)
     );
+    const linking: PathologySlidesLinking | undefined = pathologySlides && {
+        patient: pathologySlides,
+        isPatientSample: sampleId => (sampleIds || []).includes(sampleId),
+    };
 
     return (
         <div>
@@ -97,7 +134,11 @@ const ClinicalEventsTables: React.FunctionComponent<{
                         </h3>
                         <EventsTable
                             data={cleanedDataCategory.slice(1)}
-                            columns={makeColumns(cleanedDataCategory, key)}
+                            columns={makeColumns(
+                                cleanedDataCategory,
+                                key,
+                                linking
+                            )}
                             showPagination={false}
                             showColumnVisibility={false}
                             showFilter={true}

@@ -174,6 +174,13 @@ export function tabs(
               shown: pageComponent.shouldShowPathologySlides,
           })
         : undefined;
+    // Set only when the slide events link to the shown Pathology Slides tab.
+    const pathologySlidesPatient = timelinePathologySlides
+        ? {
+              studyId: pageComponent.patientViewPageStore.studyId,
+              patientId: pageComponent.patientViewPageStore.patientId,
+          }
+        : undefined;
     tabs.push(
         <MSKTab key={0} id={PatientViewPageTabs.Summary} linkText="Summary">
             <LoadingIndicator
@@ -208,7 +215,7 @@ export function tabs(
                                     pageComponent.patientViewPageStore
                                         .clinicalEvents.result
                                 }
-                                showPathologySlides={timelinePathologySlides}
+                                pathologySlides={pathologySlidesPatient}
                                 sampleManager={sampleManager}
                                 width={WindowStore.size.width}
                                 samples={
@@ -656,7 +663,8 @@ export function tabs(
                     clinicalEvents={
                         pageComponent.patientViewPageStore.clinicalEvents.result
                     }
-                    linkPathologySlides={timelinePathologySlides === true}
+                    pathologySlides={pathologySlidesPatient}
+                    sampleIds={pageComponent.patientViewPageStore.sampleIds}
                 />
             )}
         </MSKTab>

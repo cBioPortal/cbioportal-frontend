@@ -25,6 +25,7 @@ import {
 } from 'pages/patientView/timeline/timeline_helpers';
 import { downloadZippedTracks } from './timelineDataUtils';
 import {
+    PathologySlidesPatient,
     pathologySlidesTrackConfig,
     withoutPathologySlideLinkouts,
 } from './pathologySlidesTimeline';
@@ -45,12 +46,13 @@ export interface ITimelineProps {
     mutationProfileId: string;
     headerWidth?: number;
     /**
-     * Draws the PATHOLOGY SLIDES events in `data` as the slide track, linked
-     * to the Pathology Slides tab; set only when that tab is shown. Unset,
-     * they are drawn as a generic track and their LINKOUT is dropped, also
-     * from the downloaded tracks. Read once, when the timeline mounts.
+     * The patient whose Pathology Slides tab the PATHOLOGY SLIDES events in
+     * `data` link to; set only when that tab is shown. Set, they are drawn as
+     * the slide track. Unset, they are drawn as a generic track and their
+     * LINKOUT is dropped, also from the downloaded tracks. Read once, when
+     * the timeline mounts.
      */
-    showPathologySlides?: boolean;
+    pathologySlides?: PathologySlidesPatient;
 }
 
 const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
@@ -60,7 +62,7 @@ const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
         sampleManager,
         width,
         headerWidth,
-        showPathologySlides,
+        pathologySlides,
     }: ITimelineProps) {
         const [events, setEvents] = useState<
             TimelineTrackSpecification[] | null
@@ -69,7 +71,7 @@ const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
         const [store, setStore] = useState<TimelineStore | null>(null);
 
         const linkedData = () =>
-            showPathologySlides ? data : withoutPathologySlideLinkouts(data);
+            pathologySlides ? data : withoutPathologySlideLinkouts(data);
 
         useEffect(() => {
             const isGenieBpcStudy = window.location.href.includes('genie_bpc');
@@ -88,8 +90,14 @@ const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
             const baseConfig: ITimelineConfig = buildBaseConfig(
                 sampleManager,
                 caseMetaData,
-                showPathologySlides
-                    ? [pathologySlidesTrackConfig(caseMetaData, data)]
+                pathologySlides
+                    ? [
+                          pathologySlidesTrackConfig(
+                              caseMetaData,
+                              data,
+                              pathologySlides
+                          ),
+                      ]
                     : []
             );
 
