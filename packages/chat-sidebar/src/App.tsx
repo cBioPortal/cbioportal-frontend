@@ -20,22 +20,23 @@ import { useCrossTabSync } from '@/hooks/use-cross-tab-sync';
 import {
     AuthErrorStatus,
     getAuthError,
-    getSelectedModel,
     ModelInfo,
+    readLastThreadId,
+    saveLastThreadId,
     setAuthError,
-    setSelectedModel,
+    setModels,
     subscribe,
 } from '@/lib/chatSession';
 import { setPortalLinkAliases } from '@/lib/portal-link';
 import { getSidebarMode, subscribeToSidebarMode } from '@/lib/sidebar-mode';
 import { threadListAdapter } from '@/lib/threadListAdapter';
-import { readLastThreadId, saveLastThreadId } from '@/lib/threadStorage';
 import { useChatThreadRuntime } from '@/lib/useChatThreadRuntime';
 import {
     FALLBACK_STARTERS,
     getStartersState,
     subscribeToStarters,
 } from '@/lib/starters';
+import { startUsageSync } from '@/lib/usage';
 
 const AUTH_ERROR_CONTENT: Record<
     AuthErrorStatus,
@@ -69,8 +70,7 @@ const AUTH_ERROR_CONTENT: Record<
 const SILENT_TOOLS = new Set(['go_to_page', 'get_page_details']);
 
 // Stands in for the whole sidebar, header and chat list included: there is
-// nothing to do until the user has access or a fresh session. Mirrors
-// ThreadWelcome's heading so it reads as the same screen.
+// nothing to do until the user has access or a fresh session.
 const AuthErrorScreen: FC<{ status: AuthErrorStatus }> = ({ status }) => {
     const { title, caption } = AUTH_ERROR_CONTENT[status];
     return (
@@ -98,66 +98,11 @@ const THREAD_COMPONENTS = {
     hiddenTools: SILENT_TOOLS,
 };
 
-export function App() {
-    const [models, setModels] = useState<ModelInfo[]>([]);
-    const authError = useSyncExternalStore(
-        subscribe,
-        getAuthError,
-        getAuthError
-    );
-    const sidebarMode = useSyncExternalStore(
-        subscribeToSidebarMode,
-        getSidebarMode,
-        getSidebarMode
-    );
-
-    useEffect(() => {
-        fetch('/api/chat/config')
-            .then(r => (r.ok ? r.json() : null))
-            .then((data: { portalLinkAliases?: string[] } | null) => {
-                if (Array.isArray(data?.portalLinkAliases)) {
-                    setPortalLinkAliases(data.portalLinkAliases);
-                }
-            })
-            .catch(() => {
-                /* links keep the default aliases */
-            });
-    }, []);
-
-    useEffect(() => {
-        let cancelled = false;
-        fetch('/api/chat/models')
-            .then(r => {
-                // Surfaces the reason on load rather than on first message.
-                if (r.status === 401 || r.status === 403) {
-                    setAuthError(r.status);
-                    return null;
-                }
-                return r.json();
-            })
-            .then((data: { models: ModelInfo[] } | null) => {
-                if (!data) return;
-                if (cancelled) return;
-                setModels(data.models);
-                const selected = getSelectedModel();
-                if (!selected || !data.models.some(m => m.id === selected)) {
-                    setSelectedModel(data.models[0]?.id ?? null);
-                }
-            })
-            .catch(() => {
-                /* dropdown will just stay empty */
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, []);
-
-    // The iframe reloads with the portal page on a full page load (a refresh,
-    // or a link the portal doesn't route itself), so the open chat is restored
-    // rather than leaving the user in a blank one. Read once: the runtime
-    // freezes this on its first render.
-    const [initialThreadId] = useState(readLastThreadId);
-
+// The chat itself: its runtime and the list sync.
+const ChatRuntime: FC<{
+    initialThreadId: string | undefined;
+    authError: AuthErrorStatus | null;
+}> = ({ initialThreadId, authError }) => {
     const runtime = useRemoteThreadListRuntime({
         adapter: threadListAdapter,
         runtimeHook: useChatThreadRuntime,
@@ -182,6 +127,75 @@ export function App() {
         ),
     });
 
+    return (
+        <AssistantRuntimeProvider runtime={runtime} config={config}>
+            {authError ? (
+                <div className="min-h-0 flex-1">
+                    <AuthErrorScreen status={authError} />
+                </div>
+            ) : (
+                <>
+                    <ChatHeader />
+                    <div className="min-h-0 flex-1">
+                        <Thread components={THREAD_COMPONENTS} />
+                    </div>
+                </>
+            )}
+        </AssistantRuntimeProvider>
+    );
+};
+
+export function App() {
+    const authError = useSyncExternalStore(
+        subscribe,
+        getAuthError,
+        getAuthError
+    );
+    const sidebarMode = useSyncExternalStore(
+        subscribeToSidebarMode,
+        getSidebarMode,
+        getSidebarMode
+    );
+
+    useEffect(() => {
+        fetch('/api/chat/config')
+            .then(r => {
+                // Surfaces the reason on load rather than on first message.
+                if (r.status === 401 || r.status === 403) {
+                    setAuthError(r.status);
+                    return null;
+                }
+                return r.ok ? r.json() : null;
+            })
+            .then((data: { portalLinkAliases?: string[] } | null) => {
+                if (Array.isArray(data?.portalLinkAliases)) {
+                    setPortalLinkAliases(data.portalLinkAliases);
+                }
+            })
+            .catch(() => {
+                /* links keep the default aliases */
+            });
+    }, []);
+
+    useEffect(() => {
+        fetch('/api/chat/models')
+            .then(r => (r.ok ? r.json() : null))
+            .then((data: { models?: ModelInfo[] } | null) => {
+                if (Array.isArray(data?.models)) setModels(data.models);
+            })
+            .catch(() => {
+                /* no selector; requests use the server's default model */
+            });
+    }, []);
+
+    useEffect(() => startUsageSync(), []);
+
+    // The iframe reloads with the portal page on a full page load (a refresh,
+    // or a link the portal doesn't route itself), so the open chat is restored
+    // rather than leaving the user in a blank one. Read once: the runtime
+    // freezes this on its first render.
+    const [initialThreadId] = useState(readLastThreadId);
+
     // The chat stays mounted in the rail, only hidden, so a reply keeps
     // streaming and the draft survives a collapse. In the hidden mode the host
     // hides the whole frame, so the chat is left as it is, ready to reopen.
@@ -193,20 +207,10 @@ export function App() {
             <div
                 className={`h-full flex-col ${chatVisible ? 'flex' : 'hidden'}`}
             >
-                <AssistantRuntimeProvider runtime={runtime} config={config}>
-                    {authError ? (
-                        <div className="min-h-0 flex-1">
-                            <AuthErrorScreen status={authError} />
-                        </div>
-                    ) : (
-                        <>
-                            <ChatHeader models={models} />
-                            <div className="min-h-0 flex-1">
-                                <Thread components={THREAD_COMPONENTS} />
-                            </div>
-                        </>
-                    )}
-                </AssistantRuntimeProvider>
+                <ChatRuntime
+                    initialThreadId={initialThreadId}
+                    authError={authError}
+                />
             </div>
         </>
     );

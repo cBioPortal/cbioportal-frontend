@@ -10,15 +10,12 @@ import {
     useAuiState,
 } from '@assistant-ui/react';
 import { useAISDKRuntime } from '@assistant-ui/ai-sdk';
-import { AuthErrorStatus, getSelectedModel, setAuthError } from './chatSession';
+import { throwIfUnauthorized } from './chatApi';
+import { getSelectedModel } from './chatSession';
 import { notifyNavigate, resolvePortalLink } from './portal-link';
 import { getLatestPageEvents } from './page-events';
-
-export class ChatAuthError extends Error {
-    constructor(readonly status: AuthErrorStatus) {
-        super(`the portal rejected the chat request (${status})`);
-    }
-}
+import { notifyThreadsChanged } from './threadSync';
+import { refreshUsage, throwIfLimitReached } from './usage';
 
 // Stateless — one instance for the app's lifetime rather than one per thread.
 const attachmentAdapter = new SimpleImageAttachmentAdapter();
@@ -35,18 +32,28 @@ export function useChatThreadRuntime(): AssistantRuntime {
                 api: '/api/chat/message',
                 // The portal proxies this endpoint and rejects it when the
                 // session has lapsed or the user lacks the chat role.
+                // A user at their usage limit is refused too, and the error
+                // shown is the refusal's own message rather than its body.
                 fetch: async (input, init) => {
                     const response = await fetch(input, init);
-                    if (response.status === 401 || response.status === 403) {
-                        throw new ChatAuthError(response.status);
-                    }
+                    throwIfUnauthorized(response);
+                    await throwIfLimitReached(response);
                     return response;
                 },
-                // Evaluated per request, so the model picker stays live even
-                // though this hook never re-reads it.
-                body: () => ({
-                    model: getSelectedModel(),
-                    pageHref: getLatestPageEvents().snapshot?.href ?? null,
+                // The server keeps the history, so only the new message goes
+                // up — the prompt, or after a client-side tool call the reply
+                // carrying its output — with the parent it hangs off, which
+                // places it in the tree when the user edits or regenerates.
+                // Evaluated per request, so it carries the current model and
+                // page even though this hook never re-reads them.
+                prepareSendMessagesRequest: ({ id, messages }) => ({
+                    body: {
+                        id,
+                        message: messages.at(-1),
+                        parentId: messages.at(-2)?.id ?? null,
+                        model: getSelectedModel(),
+                        pageHref: getLatestPageEvents().snapshot?.href ?? null,
+                    },
                 }),
             }),
         []
@@ -84,8 +91,12 @@ export function useChatThreadRuntime(): AssistantRuntime {
                 return;
             }
         },
-        onError: error => {
-            if (error instanceof ChatAuthError) setAuthError(error.status);
+        // The server has saved the reply, or dropped a prompt stopped before
+        // any reply, and the chat has moved up the list. Its usage is saved
+        // by now too. Runs once per request, so once per tool continuation.
+        onFinish: () => {
+            notifyThreadsChanged();
+            void refreshUsage();
         },
         sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     });

@@ -57,10 +57,13 @@ import {
     streamReport,
 } from '@/lib/report';
 import { printHtml, reportHtml } from '@/lib/reportExport';
+import { UsageLimitError } from '@/lib/usage';
 
 type ReportState = {
     status: 'streaming' | 'done' | 'error';
     text: string;
+    // Shown in place of the generic failure, e.g. the usage limit.
+    error?: string;
 };
 
 const SKELETON_WIDTHS = ['w-2/3', 'w-full', 'w-5/6', 'w-full', 'w-3/4'];
@@ -174,8 +177,12 @@ export const ReportDialog: FC<{
             const controller = new AbortController();
             controllerRef.current = controller;
             setState({ status: 'streaming', text: '' });
-            streamReport(messages, model, controller.signal, text =>
-                setState({ status: 'streaming', text })
+            streamReport(
+                messages,
+                model,
+                aui.threadListItem.getState().remoteId,
+                controller.signal,
+                text => setState({ status: 'streaming', text })
             )
                 .then(text => {
                     cacheReport(key, text);
@@ -185,7 +192,14 @@ export const ReportDialog: FC<{
                     if (controller.signal.aborted) return;
                     console.warn('[chat-sidebar] report failed', err);
                     // Keep whatever arrived before the failure.
-                    setState(prev => ({ status: 'error', text: prev.text }));
+                    setState(prev => ({
+                        status: 'error',
+                        text: prev.text,
+                        error:
+                            err instanceof UsageLimitError
+                                ? err.message
+                                : undefined,
+                    }));
                 });
         },
         [aui, model]
@@ -255,9 +269,10 @@ export const ReportDialog: FC<{
                         {status === 'error' ? (
                             <>
                                 <TriangleAlertIcon className="size-3.5 shrink-0" />
-                                {text
-                                    ? 'Stopped before the report was finished.'
-                                    : 'Failed to generate the report.'}
+                                {state.error ??
+                                    (text
+                                        ? 'Stopped before the report was finished.'
+                                        : 'Failed to generate the report.')}
                             </>
                         ) : streaming ? (
                             <span className="shimmer motion-reduce:animate-none">

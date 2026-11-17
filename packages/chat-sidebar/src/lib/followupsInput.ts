@@ -9,6 +9,8 @@ export interface FollowupsExchange {
     messageId: string;
     question: string;
     answer: string;
+    // The chat it belongs to, so the server can trace the request with it.
+    threadId?: string;
 }
 
 // Bounds the request so a long answer or a pasted question can't slow it down.

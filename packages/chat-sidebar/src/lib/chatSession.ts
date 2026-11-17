@@ -5,9 +5,11 @@
 
 export type AuthErrorStatus = 401 | 403;
 
+// As /api/chat/models lists them; the shape of the model selector's options.
 export interface ModelInfo {
     id: string;
     name: string;
+    description?: string;
 }
 
 const MODEL_STORAGE_KEY = 'chat-sidebar:selectedModel';
@@ -20,8 +22,12 @@ function readStoredModel(): string | null {
     }
 }
 
-let selectedModel: string | null = readStoredModel();
 let authError: AuthErrorStatus | null = null;
+let models: readonly ModelInfo[] = [];
+// Kept here rather than in the selector: it has to survive reloads and chat
+// switches (which remount the composer), and the title and follow-up requests
+// read it from outside the React tree.
+let selectedModel: string | null = readStoredModel();
 
 const listeners = new Set<() => void>();
 
@@ -34,6 +40,32 @@ export function subscribe(listener: () => void): () => void {
     return () => {
         listeners.delete(listener);
     };
+}
+
+export function getAuthError(): AuthErrorStatus | null {
+    return authError;
+}
+
+// Set from two places: the config fetch on load, and any thread's transport
+// once the portal starts rejecting it.
+export function setAuthError(status: AuthErrorStatus | null): void {
+    if (status === authError) return;
+    authError = status;
+    emit();
+}
+
+export function getModels(): readonly ModelInfo[] {
+    return models;
+}
+
+// A stored selection the server no longer offers falls back to its default,
+// the first model listed.
+export function setModels(next: readonly ModelInfo[]): void {
+    models = next;
+    if (!selectedModel || !next.some(m => m.id === selectedModel)) {
+        setSelectedModel(next[0]?.id ?? null);
+    }
+    emit();
 }
 
 export function getSelectedModel(): string | null {
@@ -52,14 +84,23 @@ export function setSelectedModel(id: string | null): void {
     emit();
 }
 
-export function getAuthError(): AuthErrorStatus | null {
-    return authError;
+// The iframe reloads with the portal page on a full page load, so the open
+// chat is remembered to be restored.
+const LAST_THREAD_STORAGE_KEY = 'chat-sidebar:lastThreadId';
+
+export function readLastThreadId(): string | undefined {
+    try {
+        return localStorage.getItem(LAST_THREAD_STORAGE_KEY) ?? undefined;
+    } catch {
+        return undefined;
+    }
 }
 
-// Set from two places: the models fetch on load, and any thread's transport
-// once the portal starts rejecting it.
-export function setAuthError(status: AuthErrorStatus | null): void {
-    if (status === authError) return;
-    authError = status;
-    emit();
+export function saveLastThreadId(remoteId: string | undefined): void {
+    try {
+        if (remoteId) localStorage.setItem(LAST_THREAD_STORAGE_KEY, remoteId);
+        else localStorage.removeItem(LAST_THREAD_STORAGE_KEY);
+    } catch {
+        /* the open chat just won't be restored next load */
+    }
 }

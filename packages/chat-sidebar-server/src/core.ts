@@ -1,60 +1,42 @@
-// All configured providers are live; getModel() picks one per request.
-
 import {
     APICallError,
     streamText,
     generateText,
     convertToModelMessages,
+    createIdGenerator,
     Output,
+    pipeUIMessageStreamToResponse,
     stepCountIs,
     tool,
+    toUIMessageStream,
     getToolName,
     isToolUIPart,
     CallSettings,
     DynamicToolUIPart,
     LanguageModel,
+    OnLanguageModelCallEndCallback,
     TextUIPart,
     ToolSet,
     ToolUIPart,
     UIMessage,
+    UIMessageChunk,
 } from 'ai';
 import { ServerResponse } from 'http';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { z } from 'zod';
-import { anthropic } from '@ai-sdk/anthropic';
-import { createVertexAnthropic } from '@ai-sdk/google-vertex/anthropic';
-import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
 import { createMCPClient, MCPClient } from '@ai-sdk/mcp';
-import { defaultProvider } from '@aws-sdk/credential-provider-node';
 import { LangfuseClient } from '@langfuse/client';
+import { resolveModels } from './models.js';
+import { langfuseConfig } from './tracing.js';
 
-const vertexAnthropic = createVertexAnthropic({
-    project: process.env.GOOGLE_VERTEX_PROJECT,
-    location: process.env.GOOGLE_VERTEX_LOCATION || 'global',
-});
-
-const bedrock = createAmazonBedrock({
-    region: process.env.AWS_REGION,
-    credentialProvider: defaultProvider(),
-});
-
-const BEDROCK_MODEL_ID = process.env.BEDROCK_MODEL_ID;
-
-// Small models for follow-up suggestions, on the provider the chat uses.
-const SUGGESTIONS_MODEL_ID =
-    process.env.SUGGESTIONS_MODEL_ID ||
-    'us.anthropic.claude-haiku-4-5-20251001-v1:0';
-const SMALL_ANTHROPIC_MODEL_ID = 'claude-haiku-4-5';
-const SMALL_VERTEX_MODEL_ID = 'claude-haiku-4-5@20251001';
-
-// Direct Anthropic and Vertex access currently use Sonnet 5.
-const CLAUDE_MODEL_ID = 'claude-sonnet-5';
+export { AVAILABLE_MODELS, DEFAULT_MODEL } from './models.js';
 
 // The SDK's provider-agnostic reasoning setting, so one value maps to each
-// provider's own knob (Anthropic `thinking`, Bedrock `reasoningConfig`) —
-// a provider-keyed `providerOptions` would silently no-op on the others.
+// provider's own knob (Anthropic `thinking`, Bedrock `reasoningConfig`,
+// OpenAI `reasoningEffort`) — a provider-keyed `providerOptions` would
+// silently no-op on the others.
 type ReasoningEffort = NonNullable<CallSettings['reasoning']>;
 
 const REASONING_EFFORT_VALUES: readonly ReasoningEffort[] = [
@@ -103,27 +85,36 @@ const CAPABILITIES_PROMPT_TEXT = readFileSync(
     'utf-8'
 );
 
-// Accept LANGFUSE_HOST too — this deployment's shell env uses the older name.
-const langfuse =
-    process.env.LANGFUSE_PUBLIC_KEY && process.env.LANGFUSE_SECRET_KEY
-        ? new LangfuseClient({
-              baseUrl:
-                  process.env.LANGFUSE_BASE_URL || process.env.LANGFUSE_HOST,
-          })
-        : undefined;
+const langfuse = langfuseConfig
+    ? new LangfuseClient(langfuseConfig)
+    : undefined;
 
-async function getSystemPrompt(pageHref?: string): Promise<string> {
-    const systemPrompt = langfuse
-        ? // No label: Langfuse serves the version labelled `production`.
-          (
-              await langfuse.prompt.get('cBioChat Sidebar System Prompt', {
-                  fallback: LOCAL_SYSTEM_PROMPT_TEXT,
-              })
-          ).prompt
-        : LOCAL_SYSTEM_PROMPT_TEXT;
-    return pageHref
-        ? `${systemPrompt}\n\nThe user is currently viewing this cBioPortal page: ${pageHref}`
-        : systemPrompt;
+interface SystemPrompt {
+    text: string;
+    // The Langfuse prompt version the text came from, which the chat's model
+    // calls are linked to in their traces. A fallback is never linked.
+    langfusePrompt?: { name: string; version: number; isFallback: boolean };
+}
+
+const SYSTEM_PROMPT_NAME =
+    process.env.LANGFUSE_SYSTEM_PROMPT_NAME || 'cBioChat Sidebar System Prompt';
+
+async function getSystemPrompt(pageHref?: string): Promise<SystemPrompt> {
+    // No label: Langfuse serves the version labelled `production`.
+    const fetched = await langfuse?.prompt.get(SYSTEM_PROMPT_NAME, {
+        fallback: LOCAL_SYSTEM_PROMPT_TEXT,
+    });
+    const systemPrompt = fetched?.prompt ?? LOCAL_SYSTEM_PROMPT_TEXT;
+    return {
+        text: pageHref
+            ? `${systemPrompt}\n\nThe user is currently viewing this cBioPortal page: ${pageHref}`
+            : systemPrompt,
+        langfusePrompt: fetched && {
+            name: fetched.name,
+            version: fetched.version,
+            isFallback: fetched.isFallback,
+        },
+    };
 }
 
 async function getReportPrompt(): Promise<string> {
@@ -131,7 +122,7 @@ async function getReportPrompt(): Promise<string> {
 }
 
 // Optional and independent — unset means that server's tools aren't offered
-// (same pattern as AVAILABLE_MODELS below).
+// (same pattern as the providers in models.ts).
 interface McpServerConfig {
     name: string;
     url: string;
@@ -260,61 +251,82 @@ const getPageDetailsTool = tool({
     inputSchema: z.object({}),
 });
 
-// Ids are "<provider>:<model>".
-function getModel(id: string): LanguageModel {
-    const separatorIndex = id.indexOf(':');
-    const provider = id.slice(0, separatorIndex);
-    const modelId = id.slice(separatorIndex + 1);
-    switch (provider) {
-        case 'anthropic':
-            return anthropic(modelId);
-        case 'vertex':
-            return vertexAnthropic(modelId);
-        case 'bedrock':
-            if (!BEDROCK_MODEL_ID || modelId !== BEDROCK_MODEL_ID) {
-                throw new Error(`Unknown Bedrock model id: "${modelId}"`);
-            }
-            return bedrock(BEDROCK_MODEL_ID);
-        default:
-            throw new Error(`Unknown model id: "${id}"`);
-    }
+// Assistant message ids are minted here rather than on the client, so the id
+// the client streams into is the one that is saved.
+const generateMessageId = createIdGenerator({ prefix: 'msg' });
+
+const KEEP_ALIVE_MS = 1000;
+
+// A reply stopped just as its text began is saved with an empty text part,
+// which the model APIs reject on every later turn. A message left with
+// nothing is dropped by convertToModelMessages.
+function withoutEmptyText(message: UIMessage): UIMessage {
+    return {
+        ...message,
+        parts: message.parts.filter(
+            part => part.type !== 'text' || part.text.trim() !== ''
+        ),
+    };
 }
 
-export interface ModelInfo {
-    id: string;
-    name: string;
+// Holds back the chunks that open a reply until something follows them. A
+// client that stops before then has seen no reply begin, so assistant-ui
+// treats the run as unanswered and puts the prompt back in the composer — it
+// can't once even an empty reply has appeared. `released()` says whether the
+// client was sent a reply, and so has one to hang its next message off.
+// An abort isn't content: by then there is no client to tell.
+function withholdReplyStart(
+    stream: ReadableStream<UIMessageChunk>
+): {
+    stream: ReadableStream<UIMessageChunk>;
+    released: () => boolean;
+} {
+    let held: UIMessageChunk[] | null = [];
+    const isOpening = (chunk: UIMessageChunk) =>
+        chunk.type === 'start' ||
+        chunk.type === 'start-step' ||
+        chunk.type === 'abort';
+    return {
+        stream: stream.pipeThrough(
+            new TransformStream<UIMessageChunk, UIMessageChunk>({
+                transform(chunk, controller) {
+                    if (held && isOpening(chunk)) {
+                        held.push(chunk);
+                        return;
+                    }
+                    if (held) {
+                        for (const opening of held) controller.enqueue(opening);
+                        held = null;
+                    }
+                    controller.enqueue(chunk);
+                },
+            })
+        ),
+        released: () => held === null,
+    };
 }
 
-// Only listed if its credentials are configured.
-export const AVAILABLE_MODELS: readonly ModelInfo[] = [
-    process.env.ANTHROPIC_API_KEY && {
-        id: `anthropic:${CLAUDE_MODEL_ID}`,
-        name: 'Claude Sonnet 5 (Anthropic)',
-    },
-    process.env.GOOGLE_VERTEX_PROJECT && {
-        id: `vertex:${CLAUDE_MODEL_ID}`,
-        name: 'Claude Sonnet 5 (Vertex)',
-    },
-    BEDROCK_MODEL_ID && {
-        id: `bedrock:${BEDROCK_MODEL_ID}`,
-        name: `${BEDROCK_MODEL_ID} (Amazon Bedrock)`,
-    },
-].filter((m): m is ModelInfo => Boolean(m));
-
-export const MODEL = AVAILABLE_MODELS[0]?.id ?? '(none configured)';
-
+// `branch` is the conversation so far, oldest first, ending with the message
+// just sent — or, after a client-side tool call, with the assistant message
+// carrying its output, which this reply then continues under the same id.
+// `onEnd` receives the reply once it ends, however it ends — or null when it
+// was stopped before the client saw it begin. `onCall` receives the usage of
+// each model call, one per step of the tool loop; the run* functions below
+// take it too.
 export async function runChat(
-    uiMessages: UIMessage[],
+    branch: UIMessage[],
     res: ServerResponse,
     abortSignal: AbortSignal,
+    onEnd: (
+        message: UIMessage | null,
+        isContinuation: boolean
+    ) => Promise<void>,
+    onCall: OnLanguageModelCallEndCallback,
     model?: string,
     pageHref?: string
 ): Promise<void> {
-    const modelId = model || AVAILABLE_MODELS[0]?.id;
-    if (!modelId) {
-        throw new Error('No model available — see AVAILABLE_MODELS.');
-    }
-    const [system, mcpTools] = await Promise.all([
+    const { chat } = resolveModels(model);
+    const [{ text: system, langfusePrompt }, mcpTools] = await Promise.all([
         getSystemPrompt(pageHref),
         getMcpTools(),
     ]);
@@ -325,43 +337,52 @@ export async function runChat(
     };
 
     const result = streamText({
-        model: getModel(modelId),
+        model: chat,
         system,
         tools,
         reasoning: REASONING_EFFORT,
-        // The generic setting leaves Bedrock's `display` unset, where the other
-        // providers ask for summarized thinking; without it the sidebar's
-        // reasoning disclosure would stay empty on Bedrock. Merges with, rather
-        // than replaces, the reasoningConfig the generic setting produces.
-        providerOptions: {
-            bedrock: { reasoningConfig: { display: 'summarized' } },
-        },
         stopWhen: stepCountIs(30),
         // A reply stopped mid-tool leaves a call with no result, which the
         // model API rejects on every later turn; drop such calls.
-        messages: await convertToModelMessages(uiMessages, {
+        messages: await convertToModelMessages(branch.map(withoutEmptyText), {
             ignoreIncompleteToolCalls: true,
         }),
         abortSignal,
+        onLanguageModelCallEnd: onCall,
+        runtimeContext: { langfusePrompt },
+        telemetry: {
+            functionId: 'chat',
+            includeRuntimeContext: { langfusePrompt: true },
+        },
     });
-    await result.pipeUIMessageStreamToResponse(res);
-}
-
-// For one-shot calls. The Bedrock provider drops `reasoning: 'none'`, so Claude
-// there gets the raw field.
-function noThinking(modelId: string) {
-    return {
-        reasoning: 'none' as const,
-        providerOptions: modelId.includes('anthropic.')
-            ? {
-                  bedrock: {
-                      additionalModelRequestFields: {
-                          thinking: { type: 'disabled' },
-                      },
-                  },
-              }
-            : undefined,
-    };
+    const reply = withholdReplyStart(
+        toUIMessageStream({
+            stream: result.stream,
+            tools,
+            originalMessages: branch,
+            generateMessageId,
+            // Awaited before the response ends, so the history is settled by
+            // the time the client can send its next message.
+            onEnd: async ({
+                responseMessage,
+                isContinuation,
+                isAborted,
+                isCancelled,
+            }) => {
+                const withdrawn =
+                    (isAborted || isCancelled) && !reply.released();
+                await onEnd(withdrawn ? null : responseMessage, isContinuation);
+            },
+        })
+    );
+    await pipeUIMessageStreamToResponse({
+        response: res,
+        stream: reply.stream,
+        // A proxy only notices the browser has gone — Stop, a closed tab —
+        // when it next writes to it, so something is written while the model
+        // is still thinking. Without it the model runs on to the end.
+        keepAliveMs: KEEP_ALIVE_MS,
+    });
 }
 
 // Keeps one oversized result from crowding out the rest of the session.
@@ -426,12 +447,10 @@ function labelScreenshots(uiMessages: UIMessage[]): UIMessage[] {
 export async function* runReport(
     uiMessages: UIMessage[],
     abortSignal: AbortSignal,
+    onCall: OnLanguageModelCallEndCallback,
     model?: string
 ): AsyncGenerator<string> {
-    const modelId = model || AVAILABLE_MODELS[0]?.id;
-    if (!modelId) {
-        throw new Error('No model available — see AVAILABLE_MODELS.');
-    }
+    const { chat } = resolveModels(model);
     const system = await getReportPrompt();
     // Claude rejects a request whose messages end on 'assistant' (treats it
     // as an unsupported prefill) — the session's history ends there whenever
@@ -457,9 +476,8 @@ export async function* runReport(
     // streamText reports failures here rather than throwing.
     let error: unknown;
     const result = streamText({
-        model: getModel(modelId),
+        model: chat,
         system,
-        ...noThinking(modelId),
         messages: [
             ...messages,
             {
@@ -467,7 +485,10 @@ export async function* runReport(
                 content: 'Compile the research report for this session now.',
             },
         ],
+        reasoning: 'none',
         abortSignal,
+        onLanguageModelCallEnd: onCall,
+        telemetry: { functionId: 'report' },
         onError: event => {
             error = event.error;
         },
@@ -488,20 +509,31 @@ const MAX_TITLE_CHARS = 60;
 export async function runTitle(
     text: string,
     abortSignal: AbortSignal,
+    onCall: OnLanguageModelCallEndCallback,
     model?: string
 ): Promise<string> {
-    const modelId = model || AVAILABLE_MODELS[0]?.id;
-    if (!modelId) {
-        throw new Error('No model available — see AVAILABLE_MODELS.');
-    }
     const { text: title } = await generateText({
-        model: getModel(modelId),
+        model: resolveModels(model).utility,
         system: TITLE_PROMPT,
-        ...noThinking(modelId),
         messages: [{ role: 'user', content: text }],
+        reasoning: 'none',
         abortSignal,
+        onLanguageModelCallEnd: onCall,
+        telemetry: { functionId: 'title' },
     });
     return title.trim().slice(0, MAX_TITLE_CHARS);
+}
+
+// The chat still gets a name when the model can't be reached: the start of
+// its opening question.
+export function fallbackTitle(text: string): string {
+    const firstLine = text
+        .trim()
+        .split('\n')[0]
+        .trim();
+    return firstLine.length > MAX_TITLE_CHARS
+        ? `${firstLine.slice(0, MAX_TITLE_CHARS - 1).trimEnd()}…`
+        : firstLine;
 }
 
 const SuggestionSchema = z.object({ title: z.string(), prompt: z.string() });
@@ -526,22 +558,9 @@ export interface FollowupsInput {
     details: unknown;
 }
 
-function getSmallModel(provider: string): LanguageModel {
-    switch (provider) {
-        case 'anthropic':
-            return anthropic(SMALL_ANTHROPIC_MODEL_ID);
-        case 'vertex':
-            return vertexAnthropic(SMALL_VERTEX_MODEL_ID);
-        case 'bedrock':
-            return bedrock(SUGGESTIONS_MODEL_ID);
-        default:
-            throw new Error(`Unknown provider: "${provider}"`);
-    }
-}
-
-// Providers whose small model isn't enabled; their follow-ups use the chat
-// model instead.
-const smallModelUnavailable = new Set<string>();
+// Providers whose utility model isn't enabled — on Bedrock, each model needs
+// access granted; their follow-ups use the chat model instead.
+const utilityModelUnavailable = new Set<string>();
 
 function isModelUnavailable(err: unknown): boolean {
     return (
@@ -551,22 +570,23 @@ function isModelUnavailable(err: unknown): boolean {
 }
 
 async function* streamSuggestions(
-    settings: Pick<
-        Parameters<typeof streamText>[0],
-        'model' | 'reasoning' | 'providerOptions'
-    >,
+    model: LanguageModel,
     system: string,
     content: string,
-    abortSignal: AbortSignal
+    abortSignal: AbortSignal,
+    onCall: OnLanguageModelCallEndCallback
 ): AsyncGenerator<Suggestion> {
     // streamText reports failures here rather than throwing.
     let error: unknown;
     const result = streamText({
-        ...settings,
+        model,
         system,
         messages: [{ role: 'user', content }],
         output: Output.array({ element: SuggestionSchema }),
+        reasoning: 'none',
         abortSignal,
+        onLanguageModelCallEnd: onCall,
+        telemetry: { functionId: 'followups' },
         onError: event => {
             error = event.error;
         },
@@ -585,47 +605,34 @@ async function* streamSuggestions(
 export async function* runFollowups(
     { question, answer, href, details }: FollowupsInput,
     abortSignal: AbortSignal,
+    onCall: OnLanguageModelCallEndCallback,
     model?: string
 ): AsyncGenerator<Suggestion> {
-    const modelId = model || AVAILABLE_MODELS[0]?.id;
-    if (!modelId) {
-        throw new Error('No model available — see AVAILABLE_MODELS.');
-    }
-    const provider = modelId.slice(0, modelId.indexOf(':'));
+    const { chat, utility, providerId } = resolveModels(model);
     const system = `${LOCAL_FOLLOWUPS_PROMPT_TEXT}\n\n${CAPABILITIES_PROMPT_TEXT}\n\n${formatPageSection(
         href,
         details
     )}`;
     const content = `## Latest exchange\n\nUser:\n${question}\n\nAssistant:\n${answer}\n\nSuggest follow-ups.`;
-    const chatModel = () =>
-        streamSuggestions(
-            { model: getModel(modelId), ...noThinking(modelId) },
-            system,
-            content,
-            abortSignal
-        );
-    if (smallModelUnavailable.has(provider)) {
-        yield* chatModel();
+    const suggest = (from: LanguageModel) =>
+        streamSuggestions(from, system, content, abortSignal, onCall);
+    if (utilityModelUnavailable.has(providerId)) {
+        yield* suggest(chat);
         return;
     }
     let yielded = false;
     try {
-        for await (const suggestion of streamSuggestions(
-            { model: getSmallModel(provider) },
-            system,
-            content,
-            abortSignal
-        )) {
+        for await (const suggestion of suggest(utility)) {
             yielded = true;
             yield suggestion;
         }
     } catch (err) {
         if (yielded || !isModelUnavailable(err)) throw err;
         console.warn(
-            `${provider} small model unavailable, using ${modelId} for follow-ups:`,
+            `${providerId} utility model unavailable, using its chat model for follow-ups:`,
             describeError(err)
         );
-        smallModelUnavailable.add(provider);
-        yield* chatModel();
+        utilityModelUnavailable.add(providerId);
+        yield* suggest(chat);
     }
 }

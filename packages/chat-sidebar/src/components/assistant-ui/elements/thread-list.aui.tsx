@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useSyncExternalStore } from 'react';
+import { FC, useCallback } from 'react';
 import {
     ThreadListItemPrimitive,
     ThreadListPrimitive,
@@ -8,32 +8,6 @@ import {
 } from '@assistant-ui/react';
 import { Trash2Icon } from 'lucide-react';
 import { cn } from 'cn';
-import {
-    getStorageNotice,
-    subscribeToStorageNotice,
-} from '@/lib/threadStorage';
-
-const STORAGE_NOTICE_TEXT = {
-    pruned: 'Storage was full — the oldest chat was removed.',
-    full: 'Storage is full. Delete a chat to keep saving new messages.',
-};
-
-const StorageNotice: FC = () => {
-    const notice = useSyncExternalStore(
-        subscribeToStorageNotice,
-        getStorageNotice,
-        getStorageNotice
-    );
-    if (!notice) return null;
-    return (
-        <p
-            data-slot="aui_thread-list-notice"
-            className="mt-2 px-1 text-[11px] leading-snug text-muted-foreground"
-        >
-            {STORAGE_NOTICE_TEXT[notice]}
-        </p>
-    );
-};
 
 const ThreadListItem: FC<{ onNavigate?: (() => void) | undefined }> = ({
     onNavigate,
@@ -105,8 +79,6 @@ export const ThreadList: FC<{ onNavigate?: (() => void) | undefined }> = ({
                     {renderItem}
                 </ThreadListPrimitive.Items>
             </div>
-
-            <StorageNotice />
         </ThreadListPrimitive.Root>
     );
 };

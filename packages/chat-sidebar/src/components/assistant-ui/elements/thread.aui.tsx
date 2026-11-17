@@ -8,6 +8,10 @@ import { ScreenshotButton } from '@/components/assistant-ui/elements/screenshot-
 import { File } from '@/components/assistant-ui/elements/file';
 import { ThreadFollowupSuggestions } from '@/components/assistant-ui/elements/follow-up-suggestions.aui';
 import { MarkdownText } from '@/components/assistant-ui/elements/markdown-text';
+import {
+    ModelSelector,
+    useModelSelectorContext,
+} from '@/components/assistant-ui/elements/model-selector';
 import { ToolFallback } from '@/components/assistant-ui/elements/tool-fallback.aui';
 import {
     ToolGroupContent,
@@ -17,6 +21,13 @@ import {
 import { TooltipIconButton } from '@/components/assistant-ui/elements/tooltip-icon-button';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PortalModelsHeading, UsageBanner } from '@/components/Usage';
+import {
+    getModels,
+    getSelectedModel,
+    setSelectedModel,
+    subscribe as subscribeToChatSession,
+} from '@/lib/chatSession';
 import { getPageType, PageType, subscribe } from '@/lib/page-events';
 import { getStartersState, subscribeToStarters } from '@/lib/starters';
 import { cn } from '@/lib/utils';
@@ -263,7 +274,7 @@ const ThreadWelcome: FC = () => {
                 />
                 <span>
                     This assistant is experimental and under active development.
-                    Chats are stored only in this browser's local storage.
+                    Chats are saved to your account.
                 </span>
             </p>
         </div>
@@ -375,9 +386,10 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
             <ThreadFollowupSuggestions
                 onSelect={() => focusInputAtEnd(inputRef)}
             />
+            <UsageBanner />
             <div
                 data-slot="aui_composer-shell"
-                className="border-border focus-within:border-muted-foreground/40 dark:border-muted-foreground/15 dark:focus-within:border-muted-foreground/30 flex w-full cursor-text flex-col gap-2 rounded-(--composer-radius) border bg-(--composer-bg) p-(--composer-padding) transition-[border-color]"
+                className="border-border focus-within:border-muted-foreground/40 dark:border-muted-foreground/15 dark:focus-within:border-muted-foreground/30 flex w-full cursor-text flex-col gap-2 rounded-(--composer-radius) border bg-(--composer-bg) [[data-usage-banner]+&]:rounded-t-none p-(--composer-padding) transition-[border-color]"
             >
                 <ComposerAttachments />
                 <ComposerPrimitive.Input
@@ -399,11 +411,63 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
     );
 };
 
+// The provider, after the model name: two providers can serve the same model,
+// and the trigger would otherwise show only the shared name.
+const SelectedModelProvider: FC = () => {
+    const { selectedModel } = useModelSelectorContext();
+    if (!selectedModel?.description) return null;
+    return (
+        <span className="text-muted-foreground truncate">
+            {selectedModel.description}
+        </span>
+    );
+};
+
+// Shown even for a single model, since it also holds the usage. Hidden only
+// while there is nothing to list. Disabled while a reply streams: a tool
+// result sends the turn's next request automatically, and it must go to the
+// same provider as the rest of the turn.
+const ComposerModelSelector: FC = () => {
+    const models = useSyncExternalStore(
+        subscribeToChatSession,
+        getModels,
+        getModels
+    );
+    const selected = useSyncExternalStore(
+        subscribeToChatSession,
+        getSelectedModel,
+        getSelectedModel
+    );
+    const isRunning = useAuiState(s => s.thread.isRunning);
+    if (models.length === 0) return null;
+    return (
+        <ModelSelector.Root
+            models={models}
+            value={selected ?? undefined}
+            onValueChange={setSelectedModel}
+        >
+            <ModelSelector.Trigger
+                variant="ghost"
+                size="sm"
+                disabled={isRunning}
+            >
+                <ModelSelector.Value />
+                <SelectedModelProvider />
+            </ModelSelector.Trigger>
+            <ModelSelector.Content
+                align="end"
+                header={<PortalModelsHeading />}
+            />
+        </ModelSelector.Root>
+    );
+};
+
 const ComposerAction: FC = () => {
     return (
         <div className="aui-composer-action-wrapper relative flex items-center justify-between">
             <ScreenshotButton />
             <div className="flex items-center gap-1.5">
+                <ComposerModelSelector />
                 <AuiIf condition={s => !s.thread.isRunning}>
                     <ComposerPrimitive.Send
                         render={

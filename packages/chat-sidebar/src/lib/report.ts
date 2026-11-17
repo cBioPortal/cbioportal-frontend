@@ -2,6 +2,7 @@ import { UIMessage } from 'ai';
 import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
+import { refreshUsage, throwIfLimitReached } from './usage';
 
 // Numbered in order of first appearance, as the server labels them for the
 // report model.
@@ -161,18 +162,22 @@ export function cacheReport(key: string, text: string): void {
 
 // The endpoint streams plain text; onText gets the report so far after each
 // chunk. Rejects if the stream is cut before the end.
+// `threadId` is the chat the report is for, so the server can trace it with it.
+// A user at their usage limit gets a UsageLimitError.
 export async function streamReport(
     messages: UIMessage[],
     model: string | undefined,
+    threadId: string | undefined,
     signal: AbortSignal,
     onText: (text: string) => void
 ): Promise<string> {
     const res = await fetch('/api/chat/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages, model }),
+        body: JSON.stringify({ messages, model, threadId }),
         signal,
     });
+    await throwIfLimitReached(res);
     if (!res.ok || !res.body) {
         const body = await res.json().catch(() => undefined);
         throw new Error(body?.error ?? `report failed (${res.status})`);
@@ -186,5 +191,6 @@ export async function streamReport(
         onText(text);
     }
     if (!text) throw new Error('empty report');
+    void refreshUsage();
     return text;
 }
