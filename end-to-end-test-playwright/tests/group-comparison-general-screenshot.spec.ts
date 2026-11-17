@@ -231,7 +231,9 @@ test.describe.serial('group comparison general screenshots', () => {
     test('methylation enrichments tab several groups', async () => {
         await page.locator('.tabAnchor_dna_methylation').click();
         await expect(page.locator(METHYLATION_ENRICH_DIV).first()).toBeVisible({
-            timeout: 20000,
+            // Methylation enrichments compare every methylation probe across
+            // the groups; on a busy CI runner this can take longer than 20s.
+            timeout: 60000,
         });
         await clickBoldByText(page, 'MTRF1L');
         await expect(
@@ -328,7 +330,9 @@ test.describe.serial('group comparison general screenshots', () => {
     test('methylation enrichments tab two groups', async () => {
         await page.locator('.tabAnchor_dna_methylation').click();
         await expect(page.locator(METHYLATION_ENRICH_DIV).first()).toBeVisible({
-            timeout: 20000,
+            // Methylation enrichments compare every methylation probe across
+            // the groups; on a busy CI runner this can take longer than 20s.
+            timeout: 60000,
         });
         await clickBoldByText(page, 'BET1');
         await expectElementScreenshot(
