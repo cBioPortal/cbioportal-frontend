@@ -51,6 +51,7 @@ async function installMolecularMocks(
         accessRequests,
     });
     const portalRequests: string[] = [];
+    const copyNumberCountQueries: unknown[] = [];
     page.on('request', request => {
         const url = request.url();
         if (
@@ -85,28 +86,26 @@ async function installMolecularMocks(
             ])
         )
     );
+    // Only amplifications and deep deletions, as the viewer requests them.
     await page.route(
-        '**/api/molecular-profiles/*/molecular-data/fetch**',
+        '**/api/molecular-profiles/*/discrete-copy-number/fetch**',
         route =>
             route.fulfill(
                 json([
                     {
                         sampleId: SAMPLE_ID,
-                        value: 2,
+                        alteration: 2,
+                        entrezGeneId: 2064,
                         gene: { hugoGeneSymbol: 'ERBB2', entrezGeneId: 2064 },
-                    },
-                    {
-                        sampleId: SAMPLE_ID,
-                        value: 0,
-                        gene: { hugoGeneSymbol: 'TP53', entrezGeneId: 7157 },
                     },
                 ])
             )
     );
     await page.route(
         '**/api/molecular-profiles/*/discrete-copy-number-counts/fetch',
-        route =>
-            route.fulfill(
+        route => {
+            copyNumberCountQueries.push(route.request().postDataJSON());
+            return route.fulfill(
                 json([
                     {
                         entrezGeneId: 2064,
@@ -115,7 +114,8 @@ async function installMolecularMocks(
                         numberOfSamplesWithAlterationInGene: 10,
                     },
                 ])
-            )
+            );
+        }
     );
     await page.route('**/api/structural-variant/fetch**', route =>
         route.fulfill(
@@ -143,7 +143,12 @@ async function installMolecularMocks(
                 ])
             )
     );
-    return { accessRequests, enrichmentRequests, portalRequests };
+    return {
+        accessRequests,
+        enrichmentRequests,
+        portalRequests,
+        copyNumberCountQueries,
+    };
 }
 
 async function openViewer(page: Page) {
@@ -166,6 +171,7 @@ if (process.env.PW_SUITE === 'wsi') {
                 accessRequests,
                 enrichmentRequests,
                 portalRequests,
+                copyNumberCountQueries,
             } = await installMolecularMocks(page, MOLECULAR_PROFILES);
             const errors: string[] = [];
             page.on('pageerror', error => errors.push(error.message));
@@ -177,8 +183,10 @@ if (process.env.PW_SUITE === 'wsi') {
             await expect(molecular).toContainText('G12D');
             await expect(molecular).toContainText('ERBB2');
             await expect(molecular).toContainText('AMP');
+            await expect(molecular).toContainText(
+                'Samples in study with this alteration: 10/200 (5.0%)'
+            );
             await expect(molecular).toContainText('EML4');
-            await expect(molecular).not.toContainText('TP53');
             // The study counts arrive last, in the variant's details.
             await expect(molecular.getByText('G12D')).toContainText(
                 'Samples in study with this variant: 3/120 (2.5%)'
@@ -189,10 +197,15 @@ if (process.env.PW_SUITE === 'wsi') {
             // One profile list, with no type filter, for all three tables.
             expect(requested('/molecular-profiles?')).toHaveLength(1);
             expect(requested('molecularAlterationType')).toEqual([]);
-            expect(requested('/molecular-data/fetch')).toEqual([
+            expect(requested('/discrete-copy-number/fetch')).toEqual([
                 expect.stringContaining(
-                    `/api/molecular-profiles/${STUDY_ID}_gistic/molecular-data/fetch`
+                    `/api/molecular-profiles/${STUDY_ID}_gistic/discrete-copy-number/fetch?discreteCopyNumberEventType=HOMDEL_AND_AMP`
                 ),
+            ]);
+            expect(requested('/molecular-data/fetch')).toEqual([]);
+            // Study counts only for the sample's alterations.
+            expect(copyNumberCountQueries).toEqual([
+                [{ entrezGeneId: 2064, alteration: 2 }],
             ]);
             expect(
                 requested(
@@ -229,7 +242,7 @@ if (process.env.PW_SUITE === 'wsi') {
             ).toHaveText('Not profiled for mutations.', { timeout: 30000 });
             expect(
                 portalRequests.filter(url =>
-                    /mutations\/fetch|molecular-data|structural-variant|variant-counts/.test(
+                    /mutations\/fetch|discrete-copy-number|structural-variant|variant-counts/.test(
                         url
                     )
                 )

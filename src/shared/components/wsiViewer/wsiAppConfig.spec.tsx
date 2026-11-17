@@ -8,6 +8,7 @@ import {
     buildWsiMolecularServices,
     buildWsiViewerConfig,
     wsiAuthScope,
+    wsiSampleClinicalData,
 } from './wsiAppConfig';
 
 const mockServerConfig: Record<string, unknown> = {};
@@ -35,11 +36,13 @@ jest.mock('shared/lib/redirectHelpers', () => ({
     redirectToLogin: () => mockRedirectToLogin(),
 }));
 
+const mockClinicalState = () => ({
+    rows: [{ label: 'Sex', value: 'Female' }],
+    sampleData: mockSampleData,
+});
+const mockUseWsiClinicalData = jest.fn(mockClinicalState);
 jest.mock('./wsiClinicalRows', () => ({
-    useWsiClinicalData: () => ({
-        rows: [{ label: 'Sex', value: 'Female' }],
-        sampleData: mockSampleData,
-    }),
+    useWsiClinicalData: () => mockUseWsiClinicalData(),
 }));
 
 jest.mock('cbioportal-wsi-viewer/viewer', () => ({
@@ -94,8 +97,42 @@ describe('buildWsiMolecularServices', () => {
     });
 });
 
+describe('wsiSampleClinicalData', () => {
+    it('is the sample data, null while loading, unset after a failure', () => {
+        expect(wsiSampleClinicalData(mockClinicalState() as any)).toBe(
+            mockSampleData
+        );
+        expect(wsiSampleClinicalData(undefined)).toBeNull();
+        expect(wsiSampleClinicalData(null)).toBeUndefined();
+    });
+});
+
 describe('AppWsiViewer', () => {
-    beforeEach(() => mockWsiViewer.mockClear());
+    beforeEach(() => {
+        mockWsiViewer.mockClear();
+        mockUseWsiClinicalData.mockImplementation(mockClinicalState);
+    });
+
+    it('leaves the sample attributes to the viewer when the clinical request fails', async () => {
+        mockUseWsiClinicalData.mockImplementation((() => null) as any);
+
+        await act(async () => {
+            render(
+                <AppWsiViewer
+                    patientId="P-1"
+                    studyId="study-1"
+                    tileServerUrl="/wsi"
+                    height={600}
+                />
+            );
+        });
+
+        const props =
+            mockWsiViewer.mock.calls[mockWsiViewer.mock.calls.length - 1][0];
+        expect(props.clinicalRows).toBeUndefined();
+        expect('sampleClinicalData' in props).toBe(true);
+        expect(props.sampleClinicalData).toBeUndefined();
+    });
 
     it('hides the download control unless downloads are shown', async () => {
         mockServerConfig.skin_hide_download_controls = 'hide';

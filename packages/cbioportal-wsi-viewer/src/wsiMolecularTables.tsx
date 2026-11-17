@@ -159,6 +159,14 @@ function formatStudyCount(
     )}%)`;
 }
 
+/** The patient view's germline label next to the protein change. */
+const germlineBadgeStyle: React.CSSProperties = {
+    color: 'red',
+    fontSize: 'x-small',
+    fontWeight: 'normal',
+    marginLeft: 5,
+};
+
 function mutationDetails(
     mutation: MutationDetail,
     cna: CNADetail | undefined
@@ -305,6 +313,14 @@ export function MutationTable({
                                     >
                                         {mutation.proteinChange || '—'}
                                     </DetailTip>
+                                    {mutation.germline && (
+                                        <span
+                                            data-testid="wsi-mutation-germline"
+                                            style={germlineBadgeStyle}
+                                        >
+                                            Germline
+                                        </span>
+                                    )}
                                 </td>
                             </tr>
                         );

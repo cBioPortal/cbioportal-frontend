@@ -86,6 +86,8 @@ export interface MutationDetail {
     keyword?: string;
     proteinStart?: number;
     proteinEnd?: number;
+    /** The mutation status is germline. */
+    germline?: boolean;
     /** Samples of the study's mutation profile with the same variant. */
     cohortAlteredCount?: number;
     /** Samples of the study's mutation profile. */

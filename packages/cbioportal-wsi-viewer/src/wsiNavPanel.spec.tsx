@@ -345,10 +345,16 @@ describe('WsiNavPanel', () => {
         expect(onSelectSlide).toHaveBeenLastCalledWith(slide, sample);
     });
 
-    it('does not toggle a sample when Enter originates from a nested link', () => {
-        const sample = makeSample('S-1', [
-            makeSlide({ slide_key: 'nested-link-slide' }),
-        ]);
+    it('keeps the OncoTree link outside the sample toggle and names the toggle by both lines', () => {
+        const sample = {
+            ...makeSample('S-1', [
+                makeSlide({ slide_key: 'slide-1' }),
+                makeSlide({ slide_key: 'slide-2' }),
+            ]),
+            sample_type: 'Primary',
+            oncotree_code: 'LUAD',
+            cancer_type_detailed: 'Lung Adenocarcinoma',
+        };
         const renderer = TestRenderer.create(
             <WsiNavPanel
                 hierarchy={makeHierarchy([sample])}
@@ -359,24 +365,40 @@ describe('WsiNavPanel', () => {
                 {...navContext}
             />
         );
-        const sampleHeader = renderer.root.findByProps({
-            'aria-label': 'S-1 slides',
-        });
-        const preventDefault = jest.fn();
-        const target = {};
-        const currentTarget = {};
-
-        act(() => {
-            sampleHeader.props.onKeyDown({
-                key: 'Enter',
-                target,
-                currentTarget,
-                preventDefault,
+        const toggle = () =>
+            renderer.root.findByProps({
+                'data-testid': 'wsi-sample-toggle-S-1',
             });
-        });
 
-        expect(preventDefault).not.toHaveBeenCalled();
-        expect(sampleHeader.props['aria-expanded']).toBe(true);
+        expect(toggle().type).toBe('button');
+        expect(toggle().props.role).toBeUndefined();
+        expect(toggle().props['aria-label']).toBe(
+            'S-1 (Primary, OncoTree LUAD): 2 slides'
+        );
+        expect(
+            toggle().findAllByProps({ 'data-testid': 'wsi-oncotree-badge' })
+        ).toHaveLength(0);
+        expect(toggle().findAllByType('a')).toHaveLength(0);
+
+        const badge = renderer.root.findByProps({
+            'data-testid': 'wsi-oncotree-badge',
+        });
+        expect(badge.type).toBe('a');
+        // Following the link does not toggle the sample.
+        const stopPropagation = jest.fn();
+        act(() => {
+            badge.props.onClick({ stopPropagation });
+        });
+        expect(stopPropagation).toHaveBeenCalled();
+        expect(toggle().props['aria-expanded']).toBe(true);
+
+        // The details line toggles for pointer users.
+        act(() => {
+            renderer.root
+                .findByProps({ 'data-testid': 'wsi-sample-details-S-1' })
+                .props.onClick();
+        });
+        expect(toggle().props['aria-expanded']).toBe(false);
     });
 
     it('clears the stain filter when the active stain chip is clicked again', () => {
@@ -1108,7 +1130,9 @@ describe('WsiNavPanel', () => {
         );
         const renderer = TestRenderer.create(panel(slideA));
         const toggle = () =>
-            renderer.root.findByProps({ 'aria-label': 'S-1 slides' });
+            renderer.root.findByProps({
+                'data-testid': 'wsi-sample-toggle-S-1',
+            });
 
         act(() => toggle().props.onClick());
         expect(toggle().props['aria-expanded']).toBe(false);
@@ -1138,7 +1162,9 @@ describe('WsiNavPanel', () => {
         );
         const renderer = TestRenderer.create(panel(slideA));
         const s1 = () =>
-            renderer.root.findByProps({ 'aria-label': 'S-1 slides' });
+            renderer.root.findByProps({
+                'data-testid': 'wsi-sample-toggle-S-1',
+            });
 
         act(() => s1().props.onClick());
         expect(s1().props['aria-expanded']).toBe(false);

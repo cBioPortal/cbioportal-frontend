@@ -791,6 +791,23 @@ function SampleNode({
         .filter(Boolean)
         .join(' · ');
 
+    const toggleOpen = () => setOpen(o => !o);
+    const slideCountText = `${visibleSlideCount} ${pluralize(
+        'slide',
+        visibleSlideCount
+    )}`;
+    // The second line, in the button's name too: sample type, then the
+    // OncoTree code or the cancer type.
+    const sampleDetailParts = [
+        sample.sample_type,
+        sample.oncotree_code
+            ? `OncoTree ${sample.oncotree_code}`
+            : sampleDescription,
+    ].filter((part): part is string => !!part);
+    const sampleToggleLabel = `${sample.sample_id || 'Sample'}${
+        sampleDetailParts.length ? ` (${sampleDetailParts.join(', ')})` : ''
+    }: ${slideCountText}`;
+
     const multiPart = React.useMemo(
         () =>
             open || containsSelectedSlide
@@ -804,54 +821,52 @@ function SampleNode({
             style={{ borderBottom: `1px solid ${theme.border}` }}
             data-testid={`wsi-sample-node-${sample.sample_id}`}
         >
-            <div
-                onClick={() => setOpen(o => !o)}
-                onKeyDown={event => {
-                    if (
-                        event.target === event.currentTarget &&
-                        (event.key === 'Enter' || event.key === ' ')
-                    ) {
-                        event.preventDefault();
-                        setOpen(o => !o);
-                    }
-                }}
-                role="button"
-                tabIndex={0}
-                aria-expanded={open}
-                aria-label={`${sample.sample_id || 'Sample'} slides`}
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '8px 12px 6px',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                }}
-            >
-                <i
-                    className={`fa fa-caret-${open ? 'down' : 'right'}`}
-                    aria-hidden="true"
+            {/* The toggle is a native button; the second line sits outside
+                it, so the OncoTree link is not nested in the button. */}
+            <div style={{ padding: '8px 12px 6px' }}>
+                <button
+                    type="button"
+                    onClick={toggleOpen}
+                    aria-expanded={open}
+                    aria-label={sampleToggleLabel}
+                    data-testid={`wsi-sample-toggle-${sample.sample_id}`}
                     style={{
-                        fontSize: 12,
-                        color: theme.muted,
-                        flexShrink: 0,
-                        width: 8,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        width: '100%',
+                        padding: 0,
+                        border: 0,
+                        background: 'none',
+                        font: 'inherit',
+                        color: 'inherit',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        userSelect: 'none',
                     }}
-                />
-                {/* The sample ID gets its own line; the badges and cancer
-                    type share one truncated line below it. */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
+                >
+                    <i
+                        className={`fa fa-caret-${open ? 'down' : 'right'}`}
+                        aria-hidden="true"
                         style={{
+                            fontSize: 12,
+                            color: theme.muted,
+                            flexShrink: 0,
+                            width: 8,
+                        }}
+                    />
+                    <span
+                        style={{
+                            flex: 1,
+                            minWidth: 0,
                             display: 'flex',
                             alignItems: 'center',
                             gap: 5,
-                            minWidth: 0,
                         }}
                     >
                         {sample.sample_id &&
                             renderSampleLabel?.(sample.sample_id)}
-                        <div
+                        <span
                             style={{
                                 fontSize: 13,
                                 fontWeight: 600,
@@ -860,13 +875,40 @@ function SampleNode({
                             }}
                         >
                             {sample.sample_id || '—'}
-                        </div>
-                    </div>
+                        </span>
+                    </span>
+                    <DefaultTooltip
+                        trigger={['hover']}
+                        placement="left"
+                        overlay={
+                            <span>Viewable slides shown in this sample</span>
+                        }
+                    >
+                        <span
+                            style={{
+                                fontSize: 12,
+                                color: theme.muted,
+                                flexShrink: 0,
+                            }}
+                        >
+                            {slideCountText}
+                        </span>
+                    </DefaultTooltip>
+                </button>
+                {/* The badges and cancer type share one truncated line
+                    under the sample ID. Clicking it toggles the sample too;
+                    keyboard users have the button above. */}
+                {sampleDetailParts.length > 0 && (
                     <div
+                        onClick={toggleOpen}
+                        data-testid={`wsi-sample-details-${sample.sample_id}`}
                         style={{
                             fontSize: 11,
                             color: theme.muted,
                             marginTop: 2,
+                            marginLeft: 14,
+                            cursor: 'pointer',
+                            userSelect: 'none',
                             ...ellipsisStyle,
                         }}
                     >
@@ -905,23 +947,7 @@ function SampleNode({
                             </span>
                         )}
                     </div>
-                </div>
-                <DefaultTooltip
-                    trigger={['hover']}
-                    placement="left"
-                    overlay={<span>Viewable slides shown in this sample</span>}
-                >
-                    <span
-                        style={{
-                            fontSize: 12,
-                            color: theme.muted,
-                            flexShrink: 0,
-                        }}
-                    >
-                        {visibleSlideCount}{' '}
-                        {pluralize('slide', visibleSlideCount)}
-                    </span>
-                </DefaultTooltip>
+                )}
             </div>
             {open && (
                 <div style={{ padding: '0 10px 8px' }}>

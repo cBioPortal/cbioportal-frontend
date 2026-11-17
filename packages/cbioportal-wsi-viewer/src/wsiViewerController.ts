@@ -96,7 +96,6 @@ export interface WsiViewerControllerHost {
     /** The patient's hierarchy starts (re)loading; the shared state is reset. */
     onHierarchyLoadStarted?(): void;
     onSlideSelectionStarted?(slide: Slide): void;
-    onSelectionCleared?(): void;
     onViewerOpened?(viewer: any, openSeadragon: any, slide: Slide): void;
     onViewerDestroyed?(): void;
 }
@@ -715,7 +714,6 @@ export class WsiViewerController {
         this.resetMount();
         this.destroyViewer();
         this.state.clearSelection();
-        this.host.onSelectionCleared?.();
         hashUrlState.clear();
     }
 

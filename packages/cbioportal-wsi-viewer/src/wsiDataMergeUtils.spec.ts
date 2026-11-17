@@ -2,6 +2,7 @@
  * @jest-environment jsdom
  */
 import {
+    applyCopyNumberCounts,
     applyVariantCounts,
     buildCnaBySample,
     buildMutationsBySample,
@@ -165,6 +166,38 @@ describe('wsiDataMergeUtils', () => {
             expect(result.get('S-1')![0].vaf).toBeUndefined();
         });
 
+        it('marks germline mutations from their mutation status', () => {
+            const result = buildMutationsBySample([
+                {
+                    sampleId: 'S-1',
+                    gene: { hugoGeneSymbol: 'BRCA2' },
+                    proteinChange: 'p.K3326*',
+                    mutationStatus: 'GERMLINE',
+                },
+                {
+                    sampleId: 'S-1',
+                    gene: { hugoGeneSymbol: 'KRAS' },
+                    proteinChange: 'p.G12D',
+                    mutationStatus: 'Somatic',
+                },
+                {
+                    sampleId: 'S-1',
+                    gene: { hugoGeneSymbol: 'TP53' },
+                    proteinChange: 'p.R175H',
+                },
+            ]);
+
+            expect(
+                result
+                    .get('S-1')!
+                    .map(mutation => [mutation.gene, mutation.germline])
+            ).toEqual([
+                ['BRCA2', true],
+                ['KRAS', undefined],
+                ['TP53', undefined],
+            ]);
+        });
+
         it('sets the study counts of mutations', () => {
             const sample: Sample = {
                 ...makeSample('S-1'),
@@ -193,28 +226,69 @@ describe('wsiDataMergeUtils', () => {
             );
         });
 
-        it('deduplicates duplicate CNA rows per sample', () => {
-            const result = buildCnaBySample(
-                [
+        it('sets the study counts of copy-number alterations', () => {
+            const sample: Sample = {
+                ...makeSample('S-1'),
+                cna_alterations: buildCnaBySample([
                     {
                         sampleId: 'S-1',
-                        value: 2,
-                        gene: {
-                            hugoGeneSymbol: 'EGFR',
-                            entrezGeneId: 1956,
-                        },
+                        alteration: 2,
+                        gene: { hugoGeneSymbol: 'ERBB2', entrezGeneId: 2064 },
                     },
                     {
                         sampleId: 'S-1',
-                        value: 2,
-                        gene: {
-                            hugoGeneSymbol: 'EGFR',
-                            entrezGeneId: 1956,
-                        },
+                        alteration: -2,
+                        gene: { hugoGeneSymbol: 'CDKN2A', entrezGeneId: 1029 },
                     },
-                ],
-                () => undefined
+                ]).get('S-1'),
+            };
+
+            applyCopyNumberCounts([sample], cna =>
+                cna.gene === 'ERBB2'
+                    ? {
+                          entrezGeneId: 2064,
+                          alteration: 2,
+                          numberOfSamples: 200,
+                          numberOfSamplesWithAlterationInGene: 10,
+                      }
+                    : undefined
             );
+
+            expect(sample.cna_alterations).toEqual([
+                {
+                    gene: 'CDKN2A',
+                    entrezGeneId: 1029,
+                    cnaValue: -2,
+                },
+                {
+                    gene: 'ERBB2',
+                    entrezGeneId: 2064,
+                    cnaValue: 2,
+                    cohortAlteredCount: 10,
+                    cohortProfiledCount: 200,
+                },
+            ]);
+        });
+
+        it('deduplicates duplicate CNA rows per sample', () => {
+            const result = buildCnaBySample([
+                {
+                    sampleId: 'S-1',
+                    alteration: 2,
+                    gene: {
+                        hugoGeneSymbol: 'EGFR',
+                        entrezGeneId: 1956,
+                    },
+                },
+                {
+                    sampleId: 'S-1',
+                    alteration: 2,
+                    gene: {
+                        hugoGeneSymbol: 'EGFR',
+                        entrezGeneId: 1956,
+                    },
+                },
+            ]);
 
             expect(result.get('S-1')).toHaveLength(1);
             expect(result.get('S-1')?.[0].gene).toBe('EGFR');

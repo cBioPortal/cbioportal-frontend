@@ -691,6 +691,58 @@ describe('WSIViewer — sample enrichment scheduling', () => {
         );
     });
 
+    it('applies the copy-number study counts to the merged alterations', async () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const hierarchy = makeHierarchy(
+            [makeSlide({ slide_key: 'current-slide' })],
+            'P-current'
+        );
+        hierarchy.samples[0].cna_alterations = [
+            { gene: 'ERBB2', entrezGeneId: 2064, cnaValue: 2 },
+        ];
+        inst.viewerState.hierarchy = hierarchy;
+
+        const countsSpy = jest
+            .spyOn(wsiCbioportalDataUtils, 'fetchCopyNumberCounts')
+            .mockResolvedValue(
+                new Map([
+                    [
+                        wsiCbioportalDataUtils.copyNumberCountKey(
+                            'study_gistic',
+                            2064,
+                            2
+                        ),
+                        {
+                            entrezGeneId: 2064,
+                            alteration: 2,
+                            numberOfSamples: 200,
+                            numberOfSamplesWithAlterationInGene: 10,
+                        },
+                    ],
+                ])
+            );
+
+        await (inst as any).fetchAndMergeCopyNumberCounts(
+            'study_gistic',
+            () => true
+        );
+
+        expect(countsSpy).toHaveBeenCalledTimes(1);
+        expect(countsSpy.mock.calls[0][0]).toBe('study_gistic');
+        expect(countsSpy.mock.calls[0][1].map(cna => cna.gene)).toEqual([
+            'ERBB2',
+        ]);
+        expect(inst.viewerState.hierarchy.samples[0].cna_alterations).toEqual([
+            {
+                gene: 'ERBB2',
+                entrezGeneId: 2064,
+                cnaValue: 2,
+                cohortAlteredCount: 10,
+                cohortProfiledCount: 200,
+            },
+        ]);
+    });
+
     it('runs independent enrichment fetches in parallel stages', async () => {
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
         const order: string[] = [];
@@ -714,9 +766,12 @@ describe('WSIViewer — sample enrichment scheduling', () => {
         const frequencySpy = jest
             .spyOn(inst as any, 'fetchAndMergeVariantCounts')
             .mockResolvedValue(undefined);
+        const cnaCountsSpy = jest
+            .spyOn(inst as any, 'fetchAndMergeCopyNumberCounts')
+            .mockResolvedValue(undefined);
         jest.spyOn(inst as any, 'fetchAndMergeCNA').mockImplementation(() => {
             order.push('cna');
-            return cna.promise;
+            return cna.promise.then(() => 'study_gistic');
         });
         jest.spyOn(
             inst as any,
@@ -754,6 +809,9 @@ describe('WSIViewer — sample enrichment scheduling', () => {
         cna.resolve();
         await Promise.resolve();
         expect(frequencySpy).not.toHaveBeenCalled();
+        // The copy-number counts load after the tables, not before the
+        // copy-number table merges.
+        expect(cnaCountsSpy).not.toHaveBeenCalled();
 
         structuralVariants.resolve();
         await enrichmentPromise;
@@ -762,7 +820,28 @@ describe('WSIViewer — sample enrichment scheduling', () => {
             'study_mutations',
             expect.any(Function)
         );
+        expect(cnaCountsSpy).toHaveBeenCalledWith(
+            'study_gistic',
+            expect.any(Function)
+        );
     });
+
+    it.each(['unprofiled', 'error'])(
+        'keeps the %s mutation status when the slide selection is cleared',
+        status => {
+            const inst = makeInstance('https://tiles.example.com/patient/P-1');
+            inst.viewerState.hierarchy = makeHierarchy(
+                [makeSlide({ slide_key: 'A' })],
+                'P-1'
+            );
+            (inst as any).setMutationDataStatus(status);
+
+            controllerOf(inst).clearSelectedSlide();
+
+            // The status describes the patient, not the selected slide.
+            expect((inst as any).mutationDataStatus).toBe(status);
+        }
+    );
 
     it('reports a study without a mutation profile as not profiled, without retrying', async () => {
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
@@ -1038,5 +1117,43 @@ describe('WSIViewer — sample enrichment scheduling', () => {
 
         expect(fetchMock).not.toHaveBeenCalled();
         expect(inst.viewerState.hierarchy.samples[0].tmb_score).toBe('8.2');
+    });
+
+    it('requests the sample attributes itself when the host stops providing them', async () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1', {
+            sampleClinicalData: null,
+            studyId: 'study-1',
+        });
+        inst.viewerState.hierarchy = makeHierarchy(
+            [makeSlide({ slide_key: 'A' })],
+            'P-1'
+        );
+        const sampleId = inst.viewerState.hierarchy.samples[0].sample_id;
+        const clinicalSpy = jest
+            .spyOn(wsiCbioportalDataUtils, 'fetchClinicalDataRecords')
+            .mockResolvedValue([
+                {
+                    sampleId,
+                    clinicalAttributeId: 'TMB_NONSYNONYMOUS',
+                    value: '8.2',
+                },
+            ]);
+
+        try {
+            // The host's request failed: it no longer provides the data.
+            const prevProps = inst.props;
+            inst.props = { ...prevProps, sampleClinicalData: undefined };
+            inst.componentDidUpdate(prevProps);
+            for (let tick = 0; tick < 5; tick += 1) {
+                await Promise.resolve();
+            }
+
+            expect(clinicalSpy).toHaveBeenCalledWith([
+                { studyId: 'study-1', sampleId },
+            ]);
+            expect(inst.viewerState.hierarchy.samples[0].tmb_score).toBe('8.2');
+        } finally {
+            clinicalSpy.mockRestore();
+        }
     });
 });
