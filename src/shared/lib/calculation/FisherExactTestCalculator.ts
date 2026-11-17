@@ -1,5 +1,12 @@
 import _ from 'lodash';
 
+// A table counts as "at least as extreme" when its probability is no larger
+// than the observed table's, allowing for floating point error. Mirror tables
+// (the same counts with the groups swapped) have exactly the same probability,
+// but the log-factorial sums can differ in the last bits. R's fisher.test uses
+// the same relative tolerance.
+const RELATIVE_TOLERANCE = 1e-7;
+
 function getProbability(
     a: number,
     b: number,
@@ -38,6 +45,7 @@ export function getTwoTailedPValue(
     });
 
     let baseP = getProbability(a, b, c, d, logFactorial);
+    const maxP = baseP * (1 + RELATIVE_TOLERANCE);
     let initialA = a,
         initialB = b,
         initialC = c,
@@ -47,7 +55,7 @@ export function getTwoTailedPValue(
     min = c < b ? c : b;
     _.forEach(_.range(0, min), () => {
         let tempP = getProbability(++a, --b, --c, ++d, logFactorial);
-        if (tempP <= baseP) {
+        if (tempP <= maxP) {
             p += tempP;
         }
     });
@@ -60,9 +68,9 @@ export function getTwoTailedPValue(
     min = a < d ? a : d;
     _.forEach(_.range(0, min), () => {
         let pTemp = getProbability(--a, ++b, ++c, --d, logFactorial);
-        if (pTemp <= baseP) {
+        if (pTemp <= maxP) {
             p += pTemp;
         }
     });
-    return p;
+    return Math.min(1, p);
 }
