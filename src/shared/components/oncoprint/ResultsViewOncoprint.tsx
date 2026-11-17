@@ -487,7 +487,7 @@ export default class ResultsViewOncoprint extends React.Component<
         }
         _.forEach(parsedGroups, (entities: string[], molecularProfileId) => {
             const profile: MolecularProfile = this.props.store
-                .molecularProfileIdToMolecularProfile.result[
+                .oncoprintMolecularProfileIdToMolecularProfile.result[
                 molecularProfileId
             ];
             if (profile && entities && entities.length) {
@@ -1304,8 +1304,8 @@ export default class ResultsViewOncoprint extends React.Component<
      * heatmaps are queried from the query page.
      */
     @computed get heatmapIsDynamicallyQueried(): boolean {
-        const profileMap = this.props.store.molecularProfileIdToMolecularProfile
-            .result;
+        const profileMap = this.props.store
+            .oncoprintMolecularProfileIdToMolecularProfile.result;
         return (
             profileMap.hasOwnProperty(this.selectedHeatmapProfileId) &&
             profileMap[this.selectedHeatmapProfileId]
@@ -1506,8 +1506,9 @@ export default class ResultsViewOncoprint extends React.Component<
         delete tracksMap[molecularProfileId];
 
         const molecularAlterationType = this.props.store
-            .molecularProfileIdToMolecularProfile.result[molecularProfileId]
-            .molecularAlterationType!;
+            .oncoprintMolecularProfileIdToMolecularProfile.result[
+            molecularProfileId
+        ].molecularAlterationType!;
 
         if (entities && entities.length) {
             tracksMap[molecularProfileId] = {
@@ -1520,7 +1521,7 @@ export default class ResultsViewOncoprint extends React.Component<
         }
 
         const profileIdToProfile = await toPromise(
-            this.props.store.molecularProfileIdToMolecularProfile
+            this.props.store.oncoprintMolecularProfileIdToMolecularProfile
         );
 
         const heatmap_track_groups: string[] = [];
@@ -2098,12 +2099,14 @@ export default class ResultsViewOncoprint extends React.Component<
     }
 
     readonly additionalTrackGroupHeaders = remoteData({
-        await: () => [this.props.store.molecularProfileIdToMolecularProfile],
+        await: () => [
+            this.props.store.oncoprintMolecularProfileIdToMolecularProfile,
+        ],
         invoke: () => {
             return Promise.resolve(
                 makeTrackGroupHeaders(
-                    this.props.store.molecularProfileIdToMolecularProfile
-                        .result!,
+                    this.props.store
+                        .oncoprintMolecularProfileIdToMolecularProfile.result!,
                     this.molecularProfileIdToAdditionalTracks,
                     this.genesetHeatmapTrackGroupIndex,
                     () => this.clusteredHeatmapTrackGroupIndex,
@@ -2171,7 +2174,7 @@ export default class ResultsViewOncoprint extends React.Component<
                 this.genericAssayHeatmapTracks,
                 this.genericAssayStackedBarTracks,
                 this.heatmapTracks,
-                this.props.store.molecularProfileIdToMolecularProfile,
+                this.props.store.oncoprintMolecularProfileIdToMolecularProfile,
                 this.alterationTypesInQuery,
                 this.alteredKeys,
                 this.additionalTrackGroupHeaders
