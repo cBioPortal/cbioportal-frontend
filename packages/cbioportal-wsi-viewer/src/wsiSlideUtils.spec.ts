@@ -229,6 +229,41 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         ).toEqual(new Set(['source-slide']));
     });
 
+    it('matches a non-portal source sample to the unmatched group by part key', () => {
+        const unmatched = (slideKey: string, partKey: string) =>
+            makeSlide({
+                slide_key: slideKey,
+                sample_id: null,
+                match_level: 'PART',
+                part_key: partKey,
+                specimen_key: `part::${partKey}`,
+            });
+        const hierarchy: PatientHierarchy = {
+            patient_id: 'P-1',
+            samples: [
+                makeSample('UNMATCHED', [
+                    unmatched('source-part', 'part:aaaaaaaaaaaa'),
+                    unmatched('other-part', 'part:bbbbbbbbbbbb'),
+                ]),
+            ],
+        };
+
+        expect(
+            getServableSlideIdsForPathologyFilterReadOnly(hierarchy, {
+                sampleId: 'P-1-T01-IM5',
+                matchLevel: 'PART',
+                partKey: 'part:aaaaaaaaaaaa',
+            })
+        ).toEqual(new Set(['source-part']));
+        // A sample ID alone does not fall back to the unmatched group.
+        expect(
+            getServableSlideIdsForPathologyFilterReadOnly(hierarchy, {
+                sampleId: 'P-1-T01-IM5',
+                matchLevel: 'PART',
+            })
+        ).toEqual(new Set());
+    });
+
     it('memoizes pathology filter results per hierarchy and filter', () => {
         const hierarchy: PatientHierarchy = {
             patient_id: 'P-1',

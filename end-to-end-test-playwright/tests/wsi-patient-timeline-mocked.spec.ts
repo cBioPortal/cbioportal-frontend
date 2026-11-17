@@ -9,17 +9,19 @@ import {
     TileServerRequest,
 } from './wsi-foundation-mocks';
 
-/** A second sequenced sample, with a later slide on a different part. */
+/** A second sequenced sample, with later slides on two other parts. */
 const LATER_SAMPLE_ID = 'wsi-foundation-smoke-sample-2';
 
 /** Opaque 12-hex slide keys, as the backend publishes them. */
 const HNE_KEY = '111111111111';
 const IHC_KEY = '222222222222';
 const LATER_KEY = '444444444444';
-const ALL_KEYS = [HNE_KEY, IHC_KEY, LATER_KEY];
+const OTHER_PART_KEY = '555555555555';
+const ALL_KEYS = [HNE_KEY, IHC_KEY, LATER_KEY, OTHER_PART_KEY];
 
 const BLOCK_SPECIMEN_KEY = 'block::1::A1';
 const PART_SPECIMEN_KEY = 'part::2';
+const OTHER_PART_SPECIMEN_KEY = 'part::3';
 
 function slideRow(
     slideKey: string,
@@ -52,10 +54,11 @@ function slideRow(
 
 const PART_1 = { number: '1', description: 'Primary specimen', block: 'A1' };
 const PART_2 = { number: '2', description: 'Recurrence specimen', block: 'B1' };
+const PART_3 = { number: '3', description: 'Margin specimen', block: 'C1' };
 
 /**
- * Sample 1, block A1: an H&E and an IHC slide. Sample 2, part 2: an H&E
- * slide. The slide rows carry no timing; the clinical events do.
+ * Sample 1, block A1: an H&E and an IHC slide. Sample 2, parts 2 and 3: an
+ * H&E slide each. The slide rows carry no timing; the clinical events do.
  */
 const slideRows = [
     slideRow(HNE_KEY, 'H&E', SAMPLE_ID, 'BLOCK', BLOCK_SPECIMEN_KEY, PART_1),
@@ -68,6 +71,14 @@ const slideRows = [
         PART_SPECIMEN_KEY,
         PART_2
     ),
+    slideRow(
+        OTHER_PART_KEY,
+        'H&E',
+        LATER_SAMPLE_ID,
+        'PART',
+        OTHER_PART_SPECIMEN_KEY,
+        PART_3
+    ),
 ];
 
 /**
@@ -75,30 +86,35 @@ const slideRows = [
  * `pathologySlideSettings` node.
  */
 function slidesTabLinkout(
-    stainFilter: string,
-    matchLevel: string,
-    specimenKey: string,
-    sampleId: string
+    sampleId: string,
+    settings: {
+        stainFilter: string;
+        matchLevel: string;
+        specimenKey?: string;
+        partKey?: string;
+    }
 ): string {
     const params = new URLSearchParams({
         studyId: STUDY_ID,
         caseId: PATIENT_ID,
         sampleId,
-        pathologySlideSettings: JSON.stringify({
-            stainFilter,
-            matchLevel,
-            specimenKey,
-        }),
+        pathologySlideSettings: JSON.stringify(settings),
     });
     return `/patient/wsiHESlides?${params.toString()}`;
 }
 
-const HNE_LINKOUT = slidesTabLinkout(
-    'hne',
-    'BLOCK',
-    BLOCK_SPECIMEN_KEY,
-    SAMPLE_ID
-);
+const HNE_LINKOUT = slidesTabLinkout(SAMPLE_ID, {
+    stainFilter: 'hne',
+    matchLevel: 'BLOCK',
+    specimenKey: BLOCK_SPECIMEN_KEY,
+});
+
+/** Sample 2's part 2 slides, scoped by part key rather than specimen key. */
+const PART_LINKOUT = slidesTabLinkout(LATER_SAMPLE_ID, {
+    stainFilter: 'hne',
+    matchLevel: 'PART',
+    partKey: `part:${PART_2.number}`,
+});
 
 function clinicalEvent(
     eventType: string,
@@ -156,7 +172,11 @@ const clinicalEvents = [
         'IHC',
         'BLOCK',
         'Part 1 / Block A1',
-        slidesTabLinkout('ihc', 'BLOCK', BLOCK_SPECIMEN_KEY, SAMPLE_ID)
+        slidesTabLinkout(SAMPLE_ID, {
+            stainFilter: 'ihc',
+            matchLevel: 'BLOCK',
+            specimenKey: BLOCK_SPECIMEN_KEY,
+        })
     ),
     pathologySlidesEvent(
         200,
@@ -164,7 +184,7 @@ const clinicalEvents = [
         'H&E',
         'PART',
         'Part 2',
-        slidesTabLinkout('hne', 'PART', PART_SPECIMEN_KEY, LATER_SAMPLE_ID)
+        PART_LINKOUT
     ),
 ];
 
@@ -391,6 +411,54 @@ if (process.env.PW_SUITE === 'wsi') {
                 .toContain(HNE_KEY);
             expectTilesWithinLinkedSample(tileServerRequests);
             // The retired slide access endpoint is never called.
+            expect(accessRequests).toEqual([]);
+        });
+
+        test("a PART event's part key scopes the Pathology Slides tab to that part", async ({
+            page,
+        }) => {
+            const accessRequests: string[] = [];
+            const tileServerRequests: TileServerRequest[] = [];
+            await installPatientPageMocks(
+                page,
+                accessRequests,
+                tileServerRequests
+            );
+            await page.goto(
+                `/patient/summary?studyId=${STUDY_ID}&caseId=${PATIENT_ID}`
+            );
+
+            const tooltip = await hoverPathologyEvent(
+                page,
+                'Pathology slides · H&E · Part-matched'
+            );
+            await expect(tooltip).toContainText(LATER_SAMPLE_ID);
+            const link = tooltip.getByRole('link', {
+                name: `Open slides (H&E, ${LATER_SAMPLE_ID})`,
+            });
+            expect(await link.getAttribute('href')).toBe(PART_LINKOUT);
+
+            const linkBox = await link.boundingBox();
+            await page.mouse.move(
+                linkBox!.x + linkBox!.width / 2,
+                linkBox!.y + linkBox!.height / 2
+            );
+            await link.click();
+
+            await expect(page).toHaveURL(/\/patient\/wsiHESlides\?/);
+            // Only part 2's slide: the sample's part 3 slide is left out.
+            await expectListedSlides(page, [LATER_KEY]);
+            await expect(
+                page.getByTestId(`wsi-slide-item-${LATER_KEY}`)
+            ).toHaveAttribute('aria-current', 'true', { timeout: 30000 });
+            await expect
+                .poll(() => requestedSlideKeys(tileServerRequests), {
+                    timeout: 30000,
+                })
+                .toContain(LATER_KEY);
+            expect(requestedSlideKeys(tileServerRequests)).not.toContain(
+                OTHER_PART_KEY
+            );
             expect(accessRequests).toEqual([]);
         });
     });
