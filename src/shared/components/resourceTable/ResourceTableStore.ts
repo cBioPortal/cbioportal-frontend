@@ -19,10 +19,10 @@ import {
 } from 'shared/lib/ResourceTableUtils';
 import {
     PatientIdentifier,
-    Sample,
     SampleIdentifier,
+    StudyViewFilter,
 } from 'cbioportal-ts-api-client';
-import _ from 'lodash';
+import { ResourceCohort, resourceCohortFields } from './resourceTableCohort';
 
 // Guards against a pathological resource pulling an unbounded result set into the browser.
 const MAX_DOWNLOAD_ROWS = 100000;
@@ -47,6 +47,8 @@ export class ResourceTableStore {
     @observable studyIds: string[] = [];
     @observable patientIdentifiers: PatientIdentifier[] = [];
     @observable sampleIdentifiers: SampleIdentifier[] = [];
+    /** When set, the row and metadata requests send this as the cohort; see ResourceCohort. */
+    @observable.ref studyViewFilter: StudyViewFilter | undefined;
     @observable selectedResourceId: string | undefined;
 
     // Server-side state
@@ -78,64 +80,33 @@ export class ResourceTableStore {
         patientIdentifiers: PatientIdentifier[] = [],
         sampleIdentifiers: SampleIdentifier[] = []
     ) {
-        this.studyIds = studyIds;
-        this.patientIdentifiers = patientIdentifiers;
-        this.sampleIdentifiers = sampleIdentifiers;
+        this.setCohort({ studyIds, patientIdentifiers, sampleIdentifiers });
+    }
+
+    /**
+     * Sets the cohort, including a study-view filter when it has one; see ResourceCohort.
+     * Search and column filters are kept: they narrow whatever the cohort holds, as study-view
+     * filters compose, and the table's search box and filter chips keep showing them. A filter
+     * value the new cohort lacks just matches no rows. Only paging resets.
+     */
+    @action
+    setCohort(cohort: ResourceCohort) {
+        this.studyIds = cohort.studyIds;
+        this.patientIdentifiers = cohort.patientIdentifiers;
+        this.sampleIdentifiers = cohort.sampleIdentifiers;
+        this.studyViewFilter = cohort.studyViewFilter;
         this.pageNumber = 0;
-        this.searchTerm = '';
-        this.filters = [];
         // selectedResourceId survives a cohort change: a store created for one resource stays
         // scoped to it. Cleared here, activeResourceId falls back to the first tab instead.
     }
 
-    /**
-     * Sets the cohort from a study view selection.
-     *
-     * The backend reads a request carrying no patient or sample identifiers as the whole of
-     * `studyIds`, so sending none is cheaper when the selection already is the whole study. That
-     * shortcut is only equivalent when the query covers the whole physical study: a virtual study
-     * or case list queries a subset, and `all` is then that subset too, so the counts match while
-     * the cohorts do not. `coversWholeStudy` false, or `all` not yet loaded, keeps the explicit
-     * list, which is correct either way.
-     */
-    @action
-    setContextFromSelection(
-        selected: Pick<Sample, 'studyId' | 'patientId' | 'sampleId'>[],
-        all: Pick<Sample, 'studyId'>[] | undefined,
-        coversWholeStudy: boolean = false
-    ) {
-        if (
-            coversWholeStudy &&
-            all !== undefined &&
-            selected.length === all.length
-        ) {
-            this.setContext(_.uniq(selected.map(s => s.studyId)));
-        } else {
-            this.setContextFromSamples(selected);
-        }
-    }
-
-    /**
-     * Derives the whole cohort from a sample set, keeping each id paired with its own study. Use
-     * this wherever the cohort *is* the samples, so a call site cannot flatten the pairing away.
-     * The patient view builds its context explicitly instead, because a patient with no samples
-     * still has patient-level resources to show.
-     */
-    @action
-    setContextFromSamples(
-        samples: Pick<Sample, 'studyId' | 'patientId' | 'sampleId'>[]
-    ) {
-        this.setContext(
-            _.uniq(samples.map(s => s.studyId)),
-            _.uniqBy(
-                samples.map(s => ({
-                    studyId: s.studyId,
-                    patientId: s.patientId,
-                })),
-                d => `${d.studyId}_${d.patientId}`
-            ),
-            samples.map(s => ({ studyId: s.studyId, sampleId: s.sampleId }))
-        );
+    @computed get cohort(): ResourceCohort {
+        return {
+            studyIds: this.studyIds,
+            patientIdentifiers: this.patientIdentifiers,
+            sampleIdentifiers: this.sampleIdentifiers,
+            studyViewFilter: this.studyViewFilter,
+        };
     }
 
     @action setSelectedResourceId(resourceId: string) {
@@ -199,9 +170,7 @@ export class ResourceTableStore {
      */
     @computed private get baseQuery() {
         return {
-            studyIds: this.studyIds,
-            patientIdentifiers: this.patientIdentifiers,
-            sampleIdentifiers: this.sampleIdentifiers,
+            ...resourceCohortFields(this.cohort),
             sortBy: this.sortBy,
             direction: this.sortDirection,
             search: this.searchTerm || undefined,
@@ -312,10 +281,8 @@ export class ResourceTableStore {
             return [];
         }
         const result = await fetchResourceTableData({
-            studyIds: this.studyIds,
+            ...resourceCohortFields(this.cohort),
             resourceId,
-            patientIdentifiers: this.patientIdentifiers,
-            sampleIdentifiers: this.sampleIdentifiers,
             pageNumber: 0,
             pageSize: Math.min(
                 Math.max(this.totalRowCount, 1),
