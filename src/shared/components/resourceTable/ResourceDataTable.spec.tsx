@@ -30,6 +30,7 @@ describe('ResourceDataTable metadata columns', () => {
                 facetRanges: {},
                 distinctValueCounts: {},
                 rowsForDisplay: [],
+                isMetadataKeyHidden: () => false,
                 ...store,
             } as any,
         });
@@ -108,6 +109,49 @@ describe('ResourceDataTable metadata columns', () => {
         assert.equal(
             cols.find(c => c.id === 'metadata:score')!.dataType,
             'number'
+        );
+    });
+
+    it('shows slide keys as WSI- Slide IDs and downloads them bare', () => {
+        const [slideId] = columns({
+            columns: [
+                metadataColumn({ id: 'metadata:slide_key', label: 'Slide ID' }),
+            ] as ResourceColumnInfo[],
+        });
+        const slideRow: any = {
+            resourceId: 'WSI_SAMPLE',
+            metadata: { slide_key: '1234094d6bc6' },
+        };
+
+        const cell: any = slideId.render(slideRow);
+        assert.equal(cell.props.children, 'WSI-1234-094d-6bc6');
+        assert.equal(slideId.download!(slideRow), '1234094d6bc6');
+    });
+
+    it('leaves out the keys the store hides, from the table and the download', () => {
+        const hideInternal = (key: string) => key === 'internal';
+        assert.deepEqual(
+            columns({
+                isMetadataKeyHidden: hideInternal,
+                columns: [
+                    metadataColumn({ id: 'metadata:score' }),
+                    metadataColumn({ id: 'metadata:internal' }),
+                ] as ResourceColumnInfo[],
+            }).map(c => c.id),
+            ['metadata:score']
+        );
+        // Without backend columns, the keys found in the rows are filtered alike.
+        assert.deepEqual(
+            columns({
+                isMetadataKeyHidden: hideInternal,
+                rowsForDisplay: [
+                    {
+                        resourceId: 'NOTES',
+                        metadata: { score: '1', internal: 'x' },
+                    } as any,
+                ],
+            }).map(c => c.id),
+            ['metadata:score']
         );
     });
 
