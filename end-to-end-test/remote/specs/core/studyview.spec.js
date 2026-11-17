@@ -457,8 +457,9 @@ describe('cancer gene filter', () => {
     });
 
     it('the cancer gene filter should remove non cancer gene', async () => {
-        // enable the filter and check
+        // open the gene filter dropdown and enable the OncoKB option
         await clickElement(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`);
+        await clickElement(`[data-test='gene-filter-option-oncokb']`);
         assert.equal(
             await getColorOfNthElement(
                 `${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`,

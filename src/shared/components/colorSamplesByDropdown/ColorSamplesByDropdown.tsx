@@ -21,11 +21,9 @@ export interface ColorSamplesByDropdownProps {
 
     // Current selection
     selectedOption?: ColoringMenuOmnibarOption;
-    logScale: boolean;
 
     // Configuration
     hasNoQueriedGenes: boolean;
-    logScalePossible: boolean;
     isLoading: boolean;
 
     // Gene-based coloring options (like PlotsTab)
@@ -38,7 +36,6 @@ export interface ColorSamplesByDropdownProps {
 
     // Event handlers
     onSelectionChange: (option: ColoringMenuOmnibarOption | undefined) => void;
-    onLogScaleChange: (enabled: boolean) => void;
     onMutationTypeToggle?: (enabled: boolean) => void;
     onCopyNumberToggle?: (enabled: boolean) => void;
     onStructuralVariantToggle?: (enabled: boolean) => void;
@@ -46,9 +43,17 @@ export interface ColorSamplesByDropdownProps {
     // Additional option groups to insert before Clinical Attributes
     additionalGroups?: ColoringMenuOmnibarGroup[];
 
+    // Omits the built-in "Color by:" label - for callers (e.g. one with its
+    // own caption above) that would otherwise show it twice.
+    hideLabel?: boolean;
+    // Stacks the select and gene checkboxes vertically, for callers with a narrow column where an inline row would overflow.
+    stacked?: boolean;
+
     // Optional styling
     className?: string;
     style?: React.CSSProperties;
+    // Passed straight through to the underlying react-select's `styles` prop
+    selectStyles?: { [key: string]: (base: any, state: any) => any };
 }
 
 @observer
@@ -162,11 +167,6 @@ export class ColorSamplesByDropdown extends React.Component<
     }
 
     @action.bound
-    private handleLogScaleChange() {
-        this.props.onLogScaleChange(!this.props.logScale);
-    }
-
-    @action.bound
     private handleMutationTypeToggle() {
         if (this.props.onMutationTypeToggle) {
             this.props.onMutationTypeToggle(!this.props.mutationTypeEnabled);
@@ -277,36 +277,66 @@ export class ColorSamplesByDropdown extends React.Component<
     };
 
     render() {
+        const stacked = this.props.stacked;
+
         const selectProps = {
-            className: 'color-samples-toolbar-elt gene-select',
+            // Those classes carry fixed-width SCSS meant for the wide
+            // toolbar row - skip them in stacked mode.
+            className: stacked ? '' : 'color-samples-toolbar-elt gene-select',
             value: this.props.selectedOption,
             onChange: this.handleSelectionChange,
             isLoading: this.props.isLoading,
             clearable: false,
             searchable: true,
             disabled: !this.coloringMenuOmnibarOptions.length,
+            ...(this.props.selectStyles && {
+                styles: this.props.selectStyles,
+            }),
         };
 
         return (
             <div
-                style={{
-                    display: 'inline-flex',
-                    position: 'relative',
-                    alignItems: 'center',
-                    ...this.props.style,
-                }}
+                style={
+                    stacked
+                        ? {
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'stretch',
+                              ...this.props.style,
+                          }
+                        : {
+                              display: 'inline-flex',
+                              position: 'relative',
+                              alignItems: 'center',
+                              ...this.props.style,
+                          }
+                }
                 data-test="ColorSamplesByDropdown"
                 className={`coloring-menu ${this.props.className || ''}`}
             >
-                <label className="legend-label">Color by:</label>
-                &nbsp;
+                {!this.props.hideLabel && (
+                    <>
+                        <label className="legend-label">Color by:</label>
+                        &nbsp;
+                    </>
+                )}
                 <div
-                    style={{
-                        display: 'inline-block',
-                    }}
+                    style={
+                        stacked
+                            ? {
+                                  display: 'block',
+                                  width: '100%',
+                                  padding: 0,
+                                  margin: 0,
+                              }
+                            : { display: 'inline-block' }
+                    }
                     className="gene-select-background"
                 >
-                    <div className="checkbox gene-select-container">
+                    <div
+                        className="checkbox gene-select-container"
+                        style={stacked ? { margin: 0 } : undefined}
+                    >
                         <If condition={this.props.hasNoQueriedGenes}>
                             <Then>
                                 <AsyncSelect
@@ -340,27 +370,26 @@ export class ColorSamplesByDropdown extends React.Component<
                         </If>
                     </div>
                 </div>
-                {this.props.logScalePossible && (
-                    <LabeledCheckbox
-                        checked={this.props.logScale}
-                        onChange={this.handleLogScaleChange}
-                        inputProps={{
-                            style: { marginTop: 4 },
-                            className: 'coloringLogScale',
-                        }}
-                    >
-                        Log Scale
-                    </LabeledCheckbox>
-                )}
                 {/* Gene-based coloring checkboxes (like PlotsTab) */}
                 {this.isGeneSelected && (
                     <div
-                        style={{
-                            marginLeft: '10px',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                        }}
+                        style={
+                            stacked
+                                ? {
+                                      marginTop: '6px',
+                                      marginLeft: '8px',
+                                      display: 'flex',
+                                      flexWrap: 'wrap',
+                                      alignItems: 'center',
+                                      gap: '4px 8px',
+                                  }
+                                : {
+                                      marginLeft: '10px',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '10px',
+                                  }
+                        }
                     >
                         {this.props.mutationDataExists && (
                             <LabeledCheckbox

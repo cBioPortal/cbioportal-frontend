@@ -133,10 +133,44 @@ $study-view-table-icon-size: 10px;
 
 .cancerGeneIcon {
     margin-right: 5px;
+    cursor: pointer;
 }
 
 .cancerGeneIcon > img {
     height: $study-view-table-icon-size;
+}
+
+.geneFilterDropdownMenu {
+    min-width: 170px;
+    white-space: nowrap;
+
+    label {
+        display: block;
+        margin: 3px 0;
+        font-weight: normal;
+        cursor: pointer;
+    }
+}
+
+.geneFilterDropdownTitle {
+    margin-bottom: 4px;
+    font-weight: bold;
+}
+
+.geneFilterDropdownCount {
+    color: #999999;
+}
+
+.geneFilterDropdownCombineRow {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #e5e5e5;
+    cursor: pointer;
+    color: #999999;
+
+    &:hover {
+        color: #333333;
+    }
 }
 
 .gistic,

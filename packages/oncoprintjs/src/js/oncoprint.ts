@@ -1348,6 +1348,7 @@ export default class Oncoprint {
         this.cell_view.shareRuleSet(this.model, target_track_id);
         this.legend_view.shareRuleSet(this.model);
         this.minimap_view.shareRuleSet(this.model, this.cell_view);
+        this.resizeAndOrganizeAfterTimeout();
     }
 
     public setRuleSet(track_id: TrackId, rule_set_params: RuleSetParams) {

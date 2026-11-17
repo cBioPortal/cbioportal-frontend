@@ -132,6 +132,10 @@ export default class GroupCheckbox extends React.Component<
 
     buildColorChooserWidget = () => (
         <Popover>
+            {/* The popover is portaled to document.body, outside the Groups
+                menu (an rc-tooltip). Stop native mousedown/click here so
+                rc-trigger's document listener doesn't treat a swatch click
+                as an outside click and close the whole menu. */}
             <div
                 onMouseDown={e => {
                     e.nativeEvent.stopImmediatePropagation();
@@ -237,6 +241,14 @@ export default class GroupCheckbox extends React.Component<
                                             marginTop: 2,
                                             marginRight: 2,
                                         }}
+                                        // Stop the native click before it reaches
+                                        // document: under React 18, RootCloseWrapper
+                                        // attaches its document listener during the
+                                        // opening click's dispatch and would otherwise
+                                        // close the popover immediately.
+                                        onClick={e =>
+                                            e.nativeEvent.stopImmediatePropagation()
+                                        }
                                     >
                                         <ColorPickerIcon
                                             color={

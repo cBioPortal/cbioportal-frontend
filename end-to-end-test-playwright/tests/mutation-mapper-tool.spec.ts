@@ -255,12 +255,19 @@ test.describe('Mutation Mapper Tool: example genomic changes input', () => {
         await waitForGenomeNexus(page);
         await waitForAnnotationTable(page);
 
-        await expect(page.locator('text=T790M')).toHaveCount(2);
         await expect(
             page.locator(
                 '[data-test="LazyMobXTable_CountHeader"]:has-text("124 Mutations")'
             )
         ).toBeVisible();
+        // T790M is not necessarily on the first page, so search for it
+        await page
+            .locator('input.tableSearchInput')
+            .first()
+            .fill('T790M');
+        await expect(
+            page.getByRole('cell', { name: 'T790M', exact: true })
+        ).toHaveCount(2);
         // Gene nav pills present
         await expect(
             page.locator('.nav-pills a:has-text("BRCA1")')

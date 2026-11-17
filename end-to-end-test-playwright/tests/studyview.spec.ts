@@ -679,9 +679,15 @@ test.describe('studyview tests', () => {
         test('the cancer gene filter should remove non cancer gene', async ({
             page,
         }) => {
+            const icon = page.locator(
+                `${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`
+            );
+            await icon.click();
             await page
-                .locator(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`)
+                .locator("[data-test='gene-filter-option-oncokb']")
                 .click();
+            // close the dropdown so it doesn't show up in the table screenshot
+            await icon.click();
             expect(
                 await getColorOfNthElement(
                     page,

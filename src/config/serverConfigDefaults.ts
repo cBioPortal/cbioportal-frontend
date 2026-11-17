@@ -206,6 +206,8 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     skin_home_page_show_unauthorized_studies: false,
 
+    study_availability_enabled: false,
+
     skin_home_page_unauthorized_studies_global_message:
         'The study is unauthorized. You need to request access.',
     comparison_categorical_na_values: 'NA',
@@ -253,6 +255,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     uptime_robot_api_key: null,
 
     skin_hide_clinical_data_tab_study_view: false,
+    wsi_tile_server_url: '',
 };
 
 export default ServerConfigDefaults;

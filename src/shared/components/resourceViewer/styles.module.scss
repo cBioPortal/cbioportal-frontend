@@ -1,0 +1,95 @@
+.carouselButton {
+    color: #e0e0e0;
+
+    &.active {
+        color: black;
+        cursor: pointer;
+
+        &:hover {
+            opacity: 0.7;
+        }
+
+        &:active {
+            opacity: 0.9;
+        }
+    }
+}
+
+.warningBanner {
+    padding: 20px 30px;
+    background-color: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    max-width: 450px;
+    margin: 0 auto;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.warningIcon {
+    color: #856404;
+    font-size: 36px;
+    margin-bottom: 12px;
+}
+
+.warningText {
+    color: #856404;
+    font-size: 14px;
+    line-height: 1.5;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.refreshButton {
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    &:active {
+        opacity: 0.8;
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+}
+
+// For a page tab that holds only the viewer. The embedded page brings its own margins, so the
+// tab gets the full window width.
+:global(.mainTabs > .tab-content > .msk-tab).fullWidthTab {
+    padding-left: 0;
+    padding-right: 0;
+
+    .header {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    :global(.iframeLoaderNewWindowLink) {
+        right: 10px !important;
+    }
+
+    iframe {
+        display: block;
+    }
+}
+
+// The embedded page runs to the bottom of the window, so nothing is left to scroll to.
+:global(.mainTabs
+        > .tab-content):has(> .fullWidthTab:not(:global(.hiddenByPosition))) {
+    padding-bottom: 0;
+}

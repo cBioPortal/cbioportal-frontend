@@ -1,6 +1,11 @@
 import { Page } from '@playwright/test';
 import { test, expect } from '../../fixtures';
-import { expectElementScreenshot, waitForNetworkQuiet } from './common';
+import {
+    expectElementScreenshot,
+    stubHg19GenomeFetches,
+    waitForIgvRendered,
+    waitForNetworkQuiet,
+} from './common';
 import { setSettingsMenuOpen, waitForOncoprint } from './oncoprint';
 
 /**
@@ -124,8 +129,9 @@ export function runResultsTestSuite(
         });
 
         test('igv tab', async ({ page }) => {
+            await stubHg19GenomeFetches(page);
             await page.locator('a.tabAnchor_cnSegments').click();
-            await expect(page.locator('.igv-column-container')).toBeVisible();
+            await waitForIgvRendered(page);
             await waitForNetworkQuiet(page);
             await page.waitForFunction(
                 () => {
@@ -327,6 +333,11 @@ export function runResultsTestSuite(
             await page.locator('a.tabAnchor_pathways').click();
             await expect(page.locator('#cy')).toBeVisible({ timeout: 10000 });
             await waitForNetworkQuiet(page, 30000);
+            // Alteration frequencies of the pathway's non-query genes are
+            // computed after their requests finish, behind this banner.
+            await expect(
+                page.getByText('Loading alteration data...')
+            ).toHaveCount(0, { timeout: 30000 });
             await snapshot(
                 page,
                 '[data-test="pathwayMapperTabDiv"]',

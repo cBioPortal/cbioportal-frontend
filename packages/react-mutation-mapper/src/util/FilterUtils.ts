@@ -2,7 +2,7 @@ import {
     getProteinImpactType,
     ProteinImpactType,
 } from 'cbioportal-frontend-commons';
-import { Mutation } from 'cbioportal-utils';
+import { getLollipopPosition, Mutation } from 'cbioportal-utils';
 import _ from 'lodash';
 
 import { MutationFilter, MutationFilterValue } from '../filter/MutationFilter';
@@ -141,7 +141,7 @@ export function applyDefaultPositionFilter(
     // const positions: {[position: string]: {position: number}} = indexPositions([filter]);
     // return !positions || !!positions[mutation.proteinPosStart+""];
 
-    return filter.values.includes(mutation.proteinPosStart);
+    return filter.values.includes(getLollipopPosition(mutation));
 }
 
 export function applyDefaultProteinImpactTypeFilter(

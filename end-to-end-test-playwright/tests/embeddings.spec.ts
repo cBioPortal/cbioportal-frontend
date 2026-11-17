@@ -1,4 +1,5 @@
 import { test, expect, Page } from '../fixtures';
+import { stubEmbeddingData } from './helpers/common';
 
 /**
  * Port of end-to-end-test/local/specs/core/embeddings.spec.js.
@@ -18,7 +19,17 @@ import { test, expect, Page } from '../fixtures';
 const STUDY = 'msk_impact_50k_2026';
 const LEGEND = '[data-test="embeddings-legend"]';
 const VIZ = '[data-test="embeddings-visualization"]';
-const LEGEND_ITEM = `${LEGEND} div[style*="cursor: pointer"]`;
+const LEGEND_ITEM = `${LEGEND} [data-test="embeddings-legend-item"]`;
+const LEGEND_SELECT_BUTTON = '[data-test="embeddings-legend-select-button"]';
+const LEGEND_HIDE_BUTTON = '[data-test="embeddings-legend-hide-button"]';
+const STATUS_BAR = '[data-test="embeddings-status-bar"]';
+const PAN_BUTTON = '[data-test="embeddings-pan-button"]';
+const SELECT_BUTTON = '[data-test="embeddings-select-button"]';
+const CLEAR_BUTTON = '[data-test="embeddings-clear-button"]';
+const MAKE_GLOBAL_BUTTON = '[data-test="embeddings-make-global-button"]';
+const LOCK_MAP_BUTTON = '[data-test="embeddings-lock-map-button"]';
+const panelCountButton = (n: number) =>
+    `[data-test="embeddings-panel-count-${n}"]`;
 
 function coloringParam(selection: Record<string, string>): string {
     return encodeURIComponent(JSON.stringify(selection));
@@ -48,43 +59,191 @@ async function gotoEmbeddings(page: Page, query = '') {
 }
 
 test.describe('embeddings tab interactions', () => {
+    test.beforeEach(async ({ page }) => {
+        await stubEmbeddingData(page);
+    });
+
     test.describe('legend interactions', () => {
-        test('toggles category visibility when clicking a legend item', async ({
+        test('offers Select and Hide on a legend row, swapping them in for the count on hover', async ({
             page,
         }) => {
             await gotoEmbeddings(page);
             const firstItem = page.locator(LEGEND_ITEM).first();
             await expect(firstItem).toBeVisible();
 
-            await firstItem.click({ timeout: 30000 });
-            await expect(firstItem).toHaveAttribute('style', /opacity:\s*0\.5/);
+            await expect(firstItem.locator(LEGEND_SELECT_BUTTON)).toHaveCount(
+                0
+            );
 
-            await firstItem.click({ timeout: 30000 });
-            await expect(firstItem).toHaveAttribute('style', /opacity:\s*1/);
+            await firstItem.hover({ timeout: 30000 });
+            await expect(firstItem.locator(LEGEND_SELECT_BUTTON)).toContainText(
+                'Select'
+            );
+            await expect(firstItem.locator(LEGEND_HIDE_BUTTON)).toContainText(
+                'Hide'
+            );
+        });
+
+        test('hiding a category removes it from the plot; selecting one offers Unselect', async ({
+            page,
+        }) => {
+            await gotoEmbeddings(page);
+            const firstItem = page.locator(LEGEND_ITEM).first();
+            await expect(firstItem).toBeVisible();
+
+            // Select is its own axis, so the row stays visible and offers to undo.
+            await firstItem.hover({ timeout: 30000 });
+            await firstItem
+                .locator(LEGEND_SELECT_BUTTON)
+                .click({ timeout: 30000 });
+            await firstItem.hover({ timeout: 30000 });
+            await expect(firstItem.locator(LEGEND_SELECT_BUTTON)).toContainText(
+                'Unselect'
+            );
+
+            // Hiding is the other axis - the category drops out of the plot
+            // entirely, so its visible count goes to "0 / N", and a hidden
+            // row can no longer be selected.
+            await firstItem
+                .locator(LEGEND_HIDE_BUTTON)
+                .click({ timeout: 30000 });
+            // The cursor is still sitting over the row after that click, and
+            // the row shows its hover actions (not the count) while hovered -
+            // move away so the count is what's actually rendered.
+            await page.mouse.move(0, 0);
+            await expect(firstItem).toContainText(/0\s*\/\s*[\d,]+/);
+            await firstItem.hover({ timeout: 30000 });
+            await expect(firstItem.locator(LEGEND_HIDE_BUTTON)).toContainText(
+                'Show'
+            );
+            await expect(firstItem.locator(LEGEND_SELECT_BUTTON)).toHaveCount(
+                0
+            );
         });
 
         test('shows/hides all categories with the Show All/Hide All button', async ({
             page,
         }) => {
             await gotoEmbeddings(page);
-            const toggle = page
-                .locator(LEGEND)
-                .getByRole('button')
-                .first();
+            // Not getByRole('button').first(): the collapse/expand chevron is also a button and sits before this one.
+            const toggle = page.locator(
+                '[data-test="embeddings-legend-toggle-all"]'
+            );
             await expect(toggle).toBeVisible();
 
-            await toggle.click();
+            // Recomputes visibility for all 50k samples, can outrun the default click timeout.
+            await toggle.click({ timeout: 30000 });
             await expect(toggle).toContainText('Show All');
 
-            await toggle.click();
+            await toggle.click({ timeout: 30000 });
             await expect(toggle).toContainText('Hide All');
         });
 
-        test('displays total and visible sample counts', async ({ page }) => {
+        test('a legend search filters rows by name, case-insensitively', async ({
+            page,
+        }) => {
             await gotoEmbeddings(page);
-            const legend = page.locator(LEGEND);
-            await expect(legend).toContainText('Total Samples:');
-            await expect(legend).toContainText('Visible Samples:');
+            const search = page.locator(
+                '[data-test="embeddings-legend-search"]'
+            );
+            await expect(search).toBeVisible();
+
+            const itemCount = await page.locator(LEGEND_ITEM).count();
+            // Default coloring is Cancer Type Detailed, so this matches
+            // "Colorectal Adenocarcinoma" - not the coarser "Colorectal
+            // Cancer" bucket from the plain Cancer Type attribute.
+            await search.fill('COLORECTAL');
+            await expect(page.locator(LEGEND_ITEM)).toHaveCount(1);
+            await expect(page.locator(LEGEND_ITEM)).toContainText('Colorectal');
+
+            // Clearing the search restores every row.
+            await search.fill('');
+            await expect(page.locator(LEGEND_ITEM)).toHaveCount(itemCount);
+        });
+
+        test('displays the total embedded sample count in the status bar', async ({
+            page,
+        }) => {
+            // Total/visible counts live in the shared status bar, not the legend (which only shows per-category counts).
+            await gotoEmbeddings(page);
+            await expect(page.locator(STATUS_BAR)).toContainText(
+                /[\d,]+ samples embedded in/
+            );
+            // An unfiltered cohort still has every patient "selected" in the
+            // store, which must not read as an active selection here.
+            await expect(page.locator(STATUS_BAR)).not.toContainText(
+                /Selection active/
+            );
+            await expect(
+                page.locator('[data-test="embeddings-highlight-mode-button"]')
+            ).toHaveCount(0);
+        });
+
+        test('status bar switches to "Selection active" once a category is selected, and Clear restores it', async ({
+            page,
+        }) => {
+            await gotoEmbeddings(page);
+            const firstItem = page.locator(LEGEND_ITEM).first();
+            await expect(firstItem).toBeVisible();
+
+            // Default mode is Highlight, so the status bar reports a
+            // reduced "highlighted" count, not "visible" (that's Filter
+            // mode's wording - see the dedicated test below).
+            await firstItem.click({ timeout: 30000 });
+            await expect(page.locator(STATUS_BAR)).toContainText(
+                /Selection active.*[\d,]+\s*\/\s*[\d,]+.*highlighted/
+            );
+            await expect(page.locator(CLEAR_BUTTON)).toBeVisible();
+            await expect(page.locator(MAKE_GLOBAL_BUTTON)).toBeVisible();
+
+            await page.locator(CLEAR_BUTTON).click({ timeout: 30000 });
+            await expect(page.locator(STATUS_BAR)).toContainText(
+                /[\d,]+ samples embedded in/
+            );
+            await expect(page.locator(CLEAR_BUTTON)).not.toBeVisible();
+        });
+
+        test('legend counts reflect the selection in Highlight mode, where nothing is removed from the plot', async ({
+            page,
+        }) => {
+            await gotoEmbeddings(page);
+            const firstItem = page.locator(LEGEND_ITEM).first();
+            const secondItem = page.locator(LEGEND_ITEM).nth(1);
+            await expect(firstItem).toBeVisible();
+
+            // Every row reserves a 1px border to avoid layout shift, so
+            // check it's specifically no longer transparent once selected.
+            await expect(firstItem).toHaveAttribute(
+                'style',
+                /border:\s*1px solid transparent/
+            );
+
+            await firstItem.click({ timeout: 30000 });
+            await expect(firstItem).not.toHaveAttribute(
+                'style',
+                /border:\s*1px solid transparent/
+            );
+            // Highlight only dims the remainder, but the counts still track
+            // the selection: everything outside it reads "0 / total".
+            await expect(secondItem).toContainText(/0\s*\/\s*[\d,]+/);
+        });
+
+        test('Filter mode reports the same selection as "visible" rather than "highlighted"', async ({
+            page,
+        }) => {
+            await gotoEmbeddings(page);
+            const firstItem = page.locator(LEGEND_ITEM).first();
+            const secondItem = page.locator(LEGEND_ITEM).nth(1);
+            await expect(firstItem).toBeVisible();
+
+            await firstItem.click({ timeout: 30000 });
+            await page
+                .locator('[data-test="embeddings-filter-mode-button"]')
+                .click({ timeout: 30000 });
+            await expect(page.locator(STATUS_BAR)).toContainText(
+                /Selection active.*[\d,]+\s*\/\s*[\d,]+.*visible/
+            );
+            await expect(secondItem).toContainText(/0\s*\/\s*[\d,]+/);
         });
     });
 
@@ -102,7 +261,7 @@ test.describe('embeddings tab interactions', () => {
         // URL: clicking the tab from a freshly-loaded summary view is not
         // actionable within the action timeout while the 50k-sample study
         // view renders.
-        test('shows an Unselected category when a study-view filter is applied', async ({
+        test('a study-view filter highlights in place, without collapsing the rest into an Unselected bucket', async ({
             page,
         }) => {
             await page.goto(
@@ -111,9 +270,120 @@ test.describe('embeddings tab interactions', () => {
                 )}`
             );
             await expect(page.locator(LEGEND)).toBeVisible({ timeout: 60000 });
-            await expect(page.locator(LEGEND)).toContainText('Unselected', {
+            await expect(
+                page.locator(STATUS_BAR)
+            ).toContainText(/Selection active/, { timeout: 60000 });
+
+            // Everything outside the filter keeps its own category and just
+            // dims, so its count reads "0 / total" rather than being rolled
+            // into one grey row.
+            await expect(page.locator(LEGEND)).not.toContainText('Unselected');
+            await expect(page.locator(LEGEND)).toContainText(/0\s*\/\s*[\d,]+/);
+        });
+
+        test('a study-view filter alone (no local lasso/legend action) still offers the Filter/Highlight toggle', async ({
+            page,
+        }) => {
+            await page.goto(
+                `/study/embeddings?id=${STUDY}&featureFlags=EMBEDDINGS${filterHash(
+                    ['Colorectal Cancer']
+                )}`
+            );
+            await expect(page.locator(LEGEND)).toBeVisible({ timeout: 60000 });
+
+            // No local selection was made, so Clear/Make Global shouldn't
+            // show - there's nothing local to clear/promote - but the mode
+            // toggle should, since it also governs this page-wide selection.
+            const highlightModeButton = page.locator(
+                '[data-test="embeddings-highlight-mode-button"]'
+            );
+            const filterModeButton = page.locator(
+                '[data-test="embeddings-filter-mode-button"]'
+            );
+            await expect(highlightModeButton).toBeVisible({ timeout: 60000 });
+            await expect(filterModeButton).toBeVisible();
+            await expect(page.locator(CLEAR_BUTTON)).not.toBeVisible();
+            await expect(page.locator(MAKE_GLOBAL_BUTTON)).not.toBeVisible();
+
+            await filterModeButton.click({ timeout: 30000 });
+            await expect(page.locator(STATUS_BAR)).toContainText(
+                /Selection active.*[\d,]+\s*\/\s*[\d,]+.*visible/
+            );
+        });
+    });
+
+    test.describe('multi-panel split view', () => {
+        test('Pan/Select and panel-count controls are visible', async ({
+            page,
+        }) => {
+            await gotoEmbeddings(page);
+            await expect(page.locator(PAN_BUTTON)).toBeVisible();
+            await expect(page.locator(SELECT_BUTTON)).toBeVisible();
+            await expect(page.locator(panelCountButton(1))).toBeVisible();
+        });
+
+        test('hides the per-embedding status sentence once Lock Map is disabled with multiple panels open', async ({
+            page,
+        }) => {
+            // Single panel: the status bar reports this one panel's map and
+            // its sample counts.
+            await gotoEmbeddings(page);
+            await expect(page.locator(STATUS_BAR)).toContainText(
+                /[\d,]+ samples embedded in/
+            );
+
+            // Lock Map defaults to on, so opening a second panel still
+            // shows one shared map/sample-size in the status bar.
+            await page.locator(panelCountButton(2)).click({ timeout: 30000 });
+            await expect(page.locator(VIZ)).toHaveCount(2, { timeout: 60000 });
+            await expect(
+                page.locator(STATUS_BAR)
+            ).toContainText(/[\d,]+ samples embedded in/, { timeout: 60000 });
+
+            // Disabling Lock Map lets each panel pick a different map, so
+            // there's no longer a single "the" map/sample-size to report.
+            await page
+                .locator(LOCK_MAP_BUTTON)
+                .first()
+                .click({ timeout: 30000 });
+            await expect(
+                page.locator(STATUS_BAR)
+            ).not.toContainText(/embedded in/, { timeout: 30000 });
+
+            // Switching back to a single panel restores it regardless.
+            await page.locator(panelCountButton(1)).click({ timeout: 30000 });
+            await expect(page.locator(VIZ)).toHaveCount(1, { timeout: 60000 });
+            await expect(
+                page.locator(STATUS_BAR)
+            ).toContainText(/[\d,]+ samples embedded in/, { timeout: 30000 });
+        });
+
+        test('a cross-panel selection filter is reflected in every open panel', async ({
+            page,
+        }) => {
+            // Load directly into 2-panel mode via URL params, avoiding a race with the panel-count button.
+            await page.goto(
+                `/study/embeddings?id=${STUDY}&featureFlags=EMBEDDINGS&embeddings_panel2_map=msk_mosaic_2026_he`
+            );
+            await expect(page.locator(VIZ)).toHaveCount(2, { timeout: 60000 });
+            await expect(page.locator(LEGEND).first()).toBeVisible({
                 timeout: 60000,
             });
+
+            // Cross-panel filter recomputes visibility across both panels' 50k samples, can outrun the default click timeout.
+            const firstPanelFirstItem = page.locator(LEGEND_ITEM).first();
+            await expect(firstPanelFirstItem).toBeVisible();
+            await firstPanelFirstItem.click({ timeout: 60000 });
+
+            await expect(page.locator(STATUS_BAR)).toContainText(
+                /Selection active/
+            );
+            await expect(page.locator(CLEAR_BUTTON)).toBeVisible();
+
+            await page.locator(CLEAR_BUTTON).click({ timeout: 60000 });
+            await expect(
+                page.locator(STATUS_BAR)
+            ).not.toContainText(/Selection active/, { timeout: 30000 });
         });
     });
 

@@ -1430,11 +1430,13 @@ export function groupBySampleId(
     sampleIds: Array<string>,
     clinicalDataArray: Array<ClinicalData>
 ) {
+    const clinicalDataBySampleId = _.groupBy(
+        clinicalDataArray,
+        (cd: ClinicalData) => cd.sampleId
+    );
     return _.map(sampleIds, (k: string) => ({
         id: k,
-        clinicalData: clinicalDataArray.filter(
-            (cd: ClinicalData) => cd.sampleId === k
-        ),
+        clinicalData: clinicalDataBySampleId[k] || [],
     }));
 }
 
@@ -2183,6 +2185,19 @@ export function buildProteinChange(sv: StructuralVariant) {
 
     if (genes.length === 2) {
         return `${genes[0]}-${genes[1]} Fusion`;
+    } else if (
+        genes.length === 1 &&
+        (!sv.site1HugoSymbol || !sv.site2HugoSymbol)
+    ) {
+        const variantClass = sv.variantClass?.toUpperCase();
+        const isIntergenic =
+            variantClass === 'INTERGENIC' ||
+            ((!variantClass ||
+                variantClass === 'UNKNOWN' ||
+                variantClass === 'NA') &&
+                sv.eventInfo?.toUpperCase() ===
+                    `${genes[0].toUpperCase()}-INTERGENIC`);
+        return `${genes[0]} ${isIntergenic ? 'intergenic' : 'intragenic'}`;
     } else {
         return `${genes[0]} intragenic`;
     }

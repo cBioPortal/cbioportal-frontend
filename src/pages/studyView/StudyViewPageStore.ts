@@ -1,4 +1,11 @@
 import _ from 'lodash';
+import {
+    CaseIdAlias,
+    CaseIdAliases,
+    getCaseIdAliasAttributeIds,
+    isUsableAliasValue,
+} from './addChartButton/customCaseSelection/CustomCaseSelectionUtils';
+import { isWsiResourceId } from 'shared/lib/ResourcePolicy';
 import { getClient } from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
 import {
@@ -22,6 +29,7 @@ import {
     ClinicalAttribute,
     ClinicalAttributeCount,
     ClinicalAttributeCountFilter,
+    TypeOfCancer,
     ClinicalData,
     ClinicalDataBinFilter,
     ClinicalDataCount,
@@ -139,7 +147,7 @@ import {
     getChartSettingsMap,
     getClinicalDataCountWithColorByClinicalDataCount,
     getCNAByAlteration,
-    getCNASamplesCount,
+    getProfiledSamplesCount,
     getDataIntervalFilterValues,
     getDefaultPriorityByUniqueKey,
     getFilteredAndCompressedDataIntervalFilters,
@@ -168,7 +176,6 @@ import {
     getPriorityByClinicalAttribute,
     getRequestedAwaitPromisesForClinicalData,
     getSamplesByExcludingFiltersOnChart,
-    getStructuralVariantSamplesCount,
     getUniqueKey,
     getUniqueKeyFromGeneFilterMolecularProfileIds,
     getUniqueKeyFromMolecularProfileIds,
@@ -316,10 +323,7 @@ import {
     CNA_AMP_VALUE,
     CNA_HOMDEL_VALUE,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
-import {
-    fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
-    fetchGenericAssayMetaGroupedByMolecularProfileIdSuffix,
-} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { fetchGenericAssayMetaByEntityIds } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import {
     buildDriverAnnotationSettings,
     DriverAnnotationSettings,
@@ -406,7 +410,9 @@ export type StudyViewPageTabKey =
     | StudyViewPageTabKeyEnum.CLINICAL_DATA
     | StudyViewPageTabKeyEnum.SUMMARY
     | StudyViewPageTabKeyEnum.HEATMAPS
-    | StudyViewPageTabKeyEnum.CN_SEGMENTS;
+    | StudyViewPageTabKeyEnum.CN_SEGMENTS
+    | StudyViewPageTabKeyEnum.FILES_AND_LINKS
+    | StudyViewPageTabKeyEnum.PLOTS;
 
 export enum StudyViewPageTabDescriptions {
     SUMMARY = 'Summary',
@@ -420,6 +426,31 @@ export enum StudyViewPageTabDescriptions {
 const DEFAULT_CHART_NAME = 'Custom Data';
 export const SELECTED_ANALYSIS_GROUP_VALUE = 'Selected';
 export const UNSELECTED_ANALYSIS_GROUP_VALUE = 'Unselected';
+
+type O2glGeneMap = {
+    [oncotreeCode: string]: string[];
+};
+
+const O2GL_GENE_MAP: O2glGeneMap = require('shared/oncotree2genes/o2gl.json');
+const ONCOTREE_CODE_ATTRIBUTE_ID = 'ONCOTREE_CODE';
+
+function getO2glGeneSetForCodes(
+    oncotreeCodes: string[],
+    geneMap: O2glGeneMap
+): Set<string> {
+    const genes = new Set<string>();
+    oncotreeCodes.forEach(code => {
+        const normalizedCode = code.trim().toUpperCase();
+        if (!normalizedCode) {
+            return;
+        }
+        const matchedGenes = geneMap[normalizedCode];
+        if (matchedGenes) {
+            matchedGenes.forEach(gene => genes.add(gene));
+        }
+    });
+    return genes;
+}
 
 export type SurvivalType = {
     id: string;
@@ -451,6 +482,18 @@ export type StudyViewURLQuery = {
     plots_vert_selection?: PlotsSelectionParam;
     plots_coloring_selection?: PlotsColoringParam;
     embeddings_coloring_selection?: PlotsColoringParam;
+    embeddings_map?: string;
+    embeddings_tooltip_fields?: string;
+    embeddings_legend_collapsed?: string;
+    embeddings_panel2_coloring_selection?: PlotsColoringParam;
+    embeddings_panel2_map?: string;
+    embeddings_panel2_legend_collapsed?: string;
+    embeddings_panel3_coloring_selection?: PlotsColoringParam;
+    embeddings_panel3_map?: string;
+    embeddings_panel3_legend_collapsed?: string;
+    embeddings_panel4_coloring_selection?: PlotsColoringParam;
+    embeddings_panel4_map?: string;
+    embeddings_panel4_legend_collapsed?: string;
     generic_assay_groups?: string;
     geneset_list?: string;
 };
@@ -540,9 +583,9 @@ enum CustomDataTypeEnum {
 }
 
 export enum SampleListCategoryType {
-    'w_mut' = 'w_mut',
-    'w_cna' = 'w_cna',
-    'w_mut_cna' = 'w_mut_cna',
+    w_mut = 'w_mut',
+    w_cna = 'w_cna',
+    w_mut_cna = 'w_mut_cna',
 }
 
 export const SampleListCategoryTypeToFullId = {
@@ -659,8 +702,6 @@ export class StudyViewPageStore
             clinicalAttributes: this.clinicalAttributes,
             customAttributes: this.customAttributes,
             genesets: this.genesets,
-            genericAssayEntitiesGroupByMolecularProfileId: this
-                .genericAssayEntitiesGroupedByProfileId,
             get selectedGenericAssayEntitiesGroupByMolecularProfileId() {
                 return self.selectedGenericAssayEntitiesGroupByMolecularProfileId;
             },
@@ -3019,6 +3060,70 @@ export class StudyViewPageStore
         );
     }
 
+    @observable private _filterMutatedGenesTableByO2gl: boolean = false;
+    @observable private _filterSVGenesTableByO2gl: boolean = false;
+    @observable private _filterStructVarsTableByO2gl: boolean = false;
+    @observable private _filterCNAGenesTableByO2gl: boolean = false;
+
+    @action.bound
+    updateMutatedGenesTableByO2glFilter(filtered: boolean): void {
+        this._filterMutatedGenesTableByO2gl = filtered;
+    }
+    @action.bound
+    updateSVGenesTableByO2glFilter(filtered: boolean): void {
+        this._filterSVGenesTableByO2gl = filtered;
+    }
+    @action.bound
+    updateStructVarsTableByO2glFilter(filtered: boolean): void {
+        this._filterStructVarsTableByO2gl = filtered;
+    }
+    @action.bound
+    updateCNAGenesTableByO2glFilter(filtered: boolean): void {
+        this._filterCNAGenesTableByO2gl = filtered;
+    }
+
+    @computed get filterMutatedGenesTableByO2gl(): boolean {
+        return (
+            this.isO2glFilterAvailable && this._filterMutatedGenesTableByO2gl
+        );
+    }
+    @computed get filterSVGenesTableByO2gl(): boolean {
+        return this.isO2glFilterAvailable && this._filterSVGenesTableByO2gl;
+    }
+    @computed get filterStructVarsTableByO2gl(): boolean {
+        return this.isO2glFilterAvailable && this._filterStructVarsTableByO2gl;
+    }
+    @computed get filterCNAGenesTableByO2gl(): boolean {
+        return this.isO2glFilterAvailable && this._filterCNAGenesTableByO2gl;
+    }
+
+    @observable private _filterMutatedGenesTableByDriverGenes: boolean = false;
+    @observable private _filterSVGenesTableByDriverGenes: boolean = false;
+    @observable private _filterCNAGenesTableByDriverGenes: boolean = false;
+
+    @action.bound
+    updateMutatedGenesTableByDriverGenesFilter(filtered: boolean): void {
+        this._filterMutatedGenesTableByDriverGenes = filtered;
+    }
+    @action.bound
+    updateSVGenesTableByDriverGenesFilter(filtered: boolean): void {
+        this._filterSVGenesTableByDriverGenes = filtered;
+    }
+    @action.bound
+    updateCNAGenesTableByDriverGenesFilter(filtered: boolean): void {
+        this._filterCNAGenesTableByDriverGenes = filtered;
+    }
+
+    @computed get filterMutatedGenesTableByDriverGenes(): boolean {
+        return this._filterMutatedGenesTableByDriverGenes;
+    }
+    @computed get filterSVGenesTableByDriverGenes(): boolean {
+        return this._filterSVGenesTableByDriverGenes;
+    }
+    @computed get filterCNAGenesTableByDriverGenes(): boolean {
+        return this._filterCNAGenesTableByDriverGenes;
+    }
+
     public get filterComparisonGroups(): StudyViewComparisonGroup[] {
         return this._filterComparisonGroups;
     }
@@ -3078,6 +3183,16 @@ export class StudyViewPageStore
         ChartUniqueKey,
         ChartMeta
     >({}, { deep: false });
+    @observable.ref private _genericAssayEntityMetaByStableId = observable.map<
+        string,
+        GenericAssayMeta
+    >({}, { deep: false });
+    // in-flight and finished meta requests by stable id, so each id is
+    // requested once and concurrent callers wait for the same request
+    private readonly _genericAssayEntityMetaRequests = new Map<
+        string,
+        Promise<void>
+    >();
     private _XvsYViolinChartMap = observable.map<
         ChartUniqueKey,
         XvsYViolinChart
@@ -3856,7 +3971,9 @@ export class StudyViewPageStore
 
     private getGenericAssayFrequencyTableProfileMap(
         chart: GenericAssayChart
-    ): { [studyId: string]: MolecularProfile } {
+    ): {
+        [studyId: string]: MolecularProfile;
+    } {
         return _.chain(this.genericAssayProfiles.result)
             .filter(
                 profile =>
@@ -4346,6 +4463,16 @@ export class StudyViewPageStore
         return (
             this._genericAssayChartMap.get(uniqueKey)?.chartKind ===
             'PROFILE_FREQUENCY_TABLE'
+        );
+    }
+
+    public isGenericAssayEntityChartOfProfileType(
+        uniqueKey: string,
+        profileType: string
+    ): boolean {
+        const chart = this._genericAssayChartMap.get(uniqueKey);
+        return (
+            chart?.profileType === profileType && chart.chartKind === 'ENTITY'
         );
     }
 
@@ -5190,11 +5317,8 @@ export class StudyViewPageStore
             }
         }
 
-        const entityMetaByStableId = _.keyBy(
-            this.genericAssayEntitiesGroupedByProfileIdSuffix.result?.[
-                profileType
-            ] || [],
-            meta => meta.stableId
+        const entityMetaByStableId = this.loadedGenericAssayEntityMeta(
+            stableId
         );
 
         return getGenericAssayChartDisplayName(
@@ -5229,11 +5353,8 @@ export class StudyViewPageStore
         const { stableId, value } = splitGenericAssayFrequencyTableRowUniqueKey(
             rowKey
         );
-        const entityMetaByProfileIdSuffix =
-            this.genericAssayEntitiesGroupedByProfileIdSuffix.result || {};
-        const entityMetaByStableId = _.keyBy(
-            entityMetaByProfileIdSuffix[chart.profileType] || [],
-            meta => meta.stableId
+        const entityMetaByStableId = this.loadedGenericAssayEntityMeta(
+            stableId
         );
         const entityLabel = getGenericAssayEntityLabel(
             stableId,
@@ -5967,10 +6088,7 @@ export class StudyViewPageStore
             this.genericAssayFrequencyTablePromises[
                 chartMeta.uniqueKey
             ] = remoteData<GenericAssayFrequencyTableRow[]>({
-                await: () => [
-                    this.selectedSamples,
-                    this.genericAssayEntitiesGroupedByProfileIdSuffix,
-                ],
+                await: () => [this.selectedSamples],
                 invoke: async () => {
                     const chartInfo = this._genericAssayChartMap.get(
                         chartMeta.uniqueKey
@@ -5982,18 +6100,6 @@ export class StudyViewPageStore
                         return [];
                     }
 
-                    const entityMetaByProfileIdSuffix =
-                        this.genericAssayEntitiesGroupedByProfileIdSuffix
-                            .result || {};
-                    const entityMetaByStableId = _.keyBy(
-                        entityMetaByProfileIdSuffix[chartInfo.profileType] ||
-                            [],
-                        meta => meta.stableId
-                    );
-                    if (_.isEmpty(entityMetaByStableId)) {
-                        return [];
-                    }
-
                     const result = await this.internalClient.fetchGenericAssayDataCountsUsingPOST(
                         {
                             genericAssayDataCountFilter: {
@@ -6002,6 +6108,20 @@ export class StudyViewPageStore
                             } as GenericAssayDataCountFilter,
                         }
                     );
+                    const stableIds = _.uniq(result.map(item => item.stableId));
+                    await this.ensureGenericAssayEntityMetaByStableIds(
+                        stableIds
+                    );
+                    const entityMetaByStableId = _.fromPairs(
+                        stableIds
+                            .map(stableId => [
+                                stableId,
+                                this._genericAssayEntityMetaByStableId.get(
+                                    stableId
+                                ),
+                            ])
+                            .filter(([, meta]) => meta !== undefined)
+                    ) as { [stableId: string]: GenericAssayMeta };
 
                     const totalCount = chartInfo.patientLevel
                         ? this.selectedPatients.length
@@ -6745,12 +6865,18 @@ export class StudyViewPageStore
 
     readonly resourceDefinitions = remoteData({
         await: () => [this.queriedPhysicalStudies],
+        // Pathology slides are one resource row per slide, and have their own
+        // views; they are left out of Files & Links and the resource tabs.
         invoke: () => {
-            return this.internalClient.fetchResourceDefinitionsUsingPOST({
-                studyIds: this.queriedPhysicalStudies.result.map(
-                    study => study.studyId
-                ),
-            });
+            return this.internalClient
+                .fetchResourceDefinitionsUsingPOST({
+                    studyIds: this.queriedPhysicalStudies.result.map(
+                        study => study.studyId
+                    ),
+                })
+                .then(defs =>
+                    defs.filter(def => !isWsiResourceId(def.resourceId))
+                );
         },
         onResult: defs => {
             if (defs) {
@@ -6758,78 +6884,6 @@ export class StudyViewPageStore
                     if (def.openByDefault)
                         this.setResourceTabOpen(def.resourceId, true);
             }
-        },
-    });
-
-    readonly studyResourceData = remoteData<ResourceData[]>({
-        await: () => [this.resourceDefinitions],
-        invoke: () => {
-            const ret: ResourceData[] = [];
-            const studyResourceDefinitions = this.resourceDefinitions.result!.filter(
-                d => d.resourceType === 'STUDY'
-            );
-            const promises = [];
-            for (const resource of studyResourceDefinitions) {
-                promises.push(
-                    this.internalClient
-                        .getAllStudyResourceDataInStudyUsingGET({
-                            studyId: resource.studyId,
-                            resourceId: resource.resourceId,
-                            projection: 'DETAILED',
-                        })
-                        .then(data => ret.push(...data))
-                );
-            }
-            return Promise.all(promises).then(() => ret);
-        },
-    });
-
-    readonly sampleResourceData = remoteData<{
-        [sampleId: string]: ResourceData[];
-    }>({
-        await: () => [this.resourceDefinitions, this.samples],
-        invoke: () => {
-            const sampleResourceDefinitions = this.resourceDefinitions.result!.filter(
-                d => d.resourceType === 'SAMPLE'
-            );
-            if (!sampleResourceDefinitions.length) {
-                return Promise.resolve({});
-            }
-
-            const res = _(this.samples.result!)
-                .map(sample =>
-                    sampleResourceDefinitions.map(resource =>
-                        this.internalClient.getAllResourceDataOfSampleInStudyUsingGET(
-                            {
-                                sampleId: sample.sampleId,
-                                studyId: sample.studyId,
-                                resourceId: resource.resourceId,
-                                projection: 'DETAILED',
-                            }
-                        )
-                    )
-                )
-                .flatten()
-                .value();
-
-            return Promise.all(res).then(resData =>
-                _(resData)
-                    .flatMap()
-                    .groupBy('sampleId')
-                    .mapValues(data => data)
-                    .value()
-            );
-        },
-    });
-
-    readonly resourceIdToResourceData = remoteData<{
-        [resourceId: string]: ResourceData[];
-    }>({
-        await: () => [this.studyResourceData],
-        invoke: () => {
-            return Promise.resolve(
-                _.groupBy(this.studyResourceData.result!, d => d.resourceId)
-            );
         },
     });
 
@@ -7049,28 +7103,6 @@ export class StudyViewPageStore
         default: [],
     });
 
-    readonly genericAssayEntitiesGroupedByProfileId = remoteData<{
-        [profileId: string]: GenericAssayMeta[];
-    }>({
-        await: () => [this.genericAssayProfiles],
-        invoke: async () => {
-            return await fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId(
-                this.genericAssayProfiles.result
-            );
-        },
-    });
-
-    readonly genericAssayEntitiesGroupedByProfileIdSuffix = remoteData<{
-        [profileIdSuffix: string]: GenericAssayMeta[];
-    }>({
-        await: () => [this.genericAssayProfiles],
-        invoke: async () => {
-            return await fetchGenericAssayMetaGroupedByMolecularProfileIdSuffix(
-                this.genericAssayProfiles.result
-            );
-        },
-    });
-
     readonly genericAssayProfiles = remoteData({
         await: () => [this.molecularProfiles],
         invoke: () => {
@@ -7138,6 +7170,55 @@ export class StudyViewPageStore
         },
         default: {},
     });
+
+    // meta of the entity if loaded, keyed by stable id; starts loading it
+    // otherwise
+    private loadedGenericAssayEntityMeta(stableId: string) {
+        void this.ensureGenericAssayEntityMetaByStableIds([stableId]);
+        const entityMeta = this._genericAssayEntityMetaByStableId.get(stableId);
+        return entityMeta ? { [stableId]: entityMeta } : {};
+    }
+
+    private async ensureGenericAssayEntityMetaByStableIds(stableIds: string[]) {
+        const uniqueStableIds = _.uniq(stableIds);
+        const missingStableIds = uniqueStableIds.filter(
+            stableId =>
+                !this._genericAssayEntityMetaByStableId.has(stableId) &&
+                !this._genericAssayEntityMetaRequests.has(stableId)
+        );
+        if (missingStableIds.length > 0) {
+            const request = fetchGenericAssayMetaByEntityIds(
+                missingStableIds
+            ).then(
+                entities =>
+                    runInAction(() =>
+                        entities.forEach(entity =>
+                            this._genericAssayEntityMetaByStableId.set(
+                                entity.stableId,
+                                entity
+                            )
+                        )
+                    ),
+                () =>
+                    // allow a retry after a failed request
+                    missingStableIds.forEach(stableId =>
+                        this._genericAssayEntityMetaRequests.delete(stableId)
+                    )
+            );
+            missingStableIds.forEach(stableId =>
+                this._genericAssayEntityMetaRequests.set(stableId, request)
+            );
+        }
+        await Promise.all(
+            _.uniq(
+                _.compact(
+                    uniqueStableIds.map(stableId =>
+                        this._genericAssayEntityMetaRequests.get(stableId)
+                    )
+                )
+            )
+        );
+    }
 
     @computed({ keepAlive: true })
     get oncokbCancerGeneFilterEnabled(): boolean {
@@ -8227,7 +8308,15 @@ export class StudyViewPageStore
                 this._filterMutatedGenesTableByCancerGenes,
                 this._filterSVGenesTableByCancerGenes,
                 this._filterCNAGenesTableByCancerGenes,
-                this.currentGridLayout
+                this.currentGridLayout,
+                this._filterMutatedGenesTableByO2gl,
+                this._filterSVGenesTableByO2gl,
+                this._filterStructVarsTableByO2gl,
+                this._filterCNAGenesTableByO2gl,
+                this._filterMutatedGenesTableByDriverGenes,
+                this._filterSVGenesTableByDriverGenes,
+                this._filterCNAGenesTableByDriverGenes,
+                this._filterStructVarsTableByCancerGenes
             );
         }
         return chartSettingsMap;
@@ -8249,11 +8338,9 @@ export class StudyViewPageStore
         onError: () => {
             // fail silently when an error occurs
         },
-        onResult: () => {
+        onResult: settings => {
             const groupColorFromSession =
-                this.userSettings.isComplete && this.userSettings.result
-                    ? this.userSettings.result.groupColors
-                    : {};
+                (settings && settings.groupColors) || {};
             _.forIn(
                 groupColorFromSession,
                 (value, key) => (this.userGroupColors[key] = value)
@@ -8277,7 +8364,15 @@ export class StudyViewPageStore
         this.currentFocusedChartByUserDimension = undefined;
         this._filterMutatedGenesTableByCancerGenes = true;
         this._filterSVGenesTableByCancerGenes = true;
+        this._filterStructVarsTableByCancerGenes = true;
         this._filterCNAGenesTableByCancerGenes = true;
+        this._filterMutatedGenesTableByO2gl = false;
+        this._filterSVGenesTableByO2gl = false;
+        this._filterStructVarsTableByO2gl = false;
+        this._filterCNAGenesTableByO2gl = false;
+        this._filterMutatedGenesTableByDriverGenes = false;
+        this._filterSVGenesTableByDriverGenes = false;
+        this._filterCNAGenesTableByDriverGenes = false;
         this._clinicalDataBinFilterSet = observable.map(
             _.fromPairs(this._defaultClinicalDataBinFilterSet.toJSON())
         );
@@ -8661,24 +8756,31 @@ export class StudyViewPageStore
                         chartUserSettings.filterByCancerGenes === undefined
                             ? true
                             : chartUserSettings.filterByCancerGenes;
+                    this._filterMutatedGenesTableByO2gl = !!chartUserSettings.filterByO2gl;
+                    this._filterMutatedGenesTableByDriverGenes = !!chartUserSettings.filterByDriverGenes;
                     break;
                 case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
                     this._filterSVGenesTableByCancerGenes =
                         chartUserSettings.filterByCancerGenes === undefined
                             ? true
                             : chartUserSettings.filterByCancerGenes;
+                    this._filterSVGenesTableByO2gl = !!chartUserSettings.filterByO2gl;
+                    this._filterSVGenesTableByDriverGenes = !!chartUserSettings.filterByDriverGenes;
                     break;
                 case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
                     this._filterStructVarsTableByCancerGenes =
                         chartUserSettings.filterByCancerGenes === undefined
                             ? true
                             : chartUserSettings.filterByCancerGenes;
+                    this._filterStructVarsTableByO2gl = !!chartUserSettings.filterByO2gl;
                     break;
                 case ChartTypeEnum.CNA_GENES_TABLE:
                     this._filterCNAGenesTableByCancerGenes =
                         chartUserSettings.filterByCancerGenes === undefined
                             ? true
                             : chartUserSettings.filterByCancerGenes;
+                    this._filterCNAGenesTableByO2gl = !!chartUserSettings.filterByO2gl;
+                    this._filterCNAGenesTableByDriverGenes = !!chartUserSettings.filterByDriverGenes;
                     break;
                 case ChartTypeEnum.BAR_CHART:
                     let ref = this._clinicalDataBinFilterSet.get(
@@ -8746,8 +8848,7 @@ export class StudyViewPageStore
                 this.appStore.featureFlagStore.has(
                     FeatureFlagEnum.GENE_SPECIFIC_VIOLIN_PLOT
                 ) ||
-                (this.studyIds.length === 1 &&
-                    this.studyIds[0] === 'msk_target_test')
+                (this.studyIds.length === 1 && this.studyIds[0] === 'msktarget')
             ) {
                 const isSingleStudy =
                     (this.queriedPhysicalStudyIds.result?.length ?? 0) === 1;
@@ -9584,6 +9685,70 @@ export class StudyViewPageStore
         default: [],
     });
 
+    /**
+     * Alternative case identifiers (e.g. SAMPLE_DISPLAY_NAME, OTHER_PATIENT_ID)
+     * that Custom Selection accepts in place of internal sample / patient IDs.
+     * Only attributes present in the queried studies are fetched.
+     */
+    readonly caseIdAliases = remoteData<CaseIdAliases>({
+        await: () => [this.clinicalAttributes, this.samples],
+        invoke: async () => {
+            const fetchAliases = async (
+                clinicalDataType: ClinicalDataTypeEnum
+            ): Promise<CaseIdAlias[]> => {
+                const isPatient =
+                    clinicalDataType === ClinicalDataTypeEnum.PATIENT;
+                const attributes = this.clinicalAttributes.result!.filter(
+                    attr =>
+                        attr.patientAttribute === isPatient &&
+                        getCaseIdAliasAttributeIds(clinicalDataType).includes(
+                            attr.clinicalAttributeId
+                        )
+                );
+                if (attributes.length === 0) {
+                    return [];
+                }
+                const identifiers = _.uniqBy(
+                    this.samples.result!.map(s => ({
+                        studyId: s.studyId,
+                        entityId: isPatient ? s.patientId : s.sampleId,
+                    })),
+                    id => `${id.studyId}:${id.entityId}`
+                );
+                const data = await getClient().fetchClinicalDataUsingPOST({
+                    clinicalDataType,
+                    clinicalDataMultiStudyFilter: {
+                        attributeIds: attributes.map(
+                            a => a.clinicalAttributeId
+                        ),
+                        identifiers,
+                    },
+                });
+                return data
+                    .filter(d => isUsableAliasValue(d.value))
+                    .map(d => ({
+                        studyId: d.studyId,
+                        caseId: isPatient ? d.patientId : d.sampleId,
+                        alias: d.value.trim(),
+                        attributeId: d.clinicalAttributeId,
+                    }));
+            };
+            const [sample, patient] = await Promise.all([
+                fetchAliases(ClinicalDataTypeEnum.SAMPLE),
+                fetchAliases(ClinicalDataTypeEnum.PATIENT),
+            ]);
+            return {
+                [ClinicalDataTypeEnum.SAMPLE]: sample,
+                [ClinicalDataTypeEnum.PATIENT]: patient,
+            };
+        },
+        onError: () => {},
+        default: {
+            [ClinicalDataTypeEnum.SAMPLE]: [],
+            [ClinicalDataTypeEnum.PATIENT]: [],
+        },
+    });
+
     public readonly sampleSet = remoteData({
         await: () => [this.samples],
         invoke: () => {
@@ -10005,6 +10170,143 @@ export class StudyViewPageStore
             return getClient().getGenePanelUsingGET(q);
         },
     }));
+
+    readonly oncotreeCodeCounts = remoteData<ClinicalDataCount[]>({
+        await: () => [this.clinicalAttributes, this.selectedSamples],
+        invoke: async () => {
+            if (!this.hasFilteredSamples) {
+                return [];
+            }
+            const hasOncotreeCode = this.clinicalAttributes.result.some(
+                attribute =>
+                    attribute.clinicalAttributeId === ONCOTREE_CODE_ATTRIBUTE_ID
+            );
+            if (!hasOncotreeCode) {
+                return [];
+            }
+            const results = await this.internalClient.fetchClinicalDataCountsUsingPOST(
+                {
+                    clinicalDataCountFilter: {
+                        attributes: [
+                            {
+                                attributeId: ONCOTREE_CODE_ATTRIBUTE_ID,
+                                values: [],
+                            },
+                        ],
+                        studyViewFilter: this.filters,
+                    },
+                }
+            );
+            const oncotreeCounts = results.find(
+                item => item.attributeId === ONCOTREE_CODE_ATTRIBUTE_ID
+            );
+            return oncotreeCounts ? oncotreeCounts.counts : [];
+        },
+        onError: () => {},
+        default: [],
+    });
+
+    readonly oncotreeCodeValues = remoteData<string[]>({
+        await: () => [this.oncotreeCodeCounts],
+        invoke: async () =>
+            this.oncotreeCodeCounts.result
+                .map(count => String(count.value || '').trim())
+                .filter(
+                    value =>
+                        value.length > 0 &&
+                        value.toUpperCase() !== 'NA' &&
+                        value.toUpperCase() !== 'N/A'
+                ),
+        onError: () => {},
+        default: [],
+    });
+
+    readonly cancerTypes = remoteData<TypeOfCancer[]>({
+        invoke: () => getClient().getAllCancerTypesUsingGET({}),
+        onError: () => {},
+        default: [],
+    });
+
+    // Canonical oncotree color per code (cancerTypeId is the lowercase oncotree
+    // code, e.g. hcc -> MediumSeaGreen), so a gene's O2GL icon reflects its
+    // cancer type.
+    @computed get oncotreeCodeColorMap(): { [code: string]: string } {
+        const map: { [code: string]: string } = {};
+        if (!this.isO2glFilterAvailable) {
+            // avoid triggering the cancerTypes fetch when O2GL isn't in use
+            return map;
+        }
+        this.cancerTypes.result.forEach(ct => {
+            if (ct.dedicatedColor) {
+                map[ct.cancerTypeId.toUpperCase()] = ct.dedicatedColor;
+            }
+        });
+        return map;
+    }
+
+    // Readable cancer type name per oncotree code (e.g. DDLS ->
+    // "Dedifferentiated Liposarcoma") for the gene tooltip.
+    @computed get oncotreeCodeNameMap(): { [code: string]: string } {
+        const map: { [code: string]: string } = {};
+        if (!this.isO2glFilterAvailable) {
+            // avoid triggering the cancerTypes fetch when O2GL isn't in use
+            return map;
+        }
+        this.cancerTypes.result.forEach(ct => {
+            if (ct.name) {
+                map[ct.cancerTypeId.toUpperCase()] = ct.name;
+            }
+        });
+        return map;
+    }
+
+    @computed get o2glFilterGenes(): string[] {
+        if (
+            !this.appStore.featureFlagStore.has(FeatureFlagEnum.ONCOTREE2GENES)
+        ) {
+            return [];
+        }
+        return Array.from(
+            getO2glGeneSetForCodes(
+                this.oncotreeCodeValues.result,
+                O2GL_GENE_MAP
+            )
+        );
+    }
+
+    @computed get o2glFilterMatchedOncotreeCodes(): string[] {
+        if (
+            !this.appStore.featureFlagStore.has(FeatureFlagEnum.ONCOTREE2GENES)
+        ) {
+            return [];
+        }
+        return _.uniq(
+            this.oncotreeCodeValues.result
+                .map(code => code.trim().toUpperCase())
+                .filter(code => O2GL_GENE_MAP[code] !== undefined)
+        );
+    }
+
+    @computed get o2glFilterOncotreeCodeCount(): number {
+        return this.o2glFilterMatchedOncotreeCodes.length;
+    }
+
+    // Map each O2GL gene to the cohort's oncotree codes that include it, so a
+    // gene tooltip can name its specific cancer type(s) even in a multi-cancer
+    // cohort.
+    @computed get o2glGeneOncotreeCodeMap(): { [gene: string]: string[] } {
+        const map: { [gene: string]: string[] } = {};
+        this.o2glFilterMatchedOncotreeCodes.forEach(code => {
+            (O2GL_GENE_MAP[code] || []).forEach(gene => {
+                (map[gene] = map[gene] || []).push(code);
+            });
+        });
+        return map;
+    }
+
+    @computed get isO2glFilterAvailable(): boolean {
+        return this.o2glFilterGenes.length > 0;
+    }
 
     readonly mutatedGeneTableRowData = remoteData<MultiSelectionTableRow[]>({
         await: () =>
@@ -11282,6 +11584,16 @@ export class StudyViewPageStore
                     );
                 }
 
+                // Add counts for gene-specific violin charts
+                this._geneSpecificViolinChartMap.forEach(
+                    (violinChart, uniqueChartKey) => {
+                        ret[uniqueChartKey] =
+                            molecularProfileSamplesSet[
+                                violinChart.profileType
+                            ] || 0;
+                    }
+                );
+
                 // Add counts generic assay data charts
                 if (this._genericAssayChartMap.size > 0) {
                     _.reduce(
@@ -11719,13 +12031,15 @@ export class StudyViewPageStore
                 }
                 case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
                 case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE: {
-                    count = getStructuralVariantSamplesCount(
+                    count = getProfiledSamplesCount(
+                        this.structuralVariantProfiles.result,
                         this.molecularProfileSampleCountSet.result
                     );
                     break;
                 }
                 case ChartTypeEnum.CNA_GENES_TABLE: {
-                    count = getCNASamplesCount(
+                    count = getProfiledSamplesCount(
+                        this.cnaProfiles.result,
                         this.molecularProfileSampleCountSet.result
                     );
                     break;
@@ -12635,20 +12949,24 @@ export class StudyViewPageStore
                 )![0];
                 entrezIds.push(selectedColoringGene);
             }
-            // gene selected in embeddings color menu
-            if (
-                this.urlWrapper.query.embeddings_coloring_selection
-                    ?.selectedOption &&
-                this.urlWrapper.query.embeddings_coloring_selection.selectedOption.match(
-                    '^[0-9]+'
-                )
-            ) {
-                // extract entrezGeneId from embeddings coloring selection string
-                let selectedEmbeddingsColoringGene = this.urlWrapper.query.embeddings_coloring_selection.selectedOption.match(
-                    '^[0-9]+'
-                )![0];
-                entrezIds.push(selectedEmbeddingsColoringGene);
-            }
+            // gene selected in embeddings color menu (any split-view panel)
+            [
+                this.urlWrapper.query.embeddings_coloring_selection,
+                this.urlWrapper.query.embeddings_panel2_coloring_selection,
+                this.urlWrapper.query.embeddings_panel3_coloring_selection,
+                this.urlWrapper.query.embeddings_panel4_coloring_selection,
+            ].forEach(coloringSelection => {
+                if (
+                    coloringSelection?.selectedOption &&
+                    coloringSelection.selectedOption.match('^[0-9]+')
+                ) {
+                    // extract entrezGeneId from embeddings coloring selection string
+                    let selectedEmbeddingsColoringGene = coloringSelection.selectedOption.match(
+                        '^[0-9]+'
+                    )![0];
+                    entrezIds.push(selectedEmbeddingsColoringGene);
+                }
+            });
             if (entrezIds.length > 0) {
                 return getClient().fetchGenesUsingPOST({
                     geneIdType: 'ENTREZ_GENE_ID',

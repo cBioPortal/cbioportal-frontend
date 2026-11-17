@@ -140,6 +140,72 @@ test.describe('oncoprint', () => {
         test('shows binary and multiple category tracks', async ({ page }) => {
             await goToUrlAndSetLocalStorage(page, genericArrayUrl, true);
             await waitForOncoprint(page);
+            // The generic assay tracks are added after the gene tracks, so
+            // wait for all four (SBS1 and SBS9 in both groups) and for both
+            // groups' legends before taking the screenshot.
+            await expect
+                .poll(
+                    () =>
+                        page.evaluate(() => {
+                            const model = (window as any).frontendOnc.model;
+                            return model
+                                .getTracks()
+                                .filter((id: number) =>
+                                    /^SBS/.test(model.getTrackLabel(id) || '')
+                                ).length;
+                        }),
+                    { timeout: 30000 }
+                )
+                .toBe(4);
+            for (const group of [
+                'mutational signature binary SBS',
+                'mutational signature category SBS',
+            ]) {
+                await expect(
+                    page
+                        .locator('#oncoprintDiv .oncoprint-legend-div svg text')
+                        .filter({ hasText: group })
+                        .first()
+                ).toBeAttached({ timeout: 30000 });
+            }
+            // The tracks of each group share one legend once their rule
+            // sets are merged, and oncoprintjs resizes #oncoprintDiv to the
+            // new legend asynchronously. Wait until its height fits the
+            // current track area and legend.
+            await expect
+                .poll(
+                    () =>
+                        page.evaluate(() => {
+                            const onc = (window as any).frontendOnc;
+                            const areaHeight = onc.cell_view.getVisibleAreaHeight(
+                                onc.model
+                            );
+                            const minimapHeight = onc.$minimap_div.is(
+                                ':visible'
+                            )
+                                ? onc.$minimap_div.outerHeight()
+                                : 0;
+                            const expectedHeight =
+                                areaHeight +
+                                Math.max(
+                                    onc.$legend_div.outerHeight(),
+                                    minimapHeight
+                                ) +
+                                30;
+                            return (
+                                Math.abs(
+                                    parseFloat(onc.$ctr.css('min-height')) -
+                                        expectedHeight
+                                ) < 1 &&
+                                Math.abs(
+                                    parseFloat(onc.$legend_div.css('top')) -
+                                        (areaHeight + 30)
+                                ) < 1
+                            );
+                        }),
+                    { timeout: 10000 }
+                )
+                .toBe(true);
             await expectOncoprintScreenshot(
                 page,
                 'oncoprint-generic-assay-categorical-tracks.png'

@@ -28,6 +28,10 @@ export function createScatterplotLayer(
                 return 0.003;
             }
 
+            if (d.isDeemphasized) {
+                return 0.018;
+            }
+
             const isSelected =
                 (d.patientId && localSelectedSet.has(d.patientId)) ||
                 (d.patientId && externalSelectedSet.has(d.patientId));
@@ -41,6 +45,13 @@ export function createScatterplotLayer(
                 return [rgb[0], rgb[1], rgb[2], 255];
             }
 
+            const color = d.color || '#CCCCCC';
+            const rgb = colorToRgb(color);
+
+            if (d.isDeemphasized) {
+                return [rgb[0], rgb[1], rgb[2], 110];
+            }
+
             const isSelected =
                 (d.patientId && localSelectedSet.has(d.patientId)) ||
                 (d.patientId && externalSelectedSet.has(d.patientId));
@@ -51,8 +62,6 @@ export function createScatterplotLayer(
             }
 
             // Default: show actual color (keep the fill color)
-            const color = d.color || '#CCCCCC';
-            const rgb = colorToRgb(color);
             return [rgb[0], rgb[1], rgb[2], 255];
         },
         getLineColor: (d: EmbeddingPoint) => {
@@ -60,6 +69,11 @@ export function createScatterplotLayer(
             if (d.isInCohort === false) {
                 const color = d.color || '#666666';
                 return colorToRgb(color); // Use same color for stroke and fill for consistency
+            }
+
+            if (d.isDeemphasized) {
+                const color = d.strokeColor || d.color || '#CCCCCC';
+                return colorToRgb(color);
             }
 
             const isSelected =

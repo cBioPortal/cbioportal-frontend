@@ -84,6 +84,8 @@ export type ChartUserSetting = {
     numericalAttrId?: string;
     patientAttribute: boolean;
     filterByCancerGenes?: boolean;
+    filterByO2gl?: boolean;
+    filterByDriverGenes?: boolean;
     customBins?: number[];
     disableLogScale?: boolean;
     description?: string;

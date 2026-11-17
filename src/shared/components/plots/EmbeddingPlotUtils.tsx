@@ -18,6 +18,7 @@ import {
     createSampleIdLookupMap,
     preComputeClinicalDataMaps,
     getMolecularDataForGeneSync,
+    PatientMolecularData,
 } from '../../lib/PatientMolecularDataUtils';
 import {
     CNA_COLOR_AMP,
@@ -132,7 +133,8 @@ export function getEmbeddingDataFields(
 export function preComputeEmbeddingDataColors(
     embeddingData: EmbeddingData,
     fieldName: string,
-    isNumeric: boolean
+    isNumeric: boolean,
+    numericalValueToColorOverride?: (x: number) => string
 ): {
     colorMap: Map<string, string>;
     valueMap: Map<string, string>;
@@ -160,8 +162,9 @@ export function preComputeEmbeddingDataColors(
         }
 
         const range = max - min || 1; // Avoid division by zero
-        const numericalColorFn = (x: number) =>
-            interpolateReds((x - min) / range);
+        const numericalColorFn =
+            numericalValueToColorOverride ||
+            ((x: number) => interpolateReds((x - min) / range));
 
         const idKey =
             embeddingData.embedding_type === 'patients'
@@ -236,6 +239,78 @@ export interface EmbeddingPlotPoint {
     strokeColor?: string;
     displayLabel?: string;
     isInCohort?: boolean;
+    // Rendered smaller/more transparent, without changing color or label.
+    isDeemphasized?: boolean;
+}
+
+/**
+ * Classifies a patient/sample's aggregated mutation/CNA/SV data for one gene
+ * into the same display labels used for gene-based coloring (e.g. "Missense
+ * (Driver)", "Amplification", "Not mutated"), independent of any color.
+ */
+export function getGeneAlterationLabel(
+    molecularData: PatientMolecularData | undefined,
+    driversAnnotated: boolean
+): string {
+    if (!molecularData || molecularData.mutations.length === 0) {
+        if ((molecularData?.svs.length || 0) > 0) {
+            return 'Structural Variant';
+        }
+        if ((molecularData?.cnas.length || 0) > 0) {
+            const cnaValue = molecularData!.cnas[0].value ?? 0;
+            if (cnaValue === -2) {
+                return 'Deep Deletion';
+            }
+            if (cnaValue === 2) {
+                return 'Amplification';
+            }
+        }
+        return 'Not mutated';
+    }
+
+    const firstMutation = molecularData.mutations[0];
+    const mutationType =
+        firstMutation.mutationType || firstMutation.type || 'unknown';
+    const proteinImpactType = getProteinImpactTypeFromCanonical(
+        getCanonicalMutationType(mutationType)
+    );
+
+    let label: string;
+    switch (proteinImpactType) {
+        case ProteinImpactType.MISSENSE:
+            label = 'Missense';
+            break;
+        case ProteinImpactType.TRUNCATING:
+            label = 'Truncating';
+            break;
+        case ProteinImpactType.INFRAME:
+            label = 'Inframe';
+            break;
+        case ProteinImpactType.SPLICE:
+            label = 'Splice';
+            break;
+        case ProteinImpactType.FUSION:
+            label = 'Fusion';
+            break;
+        default:
+            label = 'Other';
+    }
+
+    const hasPutativeDriverInfo = molecularData.mutations.some(
+        (m: any) => m.putativeDriver !== undefined
+    );
+    if (
+        driversAnnotated &&
+        hasPutativeDriverInfo &&
+        firstMutation.putativeDriver !== undefined
+    ) {
+        label =
+            firstMutation.putativeDriver === true
+                ? `${label} (Driver)`
+                : `${label} (VUS)`;
+    }
+
+    return label;
 }
 
 /**
@@ -249,7 +324,7 @@ export function makeEmbeddingScatterPlotData(
     mutationTypeEnabled: boolean = true,
     copyNumberEnabled: boolean = true,
     structuralVariantEnabled: boolean = true,
-    coloringLogScale: boolean = false
+    numericalValueToColorOverride?: (x: number) => string
 ): EmbeddingPlotPoint[] {
     if (embeddingData.embedding_type === 'samples') {
         return transformSampleEmbedding(
@@ -259,7 +334,7 @@ export function makeEmbeddingScatterPlotData(
             mutationTypeEnabled,
             copyNumberEnabled,
             structuralVariantEnabled,
-            coloringLogScale
+            numericalValueToColorOverride
         );
     } else {
         return transformPatientEmbedding(
@@ -269,7 +344,7 @@ export function makeEmbeddingScatterPlotData(
             mutationTypeEnabled,
             copyNumberEnabled,
             structuralVariantEnabled,
-            coloringLogScale
+            numericalValueToColorOverride
         );
     }
 }
@@ -284,23 +359,10 @@ function transformPatientEmbedding(
     mutationTypeEnabled: boolean = true,
     copyNumberEnabled: boolean = true,
     structuralVariantEnabled: boolean = true,
-    coloringLogScale: boolean = false
+    numericalValueToColorOverride?: (x: number) => string
 ): EmbeddingPlotPoint[] {
     const allSamples = store.samples.result || [];
     const patientLookupMap = createSampleLookupMap(allSamples);
-
-    // Create set of selected patients for clinical attribute filtering
-    const selectedPatientIds = new Set<string>();
-    const selectedSamples = store.selectedSamples.result || [];
-    selectedSamples.forEach(sample => {
-        selectedPatientIds.add(sample.patientId);
-    });
-
-    // Determine if there's an active selection (user has explicitly selected a subset)
-    // If selectedSamples is empty or equals all samples, there's no active selection
-    const hasActiveSelection =
-        selectedSamples.length > 0 &&
-        selectedSamples.length < (store.samples.result || []).length;
 
     // Use optimized approach - pre-compute cancer type lookup from store
     const patientToCancerTypeMap = new Map<string, string>();
@@ -340,7 +402,8 @@ function transformPatientEmbedding(
         const result = preComputeEmbeddingDataColors(
             embeddingData,
             fieldName,
-            isNumericEmbeddingField
+            isNumericEmbeddingField,
+            isNumericEmbeddingField ? numericalValueToColorOverride : undefined
         );
         embeddingDataColorMap = result.colorMap;
         embeddingDataValueMap = result.valueMap;
@@ -353,7 +416,11 @@ function transformPatientEmbedding(
     let clinicalAttributeDisplayName: string | undefined;
 
     if (coloringOption?.info?.clinicalAttribute && !isEmbeddingDataField) {
-        const clinicalDataCacheEntry = store.clinicalDataCache.get(
+        // Unfiltered: store.clinicalDataCache drops everything outside the
+        // study view filter, which would leave the remainder with no value
+        // and collapse it into one grey 'No data' bucket. Colors match - the
+        // filtered cache derives from this one and only narrows the data.
+        const clinicalDataCacheEntry = store.clinicalDataCache.unfilteredClinicalDataCache.get(
             coloringOption.info.clinicalAttribute
         );
 
@@ -377,7 +444,8 @@ function transformPatientEmbedding(
                 isNumericClinicalAttribute
                     ? null
                     : clinicalDataCacheEntry.result.categoryToColor,
-                clinicalDataCacheEntry.result.numericalValueToColor,
+                numericalValueToColorOverride ||
+                    clinicalDataCacheEntry.result.numericalValueToColor,
                 isPatientAttribute
             );
             patientColorMap = maps.patientColorMap;
@@ -561,62 +629,32 @@ function transformPatientEmbedding(
             }
         } else if (isEmbeddingDataField && embeddingDataColorMap) {
             // Embedding data field coloring - use pre-computed maps (O(1) lookup)
-            if (
-                hasActiveSelection &&
-                !selectedPatientIds.has(coord.patientId)
-            ) {
-                color = '#C8C8C8';
-                strokeColor = '#C8C8C8';
-                displayLabel = 'Unselected';
-            } else {
-                const retrievedColor = embeddingDataColorMap.get(
-                    coord.patientId
-                );
-                color = retrievedColor || DEFAULT_UNKNOWN_COLOR;
+            const retrievedColor = embeddingDataColorMap.get(coord.patientId);
+            color = retrievedColor || DEFAULT_UNKNOWN_COLOR;
 
-                if (isNumericEmbeddingField && embeddingFieldDisplayName) {
-                    displayLabel = embeddingFieldDisplayName;
-                } else {
-                    displayLabel =
-                        embeddingDataValueMap?.get(coord.patientId) ||
-                        'No data';
-                }
-                strokeColor = color;
+            if (isNumericEmbeddingField && embeddingFieldDisplayName) {
+                displayLabel = embeddingFieldDisplayName;
+            } else {
+                displayLabel =
+                    embeddingDataValueMap?.get(coord.patientId) || 'No data';
             }
+            strokeColor = color;
         } else if (coloringOption?.info?.clinicalAttribute && sample) {
-            // Clinical attribute coloring
-            // Only show "Unselected" if there's an active selection AND this patient is not in it
-            if (
-                hasActiveSelection &&
-                !selectedPatientIds.has(coord.patientId)
-            ) {
-                // Patient not in selected set - show as unselected
-                color = '#C8C8C8'; // Light gray
-                strokeColor = '#C8C8C8';
-                displayLabel = 'Unselected';
-            } else {
-                // Patient is selected — colour by the patient-level value.
-                // Sample-level attributes are reduced to one value per patient
-                // (average for numeric, "Mixed" when the samples disagree) in
-                // preComputeClinicalDataMaps, mirroring the oncoprint's patient
-                // mode, so both attribute kinds are keyed by patientId here.
-                color =
-                    patientColorMap?.get(coord.patientId) ||
-                    DEFAULT_UNKNOWN_COLOR;
+            // Keyed by patientId for both attribute kinds: sample-level ones
+            // are reduced to one value per patient in
+            // preComputeClinicalDataMaps, like the oncoprint's patient mode.
+            color =
+                patientColorMap?.get(coord.patientId) || DEFAULT_UNKNOWN_COLOR;
 
-                // For numeric attributes, use a generic label so all values
-                // share one legend category; otherwise use the actual value.
-                if (
-                    isNumericClinicalAttribute &&
-                    clinicalAttributeDisplayName
-                ) {
-                    displayLabel = clinicalAttributeDisplayName;
-                } else {
-                    displayLabel =
-                        patientValueMap?.get(coord.patientId) || 'No data';
-                }
-                strokeColor = color;
+            // For numeric attributes, use a generic label so all values
+            // share one legend category; otherwise use the actual value.
+            if (isNumericClinicalAttribute && clinicalAttributeDisplayName) {
+                displayLabel = clinicalAttributeDisplayName;
+            } else {
+                displayLabel =
+                    patientValueMap?.get(coord.patientId) || 'No data';
             }
+            strokeColor = color;
         } else {
             // Default coloring - use pre-computed cancer type map (O(1) lookup)
             displayLabel =
@@ -648,23 +686,10 @@ function transformSampleEmbedding(
     mutationTypeEnabled: boolean = true,
     copyNumberEnabled: boolean = true,
     structuralVariantEnabled: boolean = true,
-    coloringLogScale: boolean = false
+    numericalValueToColorOverride?: (x: number) => string
 ): EmbeddingPlotPoint[] {
     const allSamples = store.samples.result || [];
     const sampleLookupMap = createSampleIdLookupMap(allSamples);
-
-    // Create set of selected samples for clinical attribute filtering
-    const selectedSampleIds = new Set<string>();
-    const selectedSamples = store.selectedSamples.result || [];
-    selectedSamples.forEach(sample => {
-        selectedSampleIds.add(sample.sampleId);
-    });
-
-    // Determine if there's an active selection (user has explicitly selected a subset)
-    // If selectedSamples is empty or equals all samples, there's no active selection
-    const hasActiveSelection =
-        selectedSamples.length > 0 &&
-        selectedSamples.length < (store.samples.result || []).length;
 
     // Use same optimized approach - pre-compute cancer type lookup from store
     const patientToCancerTypeMap = new Map<string, string>();
@@ -704,7 +729,8 @@ function transformSampleEmbedding(
         const result = preComputeEmbeddingDataColors(
             embeddingData,
             fieldName,
-            isNumericEmbeddingField
+            isNumericEmbeddingField,
+            isNumericEmbeddingField ? numericalValueToColorOverride : undefined
         );
         embeddingDataColorMap = result.colorMap;
         embeddingDataValueMap = result.valueMap;
@@ -719,7 +745,11 @@ function transformSampleEmbedding(
     let clinicalAttributeDisplayName: string | undefined;
 
     if (coloringOption?.info?.clinicalAttribute && !isEmbeddingDataField) {
-        const clinicalDataCacheEntry = store.clinicalDataCache.get(
+        // Unfiltered: store.clinicalDataCache drops everything outside the
+        // study view filter, which would leave the remainder with no value
+        // and collapse it into one grey 'No data' bucket. Colors match - the
+        // filtered cache derives from this one and only narrows the data.
+        const clinicalDataCacheEntry = store.clinicalDataCache.unfilteredClinicalDataCache.get(
             coloringOption.info.clinicalAttribute
         );
 
@@ -743,7 +773,8 @@ function transformSampleEmbedding(
                 isNumericClinicalAttribute
                     ? null
                     : clinicalDataCacheEntry.result.categoryToColor,
-                clinicalDataCacheEntry.result.numericalValueToColor,
+                numericalValueToColorOverride ||
+                    clinicalDataCacheEntry.result.numericalValueToColor,
                 isPatientAttribute
             );
             clinicalDataColorMap = maps.colorMap;
@@ -997,76 +1028,53 @@ function transformSampleEmbedding(
             }
         } else if (isEmbeddingDataField && embeddingDataColorMap) {
             // Embedding data field coloring - use pre-computed maps (O(1) lookup)
-            if (hasActiveSelection && !selectedSampleIds.has(coord.sampleId)) {
-                color = '#C8C8C8';
-                strokeColor = '#C8C8C8';
-                displayLabel = 'Unselected';
-            } else {
-                const retrievedColor = embeddingDataColorMap.get(
-                    coord.sampleId
-                );
-                color = retrievedColor || DEFAULT_UNKNOWN_COLOR;
+            const retrievedColor = embeddingDataColorMap.get(coord.sampleId);
+            color = retrievedColor || DEFAULT_UNKNOWN_COLOR;
 
-                if (isNumericEmbeddingField && embeddingFieldDisplayName) {
-                    displayLabel = embeddingFieldDisplayName;
+            if (isNumericEmbeddingField && embeddingFieldDisplayName) {
+                displayLabel = embeddingFieldDisplayName;
+            } else {
+                displayLabel =
+                    embeddingDataValueMap?.get(coord.sampleId) || 'No data';
+            }
+            strokeColor = color;
+        } else if (coloringOption?.info?.clinicalAttribute && sample) {
+            // Clinical attribute coloring - use pre-computed maps (O(1) lookup).
+            // Patient-level attributes are keyed by patientId, sample-level
+            // ones by sampleKey.
+            const isPatientAttribute =
+                coloringOption.info.clinicalAttribute.patientAttribute || false;
+
+            if (isPatientAttribute && patientColorMap && patientValueMap) {
+                color = patientColorMap.get(patientId) || DEFAULT_UNKNOWN_COLOR;
+
+                // For numeric attributes, use a generic label so all values
+                // share one legend category; otherwise use the actual value.
+                if (
+                    isNumericClinicalAttribute &&
+                    clinicalAttributeDisplayName
+                ) {
+                    displayLabel = clinicalAttributeDisplayName;
+                } else {
+                    displayLabel = patientValueMap.get(patientId) || 'No data';
+                }
+            } else {
+                const sampleKey = `${sample.studyId}:${sample.sampleId}`;
+                color =
+                    clinicalDataColorMap?.get(sampleKey) ||
+                    DEFAULT_UNKNOWN_COLOR;
+
+                if (
+                    isNumericClinicalAttribute &&
+                    clinicalAttributeDisplayName
+                ) {
+                    displayLabel = clinicalAttributeDisplayName;
                 } else {
                     displayLabel =
-                        embeddingDataValueMap?.get(coord.sampleId) || 'No data';
+                        clinicalDataValueMap?.get(sampleKey) || 'No data';
                 }
-                strokeColor = color;
             }
-        } else if (coloringOption?.info?.clinicalAttribute && sample) {
-            // Clinical attribute coloring
-            // Only show "Unselected" if there's an active selection AND this sample is not in it
-            if (hasActiveSelection && !selectedSampleIds.has(coord.sampleId)) {
-                // Sample not in selected set - show as unselected
-                color = '#C8C8C8'; // Light gray
-                strokeColor = '#C8C8C8';
-                displayLabel = 'Unselected';
-            } else {
-                // Sample is selected - use pre-computed maps (O(1) lookup)
-                // For patient-level attributes, use patientId lookup; for sample-level, use sampleKey
-                const isPatientAttribute =
-                    coloringOption.info.clinicalAttribute.patientAttribute ||
-                    false;
-
-                if (isPatientAttribute && patientColorMap && patientValueMap) {
-                    // Use patient-level maps for patient attributes
-                    const retrievedColor = patientColorMap.get(patientId);
-                    color = retrievedColor || DEFAULT_UNKNOWN_COLOR;
-
-                    // For numeric attributes, use a generic label so all values share one legend category
-                    // For categorical attributes, use the actual value as the label
-                    if (
-                        isNumericClinicalAttribute &&
-                        clinicalAttributeDisplayName
-                    ) {
-                        displayLabel = clinicalAttributeDisplayName;
-                    } else {
-                        displayLabel =
-                            patientValueMap.get(patientId) || 'No data';
-                    }
-                } else {
-                    // Use sample-level maps for sample attributes
-                    const sampleKey = `${sample.studyId}:${sample.sampleId}`;
-                    color =
-                        clinicalDataColorMap?.get(sampleKey) ||
-                        DEFAULT_UNKNOWN_COLOR;
-
-                    // For numeric attributes, use a generic label so all values share one legend category
-                    // For categorical attributes, use the actual value as the label
-                    if (
-                        isNumericClinicalAttribute &&
-                        clinicalAttributeDisplayName
-                    ) {
-                        displayLabel = clinicalAttributeDisplayName;
-                    } else {
-                        displayLabel =
-                            clinicalDataValueMap?.get(sampleKey) || 'No data';
-                    }
-                }
-                strokeColor = color;
-            }
+            strokeColor = color;
         } else {
             // Default coloring - use pre-computed cancer type map (O(1) lookup)
             displayLabel = patientToCancerTypeMap.get(patientId) || 'No data';

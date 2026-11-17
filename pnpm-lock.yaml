@@ -52,17 +52,17 @@ importers:
         specifier: ^6.26.0
         version: 6.32.0(@datadog/browser-logs@5.35.1)
       '@deck.gl/core':
-        specifier: ^9.1.12
-        version: 9.3.6
+        specifier: ^9.4.0
+        version: 9.4.0
       '@deck.gl/layers':
-        specifier: ^9.1.12
-        version: 9.3.6(@deck.gl/core@9.3.6)(@loaders.gl/core@4.4.3)(@luma.gl/core@9.3.6)(@luma.gl/engine@9.3.6(@luma.gl/core@9.3.6)(@luma.gl/shadertools@9.3.6(@luma.gl/core@9.3.6)))
+        specifier: ^9.4.0
+        version: 9.4.0(@deck.gl/core@9.4.0)(@loaders.gl/core@4.4.3)(@luma.gl/core@9.4.0)(@luma.gl/engine@9.4.0(@luma.gl/core@9.4.0)(@luma.gl/shadertools@9.4.0(@luma.gl/core@9.4.0)))
       '@deck.gl/react':
-        specifier: ^9.1.12
-        version: 9.3.6(@deck.gl/core@9.3.6)(@deck.gl/widgets@9.3.6(@deck.gl/core@9.3.6)(@luma.gl/core@9.3.6))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^9.4.0
+        version: 9.4.0(@deck.gl/core@9.4.0)(@deck.gl/widgets@9.4.0(@deck.gl/core@9.4.0)(@luma.gl/core@9.4.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@deck.gl/widgets':
-        specifier: ^9.1.12
-        version: 9.3.6(@deck.gl/core@9.3.6)(@luma.gl/core@9.3.6)
+        specifier: ^9.4.0
+        version: 9.4.0(@deck.gl/core@9.4.0)(@luma.gl/core@9.4.0)
       '@fortawesome/fontawesome-free':
         specifier: ^6.7.2
         version: 6.7.2
@@ -212,7 +212,7 @@ importers:
         version: 2.4.0
       axios:
         specifier: ^1.7.8
-        version: 1.18.1
+        version: 1.20.0
       babel-loader:
         specifier: 8.0.5
         version: 8.0.5(@babel/core@7.29.6)(webpack@5.106.1)
@@ -246,6 +246,9 @@ importers:
       cbioportal-utils:
         specifier: workspace:*
         version: link:packages/cbioportal-utils
+      cbioportal-wsi-viewer:
+        specifier: workspace:*
+        version: link:packages/cbioportal-wsi-viewer
       classnames:
         specifier: ^2.2.5
         version: 2.5.1
@@ -377,7 +380,7 @@ importers:
         version: 10.0.0(encoding@0.1.13)
       lerna:
         specifier: 9.0.7
-        version: 9.0.7(@types/node@24.13.3)
+        version: 9.0.7(@types/node@25.9.2)
       linear-algebra:
         specifier: ^3.1.4
         version: 3.1.4
@@ -438,6 +441,9 @@ importers:
       oncoprintjs:
         specifier: workspace:*
         version: link:packages/oncoprintjs
+      openseadragon:
+        specifier: 6.0.2
+        version: 6.0.2
       pako:
         specifier: 2.0.2
         version: 2.0.2
@@ -466,8 +472,8 @@ importers:
         specifier: 3.0.1
         version: 3.0.1
       qs:
-        specifier: 6.15.2
-        version: 6.15.2
+        specifier: 6.16.0
+        version: 6.16.0
       query-string:
         specifier: ^6.13.6
         version: 6.14.1
@@ -495,9 +501,6 @@ importers:
       react-color:
         specifier: ^2.18.1
         version: 2.19.3(react@18.3.1)
-      react-column-resizer:
-        specifier: ^1.1.9
-        version: 1.1.9(react@18.3.1)
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
@@ -519,9 +522,6 @@ importers:
       react-if:
         specifier: ^2.1.0
         version: 2.2.2(prop-types@15.7.2)(react@18.3.1)
-      react-json-to-table:
-        specifier: ^0.1.5
-        version: 0.1.7
       react-markdown:
         specifier: ^7.0.1
         version: 7.1.2(@types/react@18.3.27)(react@18.3.1)
@@ -617,7 +617,7 @@ importers:
         version: 2.9.0
       rollup-plugin-sourcemaps:
         specifier: ^0.6.3
-        version: 0.6.3(@types/node@24.13.3)(rollup@2.80.0)
+        version: 0.6.3(@types/node@25.9.2)(rollup@2.80.0)
       rollup-plugin-typescript2:
         specifier: ^0.31.2
         version: 0.31.2(rollup@2.80.0)(typescript@4.9.5)
@@ -750,7 +750,7 @@ importers:
         version: 3.0.0
       jest:
         specifier: ^27.2.1
-        version: 27.5.1(ts-node@10.9.2(@types/node@24.13.3)(typescript@4.9.5))
+        version: 27.5.1(ts-node@10.9.2(@types/node@25.9.2)(typescript@4.9.5))
       jest-canvas-mock:
         specifier: ^2.3.1
         version: 2.5.2
@@ -792,10 +792,10 @@ importers:
         version: https://codeload.github.com/cBioPortal/swagger-js-codegen/tar.gz/0362f4a1e2d116ad6dffc36e4b57cdfbc93956cf
       ts-jest:
         specifier: ^27.1.5
-        version: 27.1.5(@babel/core@7.29.6)(@types/jest@27.5.2)(babel-jest@27.5.1(@babel/core@7.29.6))(jest@27.5.1(ts-node@10.9.2(@types/node@24.13.3)(typescript@4.9.5)))(typescript@4.9.5)
+        version: 27.1.5(@babel/core@7.29.6)(@types/jest@27.5.2)(babel-jest@27.5.1(@babel/core@7.29.6))(jest@27.5.1(ts-node@10.9.2(@types/node@25.9.2)(typescript@4.9.5)))(typescript@4.9.5)
       ts-node:
         specifier: ^10.9.2
-        version: 10.9.2(@types/node@24.13.3)(typescript@4.9.5)
+        version: 10.9.2(@types/node@25.9.2)(typescript@4.9.5)
       turbo:
         specifier: 2.9.14
         version: 2.9.14
@@ -931,6 +931,12 @@ importers:
       typescript:
         specifier: 4.0.3
         version: 4.0.3
+
+  packages/cbioportal-wsi-viewer:
+    dependencies:
+      openseadragon:
+        specifier: 6.0.2
+        version: 6.0.2
 
   packages/chat-sidebar:
     dependencies:
@@ -2301,30 +2307,30 @@ packages:
   '@datastructures-js/max-heap@2.0.0':
     resolution: {integrity: sha512-hEWFvCI5DVikJUtbP6me2fwWC2En2y9IgAKNUD9UqifVog+3DAjqb15YcpAZ3knJGRuupx5Z5KjMpu1lNS0E3w==}
 
-  '@deck.gl/core@9.3.6':
-    resolution: {integrity: sha512-dCwF+ATE382DdbIqbaoHYCTAW7vutkVlQvWlmMebTDW1j7rPnKrT6ZPa0Y996U/8ZL5NNWc2/wWWY9LYhZVm2Q==}
+  '@deck.gl/core@9.4.0':
+    resolution: {integrity: sha512-0isP+x2eGNxteO7lT650lYO7oiAYXAu4aF1jG+BMi8aKYh38HtPugLq1TlQTravIXzBSi5Oe1oZNuVj8h4ZEjA==}
 
-  '@deck.gl/layers@9.3.6':
-    resolution: {integrity: sha512-Ex3Lh4AIQ4zi8iojyWr/kpjwdY9HFKkR0iLeNt0hgz3fOmgL8++5jwUuzt+VOQnjE+x7TsNlM1B1fLciHnH4Xg==}
+  '@deck.gl/layers@9.4.0':
+    resolution: {integrity: sha512-jSL/xje2Ez7DmnP8AAIdhhg6IAtfXMmnXiUAKNgpl/TTaEL+iL5TAnagCdt39H3azmKVcCG33kOlIoWFAuLuRg==}
     peerDependencies:
-      '@deck.gl/core': ~9.3.0
+      '@deck.gl/core': ~9.4.0
       '@loaders.gl/core': ^4.4.3
-      '@luma.gl/core': ~9.3.3
-      '@luma.gl/engine': ~9.3.3
+      '@luma.gl/core': ~9.4.0
+      '@luma.gl/engine': ~9.4.0
 
-  '@deck.gl/react@9.3.6':
-    resolution: {integrity: sha512-oZ8Bvj8GzTU50864X4aujrlzeGytf60Azd7pAeotQO+8vZkIw8e9pxoZo6S4NM2NOtHKHWkGVCy08Fx9482lpA==}
+  '@deck.gl/react@9.4.0':
+    resolution: {integrity: sha512-bDzQB4qJguHfrb/8sxS/YDMwoKAGGIp3cyw7vAbnwzkyZ/uoGTH4EMHJfATtxjI8d1eZYuzqxD/P6yE21UjJZA==}
     peerDependencies:
-      '@deck.gl/core': ~9.3.0
-      '@deck.gl/widgets': ~9.3.0
+      '@deck.gl/core': ~9.4.0
+      '@deck.gl/widgets': ~9.4.0
       react: '>=16.3.0'
       react-dom: '>=16.3.0'
 
-  '@deck.gl/widgets@9.3.6':
-    resolution: {integrity: sha512-45A0rjEuOYr+rAs2RqSgjCOVz8zlkzQLFLskcrA2pQgc1+zFmIzgcncE9Hi2aque87Chb1oZ5BdGMLA0jl5Lnw==}
+  '@deck.gl/widgets@9.4.0':
+    resolution: {integrity: sha512-Ou8d9XiymjWT9zkPKtI+YezAfh48N3uxayhjSlNnp24rCrf40QtEnlZyC5daE0bk5Ehrj6SrmE8fOtpbhIPnYQ==}
     peerDependencies:
-      '@deck.gl/core': ~9.3.0
-      '@luma.gl/core': ~9.3.3
+      '@deck.gl/core': ~9.4.0
+      '@luma.gl/core': ~9.4.0
 
   '@discoveryjs/json-ext@0.5.7':
     resolution: {integrity: sha512-dBVuXR082gk3jsFp7Rd/JI4kytwGHecnCoTtXFb7DB6CNHp4rg5k1bhg0nWdLGLnOV71lmDzGQaLMy8iPLY0pw==}
@@ -3336,24 +3342,32 @@ packages:
     peerDependencies:
       '@loaders.gl/core': ~4.4.0
 
-  '@luma.gl/core@9.3.6':
-    resolution: {integrity: sha512-eqHnCPh2xHYkdd9rEkiIIkGMixNiJkq1ROrnTob6npvmZNVHXL0ubIw5KueL7rqW0+J1tm+p2+TXZaCmn0sP7Q==}
+  '@luma.gl/core@9.4.0':
+    resolution: {integrity: sha512-2SIB77DoZ6LMZW/aPS/M3hKHP8UR0WR6f5R2+Sir5FdNVdOvFiOHAxPCafjVTxTqFWWHnh1NSCo5k/qq6sdFQw==}
 
-  '@luma.gl/engine@9.3.6':
-    resolution: {integrity: sha512-NYTdhn2NaH/MjN8qXCl2ukrT1Ac9iTKu1mgN0wz11XRd1QYnlMNBXswRROD7IZ2PUsBWdmYHc9qE8wKBQqMuIA==}
+  '@luma.gl/engine@9.4.0':
+    resolution: {integrity: sha512-VK1kvdbGKzUmxNC0caR2YB65Q9VV5JA2bMOZwE3k6+mwrSymUrgIgjsNZHasjwe8QnSPlZNpMBsQDVVrdG9P1g==}
     peerDependencies:
-      '@luma.gl/core': ~9.3.0
-      '@luma.gl/shadertools': ~9.3.0
+      '@luma.gl/core': ~9.4.0
+      '@luma.gl/shadertools': ~9.4.0
 
-  '@luma.gl/shadertools@9.3.6':
-    resolution: {integrity: sha512-dDuD8lCOkAE1L7hJGZEyZAi7upR1HG3wEEIQ1gCLaTTbJWC7tNtnVz853lqUA+VXgjgS9NiQFFRcosiIZmW4Vg==}
+  '@luma.gl/gpgpu@9.4.0':
+    resolution: {integrity: sha512-Rs1Fi50lF9GH90qteHGFS70defMWsZz9fu2ghI8eYW5kecORmEsi/Z1Q0taJHVdhKVdOil1mEr8A7DFMGNBhQg==}
     peerDependencies:
-      '@luma.gl/core': ~9.3.0
+      '@luma.gl/core': ~9.4.0
+      '@luma.gl/engine': ~9.4.0
+      '@luma.gl/shadertools': ~9.4.0
+      '@luma.gl/webgpu': ~9.4.0
 
-  '@luma.gl/webgl@9.3.6':
-    resolution: {integrity: sha512-tGm7FGWPmJKxGZMvkRPRi219x3tKmBxR7Uke09nTp2ujNak/O5V9xPIQ9lUBGTxqAb8U2yjKkXG8j+f/4b2+sw==}
+  '@luma.gl/shadertools@9.4.0':
+    resolution: {integrity: sha512-H+V0rfSdzpceJc3li7AvK3JlegrMr1293UsWx7g/4D907Kqk34YcOupkqqp367LYVZFC5rEzdnkcjqD7SjeBkA==}
     peerDependencies:
-      '@luma.gl/core': ~9.3.0
+      '@luma.gl/core': ~9.4.0
+
+  '@luma.gl/webgl@9.4.0':
+    resolution: {integrity: sha512-62g01eM/qQthE4jekt6EFsCNbjaL8bQtdmM7OcvcmnVtEQueuaIAM1PUA8MPcvS6qPHQQz9MSQzCpVEN2FrWBQ==}
+    peerDependencies:
+      '@luma.gl/core': ~9.4.0
 
   '@mapbox/tiny-sdf@2.2.0':
     resolution: {integrity: sha512-LVL4wgI9YAum5V+LNVQO6QgFBPw7/MIIY4XJPNsPDMrjEwcE+JfKk1LuIl8GnF197ejVdC9QdPaxrx5gfgdGXg==}
@@ -5504,6 +5518,12 @@ packages:
   '@types/node@24.13.3':
     resolution: {integrity: sha512-Dh8vAsV36ig5wa9OX4pXvMc9D3Veibfw2wix0CUwYODLD8nkj9UsLjASr49nPg+2eKzxhBV+v7L8pXvT4e639Q==}
 
+  '@types/node@25.6.0':
+    resolution: {integrity: sha512-+qIYRKdNYJwY3vRCZMdJbPLJAtGjQBudzZzdzwQYkEPQd+PJGixUL5QfvCLDaULoLv+RhT3LDkwEfKaAkgSmNQ==}
+
+  '@types/node@25.9.2':
+    resolution: {integrity: sha512-G05zqtJhcDLb8uslf5EjCxXg9G1KQxiV8OS0R26IC//Eoyitzqe8z37I7cqvnZlrlSfgocQRfSn/AHBZJJFyGw==}
+
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
 
@@ -6212,8 +6232,8 @@ packages:
   axios@1.15.0:
     resolution: {integrity: sha512-wWyJDlAatxk30ZJer+GeCWS209sA42X+N5jU2jy6oHTp7ufw8uzUTVFBX9+wTfAlhiJXGS0Bq7X6efruWjuK9Q==}
 
-  axios@1.18.1:
-    resolution: {integrity: sha512-3nTvFlvpn9Zu/RkHUqtc7/+al4UpRW5az71ap5zccp6e8RAYEzhMTecX8Dz1wWDYrPpUoB1HAQEGEAEvUr7S9g==}
+  axios@1.20.0:
+    resolution: {integrity: sha512-r8aOh8j9cGKpgQAqpzrUHnSIc6a59Y3Xf/cv8sy1DrHCkZHzQGEuoq1tARk6qSyDdtQGSDgpb9kFlruzPvrgwg==}
 
   b4a@1.8.0:
     resolution: {integrity: sha512-qRuSmNSkGQaHwNbM7J78Wwy+ghLEYF1zNrSeMxj4Kgw6y33O3mXcQ6Ie9fRvfU/YnxWkOchPXbaLb73TkIsfdg==}
@@ -6912,6 +6932,7 @@ packages:
 
   cf-blob.js@0.0.1:
     resolution: {integrity: sha512-KkUmNT/rgVK+KehG7cSvbLwMb+OS5Qby6ADB4LP12jtx6rfVvHCdyqFUjAeQnDpGpQNNwvpi0R/tluT2J6P99Q==}
+    deprecated: 'This package is deprecated and no longer maintained. Please use blob-polyfill instead: https://www.npmjs.com/package/blob-polyfill'
 
   chai-enzyme@1.0.0-beta.1:
     resolution: {integrity: sha512-vWT101M7qjq6kM/29G4vHrgLM4Mj1gCnKuvOSF03s8pFVsqol4B6USoGM/aYRKqaaIHs8/AxmHjWGFplQWhIQw==}
@@ -8872,8 +8893,8 @@ packages:
   focus-outline-manager@1.0.2:
     resolution: {integrity: sha512-bHWEmjLsTjGP9gVs7P3Hyl+oY5NlMW8aTSPdTJ+X2GKt6glDctt9fUCLbRV+d/l8NDC40+FxMjp9WlTQXaQALw==}
 
-  follow-redirects@1.16.0:
-    resolution: {integrity: sha512-y5rN/uOsadFT/JfYwhxRS5R7Qce+g3zG97+JrtFZlC9klX/W5hD7iiLzScI4nZqUS7DNUdhPgw4xI8W2LuXlUw==}
+  follow-redirects@1.16.1:
+    resolution: {integrity: sha512-FNvFGzoMLWmE6Yj9spb/zjd7yiNCHiAW9/Tg9CXrQ8wuu32HtlJOwWO11OJafl5FfY3DxTdQ0vj42zU1kvv5jg==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -10359,7 +10380,7 @@ packages:
 
   jquery@2.2.4:
     resolution: {integrity: sha512-lBHj60ezci2u1v2FqnZIraShGgEXq35qCzMv4lITyHGppTnA13rwR0MgwyNJh9TnDs3aXUvd1xjAotfraMHX/Q==}
-    deprecated: This version is deprecated. Please upgrade to the latest version or find support at https://www.herodevs.com/support/jquery-nes.
+    deprecated: This version is deprecated. Please upgrade to the latest version or find support at https://www.herodevs.com/support/jquery-nes or https://tuxcare.com/lp/click-jquery-support/.
 
   jquery@3.6.0:
     resolution: {integrity: sha512-JVzAR/AjBvVt2BmYhxRCSYysDsPcssdmTFnzyLEts9qNwmjmu4JTAMYubEfwVOSwpQ1I1sKKFcxhZCI2buerfw==}
@@ -11460,8 +11481,8 @@ packages:
     resolution: {integrity: sha512-WRoDn//mXBiJ1H40rqa3vH0toePwSsGb45iInWlTySa+Uu4k3tYUSxa2v1KqAiLtvlrSzaExqS1gtk96A9zvEA==}
     engines: {node: '>=0.10.0'}
 
-  mjolnir.js@3.0.1:
-    resolution: {integrity: sha512-/RMi8Jm3NKleOkVI8D2ai+1OVwtfRJsSVBVjbTXNm83nfsN4uORYaN3u1/hsg5CqVI+di8enTkvgDNDOywn6cQ==}
+  mjolnir.js@3.1.1:
+    resolution: {integrity: sha512-Em3+0p6n2RamaiiDenHByvaWNolr+K0fWsFpgUgUXRssFI59ramCMdp0crU6V75clbA4fDJBVTBXfBF5rlPB9A==}
 
   mkdirp@0.5.6:
     resolution: {integrity: sha512-FP+p8RB8OWpF3YZBCrP5gtADmtXApB5AMLn+vdyA+PyxCjrCs00mjyUozssO33cwDeT3wNGdLxJ5M//YqtHAJw==}
@@ -11922,6 +11943,9 @@ packages:
     resolution: {integrity: sha512-ur5UIdyw5Y7yEj9wLzhqXiy6GZ3Mwx0yGI+5sMn2r0N0v3cKJvUmFH5yPP+WXh9e0xfyzyJX95D8l088DNFj7A==}
     hasBin: true
 
+  openseadragon@6.0.2:
+    resolution: {integrity: sha512-WNPPQWp9sHunyzkV9J2yhfxnSfDF9CfBsE6unmkdxh1uTWzFcueMvBPhmuZdY7M1v/ffJ3NdaF3Qq3jogphIbA==}
+
   optimist@0.6.1:
     resolution: {integrity: sha512-snN4O4TkigujZphWLN0E//nQmm7790RYaE53DdL7ZYwee2D8DDo9/EyYiKUfN3rneWUjhJnueija3G9I2i0h3g==}
 
@@ -12151,6 +12175,7 @@ packages:
 
   path-dirname@1.0.2:
     resolution: {integrity: sha512-ALzNPpyNq9AqXMBjeymIjFDAkAFH06mHJH/cSBHAgU0s4vfpBn6b2nf8tiRLvagKD8RbTpq2FKTBg7cl9l3c7Q==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   path-exists@2.1.0:
     resolution: {integrity: sha512-yTltuKuhtNeFJKa1PiRzfLAU5182q1y4Eb4XCJ3PBqyzEDkAZRzBrKKBct682ls9reBVHf9udYLN5Nd+K1B9BQ==}
@@ -12865,8 +12890,16 @@ packages:
     resolution: {integrity: sha512-Rzq0KEyX/w/tEybncDgdkZrJgVUsUMk3xjh3t5bv3S1HTAtg+uOYt72+ZfwiQwKdysThkTBdL/rTi6HDmX9Ddw==}
     engines: {node: '>=0.6'}
 
+  qs@6.16.0:
+    resolution: {integrity: sha512-h6fhOIaRrID2CbEY2fqs+7t+UXZo+MLAnU5gRIq85uFtdiUPCdsApMlHhXogKVM4HM2DVbIjGNTTYH2OcmP1vA==}
+    engines: {node: '>=0.6'}
+
   qs@6.5.2:
     resolution: {integrity: sha512-N5ZAX4/LxJmF+7wN74pUD6qAh9/wnvdQcjq9TZjevvXzSUo7bfmw91saqMjzGS2xq91/odN2dW/WOl7qQHNDGA==}
+    engines: {node: '>=0.6'}
+
+  qs@6.5.5:
+    resolution: {integrity: sha512-mzR4sElr1bfCaPJe7m8ilJ6ZXdDaGoObcYR0ZHSsktM/Lt21MVHj5De30GQH2eiZ1qGRTO7LCAzQsUeXTNexWQ==}
     engines: {node: '>=0.6'}
 
   query-string@4.3.4:
@@ -13019,20 +13052,10 @@ packages:
     peerDependencies:
       react: '*'
 
-  react-column-resizer@1.1.9:
-    resolution: {integrity: sha512-l25LPyN3Gu33RC726cv3ZnS9EaI/B+ZIY1MrJiiHcBqsY4BKRYNBbrZolUfzBjjWDwHOBMc/fZLiSxmDGPqCrQ==}
-    peerDependencies:
-      react: ^16.0.0
-
   react-dom@15.7.0:
     resolution: {integrity: sha512-mpjXqC2t1FuYsILOLCj0kg6pbg460byZkVA/80VtDmKU/pYmoTdHOtaMcTRIDiyXLz4sIur0cQ04nOC6iGndJg==}
     peerDependencies:
       react: ^15.7.0
-
-  react-dom@16.14.0:
-    resolution: {integrity: sha512-1gCeQXDLoIqMgqD3IO2Ah9bnf0w9kzhwN5q4FGnHZ67hBm9yePzB5JJAIQCc8x3pFnNlwFq4RidZggNAAkzWWw==}
-    peerDependencies:
-      react: ^16.14.0
 
   react-dom@18.3.1:
     resolution: {integrity: sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==}
@@ -13106,10 +13129,6 @@ packages:
 
   react-is@18.3.1:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
-
-  react-json-to-table@0.1.7:
-    resolution: {integrity: sha512-mUo8gFS1VquYKm38hQukcQuFjWRfnnmDaGHWg5quQM4Ib+ogWgQV5kEaouvTyIXBK3LZ7Us9O0uqDa4TJdUOtA==}
-    engines: {node: '>=8.0.0'}
 
   react-lifecycles-compat@3.0.4:
     resolution: {integrity: sha512-fBASbA6LnOU9dOU2eW7aQ8xmYBSXUIWr+UmF9b1efZBazGNO+rcXT/icdKnYm2pTwcRylVUYwW7H1PHfLekVzA==}
@@ -13829,9 +13848,6 @@ packages:
     resolution: {integrity: sha512-5LBh1Tls8c9xgGjw3QrMwETmTMVk0oFgvrFSvWx62llR2hcEInrKNZ2GZCCuuy2lvWrdl5jhbpeqc5hRYKFOcw==}
     engines: {node: '>=10'}
 
-  scheduler@0.19.1:
-    resolution: {integrity: sha512-n/zwRWRYSUj0/3g/otKDRPMh6qv2SYMWNq85IEa8iZyAv8od9zDYpGSnpBEjNgcMNq6Scbu5KfIPxNF72R/2EA==}
-
   scheduler@0.23.2:
     resolution: {integrity: sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==}
 
@@ -14018,6 +14034,10 @@ packages:
 
   side-channel@1.1.0:
     resolution: {integrity: sha512-ZX99e6tRweoUXqR+VBrslhda51Nh5MTQwou5tnUDgbtyM0dBgmhEDtWGP/xbKn6hqfPRHujUNwz5fy/wbbhnpw==}
+    engines: {node: '>= 0.4'}
+
+  side-channel@1.1.1:
+    resolution: {integrity: sha512-6x6dK6zJdpTzF4sQeNYxwtvBzf6Eg4GtlesS94HOvTudUeyK2WXAaIfmDgsyslYrRBeFIlsi54AYsFGUuhmvrQ==}
     engines: {node: '>= 0.4'}
 
   sigmund@1.0.1:
@@ -14978,6 +14998,12 @@ packages:
 
   undici-types@7.18.2:
     resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
+
+  undici-types@7.19.2:
+    resolution: {integrity: sha512-qYVnV5OEm2AW8cJMCpdV20CDyaN3g0AjDlOGf1OW4iaDEx8MwdtChUp4zu4H0VP3nDRF/8RKWH+IPp9uW0YGZg==}
+
+  undici-types@7.24.6:
+    resolution: {integrity: sha512-WRNW+sJgj5OBN4/0JpHFqtqzhpbnV0GuB+OozA9gCL7a993SmU+1JBZCzLNxYsbMfIeDL+lTsphD5jN5N+n0zg==}
 
   undici@7.29.0:
     resolution: {integrity: sha512-IDxfleLmmbSskfWSUATiN1nfn2rDuvnMOqb5CWR92iIfojA0Ud+ulOAAEQ57LPr9rWmsreUyf5lwyao+7GNNVw==}
@@ -16538,22 +16564,22 @@ snapshots:
   '@babel/plugin-syntax-async-generators@7.8.4(@babel/core@7.29.6)':
     dependencies:
       '@babel/core': 7.29.6
-      '@babel/helper-plugin-utils': 7.29.7
+      '@babel/helper-plugin-utils': 7.28.6
 
   '@babel/plugin-syntax-bigint@7.8.3(@babel/core@7.29.6)':
     dependencies:
       '@babel/core': 7.29.6
-      '@babel/helper-plugin-utils': 7.29.7
+      '@babel/helper-plugin-utils': 7.28.6
 
   '@babel/plugin-syntax-class-properties@7.12.13(@babel/core@7.29.6)':
     dependencies:
       '@babel/core': 7.29.6
-      '@babel/helper-plugin-utils': 7.29.7
+      '@babel/helper-plugin-utils': 7.28.6
 
   '@babel/plugin-syntax-class-static-block@7.14.5(@babel/core@7.29.6)':
     dependencies:
       '@babel/core': 7.29.6
-      '@babel/helper-plugin-utils': 7.29.7
+      '@babel/helper-plugin-utils': 7.28.6
 
   '@babel/plugin-syntax-dynamic-import@7.8.3(@babel/core@7.29.6)':
     dependencies:
@@ -16573,12 +16599,12 @@ snapshots:
   '@babel/plugin-syntax-import-meta@7.10.4(@babel/core@7.29.6)':
     dependencies:
       '@babel/core': 7.29.6
-      '@babel/helper-plugin-utils': 7.29.7
+      '@babel/helper-plugin-utils': 7.28.6
 
   '@babel/plugin-syntax-json-strings@7.8.3(@babel/core@7.29.6)':
     dependencies:
       '@babel/core': 7.29.6
-      '@babel/helper-plugin-utils': 7.29.7
+      '@babel/helper-plugin-utils': 7.28.6
 
   '@babel/plugin-syntax-jsx@7.28.6(@babel/core@7.29.6)':
     dependencies:
@@ -16593,47 +16619,47 @@ snapshots:
   '@babel/plugin-syntax-logical-assignment-operators@7.10.4(@babel/core@7.29.6)':
     dependencies:
       '@babel/core': 7.29.6
-      '@babel/helper-plugin-utils': 7.29.7
+      '@babel/helper-plugin-utils': 7.28.6
 
   '@babel/plugin-syntax-nullish-coalescing-operator@7.8.3(@babel/core@7.29.6)':
     dependencies:
       '@babel/core': 7.29.6
-      '@babel/helper-plugin-utils': 7.29.7
+      '@babel/helper-plugin-utils': 7.28.6
 
   '@babel/plugin-syntax-numeric-separator@7.10.4(@babel/core@7.29.6)':
     dependencies:
       '@babel/core': 7.29.6
-      '@babel/helper-plugin-utils': 7.29.7
+      '@babel/helper-plugin-utils': 7.28.6
 
   '@babel/plugin-syntax-object-rest-spread@7.8.3(@babel/core@7.29.6)':
     dependencies:
       '@babel/core': 7.29.6
-      '@babel/helper-plugin-utils': 7.29.7
+      '@babel/helper-plugin-utils': 7.28.6
 
   '@babel/plugin-syntax-optional-catch-binding@7.8.3(@babel/core@7.29.6)':
     dependencies:
       '@babel/core': 7.29.6
-      '@babel/helper-plugin-utils': 7.29.7
+      '@babel/helper-plugin-utils': 7.28.6
 
   '@babel/plugin-syntax-optional-chaining@7.8.3(@babel/core@7.29.6)':
     dependencies:
       '@babel/core': 7.29.6
-      '@babel/helper-plugin-utils': 7.29.7
+      '@babel/helper-plugin-utils': 7.28.6
 
   '@babel/plugin-syntax-private-property-in-object@7.14.5(@babel/core@7.29.6)':
     dependencies:
       '@babel/core': 7.29.6
-      '@babel/helper-plugin-utils': 7.29.7
+      '@babel/helper-plugin-utils': 7.28.6
 
   '@babel/plugin-syntax-top-level-await@7.14.5(@babel/core@7.29.6)':
     dependencies:
       '@babel/core': 7.29.6
-      '@babel/helper-plugin-utils': 7.29.7
+      '@babel/helper-plugin-utils': 7.28.6
 
   '@babel/plugin-syntax-typescript@7.28.6(@babel/core@7.29.6)':
     dependencies:
       '@babel/core': 7.29.6
-      '@babel/helper-plugin-utils': 7.29.7
+      '@babel/helper-plugin-utils': 7.28.6
 
   '@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.6)':
     dependencies:
@@ -17233,14 +17259,15 @@ snapshots:
 
   '@datastructures-js/max-heap@2.0.0': {}
 
-  '@deck.gl/core@9.3.6':
+  '@deck.gl/core@9.4.0':
     dependencies:
       '@loaders.gl/core': 4.4.3
       '@loaders.gl/images': 4.4.3(@loaders.gl/core@4.4.3)
-      '@luma.gl/core': 9.3.6
-      '@luma.gl/engine': 9.3.6(@luma.gl/core@9.3.6)(@luma.gl/shadertools@9.3.6(@luma.gl/core@9.3.6))
-      '@luma.gl/shadertools': 9.3.6(@luma.gl/core@9.3.6)
-      '@luma.gl/webgl': 9.3.6(@luma.gl/core@9.3.6)
+      '@luma.gl/core': 9.4.0
+      '@luma.gl/engine': 9.4.0(@luma.gl/core@9.4.0)(@luma.gl/shadertools@9.4.0(@luma.gl/core@9.4.0))
+      '@luma.gl/gpgpu': 9.4.0(@luma.gl/core@9.4.0)(@luma.gl/engine@9.4.0(@luma.gl/core@9.4.0)(@luma.gl/shadertools@9.4.0(@luma.gl/core@9.4.0)))(@luma.gl/shadertools@9.4.0(@luma.gl/core@9.4.0))
+      '@luma.gl/shadertools': 9.4.0(@luma.gl/core@9.4.0)
+      '@luma.gl/webgl': 9.4.0(@luma.gl/core@9.4.0)
       '@math.gl/core': 4.1.0
       '@math.gl/sun': 4.1.0
       '@math.gl/types': 4.1.0
@@ -17250,19 +17277,20 @@ snapshots:
       '@probe.gl/stats': 4.1.1
       '@types/offscreencanvas': 2019.7.3
       gl-matrix: 3.4.4
-      mjolnir.js: 3.0.1
+      mjolnir.js: 3.1.1
     transitivePeerDependencies:
       - '@75lb/nature'
+      - '@luma.gl/webgpu'
 
-  '@deck.gl/layers@9.3.6(@deck.gl/core@9.3.6)(@loaders.gl/core@4.4.3)(@luma.gl/core@9.3.6)(@luma.gl/engine@9.3.6(@luma.gl/core@9.3.6)(@luma.gl/shadertools@9.3.6(@luma.gl/core@9.3.6)))':
+  '@deck.gl/layers@9.4.0(@deck.gl/core@9.4.0)(@loaders.gl/core@4.4.3)(@luma.gl/core@9.4.0)(@luma.gl/engine@9.4.0(@luma.gl/core@9.4.0)(@luma.gl/shadertools@9.4.0(@luma.gl/core@9.4.0)))':
     dependencies:
-      '@deck.gl/core': 9.3.6
+      '@deck.gl/core': 9.4.0
       '@loaders.gl/core': 4.4.3
       '@loaders.gl/images': 4.4.3(@loaders.gl/core@4.4.3)
       '@loaders.gl/schema': 4.4.3
-      '@luma.gl/core': 9.3.6
-      '@luma.gl/engine': 9.3.6(@luma.gl/core@9.3.6)(@luma.gl/shadertools@9.3.6(@luma.gl/core@9.3.6))
-      '@luma.gl/shadertools': 9.3.6(@luma.gl/core@9.3.6)
+      '@luma.gl/core': 9.4.0
+      '@luma.gl/engine': 9.4.0(@luma.gl/core@9.4.0)(@luma.gl/shadertools@9.4.0(@luma.gl/core@9.4.0))
+      '@luma.gl/shadertools': 9.4.0(@luma.gl/core@9.4.0)
       '@mapbox/tiny-sdf': 2.2.0
       '@math.gl/core': 4.1.0
       '@math.gl/polygon': 4.1.0
@@ -17272,18 +17300,18 @@ snapshots:
     transitivePeerDependencies:
       - '@75lb/nature'
 
-  '@deck.gl/react@9.3.6(@deck.gl/core@9.3.6)(@deck.gl/widgets@9.3.6(@deck.gl/core@9.3.6)(@luma.gl/core@9.3.6))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@deck.gl/react@9.4.0(@deck.gl/core@9.4.0)(@deck.gl/widgets@9.4.0(@deck.gl/core@9.4.0)(@luma.gl/core@9.4.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@deck.gl/core': 9.3.6
-      '@deck.gl/widgets': 9.3.6(@deck.gl/core@9.3.6)(@luma.gl/core@9.3.6)
+      '@deck.gl/core': 9.4.0
+      '@deck.gl/widgets': 9.4.0(@deck.gl/core@9.4.0)(@luma.gl/core@9.4.0)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@deck.gl/widgets@9.3.6(@deck.gl/core@9.3.6)(@luma.gl/core@9.3.6)':
+  '@deck.gl/widgets@9.4.0(@deck.gl/core@9.4.0)(@luma.gl/core@9.4.0)':
     dependencies:
-      '@deck.gl/core': 9.3.6
+      '@deck.gl/core': 9.4.0
       '@floating-ui/dom': 1.7.6
-      '@luma.gl/core': 9.3.6
+      '@luma.gl/core': 9.4.0
       preact: 10.29.7
     transitivePeerDependencies:
       - preact-render-to-string
@@ -17671,128 +17699,128 @@ snapshots:
 
   '@inquirer/ansi@1.0.2': {}
 
-  '@inquirer/checkbox@4.3.2(@types/node@24.13.3)':
+  '@inquirer/checkbox@4.3.2(@types/node@25.9.2)':
     dependencies:
       '@inquirer/ansi': 1.0.2
-      '@inquirer/core': 10.3.2(@types/node@24.13.3)
+      '@inquirer/core': 10.3.2(@types/node@25.9.2)
       '@inquirer/figures': 1.0.15
-      '@inquirer/type': 3.0.10(@types/node@24.13.3)
+      '@inquirer/type': 3.0.10(@types/node@25.9.2)
       yoctocolors-cjs: 2.1.3
     optionalDependencies:
-      '@types/node': 24.13.3
+      '@types/node': 25.9.2
 
-  '@inquirer/confirm@5.1.21(@types/node@24.13.3)':
+  '@inquirer/confirm@5.1.21(@types/node@25.9.2)':
     dependencies:
-      '@inquirer/core': 10.3.2(@types/node@24.13.3)
-      '@inquirer/type': 3.0.10(@types/node@24.13.3)
+      '@inquirer/core': 10.3.2(@types/node@25.9.2)
+      '@inquirer/type': 3.0.10(@types/node@25.9.2)
     optionalDependencies:
-      '@types/node': 24.13.3
+      '@types/node': 25.9.2
 
-  '@inquirer/core@10.3.2(@types/node@24.13.3)':
+  '@inquirer/core@10.3.2(@types/node@25.9.2)':
     dependencies:
       '@inquirer/ansi': 1.0.2
       '@inquirer/figures': 1.0.15
-      '@inquirer/type': 3.0.10(@types/node@24.13.3)
+      '@inquirer/type': 3.0.10(@types/node@25.9.2)
       cli-width: 4.1.0
       mute-stream: 2.0.0
       signal-exit: 4.1.0
       wrap-ansi: 6.2.0
       yoctocolors-cjs: 2.1.3
     optionalDependencies:
-      '@types/node': 24.13.3
+      '@types/node': 25.9.2
 
-  '@inquirer/editor@4.2.23(@types/node@24.13.3)':
+  '@inquirer/editor@4.2.23(@types/node@25.9.2)':
     dependencies:
-      '@inquirer/core': 10.3.2(@types/node@24.13.3)
-      '@inquirer/external-editor': 1.0.3(@types/node@24.13.3)
-      '@inquirer/type': 3.0.10(@types/node@24.13.3)
+      '@inquirer/core': 10.3.2(@types/node@25.9.2)
+      '@inquirer/external-editor': 1.0.3(@types/node@25.9.2)
+      '@inquirer/type': 3.0.10(@types/node@25.9.2)
     optionalDependencies:
-      '@types/node': 24.13.3
+      '@types/node': 25.9.2
 
-  '@inquirer/expand@4.0.23(@types/node@24.13.3)':
+  '@inquirer/expand@4.0.23(@types/node@25.9.2)':
     dependencies:
-      '@inquirer/core': 10.3.2(@types/node@24.13.3)
-      '@inquirer/type': 3.0.10(@types/node@24.13.3)
+      '@inquirer/core': 10.3.2(@types/node@25.9.2)
+      '@inquirer/type': 3.0.10(@types/node@25.9.2)
       yoctocolors-cjs: 2.1.3
     optionalDependencies:
-      '@types/node': 24.13.3
+      '@types/node': 25.9.2
 
-  '@inquirer/external-editor@1.0.3(@types/node@24.13.3)':
+  '@inquirer/external-editor@1.0.3(@types/node@25.9.2)':
     dependencies:
       chardet: 2.1.1
       iconv-lite: 0.7.2
     optionalDependencies:
-      '@types/node': 24.13.3
+      '@types/node': 25.9.2
 
   '@inquirer/figures@1.0.15': {}
 
-  '@inquirer/input@4.3.1(@types/node@24.13.3)':
+  '@inquirer/input@4.3.1(@types/node@25.9.2)':
     dependencies:
-      '@inquirer/core': 10.3.2(@types/node@24.13.3)
-      '@inquirer/type': 3.0.10(@types/node@24.13.3)
+      '@inquirer/core': 10.3.2(@types/node@25.9.2)
+      '@inquirer/type': 3.0.10(@types/node@25.9.2)
     optionalDependencies:
-      '@types/node': 24.13.3
+      '@types/node': 25.9.2
 
-  '@inquirer/number@3.0.23(@types/node@24.13.3)':
+  '@inquirer/number@3.0.23(@types/node@25.9.2)':
     dependencies:
-      '@inquirer/core': 10.3.2(@types/node@24.13.3)
-      '@inquirer/type': 3.0.10(@types/node@24.13.3)
+      '@inquirer/core': 10.3.2(@types/node@25.9.2)
+      '@inquirer/type': 3.0.10(@types/node@25.9.2)
     optionalDependencies:
-      '@types/node': 24.13.3
+      '@types/node': 25.9.2
 
-  '@inquirer/password@4.0.23(@types/node@24.13.3)':
-    dependencies:
-      '@inquirer/ansi': 1.0.2
-      '@inquirer/core': 10.3.2(@types/node@24.13.3)
-      '@inquirer/type': 3.0.10(@types/node@24.13.3)
-    optionalDependencies:
-      '@types/node': 24.13.3
-
-  '@inquirer/prompts@7.10.1(@types/node@24.13.3)':
-    dependencies:
-      '@inquirer/checkbox': 4.3.2(@types/node@24.13.3)
-      '@inquirer/confirm': 5.1.21(@types/node@24.13.3)
-      '@inquirer/editor': 4.2.23(@types/node@24.13.3)
-      '@inquirer/expand': 4.0.23(@types/node@24.13.3)
-      '@inquirer/input': 4.3.1(@types/node@24.13.3)
-      '@inquirer/number': 3.0.23(@types/node@24.13.3)
-      '@inquirer/password': 4.0.23(@types/node@24.13.3)
-      '@inquirer/rawlist': 4.1.11(@types/node@24.13.3)
-      '@inquirer/search': 3.2.2(@types/node@24.13.3)
-      '@inquirer/select': 4.4.2(@types/node@24.13.3)
-    optionalDependencies:
-      '@types/node': 24.13.3
-
-  '@inquirer/rawlist@4.1.11(@types/node@24.13.3)':
-    dependencies:
-      '@inquirer/core': 10.3.2(@types/node@24.13.3)
-      '@inquirer/type': 3.0.10(@types/node@24.13.3)
-      yoctocolors-cjs: 2.1.3
-    optionalDependencies:
-      '@types/node': 24.13.3
-
-  '@inquirer/search@3.2.2(@types/node@24.13.3)':
-    dependencies:
-      '@inquirer/core': 10.3.2(@types/node@24.13.3)
-      '@inquirer/figures': 1.0.15
-      '@inquirer/type': 3.0.10(@types/node@24.13.3)
-      yoctocolors-cjs: 2.1.3
-    optionalDependencies:
-      '@types/node': 24.13.3
-
-  '@inquirer/select@4.4.2(@types/node@24.13.3)':
+  '@inquirer/password@4.0.23(@types/node@25.9.2)':
     dependencies:
       '@inquirer/ansi': 1.0.2
-      '@inquirer/core': 10.3.2(@types/node@24.13.3)
-      '@inquirer/figures': 1.0.15
-      '@inquirer/type': 3.0.10(@types/node@24.13.3)
+      '@inquirer/core': 10.3.2(@types/node@25.9.2)
+      '@inquirer/type': 3.0.10(@types/node@25.9.2)
+    optionalDependencies:
+      '@types/node': 25.9.2
+
+  '@inquirer/prompts@7.10.1(@types/node@25.9.2)':
+    dependencies:
+      '@inquirer/checkbox': 4.3.2(@types/node@25.9.2)
+      '@inquirer/confirm': 5.1.21(@types/node@25.9.2)
+      '@inquirer/editor': 4.2.23(@types/node@25.9.2)
+      '@inquirer/expand': 4.0.23(@types/node@25.9.2)
+      '@inquirer/input': 4.3.1(@types/node@25.9.2)
+      '@inquirer/number': 3.0.23(@types/node@25.9.2)
+      '@inquirer/password': 4.0.23(@types/node@25.9.2)
+      '@inquirer/rawlist': 4.1.11(@types/node@25.9.2)
+      '@inquirer/search': 3.2.2(@types/node@25.9.2)
+      '@inquirer/select': 4.4.2(@types/node@25.9.2)
+    optionalDependencies:
+      '@types/node': 25.9.2
+
+  '@inquirer/rawlist@4.1.11(@types/node@25.9.2)':
+    dependencies:
+      '@inquirer/core': 10.3.2(@types/node@25.9.2)
+      '@inquirer/type': 3.0.10(@types/node@25.9.2)
       yoctocolors-cjs: 2.1.3
     optionalDependencies:
-      '@types/node': 24.13.3
+      '@types/node': 25.9.2
 
-  '@inquirer/type@3.0.10(@types/node@24.13.3)':
+  '@inquirer/search@3.2.2(@types/node@25.9.2)':
+    dependencies:
+      '@inquirer/core': 10.3.2(@types/node@25.9.2)
+      '@inquirer/figures': 1.0.15
+      '@inquirer/type': 3.0.10(@types/node@25.9.2)
+      yoctocolors-cjs: 2.1.3
     optionalDependencies:
-      '@types/node': 24.13.3
+      '@types/node': 25.9.2
+
+  '@inquirer/select@4.4.2(@types/node@25.9.2)':
+    dependencies:
+      '@inquirer/ansi': 1.0.2
+      '@inquirer/core': 10.3.2(@types/node@25.9.2)
+      '@inquirer/figures': 1.0.15
+      '@inquirer/type': 3.0.10(@types/node@25.9.2)
+      yoctocolors-cjs: 2.1.3
+    optionalDependencies:
+      '@types/node': 25.9.2
+
+  '@inquirer/type@3.0.10(@types/node@25.9.2)':
+    optionalDependencies:
+      '@types/node': 25.9.2
 
   '@isaacs/cliui@9.0.0': {}
 
@@ -17815,27 +17843,27 @@ snapshots:
   '@jest/console@27.5.1':
     dependencies:
       '@jest/types': 27.5.1
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
       chalk: 4.1.2
       jest-message-util: 27.5.1
       jest-util: 27.5.1
       slash: 3.0.0
 
-  '@jest/core@27.5.1(ts-node@10.9.2(@types/node@24.13.3)(typescript@4.9.5))':
+  '@jest/core@27.5.1(ts-node@10.9.2(@types/node@25.9.2)(typescript@4.9.5))':
     dependencies:
       '@jest/console': 27.5.1
       '@jest/reporters': 27.5.1
       '@jest/test-result': 27.5.1
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 22.20.1
+      '@types/node': 25.6.0
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       emittery: 0.8.1
       exit: 0.1.2
       graceful-fs: 4.2.11
       jest-changed-files: 27.5.1
-      jest-config: 27.5.1(ts-node@10.9.2(@types/node@24.13.3)(typescript@4.9.5))
+      jest-config: 27.5.1(ts-node@10.9.2(@types/node@25.9.2)(typescript@4.9.5))
       jest-haste-map: 27.5.1
       jest-message-util: 27.5.1
       jest-regex-util: 27.5.1
@@ -17864,14 +17892,14 @@ snapshots:
     dependencies:
       '@jest/fake-timers': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 22.20.1
+      '@types/node': 25.6.0
       jest-mock: 27.5.1
 
   '@jest/fake-timers@27.5.1':
     dependencies:
       '@jest/types': 27.5.1
       '@sinonjs/fake-timers': 8.1.0
-      '@types/node': 22.20.1
+      '@types/node': 25.6.0
       jest-message-util: 27.5.1
       jest-mock: 27.5.1
       jest-util: 27.5.1
@@ -17891,7 +17919,7 @@ snapshots:
       '@jest/test-result': 27.5.1
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
       chalk: 4.1.2
       collect-v8-coverage: 1.0.3
       exit: 0.1.2
@@ -17964,7 +17992,7 @@ snapshots:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 22.20.1
+      '@types/node': 25.6.0
       '@types/yargs': 16.0.11
       chalk: 4.1.2
 
@@ -18166,7 +18194,7 @@ snapshots:
 
   '@lazy-node/types-path@1.0.3':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
       ts-type: 3.0.13
       tslib: 2.8.1
     transitivePeerDependencies:
@@ -18229,7 +18257,7 @@ snapshots:
     dependencies:
       '@loaders.gl/core': 4.4.3
 
-  '@luma.gl/core@9.3.6':
+  '@luma.gl/core@9.4.0':
     dependencies:
       '@math.gl/types': 4.1.0
       '@probe.gl/env': 4.1.1
@@ -18237,24 +18265,34 @@ snapshots:
       '@probe.gl/stats': 4.1.1
       '@types/offscreencanvas': 2019.7.3
 
-  '@luma.gl/engine@9.3.6(@luma.gl/core@9.3.6)(@luma.gl/shadertools@9.3.6(@luma.gl/core@9.3.6))':
+  '@luma.gl/engine@9.4.0(@luma.gl/core@9.4.0)(@luma.gl/shadertools@9.4.0(@luma.gl/core@9.4.0))':
     dependencies:
-      '@luma.gl/core': 9.3.6
-      '@luma.gl/shadertools': 9.3.6(@luma.gl/core@9.3.6)
+      '@luma.gl/core': 9.4.0
+      '@luma.gl/shadertools': 9.4.0(@luma.gl/core@9.4.0)
       '@math.gl/core': 4.1.0
       '@math.gl/types': 4.1.0
       '@probe.gl/log': 4.1.1
       '@probe.gl/stats': 4.1.1
 
-  '@luma.gl/shadertools@9.3.6(@luma.gl/core@9.3.6)':
+  '@luma.gl/gpgpu@9.4.0(@luma.gl/core@9.4.0)(@luma.gl/engine@9.4.0(@luma.gl/core@9.4.0)(@luma.gl/shadertools@9.4.0(@luma.gl/core@9.4.0)))(@luma.gl/shadertools@9.4.0(@luma.gl/core@9.4.0))':
     dependencies:
-      '@luma.gl/core': 9.3.6
+      '@luma.gl/core': 9.4.0
+      '@luma.gl/engine': 9.4.0(@luma.gl/core@9.4.0)(@luma.gl/shadertools@9.4.0(@luma.gl/core@9.4.0))
+      '@luma.gl/shadertools': 9.4.0(@luma.gl/core@9.4.0)
+      '@math.gl/core': 4.1.0
+      '@math.gl/types': 4.1.0
+      '@probe.gl/log': 4.1.1
+      '@probe.gl/stats': 4.1.1
+
+  '@luma.gl/shadertools@9.4.0(@luma.gl/core@9.4.0)':
+    dependencies:
+      '@luma.gl/core': 9.4.0
       '@math.gl/core': 4.1.0
       '@math.gl/types': 4.1.0
 
-  '@luma.gl/webgl@9.3.6(@luma.gl/core@9.3.6)':
+  '@luma.gl/webgl@9.4.0(@luma.gl/core@9.4.0)':
     dependencies:
-      '@luma.gl/core': 9.3.6
+      '@luma.gl/core': 9.4.0
       '@math.gl/types': 4.1.0
       '@probe.gl/env': 4.1.1
 
@@ -20887,11 +20925,11 @@ snapshots:
   '@types/body-parser@1.19.6':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
 
   '@types/bonjour@3.5.13':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
 
   '@types/chai-enzyme@0.6.14':
     dependencies:
@@ -20904,7 +20942,7 @@ snapshots:
 
   '@types/cheerio@0.22.35':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 25.6.0
 
   '@types/classnames@0.0.32': {}
 
@@ -20921,11 +20959,11 @@ snapshots:
   '@types/connect-history-api-fallback@1.5.4':
     dependencies:
       '@types/express-serve-static-core': 4.19.8
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
 
   '@types/cors@2.8.19':
     dependencies:
@@ -20978,7 +21016,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.8':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
       '@types/qs': 6.15.0
       '@types/range-parser': 1.2.7
       '@types/send': 1.2.1
@@ -20996,7 +21034,7 @@ snapshots:
 
   '@types/graceful-fs@4.1.9':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
 
   '@types/hast@2.3.10':
     dependencies:
@@ -21014,7 +21052,7 @@ snapshots:
 
   '@types/http-proxy@1.17.17':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
 
   '@types/istanbul-lib-coverage@2.0.6': {}
 
@@ -21065,7 +21103,7 @@ snapshots:
 
   '@types/node-forge@1.3.14':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
 
   '@types/node@22.20.1':
     dependencies:
@@ -21074,6 +21112,14 @@ snapshots:
   '@types/node@24.13.3':
     dependencies:
       undici-types: 7.18.2
+
+  '@types/node@25.6.0':
+    dependencies:
+      undici-types: 7.19.2
+
+  '@types/node@25.9.2':
+    dependencies:
+      undici-types: 7.24.6
 
   '@types/normalize-package-data@2.4.4': {}
 
@@ -21216,7 +21262,7 @@ snapshots:
 
   '@types/resolve@1.17.1':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 25.6.0
 
   '@types/retry@0.12.2': {}
 
@@ -21225,11 +21271,11 @@ snapshots:
   '@types/send@0.17.6':
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
 
   '@types/send@1.2.1':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
 
   '@types/serve-index@1.9.4':
     dependencies:
@@ -21238,7 +21284,7 @@ snapshots:
   '@types/serve-static@1.15.10':
     dependencies:
       '@types/http-errors': 2.0.5
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
       '@types/send': 0.17.6
 
   '@types/sinon@4.3.3': {}
@@ -21247,13 +21293,13 @@ snapshots:
 
   '@types/sockjs@0.3.36':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
 
   '@types/stack-utils@2.0.3': {}
 
   '@types/superagent@2.3.5':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 25.6.0
 
   '@types/unist@2.0.11': {}
 
@@ -21263,7 +21309,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -21277,7 +21323,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
     optional: true
 
   '@ungap/structured-clone@1.3.3': {}
@@ -21819,15 +21865,15 @@ snapshots:
 
   axios@1.15.0:
     dependencies:
-      follow-redirects: 1.16.0
+      follow-redirects: 1.16.1
       form-data: 4.0.6
       proxy-from-env: 2.1.0
     transitivePeerDependencies:
       - debug
 
-  axios@1.18.1:
+  axios@1.20.0:
     dependencies:
-      follow-redirects: 1.16.0
+      follow-redirects: 1.16.1
       form-data: 4.0.6
       https-proxy-agent: 5.0.1
       proxy-from-env: 2.1.0
@@ -22072,7 +22118,7 @@ snapshots:
 
   babel-plugin-istanbul@6.1.1:
     dependencies:
-      '@babel/helper-plugin-utils': 7.29.7
+      '@babel/helper-plugin-utils': 7.28.6
       '@istanbuljs/load-nyc-config': 1.1.0
       '@istanbuljs/schema': 0.1.6
       istanbul-lib-instrument: 5.2.1
@@ -24234,7 +24280,7 @@ snapshots:
       object-keys: 1.1.1
       object.assign: 4.1.7
       regexp.prototype.flags: 1.5.4
-      side-channel: 1.1.0
+      side-channel: 1.1.1
       which-boxed-primitive: 1.1.1
       which-collection: 1.0.2
       which-typed-array: 1.1.20
@@ -25322,7 +25368,7 @@ snapshots:
 
   focus-outline-manager@1.0.2: {}
 
-  follow-redirects@1.16.0: {}
+  follow-redirects@1.16.1: {}
 
   font-awesome@4.7.0: {}
 
@@ -26077,7 +26123,7 @@ snapshots:
   http-proxy@1.18.1:
     dependencies:
       eventemitter3: 4.0.7
-      follow-redirects: 1.16.0
+      follow-redirects: 1.16.1
       requires-port: 1.0.0
     transitivePeerDependencies:
       - debug
@@ -26248,23 +26294,23 @@ snapshots:
       bowser: 1.9.4
       css-in-js-utils: 2.0.1
 
-  inquirer@12.9.6(@types/node@24.13.3):
+  inquirer@12.9.6(@types/node@25.9.2):
     dependencies:
       '@inquirer/ansi': 1.0.2
-      '@inquirer/core': 10.3.2(@types/node@24.13.3)
-      '@inquirer/prompts': 7.10.1(@types/node@24.13.3)
-      '@inquirer/type': 3.0.10(@types/node@24.13.3)
+      '@inquirer/core': 10.3.2(@types/node@25.9.2)
+      '@inquirer/prompts': 7.10.1(@types/node@25.9.2)
+      '@inquirer/type': 3.0.10(@types/node@25.9.2)
       mute-stream: 2.0.0
       run-async: 4.0.6
       rxjs: 7.8.2
     optionalDependencies:
-      '@types/node': 24.13.3
+      '@types/node': 25.9.2
 
   internal-slot@1.1.0:
     dependencies:
       es-errors: 1.3.0
       hasown: 2.0.4
-      side-channel: 1.1.0
+      side-channel: 1.1.1
 
   interpret@1.4.0: {}
 
@@ -26743,7 +26789,7 @@ snapshots:
       '@jest/environment': 27.5.1
       '@jest/test-result': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
       chalk: 4.1.2
       co: 4.6.0
       dedent: 0.7.0
@@ -26762,16 +26808,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  jest-cli@27.5.1(ts-node@10.9.2(@types/node@24.13.3)(typescript@4.9.5)):
+  jest-cli@27.5.1(ts-node@10.9.2(@types/node@25.9.2)(typescript@4.9.5)):
     dependencies:
-      '@jest/core': 27.5.1(ts-node@10.9.2(@types/node@24.13.3)(typescript@4.9.5))
+      '@jest/core': 27.5.1(ts-node@10.9.2(@types/node@25.9.2)(typescript@4.9.5))
       '@jest/test-result': 27.5.1
       '@jest/types': 27.5.1
       chalk: 4.1.2
       exit: 0.1.2
       graceful-fs: 4.2.11
       import-local: 3.2.0
-      jest-config: 27.5.1(ts-node@10.9.2(@types/node@24.13.3)(typescript@4.9.5))
+      jest-config: 27.5.1(ts-node@10.9.2(@types/node@25.9.2)(typescript@4.9.5))
       jest-util: 27.5.1
       jest-validate: 27.5.1
       prompts: 2.4.2
@@ -26783,7 +26829,7 @@ snapshots:
       - ts-node
       - utf-8-validate
 
-  jest-config@27.5.1(ts-node@10.9.2(@types/node@24.13.3)(typescript@4.9.5)):
+  jest-config@27.5.1(ts-node@10.9.2(@types/node@25.9.2)(typescript@4.9.5)):
     dependencies:
       '@babel/core': 7.29.6
       '@jest/test-sequencer': 27.5.1
@@ -26810,7 +26856,7 @@ snapshots:
       slash: 3.0.0
       strip-json-comments: 3.1.1
     optionalDependencies:
-      ts-node: 10.9.2(@types/node@24.13.3)(typescript@4.9.5)
+      ts-node: 10.9.2(@types/node@25.9.2)(typescript@4.9.5)
     transitivePeerDependencies:
       - bufferutil
       - canvas
@@ -26848,7 +26894,7 @@ snapshots:
       '@jest/environment': 27.5.1
       '@jest/fake-timers': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 22.20.1
+      '@types/node': 25.6.0
       jest-mock: 27.5.1
       jest-util: 27.5.1
       jsdom: 16.7.0
@@ -26863,7 +26909,7 @@ snapshots:
       '@jest/environment': 27.5.1
       '@jest/fake-timers': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
       jest-mock: 27.5.1
       jest-util: 27.5.1
 
@@ -26873,7 +26919,7 @@ snapshots:
     dependencies:
       '@jest/types': 27.5.1
       '@types/graceful-fs': 4.1.9
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       graceful-fs: 4.2.11
@@ -26892,7 +26938,7 @@ snapshots:
       '@jest/source-map': 27.5.1
       '@jest/test-result': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
       chalk: 4.1.2
       co: 4.6.0
       expect: 27.5.1
@@ -26942,7 +26988,7 @@ snapshots:
   jest-mock@27.5.1:
     dependencies:
       '@jest/types': 27.5.1
-      '@types/node': 22.20.1
+      '@types/node': 25.6.0
 
   jest-pnp-resolver@1.2.3(jest-resolve@27.5.1):
     optionalDependencies:
@@ -26978,7 +27024,7 @@ snapshots:
       '@jest/test-result': 27.5.1
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
       chalk: 4.1.2
       emittery: 0.8.1
       graceful-fs: 4.2.11
@@ -27029,7 +27075,7 @@ snapshots:
 
   jest-serializer@27.5.1:
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
       graceful-fs: 4.2.11
 
   jest-snapshot@27.5.1:
@@ -27062,7 +27108,7 @@ snapshots:
   jest-util@27.5.1:
     dependencies:
       '@jest/types': 27.5.1
-      '@types/node': 22.20.1
+      '@types/node': 25.6.0
       chalk: 4.1.2
       ci-info: 3.9.0
       graceful-fs: 4.2.11
@@ -27081,7 +27127,7 @@ snapshots:
     dependencies:
       '@jest/test-result': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       jest-util: 27.5.1
@@ -27089,15 +27135,15 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
-  jest@27.5.1(ts-node@10.9.2(@types/node@24.13.3)(typescript@4.9.5)):
+  jest@27.5.1(ts-node@10.9.2(@types/node@25.9.2)(typescript@4.9.5)):
     dependencies:
-      '@jest/core': 27.5.1(ts-node@10.9.2(@types/node@24.13.3)(typescript@4.9.5))
+      '@jest/core': 27.5.1(ts-node@10.9.2(@types/node@25.9.2)(typescript@4.9.5))
       import-local: 3.2.0
-      jest-cli: 27.5.1(ts-node@10.9.2(@types/node@24.13.3)(typescript@4.9.5))
+      jest-cli: 27.5.1(ts-node@10.9.2(@types/node@25.9.2)(typescript@4.9.5))
     transitivePeerDependencies:
       - bufferutil
       - canvas
@@ -27368,7 +27414,7 @@ snapshots:
     dependencies:
       invert-kv: 1.0.0
 
-  lerna@9.0.7(@types/node@24.13.3):
+  lerna@9.0.7(@types/node@25.9.2):
     dependencies:
       '@npmcli/arborist': 9.1.6
       '@npmcli/package-json': 7.0.2
@@ -27387,7 +27433,7 @@ snapshots:
       conventional-changelog-angular: 7.0.0
       conventional-changelog-core: 5.0.1
       conventional-recommended-bump: 7.0.1
-      cosmiconfig: 9.0.0(typescript@5.9.3)
+      cosmiconfig: 9.0.0(typescript@4.9.5)
       dedent: 1.5.3
       envinfo: 7.13.0
       execa: 5.0.0
@@ -27399,7 +27445,7 @@ snapshots:
       import-local: 3.1.0
       ini: 1.3.8
       init-package-json: 8.2.2
-      inquirer: 12.9.6(@types/node@24.13.3)
+      inquirer: 12.9.6(@types/node@25.9.2)
       is-ci: 3.0.1
       jest-diff: 30.3.0
       js-yaml: 4.1.1
@@ -27428,7 +27474,7 @@ snapshots:
       tar: 7.5.11
       through: 2.3.8
       tinyglobby: 0.2.12
-      typescript: 5.9.3
+      typescript: 4.9.5
       upath: 2.0.1
       validate-npm-package-license: 3.0.4
       validate-npm-package-name: 6.0.2
@@ -28744,7 +28790,7 @@ snapshots:
       is-extendable: 1.0.1
     optional: true
 
-  mjolnir.js@3.0.1: {}
+  mjolnir.js@3.1.1: {}
 
   mkdirp@0.5.6:
     dependencies:
@@ -28878,7 +28924,7 @@ snapshots:
       node-fetch: 2.7.0(encoding@0.1.13)
       omit.js: 2.0.2
       p-wait-for: 3.2.0
-      qs: 6.15.2
+      qs: 6.16.0
     transitivePeerDependencies:
       - encoding
 
@@ -29296,6 +29342,8 @@ snapshots:
   opener@1.4.3: {}
 
   opener@1.5.2: {}
+
+  openseadragon@6.0.2: {}
 
   optimist@0.6.1:
     dependencies:
@@ -29977,7 +30025,7 @@ snapshots:
 
   postcss-modules-extract-imports@1.1.0:
     dependencies:
-      postcss: 6.0.23
+      postcss: 6.0.1
 
   postcss-modules-extract-imports@1.2.1:
     dependencies:
@@ -30454,17 +30502,24 @@ snapshots:
 
   qs@6.14.2:
     dependencies:
-      side-channel: 1.1.0
+      side-channel: 1.1.1
 
   qs@6.15.1:
     dependencies:
-      side-channel: 1.1.0
+      side-channel: 1.1.1
 
   qs@6.15.2:
     dependencies:
       side-channel: 1.1.0
 
+  qs@6.16.0:
+    dependencies:
+      es-define-property: 1.0.1
+      side-channel: 1.1.1
+
   qs@6.5.2: {}
+
+  qs@6.5.5: {}
 
   query-string@4.3.4:
     dependencies:
@@ -30764,10 +30819,6 @@ snapshots:
       reactcss: 1.2.3(react@18.3.1)
       tinycolor2: 1.6.0
 
-  react-column-resizer@1.1.9(react@18.3.1):
-    dependencies:
-      react: 18.3.1
-
   react-dom@15.7.0(react@18.3.1):
     dependencies:
       fbjs: 0.8.18
@@ -30775,14 +30826,6 @@ snapshots:
       object-assign: 4.1.1
       prop-types: 15.7.2
       react: 18.3.1
-
-  react-dom@16.14.0(react@16.14.0):
-    dependencies:
-      loose-envify: 1.4.0
-      object-assign: 4.1.1
-      prop-types: 15.7.2
-      react: 16.14.0
-      scheduler: 0.19.1
 
   react-dom@18.3.1(react@18.3.1):
     dependencies:
@@ -30876,11 +30919,6 @@ snapshots:
       react: 19.2.8
 
   react-is@18.3.1: {}
-
-  react-json-to-table@0.1.7:
-    dependencies:
-      react: 16.14.0
-      react-dom: 16.14.0(react@16.14.0)
 
   react-lifecycles-compat@3.0.4: {}
 
@@ -31565,7 +31603,7 @@ snapshots:
       mime-types: 2.1.35
       oauth-sign: 0.9.0
       performance-now: 2.1.0
-      qs: 6.5.2
+      qs: 6.5.5
       safe-buffer: 5.2.1
       tough-cookie: 2.5.0
       tunnel-agent: 0.6.0
@@ -31701,13 +31739,13 @@ snapshots:
       safe-identifier: 0.4.2
       style-inject: 0.3.0
 
-  rollup-plugin-sourcemaps@0.6.3(@types/node@24.13.3)(rollup@2.80.0):
+  rollup-plugin-sourcemaps@0.6.3(@types/node@25.9.2)(rollup@2.80.0):
     dependencies:
       '@rollup/pluginutils': 3.1.0(rollup@2.80.0)
       rollup: 2.80.0
       source-map-resolve: 0.6.0
     optionalDependencies:
-      '@types/node': 24.13.3
+      '@types/node': 25.9.2
 
   rollup-plugin-typescript2@0.31.2(rollup@2.80.0)(typescript@4.9.5):
     dependencies:
@@ -31878,11 +31916,6 @@ snapshots:
   saxes@5.0.1:
     dependencies:
       xmlchars: 2.2.0
-
-  scheduler@0.19.1:
-    dependencies:
-      loose-envify: 1.4.0
-      object-assign: 4.1.1
 
   scheduler@0.23.2:
     dependencies:
@@ -32188,6 +32221,14 @@ snapshots:
       side-channel-map: 1.0.1
 
   side-channel@1.1.0:
+    dependencies:
+      es-errors: 1.3.0
+      object-inspect: 1.13.4
+      side-channel-list: 1.0.1
+      side-channel-map: 1.0.1
+      side-channel-weakmap: 1.0.2
+
+  side-channel@1.1.1:
     dependencies:
       es-errors: 1.3.0
       object-inspect: 1.13.4
@@ -32770,7 +32811,7 @@ snapshots:
       fast-json-patch: 2.2.1
       isomorphic-form-data: 0.0.1
       lodash: 4.18.1
-      qs: 6.15.2
+      qs: 6.16.0
       querystring-browser: 1.0.4
       url: 0.11.4
       utf8-bytes: 0.0.1
@@ -33047,11 +33088,11 @@ snapshots:
 
   trough@2.2.0: {}
 
-  ts-jest@27.1.5(@babel/core@7.29.6)(@types/jest@27.5.2)(babel-jest@27.5.1(@babel/core@7.29.6))(jest@27.5.1(ts-node@10.9.2(@types/node@24.13.3)(typescript@4.9.5)))(typescript@4.9.5):
+  ts-jest@27.1.5(@babel/core@7.29.6)(@types/jest@27.5.2)(babel-jest@27.5.1(@babel/core@7.29.6))(jest@27.5.1(ts-node@10.9.2(@types/node@25.9.2)(typescript@4.9.5)))(typescript@4.9.5):
     dependencies:
       bs-logger: 0.2.6
       fast-json-stable-stringify: 2.1.0
-      jest: 27.5.1(ts-node@10.9.2(@types/node@24.13.3)(typescript@4.9.5))
+      jest: 27.5.1(ts-node@10.9.2(@types/node@25.9.2)(typescript@4.9.5))
       jest-util: 27.5.1
       json5: 2.2.3
       lodash.memoize: 4.1.2
@@ -33079,14 +33120,14 @@ snapshots:
       '@ts-morph/common': 0.27.0
       code-block-writer: 13.0.3
 
-  ts-node@10.9.2(@types/node@24.13.3)(typescript@4.9.5):
+  ts-node@10.9.2(@types/node@25.9.2)(typescript@4.9.5):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.12
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 24.13.3
+      '@types/node': 25.9.2
       acorn: 8.16.0
       acorn-walk: 8.3.5
       arg: 4.1.3
@@ -33099,7 +33140,7 @@ snapshots:
 
   ts-type@3.0.13:
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
       tslib: 2.8.1
       typedarray-dts: 1.0.0
 
@@ -33299,6 +33340,10 @@ snapshots:
 
   undici-types@7.18.2: {}
 
+  undici-types@7.19.2: {}
+
+  undici-types@7.24.6: {}
+
   undici@7.29.0: {}
 
   undici@7.30.2: {}
@@ -33430,7 +33475,7 @@ snapshots:
   upath2@3.1.23:
     dependencies:
       '@lazy-node/types-path': 1.0.3
-      '@types/node': 22.20.1
+      '@types/node': 25.9.2
       path-is-network-drive: 1.0.24
       path-strip-sep: 1.0.21
       tslib: 2.8.1

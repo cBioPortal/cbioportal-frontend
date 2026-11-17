@@ -35,7 +35,7 @@ enum FunctionalImpactColumnName {
     ALPHAMISSENSE = 'ALPHAMISSENSE',
 }
 
-interface FunctionalImpactData {
+export interface FunctionalImpactData {
     mutationAssessor: MutationAssessorData | undefined;
     siftScore: number | undefined;
     siftPrediction: string | undefined;

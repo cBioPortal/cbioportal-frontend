@@ -1,5 +1,12 @@
 import _ from 'lodash';
 import {
+    isHiddenFromResourceViews,
+    isWsiResourceId,
+    isWsiTileServerConfigured,
+} from 'shared/lib/ResourcePolicy';
+import { fetchWsiPatientHierarchy } from 'cbioportal-wsi-viewer';
+import { wsiAuthScope } from 'shared/components/wsiViewer/wsiAppConfig';
+import {
     CBioPortalAPIInternal,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
@@ -14,6 +21,7 @@ import {
     NumericGeneMolecularData,
     ReferenceGenomeGene,
     ResourceData,
+    ResourceDefinition,
     Sample,
     SampleMolecularIdentifier,
     GenericAssayData,
@@ -27,6 +35,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import { getClient } from '../../../shared/api/cbioportalClientInstance';
 import { PatientViewPlotsStore } from './PatientViewPlotsStore';
+import { ImmuneSignatureStore } from '../immuneSignature/ImmuneSignatureStore';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
 import oncokbClient from '../../../shared/api/oncokbClientInstance';
 import { computed, observable, action, makeObservable } from 'mobx';
@@ -117,6 +126,10 @@ import {
     generateDataQueryFilter,
 } from 'shared/lib/StoreUtils';
 import {
+    fetchResourceTableTabs,
+    ResourceTableTab,
+} from 'shared/api/resourceTableClient';
+import {
     computeGenePanelInformation,
     CoverageInformation,
     getCoverageInformation,
@@ -195,7 +208,6 @@ import {
 import {
     getGenericAssayMetaPropertyOrDefault,
     getGenericAssayCategoryFromName,
-    fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 
@@ -235,7 +247,6 @@ import {
 } from 'shared/components/plots/PlotsTabStore';
 
 type PageMode = 'patient' | 'sample';
-type ResourceId = string;
 
 type NamespaceColumnConfigMap = {
     cna: NamespaceColumnConfig;
@@ -393,6 +404,7 @@ export class PatientViewPageStore {
         this.studyId = studyId;
 
         this.plotsStore = new PatientViewPlotsStore(this);
+        this.immuneSignatureStore = new ImmuneSignatureStore(this);
         this.plotsTabStore = new PlotsTabStore({
             molecularProfiles: this.molecularProfilesInCohortStudies,
             plotsSelectedGenes: this.plotsSelectedGenes,
@@ -420,8 +432,6 @@ export class PatientViewPageStore {
             clinicalAttributes: this.clinicalAttributes,
             customAttributes: this.customAttributes,
             genesets: this.genesets,
-            genericAssayEntitiesGroupByMolecularProfileId: this
-                .genericAssayEntitiesGroupedByProfileId,
             get selectedGenericAssayEntitiesGroupByMolecularProfileId() {
                 return self.selectedGenericAssayEntitiesGroupByMolecularProfileId;
             },
@@ -453,6 +463,8 @@ export class PatientViewPageStore {
 
     // Sub-store for the patient view plots (e.g. the mRNA tab).
     public readonly plotsStore: PatientViewPlotsStore;
+    // Sub-store for the immune signature tab and header row.
+    public readonly immuneSignatureStore: ImmuneSignatureStore;
     public readonly plotsTabStore: PlotsTabStore;
     public clinicalDataCache: ClinicalDataCache;
 
@@ -832,17 +844,6 @@ export class PatientViewPageStore {
         default: [],
     });
 
-    readonly genericAssayEntitiesGroupedByProfileId = remoteData<{
-        [profileId: string]: GenericAssayMeta[];
-    }>({
-        await: () => [this.genericAssayProfiles],
-        invoke: async () => {
-            return await fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId(
-                this.genericAssayProfiles.result
-            );
-        },
-    });
-
     readonly genericAssayProfiles = remoteData({
         await: () => [this.molecularProfilesInCohortStudies],
         invoke: () => {
@@ -1176,16 +1177,6 @@ export class PatientViewPageStore {
     @observable studyId = '';
 
     @observable _sampleId = '';
-
-    private openResourceTabMap = observable.map<ResourceId, boolean>();
-    @autobind
-    public isResourceTabOpen(resourceId: string) {
-        return !!this.openResourceTabMap.get(resourceId);
-    }
-    @action.bound
-    public setResourceTabOpen(resourceId: string, open: boolean) {
-        this.openResourceTabMap.set(resourceId, open);
-    }
 
     @action.bound
     public onFilterGenesStructuralVariantTable(option: GeneFilterOption): void {
@@ -1794,122 +1785,77 @@ export class PatientViewPageStore {
         []
     );
 
-    readonly resourceDefinitions = remoteData({
+    /**
+     * Whether the patient has pathology slides, from the slide rows of the
+     * WSI_SAMPLE and WSI_PATIENT resources. False when slides aren't served
+     * or the rows can't be read. The request goes through the viewer's
+     * hierarchy cache, so opening the Pathology Slides tab reuses it.
+     */
+    readonly hasPathologySlides = remoteData<boolean>({
+        invoke: async () => {
+            if (!isWsiTileServerConfigured()) {
+                return false;
+            }
+            try {
+                const hierarchy = await fetchWsiPatientHierarchy(
+                    this.studyId,
+                    this.patientId,
+                    wsiAuthScope(this.appStore.userName)
+                );
+                return hierarchy.samples.length > 0;
+            } catch (e) {
+                return false;
+            }
+        },
+        default: false,
+    });
+
+    // Per-resource configuration, which the resource-table endpoints do not return.
+    // Pathology slides are shown in the Pathology Slides tab, so their
+    // resources are left out of Files & Links and the resource tabs.
+    readonly resourceDefinitions = remoteData<ResourceDefinition[]>({
         invoke: () =>
-            internalClient.getAllResourceDefinitionsInStudyUsingGET({
-                studyId: this.studyId,
-            }),
-        onResult: defs => {
-            // open resources which have `openByDefault` set to true
-            if (defs) {
-                for (const def of defs)
-                    if (def.openByDefault)
-                        this.setResourceTabOpen(def.resourceId, true);
-            }
-        },
+            internalClient
+                .getAllResourceDefinitionsInStudyUsingGET({
+                    studyId: this.studyId,
+                })
+                .then(defs =>
+                    defs.filter(def => !isWsiResourceId(def.resourceId))
+                ),
+        default: [],
     });
 
-    readonly studyResourceData = remoteData<ResourceData[]>({
-        await: () => [this.resourceDefinitions],
-        invoke: () => {
-            const ret: ResourceData[] = [];
-            const studyResourceDefinitions = this.resourceDefinitions.result!.filter(
-                d => d.resourceType === 'STUDY'
-            );
-            const promises = [];
-            for (const resource of studyResourceDefinitions) {
-                promises.push(
-                    internalClient
-                        .getAllStudyResourceDataInStudyUsingGET({
-                            studyId: this.studyId,
-                            resourceId: resource.resourceId,
-                            projection: 'DETAILED',
-                        })
-                        .then(data => ret.push(...data))
-                );
-            }
-            return Promise.all(promises).then(() => ret);
-        },
-    });
+    @computed get resourceIdToDefinition(): {
+        [resourceId: string]: ResourceDefinition;
+    } {
+        return _.keyBy(
+            this.resourceDefinitions.result || [],
+            d => d.resourceId
+        );
+    }
 
-    readonly sampleResourceData = remoteData<{
-        [sampleId: string]: ResourceData[];
-    }>({
-        await: () => [this.resourceDefinitions, this.samples],
-        invoke: () => {
-            const sampleResourceDefinitions = this.resourceDefinitions.result!.filter(
-                d => d.resourceType === 'SAMPLE'
-            );
-            if (!sampleResourceDefinitions.length) {
-                return Promise.resolve({});
-            }
-
-            const samples = this.samples.result!;
-            const ret: { [sampleId: string]: ResourceData[] } = {};
-            const promises = [];
-            for (const sample of samples) {
-                for (const resource of sampleResourceDefinitions) {
-                    promises.push(
-                        internalClient
-                            .getAllResourceDataOfSampleInStudyUsingGET({
-                                sampleId: sample.sampleId,
-                                studyId: this.studyId,
-                                resourceId: resource.resourceId,
-                                projection: 'DETAILED',
-                            })
-                            .then(data => {
-                                ret[sample.sampleId] =
-                                    ret[sample.sampleId] || [];
-                                ret[sample.sampleId].push(...data);
-                            })
-                    );
-                }
-            }
-            return Promise.all(promises).then(() => ret);
-        },
-    });
-
-    readonly patientResourceData = remoteData<ResourceData[]>({
-        await: () => [this.resourceDefinitions],
-        invoke: () => {
-            const ret: ResourceData[] = [];
-            const patientResourceDefinitions = this.resourceDefinitions.result!.filter(
-                d => d.resourceType === 'PATIENT'
-            );
-            const promises = [];
-            for (const resource of patientResourceDefinitions) {
-                promises.push(
-                    internalClient
-                        .getAllResourceDataOfPatientInStudyUsingGET({
-                            studyId: this.studyId,
-                            patientId: this.patientId,
-                            resourceId: resource.resourceId,
-                            projection: 'DETAILED',
-                        })
-                        .then(data => ret.push(...data))
-                );
-            }
-            return Promise.all(promises).then(() => ret);
-        },
-    });
-
-    readonly resourceIdToResourceData = remoteData<{
-        [resourceId: string]: ResourceData[];
-    }>({
-        await: () => [
-            this.sampleResourceData,
-            this.patientResourceData,
-            this.studyResourceData,
-        ],
-        invoke: () => {
-            const allData: ResourceData[] = _.flatMap(
-                this.sampleResourceData.result!,
-                v => v
-            )
-                .concat(this.patientResourceData.result!)
-                .concat(this.studyResourceData.result!);
-            return Promise.resolve(_.groupBy(allData, d => d.resourceId));
-        },
+    /**
+     * Per-resource row counts for this patient, used to decide whether the resource tabs are
+     * worth showing. The tabs endpoint answers that directly; the alternative is fetching every
+     * resource's data just to learn whether any exists. Slides are left out: they have their own
+     * Pathology Slides tab.
+     */
+    readonly resourceTableTabs = remoteData<ResourceTableTab[]>({
+        await: () => [this.samples],
+        invoke: () =>
+            fetchResourceTableTabs({
+                studyIds: [this.studyId],
+                patientIdentifiers: [
+                    { studyId: this.studyId, patientId: this.patientId },
+                ],
+                sampleIdentifiers: this.samples.result!.map(s => ({
+                    studyId: this.studyId,
+                    sampleId: s.sampleId,
+                })),
+            }).then(tabs =>
+                tabs.filter(tab => !isHiddenFromResourceViews(tab.resourceId))
+            ),
+        default: [],
     });
 
     readonly pathologyReport = remoteData(
@@ -2088,30 +2034,6 @@ export class PatientViewPageStore {
         },
         {}
     );
-
-    readonly getWholeSlideViewerIds = remoteData({
-        await: () => [this.clinicalDataGroupedBySample],
-        invoke: () => {
-            const clinicalData = this.clinicalDataGroupedBySample.result!;
-            const clinicalAttributeId = 'MSK_SLIDE_ID';
-            if (clinicalData) {
-                const ids = _.chain(clinicalData)
-                    .map(data => data.clinicalData)
-                    .flatten()
-                    .filter(attribute => {
-                        return (
-                            attribute.clinicalAttributeId ===
-                            clinicalAttributeId
-                        );
-                    })
-                    .map(attribute => attribute.value)
-                    .value();
-
-                return Promise.resolve(ids);
-            }
-            return Promise.resolve([]);
-        },
-    });
 
     readonly studyMetaData = remoteData({
         invoke: async () =>

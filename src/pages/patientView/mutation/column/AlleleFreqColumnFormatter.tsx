@@ -1,5 +1,4 @@
 import * as React from 'react';
-import _ from 'lodash';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import { Mutation } from 'cbioportal-ts-api-client';
@@ -7,10 +6,42 @@ import SampleManager from '../../SampleManager';
 import { isUncalled } from 'shared/lib/MutationUtils';
 import { getFormattedFrequencyValue } from 'shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter';
 
+export type AlleleFreqSource = 'tumor' | 'normal';
+
+type ReadCounts = {
+    tumorAltCount: number;
+    tumorRefCount: number;
+    normalAltCount?: number;
+    normalRefCount?: number;
+};
+
+export function getReadCounts(
+    mutation: ReadCounts,
+    source: AlleleFreqSource
+): { altReads: number; refReads: number } | null {
+    const altReads =
+        source === 'normal' ? mutation.normalAltCount : mutation.tumorAltCount;
+    const refReads =
+        source === 'normal' ? mutation.normalRefCount : mutation.tumorRefCount;
+    if (
+        altReads === undefined ||
+        altReads === null ||
+        refReads === undefined ||
+        refReads === null ||
+        altReads < 0 ||
+        refReads < 0
+    ) {
+        return null;
+    }
+    return { altReads, refReads };
+}
+
 export default class AlleleFreqColumnFormatter {
     static barWidth = 6;
     static barSpacing = 3;
     static maxBarHeight = 12;
+    // keeps a normal frequency of 0 visible as a baseline
+    static minNormalBarHeight = 1;
     static indexToBarLeft = (n: number) =>
         n *
         (AlleleFreqColumnFormatter.barWidth +
@@ -41,21 +72,32 @@ export default class AlleleFreqColumnFormatter {
     }
 
     public static convertMutationToSampleElement<
-        T extends {
+        T extends ReadCounts & {
             sampleId: string;
-            tumorRefCount: number;
-            tumorAltCount: number;
             molecularProfileId: string;
         }
-    >(mutation: T, color: string, barX: number, sampleComponent: any) {
-        const altReads = mutation.tumorAltCount;
-        const refReads = mutation.tumorRefCount;
-        if (altReads < 0 || refReads < 0) {
+    >(
+        mutation: T,
+        color: string,
+        barX: number,
+        sampleComponent: any,
+        source: AlleleFreqSource = 'tumor'
+    ) {
+        const counts = getReadCounts(mutation, source);
+        if (!counts) {
             return null;
         }
+        const { altReads, refReads } = counts;
         const freq = altReads / (altReads + refReads);
-        const barHeight =
+        const scaledHeight =
             (isNaN(freq) ? 0 : freq) * AlleleFreqColumnFormatter.maxBarHeight;
+        const barHeight =
+            source === 'normal' && !isNaN(freq)
+                ? Math.max(
+                      scaledHeight,
+                      AlleleFreqColumnFormatter.minNormalBarHeight
+                  )
+                : scaledHeight;
         const barY = AlleleFreqColumnFormatter.maxBarHeight - barHeight;
 
         const bar = (
@@ -89,7 +131,8 @@ export default class AlleleFreqColumnFormatter {
 
     public static renderFunction(
         mutations: Mutation[],
-        sampleManager: SampleManager | null
+        sampleManager: SampleManager | null,
+        source: AlleleFreqSource = 'tumor'
     ) {
         if (!sampleManager) {
             return <span></span>;
@@ -110,7 +153,8 @@ export default class AlleleFreqColumnFormatter {
                     m.sampleId,
                     args.opacity,
                     args.extraTooltipText
-                )
+                ),
+                source
             );
         });
         const sampleToElements = sampleElements.reduce((map, elements: any) => {
@@ -128,11 +172,11 @@ export default class AlleleFreqColumnFormatter {
                 <br />
             </span>
         ));
-        const freqs = sampleOrder.map(
-            (sampleId: string) =>
-                (sampleToElements[sampleId] &&
-                    sampleToElements[sampleId].freq) ||
-                undefined
+        const freqs = sampleOrder.map((sampleId: string) =>
+            AlleleFreqColumnFormatter.toValidFrequency(
+                sampleToElements[sampleId] && sampleToElements[sampleId].freq,
+                source
+            )
         );
         const bars = elementsInSampleOrder.map((elements: any) => elements.bar);
 
@@ -145,12 +189,11 @@ export default class AlleleFreqColumnFormatter {
             const visualizedSampleIndex = sampleOrder.indexOf(
                 sampleManager.sampleIdsInHeader[0]
             );
+            const visualizedFreq = freqs[visualizedSampleIndex];
             content = (
                 <span>
-                    {!isNaN(freqs[visualizedSampleIndex])
-                        ? getFormattedFrequencyValue(
-                              freqs[visualizedSampleIndex]
-                          )
+                    {visualizedFreq !== undefined
+                        ? getFormattedFrequencyValue(visualizedFreq)
                         : ''}
                 </span>
             );
@@ -183,7 +226,15 @@ export default class AlleleFreqColumnFormatter {
                     arrowContent={<div className="rc-tooltip-arrow-inner" />}
                     destroyTooltipOnHide={true}
                 >
-                    <div data-test="allele-freq-cell">{content}</div>
+                    <div
+                        data-test={
+                            source === 'normal'
+                                ? 'normal-allele-freq-cell'
+                                : 'allele-freq-cell'
+                        }
+                    >
+                        {content}
+                    </div>
                 </DefaultTooltip>
             );
         }
@@ -200,7 +251,8 @@ export default class AlleleFreqColumnFormatter {
 
     public static getSortValue(
         d: Mutation[],
-        sampleManager: SampleManager | null
+        sampleManager: SampleManager | null,
+        source: AlleleFreqSource = 'tumor'
     ) {
         if (!sampleManager) {
             return [null];
@@ -219,22 +271,30 @@ export default class AlleleFreqColumnFormatter {
             .map(sampleId => sampleToMutation[sampleId])
             .map(
                 mutation =>
-                    AlleleFreqColumnFormatter.calcFrequency(mutation) || null
+                    AlleleFreqColumnFormatter.toValidFrequency(
+                        AlleleFreqColumnFormatter.calcFrequency(
+                            mutation,
+                            source
+                        ),
+                        source
+                    ) ?? null
             );
     }
 
     public static isVisible(
         sampleManager: SampleManager | null,
-        allMutations?: Mutation[][]
+        allMutations?: Mutation[][],
+        source: AlleleFreqSource = 'tumor'
     ): boolean {
         if (allMutations) {
             for (const rowMutations of allMutations) {
                 const frequency = this.getSortValue(
                     rowMutations,
-                    sampleManager
+                    sampleManager,
+                    source
                 );
-                // if there is at least one valid (non-falsey) value, it should be visible
-                if (_.compact(frequency).length > 0) {
+                // if there is at least one valid value, it should be visible
+                if (frequency.some(f => f !== null)) {
                     return true;
                 }
             }
@@ -243,13 +303,17 @@ export default class AlleleFreqColumnFormatter {
         return false;
     }
 
-    public static getFrequency(data: Mutation[]): string | string[] {
+    public static getFrequency(
+        data: Mutation[],
+        source: AlleleFreqSource = 'tumor'
+    ): string | string[] {
         const result: string[] = [];
 
         if (data) {
             for (const mutation of data) {
                 const frequency = AlleleFreqColumnFormatter.calcFrequency(
-                    mutation
+                    mutation,
+                    source
                 );
                 const value = frequency === null ? '' : String(frequency);
 
@@ -264,18 +328,34 @@ export default class AlleleFreqColumnFormatter {
         return result;
     }
 
-    protected static calcFrequency(mutation: Mutation): number | null {
+    protected static calcFrequency(
+        mutation: Mutation,
+        source: AlleleFreqSource = 'tumor'
+    ): number | null {
         if (!mutation) {
             return null;
         }
 
-        const altReads = mutation.tumorAltCount;
-        const refReads = mutation.tumorRefCount;
-
-        if (altReads < 0 || refReads < 0) {
+        const counts = getReadCounts(mutation, source);
+        if (!counts) {
             return null;
         }
 
-        return altReads / (altReads + refReads);
+        return counts.altReads / (counts.altReads + counts.refReads);
+    }
+
+    // A tumor frequency of 0 carries no information (the mutation was not
+    // observed), whereas a normal frequency of 0 is the expected value.
+    private static toValidFrequency(
+        freq: number | null | undefined,
+        source: AlleleFreqSource
+    ): number | undefined {
+        if (freq === null || freq === undefined || isNaN(freq)) {
+            return undefined;
+        }
+        if (source === 'tumor' && !freq) {
+            return undefined;
+        }
+        return freq;
     }
 }

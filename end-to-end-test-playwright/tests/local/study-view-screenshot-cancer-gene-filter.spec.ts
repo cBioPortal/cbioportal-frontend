@@ -48,12 +48,16 @@ test.describe.serial('cancer gene filter', () => {
     });
 
     test('cancer gene filter should remove non cancer genes', async () => {
-        await page
-            .locator(`${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`)
-            .click();
-        const color = await page
-            .locator(`${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`)
-            .evaluate((el: Element) => window.getComputedStyle(el).color);
+        const icon = page.locator(
+            `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`
+        );
+        await icon.click();
+        await page.locator("[data-test='gene-filter-option-oncokb']").click();
+        // close the dropdown so it doesn't show up in the table screenshot
+        await icon.click();
+        const color = await icon.evaluate(
+            (el: Element) => window.getComputedStyle(el).color
+        );
         expect(color).toBe('rgb(0, 0, 0)');
         await expectElementScreenshot(
             page,

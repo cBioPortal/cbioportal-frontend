@@ -12,10 +12,12 @@ import {
 } from 'react-mutation-mapper';
 import { SimpleLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import { Mutation } from 'cbioportal-ts-api-client';
+import { getLollipopPosition } from 'cbioportal-utils';
 import {
     ANNOTATED_PROTEIN_IMPACT_TYPE_FILTER_ID,
     countDuplicateMutations,
     groupMutationsByGeneAndPatientAndProteinChange,
+    sortMutationsDeterministically,
 } from 'shared/lib/MutationUtils';
 import { mergeMutations } from 'shared/lib/StoreUtils';
 
@@ -236,7 +238,7 @@ export default class MutationMapperDataStore
         highlightFilters: DataFilter[] = [],
         groupFilters: { group: string; filter: DataFilter }[] = []
     ) {
-        super(data);
+        super(sortMutationsDeterministically(data));
 
         makeObservable(this);
 
@@ -286,7 +288,7 @@ export default class MutationMapperDataStore
             // by default only filter by position
             return (
                 filter.type !== DataFilterType.POSITION ||
-                filter.values.includes(mutation.proteinPosStart)
+                filter.values.includes(getLollipopPosition(mutation))
             );
         }
     }

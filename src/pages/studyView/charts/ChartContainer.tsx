@@ -174,6 +174,16 @@ export interface IChartContainerProps {
     isNewlyAdded: (uniqueKey: string) => boolean;
     cancerGeneFilterEnabled: boolean;
     filterByCancerGenes?: boolean;
+    o2glFilterEnabled?: boolean;
+    filterByO2gl?: boolean;
+    onChangeO2glFilter?: (filtered: boolean) => void;
+    o2glGenes?: string[];
+    o2glOncotreeCodes?: string[];
+    o2glGeneOncotreeCodes?: { [gene: string]: string[] };
+    oncotreeCodeColorMap?: { [code: string]: string };
+    oncotreeCodeNameMap?: { [code: string]: string };
+    filterByDriverGenes?: boolean;
+    onChangeDriverGenesFilter?: (filtered: boolean) => void;
     alterationFilterEnabled: boolean;
     filterAlterations?: boolean;
     onChangeCancerGeneFilter?: (filtered: boolean) => void;
@@ -775,6 +785,22 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             onChangeCancerGeneFilter={
                                 this.props.onChangeCancerGeneFilter!
                             }
+                            o2glFilterEnabled={this.props.o2glFilterEnabled}
+                            filterByO2gl={this.props.filterByO2gl}
+                            onChangeO2glFilter={this.props.onChangeO2glFilter}
+                            filterByDriverGenes={this.props.filterByDriverGenes}
+                            onChangeDriverGenesFilter={
+                                this.props.onChangeDriverGenesFilter
+                            }
+                            o2glGenes={this.props.o2glGenes}
+                            o2glOncotreeCodes={this.props.o2glOncotreeCodes}
+                            o2glGeneOncotreeCodes={
+                                this.props.o2glGeneOncotreeCodes
+                            }
+                            oncotreeCodeColorMap={
+                                this.props.oncotreeCodeColorMap
+                            }
+                            oncotreeCodeNameMap={this.props.oncotreeCodeNameMap}
                             alterationFilterEnabled={
                                 this.props.alterationFilterEnabled
                             }
@@ -921,6 +947,22 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             onChangeCancerGeneFilter={
                                 this.props.onChangeCancerGeneFilter!
                             }
+                            o2glFilterEnabled={this.props.o2glFilterEnabled}
+                            filterByO2gl={this.props.filterByO2gl}
+                            onChangeO2glFilter={this.props.onChangeO2glFilter}
+                            filterByDriverGenes={this.props.filterByDriverGenes}
+                            onChangeDriverGenesFilter={
+                                this.props.onChangeDriverGenesFilter
+                            }
+                            o2glGenes={this.props.o2glGenes}
+                            o2glOncotreeCodes={this.props.o2glOncotreeCodes}
+                            o2glGeneOncotreeCodes={
+                                this.props.o2glGeneOncotreeCodes
+                            }
+                            oncotreeCodeColorMap={
+                                this.props.oncotreeCodeColorMap
+                            }
+                            oncotreeCodeNameMap={this.props.oncotreeCodeNameMap}
                             alterationFilterEnabled={
                                 this.props.alterationFilterEnabled
                             }
@@ -1008,6 +1050,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             onChangeCancerGeneFilter={
                                 this.props.onChangeCancerGeneFilter!
                             }
+                            o2glFilterEnabled={this.props.o2glFilterEnabled}
+                            filterByO2gl={this.props.filterByO2gl}
+                            onChangeO2glFilter={this.props.onChangeO2glFilter}
+                            o2glGenes={this.props.o2glGenes}
+                            o2glOncotreeCodes={this.props.o2glOncotreeCodes}
                             alterationFilterEnabled={
                                 this.props.alterationFilterEnabled
                             }
@@ -1099,6 +1146,22 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             onChangeCancerGeneFilter={
                                 this.props.onChangeCancerGeneFilter!
                             }
+                            o2glFilterEnabled={this.props.o2glFilterEnabled}
+                            filterByO2gl={this.props.filterByO2gl}
+                            onChangeO2glFilter={this.props.onChangeO2glFilter}
+                            filterByDriverGenes={this.props.filterByDriverGenes}
+                            onChangeDriverGenesFilter={
+                                this.props.onChangeDriverGenesFilter
+                            }
+                            o2glGenes={this.props.o2glGenes}
+                            o2glOncotreeCodes={this.props.o2glOncotreeCodes}
+                            o2glGeneOncotreeCodes={
+                                this.props.o2glGeneOncotreeCodes
+                            }
+                            oncotreeCodeColorMap={
+                                this.props.oncotreeCodeColorMap
+                            }
+                            oncotreeCodeNameMap={this.props.oncotreeCodeNameMap}
                             alterationFilterEnabled={
                                 this.props.alterationFilterEnabled
                             }

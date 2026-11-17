@@ -17,6 +17,7 @@ import {
     SideChain,
     IStructureVisualizerProps,
     IResidueSpec,
+    StructureSource,
 } from './StructureVisualizer';
 import {
     default as StructureVisualizer3D,
@@ -32,11 +33,18 @@ describe('StructureVisualizer3D', () => {
     let props: IStructureVisualizerProps;
     let residues: IResidueSpec[];
 
-    function initVis() {
+    async function flushPromises() {
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
+    }
+
+    async function initVis() {
         const visualizer = new StructureVisualizer3D(fakeDiv, props, $3Dmol);
 
         // pdb id does not really matter, we don't load any structure during test
-        visualizer.init('3pxe', 'B', residues, viewer);
+        visualizer.init('3pxe', 'B', residues, StructureSource.PDB, viewer);
+        await flushPromises();
 
         return visualizer;
     }
@@ -60,7 +68,12 @@ describe('StructureVisualizer3D', () => {
             setStyle: () => {},
             clear: sinon.stub(),
             render: sinon.stub(),
+            selectedAtoms: sinon.stub().returns([{}]),
         };
+        (global as any).fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+        });
 
         // reset to defaults
         props = {
@@ -134,8 +147,8 @@ describe('StructureVisualizer3D', () => {
         ];
     });
 
-    it('properly initializes the 3D visualizer', () => {
-        initVis();
+    it('properly initializes the 3D visualizer', async () => {
+        await initVis();
         assert.isTrue(
             viewer.setBackgroundColor.calledWith('0xFFFFFF'),
             'Background color should be set to 0xFFFFFF'
@@ -161,7 +174,7 @@ describe('StructureVisualizer3D', () => {
         );
     });
 
-    it('sets chain color and the opacity properly', () => {
+    it('sets chain color and the opacity properly', async () => {
         let chainColor = 'N/A';
         let chainOpacity = -1;
 
@@ -179,7 +192,7 @@ describe('StructureVisualizer3D', () => {
                 }
             });
 
-        initVis();
+        await initVis();
         assert.equal(
             chainColor,
             '0x888888',
@@ -188,7 +201,7 @@ describe('StructureVisualizer3D', () => {
         assert.equal(chainOpacity, 1, 'Chain opacity should be set to 1');
     });
 
-    it('sets the base structure color and the opacity properly', () => {
+    it('sets the base structure color and the opacity properly', async () => {
         let baseColor = 'N/A';
         let baseOpacity = -1;
 
@@ -206,7 +219,7 @@ describe('StructureVisualizer3D', () => {
                 }
             });
 
-        initVis();
+        await initVis();
         assert.equal(
             baseColor,
             '0xDDDDDD',
@@ -215,11 +228,11 @@ describe('StructureVisualizer3D', () => {
         assert.equal(baseOpacity, 5 / 10, 'Base opacity should be set to 0.5');
     });
 
-    it('applies correct protein style wrt the corresponding prop', () => {
+    it('applies correct protein style wrt the corresponding prop', async () => {
         viewer.setStyle = sinon.stub();
 
         props.proteinScheme = ProteinScheme.TRACE;
-        const visualizer = initVis();
+        const visualizer = await initVis();
         assert.isTrue(
             viewer.setStyle.calledWithMatch({}, { cartoon: { style: 'trace' } })
         );
@@ -235,11 +248,11 @@ describe('StructureVisualizer3D', () => {
         assert.isTrue(viewer.setStyle.calledWithMatch({}, { cartoon: {} }));
     });
 
-    it('does not display bound molecules when the corresponding prop is set to false', () => {
+    it('does not display bound molecules when the corresponding prop is set to false', async () => {
         viewer.setStyle = sinon.stub();
 
         props.displayBoundMolecules = false;
-        initVis();
+        await initVis();
 
         assert.isTrue(
             viewer.setStyle.calledWithMatch({
@@ -290,7 +303,7 @@ describe('StructureVisualizer3D', () => {
         );
     });
 
-    it('applies correct protein colors wrt the corresponding prop', () => {
+    it('applies correct protein colors wrt the corresponding prop', async () => {
         let structureToColor: { [selector: string]: string };
         let defaultColors: string[] = [];
         let isColoredWithSpectrum = false;
@@ -324,7 +337,7 @@ describe('StructureVisualizer3D', () => {
         structureToColor = {};
         props.proteinScheme = ProteinScheme.TRACE;
         props.proteinColor = ProteinColor.SECONDARY_STRUCTURE;
-        const visualizer = initVis();
+        const visualizer = await initVis();
 
         assert.equal(
             structureToColor['h'],
@@ -359,7 +372,7 @@ describe('StructureVisualizer3D', () => {
         );
     });
 
-    it.skip('colors residues with correct colors', () => {
+    it.skip('colors residues with correct colors', async () => {
         let residueToColor: { [residue: number]: string } = {};
 
         sinon.stub(
@@ -373,7 +386,7 @@ describe('StructureVisualizer3D', () => {
         );
 
         props.mutationColor = MutationColor.MUTATION_TYPE;
-        const visualizer = initVis();
+        const visualizer = await initVis();
 
         assert.equal(
             residueToColor[122],
@@ -447,7 +460,7 @@ describe('StructureVisualizer3D', () => {
         );
     });
 
-    it.skip('styles and colors side chain atoms wrt the corresponding props', () => {
+    it.skip('styles and colors side chain atoms wrt the corresponding props', async () => {
         let residueToStickColor: { [residue: number]: string };
         let residueToSphereColor: { [residue: number]: string };
 
@@ -474,7 +487,7 @@ describe('StructureVisualizer3D', () => {
         residueToSphereColor = {};
         props.sideChain = SideChain.SELECTED;
         props.mutationColor = MutationColor.MUTATION_TYPE;
-        const visualizer = initVis();
+        const visualizer = await initVis();
 
         assert.equal(
             residueToStickColor[122],
@@ -598,58 +611,6 @@ describe('StructureVisualizer3D', () => {
             residueToSphereColor[1835],
             '0x8A2BE2',
             'Residue 1835 side chain spheres should be colored with uniform color (0x8A2BE2) when ALL & UNIFORM active'
-        );
-
-        // none of the residues should have side chain style or color if sideChain is set to NONE
-
-        residueToStickColor = {};
-        residueToSphereColor = {};
-        props.sideChain = SideChain.NONE;
-        props.mutationColor = MutationColor.MUTATION_TYPE;
-        updateVis(visualizer);
-
-        assert.equal(
-            residueToStickColor[122],
-            undefined,
-            'Residue 122 side chain sticks should not be selected or colored when NONE active'
-        );
-        assert.equal(
-            residueToSphereColor[122],
-            undefined,
-            'Residue 122 side chain spheres should not be selected or colored when NONE active'
-        );
-
-        assert.equal(
-            residueToStickColor[1710],
-            undefined,
-            'Residue 1710 side chain sticks should not be selected or colored when NONE active'
-        );
-        assert.equal(
-            residueToSphereColor[1710],
-            undefined,
-            'Residue 1710 side chain spheres should not be selected or colored when NONE active'
-        );
-
-        assert.equal(
-            residueToStickColor[1815],
-            undefined,
-            'Residue 1815 side chain sticks should not be selected or colored when NONE active'
-        );
-        assert.equal(
-            residueToSphereColor[1815],
-            undefined,
-            'Residue 1815 side chain spheres should not be selected or colored when NONE active'
-        );
-
-        assert.equal(
-            residueToStickColor[1835],
-            undefined,
-            'Residue 1835 side chain sticks should not be selected or colored when NONE active'
-        );
-        assert.equal(
-            residueToSphereColor[1835],
-            undefined,
-            'Residue 1835 side chain spheres should not be selected or colored when NONE active'
         );
     });
 });

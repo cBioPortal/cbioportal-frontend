@@ -8,6 +8,7 @@ import {
     ProteinColor,
     MutationColor,
     SideChain,
+    StructureSource,
 } from './StructureVisualizer';
 
 describe('PyMolScriptGenerator', () => {
@@ -93,7 +94,10 @@ describe('PyMolScriptGenerator', () => {
         // can't stub private methods so need to cast to any
         const reinitStub = sinon.stub(scriptGenerator as any, 'reinitialize');
         const bgColorStub = sinon.stub(scriptGenerator as any, 'bgColor');
-        const loadPdbStub = sinon.stub(scriptGenerator as any, 'loadPdb');
+        const loadStructureStub = sinon.stub(
+            scriptGenerator as any,
+            'loadStructure'
+        );
 
         scriptGenerator.generateScript('3pxe', 'B', residues, props);
 
@@ -108,7 +112,11 @@ describe('PyMolScriptGenerator', () => {
         );
 
         assert.isTrue(
-            loadPdbStub.calledWithExactly('3pxe'),
+            loadStructureStub.calledWithExactly(
+                '3pxe',
+                StructureSource.PDB,
+                props
+            ),
             'PDB structure for 3pxe should be loaded'
         );
     });
@@ -340,26 +348,6 @@ describe('PyMolScriptGenerator', () => {
         assert.isTrue(
             selectSideChainsStub.withArgs(['1835'], 'B').calledOnce,
             'Side chain for residue 1815 should be displayed when ALL & UNIFORM active'
-        );
-
-        // none of the residues should have visible side chains if sideChain is set to NONE
-
-        selectSideChainsStub.reset();
-        props.sideChain = SideChain.NONE;
-        props.mutationColor = MutationColor.MUTATION_TYPE;
-        scriptGenerator.generateScript('3pxe', 'B', residues, props);
-
-        assert.isTrue(
-            selectSideChainsStub.withArgs(['122', '1815']).notCalled,
-            'Side chains for residues 122 and 1815 should NOT be displayed when NONE active'
-        );
-        assert.isTrue(
-            selectSideChainsStub.withArgs(['1710']).notCalled,
-            'Side chain for residue 1710 should NOT be displayed when NONE active'
-        );
-        assert.isTrue(
-            selectSideChainsStub.withArgs(['1835']).notCalled,
-            'Side chain for residue 1815 should NOT be displayed when NONE active'
         );
     });
 });

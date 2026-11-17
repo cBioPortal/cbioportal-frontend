@@ -19,7 +19,6 @@ import {
 import { OncokbCancerStructVar } from 'pages/studyView/StudyViewPageStore';
 import {
     FreqColumnTypeEnum,
-    getCancerGeneToggledOverlay,
     getFreqColumnRender,
     getTooltip,
     SelectionOperatorEnum,
@@ -36,6 +35,14 @@ import { TableHeaderCellFilterIcon } from 'pages/studyView/table/TableHeaderCell
 import { StructVarCell } from 'pages/studyView/table/StructVarCell';
 import { BaseMultiSelectionTableProps } from 'pages/studyView/table/MultiSelectionTable';
 import { StructVarGenePair } from 'pages/studyView/StructVarUtils';
+import {
+    GeneFilterDropdown,
+    IGeneFilterDropdownOption,
+} from 'pages/studyView/table/GeneFilterDropdown';
+import { getOncoKBCancerGeneListLinkout } from 'pages/studyView/oncokb/OncoKBUtils';
+import { getOncoTree2GenesLinkout } from 'shared/oncotree2genes/OncoTree2GenesUtils';
+import { OncoKbCancerGeneIcon } from 'pages/studyView/oncokb/OncoKbCancerGeneIcon';
+import { OncoTree2GenesIcon } from 'shared/oncotree2genes/OncoTree2GenesIcon';
 import {
     STRUCTVARAnyGeneStr,
     STRUCTVARNullGeneStr,
@@ -141,19 +148,17 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                 name: columnKey,
                 headerRender: () => {
                     return (
-                        <TableHeaderCellFilterIcon
+                        <GeneFilterDropdown
                             cellMargin={cellMargin}
                             dataTest="structvar-column-header"
-                            className={styles.displayFlex}
-                            showFilter={!!this.props.cancerGeneFilterEnabled!}
-                            isFiltered={!!this.isFilteredByCancerGeneList}
-                            onClickCallback={this.toggleCancerGeneFilter}
-                            overlay={getCancerGeneToggledOverlay(
-                                !!this.isFilteredByCancerGeneList
-                            )}
+                            options={this.geneFilterDropdownOptions}
+                            combineOperator={this.geneFilterOperator}
+                            onToggleCombineOperator={
+                                this.toggleGeneFilterOperator
+                            }
                         >
                             <span />
-                        </TableHeaderCellFilterIcon>
+                        </GeneFilterDropdown>
                     );
                 },
                 render: (data: StructVarMultiSelectionTableRow) => {
@@ -545,12 +550,59 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
     }
 
     @computed get tableData() {
-        return this.isFilteredByCancerGeneList
-            ? _.filter(
-                  this.props.promise.result,
-                  data => data.gene1IsCancerGene || data.gene2IsCancerGene
-              )
-            : this.props.promise.result || [];
+        const data = this.props.promise.result || [];
+        const activeFilters: Array<(
+            row: StructVarMultiSelectionTableRow
+        ) => boolean> = [];
+        if (this.isFilteredByCancerGeneList) {
+            activeFilters.push(
+                row => row.gene1IsCancerGene || row.gene2IsCancerGene
+            );
+        }
+        if (this.isFilteredByO2gl) {
+            activeFilters.push(
+                row =>
+                    this.o2glGeneSet.has(row.label1) ||
+                    this.o2glGeneSet.has(row.label2)
+            );
+        }
+        if (activeFilters.length === 0) {
+            return data;
+        }
+        // union: a gene pair is kept if it matches ANY checked filter;
+        // intersection: it must match ALL of them
+        return this.geneFilterOperator === SelectionOperatorEnum.INTERSECTION
+            ? _.filter(data, row => activeFilters.every(f => f(row)))
+            : _.filter(data, row => activeFilters.some(f => f(row)));
+    }
+
+    private geneFilterOperatorStorageKey() {
+        return `${this.props.tableType}_geneFilterOperator`;
+    }
+
+    @observable private _geneFilterOperator: SelectionOperatorEnum;
+
+    @computed get geneFilterOperator(): SelectionOperatorEnum {
+        if (this._geneFilterOperator) {
+            return this._geneFilterOperator;
+        }
+        return (localStorage.getItem(
+            this.geneFilterOperatorStorageKey()
+        ) as SelectionOperatorEnum) === SelectionOperatorEnum.INTERSECTION
+            ? SelectionOperatorEnum.INTERSECTION
+            : SelectionOperatorEnum.UNION;
+    }
+
+    @action.bound
+    toggleGeneFilterOperator() {
+        this._geneFilterOperator =
+            this.geneFilterOperator === SelectionOperatorEnum.INTERSECTION
+                ? SelectionOperatorEnum.UNION
+                : SelectionOperatorEnum.INTERSECTION;
+        localStorage.setItem(
+            this.geneFilterOperatorStorageKey(),
+            this._geneFilterOperator
+        );
     }
 
     @computed get flattenedFilters() {
@@ -616,17 +668,75 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
         this.modalSettings.modalOpen = !this.modalSettings.modalOpen;
     }
 
-    @autobind
-    toggleCancerGeneFilter(event: any) {
-        event.stopPropagation();
-        this.props.onChangeCancerGeneFilter(!this.props.filterByCancerGenes);
-    }
-
     @computed get isFilteredByCancerGeneList() {
         return (
             !!this.props.cancerGeneFilterEnabled &&
-            this.props.filterByCancerGenes
+            !!this.props.filterByCancerGenes
         );
+    }
+
+    @computed get isFilteredByO2gl() {
+        return !!this.props.o2glFilterEnabled && !!this.props.filterByO2gl;
+    }
+
+    @computed get o2glGeneSet(): Set<string> {
+        return new Set(this.props.o2glGenes || []);
+    }
+
+    @computed get geneFilterDropdownOptions(): IGeneFilterDropdownOption[] {
+        const options: IGeneFilterDropdownOption[] = [];
+        if (this.props.cancerGeneFilterEnabled) {
+            options.push({
+                label: (
+                    <span
+                        style={{ display: 'inline-flex', alignItems: 'center' }}
+                    >
+                        <span
+                            style={{ display: 'inline-flex', marginRight: 5 }}
+                        >
+                            <OncoKbCancerGeneIcon />
+                        </span>
+                        {getOncoKBCancerGeneListLinkout()}
+                    </span>
+                ),
+                checked: this.isFilteredByCancerGeneList,
+                onToggle: checked =>
+                    this.props.onChangeCancerGeneFilter(checked),
+                dataTest: 'gene-filter-option-oncokb',
+            });
+        }
+        if (this.props.o2glFilterEnabled) {
+            const codeCount = (this.props.o2glOncotreeCodes || []).length;
+            const geneCount = this.o2glGeneSet.size;
+            options.push({
+                label: (
+                    <span
+                        style={{ display: 'inline-flex', alignItems: 'center' }}
+                    >
+                        <span
+                            style={{ display: 'inline-flex', marginRight: 5 }}
+                        >
+                            <OncoTree2GenesIcon />
+                        </span>
+                        <span>
+                            {getOncoTree2GenesLinkout()}{' '}
+                            <span className={styles.geneFilterDropdownCount}>
+                                ({codeCount} oncotree{' '}
+                                {codeCount === 1 ? 'code' : 'codes'},{' '}
+                                {geneCount} {geneCount === 1 ? 'gene' : 'genes'}
+                                )
+                            </span>
+                        </span>
+                    </span>
+                ),
+                checked: this.isFilteredByO2gl,
+                onToggle: checked =>
+                    this.props.onChangeO2glFilter &&
+                    this.props.onChangeO2glFilter(checked),
+                dataTest: 'gene-filter-option-o2gl',
+            });
+        }
+        return options;
     }
 
     @computed get allSelectedRowsKeysSet() {

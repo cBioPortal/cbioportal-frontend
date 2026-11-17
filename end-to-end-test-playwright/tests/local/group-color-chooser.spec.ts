@@ -52,26 +52,9 @@ test.describe.serial('color chooser for groups menu in study view', () => {
             typeof icon === 'string' ? page.locator(icon) : icon;
         for (let attempt = 0; attempt < 3; attempt++) {
             if (!(await page.locator(swatchSel).isVisible())) {
-                // react-overlays 0.7.x's RootCloseWrapper adds its document-level
-                // close handler during the opening click's event processing (inside
-                // componentDidMount, which React runs while the click is still
-                // bubbling from #reactRoot to document in React 18).  That handler
-                // then fires when the same click reaches document — immediately
-                // closing the picker that was just opened.
-                //
-                // Fix: register a bubble-phase listener on document BEFORE the
-                // click fires.  Listeners fire in FIFO order per element/phase, so
-                // ours always runs before the RootCloseWrapper handler (which is
-                // only registered partway through the event's propagation).
-                // stopImmediatePropagation silences all subsequent listeners at
-                // document for this one event.
-                await page.evaluate(() => {
-                    document.addEventListener(
-                        'click',
-                        e => e.stopImmediatePropagation(),
-                        { capture: false, once: true }
-                    );
-                });
+                // A plain click must open the picker. Do not paper over
+                // RootCloseWrapper/React 18 close-on-open behavior here; that
+                // is handled in GroupCheckbox and is what this test guards.
                 await iconLocator.click();
                 // circle-picker does a secondary layout re-render right after
                 // mounting; wait for it to settle before trying to click a swatch.

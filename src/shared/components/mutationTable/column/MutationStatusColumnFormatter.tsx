@@ -17,6 +17,33 @@ export default class MutationStatusColumnFormatter {
         return value;
     }
 
+    public static isClonalHematopoiesis(mutationStatus?: string | null) {
+        if (!mutationStatus) {
+            return false;
+        }
+
+        const status = mutationStatus
+            .toLowerCase()
+            .replace(/[\s_-]+/g, ' ')
+            .trim();
+
+        return (
+            status === 'ch' ||
+            status === 'chip' ||
+            status.indexOf('clonal hematopoiesis') > -1
+        );
+    }
+
+    public static hasClonalHematopoiesis(rows: Mutation[][] = []) {
+        return rows.some(row =>
+            row.some(m =>
+                MutationStatusColumnFormatter.isClonalHematopoiesis(
+                    m.mutationStatus
+                )
+            )
+        );
+    }
+
     public static sortValue(data: Mutation[]) {
         return MutationStatusColumnFormatter.getData(data);
     }
@@ -31,7 +58,12 @@ export default class MutationStatusColumnFormatter {
         let needTooltip = false;
 
         if (value) {
-            if (value.toLowerCase().indexOf('somatic') > -1) {
+            if (MutationStatusColumnFormatter.isClonalHematopoiesis(value)) {
+                content = (
+                    <span className={styles.clonalHematopoiesis}>CH</span>
+                );
+                needTooltip = true;
+            } else if (value.toLowerCase().indexOf('somatic') > -1) {
                 content = <span className={styles.somatic}>S</span>;
                 needTooltip = true;
             } else if (value.toLowerCase().indexOf('germline') > -1) {

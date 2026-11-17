@@ -302,6 +302,8 @@ export function buildBaseConfig(
             'Sample Acquisition',
             'Sequencing',
             'Surgery',
+            'Biobank Tissue',
+            'Biobank Biofluid',
             'Med Onc',
             'Med Onc Assessment',
             'Status',
@@ -319,7 +321,8 @@ export function buildBaseConfig(
             ['LAB_TEST', 'TEST'],
             ['DIAGNOSIS', 'SUBTYPE'],
             ['PATHOLOGY', 'SUBTYPE'],
-            ['BIOBANK', 'SPECIMEN_TYPE', 'SITE', 'SUBTYPE'],
+            ['BIOBANK TISSUE', 'SPECIMEN_TYPE', 'SITE', 'SUBTYPE'],
+            ['BIOBANK BIOFLUID', 'SPECIMEN_TYPE', 'CELL_TYPE', 'SUBTYPE'],
         ],
         trackEventRenderers: [
             {
