@@ -14,6 +14,7 @@ import {
 import {
     getSimplifiedMutationType,
     isWsiCivicEnabled,
+    isWsiHotspotEnabled,
     isWsiOncoKbEnabled,
 } from './wsiMolecularServices';
 import {
@@ -231,17 +232,13 @@ const annotCellStyle: React.CSSProperties = {
     whiteSpace: 'nowrap',
 };
 
-/** A recurrent hotspot, from Cancer Hotspots, OncoKB or the driver annotation. */
-function isRecurrentHotspot(mutation: MutationDetail): boolean {
-    return (
-        mutation.recurrentHotspot === true ||
-        mutation.hotspot === true ||
-        !!mutation.annotation?.toLowerCase().includes('hotspot')
-    );
-}
-
+/**
+ * A recurrent or 3D hotspot in Cancer Hotspots, the only source the patient
+ * view's hotspot icon reads (not OncoKB's hotspot flag or the driver
+ * annotation).
+ */
 function isHotspot(mutation: MutationDetail): boolean {
-    return isRecurrentHotspot(mutation) || mutation.hotspot3d === true;
+    return mutation.recurrentHotspot === true || mutation.hotspot3d === true;
 }
 
 function oncoKbSortScore(mutation: MutationDetail): number {
@@ -257,15 +254,19 @@ function oncoKbSortScore(mutation: MutationDetail): number {
     return oncogenic || mutation.mutationEffect ? 1 : 0;
 }
 
-/** Oncogenic first, then by CIViC entry, hotspot and VAF. */
+/**
+ * Oncogenic first, then by CIViC entry, hotspot (when hotspots are shown) and
+ * VAF.
+ */
 function compareAnnotatedMutations(
     a: MutationDetail,
-    b: MutationDetail
+    b: MutationDetail,
+    showHotspots: boolean
 ): number {
     const score = (mutation: MutationDetail) => [
         oncoKbSortScore(mutation),
         mutation.civicEntry ? 1 : 0,
-        isHotspot(mutation) ? 1 : 0,
+        showHotspots && isHotspot(mutation) ? 1 : 0,
         mutation.vaf ?? -1,
     ];
     const aScore = score(a);
@@ -282,10 +283,12 @@ function MutationAnnotations({
     mutation,
     showOncoKb,
     showCivic,
+    showHotspots,
 }: {
     mutation: MutationDetail;
     showOncoKb: boolean;
     showCivic: boolean;
+    showHotspots: boolean;
 }) {
     const variant = mutation.proteinChange || undefined;
     const href = buildOncoKbUrl(mutation.gene, variant);
@@ -322,15 +325,16 @@ function MutationAnnotations({
                     )}
                 </AnnotationIconSlot>
             )}
-            {isHotspot(mutation) && (
+            {showHotspots && isHotspot(mutation) && (
                 <span
                     data-testid="wsi-hotspot-annotation"
                     style={{ display: 'inline-block', verticalAlign: 'middle' }}
                 >
                     <HotspotAnnotation
                         status="complete"
-                        isHotspot={isRecurrentHotspot(mutation)}
+                        isHotspot={mutation.recurrentHotspot === true}
                         is3dHotspot={mutation.hotspot3d === true}
+                        isHotspotV3={mutation.hotspotV3 === true}
                     />
                 </span>
             )}
@@ -395,12 +399,16 @@ export function MutationTable({
     if (!sample.mutations?.length) {
         return mutationEmptyState(sample, mutationDataStatus);
     }
-    const mutations = [...sample.mutations].sort(compareAnnotatedMutations);
     const showOncoKb = isWsiOncoKbEnabled();
     const showCivic = isWsiCivicEnabled();
+    // The hotspot icon follows show_hotspot, as in the patient view.
+    const showHotspots = isWsiHotspotEnabled();
+    const mutations = [...sample.mutations].sort((a, b) =>
+        compareAnnotatedMutations(a, b, showHotspots)
+    );
     // The column stays for hotspot flags without OncoKB or CIViC.
     const showAnnotations =
-        showOncoKb || showCivic || mutations.some(isHotspot);
+        showOncoKb || showCivic || (showHotspots && mutations.some(isHotspot));
 
     return (
         <div>
@@ -461,6 +469,7 @@ export function MutationTable({
                                             mutation={mutation}
                                             showOncoKb={showOncoKb}
                                             showCivic={showCivic}
+                                            showHotspots={showHotspots}
                                         />
                                     </td>
                                 )}

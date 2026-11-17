@@ -244,9 +244,9 @@ describe('fetchWsiPortalHotspots', () => {
         mutationType,
         genomicLocation: location(start),
     });
-    const aggregated = (start: number, types: string[]) => ({
+    const aggregated = (start: number, types: string[], version?: string) => ({
         genomicLocation: location(start),
-        hotspots: types.map(type => ({ type })),
+        hotspots: types.map(type => ({ type, version })),
     });
 
     beforeEach(() => {
@@ -284,11 +284,36 @@ describe('fetchWsiPortalHotspots', () => {
 
         expect(clientFor).toHaveBeenCalledWith('https://gn37.example');
         expect(flags).toEqual([
-            { recurrent: true, threeD: false },
-            { recurrent: false, threeD: true },
-            { recurrent: false, threeD: false },
-            { recurrent: true, threeD: false },
-            { recurrent: false, threeD: false },
+            { recurrent: true, threeD: false, v3: false },
+            { recurrent: false, threeD: true, v3: false },
+            { recurrent: false, threeD: false, v3: false },
+            { recurrent: true, threeD: false, v3: false },
+            { recurrent: false, threeD: false, v3: false },
+        ]);
+    });
+
+    it('flags recurrent hotspots new in v3', async () => {
+        const clientFor = jest.fn(() => ({
+            fetchHotspotAnnotationByGenomicLocationPOST: jest
+                .fn()
+                .mockResolvedValue([
+                    aggregated(100, ['single residue'], 'v3'),
+                    aggregated(200, ['single residue']),
+                ]),
+        }));
+
+        const flags = await fetchWsiPortalHotspots(
+            [
+                query('KRAS', 100, 'Missense_Mutation'),
+                query('KRAS', 200, 'Missense_Mutation'),
+            ],
+            'hg19',
+            clientFor as any
+        );
+
+        expect(flags).toEqual([
+            { recurrent: true, threeD: false, v3: true },
+            { recurrent: true, threeD: false, v3: false },
         ]);
     });
 
@@ -314,6 +339,6 @@ describe('fetchWsiPortalHotspots', () => {
             clientFor as any
         );
         expect(clientFor).not.toHaveBeenCalled();
-        expect(flags).toEqual([{ recurrent: false, threeD: false }]);
+        expect(flags).toEqual([{ recurrent: false, threeD: false, v3: false }]);
     });
 });

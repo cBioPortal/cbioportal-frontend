@@ -118,6 +118,28 @@ describe('OncoKB annotations', () => {
         ]);
     });
 
+    it('caches the annotations per reference genome', async () => {
+        mockOncoKbClient.annotateMutationsByProteinChangePostUsingPOST_1.mockResolvedValue(
+            [indicator('3845_G12D_Missense_Mutation_COAD')]
+        );
+
+        await fetchOncoKbMutationAnnotations(
+            [{ entry: KRAS, tumorType: 'COAD' }],
+            'GRCh37'
+        );
+        await fetchOncoKbMutationAnnotations(
+            [{ entry: KRAS, tumorType: 'COAD' }],
+            'GRCh38'
+        );
+
+        const calls =
+            mockOncoKbClient.annotateMutationsByProteinChangePostUsingPOST_1
+                .mock.calls;
+        expect(
+            calls.map(([{ body }]: any) => body[0].referenceGenome)
+        ).toEqual(['GRCh37', 'GRCh38']);
+    });
+
     it('logs a failed request, resolves it to null and asks again next time', async () => {
         const debug = jest.spyOn(console, 'debug').mockImplementation(() => {});
         mockOncoKbClient.annotateCopyNumberAlterationsPostUsingPOST_1
@@ -144,7 +166,8 @@ describe('OncoKB annotations', () => {
         ]);
     });
 
-    it('makes no request without annotatable variants', async () => {
+    it('resolves to no annotations, without a request, without annotatable variants', async () => {
+        // Empty, not null: the rows' lookup is complete, not failed.
         await expect(
             fetchOncoKbStructuralVariantAnnotations(
                 [
@@ -155,7 +178,7 @@ describe('OncoKB annotations', () => {
                 ],
                 'GRCh37'
             )
-        ).resolves.toBeNull();
+        ).resolves.toEqual([]);
         expect(
             mockOncoKbClient.annotateStructuralVariantsPostUsingPOST_1
         ).not.toHaveBeenCalled();

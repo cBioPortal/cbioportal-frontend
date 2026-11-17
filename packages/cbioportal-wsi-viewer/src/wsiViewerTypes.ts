@@ -83,6 +83,9 @@ export interface WsiGenomicLocation {
     variantAllele: string;
 }
 
+/** An annotation request's state, as the patient view tracks it. */
+export type WsiAnnotationStatus = 'pending' | 'complete' | 'error';
+
 /** A mutation to look up in Cancer Hotspots. */
 export interface WsiHotspotQuery {
     gene: string;
@@ -95,6 +98,8 @@ export interface WsiHotspotQuery {
 export interface WsiHotspotFlags {
     recurrent: boolean;
     threeD: boolean;
+    /** A recurrent hotspot new in Cancer Hotspots v3. */
+    v3: boolean;
 }
 
 export interface MutationDetail {
@@ -120,6 +125,8 @@ export interface MutationDetail {
     cohortProfiledCount?: number;
     /** OncoKB oncogenicity, e.g. "Oncogenic" or "Likely Neutral". */
     oncogenic?: string;
+    /** Whether the OncoKB request for it is pending (unset), done or failed. */
+    oncoKbStatus?: WsiAnnotationStatus;
     /** OncoKB mutation effect, e.g. "Gain-of-function". */
     mutationEffect?: string;
     /** OncoKB's hotspot flag. */
@@ -130,6 +137,8 @@ export interface MutationDetail {
     recurrentHotspot?: boolean;
     /** Cancer Hotspots: a 3D clustered hotspot. */
     hotspot3d?: boolean;
+    /** Cancer Hotspots: a recurrent hotspot new in v3. */
+    hotspotV3?: boolean;
     geneSummary?: string;
     variantSummary?: string;
     /** The CIViC gene and variant entry; null when CIViC has none. */
@@ -148,6 +157,7 @@ export interface CNADetail {
     cohortProfiledCount?: number;
     /** OncoKB annotation, as on MutationDetail. */
     oncogenic?: string;
+    oncoKbStatus?: WsiAnnotationStatus;
     mutationEffect?: string;
     geneSummary?: string;
     variantSummary?: string;
@@ -187,6 +197,7 @@ export interface StructuralVariantDetail {
     ncbiBuild?: string;
     /** OncoKB annotation, as on MutationDetail. */
     oncogenic?: string;
+    oncoKbStatus?: WsiAnnotationStatus;
     mutationEffect?: string;
     geneSummary?: string;
     variantSummary?: string;

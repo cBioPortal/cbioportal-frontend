@@ -1349,12 +1349,18 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
      * Merges OncoKB annotations of the samples' mutations, copy-number
      * alterations and structural variants, annotated for each sample's
      * OncoTree code and the study's reference genome. Requests go through
-     * the host's OncoKB client; a failed request leaves the rows unannotated.
+     * the host's OncoKB client. Each row's `oncoKbStatus` becomes complete,
+     * or error when its request (or the reference genome) failed, so the
+     * tables tell a pending or failed lookup from a missing annotation.
      */
     private async fetchAndMergeOncoKbAnnotations(
         studyId: string,
         shouldContinue: () => boolean
     ): Promise<void> {
+        const merge = (apply: (samples: Sample[]) => void) => {
+            if (!shouldContinue()) return;
+            this.applyHierarchyMutationAndRefresh(apply, shouldContinue);
+        };
         let referenceGenome: OncoKbReferenceGenome;
         try {
             referenceGenome = oncoKbReferenceGenome(
@@ -1362,6 +1368,11 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             );
         } catch (error) {
             console.debug('[WSI] study reference genome unavailable', error);
+            merge(samples => {
+                applyOncoKbMutationAnnotations(samples, null);
+                applyOncoKbCnaAnnotations(samples, null);
+                applyOncoKbStructuralVariantAnnotations(samples, null);
+            });
             return;
         }
         if (!shouldContinue()) return;
@@ -1370,33 +1381,30 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             fetchOncoKbMutationAnnotations(
                 this.collectSampleEntries(sample => sample.mutations),
                 referenceGenome
-            ).then(annotations => {
-                if (!annotations?.length || !shouldContinue()) return;
-                this.applyHierarchyMutationAndRefresh(samples => {
-                    applyOncoKbMutationAnnotations(samples, annotations);
-                }, shouldContinue);
-            }),
+            ).then(annotations =>
+                merge(samples =>
+                    applyOncoKbMutationAnnotations(samples, annotations)
+                )
+            ),
             fetchOncoKbCnaAnnotations(
                 this.collectSampleEntries(sample => sample.cna_alterations),
                 referenceGenome
-            ).then(annotations => {
-                if (!annotations?.length || !shouldContinue()) return;
-                this.applyHierarchyMutationAndRefresh(samples => {
-                    applyOncoKbCnaAnnotations(samples, annotations);
-                }, shouldContinue);
-            }),
+            ).then(annotations =>
+                merge(samples =>
+                    applyOncoKbCnaAnnotations(samples, annotations)
+                )
+            ),
             fetchOncoKbStructuralVariantAnnotations(
                 this.collectSampleEntries(sample => sample.structural_variants),
                 referenceGenome
-            ).then(annotations => {
-                if (!annotations?.length || !shouldContinue()) return;
-                this.applyHierarchyMutationAndRefresh(samples => {
+            ).then(annotations =>
+                merge(samples =>
                     applyOncoKbStructuralVariantAnnotations(
                         samples,
                         annotations
-                    );
-                }, shouldContinue);
-            }),
+                    )
+                )
+            ),
         ]);
     }
 

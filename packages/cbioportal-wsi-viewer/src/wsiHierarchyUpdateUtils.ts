@@ -4,6 +4,7 @@ import {
     MutationDetail,
     Sample,
     StructuralVariantDetail,
+    WsiAnnotationStatus,
     WsiGenomicLocation,
     WsiHotspotFlags,
     WsiSampleClinicalDatum,
@@ -72,10 +73,18 @@ function annotationMap<T extends { id: string }>(annotations: T[]) {
     return new Map(annotations.map(annotation => [annotation.id, annotation]));
 }
 
+/**
+ * Sets an item's OncoKB status and annotation: the status is error when the
+ * request failed, else complete (with no annotation when OncoKB has none).
+ */
 function applyOncoKbAnnotation(
-    target: Omit<OncoKbAnnotation, 'id'>,
-    annotation: OncoKbAnnotation | undefined
+    target: Omit<OncoKbAnnotation, 'id'> & {
+        oncoKbStatus?: WsiAnnotationStatus;
+    },
+    annotation: OncoKbAnnotation | undefined,
+    failed: boolean
 ) {
+    target.oncoKbStatus = failed ? 'error' : 'complete';
     if (!annotation) return;
     target.oncogenic = annotation.oncogenic;
     target.mutationEffect = annotation.mutationEffect;
@@ -83,18 +92,21 @@ function applyOncoKbAnnotation(
     target.variantSummary = annotation.variantSummary;
 }
 
+/**
+ * Sets the mutations' OncoKB annotations and status; `annotations` is null
+ * when the request failed.
+ */
 export function applyOncoKbMutationAnnotations(
     samples: Sample[],
-    annotations: OncoKbMutationAnnotation[]
+    annotations: OncoKbMutationAnnotation[] | null
 ): void {
-    const byId = annotationMap(annotations);
+    const byId = annotationMap(annotations ?? []);
     for (const sample of samples) {
         for (const mutation of sample.mutations ?? []) {
             const id = mutationOncoKbId(mutation, sampleTumorType(sample));
             const annotation = id ? byId.get(id) : undefined;
-            if (!annotation) continue;
-            applyOncoKbAnnotation(mutation, annotation);
-            mutation.hotspot = annotation.hotspot;
+            applyOncoKbAnnotation(mutation, annotation, !annotations);
+            if (annotation) mutation.hotspot = annotation.hotspot;
         }
     }
 }
@@ -128,6 +140,7 @@ export function applyHotspotAnnotations(
             if (!flags) continue;
             mutation.recurrentHotspot = flags.recurrent;
             mutation.hotspot3d = flags.threeD;
+            mutation.hotspotV3 = flags.v3;
         }
     }
 }
@@ -149,15 +162,20 @@ export function applyCivicMutationAnnotations(
     }
 }
 
+/** As `applyOncoKbMutationAnnotations`, for copy-number alterations. */
 export function applyOncoKbCnaAnnotations(
     samples: Sample[],
-    annotations: OncoKbAnnotation[]
+    annotations: OncoKbAnnotation[] | null
 ): void {
-    const byId = annotationMap(annotations);
+    const byId = annotationMap(annotations ?? []);
     for (const sample of samples) {
         for (const cna of sample.cna_alterations ?? []) {
             const id = cnaOncoKbId(cna, sampleTumorType(sample));
-            applyOncoKbAnnotation(cna, id ? byId.get(id) : undefined);
+            applyOncoKbAnnotation(
+                cna,
+                id ? byId.get(id) : undefined,
+                !annotations
+            );
         }
     }
 }
@@ -182,15 +200,20 @@ export function applyCivicCnaAnnotations(
     }
 }
 
+/** As `applyOncoKbMutationAnnotations`, for structural variants. */
 export function applyOncoKbStructuralVariantAnnotations(
     samples: Sample[],
-    annotations: OncoKbAnnotation[]
+    annotations: OncoKbAnnotation[] | null
 ): void {
-    const byId = annotationMap(annotations);
+    const byId = annotationMap(annotations ?? []);
     for (const sample of samples) {
         for (const sv of sample.structural_variants ?? []) {
             const id = structuralVariantOncoKbId(sv, sampleTumorType(sample));
-            applyOncoKbAnnotation(sv, id ? byId.get(id) : undefined);
+            applyOncoKbAnnotation(
+                sv,
+                id ? byId.get(id) : undefined,
+                !annotations
+            );
         }
     }
 }

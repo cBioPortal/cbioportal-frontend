@@ -1294,13 +1294,87 @@ describe('WSIViewer — OncoKB and CIViC annotations', () => {
         expect(
             inst.viewerState.hierarchy.samples[0].mutations[0].oncogenic
         ).toBe('Oncogenic');
+        expect(
+            inst.viewerState.hierarchy.samples[0].mutations[0].oncoKbStatus
+        ).toBe('complete');
         inst.cancelScheduledHierarchyRefresh();
     });
 
-    it("flags the host's recurrent and 3D hotspots for the study's genome", async () => {
+    it("marks the rows' OncoKB lookups as failed when a request fails", async () => {
+        annotationsEnabled = true;
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const hierarchy = makeHierarchy([makeSlide({ slide_key: 'A' })], 'P-1');
+        hierarchy.samples[0].mutations = [
+            {
+                token: 'KRAS G12D',
+                gene: 'KRAS',
+                proteinChange: 'G12D',
+                entrezGeneId: 3845,
+                consequence: 'Missense_Mutation',
+            },
+        ];
+        hierarchy.samples[0].cna_alterations = [
+            { gene: 'ERBB2', entrezGeneId: 2064, cnaValue: 2 },
+        ];
+        inst.viewerState.hierarchy = hierarchy;
+        jest.spyOn(
+            wsiCbioportalDataUtils,
+            'fetchStudyMolecularProfiles'
+        ).mockResolvedValue({
+            mutation: 'study_mutations',
+            discreteCna: 'study_gistic',
+            structuralVariant: null,
+            referenceGenome: 'hg19',
+        });
+        jest.spyOn(
+            wsiMolecularAnnotationDataUtils,
+            'fetchOncoKbMutationAnnotations'
+        ).mockResolvedValue(null);
+        jest.spyOn(
+            wsiMolecularAnnotationDataUtils,
+            'fetchOncoKbCnaAnnotations'
+        ).mockResolvedValue([]);
+
+        await inst.fetchAndMergeOncoKbAnnotations('study-1', () => true);
+
+        const [sample] = inst.viewerState.hierarchy.samples;
+        expect(sample.mutations[0].oncoKbStatus).toBe('error');
+        // A lookup that worked but found nothing is complete.
+        expect(sample.cna_alterations[0].oncoKbStatus).toBe('complete');
+        inst.cancelScheduledHierarchyRefresh();
+    });
+
+    it("marks every row's OncoKB lookup as failed without the study's genome", async () => {
+        annotationsEnabled = true;
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const hierarchy = makeHierarchy([makeSlide({ slide_key: 'A' })], 'P-1');
+        hierarchy.samples[0].mutations = [
+            { token: 'KRAS G12D', gene: 'KRAS', proteinChange: 'G12D' },
+        ];
+        inst.viewerState.hierarchy = hierarchy;
+        jest.spyOn(console, 'debug').mockImplementation(() => {});
+        jest.spyOn(
+            wsiCbioportalDataUtils,
+            'fetchStudyMolecularProfiles'
+        ).mockRejectedValue(new Error('503'));
+        const mutationSpy = jest.spyOn(
+            wsiMolecularAnnotationDataUtils,
+            'fetchOncoKbMutationAnnotations'
+        );
+
+        await inst.fetchAndMergeOncoKbAnnotations('study-1', () => true);
+
+        expect(mutationSpy).not.toHaveBeenCalled();
+        expect(
+            inst.viewerState.hierarchy.samples[0].mutations[0].oncoKbStatus
+        ).toBe('error');
+        inst.cancelScheduledHierarchyRefresh();
+    });
+
+    it("flags the host's recurrent, v3 and 3D hotspots for the study's genome", async () => {
         const getHotspots = jest
             .fn()
-            .mockResolvedValue([{ recurrent: false, threeD: true }]);
+            .mockResolvedValue([{ recurrent: true, threeD: true, v3: true }]);
         configureTestRuntime({
             molecular: {
                 ...testMolecularServices,
@@ -1353,8 +1427,10 @@ describe('WSIViewer — OncoKB and CIViC annotations', () => {
         );
         const [notch1, tp53] = inst.viewerState.hierarchy.samples[0].mutations;
         expect(notch1.hotspot3d).toBe(true);
-        expect(notch1.recurrentHotspot).toBe(false);
+        expect(notch1.recurrentHotspot).toBe(true);
+        expect(notch1.hotspotV3).toBe(true);
         expect(tp53.hotspot3d).toBeUndefined();
+        expect(tp53.hotspotV3).toBeUndefined();
         inst.cancelScheduledHierarchyRefresh();
     });
 

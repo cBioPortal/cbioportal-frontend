@@ -4,6 +4,7 @@ import {
     indexHotspots,
     is3dHotspot,
     isLinearClusterHotspot,
+    isLinearClusterHotspotV3,
     Mutation as UtilsMutation,
 } from 'cbioportal-utils';
 import { DiscreteCopyNumberData, Mutation } from 'cbioportal-ts-api-client';
@@ -43,8 +44,8 @@ function renderWsiLoading() {
 
 /**
  * The mutations' Cancer Hotspots flags, as the patient view's mutation table
- * shows them: recurrent (single residue, indel or splice) and 3D, looked up
- * in the study reference genome's Genome Nexus.
+ * shows them: recurrent (single residue, indel or splice), new in v3, and 3D,
+ * looked up in the study reference genome's Genome Nexus.
  */
 export async function fetchWsiPortalHotspots(
     queries: ReadonlyArray<WsiHotspotQuery>,
@@ -66,7 +67,11 @@ export async function fetchWsiPortalHotspots(
     );
     const candidates = filterMutationsOnNonHotspotGenes(mutations);
     if (candidates.length === 0) {
-        return queries.map(() => ({ recurrent: false, threeD: false }));
+        return queries.map(() => ({
+            recurrent: false,
+            threeD: false,
+            v3: false,
+        }));
     }
     const url = getGenomeNexusUrl([
         { referenceGenome: referenceGenome || '' },
@@ -76,13 +81,14 @@ export async function fetchWsiPortalHotspots(
             genomicLocations: uniqueGenomicLocations(candidates),
         })
     );
-    return mutations.map(mutation => ({
-        recurrent: isLinearClusterHotspot(
-            (mutation as unknown) as UtilsMutation,
-            index
-        ),
-        threeD: is3dHotspot((mutation as unknown) as UtilsMutation, index),
-    }));
+    return mutations.map(mutation => {
+        const utilsMutation = (mutation as unknown) as UtilsMutation;
+        return {
+            recurrent: isLinearClusterHotspot(utilsMutation, index),
+            threeD: is3dHotspot(utilsMutation, index),
+            v3: isLinearClusterHotspotV3(utilsMutation, index),
+        };
+    });
 }
 
 /** OncoKB, CIViC and hotspot annotation services, as configured for the portal. */

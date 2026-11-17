@@ -14,7 +14,11 @@ import {
     resetWsiViewerRuntime,
 } from './wsiViewerConfig';
 
-function configureAnnotations(showOncoKb: boolean, showCivic: boolean) {
+function configureAnnotations(
+    showOncoKb: boolean,
+    showCivic: boolean,
+    showHotspots = true
+) {
     configureWsiViewerRuntime({
         buildApiUrl: (path: string) => `/${path}`,
         molecular: {
@@ -24,6 +28,8 @@ function configureAnnotations(showOncoKb: boolean, showCivic: boolean) {
             getOncoKbClient: () => ({} as any),
             getCivicCnaVariants: () => ({}),
             getSimplifiedMutationType: type => type.toLowerCase(),
+            showHotspots: () => showHotspots,
+            getHotspots: () => Promise.resolve([]),
         },
     });
 }
@@ -225,13 +231,16 @@ describe('molecular table details', () => {
 describe('annotation column', () => {
     const annotatedSample = () =>
         makeSample({
-            mutations: [{ ...KRAS, oncogenic: 'Oncogenic' }],
+            mutations: [
+                { ...KRAS, oncogenic: 'Oncogenic', oncoKbStatus: 'complete' },
+            ],
             cna_alterations: [
                 {
                     gene: 'ERBB2',
                     entrezGeneId: 2064,
                     cnaValue: 2,
                     oncogenic: 'Oncogenic',
+                    oncoKbStatus: 'complete',
                     civicEntry: {
                         name: 'ERBB2',
                         description: '',
@@ -246,6 +255,7 @@ describe('annotation column', () => {
                     gene2: 'ALK',
                     variantClass: 'FUSION',
                     oncogenic: 'Oncogenic',
+                    oncoKbStatus: 'complete',
                 },
             ],
         });
@@ -279,15 +289,112 @@ describe('annotation column', () => {
         const { container } = render(
             <MutationTable
                 sample={makeSample({
-                    mutations: [
-                        { ...KRAS, annotation: 'KRAS G12D is a hotspot' },
-                    ],
+                    mutations: [{ ...KRAS, recurrentHotspot: true }],
                 })}
             />
         );
 
         expect(screen.getByText('Annot')).toBeTruthy();
+        expect(screen.getByTestId('wsi-hotspot-annotation')).toBeTruthy();
         expect(container.querySelector('a[href*="oncokb.org"]')).toBeNull();
+    });
+
+    it('draws no hotspot icon, column or sort when show_hotspot is off', () => {
+        configureAnnotations(false, false, false);
+        render(
+            <MutationTable
+                sample={makeSample({
+                    mutations: [
+                        { ...KRAS, vaf: 10, recurrentHotspot: true },
+                        {
+                            token: 'TP53 R175H',
+                            gene: 'TP53',
+                            proteinChange: 'R175H',
+                            vaf: 80,
+                            hotspot3d: true,
+                        },
+                    ],
+                })}
+            />
+        );
+
+        expect(screen.queryByTestId('wsi-hotspot-annotation')).toBeNull();
+        expect(screen.queryByText('Annot')).toBeNull();
+        // By VAF only.
+        expect(screen.getAllByRole('row').map(row => row.textContent)).toEqual([
+            'GeneVariant',
+            expect.stringMatching(/^TP53/),
+            expect.stringMatching(/^KRAS/),
+        ]);
+    });
+
+    it('sorts Cancer Hotspots first when show_hotspot is on', () => {
+        configureAnnotations(false, false);
+        render(
+            <MutationTable
+                sample={makeSample({
+                    mutations: [
+                        { ...KRAS, vaf: 10, recurrentHotspot: true },
+                        {
+                            token: 'TP53 R175H',
+                            gene: 'TP53',
+                            proteinChange: 'R175H',
+                            vaf: 80,
+                        },
+                    ],
+                })}
+            />
+        );
+
+        expect(screen.getAllByRole('row').map(row => row.textContent)).toEqual([
+            'GeneVariantAnnot',
+            expect.stringMatching(/^KRAS/),
+            expect.stringMatching(/^TP53/),
+        ]);
+    });
+
+    it("reads hotspots from Cancer Hotspots only, not OncoKB's flag or the driver annotation", () => {
+        configureAnnotations(false, false);
+        render(
+            <MutationTable
+                sample={makeSample({
+                    mutations: [
+                        {
+                            ...KRAS,
+                            hotspot: true,
+                            annotation: 'KRAS G12D is a hotspot',
+                        },
+                    ],
+                })}
+            />
+        );
+
+        expect(screen.queryByTestId('wsi-hotspot-annotation')).toBeNull();
+        expect(screen.queryByText('Annot')).toBeNull();
+    });
+
+    it('marks a hotspot new in Cancer Hotspots v3', () => {
+        configureAnnotations(false, false);
+        render(
+            <MutationTable
+                sample={makeSample({
+                    mutations: [
+                        { ...KRAS, recurrentHotspot: true, hotspotV3: true },
+                    ],
+                })}
+            />
+        );
+
+        act(() => {
+            fireEvent.focus(
+                screen
+                    .getByTestId('wsi-hotspot-annotation')
+                    .querySelector('.chang_hotspot')!
+            );
+        });
+        expect(screen.getByRole('tooltip').textContent).toContain(
+            'Recurrent Hotspot (new in V3)'
+        );
     });
 
     it('shows a 3D hotspot from Cancer Hotspots without either service', () => {
@@ -332,6 +439,78 @@ describe('annotation column', () => {
         ).toBeNull();
     });
 
+    it('shows a pending OncoKB lookup as loading, not as unannotated', () => {
+        configureAnnotations(true, false);
+        render(
+            <MutationTable
+                sample={makeSample({
+                    mutations: [
+                        KRAS,
+                        {
+                            ...KRAS,
+                            token: 'KRAS G13D',
+                            proteinChange: 'G13D',
+                            oncoKbStatus: 'pending',
+                        },
+                    ],
+                })}
+            />
+        );
+
+        const loading = screen.getAllByTestId('wsi-oncokb-loading');
+        expect(loading).toHaveLength(2);
+        expect(loading[0].getAttribute('role')).toBe('img');
+        expect(loading.map(icon => icon.getAttribute('aria-label'))).toEqual(
+            expect.arrayContaining([
+                'OncoKB: loading the annotation of KRAS G12D',
+                'OncoKB: loading the annotation of KRAS G13D',
+            ])
+        );
+        expect(screen.queryByTestId('wsi-oncokb-link')).toBeNull();
+        expect(screen.queryByLabelText(/not annotated/)).toBeNull();
+    });
+
+    it('shows a failed OncoKB lookup as an error, not as unannotated', () => {
+        configureAnnotations(true, false);
+        render(
+            <CnaTable
+                sample={makeSample({
+                    cna_alterations: [
+                        { gene: 'ERBB2', cnaValue: 2, oncoKbStatus: 'error' },
+                    ],
+                })}
+            />
+        );
+
+        const error = screen.getByTestId('wsi-oncokb-error');
+        expect(error.getAttribute('aria-label')).toBe(
+            'OncoKB: annotation of ERBB2 AMP unavailable'
+        );
+        expect(error.getAttribute('tabindex')).toBe('0');
+        act(() => {
+            fireEvent.focus(error);
+        });
+        expect(screen.getByRole('tooltip').textContent).toBe(
+            'Error fetching OncoKB data'
+        );
+        expect(screen.queryByTestId('wsi-oncokb-link')).toBeNull();
+    });
+
+    it('says a completed lookup without an annotation is not annotated', () => {
+        configureAnnotations(true, false);
+        render(
+            <MutationTable
+                sample={makeSample({
+                    mutations: [{ ...KRAS, oncoKbStatus: 'complete' }],
+                })}
+            />
+        );
+
+        expect(
+            screen.getByTestId('wsi-oncokb-link').getAttribute('aria-label')
+        ).toBe('OncoKB: not annotated for KRAS G12D (opens in a new tab)');
+    });
+
     it('opens the OncoKB card on focus and closes it on scroll', () => {
         configureAnnotations(true, false);
         render(
@@ -341,6 +520,7 @@ describe('annotation column', () => {
                         {
                             ...KRAS,
                             oncogenic: 'Oncogenic',
+                            oncoKbStatus: 'complete',
                             geneSummary: 'KRAS summary',
                         },
                     ],

@@ -5,9 +5,12 @@ import {
     IndicatorQueryResp,
 } from 'oncokb-frontend-commons';
 import { WSI_THEME } from './wsiTheme';
+import { WsiAnnotationStatus } from './wsiViewerTypes';
 
 /** The OncoKB fields of an annotated row. */
 export type OncoKbAnnotated = {
+    /** The row's OncoKB request: pending while unset. */
+    oncoKbStatus?: WsiAnnotationStatus;
     oncogenic?: string;
     mutationEffect?: string;
     geneSummary?: string;
@@ -172,9 +175,18 @@ export function OncoKbCard({
     );
 }
 
+const annotationStatusIconStyle: React.CSSProperties = {
+    display: 'inline-block',
+    verticalAlign: 'middle',
+    fontSize: 11,
+    lineHeight: 1,
+};
+
 /**
  * The OncoKB icon, as on the portal's mutation tables, linked to the OncoKB
- * page; its card opens on hover and focus when there is an annotation.
+ * page; its card opens on hover and focus when there is an annotation. While
+ * the row's OncoKB request is pending it shows a spinner, and after a failed
+ * request a warning, as the patient view does.
  */
 export function OncoKbAnnotationLink({
     label,
@@ -189,6 +201,42 @@ export function OncoKbAnnotationLink({
     /** The card shown on hover; none without an annotation. */
     card?: React.ReactNode;
 }) {
+    const status = annotation.oncoKbStatus ?? 'pending';
+    if (status === 'pending') {
+        return (
+            <span
+                role="img"
+                aria-label={`OncoKB: loading the annotation of ${label}`}
+                data-testid="wsi-oncokb-loading"
+                style={{ ...annotationStatusIconStyle, color: WSI_THEME.muted }}
+            >
+                <i className="fa fa-spinner fa-pulse" aria-hidden="true" />
+            </span>
+        );
+    }
+    if (status === 'error') {
+        return (
+            <DefaultTooltip
+                overlay={<span>Error fetching OncoKB data</span>}
+                placement="right"
+                trigger={['hover', 'focus']}
+                destroyTooltipOnHide={true}
+            >
+                <span
+                    role="img"
+                    tabIndex={0}
+                    aria-label={`OncoKB: annotation of ${label} unavailable`}
+                    data-testid="wsi-oncokb-error"
+                    style={annotationStatusIconStyle}
+                >
+                    <i
+                        className="fa fa-exclamation-triangle text-danger"
+                        aria-hidden="true"
+                    />
+                </span>
+            </DefaultTooltip>
+        );
+    }
     const indicator = annotation.oncogenic
         ? (({
               query: { germline: false },

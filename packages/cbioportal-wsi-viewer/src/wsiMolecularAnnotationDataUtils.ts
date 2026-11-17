@@ -119,15 +119,20 @@ function sortedKey(values: Iterable<string>): string {
         .join('|');
 }
 
-/** OncoKB indicators for `items`, cached per API URL and item set. */
+/**
+ * OncoKB indicators for `items`, cached per API URL, reference genome and item
+ * set: empty without items, null when the request fails.
+ */
 function fetchOncoKbIndicators<T extends { id: string }>(
     kind: string,
     items: T[],
+    referenceGenome: OncoKbReferenceGenome,
     request: (items: T[]) => Promise<OncoKbIndicator[]>
 ): Promise<OncoKbIndicator[] | null> {
-    if (!items.length) return Promise.resolve(null);
+    if (!items.length) return Promise.resolve([]);
     const cacheKey = [
         getOncoKbApiUrl(),
+        referenceGenome,
         kind,
         sortedKey(items.map(item => item.id)),
     ].join('::');
@@ -156,6 +161,7 @@ export async function fetchOncoKbMutationAnnotations(
     const indicators = await fetchOncoKbIndicators(
         'mutation',
         buildOncoKbMutationItems(mutations, referenceGenome),
+        referenceGenome,
         body =>
             getWsiOncoKbClient().annotateMutationsByProteinChangePostUsingPOST_1(
                 { body: body as any }
@@ -176,6 +182,7 @@ export async function fetchOncoKbCnaAnnotations(
     const indicators = await fetchOncoKbIndicators(
         'cna',
         buildOncoKbCnaItems(cnas, referenceGenome),
+        referenceGenome,
         body =>
             getWsiOncoKbClient().annotateCopyNumberAlterationsPostUsingPOST_1({
                 body: body as any,
@@ -191,6 +198,7 @@ export async function fetchOncoKbStructuralVariantAnnotations(
     const indicators = await fetchOncoKbIndicators(
         'structural-variant',
         buildOncoKbStructuralVariantItems(structuralVariants, referenceGenome),
+        referenceGenome,
         body =>
             getWsiOncoKbClient().annotateStructuralVariantsPostUsingPOST_1({
                 body: body as any,

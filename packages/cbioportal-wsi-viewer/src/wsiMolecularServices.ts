@@ -28,7 +28,11 @@ export function fetchWsiHotspots(
     return getHotspots
         ? getHotspots(mutations, referenceGenome)
         : Promise.resolve(
-              mutations.map(() => ({ recurrent: false, threeD: false }))
+              mutations.map(() => ({
+                  recurrent: false,
+                  threeD: false,
+                  v3: false,
+              }))
           );
 }
 
