@@ -5,8 +5,10 @@ import * as React from 'react';
 import { act, render, screen } from '@testing-library/react';
 import {
     AppWsiViewer,
+    buildWsiMolecularServices,
     buildWsiViewerConfig,
     wsiAuthScope,
+    wsiSampleClinicalData,
 } from './wsiAppConfig';
 
 const mockServerConfig: Record<string, unknown> = {};
@@ -21,13 +23,26 @@ jest.mock('shared/api/urls', () => ({
         `https://portal.example/beta/${path}`,
 }));
 
+const mockSampleData = [
+    {
+        sampleId: 'S-1',
+        clinicalAttributeId: 'TMB_NONSYNONYMOUS',
+        value: '8.2',
+    },
+];
+
 const mockRedirectToLogin = jest.fn();
 jest.mock('shared/lib/redirectHelpers', () => ({
     redirectToLogin: () => mockRedirectToLogin(),
 }));
 
+const mockClinicalState = () => ({
+    rows: [{ label: 'Sex', value: 'Female' }],
+    sampleData: mockSampleData,
+});
+const mockUseWsiClinicalData = jest.fn(mockClinicalState);
 jest.mock('./wsiClinicalRows', () => ({
-    useWsiClinicalRows: () => [{ label: 'Sex', value: 'Female' }],
+    useWsiClinicalData: () => mockUseWsiClinicalData(),
 }));
 
 jest.mock('cbioportal-wsi-viewer/viewer', () => ({
@@ -67,8 +82,57 @@ describe('buildWsiViewerConfig', () => {
     });
 });
 
+describe('buildWsiMolecularServices', () => {
+    it('simplifies mutation types like the rest of the portal', () => {
+        const services = buildWsiMolecularServices();
+
+        expect(services.getSimplifiedMutationType('Frame_Shift_Del')).toBe(
+            'frameshift'
+        );
+        expect(buildWsiViewerConfig().molecular).toEqual(
+            expect.objectContaining({
+                getSimplifiedMutationType: expect.any(Function),
+            })
+        );
+    });
+});
+
+describe('wsiSampleClinicalData', () => {
+    it('is the sample data, null while loading, unset after a failure', () => {
+        expect(wsiSampleClinicalData(mockClinicalState() as any)).toBe(
+            mockSampleData
+        );
+        expect(wsiSampleClinicalData(undefined)).toBeNull();
+        expect(wsiSampleClinicalData(null)).toBeUndefined();
+    });
+});
+
 describe('AppWsiViewer', () => {
-    beforeEach(() => mockWsiViewer.mockClear());
+    beforeEach(() => {
+        mockWsiViewer.mockClear();
+        mockUseWsiClinicalData.mockImplementation(mockClinicalState);
+    });
+
+    it('leaves the sample attributes to the viewer when the clinical request fails', async () => {
+        mockUseWsiClinicalData.mockImplementation((() => null) as any);
+
+        await act(async () => {
+            render(
+                <AppWsiViewer
+                    patientId="P-1"
+                    studyId="study-1"
+                    tileServerUrl="/wsi"
+                    height={600}
+                />
+            );
+        });
+
+        const props =
+            mockWsiViewer.mock.calls[mockWsiViewer.mock.calls.length - 1][0];
+        expect(props.clinicalRows).toBeUndefined();
+        expect('sampleClinicalData' in props).toBe(true);
+        expect(props.sampleClinicalData).toBeUndefined();
+    });
 
     it('hides the download control unless downloads are shown', async () => {
         mockServerConfig.skin_hide_download_controls = 'hide';
@@ -116,6 +180,7 @@ describe('AppWsiViewer', () => {
                 showDownload: true,
                 renderLoading: expect.any(Function),
                 clinicalRows: [{ label: 'Sex', value: 'Female' }],
+                sampleClinicalData: mockSampleData,
             })
         );
     });

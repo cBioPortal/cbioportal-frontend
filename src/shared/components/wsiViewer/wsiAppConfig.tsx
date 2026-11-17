@@ -1,16 +1,30 @@
 import * as React from 'react';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
-import { WsiViewerConfig, WsiViewerProps } from 'cbioportal-wsi-viewer';
+import {
+    WsiMolecularServices,
+    WsiViewerConfig,
+    WsiViewerProps,
+} from 'cbioportal-wsi-viewer';
 import { getServerConfig } from 'config/config';
 import { buildCBioPortalAPIUrl, buildCBioPortalPageUrl } from 'shared/api/urls';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import { getSimplifiedMutationType } from 'shared/lib/oql/AccessorsForOqlFilter';
 import { redirectToLogin } from 'shared/lib/redirectHelpers';
-import { useWsiClinicalRows, WsiPatientClinicalData } from './wsiClinicalRows';
+import {
+    useWsiClinicalData,
+    WsiClinicalState,
+    WsiPatientClinicalData,
+} from './wsiClinicalRows';
 
 const WSI_OSD_PREFIX_URL = '/reactapp/osd-images/';
 
 function renderWsiLoading() {
     return <LoadingIndicator isLoading={true} center={true} size="big" />;
+}
+
+/** Molecular services for the viewer's tables. */
+export function buildWsiMolecularServices(): WsiMolecularServices {
+    return { getSimplifiedMutationType };
 }
 
 /** Viewer services from the portal configuration, installed at startup. */
@@ -20,6 +34,7 @@ export function buildWsiViewerConfig(): WsiViewerConfig {
         buildPageUrl: (path: string, query: Record<string, string>) =>
             buildCBioPortalPageUrl(path, query),
         osdPrefixUrl: WSI_OSD_PREFIX_URL,
+        molecular: buildWsiMolecularServices(),
         // Slides are authorized by the portal session, so an expired session
         // signs in again the way the portal's own 401s do.
         onSessionExpired: redirectToLogin,
@@ -45,7 +60,11 @@ export const LazyWsiViewer = React.lazy(() => {
 
 export type AppWsiViewerProps = Omit<
     WsiViewerProps,
-    'authScope' | 'showDownload' | 'renderLoading' | 'clinicalRows'
+    | 'authScope'
+    | 'showDownload'
+    | 'renderLoading'
+    | 'clinicalRows'
+    | 'sampleClinicalData'
 > & {
     /** Signed-in user name, when the page knows it. */
     userName?: string;
@@ -56,13 +75,26 @@ export type AppWsiViewerProps = Omit<
     clinicalData?: WsiPatientClinicalData | null;
 };
 
+/**
+ * The viewer's `sampleClinicalData`: the loaded sample data, `null` while it
+ * loads, and unset after a failed request so the viewer requests the sample
+ * attributes itself.
+ */
+export function wsiSampleClinicalData(
+    clinical: WsiClinicalState | null | undefined
+): WsiViewerProps['sampleClinicalData'] {
+    if (clinical === null) return undefined;
+    return clinical ? clinical.sampleData : null;
+}
+
 /** The package viewer configured for this portal, loaded lazily. */
 export function AppWsiViewer({
     userName,
     clinicalData,
     ...viewerProps
 }: AppWsiViewerProps) {
-    const clinicalRows = useWsiClinicalRows(
+    // The viewer reads its sample attributes from the same data.
+    const clinical = useWsiClinicalData(
         viewerProps.studyId,
         viewerProps.patientId,
         clinicalData
@@ -83,7 +115,8 @@ export function AppWsiViewer({
                     DownloadControlOption.SHOW_ALL
                 }
                 renderLoading={renderWsiLoading}
-                clinicalRows={clinicalRows}
+                clinicalRows={clinical?.rows}
+                sampleClinicalData={wsiSampleClinicalData(clinical)}
             />
         </React.Suspense>
     );

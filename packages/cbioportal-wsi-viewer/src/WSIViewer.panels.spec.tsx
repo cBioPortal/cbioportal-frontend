@@ -18,6 +18,7 @@ const hierarchy = {
     samples: [
         {
             sample_id: 'S-1',
+            sample_type: 'Primary',
             parts: [
                 {
                     part_number: '1',
