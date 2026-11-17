@@ -1,4 +1,4 @@
-import { observable } from 'mobx';
+import { observable, makeObservable } from 'mobx';
 import { parseUrl } from 'query-string';
 import _ from 'lodash';
 
@@ -9,6 +9,7 @@ export class FeatureFlagStore {
     @observable.ref currentState: string[] = [];
 
     constructor() {
+        makeObservable(this);
         const url = parseUrl(window.location.href);
         let newState =
             url.query.featureFlags?.toString().split(DELIMITER) || [];
