@@ -2445,6 +2445,43 @@ describe('LazyMobXTable', () => {
             );
         });
 
+        it('sizes the sticky table body from its document position, not the scroll position', () => {
+            const originalInnerHeight = window.innerHeight;
+            const originalPageYOffset = window.pageYOffset;
+            let viewportTop = 100;
+            const rectStub = sinon
+                .stub(HTMLElement.prototype, 'getBoundingClientRect')
+                .callsFake(() => ({ top: viewportTop } as DOMRect));
+            try {
+                (window as any).innerHeight = 1000;
+                (window as any).pageYOffset = 0;
+                const table = mount(
+                    <Table
+                        columns={simpleColumns}
+                        data={simpleData}
+                        stickyPagination={true}
+                    />
+                );
+                const instance = table.instance() as any;
+                assert.equal(instance.state.stickyPaginationMaxHeight, 888);
+
+                // scrolling the page moves the container up the viewport
+                viewportTop = 40;
+                (window as any).pageYOffset = 60;
+                act(() => instance.measureStickyPaginationHeight());
+                assert.equal(
+                    instance.state.stickyPaginationMaxHeight,
+                    888,
+                    'height is unchanged by scrolling'
+                );
+                table.unmount();
+            } finally {
+                rectStub.restore();
+                (window as any).innerHeight = originalInnerHeight;
+                (window as any).pageYOffset = originalPageYOffset;
+            }
+        });
+
         it('starts with 50 items per page', () => {
             let table = mount(
                 <Table

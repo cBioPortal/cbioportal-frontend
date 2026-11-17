@@ -892,6 +892,9 @@ export class LazyMobXTableStore<T> {
     }
 }
 
+// smallest body height a sticky-pagination table shrinks to on short viewports
+const STICKY_PAGINATION_MIN_HEIGHT = 300;
+
 type LazyMobXTableState = {
     stickyPaginationMaxHeight?: number;
 };
@@ -1007,13 +1010,14 @@ export default class LazyMobXTable<T> extends React.Component<
             return;
         }
 
-        const top = Math.max(
-            0,
-            this.stickyPaginationContainer.getBoundingClientRect().top
-        );
+        // Measure from the container's position in the document rather than
+        // in the viewport, so the height does not change as the page scrolls.
+        const documentTop =
+            this.stickyPaginationContainer.getBoundingClientRect().top +
+            window.pageYOffset;
         const availableHeight = Math.max(
-            0,
-            Math.floor(window.innerHeight - top - 12)
+            STICKY_PAGINATION_MIN_HEIGHT,
+            Math.floor(window.innerHeight - documentTop - 12)
         );
 
         if (this.state.stickyPaginationMaxHeight !== availableHeight) {
@@ -1029,11 +1033,6 @@ export default class LazyMobXTable<T> extends React.Component<
         window.addEventListener(
             'resize',
             this.scheduleStickyPaginationMeasurement
-        );
-        window.addEventListener(
-            'scroll',
-            this.scheduleStickyPaginationMeasurement,
-            true
         );
 
         if (typeof ResizeObserver !== 'undefined') {
@@ -1055,11 +1054,6 @@ export default class LazyMobXTable<T> extends React.Component<
         window.removeEventListener(
             'resize',
             this.scheduleStickyPaginationMeasurement
-        );
-        window.removeEventListener(
-            'scroll',
-            this.scheduleStickyPaginationMeasurement,
-            true
         );
         this.stickyPaginationResizeObserver?.disconnect();
         this.stickyPaginationResizeObserver = undefined;
