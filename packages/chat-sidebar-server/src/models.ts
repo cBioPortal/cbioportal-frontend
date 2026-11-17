@@ -141,7 +141,7 @@ export const DEFAULT_MODEL: string | undefined = AVAILABLE_MODELS[0]?.id;
 // chat also serves its titles and follow-ups.
 export function resolveModels(
     requested?: string
-): { chat: Model; utility: Model } {
+): { chat: Model; utility: Model; providerId: string } {
     const id = requested || DEFAULT_MODEL;
     if (!id) {
         throw new Error('No model configured — see .env.example.');
@@ -153,5 +153,6 @@ export function resolveModels(
     return {
         chat,
         utility: registry.languageModel(`${providerId}:utility`),
+        providerId,
     };
 }

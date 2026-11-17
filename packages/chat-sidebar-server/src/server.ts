@@ -420,13 +420,35 @@ app.post(
         const userId = userOf(res);
         await requireAllowance(userId);
         try {
-            const report = await traced(res, 'report', threadId, () =>
-                runReport(messages, signal, recordFor(userId), model)
-            );
-            res.json({ report });
+            // The generator's model call starts on the first iteration, so the
+            // whole loop runs inside the trace.
+            await traced(res, 'report', threadId, async () => {
+                const report = runReport(
+                    messages,
+                    signal,
+                    recordFor(userId),
+                    model
+                );
+                for await (const chunk of report) {
+                    if (!res.headersSent) {
+                        res.writeHead(200, {
+                            'Content-Type': 'text/plain; charset=utf-8',
+                            'Cache-Control': 'no-cache',
+                            'X-Accel-Buffering': 'no',
+                        });
+                    }
+                    res.write(chunk);
+                }
+            });
+            res.end();
         } catch (err) {
             if (signal.aborted) return;
             console.error('report generation failed:', err);
+            // Cut mid-stream so the client sees the report as incomplete.
+            if (res.headersSent) {
+                res.destroy();
+                return;
+            }
             const message =
                 err instanceof Error ? err.message : 'report failed';
             res.status(errorStatus(err)).json({ error: message });

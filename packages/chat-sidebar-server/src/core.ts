@@ -1,4 +1,5 @@
 import {
+    APICallError,
     streamText,
     generateText,
     convertToModelMessages,
@@ -8,9 +9,15 @@ import {
     stepCountIs,
     tool,
     toUIMessageStream,
+    getToolName,
+    isToolUIPart,
     CallSettings,
+    DynamicToolUIPart,
+    LanguageModel,
     OnLanguageModelCallEndCallback,
+    TextUIPart,
     ToolSet,
+    ToolUIPart,
     UIMessage,
     UIMessageChunk,
 } from 'ai';
@@ -378,14 +385,71 @@ export async function runChat(
     });
 }
 
-// No tools — everything the report needs (query results, page-state
-// snapshots, navigation URLs) is already in the given history.
-export async function runReport(
+// Keeps one oversized result from crowding out the rest of the session.
+const MAX_TOOL_RESULT_CHARS = 20_000;
+
+function formatToolResult(output: unknown): string {
+    // MCP results wrap their payload in text content items.
+    const content = (output as { content?: unknown } | null)?.content;
+    const text = Array.isArray(content)
+        ? content
+              .map(item =>
+                  item?.type === 'text' ? item.text : `[${item?.type} content]`
+              )
+              .join('\n')
+        : JSON.stringify(output) ?? String(output);
+    return text.length > MAX_TOOL_RESULT_CHARS
+        ? `${text.slice(0, MAX_TOOL_RESULT_CHARS)}\n[truncated ${text.length -
+              MAX_TOOL_RESULT_CHARS} characters]`
+        : text;
+}
+
+// Tool calls go in as text: Bedrock strips tool content from a request that
+// offers no tools, which would hide every query result from the report.
+function toolPartAsText(part: ToolUIPart | DynamicToolUIPart): TextUIPart {
+    const result =
+        part.state === 'output-available'
+            ? formatToolResult(part.output)
+            : part.state === 'output-error'
+            ? `Error: ${part.errorText}`
+            : 'No result.';
+    return {
+        type: 'text',
+        text: `[Tool call: ${getToolName(part)}]\nInput: ${JSON.stringify(
+            part.input
+        )}\nResult:\n${result}`,
+    };
+}
+
+// Numbers each distinct screenshot in order of appearance so the report can
+// place it with screenshot:N. The client numbers them the same way.
+function labelScreenshots(uiMessages: UIMessage[]): UIMessage[] {
+    const numbers = new Map<string, number>();
+    return uiMessages.map(message => ({
+        ...message,
+        parts: message.parts.flatMap(part => {
+            if (part.type !== 'file' || !part.mediaType.startsWith('image/')) {
+                return [part];
+            }
+            if (!numbers.has(part.url)) numbers.set(part.url, numbers.size + 1);
+            const label: TextUIPart = {
+                type: 'text',
+                text: `[Screenshot ${numbers.get(part.url)}]`,
+            };
+            return [label, part];
+        }),
+    }));
+}
+
+// No tools offered — everything the report needs (query results, page-state
+// snapshots, navigation URLs) is already in the given history. Yields the
+// report's text as it is written.
+export async function* runReport(
     uiMessages: UIMessage[],
     abortSignal: AbortSignal,
     onCall: OnLanguageModelCallEndCallback,
     model?: string
-): Promise<string> {
+): AsyncGenerator<string> {
     const { chat } = resolveModels(model);
     const system = await getReportPrompt();
     // Claude rejects a request whose messages end on 'assistant' (treats it
@@ -397,15 +461,21 @@ export async function runReport(
     // differ from the original response, and the Bedrock provider drops
     // reasoning parts that carry no signature.
     const messages = await convertToModelMessages(
-        uiMessages
+        labelScreenshots(uiMessages)
             .map(message => ({
                 ...message,
-                parts: message.parts.filter(part => part.type !== 'reasoning'),
+                parts: message.parts
+                    .filter(part => part.type !== 'reasoning')
+                    .map(part =>
+                        isToolUIPart(part) ? toolPartAsText(part) : part
+                    ),
             }))
             .filter(message => message.parts.length > 0),
         { ignoreIncompleteToolCalls: true }
     );
-    const { text } = await generateText({
+    // streamText reports failures here rather than throwing.
+    let error: unknown;
+    const result = streamText({
         model: chat,
         system,
         messages: [
@@ -415,11 +485,18 @@ export async function runReport(
                 content: 'Compile the research report for this session now.',
             },
         ],
+        reasoning: 'none',
         abortSignal,
         onLanguageModelCallEnd: onCall,
         telemetry: { functionId: 'report' },
+        onError: event => {
+            error = event.error;
+        },
     });
-    return text;
+    for await (const chunk of result.textStream) {
+        yield chunk;
+    }
+    if (error !== undefined) throw error;
 }
 
 // Titles come from the opening question alone — enough for a few words, and it
@@ -481,31 +558,30 @@ export interface FollowupsInput {
     details: unknown;
 }
 
-// Follow-ups for the latest exchange on the page the user is on, yielded one
-// at a time as each is complete. No tools, no reasoning, and only the
-// exchange the client sends, so the call stays fast and cheap.
-export async function* runFollowups(
-    { question, answer, href, details }: FollowupsInput,
+// Providers whose utility model isn't enabled — on Bedrock, each model needs
+// access granted; their follow-ups use the chat model instead.
+const utilityModelUnavailable = new Set<string>();
+
+function isModelUnavailable(err: unknown): boolean {
+    return (
+        APICallError.isInstance(err) &&
+        (err.statusCode === 403 || err.statusCode === 404)
+    );
+}
+
+async function* streamSuggestions(
+    model: LanguageModel,
+    system: string,
+    content: string,
     abortSignal: AbortSignal,
-    onCall: OnLanguageModelCallEndCallback,
-    model?: string
+    onCall: OnLanguageModelCallEndCallback
 ): AsyncGenerator<Suggestion> {
-    const { utility } = resolveModels(model);
-    const system = `${LOCAL_FOLLOWUPS_PROMPT_TEXT}\n\n${CAPABILITIES_PROMPT_TEXT}\n\n${formatPageSection(
-        href,
-        details
-    )}`;
     // streamText reports failures here rather than throwing.
     let error: unknown;
     const result = streamText({
-        model: utility,
+        model,
         system,
-        messages: [
-            {
-                role: 'user',
-                content: `## Latest exchange\n\nUser:\n${question}\n\nAssistant:\n${answer}\n\nSuggest follow-ups.`,
-            },
-        ],
+        messages: [{ role: 'user', content }],
         output: Output.array({ element: SuggestionSchema }),
         reasoning: 'none',
         abortSignal,
@@ -521,4 +597,42 @@ export async function* runFollowups(
         if (++count === FOLLOWUP_COUNT) return;
     }
     if (error !== undefined) throw error;
+}
+
+// Follow-ups for the latest exchange on the page the user is on, yielded one
+// at a time as each is complete. No tools, no reasoning, and only the
+// exchange the client sends, so the call stays fast and cheap.
+export async function* runFollowups(
+    { question, answer, href, details }: FollowupsInput,
+    abortSignal: AbortSignal,
+    onCall: OnLanguageModelCallEndCallback,
+    model?: string
+): AsyncGenerator<Suggestion> {
+    const { chat, utility, providerId } = resolveModels(model);
+    const system = `${LOCAL_FOLLOWUPS_PROMPT_TEXT}\n\n${CAPABILITIES_PROMPT_TEXT}\n\n${formatPageSection(
+        href,
+        details
+    )}`;
+    const content = `## Latest exchange\n\nUser:\n${question}\n\nAssistant:\n${answer}\n\nSuggest follow-ups.`;
+    const suggest = (from: LanguageModel) =>
+        streamSuggestions(from, system, content, abortSignal, onCall);
+    if (utilityModelUnavailable.has(providerId)) {
+        yield* suggest(chat);
+        return;
+    }
+    let yielded = false;
+    try {
+        for await (const suggestion of suggest(utility)) {
+            yielded = true;
+            yield suggestion;
+        }
+    } catch (err) {
+        if (yielded || !isModelUnavailable(err)) throw err;
+        console.warn(
+            `${providerId} utility model unavailable, using its chat model for follow-ups:`,
+            describeError(err)
+        );
+        utilityModelUnavailable.add(providerId);
+        yield* suggest(chat);
+    }
 }
