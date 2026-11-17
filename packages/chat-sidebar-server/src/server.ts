@@ -41,6 +41,7 @@ import {
     UsageLimitError,
 } from './usage.js';
 import { rejectCrossSite, requireUser, userOf } from './user.js';
+import { oqlRouter } from './oql/router.js';
 
 const PORT = Number(process.env.PORT || 4000);
 const HOST = process.env.HOST || '127.0.0.1';
@@ -117,6 +118,9 @@ app.get('/api/chat/config', (_req, res) => {
 app.get('/api/chat/models', (_req, res) => {
     res.json({ models: AVAILABLE_MODELS });
 });
+
+// Natural language to OQL. Open to everyone, without a login or allowance.
+app.use('/api/chat/oql', oqlRouter);
 
 // Everything that reads or writes a user's chats, or calls a model and so
 // counts against their allowance. The rest — config, models — works from what

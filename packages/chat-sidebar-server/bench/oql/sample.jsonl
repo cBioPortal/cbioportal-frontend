@@ -1,0 +1,10 @@
+{"id":"s1","prompt":"BRAF V600E mutations","expected":"BRAF: MUT=V600E;"}
+{"id":"s2","prompt":"samples with EGFR L858R or exon 19 deletion E746_A750del","expected":"EGFR: MUT=L858R MUT=E746_A750del;"}
+{"id":"s3","prompt":"MDM2 amplification and CDKN2A homozygous deletion","expected":"MDM2: AMP;\nCDKN2A: HOMDEL;"}
+{"id":"s4","prompt":"KRAS G12C","expected":"KRAS: MUT=G12C;"}
+{"id":"s5","prompt":"any mutation in STK11 or KEAP1","expected":"STK11: MUT;\nKEAP1: MUT;"}
+{"id":"s6","prompt":"high MYC mRNA expression","expected":"MYC: EXP>2;"}
+{"id":"s7","prompt":"truncating APC mutations","expected":"APC: TRUNC;"}
+{"id":"s8","prompt":"ROS1 fusions","expected":"ROS1: FUSION;"}
+{"id":"s9","prompt":"driver mutations in PIK3CA","expected":"PIK3CA: MUT_DRIVER;"}
+{"id":"s10","prompt":"TP53 and RB1 altered, shown as a single track called TP53/RB1","expected":"[\"TP53/RB1\" TP53 RB1]"}

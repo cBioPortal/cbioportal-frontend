@@ -4,3 +4,4 @@ dist
 .env.local
 .env.*.local
 *.log
+bench/oql/results/

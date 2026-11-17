@@ -6,10 +6,14 @@
     "type": "module",
     "scripts": {
         "dev": "NODE_ENV=development tsx watch src/server.ts",
-        "build": "tsc && cp src/systemPrompt.md dist/systemPrompt.md && cp src/reportPrompt.md dist/reportPrompt.md && cp src/followupsPrompt.md dist/followupsPrompt.md && cp src/capabilitiesPrompt.md dist/capabilitiesPrompt.md",
+        "build": "tsc && cp src/systemPrompt.md dist/systemPrompt.md && cp src/reportPrompt.md dist/reportPrompt.md && cp src/followupsPrompt.md dist/followupsPrompt.md && cp src/capabilitiesPrompt.md dist/capabilitiesPrompt.md && mkdir -p dist/oql/dsl/grammar && cp src/oql/dsl/grammar/oql-parser.js dist/oql/dsl/grammar/oql-parser.js",
         "start": "tsx src/server.ts",
         "migrate": "tsx src/migrate.ts",
-        "db:generate": "drizzle-kit generate"
+        "db:generate": "drizzle-kit generate",
+        "test": "vitest run",
+        "typecheck": "tsc --noEmit",
+        "gen:oql-parser": "peggy --format es -o src/oql/dsl/grammar/oql-parser.js src/oql/dsl/grammar/oql-parser.pegjs",
+        "oql:bench": "tsx scripts/oql-bench.ts"
     },
     "dependencies": {
         "@ai-sdk/amazon-bedrock": "^5.0.133",
@@ -34,7 +38,7 @@
         "drizzle-orm": "0.45.4",
         "express": "^4.21.2",
         "pg": "8.23.1",
-        "zod": "^3.25.76"
+        "zod": "^4.6.7"
     },
     "devDependencies": {
         "@types/cors": "^2.8.17",
@@ -42,7 +46,10 @@
         "@types/node": "^22.10.0",
         "@types/pg": "8.23.1",
         "drizzle-kit": "0.31.11",
+        "peggy": "5.1.0",
         "tsx": "^4.19.2",
-        "typescript": "^5.7.2"
+        "typescript": "^5.7.2",
+        "vite": "^6.4.0",
+        "vitest": "^5.0.3"
     }
 }

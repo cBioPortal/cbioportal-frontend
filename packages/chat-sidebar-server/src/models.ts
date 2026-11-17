@@ -35,6 +35,17 @@ interface ProviderConfig {
     chatModelName: string;
     chat: Model;
     utility: Model;
+    // Only Claude Haiku: the OQL prompt is tuned and benchmarked on it.
+    oql?: Model;
+}
+
+function haikuOnly(envName: string, modelId: string): string {
+    if (!/haiku/i.test(modelId)) {
+        throw new Error(
+            `${envName} must be a Claude Haiku model, got "${modelId}" — see .env.example.`
+        );
+    }
+    return modelId;
 }
 
 function configureBedrock(): ProviderConfig | undefined {
@@ -66,6 +77,13 @@ function configureBedrock(): ProviderConfig | undefined {
             process.env.BEDROCK_UTILITY_MODEL ||
                 'us.anthropic.claude-haiku-4-5-20251001-v1:0'
         ),
+        oql: bedrock(
+            haikuOnly(
+                'BEDROCK_OQL_MODEL',
+                process.env.BEDROCK_OQL_MODEL ||
+                    'us.anthropic.claude-haiku-4-5-20251001-v1:0'
+            )
+        ),
     };
 }
 
@@ -82,6 +100,12 @@ function configureAnthropic(): ProviderConfig | undefined {
         chat: anthropic(chatModelId || 'claude-sonnet-5'),
         utility: anthropic(
             process.env.ANTHROPIC_UTILITY_MODEL || 'claude-haiku-4-5'
+        ),
+        oql: anthropic(
+            haikuOnly(
+                'ANTHROPIC_OQL_MODEL',
+                process.env.ANTHROPIC_OQL_MODEL || 'claude-haiku-4-5'
+            )
         ),
     };
 }
@@ -155,4 +179,13 @@ export function resolveModels(
         utility: registry.languageModel(`${providerId}:utility`),
         providerId,
     };
+}
+
+// The OQL translator's model, from the first configured provider that offers
+// one; undefined when none does (OpenAI never does).
+export function resolveOqlModel():
+    | { model: Model; providerId: string }
+    | undefined {
+    const provider = PROVIDERS.find(p => p.oql);
+    return provider && { model: provider.oql!, providerId: provider.id };
 }
