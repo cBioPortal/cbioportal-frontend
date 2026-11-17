@@ -67,6 +67,7 @@ export const ChatHeader: FC = () => {
                 body: JSON.stringify({
                     messages,
                     model: getSelectedModel(),
+                    threadId: aui.threadListItem.getState().remoteId,
                 }),
             });
             await throwIfLimitReached(res);

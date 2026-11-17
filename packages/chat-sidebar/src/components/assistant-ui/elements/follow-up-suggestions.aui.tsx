@@ -137,10 +137,16 @@ export const ThreadFollowupSuggestions: FC<{ onSelect: () => void }> = ({
     // message's id and status rather than the messages themselves, which
     // change on every streamed token.
     useEffect(() => {
+        const exchange = isRunning
+            ? undefined
+            : latestExchange(aui.thread.getState().messages);
         setFollowupsTarget(
-            isRunning
-                ? null
-                : latestExchange(aui.thread.getState().messages) ?? null
+            exchange
+                ? {
+                      ...exchange,
+                      threadId: aui.threadListItem.getState().remoteId,
+                  }
+                : null
         );
     }, [aui, isRunning, lastMessageId, lastStatus]);
     useEffect(() => () => setFollowupsTarget(null), []);

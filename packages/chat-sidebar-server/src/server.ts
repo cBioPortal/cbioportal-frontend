@@ -1,7 +1,12 @@
 import './env.js'; // must be first — see env.ts
+import './tracing.js';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
+import {
+    propagateAttributes,
+    PropagateAttributesParams,
+} from '@langfuse/tracing';
 import {
     NoSuchModelError,
     OnLanguageModelCallEndCallback,
@@ -64,6 +69,27 @@ function abortOnClose(res: express.Response): AbortSignal {
 // Counts each model call a request makes against the user's allowance.
 function recordFor(userId: string): OnLanguageModelCallEndCallback {
     return event => recordCall(userId, event);
+}
+
+// Runs a request's model calls under one named trace, attributed to the user
+// and, when the request belongs to a chat, grouped into that chat's session.
+// The model calls must start inside `run`.
+function traced<T>(
+    res: Response,
+    traceName: string,
+    threadId: unknown,
+    run: () => Promise<T>,
+    extra?: Pick<PropagateAttributesParams, 'tags' | 'metadata'>
+): Promise<T> {
+    return propagateAttributes(
+        {
+            traceName,
+            userId: userOf(res),
+            sessionId: isId(threadId) ? threadId : undefined,
+            ...extra,
+        },
+        run
+    );
 }
 
 // A model id the registry doesn't have is the client's mistake, not ours.
@@ -279,8 +305,9 @@ app.post(
         try {
             await requireAllowance(userId);
             title =
-                (await runTitle(text, signal, recordFor(userId), model)) ||
-                fallbackTitle(text);
+                (await traced(res, 'title', req.params.id, () =>
+                    runTitle(text, signal, recordFor(userId), model)
+                )) || fallbackTitle(text);
         } catch (err) {
             if (!signal.aborted && !(err instanceof UsageLimitError)) {
                 console.error('title generation failed:', err);
@@ -347,14 +374,28 @@ app.post(
             }
         };
         try {
-            await runChat(
-                branch,
+            await traced(
                 res,
-                signal,
-                onEnd,
-                recordFor(userId),
-                model,
-                pageHref
+                'chat',
+                id,
+                () =>
+                    runChat(
+                        branch,
+                        res,
+                        signal,
+                        onEnd,
+                        recordFor(userId),
+                        model,
+                        pageHref
+                    ),
+                {
+                    // An assistant message carries a client-side tool's
+                    // output, and this request continues its reply.
+                    tags: message.role === 'assistant' ? ['continuation'] : [],
+                    metadata: parent
+                        ? { messageId: message.id, parentMessageId: parent }
+                        : { messageId: message.id },
+                }
             );
         } catch (err) {
             if (signal.aborted) return;
@@ -370,7 +411,7 @@ app.post(
 app.post(
     '/api/chat/report',
     route(async (req, res) => {
-        const { messages, model } = req.body ?? {};
+        const { messages, model, threadId } = req.body ?? {};
         if (!Array.isArray(messages)) {
             res.status(400).json({ error: 'messages (array) required' });
             return;
@@ -379,11 +420,8 @@ app.post(
         const userId = userOf(res);
         await requireAllowance(userId);
         try {
-            const report = await runReport(
-                messages,
-                signal,
-                recordFor(userId),
-                model
+            const report = await traced(res, 'report', threadId, () =>
+                runReport(messages, signal, recordFor(userId), model)
             );
             res.json({ report });
         } catch (err) {
@@ -401,7 +439,8 @@ app.post(
 app.post(
     '/api/chat/followups',
     route(async (req, res) => {
-        const { question, answer, href, details, model } = req.body ?? {};
+        const { question, answer, href, details, model, threadId } =
+            req.body ?? {};
         if (typeof question !== 'string' || typeof answer !== 'string') {
             res.status(400).json({
                 error: 'question and answer (strings) required',
@@ -412,27 +451,31 @@ app.post(
         const userId = userOf(res);
         await requireAllowance(userId);
         try {
-            const followups = runFollowups(
-                {
-                    question,
-                    answer,
-                    href: typeof href === 'string' ? href : '',
-                    details: details ?? { available: false },
-                },
-                signal,
-                recordFor(userId),
-                model
-            );
-            for await (const followup of followups) {
-                if (!res.headersSent) {
-                    res.writeHead(200, {
-                        'Content-Type': 'application/x-ndjson',
-                        'Cache-Control': 'no-cache',
-                        'X-Accel-Buffering': 'no',
-                    });
+            // The generator's model call starts on the first iteration, so the
+            // whole loop runs inside the trace.
+            await traced(res, 'followups', threadId, async () => {
+                const followups = runFollowups(
+                    {
+                        question,
+                        answer,
+                        href: typeof href === 'string' ? href : '',
+                        details: details ?? { available: false },
+                    },
+                    signal,
+                    recordFor(userId),
+                    model
+                );
+                for await (const followup of followups) {
+                    if (!res.headersSent) {
+                        res.writeHead(200, {
+                            'Content-Type': 'application/x-ndjson',
+                            'Cache-Control': 'no-cache',
+                            'X-Accel-Buffering': 'no',
+                        });
+                    }
+                    res.write(`${JSON.stringify(followup)}\n`);
                 }
-                res.write(`${JSON.stringify(followup)}\n`);
-            }
+            });
             res.end();
         } catch (err) {
             if (signal.aborted) return;

@@ -22,6 +22,7 @@ import { z } from 'zod';
 import { createMCPClient, MCPClient } from '@ai-sdk/mcp';
 import { LangfuseClient } from '@langfuse/client';
 import { resolveModels } from './models.js';
+import { langfuseConfig } from './tracing.js';
 
 export { AVAILABLE_MODELS, DEFAULT_MODEL } from './models.js';
 
@@ -77,27 +78,36 @@ const CAPABILITIES_PROMPT_TEXT = readFileSync(
     'utf-8'
 );
 
-// Accept LANGFUSE_HOST too — this deployment's shell env uses the older name.
-const langfuse =
-    process.env.LANGFUSE_PUBLIC_KEY && process.env.LANGFUSE_SECRET_KEY
-        ? new LangfuseClient({
-              baseUrl:
-                  process.env.LANGFUSE_BASE_URL || process.env.LANGFUSE_HOST,
-          })
-        : undefined;
+const langfuse = langfuseConfig
+    ? new LangfuseClient(langfuseConfig)
+    : undefined;
 
-async function getSystemPrompt(pageHref?: string): Promise<string> {
-    const systemPrompt = langfuse
-        ? // No label: Langfuse serves the version labelled `production`.
-          (
-              await langfuse.prompt.get('cBioChat Sidebar System Prompt', {
-                  fallback: LOCAL_SYSTEM_PROMPT_TEXT,
-              })
-          ).prompt
-        : LOCAL_SYSTEM_PROMPT_TEXT;
-    return pageHref
-        ? `${systemPrompt}\n\nThe user is currently viewing this cBioPortal page: ${pageHref}`
-        : systemPrompt;
+interface SystemPrompt {
+    text: string;
+    // The Langfuse prompt version the text came from, which the chat's model
+    // calls are linked to in their traces. A fallback is never linked.
+    langfusePrompt?: { name: string; version: number; isFallback: boolean };
+}
+
+const SYSTEM_PROMPT_NAME =
+    process.env.LANGFUSE_SYSTEM_PROMPT_NAME || 'cBioChat Sidebar System Prompt';
+
+async function getSystemPrompt(pageHref?: string): Promise<SystemPrompt> {
+    // No label: Langfuse serves the version labelled `production`.
+    const fetched = await langfuse?.prompt.get(SYSTEM_PROMPT_NAME, {
+        fallback: LOCAL_SYSTEM_PROMPT_TEXT,
+    });
+    const systemPrompt = fetched?.prompt ?? LOCAL_SYSTEM_PROMPT_TEXT;
+    return {
+        text: pageHref
+            ? `${systemPrompt}\n\nThe user is currently viewing this cBioPortal page: ${pageHref}`
+            : systemPrompt,
+        langfusePrompt: fetched && {
+            name: fetched.name,
+            version: fetched.version,
+            isFallback: fetched.isFallback,
+        },
+    };
 }
 
 async function getReportPrompt(): Promise<string> {
@@ -309,7 +319,7 @@ export async function runChat(
     pageHref?: string
 ): Promise<void> {
     const { chat } = resolveModels(model);
-    const [system, mcpTools] = await Promise.all([
+    const [{ text: system, langfusePrompt }, mcpTools] = await Promise.all([
         getSystemPrompt(pageHref),
         getMcpTools(),
     ]);
@@ -332,6 +342,11 @@ export async function runChat(
         }),
         abortSignal,
         onLanguageModelCallEnd: onCall,
+        runtimeContext: { langfusePrompt },
+        telemetry: {
+            functionId: 'chat',
+            includeRuntimeContext: { langfusePrompt: true },
+        },
     });
     const reply = withholdReplyStart(
         toUIMessageStream({
@@ -402,6 +417,7 @@ export async function runReport(
         ],
         abortSignal,
         onLanguageModelCallEnd: onCall,
+        telemetry: { functionId: 'report' },
     });
     return text;
 }
@@ -426,6 +442,7 @@ export async function runTitle(
         reasoning: 'none',
         abortSignal,
         onLanguageModelCallEnd: onCall,
+        telemetry: { functionId: 'title' },
     });
     return title.trim().slice(0, MAX_TITLE_CHARS);
 }
@@ -493,6 +510,7 @@ export async function* runFollowups(
         reasoning: 'none',
         abortSignal,
         onLanguageModelCallEnd: onCall,
+        telemetry: { functionId: 'followups' },
         onError: event => {
             error = event.error;
         },

@@ -214,6 +214,7 @@ function request(
         {
             question: exchange.question,
             answer: exchange.answer,
+            threadId: exchange.threadId,
             ...requestPage,
             model: getSelectedModel(),
         },
