@@ -73,22 +73,33 @@ function compareSpecimenNumbers(
     });
 }
 
+/** Block-matched slides come first, then part-matched, then the rest. */
+function matchLevelOrder(matchLevel: MatchLevel | undefined): number {
+    return matchLevel === 'BLOCK' ? 0 : matchLevel === 'PART' ? 1 : 2;
+}
+
 export interface SampleSlideOrderEntry {
-    slide: Pick<Slide, 'block_number' | 'stain_kind' | 'stain_name'>;
+    slide: Pick<
+        Slide,
+        'block_number' | 'match_level' | 'stain_kind' | 'stain_name'
+    >;
     /** Number of the part holding the slide. */
     partNumber?: string | null;
 }
 
 /**
- * Orders slides within a sample by part number, then block number (as the
- * backend orders them), then stain: H&E first, the rest by stain name. Slide
- * selection takes the first matching slide in this order as the default.
+ * Orders slides within a sample by match level (block-matched, then
+ * part-matched), then part number, then block number (as the backend orders
+ * them), then stain: H&E first, the rest by stain name. Slide selection takes
+ * the first matching slide in this order as the default.
  */
 export function compareSlidesInSample(
     left: SampleSlideOrderEntry,
     right: SampleSlideOrderEntry
 ): number {
     return (
+        matchLevelOrder(left.slide.match_level) -
+            matchLevelOrder(right.slide.match_level) ||
         compareSpecimenNumbers(left.partNumber, right.partNumber) ||
         compareSpecimenNumbers(
             left.slide.block_number,
