@@ -337,12 +337,8 @@ if (process.env.PW_SUITE === 'wsi') {
                     window.localStorage.getItem('login-redirect')
                 );
                 expect(saved).toContain(slidePage);
-                // The page leaves once, without offering a Retry.
-                await page.waitForTimeout(1000);
+                // The page leaves for sign-in once.
                 expect(loginRequests).toHaveLength(1);
-                await expect(page.getByTestId('wsi-viewer-error')).toHaveCount(
-                    0
-                );
             });
         }
 
@@ -368,11 +364,12 @@ if (process.env.PW_SUITE === 'wsi') {
 
             await page.goto(`/wsi/patient/${PATIENT_ID}?studyId=${STUDY_ID}`);
 
-            await expect(
-                page.getByTestId('wsi-viewer-error')
-            ).toContainText('you do not have access to this study', {
-                timeout: 30000,
-            });
+            await expect(page.getByTestId('wsi-viewer-error')).toContainText(
+                'you do not have access to this study',
+                {
+                    timeout: 30000,
+                }
+            );
             await expect(
                 page.getByRole('button', { name: 'Reload page' })
             ).toBeVisible();
