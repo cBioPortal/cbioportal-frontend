@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import fixtures from './frontend-fixtures.json';
 import {
     OqlQuery,
@@ -37,7 +36,7 @@ describe('frontend parser fixtures', () => {
             // Fixtures that our stricter schema rejects (lowercase genes, lenient forms) are skipped.
             if (!schema.ok) return;
             const rt = serializeChecked(schema.value);
-            expect(rt.ok, rt.ok ? '' : `${rt.reason}\n${rt.oql}`).toBe(true);
+            expect(rt.ok ? '' : `${rt.reason}\n${rt.oql}`).toBe('');
             expect(meaning(parseOqlAst(rt.oql))).toEqual(
                 meaning(parseOqlAst(q))
             );
@@ -313,7 +312,7 @@ describe('serializer', () => {
             expect(schemaIssues(dsl).ok).toBe(true);
             expect(serialize(dsl)).toBe(oql);
             const rt = serializeChecked(dsl);
-            expect(rt.ok, rt.ok ? '' : rt.reason).toBe(true);
+            expect(rt.ok ? '' : rt.reason).toBe('');
             expect(describeQuery(dsl).length).toBeGreaterThan(0);
         });
     }

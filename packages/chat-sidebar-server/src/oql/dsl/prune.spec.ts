@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import { Issue, OqlQuery, pruneQuery, serialize } from './index.js';
 
 const err = (path: (string | number)[], term?: string): Issue => ({

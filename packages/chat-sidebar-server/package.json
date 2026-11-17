@@ -10,7 +10,7 @@
         "start": "tsx src/server.ts",
         "migrate": "tsx src/migrate.ts",
         "db:generate": "drizzle-kit generate",
-        "test": "vitest run",
+        "test": "cross-env jest $GREP --env=node --runInBand --ci --reporters=default --reporters=jest-junit --passWithNoTests",
         "typecheck": "tsc --noEmit",
         "gen:oql-parser": "peggy --format es -o src/oql/dsl/grammar/oql-parser.js src/oql/dsl/grammar/oql-parser.pegjs",
         "oql:bench": "tsx scripts/oql-bench.ts"
@@ -48,8 +48,6 @@
         "drizzle-kit": "0.31.11",
         "peggy": "5.1.0",
         "tsx": "^4.19.2",
-        "typescript": "^5.7.2",
-        "vite": "^6.4.0",
-        "vitest": "^5.0.3"
+        "typescript": "^5.7.2"
     }
 }

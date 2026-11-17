@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import { OqlQuery, unverifiedNumbers } from './index.js';
 
 const gene = (g: string, alterations: any[]): OqlQuery => ({

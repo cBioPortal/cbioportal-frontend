@@ -1,14 +1,12 @@
 import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
+import { join } from 'path';
 import peggy from 'peggy';
-import { describe, expect, it } from 'vitest';
 
-const read = (path: string) =>
-    readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf-8');
+const read = (path: string) => readFileSync(join(__dirname, path), 'utf-8');
 
-const VENDORED = './oql-parser.pegjs';
+const VENDORED = 'oql-parser.pegjs';
 const FRONTEND = '../../../../../../src/shared/lib/oql/oql-parser.pegjs';
-const GENERATED = './oql-parser.js';
+const GENERATED = 'oql-parser.js';
 
 describe('vendored OQL grammar', () => {
     it("matches the frontend's grammar", () => {
