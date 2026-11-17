@@ -45,6 +45,8 @@ import { WsiMatchLevelInfo, WsiStainInfo } from './wsiFilterHelp';
 
 export interface WsiNavPanelProps {
     hierarchy: PatientHierarchy;
+    /** Bumped when enrichment updates the hierarchy's samples in place. */
+    dataVersion?: number;
     selectedSlide: Slide | null;
     stainFilter: WsiStainFilter;
     sampleIdFilter?: string;
@@ -183,6 +185,7 @@ function narrowSampleEntries(
 
 function WsiNavPanelComponent({
     hierarchy,
+    dataVersion = 0,
     selectedSlide,
     stainFilter,
     sampleIdFilter,
@@ -522,6 +525,7 @@ function WsiNavPanelComponent({
                                 filteredSlideIds.has(selectedSlideId)
                             }
                             filteredSlides={filteredSlides}
+                            dataVersion={dataVersion}
                             sampleIndex={index}
                             selectedSlide={selectedSlide}
                             onSelectSlide={onSelectSlide}
@@ -658,6 +662,79 @@ function WsiFilterRow({
     );
 }
 
+const ONCOTREE_URL = 'https://oncotree.info/';
+
+/**
+ * A sample's OncoTree code. Its tooltip names the cancer type and site, which
+ * the sample row has no room for, and links to OncoTree; clicks inside it
+ * don't toggle the sample row.
+ */
+function WsiOncoTreeBadge({
+    code,
+    name,
+    site,
+}: {
+    code: string;
+    name?: string;
+    site?: string;
+}) {
+    const stopRowToggle = (e: React.SyntheticEvent) => e.stopPropagation();
+    return (
+        <DefaultTooltip
+            trigger={['hover', 'focus']}
+            placement="top"
+            // Long enough to move the pointer from the badge to the link.
+            mouseLeaveDelay={0.6}
+            overlay={
+                <div
+                    data-testid="wsi-oncotree-tooltip"
+                    onClick={stopRowToggle}
+                    onKeyDown={stopRowToggle}
+                >
+                    <div>
+                        <b>{code}</b>
+                        {name ? ` — ${name}` : ''}
+                    </div>
+                    {site && <div>Site: {site}</div>}
+                    <a
+                        href={ONCOTREE_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        View OncoTree{' '}
+                        <i className="fa fa-external-link" aria-hidden="true" />
+                    </a>
+                </div>
+            }
+        >
+            <a
+                href={ONCOTREE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`OncoTree code ${code}${
+                    name ? `, ${name}` : ''
+                }: view OncoTree (opens in a new tab)`}
+                data-testid="wsi-oncotree-badge"
+                onClick={stopRowToggle}
+                style={{
+                    display: 'inline-block',
+                    background: theme.headerBg,
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: 3,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    padding: '0 4px',
+                    color: theme.text,
+                    marginRight: 4,
+                    textDecoration: 'none',
+                }}
+            >
+                {code}
+            </a>
+        </DefaultTooltip>
+    );
+}
+
 function SampleNode({
     sample,
     containsSelectedSlide,
@@ -673,6 +750,7 @@ function SampleNode({
     sample: Sample;
     containsSelectedSlide: boolean;
     filteredSlides: Array<{ slide: Slide; blockLabel: string | null }>;
+    dataVersion: number;
     sampleIndex: number;
     selectedSlide: Slide | null;
     onSelectSlide: (slide: Slide, sample: Sample) => void;
@@ -705,6 +783,31 @@ function SampleNode({
         }
     }, [selectedSlideKey]);
 
+    const isPrimarySample =
+        (sample.sample_type || '').toLowerCase() === 'primary';
+
+    const cancerTypeName = sample.cancer_type_detailed || sample.cancer_type;
+    const sampleDescription = [cancerTypeName, sample.primary_site]
+        .filter(Boolean)
+        .join(' · ');
+
+    const toggleOpen = () => setOpen(o => !o);
+    const slideCountText = `${visibleSlideCount} ${pluralize(
+        'slide',
+        visibleSlideCount
+    )}`;
+    // The second line, in the button's name too: sample type, then the
+    // OncoTree code or the cancer type.
+    const sampleDetailParts = [
+        sample.sample_type,
+        sample.oncotree_code
+            ? `OncoTree ${sample.oncotree_code}`
+            : sampleDescription,
+    ].filter((part): part is string => !!part);
+    const sampleToggleLabel = `${sample.sample_id || 'Sample'}${
+        sampleDetailParts.length ? ` (${sampleDetailParts.join(', ')})` : ''
+    }: ${slideCountText}`;
+
     const multiPart = React.useMemo(
         () =>
             open || containsSelectedSlide
@@ -718,77 +821,133 @@ function SampleNode({
             style={{ borderBottom: `1px solid ${theme.border}` }}
             data-testid={`wsi-sample-node-${sample.sample_id}`}
         >
-            <div
-                onClick={() => setOpen(o => !o)}
-                onKeyDown={event => {
-                    if (
-                        event.target === event.currentTarget &&
-                        (event.key === 'Enter' || event.key === ' ')
-                    ) {
-                        event.preventDefault();
-                        setOpen(o => !o);
-                    }
-                }}
-                role="button"
-                tabIndex={0}
-                aria-expanded={open}
-                aria-label={`${sample.sample_id || 'Sample'} slides`}
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '8px 12px 6px',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                }}
-            >
-                <i
-                    className={`fa fa-caret-${open ? 'down' : 'right'}`}
-                    aria-hidden="true"
+            {/* The toggle is a native button; the second line sits outside
+                it, so the OncoTree link is not nested in the button. */}
+            <div style={{ padding: '8px 12px 6px' }}>
+                <button
+                    type="button"
+                    onClick={toggleOpen}
+                    aria-expanded={open}
+                    aria-label={sampleToggleLabel}
+                    data-testid={`wsi-sample-toggle-${sample.sample_id}`}
                     style={{
-                        fontSize: 12,
-                        color: theme.muted,
-                        flexShrink: 0,
-                        width: 8,
-                    }}
-                />
-                <div
-                    style={{
-                        flex: 1,
-                        minWidth: 0,
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 5,
+                        gap: 6,
+                        width: '100%',
+                        padding: 0,
+                        border: 0,
+                        background: 'none',
+                        font: 'inherit',
+                        color: 'inherit',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        userSelect: 'none',
                     }}
                 >
-                    {sample.sample_id && renderSampleLabel?.(sample.sample_id)}
-                    <div
-                        style={{
-                            fontSize: 13,
-                            fontWeight: 600,
-                            color: theme.blue,
-                            ...ellipsisStyle,
-                        }}
-                    >
-                        {sample.sample_id || '—'}
-                    </div>
-                </div>
-                <DefaultTooltip
-                    trigger={['hover']}
-                    placement="left"
-                    overlay={<span>Viewable slides shown in this sample</span>}
-                >
-                    <span
+                    <i
+                        className={`fa fa-caret-${open ? 'down' : 'right'}`}
+                        aria-hidden="true"
                         style={{
                             fontSize: 12,
                             color: theme.muted,
                             flexShrink: 0,
+                            width: 8,
+                        }}
+                    />
+                    <span
+                        style={{
+                            flex: 1,
+                            minWidth: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 5,
                         }}
                     >
-                        {visibleSlideCount}{' '}
-                        {pluralize('slide', visibleSlideCount)}
+                        {sample.sample_id &&
+                            renderSampleLabel?.(sample.sample_id)}
+                        <span
+                            style={{
+                                fontSize: 13,
+                                fontWeight: 600,
+                                color: theme.blue,
+                                ...ellipsisStyle,
+                            }}
+                        >
+                            {sample.sample_id || '—'}
+                        </span>
                     </span>
-                </DefaultTooltip>
+                    <DefaultTooltip
+                        trigger={['hover']}
+                        placement="left"
+                        overlay={
+                            <span>Viewable slides shown in this sample</span>
+                        }
+                    >
+                        <span
+                            style={{
+                                fontSize: 12,
+                                color: theme.muted,
+                                flexShrink: 0,
+                            }}
+                        >
+                            {slideCountText}
+                        </span>
+                    </DefaultTooltip>
+                </button>
+                {/* The badges and cancer type share one truncated line
+                    under the sample ID. Clicking it toggles the sample too;
+                    keyboard users have the button above. */}
+                {sampleDetailParts.length > 0 && (
+                    <div
+                        onClick={toggleOpen}
+                        data-testid={`wsi-sample-details-${sample.sample_id}`}
+                        style={{
+                            fontSize: 11,
+                            color: theme.muted,
+                            marginTop: 2,
+                            marginLeft: 14,
+                            cursor: 'pointer',
+                            userSelect: 'none',
+                            ...ellipsisStyle,
+                        }}
+                    >
+                        {sample.sample_type && (
+                            <span
+                                style={{
+                                    display: 'inline-block',
+                                    fontSize: 10,
+                                    fontWeight: 700,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '.4px',
+                                    padding: '1px 5px',
+                                    borderRadius: 3,
+                                    background: isPrimarySample
+                                        ? theme.blueLight
+                                        : theme.headerBg,
+                                    color: isPrimarySample
+                                        ? theme.blue
+                                        : theme.muted,
+                                    marginRight: 4,
+                                }}
+                            >
+                                {sample.sample_type}
+                            </span>
+                        )}
+                        {sample.oncotree_code && (
+                            <WsiOncoTreeBadge
+                                code={sample.oncotree_code}
+                                name={cancerTypeName}
+                                site={sample.primary_site}
+                            />
+                        )}
+                        {!sample.oncotree_code && sampleDescription && (
+                            <span title={sampleDescription}>
+                                {sampleDescription}
+                            </span>
+                        )}
+                    </div>
+                )}
             </div>
             {open && (
                 <div style={{ padding: '0 10px 8px' }}>
@@ -818,6 +977,7 @@ const MemoSampleNode = React.memo(SampleNode, (prev, next) => {
     if (
         prev.sample !== next.sample ||
         prev.containsSelectedSlide !== next.containsSelectedSlide ||
+        prev.dataVersion !== next.dataVersion ||
         prev.sampleIndex !== next.sampleIndex ||
         prev.filteredSlides !== next.filteredSlides ||
         prev.onSelectSlide !== next.onSelectSlide ||
