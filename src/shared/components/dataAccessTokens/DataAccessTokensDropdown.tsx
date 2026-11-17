@@ -52,6 +52,11 @@ export class DataAccessTokensDropdown extends React.Component<
     @computed get getDatDropdownList(): any {
         const listItems = [
             {
+                id: 'myAccount',
+                action: <Link to="/account">My Account</Link>,
+                hide: false,
+            },
+            {
                 id: 'signout',
                 action: (
                     <a
