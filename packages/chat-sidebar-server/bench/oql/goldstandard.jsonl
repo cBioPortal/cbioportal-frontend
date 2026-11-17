@@ -1,0 +1,94 @@
+{"id": "1", "prompt": "Give me BRAF V600E mutations", "expected": "BRAF: MUT=V600E", "category": "mutation_subtype", "composition": "single", "complexity": "medium"}
+{"id": "2", "prompt": "IDH1 Driver mutations", "expected": "IDH1: DRIVER_MUT", "category": "mutation_basic", "composition": "single", "complexity": "medium"}
+{"id": "3", "prompt": "Give patients with BRCA truncating mutations and EGFR amplifications", "expected": "BRCA1: MUT=TRUNC; BRCA2: MUT=TRUNC; EGFR: AMP", "category": "mixed_modal", "composition": "multi_clause", "complexity": "high"}
+{"id": "4", "prompt": "Give me EGFR high expression and PTEN low expression genes", "expected": "EGFR: EXP>2\nPTEN: EXP<-2", "category": "expression", "composition": "multi_clause", "complexity": "high"}
+{"id": "5", "prompt": "EGFR mutations in the tyrosine kinase domain (positions 718-854)", "expected": "EGFR: MUT = (718-854)", "category": "mutation_range", "composition": "single", "complexity": "medium"}
+{"id": "6", "prompt": "EGFR gain", "expected": "EGFR: GAIN", "category": "cna", "composition": "single", "complexity": "low"}
+{"id": "7", "prompt": "BRAF(?) truncating mutations", "expected": "BRAF: MUT=TRUNC", "category": "mutation_subtype", "composition": "single", "complexity": "medium"}
+{"id": "8", "prompt": "Show me TMPRSS2 gene fusions", "expected": "TMPRSS2: FUSION", "category": "fusion", "composition": "single", "complexity": "low"}
+{"id": "9", "prompt": "Show me samples with homozygous deletions in CDKN2A.", "expected": "CDKN2A: HOMDEL", "category": "cna", "composition": "single", "complexity": "low"}
+{"id": "10", "prompt": "Show me samples with heterozygous loss of TP53", "expected": "TP53: HETLOSS", "category": "cna", "composition": "single", "complexity": "low"}
+{"id": "11", "prompt": "Show me samples with copy-number gain or amplification of MYC", "expected": "MYC: CNA >= GAIN", "category": "cna", "composition": "single", "complexity": "medium"}
+{"id": "12", "prompt": "Show me samples with high EGFR protein expression (greater than 2)", "expected": "EGFR: PROT > 2", "category": "protein", "composition": "single", "complexity": "medium"}
+{"id": "13", "prompt": "Show me samples without truncating TP53 mutations", "expected": "TP53: MUT != TRUNC", "category": "mutation_exclusion", "composition": "single", "complexity": "medium"}
+{"id": "14", "prompt": "Find alterations in MDM2 and MDM4 as a group", "expected": "[MDM2 MDM4]", "category": "mixed_modal", "composition": "merged_track", "complexity": "high"}
+{"id": "15", "prompt": "Show me mutations in KRAS, NRAS, or HRAS", "expected": "DATATYPES: MUT; KRAS NRAS HRAS", "category": "mutation_basic", "composition": "datatypes", "complexity": "high"}
+{"id": "16", "prompt": "Find samples with TP53 mutations and MDM2 amplifications", "expected": "TP53: MUT; MDM2: AMP", "category": "mixed_modal", "composition": "multi_clause", "complexity": "high"}
+{"id": "17", "prompt": "Show me MYC or MYCN amplifications", "expected": "MYC: AMP; MYCN: AMP", "category": "cna", "composition": "multi_gene", "complexity": "high"}
+{"id": "18", "prompt": "Samples with TP53 mutations but not truncating, and MDM2 amplification", "expected": "TP53: MUT != TRUNC; MDM2: AMP", "category": "mixed_modal", "composition": "multi_clause", "complexity": "high"}
+{"id": "19", "prompt": "Find patients with germline BRCA1 mutations", "expected": "BRCA1: MUT=GERMLINE", "category": "mutation_basic", "composition": "single", "complexity": "medium"}
+{"id": "20", "prompt": "Find patients with somatic BRCA1 mutations", "expected": "BRCA1: MUT=SOMATIC", "category": "mutation_basic", "composition": "single", "complexity": "medium"}
+{"id": "21", "prompt": "Show samples with TP53 nonsense or frameshift mutations.", "expected": "TP53: NONSENSE FRAMESHIFT", "category": "mutation_subtype", "composition": "single", "complexity": "medium"}
+{"id": "22", "prompt": "Find samples where the CCNE1 gene is highly overexpressed. (Z score ≥ 3)", "expected": "CCNE1: EXP >= 3", "category": "expression", "composition": "single", "complexity": "medium"}
+{"id": "23", "prompt": "Find EGFR mutations that are not the T790M substitution.", "expected": "EGFR: MUT != T790M", "category": "mutation_exclusion", "composition": "single", "complexity": "medium"}
+{"id": "24", "prompt": "Identify samples with significantly elevated EGFR_PY992 protein levels (Z-score ≥ 2).", "expected": "EGFR_PY992: PROT >= 2", "category": "protein", "composition": "single", "complexity": "medium"}
+{"id": "25", "prompt": "Show CDKN2A copy number alterations that are amplifications or shallow deletions.", "expected": "CDKN2A: AMP HETLOSS", "category": "cna", "composition": "single", "complexity": "medium"}
+{"id": "26", "prompt": "Show all amplifications, gains and deep deletions in MDM2, TP53, and CDK4.", "expected": "DATATYPES: AMP GAIN HOMDEL; MDM2 TP53 CDK4", "category": "cna", "composition": "datatypes", "complexity": "high"}
+{"id": "27", "prompt": "Find TP53 mutations that are fully contained within the protein position range 150 to 250.", "expected": "TP53: (150-250*)", "category": "mutation_range", "composition": "single", "complexity": "medium"}
+{"id": "28", "prompt": "Find BRCA1 alterations that are driver mutations or driver fusions.", "expected": "BRCA1: MUT_DRIVER FUSION_DRIVER", "category": "mixed_modal", "composition": "single", "complexity": "high"}
+{"id": "29", "prompt": "Create a merged OncoPrint track named \"MET PATHWAY\" containing MET, HGF, and GAB1.", "expected": "[\"MET PATHWAY\" MET HGF GAB1]", "category": "mixed_modal", "composition": "merged_track", "complexity": "high"}
+{"id": "30", "prompt": "Generate a query for EGFR that selects only known driver fusions, known driver amplifications, and known driver missense mutations.", "expected": "EGFR: FUSION_DRIVER AMP_DRIVER MUT=MISSENSE_DRIVER", "category": "mixed_modal", "composition": "single", "complexity": "high"}
+{"id": "31", "prompt": "Find all genetic alterations in IDH1 and IDH2 that overlap with the protein position range 132 to 140.", "expected": "IDH1: (132-140); IDH2: (132-140)", "category": "mutation_range", "composition": "multi_gene", "complexity": "high"}
+{"id": "32", "prompt": "Identify all samples that have activating mutations in either KRAS or NRAS in the G12 or G13 codons.", "expected": "KRAS: G12_DRIVER G13_DRIVER; NRAS: G12_DRIVER G13_DRIVER", "category": "mutation_range", "composition": "multi_gene", "complexity": "high"}
+{"id": "33", "prompt": "Show all amplifications, copy number gains, deep deletions, and high expressions (> 1.5) in CDKN2A, MDM2, and TP53.", "expected": "DATATYPES: AMP GAIN HOMDEL EXP > 1.5; CDKN2A MDM2 TP53", "category": "mixed_modal", "composition": "datatypes", "complexity": "high"}
+{"id": "34", "prompt": "Show me alterations in CDK inhibitors CDKN2A and CDKN2B as a group", "expected": "[\"CDK INHIBITORS\" CDKN2A CDKN2B]", "category": "mixed_modal", "composition": "merged_track", "complexity": "high"}
+{"id": "35", "prompt": "Show samples with high AKT1 protein expression (Z-score > 2).", "expected": "AKT1: PROT > 2", "category": "protein", "composition": "single", "complexity": "medium"}
+{"id": "36", "prompt": "Show samples with elevated MTOR protein expression (Z-score > 2).", "expected": "MTOR: PROT > 2", "category": "protein", "composition": "single", "complexity": "medium"}
+{"id": "37", "prompt": "Show samples with high MAPK1 phosphoprotein levels (Z-score > 2).", "expected": "MAPK1: PROT > 2", "category": "protein", "composition": "single", "complexity": "medium"}
+{"id": "38", "prompt": "List samples with NTRK1 gene fusions.", "expected": "NTRK1: FUSION", "category": "fusion", "composition": "single", "complexity": "low"}
+{"id": "39", "prompt": "Show RET fusion-positive samples.", "expected": "RET: FUSION", "category": "fusion", "composition": "single", "complexity": "low"}
+{"id": "40", "prompt": "Find samples with SMAD4 splice site mutations.", "expected": "SMAD4: SPLICE", "category": "mutation_subtype", "composition": "single", "complexity": "medium"}
+{"id": "41", "prompt": "Find samples with ARID1A frameshift mutations.", "expected": "ARID1A: FRAMESHIFT", "category": "mutation_subtype", "composition": "single", "complexity": "medium"}
+{"id": "42", "prompt": "Find samples with FBXW7 nonsense mutations.", "expected": "FBXW7: NONSENSE", "category": "mutation_subtype", "composition": "single", "complexity": "medium"}
+{"id": "43", "prompt": "Find KRAS-mutant samples excluding G12 mutations.", "expected": "KRAS: MUT != G12", "category": "mutation_exclusion", "composition": "single", "complexity": "medium"}
+{"id": "44", "prompt": "Find CDH1-mutant samples excluding missense mutations.", "expected": "CDH1: MUT != MISSENSE", "category": "mutation_exclusion", "composition": "single", "complexity": "medium"}
+{"id": "45", "prompt": "Find PIK3CA mutations between positions 542 and 546.", "expected": "PIK3CA: (542-546)", "category": "mutation_range", "composition": "single", "complexity": "medium"}
+{"id": "46", "prompt": "Find NOTCH1 mutations after position 1500.", "expected": "NOTCH1: (1501-)", "category": "mutation_range", "composition": "single", "complexity": "medium"}
+{"id": "47", "prompt": "Find RB1 mutations fully contained within positions 700 to 900.", "expected": "RB1: (700-900*)", "category": "mutation_range", "composition": "single", "complexity": "medium"}
+{"id": "48", "prompt": "Show amplifications and high expression in MYC and MYCN.", "expected": "DATATYPES: AMP EXP > 2; MYC MYCN", "category": "mixed_modal", "composition": "datatypes", "complexity": "high"}
+{"id": "49", "prompt": "Show deep deletions or low expression (Z-score <= -1) in CDKN2A and CDKN2B.", "expected": "DATATYPES: HOMDEL EXP <= -1; CDKN2A CDKN2B", "category": "mixed_modal", "composition": "datatypes", "complexity": "high"}
+{"id": "50", "prompt": "Show truncating mutations and deep deletions in SMAD4 and TGFBR2.", "expected": "DATATYPES: TRUNC HOMDEL; SMAD4 TGFBR2", "category": "mixed_modal", "composition": "datatypes", "complexity": "high"}
+{"id": "51", "prompt": "Create a merged track named \"PI3K pathway\" including PIK3CA, PTEN, and AKT1.", "expected": "[\"PI3K pathway\" PIK3CA PTEN AKT1]", "category": "mixed_modal", "composition": "merged_track", "complexity": "high"}
+{"id": "52", "prompt": "Create a merged track named \"Cell cycle loss\" showing truncating mutations in RB1, deep deletions in CDKN2A, and deep deletions in CCND1.", "expected": "[\"Cell cycle loss\" RB1: TRUNC; CDKN2A: HOMDEL; CCND1: HOMDEL]", "category": "mixed_modal", "composition": "merged_track", "complexity": "high"}
+{"id": "53", "prompt": "Find KRAS missense mutations.", "expected": "KRAS: MUT=MISSENSE", "category": "mutation_subtype", "composition": "single", "complexity": "medium"}
+{"id": "54", "prompt": "Find KIT in-frame insertions and deletions.", "expected": "KIT: MUT=INFRAME", "category": "mutation_subtype", "composition": "single", "complexity": "medium"}
+{"id": "55", "prompt": "Show samples with low PTEN protein expression (Z-score < -2).", "expected": "PTEN: PROT < -2", "category": "protein", "composition": "single", "complexity": "medium"}
+{"id": "56", "prompt": "Find TERT promoter mutations.", "expected": "TERT: PROMOTER", "category": "promoter", "composition": "single", "complexity": "low"}
+{"id": "57", "prompt": "Find FGFR3 mutations in the extracellular domain (up to position 400).", "expected": "FGFR3: (-400)", "category": "mutation_range", "composition": "single", "complexity": "medium"}
+{"id": "58", "prompt": "Show samples with germline truncating BRCA2 mutations.", "expected": "BRCA2: TRUNC_GERMLINE", "category": "mutation_subtype", "composition": "single", "complexity": "medium"}
+{"id": "59", "prompt": "Find all driver alterations in EGFR.", "expected": "EGFR: DRIVER", "category": "mutation_basic", "composition": "single", "complexity": "medium"}
+{"id": "60", "prompt": "Find CDH1 mutations that disrupt the start codon.", "expected": "CDH1: MUT=NONSTART", "category": "mutation_subtype", "composition": "single", "complexity": "medium"}
+{"id": "61", "prompt": "Find TP53 mutations that affect the stop codon.", "expected": "TP53: MUT=NONSTOP", "category": "mutation_subtype", "composition": "single", "complexity": "medium"}
+{"id": "62", "prompt": "Show all alterations in TP53.", "expected": "TP53", "category": "mixed_modal", "composition": "single", "complexity": "low"}
+{"id": "63", "prompt": "Find all BRAF mutations.", "expected": "BRAF: MUT", "category": "mutation_basic", "composition": "single", "complexity": "low"}
+{"id": "64", "prompt": "Find CDKN2A deep deletions or low mRNA expression (Z-score < -1).", "expected": "CDKN2A: HOMDEL EXP < -1", "category": "mixed_modal", "composition": "single", "complexity": "high"}
+{"id": "65", "prompt": "Find somatic missense mutations in EGFR.", "expected": "EGFR: MISSENSE_SOMATIC", "category": "mutation_subtype", "composition": "single", "complexity": "medium"}
+{"id": "66", "prompt": "Find germline driver nonsense mutations in BRCA1.", "expected": "BRCA1: NONSENSE_GERMLINE_DRIVER", "category": "mutation_subtype", "composition": "single", "complexity": "high"}
+{"id": "67", "prompt": "Find driver homozygous deletions in PTEN.", "expected": "PTEN: HOMDEL_DRIVER", "category": "cna", "composition": "single", "complexity": "medium"}
+{"id": "68", "prompt": "Show MDM2 and MDM4 as a merged group alongside TP53 mutations.", "expected": "[MDM2 MDM4]; TP53: MUT", "category": "mixed_modal", "composition": "mixed", "complexity": "high"}
+{"id": "69", "prompt": "Find TP53 mutations that are either the R175H hotspot or any truncating mutation.", "expected": "TP53: R175H TRUNC", "category": "mutation_subtype", "composition": "single", "complexity": "medium"}
+{"id": "70", "prompt": "Find TP53 copy number deletions of any depth.", "expected": "TP53: CNA <= HETLOSS", "category": "cna", "composition": "single", "complexity": "medium"}
+{"id": "71", "prompt": "Find samples with CDK4 or CDK6 amplification.", "expected": "CDK4: AMP; CDK6: AMP", "category": "cna", "composition": "multi_gene", "complexity": "medium"}
+{"id": "72", "prompt": "Find samples with germline mutations in BRCA1 or BRCA2.", "expected": "BRCA1: MUT_GERMLINE; BRCA2: MUT_GERMLINE", "category": "mutation_basic", "composition": "multi_gene", "complexity": "medium"}
+{"id": "73", "prompt": "Show samples with TP53 mutations and either MDM2 or MDM4 amplification.", "expected": "TP53: MUT; MDM2: AMP; MDM4: AMP", "category": "mixed_modal", "composition": "multi_clause", "complexity": "high"}
+{"id": "74", "prompt": "Find samples with truncating mutations in RB1 and amplification of CCND1.", "expected": "RB1: TRUNC; CCND1: AMP", "category": "mixed_modal", "composition": "multi_clause", "complexity": "high"}
+{"id": "75", "prompt": "Show samples with PIK3CA mutations, AKT1 amplifications, or PTEN deep deletions.", "expected": "PIK3CA: MUT; AKT1: AMP; PTEN: HOMDEL", "category": "mixed_modal", "composition": "multi_clause", "complexity": "high"}
+{"id": "76", "prompt": "Find KRAS-mutant samples excluding G12, and NRAS-mutant samples excluding Q61.", "expected": "KRAS: MUT != G12; NRAS: MUT != Q61", "category": "mutation_exclusion", "composition": "multi_gene", "complexity": "high"}
+{"id": "77", "prompt": "Find samples with EGFR amplification and high MET protein expression (Z-score > 2).", "expected": "EGFR: AMP; MET: PROT > 2", "category": "mixed_modal", "composition": "multi_clause", "complexity": "high"}
+{"id": "78", "prompt": "Find samples with KRAS G12 or G13 mutations, and MET amplification.", "expected": "KRAS: G12 G13; MET: AMP", "category": "mixed_modal", "composition": "multi_clause", "complexity": "high"}
+{"id": "79", "prompt": "Show FGFR1 mutations, FGFR3 mutations, and PTEN deep deletions.", "expected": "FGFR1: MUT; FGFR3: MUT; PTEN: HOMDEL", "category": "mixed_modal", "composition": "multi_clause", "complexity": "high"}
+{"id": "80", "prompt": "Show all alterations in KRAS, NRAS, HRAS, and BRAF.", "expected": "KRAS NRAS HRAS BRAF", "category": "mixed_modal", "composition": "multi_gene", "complexity": "low"}
+{"id": "81", "prompt": "Find driver fusions in NTRK1.", "expected": "NTRK1: FUSION_DRIVER", "category": "fusion", "composition": "single", "complexity": "medium"}
+{"id": "82", "prompt": "Find samples with fusions in ALK, RET, or ROS1.", "expected": "ALK: FUSION; RET: FUSION; ROS1: FUSION", "category": "fusion", "composition": "multi_gene", "complexity": "medium"}
+{"id": "83", "prompt": "Show ALK fusions or ALK amplifications.", "expected": "ALK: FUSION AMP", "category": "mixed_modal", "composition": "single", "complexity": "medium"}
+{"id": "84", "prompt": "Show all fusions in ALK, RET, ROS1, and NTRK1.", "expected": "DATATYPES: FUSION; ALK RET ROS1 NTRK1", "category": "fusion", "composition": "datatypes", "complexity": "high"}
+{"id": "85", "prompt": "Find samples with ALK fusions or EGFR mutations.", "expected": "ALK: FUSION; EGFR: MUT", "category": "mixed_modal", "composition": "multi_clause", "complexity": "high"}
+{"id": "86", "prompt": "Find TMPRSS2-ERG fusions.", "expected": "TMPRSS2::ERG", "category": "fusion", "composition": "single", "complexity": "high"}
+{"id": "87", "prompt": "Find samples where ALK is fused downstream of EML4.", "expected": "ALK: EML4::FUSION", "category": "fusion", "composition": "single", "complexity": "high"}
+{"id": "88", "prompt": "Find any fusion where TMPRSS2 is the upstream partner regardless of the downstream gene.", "expected": "TMPRSS2: FUSION::", "category": "fusion", "composition": "single", "complexity": "high"}
+{"id": "89", "prompt": "Find any fusion where ERG is the downstream partner regardless of the upstream gene.", "expected": "ERG: ::FUSION", "category": "fusion", "composition": "single", "complexity": "high"}
+{"id": "90", "prompt": "Find fusions where TMPRSS2 is the upstream gene and the downstream partner is a non-genic region.", "expected": "TMPRSS2: FUSION::-", "category": "fusion", "composition": "single", "complexity": "high"}
+{"id": "91", "prompt": "Find fusions where ALK is the downstream gene and the upstream partner is a non-genic region.", "expected": "ALK: -::FUSION", "category": "fusion", "composition": "single", "complexity": "high"}
+{"id": "92", "prompt": "Find samples with ETV6-NTRK3 fusions.", "expected": "ETV6::NTRK3", "category": "fusion", "composition": "single", "complexity": "high"}
+{"id": "93", "prompt": "Find samples with BCR-ABL1 fusions.", "expected": "BCR::ABL1", "category": "fusion", "composition": "single", "complexity": "high"}
+{"id": "94", "prompt": "Show copy number gains and amplifications in CDK4 and MDM2.", "expected": "DATATYPES: CNA >= GAIN; CDK4 MDM2", "category": "cna", "composition": "datatypes", "complexity": "high"}

@@ -1,0 +1,12 @@
+{"id":"x1","prompt":"egfr exon 19","expected":"EGFR: (729-761)","category":"exon"}
+{"id":"x2","prompt":"EGFR exon 19 deletions","expected":"EGFR: INFRAME_(729-761)","category":"exon"}
+{"id":"x3","prompt":"EGFR exon 20 insertions","expected":"EGFR: INFRAME_(762-823)","category":"exon"}
+{"id":"x4","prompt":"EGFR exon 19 deletions or L858R","expected":"EGFR: INFRAME_(729-761) MUT=L858R","category":"exon"}
+{"id":"x5","prompt":"KIT exon 9 mutations","expected":"KIT: (449-514)","category":"exon"}
+{"id":"x6","prompt":"BRAF exon 15 mutations","expected":"BRAF: (581-620)","category":"exon"}
+{"id":"x7","prompt":"MET exon 14 alterations","expected":"MET: (963-1010)","category":"exon"}
+{"id":"x8","prompt":"KRAS exon 2 or exon 3 mutations","expected":"KRAS: (1-37) (38-97)","category":"exon"}
+{"id":"x9","prompt":"IDH1 exon 4 missense mutations","expected":"IDH1: MISSENSE_(41-138)","category":"exon"}
+{"id":"x10","prompt":"CTNNB1 exon 3 mutations","expected":"CTNNB1: (5-81)","category":"exon"}
+{"id":"x11","prompt":"EGFR exon 40 mutations","expected":"FAIL","category":"exon_error"}
+{"id":"x12","prompt":"KRAS exon 1 mutations","expected":"FAIL","category":"exon_error"}
