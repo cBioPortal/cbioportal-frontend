@@ -113,3 +113,22 @@ export function isStudyWideResource(
         tab.totalCount > 0 && tab.patientCount === 0 && tab.sampleCount === 0
     );
 }
+
+/**
+ * A study view's resource tabs, in the whole studies' order: a study-wide one as listed for the
+ * studies, since a selection never matches its rows; any other as counted for the selection, and
+ * left out when the selection has none of it.
+ */
+export function studyViewResourceTabs<
+    T extends Pick<
+        ResourceTableTab,
+        'resourceId' | 'totalCount' | 'patientCount' | 'sampleCount'
+    >
+>(studyTabs: T[], selectionTabs: T[]): T[] {
+    const selectionTabById = _.keyBy(selectionTabs, tab => tab.resourceId);
+    return studyTabs
+        .map(tab =>
+            isStudyWideResource(tab) ? tab : selectionTabById[tab.resourceId]
+        )
+        .filter((tab): tab is T => tab !== undefined);
+}

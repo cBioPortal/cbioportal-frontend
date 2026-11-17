@@ -95,9 +95,13 @@ import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTabl
 import ResourceDataTable from 'shared/components/resourceTable/ResourceDataTable';
 import { ResourceViewerStore } from 'shared/components/resourceViewer/ResourceViewerStore';
 import ResourceViewerTab from 'shared/components/resourceViewer/ResourceViewerTab';
+import { CellExplorerSelection } from 'shared/components/resourceViewer/cellExplorer/cellExplorerUtils';
 import resourceViewerStyles from 'shared/components/resourceViewer/styles.module.scss';
 import { ResourceTableTab } from 'shared/api/resourceTableClient';
-import { isStudyWideResource } from 'shared/lib/ResourceTableUtils';
+import {
+    isStudyWideResource,
+    studyViewResourceTabs,
+} from 'shared/lib/ResourceTableUtils';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -156,6 +160,13 @@ export default class StudyViewPage extends React.Component<
     @observable private toolbarLeft: number = 0;
 
     private readonly resourceTableStore = new ResourceTableStore({
+        hideResource: isHiddenFromResourceViews,
+    });
+    /**
+     * The resources of the whole studies, whatever the charts select. Study-wide resources have
+     * no patient or sample to match a selection, so only this store lists them while filtered.
+     */
+    private readonly studyResourceTableStore = new ResourceTableStore({
         hideResource: isHiddenFromResourceViews,
     });
     private readonly resourceTableStores = new Map<
@@ -343,6 +354,12 @@ export default class StudyViewPage extends React.Component<
                 allSamples,
                 coversWholeStudy
             );
+            const studyIds = _.uniq(
+                (allSamples || samples).map(s => s.studyId)
+            );
+            if (!_.isEqual(studyIds, this.studyResourceTableStore.studyIds)) {
+                this.studyResourceTableStore.setContext(studyIds);
+            }
             this.resourceTableStores.forEach(store =>
                 store.setContextFromSelection(
                     samples,
@@ -363,7 +380,7 @@ export default class StudyViewPage extends React.Component<
                 this.urlWrapper.tabId ===
                     StudyViewPageTabKeyEnum.FILES_AND_LINKS
             ) {
-                const firstTab = this.resourceTableStore.visibleTabs[0];
+                const firstTab = this.resourceTableTabs[0];
                 if (firstTab) {
                     this.urlWrapper.setTab(
                         getStudyViewResourceTableTabId(firstTab.resourceId)
@@ -392,12 +409,9 @@ export default class StudyViewPage extends React.Component<
         return store;
     }
 
+    // Viewers show study-wide resources, so they read the whole studies.
     private setViewerStoreContext(store: ResourceViewerStore) {
-        store.setContext(
-            this.resourceTableStore.studyIds,
-            this.resourceTableStore.patientIdentifiers,
-            this.resourceTableStore.sampleIdentifiers
-        );
+        store.setContext(this.studyResourceTableStore.studyIds, [], []);
     }
 
     private getOrCreateViewerStore(
@@ -716,10 +730,20 @@ export default class StudyViewPage extends React.Component<
         );
     }
 
+    @computed get resourceTableTabs(): ResourceTableTab[] {
+        return studyViewResourceTabs(
+            this.studyResourceTableStore.visibleTabs,
+            this.resourceTableStore.visibleTabs
+        );
+    }
+
     readonly resourceTabs = MakeMobxView({
-        await: () => [this.resourceTableStore.tabs],
+        await: () => [
+            this.resourceTableStore.tabs,
+            this.studyResourceTableStore.tabs,
+        ],
         render: () => {
-            const apiTabs = this.resourceTableStore.visibleTabs;
+            const apiTabs = this.resourceTableTabs;
             if (apiTabs.length === 0) {
                 return [] as JSX.Element[];
             }
@@ -769,6 +793,7 @@ export default class StudyViewPage extends React.Component<
                     resourceDisplayName={tab.label}
                     hideHeader={true}
                     fillWindowHeight={true}
+                    cellExplorerSelection={this.cellExplorerSelection}
                     iframeErrorMessage={
                         definition
                             ? getResourceConfig(definition).iframeErrorMessage
@@ -784,8 +809,16 @@ export default class StudyViewPage extends React.Component<
         );
     }
 
+    /** The samples the charts filter to, or undefined when no chart is filtered. */
+    @computed get cellExplorerSelection(): CellExplorerSelection | undefined {
+        return this.store.chartsAreFiltered &&
+            this.store.selectedSamples.isComplete
+            ? this.store.selectedSamples.result
+            : undefined;
+    }
+
     @computed get isStudyWideViewerTabActive(): boolean {
-        return (this.resourceTableStore.tabs.result || []).some(
+        return this.resourceTableTabs.some(
             tab =>
                 isStudyWideResource(tab) &&
                 (this.store.currentTab as string) ===
@@ -794,7 +827,7 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get hasNewResourceTabs(): boolean {
-        return this.resourceTableStore.visibleTabs.length > 0;
+        return this.resourceTableTabs.length > 0;
     }
 
     @computed get customTabs() {
