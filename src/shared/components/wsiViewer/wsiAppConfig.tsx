@@ -29,7 +29,11 @@ import { uniqueGenomicLocations } from 'shared/lib/MutationUtils';
 import { getGenomeNexusUrl } from 'shared/lib/StoreUtils';
 import { getSimplifiedMutationType } from 'shared/lib/oql/AccessorsForOqlFilter';
 import { redirectToLogin } from 'shared/lib/redirectHelpers';
-import { useWsiClinicalData, WsiPatientClinicalData } from './wsiClinicalRows';
+import {
+    useWsiClinicalData,
+    WsiClinicalState,
+    WsiPatientClinicalData,
+} from './wsiClinicalRows';
 
 const WSI_OSD_PREFIX_URL = '/reactapp/osd-images/';
 
@@ -150,6 +154,18 @@ export type AppWsiViewerProps = Omit<
     clinicalData?: WsiPatientClinicalData | null;
 };
 
+/**
+ * The viewer's `sampleClinicalData`: the loaded sample data, `null` while it
+ * loads, and unset after a failed request so the viewer requests the sample
+ * attributes itself.
+ */
+export function wsiSampleClinicalData(
+    clinical: WsiClinicalState | null | undefined
+): WsiViewerProps['sampleClinicalData'] {
+    if (clinical === null) return undefined;
+    return clinical ? clinical.sampleData : null;
+}
+
 /** The package viewer configured for this portal, loaded lazily. */
 export function AppWsiViewer({
     userName,
@@ -179,7 +195,7 @@ export function AppWsiViewer({
                 }
                 renderLoading={renderWsiLoading}
                 clinicalRows={clinical?.rows}
-                sampleClinicalData={clinical ? clinical.sampleData : null}
+                sampleClinicalData={wsiSampleClinicalData(clinical)}
             />
         </React.Suspense>
     );

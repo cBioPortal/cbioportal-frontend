@@ -3,8 +3,10 @@
  */
 import {
     clearWsiCbioportalRequestCaches,
+    copyNumberCountKey,
     fetchClinicalDataRecords,
     fetchCnaData,
+    fetchCopyNumberCounts,
     fetchMutationData,
     fetchStructuralVariantData,
     fetchStudyMolecularProfiles,
@@ -347,7 +349,7 @@ describe('fetchCnaData', () => {
                 DISCRETE_CNA_PROFILE,
             ]),
             {
-                match: '/molecular-data/fetch',
+                match: '/discrete-copy-number/fetch',
                 respond: (body: { sampleIds: string[] }) => ({
                     json: values
                         .filter(([sampleId]) =>
@@ -358,23 +360,14 @@ describe('fetchCnaData', () => {
                                 sampleId,
                                 hugoGeneSymbol,
                                 entrezGeneId,
-                                value,
+                                alteration,
                             ]) => ({
                                 sampleId,
-                                value,
+                                alteration,
+                                entrezGeneId,
                                 gene: { hugoGeneSymbol, entrezGeneId },
                             })
                         ),
-                }),
-            },
-            {
-                match: '/discrete-copy-number-counts/fetch',
-                respond: (body: any[]) => ({
-                    json: body.map(query => ({
-                        ...query,
-                        numberOfSamples: 200,
-                        numberOfSamplesWithAlterationInGene: 10,
-                    })),
                 }),
             },
         ];
@@ -391,92 +384,118 @@ describe('fetchCnaData', () => {
         ]);
     });
 
-    it('counts only the altered genes, in the discrete profile', async () => {
+    it('requests the amplifications and deep deletions of the discrete profile', async () => {
         const fetch = installFetch(
             cnaRoutes([
                 ['S-1', 'ERBB2', 2064, 2],
-                ['S-1', 'TP53', 7157, 0],
                 ['S-2', 'CDKN2A', 1029, -2],
             ])
         );
 
-        const bySample = await fetchCnaData('study', samples);
+        const cnaData = await fetchCnaData('study', samples);
 
-        expect(
-            fetch.calls.find(call => call.url.includes('/molecular-data/fetch'))
-        ).toEqual({
-            url:
-                '/api/molecular-profiles/study_gistic/molecular-data/fetch?projection=DETAILED',
-            body: { sampleIds: ['S-1', 'S-2'] },
-        });
-        const counts = fetch.calls.find(call =>
-            call.url.includes('/discrete-copy-number-counts/fetch')
-        )!;
-        expect(counts.url).toBe(
-            '/api/molecular-profiles/study_gistic/discrete-copy-number-counts/fetch'
-        );
-        expect(counts.body).toEqual([
-            { entrezGeneId: 2064, alteration: 2 },
-            { entrezGeneId: 1029, alteration: -2 },
-        ]);
-        expect(bySample!.get('S-1')).toEqual([
+        expect(fetch.calls.slice(1)).toEqual([
             {
-                gene: 'ERBB2',
-                entrezGeneId: 2064,
-                cnaValue: 2,
-                cohortAlteredCount: 10,
-                cohortProfiledCount: 200,
+                url:
+                    '/api/molecular-profiles/study_gistic/discrete-copy-number/fetch?discreteCopyNumberEventType=HOMDEL_AND_AMP&projection=DETAILED',
+                body: { sampleIds: ['S-1', 'S-2'] },
             },
         ]);
-    });
-
-    it('skips the counts when the samples have no alterations', async () => {
-        const fetch = installFetch(cnaRoutes([['S-1', 'TP53', 7157, 0]]));
-
-        const bySample = await fetchCnaData('study', samples);
-
-        expect(bySample!.size).toBe(0);
+        expect(cnaData!.profileId).toBe('study_gistic');
+        expect(cnaData!.bySample.get('S-1')).toEqual([
+            { gene: 'ERBB2', entrezGeneId: 2064, cnaValue: 2 },
+        ]);
+        expect(cnaData!.bySample.get('S-2')).toEqual([
+            { gene: 'CDKN2A', entrezGeneId: 1029, cnaValue: -2 },
+        ]);
         expect(fetch.count('/discrete-copy-number-counts/fetch')).toBe(0);
     });
 
-    it('caches the counts per gene and alteration', async () => {
-        const fetch = installFetch(
-            cnaRoutes([
-                ['S-1', 'ERBB2', 2064, 2],
-                ['S-2', 'CDKN2A', 1029, -2],
-            ])
+    it('is null when the request fails', async () => {
+        installFetch([
+            profilesRoute([DISCRETE_CNA_PROFILE]),
+            {
+                match: '/discrete-copy-number/fetch',
+                respond: () => ({ status: 500, json: [] }),
+            },
+        ]);
+
+        await expect(fetchCnaData('study', samples)).resolves.toBeNull();
+    });
+});
+
+describe('fetchCopyNumberCounts', () => {
+    function countsRoute(status = 200): Route {
+        return {
+            match: '/discrete-copy-number-counts/fetch',
+            respond: (body: any[]) => ({
+                status,
+                json: body.map(query => ({
+                    ...query,
+                    numberOfSamples: 200,
+                    numberOfSamplesWithAlterationInGene: 10,
+                })),
+            }),
+        };
+    }
+    const ERBB2_AMP = { gene: 'ERBB2', entrezGeneId: 2064, cnaValue: 2 };
+    const CDKN2A_HOMDEL = { gene: 'CDKN2A', entrezGeneId: 1029, cnaValue: -2 };
+
+    it('counts only the given alterations, once per gene and alteration', async () => {
+        const fetch = installFetch([countsRoute()]);
+
+        const counts = await fetchCopyNumberCounts('study_gistic', [
+            ERBB2_AMP,
+            CDKN2A_HOMDEL,
+            { ...ERBB2_AMP },
+            { gene: 'NOID', cnaValue: 2 },
+        ]);
+
+        expect(fetch.calls).toEqual([
+            {
+                url:
+                    '/api/molecular-profiles/study_gistic/discrete-copy-number-counts/fetch',
+                body: [
+                    { entrezGeneId: 2064, alteration: 2 },
+                    { entrezGeneId: 1029, alteration: -2 },
+                ],
+            },
+        ]);
+        expect(counts.get(copyNumberCountKey('study_gistic', 2064, 2))).toEqual(
+            expect.objectContaining({
+                numberOfSamples: 200,
+                numberOfSamplesWithAlterationInGene: 10,
+            })
         );
+    });
 
-        await fetchCnaData('study', [samples[1]]);
-        await fetchCnaData('study', samples);
+    it('makes no request without alterations', async () => {
+        const fetch = installFetch([countsRoute()]);
 
-        const countBodies = fetch.calls
-            .filter(call =>
-                call.url.includes('/discrete-copy-number-counts/fetch')
-            )
-            .map(call => call.body);
-        expect(countBodies).toEqual([
+        await expect(
+            fetchCopyNumberCounts('study_gistic', [])
+        ).resolves.toEqual(new Map());
+        expect(fetch.calls).toEqual([]);
+    });
+
+    it('caches the counts per gene and alteration', async () => {
+        const fetch = installFetch([countsRoute()]);
+
+        await fetchCopyNumberCounts('study_gistic', [ERBB2_AMP]);
+        await fetchCopyNumberCounts('study_gistic', [ERBB2_AMP, CDKN2A_HOMDEL]);
+
+        expect(fetch.calls.map(call => call.body)).toEqual([
             [{ entrezGeneId: 2064, alteration: 2 }],
             [{ entrezGeneId: 1029, alteration: -2 }],
         ]);
     });
 
-    it('keeps the alterations when the counts fail', async () => {
-        const routes = cnaRoutes([['S-1', 'ERBB2', 2064, 2]]);
-        routes[2] = {
-            match: '/discrete-copy-number-counts/fetch',
-            respond: () => ({ status: 500, json: [] }),
-        };
-        installFetch(routes);
+    it('rejects when the request fails', async () => {
+        installFetch([countsRoute(500)]);
 
-        const bySample = await fetchCnaData('study', samples);
-
-        expect(bySample!.get('S-1')).toEqual([
-            expect.objectContaining({
-                gene: 'ERBB2',
-                cohortAlteredCount: undefined,
-            }),
-        ]);
+        await expect(
+            fetchCopyNumberCounts('study_gistic', [ERBB2_AMP])
+        ).rejects.toThrow('500');
     });
 });
 

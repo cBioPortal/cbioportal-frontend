@@ -127,6 +127,28 @@ describe('MutationTable states', () => {
         expect(screen.getByText('—')).toBeTruthy();
         expect(screen.queryByText(/p\./)).toBeNull();
     });
+
+    it('labels germline mutations', () => {
+        render(
+            <MutationTable
+                sample={makeSample({
+                    mutations: [
+                        { ...KRAS, germline: true },
+                        {
+                            token: 'TP53 R175H',
+                            gene: 'TP53',
+                            proteinChange: 'R175H',
+                        },
+                    ],
+                })}
+            />
+        );
+
+        const labels = screen.getAllByTestId('wsi-mutation-germline');
+        expect(labels).toHaveLength(1);
+        expect(labels[0].textContent).toBe('Germline');
+        expect(labels[0].closest('tr')!.textContent).toContain('KRAS');
+    });
 });
 
 describe('molecular table details', () => {

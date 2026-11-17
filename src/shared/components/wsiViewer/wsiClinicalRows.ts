@@ -314,19 +314,19 @@ export function clearWsiClinicalRowsCache(): void {
 }
 
 /**
- * The patient's Clinical rows and sample data; undefined while loading or
- * after a failed request, which hides the section. They come from
- * `clinicalData` when the host has loaded it (`null` while it is still
- * loading); when it is unset the patient's data is fetched here.
+ * The patient's Clinical rows and sample data: undefined while loading, null
+ * after the request here failed. They come from `clinicalData` when the host
+ * has loaded it (`null` while it is still loading); when it is unset the
+ * patient's data is fetched here.
  */
 export function useWsiClinicalData(
     studyId: string,
     patientId: string,
     clinicalData?: WsiPatientClinicalData | null
-): WsiClinicalState | undefined {
+): WsiClinicalState | null | undefined {
     const [state, setState] = React.useState<{
         key: string;
-        clinical: WsiClinicalState;
+        clinical: WsiClinicalState | null;
     }>();
     const key = `${studyId}\u0000${patientId}`;
     const hostLoads = clinicalData !== undefined;
@@ -351,6 +351,7 @@ export function useWsiClinicalData(
                     '[WSI] patient clinical data fetch failed',
                     error
                 );
+                if (!cancelled) setState({ key, clinical: null });
             }
         );
         return () => {
@@ -362,7 +363,10 @@ export function useWsiClinicalData(
     return state?.key === key ? state.clinical : undefined;
 }
 
-/** The patient's Clinical rows; see `useWsiClinicalData`. */
+/**
+ * The patient's Clinical rows; undefined while loading or after a failed
+ * request, which hides the section. See `useWsiClinicalData`.
+ */
 export function useWsiClinicalRows(
     studyId: string,
     patientId: string,

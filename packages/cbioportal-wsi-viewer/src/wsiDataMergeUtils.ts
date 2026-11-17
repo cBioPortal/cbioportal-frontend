@@ -27,6 +27,8 @@ export type MutationApiRecord = {
     endPosition?: number;
     referenceAllele?: string;
     variantAllele?: string;
+    /** e.g. "Somatic" or "Germline". */
+    mutationStatus?: string | null;
 };
 
 /** The mutation's genomic location, when the API reported all of it. */
@@ -58,9 +60,11 @@ export function mutationGenomicLocation(
     };
 }
 
+/** `discrete-copy-number/fetch` row (DETAILED projection). */
 export type CnaApiRecord = {
     sampleId: string;
-    value: number;
+    /** GISTIC value: -2 = deep deletion, 2 = amplification. */
+    alteration: number;
     entrezGeneId?: number;
     gene?: {
         entrezGeneId?: number;
@@ -164,6 +168,13 @@ export function mergeClinicalDataIntoSamples(
     }
 }
 
+/** Whether a mutation status is germline, as the patient view reads it. */
+export function isGermlineMutationStatus(
+    mutationStatus: string | null | undefined
+): boolean {
+    return !!mutationStatus && /germline/i.test(mutationStatus);
+}
+
 /** A protein change as shown: without the `p.` prefix. */
 export function displayProteinChange(
     proteinChange: string | null | undefined
@@ -215,6 +226,9 @@ export function buildMutationsBySample(
                 proteinStart: mutation.proteinPosStart,
                 proteinEnd: mutation.proteinPosEnd,
                 genomicLocation: mutationGenomicLocation(mutation),
+                germline:
+                    isGermlineMutationStatus(mutation.mutationStatus) ||
+                    undefined,
             });
         }
     }
@@ -234,31 +248,22 @@ export function buildMutationsBySample(
 }
 
 /**
- * Each sample's non-zero copy-number alterations, strongest first, with the
- * study counts from `countFor`.
+ * Each sample's copy-number alterations, strongest first, then by gene. Rows
+ * without a gene or alteration are skipped.
  */
 export function buildCnaBySample(
-    rows: ReadonlyArray<CnaApiRecord>,
-    countFor: (
-        entrezGeneId: number,
-        alteration: number
-    ) => CopyNumberCountRecord | undefined = () => undefined
+    rows: ReadonlyArray<CnaApiRecord>
 ): Map<string, CNADetail[]> {
     const bySample = new Map<string, CNADetail[]>();
     const seen = new Set<string>();
     for (const row of rows) {
-        if (row.value === 0) continue;
+        if (!row.alteration) continue;
         const gene = row.gene?.hugoGeneSymbol;
         if (!gene) continue;
-        const key = `${row.sampleId}:${gene}:${row.value}`;
+        const key = `${row.sampleId}:${gene}:${row.alteration}`;
         if (seen.has(key)) continue;
         seen.add(key);
 
-        const entrezGeneId = row.gene?.entrezGeneId ?? row.entrezGeneId;
-        const count =
-            entrezGeneId != null
-                ? countFor(entrezGeneId, row.value)
-                : undefined;
         let sampleCnas = bySample.get(row.sampleId);
         if (!sampleCnas) {
             sampleCnas = [];
@@ -266,10 +271,8 @@ export function buildCnaBySample(
         }
         sampleCnas.push({
             gene,
-            entrezGeneId,
-            cnaValue: row.value,
-            cohortAlteredCount: count?.numberOfSamplesWithAlterationInGene,
-            cohortProfiledCount: count?.numberOfSamples,
+            entrezGeneId: row.gene?.entrezGeneId ?? row.entrezGeneId,
+            cnaValue: row.alteration,
         });
     }
 
@@ -376,6 +379,29 @@ export function applyVariantCounts(
             ) {
                 mutation.cohortAlteredCount = count.numberOfSamplesWithKeyword;
                 mutation.cohortProfiledCount = count.numberOfSamples;
+            }
+        }
+    }
+}
+
+/**
+ * Sets each copy-number alteration's study counts: how many samples of the
+ * copy-number profile have the same alteration of the gene.
+ */
+export function applyCopyNumberCounts(
+    samples: Sample[],
+    countFor: (cna: CNADetail) => CopyNumberCountRecord | undefined
+): void {
+    for (const sample of samples) {
+        for (const cna of sample.cna_alterations ?? []) {
+            const count = countFor(cna);
+            if (
+                count?.numberOfSamples &&
+                count.numberOfSamplesWithAlterationInGene != null
+            ) {
+                cna.cohortAlteredCount =
+                    count.numberOfSamplesWithAlterationInGene;
+                cna.cohortProfiledCount = count.numberOfSamples;
             }
         }
     }

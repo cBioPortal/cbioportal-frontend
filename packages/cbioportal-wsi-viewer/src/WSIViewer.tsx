@@ -9,6 +9,7 @@ import {
     Sample,
     PatientHierarchy,
     TileMetadata,
+    CNADetail,
     MutationDetail,
     WsiMutationDataStatus,
     WsiClinicalRow,
@@ -34,7 +35,11 @@ import {
     buildWsiRows,
 } from './wsiMetaUtils';
 import { hashUrlState } from './wsiViewStateUtils';
-import { applyVariantCounts, SampleIdentifier } from './wsiDataMergeUtils';
+import {
+    applyCopyNumberCounts,
+    applyVariantCounts,
+    SampleIdentifier,
+} from './wsiDataMergeUtils';
 import { compareSamplesForNavigation } from './wsiNavUtils';
 import { WsiNavPanel } from './wsiNavPanel';
 import {
@@ -55,9 +60,11 @@ import {
 import { chooseScaleBar, formatMagnification } from './wsiScaleUtils';
 import {
     clearWsiCbioportalRequestCaches,
+    copyNumberCountKey,
     fetchClinicalDataRecords,
     fetchStudyMolecularProfiles,
     fetchCnaData,
+    fetchCopyNumberCounts,
     fetchMutationData,
     fetchStructuralVariantData,
     fetchVariantCounts,
@@ -449,7 +456,6 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                     shouldContinue
                 ),
             onHierarchyLoadStarted: this.handleHierarchyLoadStarted,
-            onSelectionCleared: this.handleSelectionCleared,
             reportInitialSlideLoadPerformance: metric =>
                 this.reportInitialSlideLoadPerformance(metric),
         };
@@ -574,7 +580,16 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         }
 
         if (prev.sampleClinicalData !== this.props.sampleClinicalData) {
-            this.applyHostSampleClinicalData();
+            if (
+                this.props.sampleClinicalData === undefined &&
+                prev.sampleClinicalData !== undefined
+            ) {
+                // The host stopped providing the data (e.g. its request
+                // failed): request it here instead.
+                this.fetchOwnSampleClinicalData();
+            } else {
+                this.applyHostSampleClinicalData();
+            }
         }
 
         if (authScopeChanged) {
@@ -639,11 +654,6 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
     @action.bound
     private handleHierarchyLoadStarted() {
         this.cancelScheduledHierarchyRefresh();
-        this.mutationDataStatus = 'idle';
-    }
-
-    @action.bound
-    private handleSelectionCleared() {
         this.mutationDataStatus = 'idle';
     }
 
@@ -1121,7 +1131,7 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         ]);
         if (!shouldContinueForHierarchy()) return;
 
-        await Promise.all([
+        const [cnaProfileId] = await Promise.all([
             this.fetchAndMergeCNA(
                 studyId,
                 sampleIdentifiers,
@@ -1142,6 +1152,14 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
             lastStage.push(
                 this.fetchAndMergeVariantCounts(
                     mutationProfileId,
+                    shouldContinueForHierarchy
+                )
+            );
+        }
+        if (cnaProfileId) {
+            lastStage.push(
+                this.fetchAndMergeCopyNumberCounts(
+                    cnaProfileId,
                     shouldContinueForHierarchy
                 )
             );
@@ -1175,6 +1193,30 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
                 applyClinicalDataRecords(samples, data)
             );
         }
+    }
+
+    /**
+     * Requests the loaded hierarchy's sample attributes from the portal API,
+     * for when the host no longer provides them.
+     */
+    private fetchOwnSampleClinicalData() {
+        const hierarchy = this.viewerState.hierarchy;
+        const { studyId } = this.props;
+        if (!hierarchy || !studyId) return;
+        const sampleIdentifiers = this.buildSampleIdentifiers(
+            studyId,
+            hierarchy.samples
+                .map(sample => sample.sample_id)
+                .filter(sampleId => sampleId && sampleId !== 'UNMATCHED')
+        );
+        if (!sampleIdentifiers.length) return;
+        void this.fetchAndMergeClinicalData(
+            sampleIdentifiers,
+            () =>
+                this.viewerState.hierarchy === hierarchy &&
+                this.props.studyId === studyId &&
+                this.props.sampleClinicalData === undefined
+        );
     }
 
     /**
@@ -1250,20 +1292,23 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
     }
 
     /**
-     * Merges the samples' non-zero discrete copy-number alterations into each
-     * sample's `cna_alterations`.
+     * Merges the samples' amplifications and deep deletions into each
+     * sample's `cna_alterations`. Resolves to the study's discrete
+     * copy-number profile, or null when it has none or the data could not be
+     * loaded.
      */
     private async fetchAndMergeCNA(
         studyId: string,
         sampleIdentifiers: SampleIdentifier[],
         shouldContinue: () => boolean
-    ): Promise<void> {
-        const bySample = await fetchCnaData(studyId, sampleIdentifiers);
-        if (!bySample || !shouldContinue()) return;
+    ): Promise<string | null> {
+        const cnaData = await fetchCnaData(studyId, sampleIdentifiers);
+        if (!cnaData || !shouldContinue()) return null;
 
         this.applyHierarchyMutationAndRefresh(samples => {
-            applyCnaData(samples, bySample);
+            applyCnaData(samples, cnaData.bySample);
         }, shouldContinue);
+        return cnaData.profileId;
     }
 
     /**
@@ -1466,6 +1511,41 @@ export default class WSIViewer extends React.Component<WsiViewerProps, {}> {
         } catch (error) {
             // The study counts are optional in the tooltips.
             console.debug('[WSI] variant counts unavailable', error);
+        }
+    }
+
+    /**
+     * Sets each copy-number alteration's study counts: how many samples of
+     * the copy-number profile have the same alteration of the gene.
+     */
+    private async fetchAndMergeCopyNumberCounts(
+        profileId: string,
+        shouldContinue: () => boolean
+    ): Promise<void> {
+        const cnas: CNADetail[] = [];
+        for (const sample of this.viewerState.hierarchy?.samples ?? []) {
+            cnas.push(...(sample.cna_alterations ?? []));
+        }
+        try {
+            const counts = await fetchCopyNumberCounts(profileId, cnas);
+            if (!counts.size || !shouldContinue()) return;
+
+            this.applyHierarchyMutation(samples => {
+                applyCopyNumberCounts(samples, cna =>
+                    cna.entrezGeneId != null
+                        ? counts.get(
+                              copyNumberCountKey(
+                                  profileId,
+                                  cna.entrezGeneId,
+                                  cna.cnaValue
+                              )
+                          )
+                        : undefined
+                );
+            });
+        } catch (error) {
+            // The study counts are optional in the tooltips.
+            console.debug('[WSI] copy-number counts unavailable', error);
         }
     }
 

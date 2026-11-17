@@ -456,4 +456,29 @@ describe('useWsiClinicalData', () => {
         // TMB is left to the viewer's Molecular section.
         expect(current!).toEqual({ rows: [], sampleData });
     });
+
+    it('is null after its request fails', async () => {
+        const consoleError = jest
+            .spyOn(console, 'error')
+            .mockImplementation(() => {});
+        mockClient.getAllClinicalAttributesInStudyUsingGET.mockRejectedValue(
+            new Error('500')
+        );
+        mockClient.getAllClinicalDataOfPatientInStudyUsingGET.mockResolvedValue(
+            []
+        );
+        mockClient.getAllSamplesOfPatientInStudyUsingGET.mockResolvedValue([]);
+
+        const seen: Array<ReturnType<typeof useWsiClinicalData>> = [];
+        function Probe() {
+            seen.push(useWsiClinicalData('study', 'P-1'));
+            return null;
+        }
+        render(<Probe />);
+        await act(async () => {});
+
+        expect(seen[0]).toBeUndefined();
+        expect(seen[seen.length - 1]).toBeNull();
+        consoleError.mockRestore();
+    });
 });

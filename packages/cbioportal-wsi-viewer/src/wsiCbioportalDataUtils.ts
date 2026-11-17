@@ -80,6 +80,12 @@ export type WsiMutationData = {
     bySample: Map<string, MutationDetail[]>;
 };
 
+/** The samples' copy-number alterations in the study's discrete profile. */
+export type WsiCnaData = {
+    profileId: string;
+    bySample: Map<string, CNADetail[]>;
+};
+
 const molecularProfilesRequestCache = new Map<
     string,
     CachedRequestEntry<WsiStudyMolecularProfiles>
@@ -94,7 +100,7 @@ const mutationDataRequestCache = new Map<
 >();
 const cnaDataRequestCache = new Map<
     string,
-    CachedRequestEntry<Map<string, CNADetail[]> | null>
+    CachedRequestEntry<WsiCnaData | null>
 >();
 const structuralVariantDataRequestCache = new Map<
     string,
@@ -367,7 +373,7 @@ export function fetchMutationData(
     );
 }
 
-function copyNumberCountKey(
+export function copyNumberCountKey(
     profileId: string,
     entrezGeneId: number,
     alteration: number
@@ -376,14 +382,15 @@ function copyNumberCountKey(
 }
 
 /**
- * The samples' copy-number alterations in the study's discrete copy-number
- * profile, with how many of the profile's samples have the same alteration.
- * Null when the study has no such profile or the request fails.
+ * The samples' amplifications and deep deletions in the study's discrete
+ * copy-number profile, as the patient view loads them. Null when the study has
+ * no such profile or the request fails. The study counts come separately from
+ * `fetchCopyNumberCounts`.
  */
 export function fetchCnaData(
     studyId: string,
     sampleIdentifiers: SampleIdentifier[]
-): Promise<Map<string, CNADetail[]> | null> {
+): Promise<WsiCnaData | null> {
     const samples = dedupeSampleIdentifiers(sampleIdentifiers);
     return getCachedRequest(
         cnaDataRequestCache,
@@ -394,24 +401,15 @@ export function fetchCnaData(
             } = await fetchStudyMolecularProfiles(studyId);
             if (!profileId || samples.length === 0) return null;
 
-            const rows = (
-                await postJsonArray<CnaApiRecord>(
-                    portalApiUrl(
-                        `api/molecular-profiles/${encodeURIComponent(
-                            profileId
-                        )}/molecular-data/fetch?projection=DETAILED`
-                    ),
-                    { sampleIds: samples.map(({ sampleId }) => sampleId) }
-                )
-            ).filter(row => row.value !== 0);
-            if (rows.length === 0) return new Map<string, CNADetail[]>();
-
-            const counts = await fetchCopyNumberCounts(profileId, rows);
-            return buildCnaBySample(rows, (entrezGeneId, alteration) =>
-                counts.get(
-                    copyNumberCountKey(profileId, entrezGeneId, alteration)
-                )
+            const rows = await postJsonArray<CnaApiRecord>(
+                portalApiUrl(
+                    `api/molecular-profiles/${encodeURIComponent(
+                        profileId
+                    )}/discrete-copy-number/fetch?discreteCopyNumberEventType=HOMDEL_AND_AMP&projection=DETAILED`
+                ),
+                { sampleIds: samples.map(({ sampleId }) => sampleId) }
             );
+            return { profileId, bySample: buildCnaBySample(rows) };
         }
     ).catch(error => {
         console.debug('[WSI] copy-number data unavailable', error);
@@ -419,51 +417,50 @@ export function fetchCnaData(
     });
 }
 
-/** Study counts of the rows' gene alterations; empty when they fail. */
-async function fetchCopyNumberCounts(
+/**
+ * How many samples of the copy-number profile have each alteration of the
+ * gene, keyed by `copyNumberCountKey`. Alterations without a gene ID are not
+ * counted. Rejects when the request fails.
+ */
+export function fetchCopyNumberCounts(
     profileId: string,
-    rows: CnaApiRecord[]
+    cnas: ReadonlyArray<CNADetail>
 ): Promise<Map<string, CopyNumberCountRecord>> {
-    const queries: Array<{ entrezGeneId: number; alteration: number }> = [];
-    for (const row of rows) {
-        const entrezGeneId = row.gene?.entrezGeneId ?? row.entrezGeneId;
-        if (entrezGeneId != null) {
-            queries.push({ entrezGeneId, alteration: row.value });
+    const queries = new Map<
+        string,
+        { entrezGeneId: number; alteration: number }
+    >();
+    for (const cna of cnas) {
+        if (cna.entrezGeneId != null) {
+            queries.set(
+                copyNumberCountKey(profileId, cna.entrezGeneId, cna.cnaValue),
+                { entrezGeneId: cna.entrezGeneId, alteration: cna.cnaValue }
+            );
         }
     }
-    try {
-        return await fetchCachedCounts<
-            { entrezGeneId: number; alteration: number },
-            CopyNumberCountRecord
-        >(
-            copyNumberCountRequestCache,
-            queries,
-            query =>
-                copyNumberCountKey(
-                    profileId,
-                    query.entrezGeneId,
-                    query.alteration
-                ),
-            count =>
-                copyNumberCountKey(
-                    profileId,
-                    count.entrezGeneId,
-                    count.alteration
-                ),
-            missing =>
-                postJsonArray<CopyNumberCountRecord>(
-                    portalApiUrl(
-                        `api/molecular-profiles/${encodeURIComponent(
-                            profileId
-                        )}/discrete-copy-number-counts/fetch`
-                    ),
-                    missing
-                )
-        );
-    } catch (error) {
-        console.debug('[WSI] copy-number counts unavailable', error);
-        return new Map();
+    if (queries.size === 0) {
+        return Promise.resolve(new Map());
     }
+    return fetchCachedCounts<
+        { entrezGeneId: number; alteration: number },
+        CopyNumberCountRecord
+    >(
+        copyNumberCountRequestCache,
+        Array.from(queries.values()),
+        query =>
+            copyNumberCountKey(profileId, query.entrezGeneId, query.alteration),
+        count =>
+            copyNumberCountKey(profileId, count.entrezGeneId, count.alteration),
+        missing =>
+            postJsonArray<CopyNumberCountRecord>(
+                portalApiUrl(
+                    `api/molecular-profiles/${encodeURIComponent(
+                        profileId
+                    )}/discrete-copy-number-counts/fetch`
+                ),
+                missing
+            )
+    );
 }
 
 /**
