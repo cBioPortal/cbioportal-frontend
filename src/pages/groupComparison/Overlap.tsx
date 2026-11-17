@@ -23,7 +23,9 @@ import WindowStore from 'shared/components/window/WindowStore';
 import { getPatientIdentifiers } from '../studyView/StudyViewUtils';
 import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import OverlapUpset from './OverlapUpset';
-import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
+import ComparisonStore, {
+    OverlapStrategy,
+} from '../../shared/lib/comparison/ComparisonStore';
 import { getServerConfig } from 'config/config';
 
 export interface IOverlapProps {
@@ -377,32 +379,66 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     });
 
     readonly overlapUI = MakeMobxView({
-        await: () => [this.plot],
-        render: () => (
-            <div
-                data-test="ComparisonPageOverlapTabContent"
-                className="borderedChart posRelative"
-            >
-                {this.plotExists && (
-                    <DownloadControls
-                        getSvg={this.getSvg}
-                        getData={this.props.store.getGroupsDownloadDataPromise}
-                        buttons={['SVG', 'PNG', 'PDF', 'Data']}
-                        filename={'overlap'}
-                        dontFade={true}
-                        style={{ position: 'absolute', right: 10, top: 10 }}
-                        type="button"
-                        showDownload={
-                            getServerConfig().skin_hide_download_controls ===
-                            DownloadControlOption.SHOW_ALL
-                        }
-                    />
-                )}
-                <div style={{ position: 'relative', display: 'inline-block' }}>
-                    {this.plot.component}
+        await: () => [
+            this.plot,
+            this.props.store.overlapComputations,
+        ],
+        render: () => {
+            const overlapInfo = this.props.store.overlapComputations.result!;
+            const hasPatientOverlap = overlapInfo.totalPatientOverlap > 0;
+            return (
+                <div
+                    data-test="ComparisonPageOverlapTabContent"
+                    className="borderedChart posRelative"
+                >
+                    {this.plotExists && (
+                        <DownloadControls
+                            getSvg={this.getSvg}
+                            getData={
+                                this.props.store.getGroupsDownloadDataPromise
+                            }
+                            buttons={['SVG', 'PNG', 'PDF', 'Data']}
+                            filename={'overlap'}
+                            dontFade={true}
+                            style={{ position: 'absolute', right: 10, top: 10 }}
+                            type="button"
+                            showDownload={
+                                getServerConfig()
+                                    .skin_hide_download_controls ===
+                                DownloadControlOption.SHOW_ALL
+                            }
+                        />
+                    )}
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                        {this.plot.component}
+                    </div>
+                    {hasPatientOverlap && (
+                        <div
+                            style={{
+                                display: 'flex',
+                                gap: 10,
+                                marginTop: 15,
+                                padding: '0 10px 10px',
+                                flexWrap: 'wrap',
+                            }}
+                            data-test="ComparisonPageOverlapButtons"
+                        >
+                            <button
+                                className="btn btn-md btn-primary"
+                                onClick={() =>
+                                    this.props.store.updateOverlapStrategy(
+                                        OverlapStrategy.OVERLAP_ONLY
+                                    )
+                                }
+                                data-test="ComparisonPageOverlapOverlappingButton"
+                            >
+                                Compare overlapping patients
+                            </button>
+                        </div>
+                    )}
                 </div>
-            </div>
-        ),
+            );
+        },
         renderPending: () => (
             <LoadingIndicator
                 isLoading={true}
