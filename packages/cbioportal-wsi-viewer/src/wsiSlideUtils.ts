@@ -203,7 +203,10 @@ function buildPathologyFilterCacheKey(
 ): string | undefined {
     const normalizedMatchLevel = normalizeMatchLevel(filter.matchLevel);
     const hasFilter =
-        !!filter.sampleId || !!normalizedMatchLevel || !!filter.specimenKey;
+        !!filter.sampleId ||
+        !!normalizedMatchLevel ||
+        !!filter.specimenKey ||
+        !!filter.partKey;
     if (!hasFilter) {
         return undefined;
     }
@@ -212,6 +215,7 @@ function buildPathologyFilterCacheKey(
         filter.sampleId || '',
         normalizedMatchLevel || '',
         filter.specimenKey || '',
+        filter.partKey || '',
     ].join('::');
 }
 
@@ -262,6 +266,9 @@ export function getServableSlideIdsForPathologyFilterReadOnly(
         if (filter.specimenKey && slide.specimen_key !== filter.specimenKey) {
             return false;
         }
+        if (filter.partKey && slide.part_key !== filter.partKey) {
+            return false;
+        }
         return true;
     };
 
@@ -272,12 +279,13 @@ export function getServableSlideIdsForPathologyFilterReadOnly(
     );
 
     // Older pathology linkouts can carry a source sample ID that is not a
-    // portal sample. Keep the explicit specimen and match-level constraints,
-    // but allow the hierarchy's unmatched group to satisfy that linkout.
+    // portal sample. Keep the explicit specimen or part and match-level
+    // constraints, but allow the hierarchy's unmatched group to satisfy that
+    // linkout.
     if (
         matchingSlideKeys.size === 0 &&
         filter.sampleId &&
-        filter.specimenKey &&
+        (filter.specimenKey || filter.partKey) &&
         !slides.some(slide => slide.sample_id === filter.sampleId)
     ) {
         slides

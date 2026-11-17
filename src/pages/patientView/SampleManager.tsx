@@ -114,7 +114,16 @@ export function getSpecimenCollectionDayMap(
                     );
                 }
             );
-            if (sampleIdAttr) {
+            // A sample with several specimen events keeps its earliest
+            // day, whatever the event order.
+            const current = sampleIdAttr
+                ? collectionDayMap.get(sampleIdAttr.value)
+                : undefined;
+            if (
+                sampleIdAttr &&
+                (current === undefined ||
+                    event.startNumberOfDaysSinceDiagnosis < current)
+            ) {
                 collectionDayMap.set(
                     sampleIdAttr.value,
                     event.startNumberOfDaysSinceDiagnosis

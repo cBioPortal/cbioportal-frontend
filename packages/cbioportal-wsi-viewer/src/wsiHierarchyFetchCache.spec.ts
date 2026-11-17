@@ -249,7 +249,8 @@ describe('buildPatientHierarchy', () => {
                     file_size_bytes: 1234,
                     can_serve_tiles: true,
                     match_level: 'UNMATCHED',
-                    specimen_key: 'unmatched::1::A',
+                    specimen_key: 'unmatched::part:0123456789ab::block:A',
+                    part_key: 'part:0123456789ab',
                     serving: {
                         key: 'slide-1',
                         sealed_source: 'sealed',
@@ -260,6 +261,7 @@ describe('buildPatientHierarchy', () => {
                 }),
                 row(null, {
                     slide_key: 'slide-2',
+                    part_key: 'part:0123456789ab',
                     part_number: '1',
                     block_number: 'A',
                     can_serve_tiles: false,
@@ -280,7 +282,8 @@ describe('buildPatientHierarchy', () => {
                 file_size_bytes: '1234',
                 can_serve_tiles: true,
                 match_level: 'UNMATCHED',
-                specimen_key: 'unmatched::1::A',
+                specimen_key: 'unmatched::part:0123456789ab::block:A',
+                part_key: 'part:0123456789ab',
                 part_number: '1',
                 part_description: 'Unmatched specimen',
                 block_label: 'A1',

@@ -6,13 +6,21 @@ import {
     UNMATCHED_SAMPLE_ID,
     WsiStainKind,
 } from './wsiViewerTypes';
-import { cleanStain, fmtFileSize, normalizeBlockLabel } from './wsiNavUtils';
+import {
+    cleanStain,
+    DAY_ZERO_TOOLTIP,
+    fmtFileSize,
+    formatDaysSinceDiagnosis,
+    formatDaysSinceDiagnosisShort,
+    normalizeBlockLabel,
+} from './wsiNavUtils';
 import { blockName, realPartDescription } from './wsiSpecimenUtils';
 import { formatSlideId } from './wsiSlideId';
 import { matchLevelHelpText, stainHelpText } from './wsiFilterHelp';
 import { WSI_STAIN_COLORS } from './wsiTheme';
 import { nativeObjectivePower } from './wsiScaleUtils';
 import { getWsiViewerRuntime } from './wsiViewerConfig';
+import { WsiSampleTimeline } from './wsiSampleTimeline';
 
 function freezeMetaRows(rows: MetaRow[]): MetaRow[] {
     rows.forEach(row => Object.freeze(row));
@@ -140,7 +148,8 @@ export function buildPathRows(
     slide: Slide,
     sample: Sample,
     patientId: string,
-    studyId: string
+    studyId: string,
+    sampleTimeline?: WsiSampleTimeline
 ): MetaRow[] {
     const isUnmatchedSample = sample.sample_id === UNMATCHED_SAMPLE_ID;
     const stainBadge = getStainBadge(slide);
@@ -175,6 +184,12 @@ export function buildPathRows(
             href: sampleUrl,
         },
     ];
+    const timeline = isUnmatchedSample
+        ? undefined
+        : buildSampleTimelineRow(sampleTimeline);
+    if (timeline) {
+        rows.push(timeline);
+    }
     if (part) {
         rows.push({
             label: 'Part',
@@ -218,4 +233,38 @@ export function buildPathRows(
     }
 
     return freezeMetaRows(rows);
+}
+
+/**
+ * One row for when the slide's matched sample was collected and sequenced,
+ * from the patient timeline, or undefined when it has neither.
+ */
+function buildSampleTimelineRow(
+    sampleTimeline: WsiSampleTimeline | undefined
+): MetaRow | undefined {
+    const days: Array<[string, number]> = [];
+    if (sampleTimeline?.acquisitionDays != null) {
+        days.push(['tissue collected', sampleTimeline.acquisitionDays]);
+    }
+    if (sampleTimeline?.sequencingDays != null) {
+        days.push(['sequenced', sampleTimeline.sequencingDays]);
+    }
+    if (days.length === 0) {
+        return undefined;
+    }
+    // Years past a year, as in the slide list; the tooltip keeps the days.
+    const exact = days
+        .map(([what, day]) => `${what} ${formatDaysSinceDiagnosis(day)}`)
+        .join(' · ');
+    return {
+        label: 'Sample dates',
+        labelTip:
+            'When the sequenced sample this slide is matched to was collected and sequenced',
+        value: days
+            .map(
+                ([what, day]) => `${what} ${formatDaysSinceDiagnosisShort(day)}`
+            )
+            .join(' · '),
+        valueTip: `Exact days: ${exact}. ${DAY_ZERO_TOOLTIP}`,
+    };
 }

@@ -164,6 +164,7 @@ export function buildPatientHierarchy(
             sample_id: row.sampleId,
             match_level: text(metadata, 'match_level') as MatchLevel,
             specimen_key: text(metadata, 'specimen_key'),
+            part_key: text(metadata, 'part_key'),
             resource_id: row.resourceId,
         };
         Object.assign(slide, serving(metadata));

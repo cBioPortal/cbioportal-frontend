@@ -140,7 +140,7 @@ export function toResourceRows(hierarchy: PatientHierarchy): TestSlideRow[] {
                         slide_key: slide.slide_key,
                         reference_sample_id:
                             hierarchy.reference_sample_id || undefined,
-                        part_key: partKey,
+                        part_key: slide.part_key || partKey,
                         part_number: part.part_number,
                         part_type: part.part_type,
                         part_description: part.part_description,

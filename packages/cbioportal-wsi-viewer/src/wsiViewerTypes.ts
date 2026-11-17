@@ -18,6 +18,9 @@ export interface Slide {
     sample_id?: string | null;
     match_level?: MatchLevel;
     specimen_key?: string;
+    /** Opaque key of the slide's part (`part:` + 12 hex), shared by the
+     *  part's slides; a pathology link can name a part by it. */
+    part_key?: string;
     /** Resource the slide's row belongs to: `WSI_SAMPLE` or `WSI_PATIENT`. */
     resource_id?: string;
     /** The slide's key on the tile server (`metadata.serving.key`); present
@@ -80,7 +83,10 @@ export interface WsiResourceRow {
 export type PathologySlideFilter = {
     sampleId?: string;
     matchLevel?: string;
+    /** One block's slides: matched against each slide's `specimen_key`. */
     specimenKey?: string;
+    /** One part's slides: matched against each slide's `part_key`. */
+    partKey?: string;
 };
 
 export interface TileMetadata {
