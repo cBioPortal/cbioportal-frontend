@@ -26,6 +26,7 @@ import {
 } from './wsiNavUtils';
 import { getStainDotColor } from './wsiMetaUtils';
 import {
+    sampleSequencedLabel,
     sampleSequencedText,
     sampleSequencedTooltip,
     WsiSampleTimeline,
@@ -724,6 +725,7 @@ function SampleNode({
 
     const sequencedText = sampleSequencedText(sampleTimeline);
     const sequencedTooltip = sampleSequencedTooltip(sampleTimeline);
+    const sequencedLabel = sampleSequencedLabel(sampleTimeline);
 
     const multiPart = React.useMemo(
         () =>
@@ -753,7 +755,7 @@ function SampleNode({
                 tabIndex={0}
                 aria-expanded={open}
                 aria-label={`${sample.sample_id || 'Sample'} slides${
-                    sequencedText ? `, sequenced ${sequencedText}` : ''
+                    sequencedLabel ? `, ${sequencedLabel}` : ''
                 }`}
                 style={{
                     display: 'flex',

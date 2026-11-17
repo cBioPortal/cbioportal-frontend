@@ -1,6 +1,7 @@
 import { DAY_ZERO_TOOLTIP } from './wsiNavUtils';
 import {
     buildWsiSampleTimelineMap,
+    sampleSequencedLabel,
     sampleSequencedText,
     sampleSequencedTooltip,
     WsiClinicalEvent,
@@ -88,5 +89,19 @@ describe('sample timeline text', () => {
         expect(sampleSequencedText({ sequencingDays: -2393 })).toBe('-6.6y');
         expect(sampleSequencedText({ acquisitionDays: 3 })).toBeNull();
         expect(sampleSequencedText(undefined)).toBeNull();
+    });
+
+    it('names the exact sequencing day, with the rounded one past a year', () => {
+        expect(sampleSequencedLabel({ sequencingDays: 7 })).toBe(
+            'sequenced d+7'
+        );
+        expect(sampleSequencedLabel({ sequencingDays: 1242 })).toBe(
+            'sequenced d+1242 (+3.4y)'
+        );
+        expect(sampleSequencedLabel({ sequencingDays: -2393 })).toBe(
+            'sequenced d-2393 (-6.6y)'
+        );
+        expect(sampleSequencedLabel({ acquisitionDays: 3 })).toBeNull();
+        expect(sampleSequencedLabel(undefined)).toBeNull();
     });
 });

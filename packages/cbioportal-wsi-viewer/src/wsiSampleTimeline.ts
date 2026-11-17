@@ -107,3 +107,19 @@ export function sampleSequencedText(
         ? formatDaysSinceDiagnosisShort(timeline.sequencingDays)
         : null;
 }
+
+/**
+ * The sample's sequencing day for the slide list header's accessible name,
+ * with the exact day the shown text may round, e.g. "sequenced d+1242
+ * (+3.4y)" or "sequenced d+7". Null when unknown.
+ */
+export function sampleSequencedLabel(
+    timeline: WsiSampleTimeline | undefined
+): string | null {
+    if (timeline?.sequencingDays == null) {
+        return null;
+    }
+    const exact = formatDaysSinceDiagnosis(timeline.sequencingDays);
+    const shown = formatDaysSinceDiagnosisShort(timeline.sequencingDays);
+    return `sequenced ${exact}${shown === exact ? '' : ` (${shown})`}`;
+}

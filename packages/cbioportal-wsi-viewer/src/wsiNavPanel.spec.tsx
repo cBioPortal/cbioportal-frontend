@@ -1220,6 +1220,27 @@ describe('WsiNavPanel', () => {
                     TestRenderer.create(tooltip.props.overlay).toJSON()
                 )
             ).toContain('sequenced on d+7');
+            expect(
+                renderer.root.findByProps({
+                    'aria-label': 'S-1 slides, sequenced d+7',
+                })
+            ).toBeTruthy();
+        });
+
+        it('names the exact sequencing day in the header without a mouse', () => {
+            const renderer = renderWithTimelines(
+                [makeSample('S-1', [makeSlide({ slide_key: 'slide-1' })])],
+                new Map([['S-1', { sequencingDays: 1242 }]])
+            );
+
+            expect(findButtonText(renderer, 'wsi-sample-sequenced-S-1')).toBe(
+                '+3.4y'
+            );
+            const header = renderer.root.findByProps({
+                'aria-label': 'S-1 slides, sequenced d+1242 (+3.4y)',
+            });
+            expect(header.props.role).toBe('button');
+            expect(header.props.tabIndex).toBe(0);
         });
 
         it('shows no sequencing day without one, or for unmatched slides', () => {
