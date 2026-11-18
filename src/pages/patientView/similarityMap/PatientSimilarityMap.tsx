@@ -714,6 +714,10 @@ export default class PatientSimilarityMap extends React.Component<
                         clinicalAttributes={this.coloringAttributes}
                         selectedOption={this.coloringOption}
                         hasNoQueriedGenes={true}
+                        // Lays the alteration checkboxes out under the select
+                        // rather than in a toolbar row, which is what fits a
+                        // narrow panel floating over the map.
+                        stacked
                         isLoading={this.isColoringPending}
                         mutationDataExists={this.mutationDataExists}
                         cnaDataExists={this.cnaDataExists}
