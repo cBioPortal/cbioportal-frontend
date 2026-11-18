@@ -694,6 +694,11 @@ export default class PatientSimilarityMap extends React.Component<
                     gap: 6,
                     width: 190,
                     flexShrink: 0,
+                    padding: 8,
+                    borderRadius: 4,
+                    // Floats over the points, so it carries its own backdrop.
+                    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                    border: '1px solid #ddd',
                 }}
             >
                 {this.coloringOptions.length > 0 && (
@@ -816,13 +821,11 @@ export default class PatientSimilarityMap extends React.Component<
                         {this.renderStudyViewLink()}
                     </div>
                 </div>
-                <div style={{ display: 'flex', gap: 10 }}>
-                    {this.renderControlStack()}
+                <div>
                     <div
                         ref={this.setContainer}
                         style={{
                             position: 'relative',
-                            flexGrow: 1,
                             minWidth: 0,
                             height: MAP_HEIGHT,
                             overflow: 'hidden',
@@ -927,6 +930,16 @@ export default class PatientSimilarityMap extends React.Component<
                                 </span>
                             </div>
                         )}
+                        <div
+                            style={{
+                                position: 'absolute',
+                                top: 10,
+                                left: 10,
+                                zIndex: 3,
+                            }}
+                        >
+                            {this.renderControlStack()}
+                        </div>
                     </div>
                 </div>
                 <div style={{ color: '#666', marginTop: 8 }}>
