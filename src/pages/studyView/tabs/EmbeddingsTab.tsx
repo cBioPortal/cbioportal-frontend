@@ -4,6 +4,7 @@ import { observer } from 'mobx-react';
 import { observable, action, computed, makeObservable } from 'mobx';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
+import { EmbeddingsPanelStore } from 'shared/components/embeddings/EmbeddingsPanelStore';
 import { ViewState } from 'shared/components/embeddings/EmbeddingTypes';
 import { EmbeddingsPanel } from './EmbeddingsPanel';
 
@@ -29,7 +30,16 @@ const MAP_SELECT_STYLES = {
 };
 
 export interface IEmbeddingsTabProps {
-    store: StudyViewPageStore;
+    /**
+     * The page the maps are drawn on. The study view's store satisfies this;
+     * the patient view supplies the same members over the studies its map
+     * covers, so both pages run this one tab.
+     *
+     * Panel and map choices are kept in the URL through the store's
+     * urlWrapper where there is one, and simply not persisted where there
+     * is not.
+     */
+    store: EmbeddingsPanelStore;
 }
 
 type PanelIndex = 1 | 2 | 3 | 4;
