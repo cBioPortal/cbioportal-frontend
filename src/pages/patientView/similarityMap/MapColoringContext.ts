@@ -16,10 +16,14 @@ import ClinicalDataCache from 'shared/cache/ClinicalDataCache';
 import { PlotsTabStore } from 'shared/components/plots/PlotsTabStore';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import { filterAndAnnotateMutations } from 'shared/lib/StoreUtils';
-import { MolecularDataStore } from 'shared/lib/PatientMolecularDataUtils';
+import {
+    EmbeddingsPanelMolecularStore,
+    EmbeddingsPanelStore,
+} from 'shared/components/embeddings/EmbeddingsPanelStore';
 import { EmbeddingColoringContext } from 'shared/components/plots/EmbeddingPlotUtils';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import { REQUEST_ARG_ENUM } from 'shared/constants';
+import { getBrowserWindow } from 'cbioportal-frontend-commons';
 
 /**
  * Only the profiles a map can colour by. The map's studies hold four hundred
@@ -41,7 +45,8 @@ const COLORABLE_ALTERATION_TYPES = [
  * driver, a copy number call or a clinical value on the map means exactly
  * what it means on any other page.
  */
-export class MapColoringContext implements EmbeddingColoringContext {
+export class MapColoringContext
+    implements EmbeddingColoringContext, EmbeddingsPanelStore {
     public readonly plotsStore: PlotsTabStore;
     public readonly clinicalDataCache: ClinicalDataCache;
 
@@ -265,15 +270,53 @@ export class MapColoringContext implements EmbeddingColoringContext {
         },
     }));
 
-    // What colours the points: the map's own mutation fetch, with copy number
-    // and structural variants from the shared store, which already ask for
-    // every study at once.
-    @computed get plotsTabStore(): MolecularDataStore {
+    // What colours the points. Everything comes from the shared store except
+    // the mutations: its per-profile cache asks each study separately, which
+    // suits a cohort inside one study and stalls on thirty.
+    @computed get plotsTabStore(): EmbeddingsPanelMolecularStore {
+        const store = this.plotsStore;
         return {
             annotatedMutationCache: this.mapMutationCache,
-            annotatedCnaCache: this.plotsStore.annotatedCnaCache,
-            structuralVariantCache: this.plotsStore.structuralVariantCache,
+            annotatedCnaCache: store.annotatedCnaCache,
+            structuralVariantCache: store.structuralVariantCache,
+            numericGeneMolecularDataCache: store.numericGeneMolecularDataCache,
+            isHotspotForOncoprint: store.isHotspotForOncoprint,
+            getMutationPutativeDriverInfo: store.getMutationPutativeDriverInfo,
+            oncoKbMutationAnnotationForOncoprint:
+                store.oncoKbMutationAnnotationForOncoprint,
         };
+    }
+
+    // The rest of what a panel asks of its page. The cohort members are left
+    // out: this map is not filtered by one, so the features that read them
+    // report themselves unavailable.
+    @computed get clinicalAttributes() {
+        return this.patientStore.clinicalAttributes;
+    }
+
+    @computed get customAttributes() {
+        return this.patientStore.customAttributes;
+    }
+
+    @computed get allGenes() {
+        return this.patientStore.allGenes;
+    }
+
+    // The page store keeps its own copy private, so this reads the same one
+    // every page reads.
+    get appStore() {
+        return getBrowserWindow().globalStores.appStore;
+    }
+
+    readonly queriedPhysicalStudyIds = remoteData<string[]>({
+        invoke: async () => this.studyIds,
+        default: [],
+    });
+
+    // The panel hides itself when its page is on another tab; this one is
+    // only mounted while its tab is open.
+    get currentTab(): string {
+        return 'embeddings';
     }
 
     @computed get driverAnnotationSettings() {
