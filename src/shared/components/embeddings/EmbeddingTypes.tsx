@@ -84,6 +84,11 @@ export interface EmbeddingVisualizationProps {
      * which embedding is being drawn, since panels need not show the same one
      * and a sample sits somewhere different in each.
      */
+    /**
+     * Called the first time a point is hovered, so a page can hold back what
+     * only a tooltip needs until there is one to fill.
+     */
+    onPointHovered?: () => void;
     renderOverlay?: (
         project: (x: number, y: number) => { x: number; y: number },
         embedding?: EmbeddingData

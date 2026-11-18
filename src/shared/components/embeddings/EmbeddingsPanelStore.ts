@@ -51,6 +51,12 @@ export interface EmbeddingsPanelStore {
     appStore: { featureFlagStore: { has: (flag: any) => boolean } };
     currentTab: string;
 
+    /**
+     * Told which gene the map is coloured by, for a store that preloads
+     * alteration data per gene rather than fetching it per gene on demand.
+     */
+    setColoringGenes?: (genes: Gene[]) => void;
+
     /** The cohort the page's own filters leave; absent where nothing filters. */
     selectedSamples?: MobxPromise<Sample[]>;
     selectedPatients?: Patient[];

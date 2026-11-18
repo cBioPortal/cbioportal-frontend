@@ -7,6 +7,9 @@ import { colorToRgb } from './coordinateUtils';
 const REFERENCE_POINT_RADIUS = 0.02;
 const REFERENCE_POINT_ALPHA = 140;
 
+/** A point's radius in data units, before `radiusScale`. */
+export const POINT_RADIUS_DATA_UNITS = 0.03;
+
 // Points of a sample-level map carry no patientId, so selection is tracked by
 // whichever id the point has.
 function pointKey(d: EmbeddingPoint): string | undefined {
@@ -52,7 +55,7 @@ export function createScatterplotLayer(
             const isSelected =
                 !!key &&
                 (localSelectedSet.has(key) || externalSelectedSet.has(key));
-            return isSelected ? 0.05 : 0.03;
+            return isSelected ? 0.05 : POINT_RADIUS_DATA_UNITS;
         },
         getFillColor: (d: EmbeddingPoint) => {
             // Non-cohort samples always show their dark gray color

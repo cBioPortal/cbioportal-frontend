@@ -332,12 +332,27 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return this.reportedCohortCount > this.reportedTotalSampleCount;
     }
 
+    /**
+     * Whether leaving samples out of the map is worth warning about.
+     *
+     * It is on a page whose cohort the reader chose: the map then answers for
+     * less than they asked for. Where the "cohort" is only the studies the map
+     * happens to span, as on the patient view, there is nothing to warn about
+     * and the same note is simply information.
+     */
+    @computed private get hasChosenCohort(): boolean {
+        return !!this.props.store.updateCustomSelect;
+    }
+
     @computed private get hasExtraNonCohortSamples(): boolean {
         return this.reportedEmbeddingSampleSize > this.reportedTotalSampleCount;
     }
 
     @computed private get hasEmbeddingWarning(): boolean {
-        return this.hasMissingCohortSamples || this.hasExtraNonCohortSamples;
+        return (
+            this.hasChosenCohort &&
+            (this.hasMissingCohortSamples || this.hasExtraNonCohortSamples)
+        );
     }
 
     @action.bound
@@ -767,12 +782,25 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                                         case,{' '}
                                                         <strong>
                                                             {this.reportedTotalSampleCount.toLocaleString()}
-                                                        </strong>{' '}
-                                                        of this cohort&apos;s{' '}
-                                                        <strong>
-                                                            {this.reportedCohortCount.toLocaleString()}
-                                                        </strong>{' '}
-                                                        {this.unitLabel}).
+                                                        </strong>
+                                                        {this
+                                                            .hasChosenCohort ? (
+                                                            <>
+                                                                {' '}
+                                                                of this
+                                                                cohort&apos;s{' '}
+                                                                <strong>
+                                                                    {this.reportedCohortCount.toLocaleString()}
+                                                                </strong>{' '}
+                                                                {this.unitLabel}
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                {' '}
+                                                                {this.unitLabel}
+                                                            </>
+                                                        )}
+                                                        ).
                                                     </>
                                                 )}
                                             </div>

@@ -148,8 +148,14 @@ export class EmbeddingDeckGLVisualization extends React.Component<
         ];
     }
 
+    private hasReportedHover = false;
+
     private onHover = (info: any) => {
         const { object } = info;
+        if (object && !this.hasReportedHover) {
+            this.hasReportedHover = true;
+            this.props.onPointHovered?.();
+        }
         this.setState({
             hoveredPoint: object || null,
         });
@@ -513,10 +519,32 @@ export class EmbeddingDeckGLVisualization extends React.Component<
         }
     };
 
+    /**
+     * Where a data point sits on screen.
+     *
+     * Asks deck's own viewport where it can, so an overlay lands exactly on
+     * the point it marks: the viewport knows the canvas's real size, which
+     * the container's need not match to the pixel. The arithmetic below is
+     * the fallback for before the first render.
+     */
     private dataToScreen = (
         dataX: number,
         dataY: number
     ): { x: number; y: number } => {
+        try {
+            const viewport = (this.deckRef.current
+                ?.deck as any)?.getViewports?.()?.[0];
+            if (viewport?.project) {
+                const [x, y] = viewport.project([dataX, dataY]);
+                if (Number.isFinite(x) && Number.isFinite(y)) {
+                    return { x, y };
+                }
+            }
+        } catch (e) {
+            // Deck asserts rather than returning nothing when it has no
+            // viewport yet; the arithmetic below covers that moment.
+        }
+
         const { actualWidth, actualHeight } = this.state;
         const viewState = this.props.viewState || {
             target: [0, 0, 0],

@@ -204,6 +204,7 @@ export class EmbeddingsPanel extends React.Component<
     private urlSyncReactionDisposer?: () => void;
     private viewStateReactionDisposer?: () => void;
     private driverAnnotationReactionDisposer?: () => void;
+    private coloringGeneReactionDisposer?: () => void;
     private filterChangeReactionDisposer?: () => void;
     private hiddenSampleKeysReactionDisposer?: () => void;
     private sampleCountsReportReactionDisposer?: () => void;
@@ -342,6 +343,20 @@ export class EmbeddingsPanel extends React.Component<
                         this.syncColoringSelectionToURL(defaultOption);
                     }
                 }
+            },
+            { fireImmediately: true }
+        );
+
+        this.coloringGeneReactionDisposer = reaction(
+            () => this.selectedEntrezGeneId,
+            entrezGeneId => {
+                if (!this.store.setColoringGenes) {
+                    return;
+                }
+                const gene = this.genes.find(
+                    g => g.entrezGeneId === entrezGeneId
+                );
+                this.store.setColoringGenes(gene ? [gene] : []);
             },
             { fireImmediately: true }
         );
@@ -534,6 +549,9 @@ export class EmbeddingsPanel extends React.Component<
         }
         if (this.urlSyncReactionDisposer) {
             this.urlSyncReactionDisposer();
+        }
+        if (this.coloringGeneReactionDisposer) {
+            this.coloringGeneReactionDisposer();
         }
         if (this.driverAnnotationReactionDisposer) {
             this.driverAnnotationReactionDisposer();
@@ -782,14 +800,26 @@ export class EmbeddingsPanel extends React.Component<
         string,
         Map<string, string>
     > {
-        const ids = new Set(
-            EmbeddingsPanel.FIXED_TOOLTIP_CLINICAL_ATTRIBUTE_IDS
-        );
-        this.tooltipFieldsMirror.forEach(field => {
-            if (field.startsWith('clinical_')) {
-                ids.add(field.slice('clinical_'.length));
-            }
-        });
+        // Each attribute here is a fetch across every sample of the map, and
+        // the fixed rows are the same three on every page. Until a tooltip is
+        // actually wanted, offer only what colouring has already paid for.
+        const coloringAttributeId = this.selectedColoringOption?.info
+            ?.clinicalAttribute?.clinicalAttributeId;
+        const wanted =
+            this.tooltipDataRequested || this.tooltipFieldsMirror.size > 0;
+        const ids = new Set<string>();
+        if (wanted) {
+            EmbeddingsPanel.FIXED_TOOLTIP_CLINICAL_ATTRIBUTE_IDS.forEach(id =>
+                ids.add(id)
+            );
+            this.tooltipFieldsMirror.forEach(field => {
+                if (field.startsWith('clinical_')) {
+                    ids.add(field.slice('clinical_'.length));
+                }
+            });
+        } else if (coloringAttributeId) {
+            ids.add(coloringAttributeId);
+        }
 
         const result = new Map<string, Map<string, string>>();
         ids.forEach(id => {
@@ -929,7 +959,22 @@ export class EmbeddingsPanel extends React.Component<
         return !!embeddingsColoringSelection?.selectedOption;
     }
 
+    /** Whether the URL names a gene, which only the list can resolve. */
+    @computed private get urlNamesAGene(): boolean {
+        const selectedOption = (this.store as any).urlWrapper?.query?.[
+            this.coloringParamName
+        ]?.selectedOption;
+        return (
+            typeof selectedOption === 'string' && /^\d+_/.test(selectedOption)
+        );
+    }
+
+    // Every gene in the portal - 3 MB of them - and nothing needs the list
+    // until the colour-by menu is reached for, or a link names one.
     @computed get genes(): Gene[] {
+        if (!this.genesRequested && !this.urlNamesAGene) {
+            return [];
+        }
         const genesResult = this.store.allGenes;
         return genesResult.isComplete ? genesResult.result || [] : [];
     }
@@ -2140,6 +2185,7 @@ export class EmbeddingsPanel extends React.Component<
 
     @action.bound
     private pinPoint(point: EmbeddingPoint) {
+        this.tooltipDataRequested = true;
         this.pinnedPoint = point;
     }
 
@@ -2231,6 +2277,22 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @observable private isComparingSelections = false;
+
+    // Fetching what a tooltip or the gene menu needs costs a pass over the
+    // whole map, so it waits until something asks for it. See
+    // tooltipClinicalAttributeValueMaps and genes.
+    @observable private tooltipDataRequested = false;
+    @observable private genesRequested = false;
+
+    @action.bound
+    requestTooltipData() {
+        this.tooltipDataRequested = true;
+    }
+
+    @action.bound
+    requestGenes() {
+        this.genesRequested = true;
+    }
 
     /**
      * Opens the selections side by side in group comparison.
@@ -2492,6 +2554,7 @@ export class EmbeddingsPanel extends React.Component<
             onClipToPercentile: this.onClipToPercentile,
             pinnedPoint: this.pinnedPoint,
             onPinPoint: this.pinPoint,
+            onPointHovered: this.requestTooltipData,
             onUnpinPoint: this.unpinPoint,
             selectedTooltipFields: new Set(this.props.tooltipFields), //Clone to ensure prop identity changes and the tooltip re-renders reliably
             colorByLabel: this.effectiveColoringOption?.label,
@@ -2515,10 +2578,14 @@ export class EmbeddingsPanel extends React.Component<
                         this.props.panelCount > 1 && !this.props.isMapLocked
                     }
                     genes={this.genes}
+                    onColorByReached={this.requestGenes}
                     clinicalAttributes={this.clinicalAttributes}
                     additionalGroups={this.embeddingDataGroups}
                     selectedColoringOption={this.effectiveColoringOption}
-                    isLoading={this.isLoading}
+                    isLoading={
+                        this.isLoading ||
+                        (this.genesRequested && !this.store.allGenes.isComplete)
+                    }
                     mutationDataExists={this.mutationDataExists}
                     cnaDataExists={this.cnaDataExists}
                     svDataExists={this.svDataExists}

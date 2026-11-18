@@ -25,6 +25,8 @@ export interface EmbeddingControlStackProps {
 
     // Color by
     genes: Gene[];
+    /** Reaching for the colour-by menu is what starts the gene list loading. */
+    onColorByReached?: () => void;
     clinicalAttributes: ClinicalAttribute[];
     additionalGroups?: ColoringMenuOmnibarGroup[];
     selectedColoringOption?: ColoringMenuOmnibarOption;
@@ -107,6 +109,7 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
     showMapColorTooltipControls,
     showMapInControlStack = true,
     genes,
+    onColorByReached,
     clinicalAttributes,
     additionalGroups,
     selectedColoringOption,
@@ -171,7 +174,11 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
             )}
 
             {showMapColorTooltipControls && (
-                <div style={{ width: '190px' }}>
+                <div
+                    style={{ width: '190px' }}
+                    onMouseEnter={onColorByReached}
+                    onFocusCapture={onColorByReached}
+                >
                     <span style={ROW_LABEL_STYLE}>Color by</span>
                     <ColorSamplesByDropdown
                         genes={genes}

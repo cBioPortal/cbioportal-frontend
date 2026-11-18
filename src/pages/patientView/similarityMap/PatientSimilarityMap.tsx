@@ -10,7 +10,11 @@ import {
     EmbeddingPoint,
     SampleEmbeddingData,
 } from 'shared/components/embeddings/EmbeddingTypes';
-import { calculateDataBounds } from 'shared/components/embeddings/utils/dataUtils';
+import {
+    calculatePointScale,
+    calculateSparseMapPointFactor,
+} from 'shared/components/embeddings/utils/dataUtils';
+import { POINT_RADIUS_DATA_UNITS } from 'shared/components/embeddings/utils/layerUtils';
 import {
     getLoadedEmbeddingOptions,
     isAnyEmbeddingPending,
@@ -26,10 +30,14 @@ import {
     SampleEmbeddingPoint,
 } from './PatientSimilarityMapUtils';
 
-// SampleLabelHTML draws a 12px icon; enlarged so it stands out on a dense map.
+// SampleLabelHTML draws at this size; the mark is scaled up from it.
 const SAMPLE_ICON_SIZE = 12;
-const SAMPLE_ICON_SCALE = 1.5;
-const SAMPLE_ICON_MAX_SCALE = 6;
+// Never smaller than this, or it is lost on a dense map; never larger, or it
+// covers the neighbourhood it is meant to point at.
+const SAMPLE_ICON_MIN_PX = 18;
+const SAMPLE_ICON_MAX_PX = 30;
+// How much bigger than the points around it the mark reads.
+const SAMPLE_ICON_POINT_RATIO = 2;
 
 export interface IPatientSimilarityMapProps {
     studyId: string;
@@ -174,10 +182,9 @@ export default class PatientSimilarityMap extends React.Component<
      * How large to draw this patient's marks.
      *
      * The plot sizes its points in data units, so they grow as the map is
-     * zoomed into and a fixed mark shrinks against them. Projecting a unit
-     * step gives the pixels per data unit without the panel having to report
-     * its zoom; comparing that against the zoom which frames the whole map
-     * says how far in the viewer is.
+     * zoomed into: a mark of fixed size is lost among them, and one that
+     * simply tracks the zoom swells until it hides what it points at. This
+     * follows the points' own on-screen size, between bounds.
      */
     private sampleIconScale(
         project: (x: number, y: number) => { x: number; y: number },
@@ -185,22 +192,25 @@ export default class PatientSimilarityMap extends React.Component<
     ): number {
         const points = this.patientMapPoints(embedding);
         if (points.length === 0) {
-            return SAMPLE_ICON_SCALE;
+            return SAMPLE_ICON_MIN_PX / SAMPLE_ICON_SIZE;
         }
-        const pixelsPerUnit =
-            project(1, 0).x - project(0, 0).x ||
-            Math.pow(2, calculateDataBounds(points as EmbeddingPoint[]).zoom);
-        const fitted = Math.pow(
-            2,
-            calculateDataBounds(points as EmbeddingPoint[]).zoom
-        );
-        return Math.min(
-            SAMPLE_ICON_MAX_SCALE,
+        // Projecting a unit step gives the pixels per data unit without the
+        // panel having to report its zoom.
+        const pixelsPerDataUnit = Math.abs(project(1, 0).x - project(0, 0).x);
+        const pointDiameterPx =
+            2 *
+            POINT_RADIUS_DATA_UNITS *
+            calculatePointScale(points as EmbeddingPoint[]) *
+            calculateSparseMapPointFactor(points.length) *
+            pixelsPerDataUnit;
+        const sizePx = Math.min(
+            SAMPLE_ICON_MAX_PX,
             Math.max(
-                SAMPLE_ICON_SCALE,
-                (SAMPLE_ICON_SCALE * Math.abs(pixelsPerUnit)) / fitted
+                SAMPLE_ICON_MIN_PX,
+                SAMPLE_ICON_POINT_RATIO * pointDiameterPx
             )
         );
+        return sizePx / SAMPLE_ICON_SIZE;
     }
 
     private renderSampleIcons = (
