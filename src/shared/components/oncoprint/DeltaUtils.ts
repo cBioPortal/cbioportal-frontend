@@ -23,6 +23,7 @@ import {
     getGenesetHeatmapTrackRuleSetParams,
     getGeneticTrackRuleSetParams,
     getHeatmapTrackRuleSetParams,
+    isTpmHeatmap,
 } from './OncoprintUtils';
 import {
     getClinicalTrackSortComparator,
@@ -1603,8 +1604,9 @@ export function transitionHeatmapTrack(
         trackSpecKeyToTrackId[nextSpec.key] = newTrackId;
 
         if (
+            !isTpmHeatmap(nextSpec) &&
             nextSpec.molecularAlterationType !==
-            AlterationTypeConstants.GENERIC_ASSAY
+                AlterationTypeConstants.GENERIC_ASSAY
         ) {
             let trackIdForRuleSetSharingKey:
                 | 'heatmap'
@@ -1640,7 +1642,10 @@ export function transitionHeatmapTrack(
             }
             // Store this track ID for future tracks of the same type
             trackIdForRuleSetSharing[trackIdForRuleSetSharingKey] = newTrackId;
-        } else {
+        } else if (
+            nextSpec.molecularAlterationType ===
+            AlterationTypeConstants.GENERIC_ASSAY
+        ) {
             // if the track is a generic assay profile, add to trackIdForRuleSetSharing under its `molecularProfileId`
             // this makes the trackId available for existing tracks of the same mol.profile for ruleset sharing
             trackIdForRuleSetSharing.genericAssayHeatmap![
@@ -1655,6 +1660,15 @@ export function transitionHeatmapTrack(
         if (nextSpec.data !== prevSpec.data) {
             // shallow equality check
             oncoprint.setTrackData(trackId, nextSpec.data, 'uid');
+            if (isTpmHeatmap(nextSpec)) {
+                oncoprint.setRuleSet(
+                    trackId,
+                    getHeatmapTrackRuleSetParams(
+                        nextSpec,
+                        nextProps.isWhiteBackgroundForGlyphsEnabled
+                    )
+                );
+            }
         }
         if (nextSpec.info !== prevSpec.info && nextSpec.info !== undefined) {
             oncoprint.setTrackInfo(trackId, nextSpec.info);

@@ -212,7 +212,10 @@ import {
 import { makeUniqueColorGetter } from '../../shared/components/plots/PlotUtils';
 import { PlotsTabStore } from 'shared/components/plots/PlotsTabStore';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
-import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
+import {
+    getSuffixOfMolecularProfile,
+    isTpmExpressionProfile,
+} from 'shared/lib/molecularProfileUtils';
 import {
     AlterationTypeConstants,
     CLINICAL_ATTRIBUTE_FIELD_ENUM,
@@ -4535,12 +4538,18 @@ export class ResultsViewPageStore extends AnalysisStore
             const expressionHeatmaps = _.sortBy(
                 _.filter(this.molecularProfilesInStudies.result!, profile => {
                     return (
-                        // Select mrna and protein profiles only if showProfileInAnalysisTab is true
+                        // TPM profiles can be visualized as continuous heatmaps.
                         // Select all methylation profiles
                         ((profile.molecularAlterationType === MRNA_EXPRESSION ||
                             profile.molecularAlterationType ===
                                 PROTEIN_LEVEL) &&
                             profile.showProfileInAnalysisTab) ||
+                        isTpmExpressionProfile(
+                            profile.molecularAlterationType,
+                            profile.datatype,
+                            profile.molecularProfileId,
+                            profile.name
+                        ) ||
                         profile.molecularAlterationType === METHYLATION ||
                         (profile.molecularAlterationType ===
                             MUTATION_EXTENDED &&

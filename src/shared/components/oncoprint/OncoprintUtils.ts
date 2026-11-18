@@ -1,3 +1,4 @@
+import { isTpmExpressionProfile } from 'shared/lib/molecularProfileUtils';
 import {
     CustomTrackOption,
     ICategoricalRuleSetParams,
@@ -227,6 +228,15 @@ function formatGeneticTrackOql(
         : oqlFilter.oql_line;
 }
 
+export function isTpmHeatmap(track: IHeatmapTrackSpec): boolean {
+    return isTpmExpressionProfile(
+        track.molecularAlterationType,
+        track.datatype,
+        track.molecularProfileId,
+        track.molecularProfileName
+    );
+}
+
 export function getHeatmapTrackRuleSetParams(
     trackSpec: IHeatmapTrackSpec,
     isWhiteBackgroundForGlyphsEnabled?: boolean
@@ -262,6 +272,24 @@ export function getHeatmapTrackRuleSetParams(
             ];
             break;
         default:
+            if (isTpmHeatmap(trackSpec)) {
+                const maximum =
+                    trackSpec.data.reduce((max, datum) => {
+                        const value = datum.profile_data;
+                        return value !== null && Number.isFinite(value)
+                            ? Math.max(max, value)
+                            : max;
+                    }, 0) || 1;
+                value_range = [0, maximum];
+                legend_label =
+                    trackSpec.legendLabel || `${trackSpec.label} TPM`;
+                value_stop_points = [0, maximum];
+                colors = [
+                    [247, 251, 255, 1],
+                    [8, 48, 107, 1],
+                ];
+                break;
+            }
             value_range = [-3, 3];
             legend_label = trackSpec.legendLabel || 'Expression Heatmap';
             value_stop_points = [-3, 0, 3];
