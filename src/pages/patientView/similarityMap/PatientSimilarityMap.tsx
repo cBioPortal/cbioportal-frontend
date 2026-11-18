@@ -1,199 +1,58 @@
 import * as React from 'react';
-import _ from 'lodash';
-import {
-    action,
-    autorun,
-    computed,
-    makeObservable,
-    observable,
-    runInAction,
-} from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
-import { remoteData } from 'cbioportal-frontend-commons';
 import SampleManager from 'pages/patientView/SampleManager';
-import Select from 'react-select';
-import {
-    ClinicalAttribute,
-    ClinicalData,
-    Gene,
-    MolecularProfile,
-    Sample,
-    SampleFilter,
-    SampleIdentifier,
-    StudyViewFilter,
-} from 'cbioportal-ts-api-client';
-import { getClient } from 'shared/api/cbioportalClientInstance';
-import internalClient from 'shared/api/cbioportalInternalClientInstance';
-import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
-import { getClinicalAttributeColoring } from 'shared/cache/ClinicalDataCacheUtils';
-import { ClinicalDataCacheEntry } from 'shared/cache/ClinicalDataCache';
+import { Sample, SampleIdentifier } from 'cbioportal-ts-api-client';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import { EmbeddingDeckGLVisualization } from 'shared/components/embeddings';
 import {
     EmbeddingData,
     EmbeddingDataOption,
     EmbeddingPoint,
     SampleEmbeddingData,
 } from 'shared/components/embeddings/EmbeddingTypes';
-import { SelectionControls } from 'shared/components/embeddings/controls/SelectionControls';
-import {
-    calculateContextPointBoost,
-    calculateDataBounds,
-    calculatePointScale,
-    calculateSparseMapPointFactor,
-} from 'shared/components/embeddings/utils/dataUtils';
+import { calculateDataBounds } from 'shared/components/embeddings/utils/dataUtils';
 import {
     getLoadedEmbeddingOptions,
     isAnyEmbeddingPending,
 } from 'shared/components/embeddings/embeddingSources';
-import { makeEmbeddingScatterPlotData } from 'shared/components/plots/EmbeddingPlotUtils';
-import { ColoringMenuOmnibarOption } from 'shared/components/plots/PlotsTabTypes';
-import ColorSamplesByDropdown from 'shared/components/colorSamplesByDropdown/ColorSamplesByDropdown';
-import { EmbeddingControlStack } from 'shared/components/embeddings/controls/EmbeddingControlStack';
 import { MapColoringContext } from './MapColoringContext';
 import { EmbeddingsTab } from 'pages/studyView/tabs/EmbeddingsTab';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
-import { EmbeddingViewportState } from 'shared/components/embeddings/state/EmbeddingViewportState';
-import { EmbeddingCategoryVisibility } from 'shared/components/embeddings/state/EmbeddingCategoryVisibility';
 import {
     getEmbeddingOptionsForSamples,
-    getClinicalColorsBySampleId,
     getStudyViewMapUrl,
-    mapWithConcurrency,
-    projectToScreen,
     SampleEmbeddingOption,
     SampleEmbeddingPoint,
 } from './PatientSimilarityMapUtils';
 
-// Floor for the map when the window is short; normally it takes whatever
-// height is left below it.
-const MIN_MAP_HEIGHT = 420;
-const MAP_BOTTOM_MARGIN = 16;
-const UNCOLORED_POINT_COLOR = '#bbbbbb';
-const NO_DATA_LABEL = 'No data';
-// What the study view colours by; on a pan-cancer map it is the one attribute
-// whose legend still reads as a map.
-const DEFAULT_COLORING_ATTRIBUTE_ID = 'CANCER_TYPE';
 // SampleLabelHTML draws a 12px icon; enlarged so it stands out on a dense map.
 const SAMPLE_ICON_SIZE = 12;
 const SAMPLE_ICON_SCALE = 1.5;
 const SAMPLE_ICON_MAX_SCALE = 6;
-// The study view's own fetch, one POST per cohort, scales poorly at this size:
-// resolving every identifier of a 30-study map in one request is slower than
-// splitting it. A few chunks in parallel beat both that and a request per
-// study. The API answers a burst with 429s, so a failure is retried.
-const CLINICAL_FETCH_CHUNK_SIZE = 15000;
-const CLINICAL_FETCH_CONCURRENCY = 5;
-const CLINICAL_FETCH_ATTEMPTS = 3;
-const CLINICAL_FETCH_BACKOFF_MS = 400;
-
-const ROW_LABEL_STYLE: React.CSSProperties = {
-    fontSize: '9px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.03em',
-    color: '#888',
-    lineHeight: '12px',
-};
-
-const SELECT_STYLES = {
-    control: (base: any) => ({
-        ...base,
-        fontSize: '12px',
-        minHeight: '32px',
-        boxShadow: 'none',
-        border: '1px solid #ccc',
-    }),
-    menu: (base: any) => ({ ...base, fontSize: '12px', zIndex: 9999 }),
-    container: (base: any) => ({ ...base, width: '100%' }),
-};
-
-// How many samples the colouring could not be read for, so the map can say so
-// instead of showing those points as though they had no value.
-type MapColoringEntry = ClinicalDataCacheEntry & { failedSampleCount: number };
-
-function sleep(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-// The map's own control cluster is replaced by this page's own, and a stable
-// identity keeps panning from re-rendering the plot's subtree each frame.
-const renderNoControls = () => null;
 
 export interface IPatientSimilarityMapProps {
     studyId: string;
     patientViewPageStore: PatientViewPageStore;
     sampleManager: SampleManager;
     hasEmbeddingsFeatureFlag: boolean;
-    clinicalAttributes: ClinicalAttribute[];
 }
 
+/**
+ * This patient's place in a similarity map.
+ *
+ * The map, its colouring, its legend and its selections are the study view's
+ * Similarity Maps tab, rendered here over the studies the map covers. What
+ * this page adds is its own: marks on the patient's samples, and a link that
+ * opens a selection in the study view.
+ */
 @observer
 export default class PatientSimilarityMap extends React.Component<
     IPatientSimilarityMapProps,
     {}
 > {
-    @observable private selectedValue: string | undefined;
-    @observable.ref private selectedColoringOption?: ColoringMenuOmnibarOption;
-    @observable private mutationTypeEnabled = true;
-    @observable private copyNumberEnabled = true;
-    @observable private structuralVariantEnabled = true;
-    @observable private selectionMode: 'none' | 'lasso' = 'none';
-    private readonly viewport = new EmbeddingViewportState();
-    @observable.ref private lassoSelection: string[] = [];
-    @observable.ref private lassoSampleIdentifiers: SampleIdentifier[] = [];
-    @observable private isResolvingLasso = false;
-    private readonly categoryVisibility = new EmbeddingCategoryVisibility();
-    @observable.ref private pinnedPoint: EmbeddingPoint | null = null;
-    @observable private mapWidth = 0;
-    @observable private mapHeight = MIN_MAP_HEIGHT;
-    // Bumped to remount the plot, the only way to drop the selection it keeps
-    // in its own state.
-    @observable private plotInstance = 0;
-
-    private container: HTMLDivElement | null = null;
-    private centeredMapValue: string | undefined;
-    private centerDisposer?: () => void;
-    private lassoToken = 0;
-
     constructor(props: IPatientSimilarityMapProps) {
         super(props);
         makeObservable(this);
-    }
-
-    componentDidMount() {
-        this.measure();
-        window.addEventListener('resize', this.measure);
-        // The map arrives from a shared fetch, so the first points can show up
-        // well after mount.
-        this.centerDisposer = autorun(() => {
-            const option = this.selectedOption;
-            if (option && this.centeredMapValue !== option.value) {
-                this.centeredMapValue = option.value;
-                this.centerView();
-            }
-        });
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.measure);
-        this.centerDisposer?.();
-    }
-
-    private setContainer = (element: HTMLDivElement | null) => {
-        this.container = element;
-        this.measure();
-    };
-
-    @action.bound
-    private measure() {
-        if (this.container) {
-            this.mapWidth = this.container.clientWidth;
-            const top = this.container.getBoundingClientRect().top;
-            this.mapHeight = Math.max(
-                MIN_MAP_HEIGHT,
-                window.innerHeight - top - MAP_BOTTOM_MARGIN
-            );
-        }
     }
 
     @computed get sampleIds(): string[] {
@@ -216,10 +75,7 @@ export default class PatientSimilarityMap extends React.Component<
     }
 
     @computed get selectedOption(): SampleEmbeddingOption | undefined {
-        return (
-            this.options.find(o => o.value === this.selectedValue) ??
-            this.options[0]
-        );
+        return this.options[0];
     }
 
     // Sample-level only: a point is a sample, and a patient attribute would
@@ -233,261 +89,6 @@ export default class PatientSimilarityMap extends React.Component<
         return this.selectedOption?.data.studyIds ?? [this.props.studyId];
     }
 
-    // Which study each sample of the map belongs to, for turning a lasso into
-    // a study view selection. A map's points carry a bare sample id.
-    @computed get sampleStudyIds(): Map<string, string> {
-        const index = new Map<string, string>();
-        this.coloring.samples.result?.forEach(s =>
-            index.set(s.sampleId, s.studyId)
-        );
-        return index;
-    }
-
-    @computed get colorableGenes(): Gene[] {
-        return this.props.patientViewPageStore.allGenes.result ?? [];
-    }
-
-    @computed get mapProfiles(): MolecularProfile[] {
-        return this.coloring.molecularProfiles.result ?? [];
-    }
-
-    @computed get mutationDataExists(): boolean {
-        return this.mapProfiles.some(
-            p => p.molecularAlterationType === 'MUTATION_EXTENDED'
-        );
-    }
-
-    @computed get cnaDataExists(): boolean {
-        return this.mapProfiles.some(
-            p => p.molecularAlterationType === 'COPY_NUMBER_ALTERATION'
-        );
-    }
-
-    @computed get svDataExists(): boolean {
-        return this.mapProfiles.some(
-            p => p.molecularAlterationType === 'STRUCTURAL_VARIANT'
-        );
-    }
-
-    @computed get coloringAttributes(): ClinicalAttribute[] {
-        return _.sortBy(
-            this.props.clinicalAttributes.filter(a => !a.patientAttribute),
-            a => a.displayName
-        );
-    }
-
-    // Defaults to cancer type, the one attribute whose legend still reads as a
-    // map on a pan-cancer embedding.
-    @computed get coloringOption(): ColoringMenuOmnibarOption | undefined {
-        if (this.selectedColoringOption) {
-            return this.selectedColoringOption;
-        }
-        const attribute = this.coloringAttributes.find(
-            a => a.clinicalAttributeId === DEFAULT_COLORING_ATTRIBUTE_ID
-        );
-        return attribute
-            ? ({
-                  label: attribute.displayName,
-                  info: { clinicalAttribute: attribute },
-              } as ColoringMenuOmnibarOption)
-            : undefined;
-    }
-
-    // The caches are read synchronously while colouring, and report nothing
-    // until they are complete, so a map drawn too early says every sample is
-    // unaltered. Waiting on them here keeps that state off the screen.
-    readonly molecularDataForColoring = remoteData({
-        await: () => {
-            const entrezGeneId = this.coloringOption?.info?.entrezGeneId;
-            if (entrezGeneId === undefined || entrezGeneId === -3) {
-                return [];
-            }
-            const store = this.coloring.plotsStore;
-            const settings = this.props.patientViewPageStore
-                .driverAnnotationSettings;
-            const queries = [{ entrezGeneId }];
-            const toAwait: any[] = [];
-            if (settings?.oncoKb) {
-                toAwait.push(store.oncoKbMutationAnnotationForOncoprint);
-            }
-            if (settings?.hotspots) {
-                toAwait.push(store.isHotspotForOncoprint);
-            }
-            toAwait.push(store.getMutationPutativeDriverInfo);
-            if (this.mutationTypeEnabled) {
-                toAwait.push(
-                    ...this.coloring.mapMutationCache.getAll(queries)
-                );
-            }
-            if (this.copyNumberEnabled) {
-                toAwait.push(...store.annotatedCnaCache.getAll(queries));
-            }
-            if (this.structuralVariantEnabled) {
-                toAwait.push(...store.structuralVariantCache.getAll(queries));
-            }
-            return toAwait;
-        },
-        invoke: () => Promise.resolve(true),
-    });
-
-    @computed get isColoringPending(): boolean {
-        if (!this.selectedOption) {
-            return false;
-        }
-        const gene = this.coloringOption?.info?.entrezGeneId;
-        const base = [
-            this.coloring.samples,
-            this.coloring.molecularProfiles,
-            this.coloring.studies,
-        ];
-        if (base.some(p => p.isPending)) {
-            return true;
-        }
-        if (gene !== undefined) {
-            return (
-                this.coloring.plotsStore.coverageInformation.isPending ||
-                this.molecularDataForColoring.isPending
-            );
-        }
-        return false;
-    }
-
-    @computed get coloringClinicalAttribute(): ClinicalAttribute | undefined {
-        return this.coloringOption?.info?.clinicalAttribute as
-            | ClinicalAttribute
-            | undefined;
-    }
-
-    @computed get isNumericColoring(): boolean {
-        return this.coloringClinicalAttribute?.datatype === 'NUMBER';
-    }
-
-    // Supplies the legend's gradient; the points themselves are already
-    // coloured by the shared helper.
-    @computed get clinicalColoringEntry() {
-        const attribute = this.coloringClinicalAttribute;
-        if (!attribute) {
-            return undefined;
-        }
-        const entry = this.coloring.clinicalDataCache.get(attribute as any);
-        return entry.isComplete ? entry.result : undefined;
-    }
-
-    @computed get allPoints(): EmbeddingPoint[] {
-        const option = this.selectedOption;
-        if (!option) {
-            return [];
-        }
-        return makeEmbeddingScatterPlotData(
-            option.data,
-            this.coloring,
-            this.coloringOption,
-            this.mutationTypeEnabled,
-            this.copyNumberEnabled,
-            this.structuralVariantEnabled
-        ) as EmbeddingPoint[];
-    }
-
-
-    @computed get plotData(): EmbeddingPoint[] {
-        const hidden = this.categoryVisibility.hidden;
-        if (hidden.size === 0) {
-            return this.allPoints;
-        }
-        return this.allPoints.filter(
-            p => !p.displayLabel || !hidden.has(p.displayLabel)
-        );
-    }
-
-    @computed get categoryCounts(): Map<string, number> {
-        const counts = new Map<string, number>();
-        for (const point of this.allPoints) {
-            const category = point.displayLabel || '';
-            counts.set(category, (counts.get(category) || 0) + 1);
-        }
-        return counts;
-    }
-
-    @computed get visibleCategoryCounts(): Map<string, number> {
-        const counts = new Map<string, number>();
-        for (const point of this.plotData) {
-            const category = point.displayLabel || '';
-            counts.set(category, (counts.get(category) || 0) + 1);
-        }
-        return counts;
-    }
-
-    @computed get categoryColors(): Map<
-        string,
-        { fillColor: string; strokeColor: string; hasStroke: boolean }
-    > {
-        const colors = new Map<
-            string,
-            { fillColor: string; strokeColor: string; hasStroke: boolean }
-        >();
-        for (const point of this.allPoints) {
-            if (point.displayLabel && point.color) {
-                if (!colors.has(point.displayLabel)) {
-                    colors.set(point.displayLabel, {
-                        fillColor: point.color,
-                        strokeColor: point.color,
-                        hasStroke: false,
-                    });
-                }
-            }
-        }
-        return colors;
-    }
-
-    // From the whole map rather than what is plotted, so hiding a category
-    // leaves the remaining points' size unchanged.
-    @computed get pointScale(): number {
-        const points = this.selectedOption?.data.data ?? [];
-        return (
-            calculatePointScale(points) *
-            calculateSparseMapPointFactor(points.length)
-        );
-    }
-
-    @computed get contextPointBoost(): number {
-        const pointCount = this.selectedOption?.data.data.length ?? 0;
-        return (
-            calculateContextPointBoost(pointCount) /
-            calculateSparseMapPointFactor(pointCount)
-        );
-    }
-
-    // Only this patient's points, so panning reprojects a handful rather than
-    // indexing the whole map on every frame.
-    @computed get patientPoints(): SampleEmbeddingPoint[] {
-        const option = this.selectedOption;
-        if (!option) {
-            return [];
-        }
-        const wanted = new Set(this.sampleIds);
-        return option.data.data.filter(p => wanted.has(p.sampleId));
-    }
-
-    @computed get placedSamples(): {
-        sampleId: string;
-        left: number;
-        top: number;
-    }[] {
-        if (this.mapWidth === 0) {
-            return [];
-        }
-        return this.patientPoints.map(p => {
-            const [left, top] = projectToScreen(
-                p.x,
-                p.y,
-                this.viewport.current,
-                this.mapWidth,
-                this.mapHeight
-            );
-            return { sampleId: p.sampleId, left, top };
-        });
-    }
-
     @computed get unplacedSampleIds(): string[] {
         const option = this.selectedOption;
         if (!option) {
@@ -495,46 +96,6 @@ export default class PatientSimilarityMap extends React.Component<
         }
         const inMap = new Set(option.data.data.map(p => p.sampleId));
         return this.sampleIds.filter(id => !inMap.has(id));
-    }
-
-    @action.bound
-    private centerView() {
-        this.viewport.centerOn(
-            (this.selectedOption?.data.data ?? []) as EmbeddingPoint[]
-        );
-    }
-
-    @action.bound
-    private onMutationTypeToggle(enabled: boolean) {
-        this.mutationTypeEnabled = enabled;
-    }
-
-    @action.bound
-    private onCopyNumberToggle(enabled: boolean) {
-        this.copyNumberEnabled = enabled;
-    }
-
-    @action.bound
-    private onStructuralVariantToggle(enabled: boolean) {
-        this.structuralVariantEnabled = enabled;
-    }
-
-    @action.bound
-    private onColoringSelectionChange(option?: ColoringMenuOmnibarOption) {
-        this.selectedColoringOption = option;
-        this.categoryVisibility.reset();
-        this.syncColoringGene();
-    }
-
-    // The context fetches and annotates whichever gene it is told about, so a
-    // driver call reaches the map only if this stays in step with the menu.
-    @action.bound
-    private syncColoringGene() {
-        const entrezGeneId = this.coloringOption?.info?.entrezGeneId;
-        const gene = this.colorableGenes.find(
-            g => g.entrezGeneId === entrezGeneId
-        );
-        this.coloring.setColoringGenes(gene ? [gene] : []);
     }
 
     /**
@@ -591,15 +152,10 @@ export default class PatientSimilarityMap extends React.Component<
     }
 
     private patientPointsIn(embedding?: EmbeddingData): SampleEmbeddingPoint[] {
-        const data =
-            embedding && embedding.embedding_type === 'samples'
-                ? (embedding as SampleEmbeddingData).data
-                : this.selectedOption?.data.data;
-        if (!data) {
-            return [];
-        }
         const wanted = new Set(this.sampleIds);
-        return data.filter(p => wanted.has(p.sampleId));
+        return this.patientMapPoints(embedding).filter(p =>
+            wanted.has(p.sampleId)
+        );
     }
 
     /**
@@ -670,8 +226,7 @@ export default class PatientSimilarityMap extends React.Component<
     };
 
     render() {
-        const option = this.selectedOption;
-        if (!option) {
+        if (!this.selectedOption) {
             return isAnyEmbeddingPending(this.embeddingScope) ? (
                 <LoadingIndicator isLoading={true} size={'big'} center={true} />
             ) : (

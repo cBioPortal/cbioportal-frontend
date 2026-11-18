@@ -935,10 +935,6 @@ export function tabs(
                     patientViewPageStore={pageComponent.patientViewPageStore}
                     sampleManager={sampleManager}
                     hasEmbeddingsFeatureFlag={hasEmbeddingsFlag}
-                    clinicalAttributes={
-                        pageComponent.patientViewPageStore.clinicalAttributes
-                            .result || []
-                    }
                 />
             </MSKTab>
         );

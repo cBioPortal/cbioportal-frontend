@@ -2,10 +2,7 @@ import { assert } from 'chai';
 import { EmbeddingDataOption } from 'shared/components/embeddings/EmbeddingTypes';
 import {
     getEmbeddingOptionsForSamples,
-    getClinicalColorsBySampleId,
     getStudyViewMapUrl,
-    mapWithConcurrency,
-    projectToScreen,
 } from './PatientSimilarityMapUtils';
 
 function option(
@@ -113,93 +110,5 @@ describe('getStudyViewMapUrl', () => {
             { studyId: 'brca_tcga', sampleId: 'TCGA-A1-A0SB-01' },
             { studyId: 'msk_impact_50k_2026', sampleId: 'P-0000012-T03' },
         ]);
-    });
-});
-
-describe('getClinicalColorsBySampleId', () => {
-    const data = [
-        { studyId: 'msktarget', sampleId: 'S1', value: 'Male' },
-        { studyId: 'msktarget', sampleId: 'S2', value: 'Female' },
-        { studyId: 'other', sampleId: 'S3', value: 'Male' },
-    ];
-
-    it('keys by bare sample id and drops studies the map does not cover', () => {
-        const { colors, values } = getClinicalColorsBySampleId(
-            data,
-            { Male: '#111111', Female: '#222222' },
-            undefined,
-            ['msktarget']
-        );
-        assert.deepEqual(Array.from(values.entries()).sort(), [
-            ['S1', 'Male'],
-            ['S2', 'Female'],
-        ].sort());
-        assert.equal(colors.get('S1'), '#111111');
-        assert.equal(colors.get('S2'), '#222222');
-        assert.isUndefined(colors.get('S3'), 'other studies are excluded');
-    });
-
-    it('keeps every study the map covers', () => {
-        const { colors, values } = getClinicalColorsBySampleId(
-            data,
-            { Male: '#111111', Female: '#222222' },
-            undefined,
-            ['msktarget', 'other']
-        );
-        assert.equal(values.get('S3'), 'Male');
-        assert.equal(colors.get('S3'), '#111111');
-    });
-
-    it('leaves samples with no value absent so the caller can grey them', () => {
-        const { colors } = getClinicalColorsBySampleId(
-            [{ studyId: 'msktarget', sampleId: 'S1', value: 'Male' }],
-            { Male: '#111111' },
-            undefined,
-            ['msktarget']
-        );
-        assert.isUndefined(colors.get('S_not_in_cohort'));
-    });
-});
-
-describe('mapWithConcurrency', () => {
-    it('keeps input order and never exceeds the limit', async () => {
-        let inFlight = 0;
-        let peak = 0;
-        const result = await mapWithConcurrency([1, 2, 3, 4, 5, 6], 2, async n => {
-            inFlight++;
-            peak = Math.max(peak, inFlight);
-            await new Promise(resolve => setTimeout(resolve, (7 - n) * 5));
-            inFlight--;
-            return n * 10;
-        });
-        assert.deepEqual(result, [10, 20, 30, 40, 50, 60]);
-        assert.isAtMost(peak, 2);
-    });
-
-    it('returns an empty array for no items', async () => {
-        assert.deepEqual(await mapWithConcurrency([], 3, async () => 1), []);
-    });
-});
-
-describe('projectToScreen', () => {
-    const viewState = { target: [0, 0, 0], zoom: 0 };
-
-    it('puts the view target at the centre', () => {
-        assert.deepEqual(projectToScreen(0, 0, viewState, 800, 560), [
-            400,
-            280,
-        ]);
-    });
-
-    it('grows y downward, as the viewer draws it', () => {
-        const [, top] = projectToScreen(0, 10, viewState, 800, 560);
-        assert.isAbove(top, 280);
-    });
-
-    it('scales by two per zoom step', () => {
-        assert.deepEqual(
-            projectToScreen(10, 0, { target: [0, 0, 0], zoom: 1 }, 800, 560),
-            [420, 280]
-        );
     });
 });

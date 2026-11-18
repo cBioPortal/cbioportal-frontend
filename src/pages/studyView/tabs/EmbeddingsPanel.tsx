@@ -263,8 +263,10 @@ export class EmbeddingsPanel extends React.Component<
         this.urlParameterReactionDisposer = reaction(
             () => {
                 const urlOption = this.coloringFromURLParameter;
-                const clinicalAttributesReady =
-                    this.clinicalAttributes.length > 0;
+                // The list is never empty - a synthetic "Cancer Study"
+                // attribute is always prepended - so ask the fetch, not it.
+                const clinicalAttributesReady = this.store.clinicalAttributes
+                    .isComplete;
                 const urlWrapperReady = !!(this.store as any).urlWrapper;
 
                 return {
@@ -280,11 +282,11 @@ export class EmbeddingsPanel extends React.Component<
                 urlWrapperReady,
                 hasUrlParams,
             }) => {
-                if (!urlWrapperReady || !clinicalAttributesReady) {
+                if (!clinicalAttributesReady) {
                     return;
                 }
 
-                if (urlOption) {
+                if (urlWrapperReady && urlOption) {
                     // Compare logical value, not reference - avoids a
                     // loop when URL sync creates new object references.
                     const currentAttrId = this.selectedColoringOption?.info
@@ -302,7 +304,12 @@ export class EmbeddingsPanel extends React.Component<
                         return;
                     }
                     this.selectedColoringOption = urlOption;
-                } else if (!hasUrlParams) {
+                } else if (
+                    !this.selectedColoringOption &&
+                    (!urlWrapperReady || !hasUrlParams)
+                ) {
+                    // Only while nothing is chosen: this also fires when the
+                    // attribute list grows, which must not undo a choice.
                     const defaultOption = this.getDefaultColoringOption();
                     if (defaultOption) {
                         this.selectedColoringOption = defaultOption;
@@ -536,6 +543,11 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     private getDefaultColoringOption(): ColoringMenuOmnibarOption | undefined {
+        // Nothing to choose from yet; the reaction above picks one once the
+        // attributes arrive. Falling through here would settle on "None".
+        if (!this.store.clinicalAttributes.isComplete) {
+            return undefined;
+        }
         const cancerTypeAttr = this.clinicalAttributes.find(
             attr => attr.clinicalAttributeId === DEFAULT_COLORING_ATTRIBUTE_ID
         );
@@ -1048,12 +1060,8 @@ export class EmbeddingsPanel extends React.Component<
         await: () => {
             const toAwait: any[] = [];
 
-            if (
-                this.selectedColoringOption?.info?.entrezGeneId &&
-                this.selectedColoringOption.info.entrezGeneId !== -3
-            ) {
-                const entrezGeneId = this.selectedColoringOption.info
-                    .entrezGeneId;
+            const entrezGeneId = this.selectedEntrezGeneId;
+            if (entrezGeneId) {
                 const queries = [{ entrezGeneId }];
                 const driverAnnotationsReady = this.driverAnnotationsEnabled;
 
@@ -1242,9 +1250,7 @@ export class EmbeddingsPanel extends React.Component<
             return [];
         }
 
-        const isColoringByGene =
-            this.selectedColoringOption?.info?.entrezGeneId &&
-            this.selectedColoringOption.info.entrezGeneId !== -3;
+        const isColoringByGene = this.selectedEntrezGeneId !== undefined;
 
         // Only depend on driverAnnotationSettings when coloring by gene, or every panel recomputes on any other panel's gene toggle.
         if (isColoringByGene) {
@@ -1879,8 +1885,7 @@ export class EmbeddingsPanel extends React.Component<
         }
 
         if (
-            this.selectedColoringOption?.info?.entrezGeneId &&
-            this.selectedColoringOption.info.entrezGeneId !== -3 &&
+            this.selectedEntrezGeneId !== undefined &&
             (this.mutationTypeEnabled ||
                 this.copyNumberEnabled ||
                 this.structuralVariantEnabled ||
