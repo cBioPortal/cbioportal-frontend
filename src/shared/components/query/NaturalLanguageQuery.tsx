@@ -2,6 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { action, makeObservable, observable } from 'mobx';
 import { buildCBioPortalAPIUrl } from 'shared/api/urls';
+import { getServerConfig } from 'config/config';
 import { QueryStoreComponent } from './QueryStore';
 import styles from './styles/styles.module.scss';
 
@@ -16,30 +17,13 @@ type TranslateResponse = {
     errors?: Issue[];
 };
 
-let availability: Promise<boolean> | undefined;
-
-/**
- * Whether this portal proxies the NL-to-OQL service (the chat-sidebar-server, under /api/chat/oql)
- * with a model configured. Checked once per page load.
- */
-function isTranslatorAvailable(): Promise<boolean> {
-    if (!availability) {
-        availability = fetch(buildCBioPortalAPIUrl('api/chat/oql/health'))
-            .then(res => (res.ok ? res.json() : undefined))
-            .then(body => Boolean(body?.model))
-            .catch(() => false);
-    }
-    return availability;
-}
-
 /**
  * Collapsed by default to a small toggle above the gene/OQL box. When opened, the user describes
  * a query in plain language; the NL-to-OQL service translates it and the result replaces the
- * contents of the gene/OQL box.
+ * contents of the gene/OQL box. Shown only when the portal sets oql_wizard.enabled.
  */
 @observer
 export default class NaturalLanguageQuery extends QueryStoreComponent<{}, {}> {
-    @observable available = false;
     @observable open = false;
     @observable prompt = '';
     @observable busy = false;
@@ -48,14 +32,6 @@ export default class NaturalLanguageQuery extends QueryStoreComponent<{}, {}> {
     constructor(props: any) {
         super(props);
         makeObservable(this);
-    }
-
-    componentDidMount() {
-        isTranslatorAvailable().then(
-            action((available: boolean) => {
-                this.available = available;
-            })
-        );
     }
 
     /** All selected studies are sent so the service can check they have the data each alteration needs. */
@@ -136,7 +112,7 @@ export default class NaturalLanguageQuery extends QueryStoreComponent<{}, {}> {
     }
 
     render() {
-        if (!this.available) return null;
+        if (!getServerConfig().oql_wizard_enabled) return null;
         if (!this.open) {
             return (
                 <button
