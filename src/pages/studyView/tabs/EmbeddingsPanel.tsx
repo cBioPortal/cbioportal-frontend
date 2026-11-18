@@ -59,12 +59,21 @@ import {
     calculatePointScale,
     calculateSparseMapPointFactor,
 } from 'shared/components/embeddings/utils/dataUtils';
+import { EmbeddingViewportState } from 'shared/components/embeddings/state/EmbeddingViewportState';
+import { EmbeddingCategoryVisibility } from 'shared/components/embeddings/state/EmbeddingCategoryVisibility';
 import {
     preComputeClinicalDataMaps,
     getMolecularDataForGeneSync,
     aggregateMolecularDataByPatient,
 } from 'shared/lib/PatientMolecularDataUtils';
 import { FeatureFlagEnum } from 'shared/featureFlags';
+
+// Out-of-cohort points, whose visibility belongs to the cohort control
+// rather than to the legend's "hide all".
+const EMBEDDING_CONFIG_CATEGORIES = [
+    'Sample not in this cohort',
+    'Case not in this cohort',
+];
 
 export interface IEmbeddingsPanelProps {
     store: StudyViewPageStore;
@@ -132,18 +141,29 @@ export class EmbeddingsPanel extends React.Component<
     @observable private structuralVariantEnabled = true;
     @observable private mrnaEnabled = false;
     @observable private selectedEmbeddingValue: string = 'msk_mosaic_2026_he';
-    @observable.ref private viewState: ViewState = {
-        target: [0, 0, 0],
-        zoom: 0,
-        minZoom: -5,
-        maxZoom: 10,
-    };
+    private readonly viewport = new EmbeddingViewportState(viewState => {
+        // While locked, every panel both drives and follows the shared view via the holder they all poll (see startLockPolling).
+        if (this.props.isLockedToPrimary) {
+            this.props.onPrimaryViewStateChange(viewState);
+        }
+    });
     @observable private windowHeight = window.innerHeight;
     @observable private legendCollapsed = false;
     @observable.ref private pinnedPoint: EmbeddingPoint | null = null;
     // Two axes: hidden removes a category from the plot in either mode;
     // selected dims or filters everything else, like a lasso's remainder.
-    @observable.ref private hiddenCategories = new Set<string>();
+    private readonly categoryVisibility = new EmbeddingCategoryVisibility({
+        // QC categories are tracked separately via hiddenQcCategories.
+        alwaysVisible: EMBEDDING_CONFIG_CATEGORIES,
+        onHide: category => {
+            // Can't be part of the selection while it isn't in the plot.
+            if (this.selectedCategories.has(category)) {
+                const next = new Set(this.selectedCategories);
+                next.delete(category);
+                this.selectedCategories = next;
+            }
+        },
+    });
     @observable.ref private selectedCategories = new Set<string>();
     // null means no lasso filter active; applied globally only via
     // applyFilterGlobally (the "Make Global" button).
@@ -422,7 +442,7 @@ export class EmbeddingsPanel extends React.Component<
 
     @action.bound
     private clearOwnFilters() {
-        this.hiddenCategories = new Set();
+        this.categoryVisibility.reset();
         this.selectedCategories = new Set();
         this.lassoSelectedKeys = null;
     }
@@ -442,7 +462,7 @@ export class EmbeddingsPanel extends React.Component<
                 return;
             }
             const primary = this.props.primaryViewStateHolder.current;
-            if (primary && primary !== this.viewState) {
+            if (primary && primary !== this.viewport.current) {
                 this.adoptPrimaryViewState();
             }
             this.lockPollRafId = requestAnimationFrame(poll);
@@ -461,7 +481,7 @@ export class EmbeddingsPanel extends React.Component<
     private adoptPrimaryViewState() {
         const primary = this.props.primaryViewStateHolder.current;
         if (primary) {
-            this.viewState = primary;
+            this.viewport.adopt(primary);
         }
     }
 
@@ -1269,7 +1289,7 @@ export class EmbeddingsPanel extends React.Component<
 
     @computed get hasLocalSelection(): boolean {
         return (
-            this.hiddenCategories.size > 0 ||
+            this.categoryVisibility.hidden.size > 0 ||
             this.selectedCategories.size > 0 ||
             this.lassoSelectedKeys !== null
         );
@@ -1291,11 +1311,11 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @computed private get hiddenCategoryKeys(): Set<string> {
-        if (this.hiddenCategories.size === 0) {
+        if (this.categoryVisibility.hidden.size === 0) {
             return new Set<string>();
         }
         return this.collectKeysByLabel(label =>
-            this.hiddenCategories.has(label)
+            this.categoryVisibility.hidden.has(label)
         );
     }
 
@@ -1773,7 +1793,7 @@ export class EmbeddingsPanel extends React.Component<
         let visibleCount = 0;
         this.categoryCounts.forEach((count, category) => {
             if (
-                !this.hiddenCategories.has(category) &&
+                !this.categoryVisibility.hidden.has(category) &&
                 !this.hiddenQcCategoriesMirror.has(category)
             ) {
                 visibleCount++;
@@ -1871,7 +1891,7 @@ export class EmbeddingsPanel extends React.Component<
         this.gradientOverride = undefined;
         this.viewRange = undefined;
         // Labels from the old coloring's category space - a lasso selection stays identity-based and valid, so it's untouched.
-        this.hiddenCategories = new Set();
+        this.categoryVisibility.reset();
         this.selectedCategories = new Set();
         this.syncColoringSelectionToURL(option);
     }
@@ -2057,32 +2077,8 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @action.bound
-    private setViewState(newViewState: ViewState) {
-        this.viewState = newViewState;
-        // While locked, every panel both drives and follows the shared view via the holder they all poll (see startLockPolling).
-        if (this.props.isLockedToPrimary) {
-            this.props.onPrimaryViewStateChange(newViewState);
-        }
-    }
-
-    @action.bound
-    private onViewStateChange(newViewState: ViewState) {
-        this.setViewState(newViewState);
-    }
-
-    @action.bound
     private centerView() {
-        if (this.plotData && this.plotData.length > 0) {
-            const bounds = calculateDataBounds(
-                this.plotData as EmbeddingPoint[]
-            );
-            this.setViewState({
-                target: [bounds.centerX, bounds.centerY, 0],
-                zoom: bounds.zoom,
-                minZoom: -5,
-                maxZoom: 10,
-            });
-        }
+        this.viewport.centerOn(this.plotData as EmbeddingPoint[]);
     }
 
     @action.bound
@@ -2108,23 +2104,6 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @action.bound
-    private toggleCategoryVisibility(category: string) {
-        const next = new Set(this.hiddenCategories);
-        if (next.has(category)) {
-            next.delete(category);
-        } else {
-            next.add(category);
-            // Can't be part of the selection while it isn't in the plot.
-            if (this.selectedCategories.has(category)) {
-                const nextSelected = new Set(this.selectedCategories);
-                nextSelected.delete(category);
-                this.selectedCategories = nextSelected;
-            }
-        }
-        this.hiddenCategories = next;
-    }
-
-    @action.bound
     private toggleCategorySelected(category: string) {
         const next = new Set(this.selectedCategories);
         if (next.has(category)) {
@@ -2137,32 +2116,7 @@ export class EmbeddingsPanel extends React.Component<
 
     @action.bound
     private toggleAllCategories() {
-        // QC categories are tracked separately via hiddenQcCategories -
-        // keep this exclusion as a defensive safety net.
-        const embeddingConfigCategories = [
-            'Sample not in this cohort',
-            'Case not in this cohort',
-        ];
-
-        if (this.hiddenCategories.size === 0) {
-            const toHide = new Set<string>();
-            if (this.categoryCounts) {
-                this.categoryCounts.forEach((count, category) => {
-                    if (!embeddingConfigCategories.includes(category)) {
-                        toHide.add(category);
-                    }
-                });
-            }
-            this.hiddenCategories = toHide;
-        } else {
-            const keepHidden = new Set<string>();
-            this.hiddenCategories.forEach(category => {
-                if (embeddingConfigCategories.includes(category)) {
-                    keepHidden.add(category);
-                }
-            });
-            this.hiddenCategories = keepHidden;
-        }
+        this.categoryVisibility.toggleAll(this.categoryCounts?.keys() ?? []);
     }
 
     // Called via ref from "Make Global". Returns whether a selection was actually applied, so a no-op doesn't discard local filters.
@@ -2314,16 +2268,16 @@ export class EmbeddingsPanel extends React.Component<
             height: this.plotHeight,
             showLegend: true,
             filename: `${this.selectedEmbedding.value}_embedding`,
-            viewState: this.viewState,
-            onViewStateChange: this.onViewStateChange,
+            viewState: this.viewport.current,
+            onViewStateChange: this.viewport.set,
             onPointSelection: this.handlePointSelection,
             selectedPatientIds: this.selectedPatientIds,
             embeddingType: this.selectedEmbedding.data.embedding_type,
             categoryCounts: this.categoryCounts,
             visibleCategoryCounts: this.visibleCategoryCounts,
             categoryColors: this.categoryColors,
-            hiddenCategories: this.hiddenCategories,
-            onToggleCategoryVisibility: this.toggleCategoryVisibility,
+            hiddenCategories: this.categoryVisibility.hidden,
+            onToggleCategoryVisibility: this.categoryVisibility.toggle,
             selectedCategories: this.selectedCategories,
             onToggleCategorySelected: this.toggleCategorySelected,
             onToggleAllCategories: this.toggleAllCategories,

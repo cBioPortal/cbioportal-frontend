@@ -26,14 +26,10 @@ import { getClinicalAttributeColoring } from 'shared/cache/ClinicalDataCacheUtil
 import { ClinicalDataCacheEntry } from 'shared/cache/ClinicalDataCache';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { EmbeddingDeckGLVisualization } from 'shared/components/embeddings';
-import {
-    EmbeddingPoint,
-    ViewState,
-} from 'shared/components/embeddings/EmbeddingTypes';
+import { EmbeddingPoint } from 'shared/components/embeddings/EmbeddingTypes';
 import { SelectionControls } from 'shared/components/embeddings/controls/SelectionControls';
 import {
     calculateContextPointBoost,
-    calculateDataBounds,
     calculatePointScale,
     calculateSparseMapPointFactor,
 } from 'shared/components/embeddings/utils/dataUtils';
@@ -41,6 +37,8 @@ import {
     getLoadedEmbeddingOptions,
     isAnyEmbeddingPending,
 } from 'shared/components/embeddings/embeddingSources';
+import { EmbeddingViewportState } from 'shared/components/embeddings/state/EmbeddingViewportState';
+import { EmbeddingCategoryVisibility } from 'shared/components/embeddings/state/EmbeddingCategoryVisibility';
 import {
     getEmbeddingOptionsForSamples,
     getClinicalColorsBySampleId,
@@ -116,16 +114,11 @@ export default class PatientSimilarityMap extends React.Component<
     @observable private selectedValue: string | undefined;
     @observable private selectedColoringAttributeId: string | undefined;
     @observable private selectionMode: 'none' | 'lasso' = 'none';
-    @observable.ref private viewState: ViewState = {
-        target: [0, 0, 0],
-        zoom: 0,
-        minZoom: -5,
-        maxZoom: 10,
-    };
+    private readonly viewport = new EmbeddingViewportState();
     @observable.ref private lassoSelection: string[] = [];
     @observable.ref private lassoSampleIdentifiers: SampleIdentifier[] = [];
     @observable private isResolvingLasso = false;
-    @observable.ref private hiddenCategories = new Set<string>();
+    private readonly categoryVisibility = new EmbeddingCategoryVisibility();
     @observable.ref private pinnedPoint: EmbeddingPoint | null = null;
     @observable private mapWidth = 0;
     // Bumped to remount the plot, the only way to drop the selection it keeps
@@ -410,7 +403,7 @@ export default class PatientSimilarityMap extends React.Component<
     }
 
     @computed get plotData(): EmbeddingPoint[] {
-        const hidden = this.hiddenCategories;
+        const hidden = this.categoryVisibility.hidden;
         if (hidden.size === 0) {
             return this.allPoints;
         }
@@ -500,7 +493,7 @@ export default class PatientSimilarityMap extends React.Component<
             const [left, top] = projectToScreen(
                 p.x,
                 p.y,
-                this.viewState,
+                this.viewport.current,
                 this.mapWidth,
                 MAP_HEIGHT
             );
@@ -519,20 +512,9 @@ export default class PatientSimilarityMap extends React.Component<
 
     @action.bound
     private centerView() {
-        const bounds = calculateDataBounds(
+        this.viewport.centerOn(
             (this.selectedOption?.data.data ?? []) as EmbeddingPoint[]
         );
-        this.viewState = {
-            target: [bounds.centerX, bounds.centerY, 0],
-            zoom: bounds.zoom,
-            minZoom: -5,
-            maxZoom: 10,
-        };
-    }
-
-    @action.bound
-    private onViewStateChange(viewState: ViewState) {
-        this.viewState = viewState;
     }
 
     @action.bound
@@ -546,7 +528,7 @@ export default class PatientSimilarityMap extends React.Component<
     @action.bound
     private onSelectColoring(option: { value: string } | null) {
         this.selectedColoringAttributeId = option?.value || undefined;
-        this.hiddenCategories = new Set();
+        this.categoryVisibility.reset();
     }
 
     @action.bound
@@ -555,22 +537,8 @@ export default class PatientSimilarityMap extends React.Component<
     }
 
     @action.bound
-    private onToggleCategoryVisibility(category: string) {
-        const hidden = new Set(this.hiddenCategories);
-        if (hidden.has(category)) {
-            hidden.delete(category);
-        } else {
-            hidden.add(category);
-        }
-        this.hiddenCategories = hidden;
-    }
-
-    @action.bound
     private onToggleAllCategories() {
-        this.hiddenCategories =
-            this.hiddenCategories.size === 0
-                ? new Set(this.categoryCounts.keys())
-                : new Set();
+        this.categoryVisibility.toggleAll(this.categoryCounts.keys());
     }
 
     @action.bound
@@ -868,8 +836,8 @@ export default class PatientSimilarityMap extends React.Component<
                             embeddingType="samples"
                             pointScale={this.pointScale}
                             contextPointBoost={this.contextPointBoost}
-                            viewState={this.viewState}
-                            onViewStateChange={this.onViewStateChange}
+                            viewState={this.viewport.current}
+                            onViewStateChange={this.viewport.set}
                             selectionMode={this.selectionMode}
                             onSelectionModeChange={this.onSelectionModeChange}
                             onPointSelection={this.onPointSelection}
@@ -879,9 +847,9 @@ export default class PatientSimilarityMap extends React.Component<
                             categoryCounts={this.categoryCounts}
                             visibleCategoryCounts={this.visibleCategoryCounts}
                             categoryColors={this.categoryColors}
-                            hiddenCategories={this.hiddenCategories}
+                            hiddenCategories={this.categoryVisibility.hidden}
                             onToggleCategoryVisibility={
-                                this.onToggleCategoryVisibility
+                                this.categoryVisibility.toggle
                             }
                             onToggleAllCategories={this.onToggleAllCategories}
                             totalSampleCount={this.allPoints.length}
@@ -889,7 +857,7 @@ export default class PatientSimilarityMap extends React.Component<
                             totalCategoryCount={this.categoryCounts.size}
                             visibleCategoryCount={
                                 this.categoryCounts.size -
-                                this.hiddenCategories.size
+                                this.categoryVisibility.hidden.size
                             }
                             isNumericAttribute={this.isNumericColoring}
                             numericalValueRange={
