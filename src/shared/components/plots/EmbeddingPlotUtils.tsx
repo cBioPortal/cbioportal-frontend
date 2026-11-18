@@ -7,7 +7,7 @@ import { makeUniqueColorGetter } from './PlotUtils';
 import { interpolateReds } from 'd3-scale-chromatic';
 import { MobxPromise } from 'cbioportal-frontend-commons';
 import ClinicalDataCache from '../../cache/ClinicalDataCache';
-import { PlotsTabStore } from './PlotsTabStore';
+import { MolecularDataStore } from '../../lib/PatientMolecularDataUtils';
 import { DriverAnnotationSettings } from '../../alterationFiltering/AnnotationFilteringSettings';
 
 /**
@@ -20,7 +20,9 @@ import { DriverAnnotationSettings } from '../../alterationFiltering/AnnotationFi
 export interface EmbeddingColoringContext {
     samples: MobxPromise<Sample[]>;
     clinicalDataCache: ClinicalDataCache;
-    plotsTabStore: PlotsTabStore;
+    // Only the three alteration caches are read, so a page whose map spans
+    // more studies than one cohort can supply its own fetch strategy.
+    plotsTabStore: MolecularDataStore;
     filteredSamplesByDetailedCancerType: MobxPromise<{
         [cancerType: string]: Sample[];
     }>;

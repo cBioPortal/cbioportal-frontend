@@ -9,11 +9,14 @@ import {
     runInAction,
 } from 'mobx';
 import { observer } from 'mobx-react';
+import { remoteData } from 'cbioportal-frontend-commons';
 import SampleManager from 'pages/patientView/SampleManager';
 import Select from 'react-select';
 import {
     ClinicalAttribute,
     ClinicalData,
+    Gene,
+    MolecularProfile,
     Sample,
     SampleFilter,
     SampleIdentifier,
@@ -37,6 +40,12 @@ import {
     getLoadedEmbeddingOptions,
     isAnyEmbeddingPending,
 } from 'shared/components/embeddings/embeddingSources';
+import { makeEmbeddingScatterPlotData } from 'shared/components/plots/EmbeddingPlotUtils';
+import { ColoringMenuOmnibarOption } from 'shared/components/plots/PlotsTabTypes';
+import ColorSamplesByDropdown from 'shared/components/colorSamplesByDropdown/ColorSamplesByDropdown';
+import { EmbeddingControlStack } from 'shared/components/embeddings/controls/EmbeddingControlStack';
+import { MapColoringContext } from './MapColoringContext';
+import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import { EmbeddingViewportState } from 'shared/components/embeddings/state/EmbeddingViewportState';
 import { EmbeddingCategoryVisibility } from 'shared/components/embeddings/state/EmbeddingCategoryVisibility';
 import {
@@ -49,7 +58,10 @@ import {
     SampleEmbeddingPoint,
 } from './PatientSimilarityMapUtils';
 
-const MAP_HEIGHT = 560;
+// Floor for the map when the window is short; normally it takes whatever
+// height is left below it.
+const MIN_MAP_HEIGHT = 420;
+const MAP_BOTTOM_MARGIN = 16;
 const UNCOLORED_POINT_COLOR = '#bbbbbb';
 const NO_DATA_LABEL = 'No data';
 // What the study view colours by; on a pan-cancer map it is the one attribute
@@ -101,6 +113,7 @@ const renderNoControls = () => null;
 
 export interface IPatientSimilarityMapProps {
     studyId: string;
+    patientViewPageStore: PatientViewPageStore;
     sampleManager: SampleManager;
     hasEmbeddingsFeatureFlag: boolean;
     clinicalAttributes: ClinicalAttribute[];
@@ -112,7 +125,10 @@ export default class PatientSimilarityMap extends React.Component<
     {}
 > {
     @observable private selectedValue: string | undefined;
-    @observable private selectedColoringAttributeId: string | undefined;
+    @observable.ref private selectedColoringOption?: ColoringMenuOmnibarOption;
+    @observable private mutationTypeEnabled = true;
+    @observable private copyNumberEnabled = true;
+    @observable private structuralVariantEnabled = true;
     @observable private selectionMode: 'none' | 'lasso' = 'none';
     private readonly viewport = new EmbeddingViewportState();
     @observable.ref private lassoSelection: string[] = [];
@@ -121,6 +137,7 @@ export default class PatientSimilarityMap extends React.Component<
     private readonly categoryVisibility = new EmbeddingCategoryVisibility();
     @observable.ref private pinnedPoint: EmbeddingPoint | null = null;
     @observable private mapWidth = 0;
+    @observable private mapHeight = MIN_MAP_HEIGHT;
     // Bumped to remount the plot, the only way to drop the selection it keeps
     // in its own state.
     @observable private plotInstance = 0;
@@ -163,6 +180,11 @@ export default class PatientSimilarityMap extends React.Component<
     private measure() {
         if (this.container) {
             this.mapWidth = this.container.clientWidth;
+            const top = this.container.getBoundingClientRect().top;
+            this.mapHeight = Math.max(
+                MIN_MAP_HEIGHT,
+                window.innerHeight - top - MAP_BOTTOM_MARGIN
+            );
         }
     }
 
@@ -194,6 +216,51 @@ export default class PatientSimilarityMap extends React.Component<
 
     // Sample-level only: a point is a sample, and a patient attribute would
     // colour every sample of a patient alike without saying so.
+    private readonly coloring = new MapColoringContext(
+        this.props.patientViewPageStore,
+        () => this.selectedOption?.data.studyIds ?? []
+    );
+
+    @computed get mapStudyIds(): string[] {
+        return this.selectedOption?.data.studyIds ?? [this.props.studyId];
+    }
+
+    // Which study each sample of the map belongs to, for turning a lasso into
+    // a study view selection. A map's points carry a bare sample id.
+    @computed get sampleStudyIds(): Map<string, string> {
+        const index = new Map<string, string>();
+        this.coloring.samples.result?.forEach(s =>
+            index.set(s.sampleId, s.studyId)
+        );
+        return index;
+    }
+
+    @computed get colorableGenes(): Gene[] {
+        return this.props.patientViewPageStore.allGenes.result ?? [];
+    }
+
+    @computed get mapProfiles(): MolecularProfile[] {
+        return this.coloring.molecularProfiles.result ?? [];
+    }
+
+    @computed get mutationDataExists(): boolean {
+        return this.mapProfiles.some(
+            p => p.molecularAlterationType === 'MUTATION_EXTENDED'
+        );
+    }
+
+    @computed get cnaDataExists(): boolean {
+        return this.mapProfiles.some(
+            p => p.molecularAlterationType === 'COPY_NUMBER_ALTERATION'
+        );
+    }
+
+    @computed get svDataExists(): boolean {
+        return this.mapProfiles.some(
+            p => p.molecularAlterationType === 'STRUCTURAL_VARIANT'
+        );
+    }
+
     @computed get coloringAttributes(): ClinicalAttribute[] {
         return _.sortBy(
             this.props.clinicalAttributes.filter(a => !a.patientAttribute),
@@ -201,206 +268,118 @@ export default class PatientSimilarityMap extends React.Component<
         );
     }
 
-    @computed get coloringOptions(): { value: string; label: string }[] {
-        return this.coloringAttributes.map(a => ({
-            value: a.clinicalAttributeId,
-            label: a.displayName,
-        }));
-    }
-
-    @computed get coloringAttributeId(): string | undefined {
-        if (this.selectedColoringAttributeId) {
-            return this.selectedColoringAttributeId;
+    // Defaults to cancer type, the one attribute whose legend still reads as a
+    // map on a pan-cancer embedding.
+    @computed get coloringOption(): ColoringMenuOmnibarOption | undefined {
+        if (this.selectedColoringOption) {
+            return this.selectedColoringOption;
         }
-        const hasDefault = this.coloringAttributes.some(
+        const attribute = this.coloringAttributes.find(
             a => a.clinicalAttributeId === DEFAULT_COLORING_ATTRIBUTE_ID
         );
-        return hasDefault ? DEFAULT_COLORING_ATTRIBUTE_ID : undefined;
+        return attribute
+            ? ({
+                  label: attribute.displayName,
+                  info: { clinicalAttribute: attribute },
+              } as ColoringMenuOmnibarOption)
+            : undefined;
     }
 
-    @computed get coloringAttribute(): ClinicalAttribute | undefined {
-        return this.coloringAttributes.find(
-            a => a.clinicalAttributeId === this.coloringAttributeId
-        );
+    // The caches are read synchronously while colouring, and report nothing
+    // until they are complete, so a map drawn too early says every sample is
+    // unaltered. Waiting on them here keeps that state off the screen.
+    readonly molecularDataForColoring = remoteData({
+        await: () => {
+            const entrezGeneId = this.coloringOption?.info?.entrezGeneId;
+            if (entrezGeneId === undefined || entrezGeneId === -3) {
+                return [];
+            }
+            const store = this.coloring.plotsStore;
+            const settings = this.props.patientViewPageStore
+                .driverAnnotationSettings;
+            const queries = [{ entrezGeneId }];
+            const toAwait: any[] = [];
+            if (settings?.oncoKb) {
+                toAwait.push(store.oncoKbMutationAnnotationForOncoprint);
+            }
+            if (settings?.hotspots) {
+                toAwait.push(store.isHotspotForOncoprint);
+            }
+            toAwait.push(store.getMutationPutativeDriverInfo);
+            if (this.mutationTypeEnabled) {
+                toAwait.push(
+                    ...this.coloring.mapMutationCache.getAll(queries)
+                );
+            }
+            if (this.copyNumberEnabled) {
+                toAwait.push(...store.annotatedCnaCache.getAll(queries));
+            }
+            if (this.structuralVariantEnabled) {
+                toAwait.push(...store.structuralVariantCache.getAll(queries));
+            }
+            return toAwait;
+        },
+        invoke: () => Promise.resolve(true),
+    });
+
+    @computed get isColoringPending(): boolean {
+        if (!this.selectedOption) {
+            return false;
+        }
+        const gene = this.coloringOption?.info?.entrezGeneId;
+        const base = [
+            this.coloring.samples,
+            this.coloring.molecularProfiles,
+            this.coloring.studies,
+        ];
+        if (base.some(p => p.isPending)) {
+            return true;
+        }
+        if (gene !== undefined) {
+            return (
+                this.coloring.plotsStore.coverageInformation.isPending ||
+                this.molecularDataForColoring.isPending
+            );
+        }
+        return false;
     }
 
-    @computed get selectedColoringOption() {
-        return (
-            this.coloringOptions.find(
-                o => o.value === this.coloringAttributeId
-            ) || null
-        );
+    @computed get coloringClinicalAttribute(): ClinicalAttribute | undefined {
+        return this.coloringOption?.info?.clinicalAttribute as
+            | ClinicalAttribute
+            | undefined;
     }
 
     @computed get isNumericColoring(): boolean {
-        return this.coloringAttribute?.datatype === 'NUMBER';
+        return this.coloringClinicalAttribute?.datatype === 'NUMBER';
     }
 
-    // Every sample of every study the map covers, fetched once and shared by
-    // all attributes. It supplies the identifiers the clinical fetch needs and
-    // doubles as the point's study, which a map's bare sample id never carries.
-    private readonly mapSamples = new MobxPromiseCache<
-        { studyIds: string[] },
-        Sample[]
-    >(
-        q => ({
-            invoke: () =>
-                internalClient.fetchFilteredSamplesUsingPOST({
-                    studyViewFilter: { studyIds: q.studyIds } as StudyViewFilter,
-                }),
-        }),
-        q => q.studyIds.join(',')
-    );
-
-    // The study view's fetch, chunked. The patient view's own clinical cache
-    // holds this study alone, which on a map built from many studies colours a
-    // sliver of the points and greys the rest.
-    private readonly mapClinicalData = new MobxPromiseCache<
-        { attribute: ClinicalAttribute; studyIds: string[] },
-        MapColoringEntry
-    >(
-        q => ({
-            await: () => [this.mapSamples.get({ studyIds: q.studyIds })],
-            invoke: async () => {
-                const samples =
-                    this.mapSamples.get({ studyIds: q.studyIds }).result ?? [];
-                const chunks = _.chunk(samples, CLINICAL_FETCH_CHUNK_SIZE);
-                let failedSampleCount = 0;
-                const perChunk = await mapWithConcurrency(
-                    chunks,
-                    CLINICAL_FETCH_CONCURRENCY,
-                    async chunk => {
-                        for (let attempt = 0; ; attempt++) {
-                            try {
-                                return await getClient().fetchClinicalDataUsingPOST(
-                                    {
-                                        clinicalDataType: 'SAMPLE',
-                                        projection: 'SUMMARY',
-                                        clinicalDataMultiStudyFilter: {
-                                            attributeIds: [
-                                                q.attribute.clinicalAttributeId,
-                                            ],
-                                            identifiers: chunk.map(s => ({
-                                                entityId: s.sampleId,
-                                                studyId: s.studyId,
-                                            })),
-                                        },
-                                    }
-                                );
-                            } catch (e) {
-                                if (attempt + 1 >= CLINICAL_FETCH_ATTEMPTS) {
-                                    failedSampleCount += chunk.length;
-                                    return [] as ClinicalData[];
-                                }
-                                await sleep(
-                                    CLINICAL_FETCH_BACKOFF_MS * (attempt + 1)
-                                );
-                            }
-                        }
-                    }
-                );
-                const data = _.flatten(perChunk);
-                return {
-                    data,
-                    failedSampleCount,
-                    ...getClinicalAttributeColoring(data, q.attribute.datatype),
-                };
-            },
-        }),
-        q => `${q.attribute.clinicalAttributeId}|${q.studyIds.join(',')}`
-    );
-
-    @computed get coloringQuery():
-        | { attribute: ClinicalAttribute; studyIds: string[] }
-        | undefined {
-        const attribute = this.coloringAttribute;
-        const option = this.selectedOption;
-        if (!attribute || !option) {
+    // Supplies the legend's gradient; the points themselves are already
+    // coloured by the shared helper.
+    @computed get clinicalColoringEntry() {
+        const attribute = this.coloringClinicalAttribute;
+        if (!attribute) {
             return undefined;
         }
-        return { attribute, studyIds: option.data.studyIds };
-    }
-
-    @computed get coloringEntry(): MapColoringEntry | undefined {
-        const query = this.coloringQuery;
-        if (!query) {
-            return undefined;
-        }
-        const entry = this.mapClinicalData.get(query);
+        const entry = this.coloring.clinicalDataCache.get(attribute as any);
         return entry.isComplete ? entry.result : undefined;
     }
 
-    @computed get clinicalColors():
-        | { colors: Map<string, string>; values: Map<string, string> }
-        | undefined {
-        const query = this.coloringQuery;
-        const result = this.coloringEntry;
-        if (!query || !result) {
-            return undefined;
-        }
-        return getClinicalColorsBySampleId(
-            result.data as any,
-            this.isNumericColoring ? undefined : result.categoryToColor,
-            result.numericalValueToColor,
-            query.studyIds
-        );
-    }
-
-    @computed get isColoringPending(): boolean {
-        const query = this.coloringQuery;
-        return !!query && this.mapClinicalData.get(query).isPending;
-    }
-
-    @computed get failedSampleCount(): number {
-        return this.coloringEntry?.failedSampleCount ?? 0;
-    }
-
-    // Which study each sample of the map belongs to. Empty until the sample
-    // list has loaded.
-    @computed get sampleStudyIds(): Map<string, string> {
-        const index = new Map<string, string>();
-        const option = this.selectedOption;
-        if (option) {
-            this.mapSamples
-                .get({ studyIds: option.data.studyIds })
-                .result?.forEach(s => index.set(s.sampleId, s.studyId));
-        }
-        return index;
-    }
-
-    // Every study the map was built from, so the study view opens the same
-    // cohort rather than whichever one this patient happens to be in.
-    @computed get mapStudyIds(): string[] {
-        return this.selectedOption?.data.studyIds ?? [this.props.studyId];
-    }
-
-    // Every point the map draws, coloured. Kept separate from what is plotted
-    // so hiding a category leaves the legend's totals alone.
     @computed get allPoints(): EmbeddingPoint[] {
         const option = this.selectedOption;
         if (!option) {
             return [];
         }
-        const clinical = this.clinicalColors;
-        const categoryLabel = this.isNumericColoring
-            ? this.coloringAttribute?.displayName ?? NO_DATA_LABEL
-            : undefined;
-        return option.data.data.map(p => {
-            const color = clinical?.colors.get(p.sampleId);
-            const value = clinical?.values.get(p.sampleId);
-            return {
-                x: p.x,
-                y: p.y,
-                sampleId: p.sampleId,
-                color: color || UNCOLORED_POINT_COLOR,
-                displayLabel:
-                    value === undefined
-                        ? NO_DATA_LABEL
-                        : categoryLabel ?? value,
-                isInCohort: true,
-            } as EmbeddingPoint;
-        });
+        return makeEmbeddingScatterPlotData(
+            option.data,
+            this.coloring,
+            this.coloringOption,
+            this.mutationTypeEnabled,
+            this.copyNumberEnabled,
+            this.structuralVariantEnabled
+        ) as EmbeddingPoint[];
     }
+
 
     @computed get plotData(): EmbeddingPoint[] {
         const hidden = this.categoryVisibility.hidden;
@@ -495,7 +474,7 @@ export default class PatientSimilarityMap extends React.Component<
                 p.y,
                 this.viewport.current,
                 this.mapWidth,
-                MAP_HEIGHT
+                this.mapHeight
             );
             return { sampleId: p.sampleId, left, top };
         });
@@ -526,9 +505,36 @@ export default class PatientSimilarityMap extends React.Component<
     }
 
     @action.bound
-    private onSelectColoring(option: { value: string } | null) {
-        this.selectedColoringAttributeId = option?.value || undefined;
+    private onMutationTypeToggle(enabled: boolean) {
+        this.mutationTypeEnabled = enabled;
+    }
+
+    @action.bound
+    private onCopyNumberToggle(enabled: boolean) {
+        this.copyNumberEnabled = enabled;
+    }
+
+    @action.bound
+    private onStructuralVariantToggle(enabled: boolean) {
+        this.structuralVariantEnabled = enabled;
+    }
+
+    @action.bound
+    private onColoringSelectionChange(option?: ColoringMenuOmnibarOption) {
+        this.selectedColoringOption = option;
         this.categoryVisibility.reset();
+        this.syncColoringGene();
+    }
+
+    // The context fetches and annotates whichever gene it is told about, so a
+    // driver call reaches the map only if this stays in step with the menu.
+    @action.bound
+    private syncColoringGene() {
+        const entrezGeneId = this.coloringOption?.info?.entrezGeneId;
+        const gene = this.colorableGenes.find(
+            g => g.entrezGeneId === entrezGeneId
+        );
+        this.coloring.setColoringGenes(gene ? [gene] : []);
     }
 
     @action.bound
@@ -701,22 +707,33 @@ export default class PatientSimilarityMap extends React.Component<
                     border: '1px solid #ddd',
                 }}
             >
-                {this.coloringOptions.length > 0 && (
-                    <div>
-                        <span style={ROW_LABEL_STYLE}>Color by</span>
-                        <Select
-                            name="patient-similarity-map-coloring"
-                            className="patient-similarity-map-coloring"
-                            value={this.selectedColoringOption}
-                            options={this.coloringOptions}
-                            onChange={this.onSelectColoring}
-                            isSearchable={true}
-                            isClearable={false}
-                            placeholder="Search for an attribute"
-                            styles={SELECT_STYLES}
-                        />
-                    </div>
-                )}
+                <div className="patient-similarity-map-coloring">
+                    <span style={ROW_LABEL_STYLE}>Color by</span>
+                    <ColorSamplesByDropdown
+                        genes={this.colorableGenes}
+                        clinicalAttributes={this.coloringAttributes}
+                        selectedOption={this.coloringOption}
+                        hasNoQueriedGenes={true}
+                        isLoading={this.isColoringPending}
+                        mutationDataExists={this.mutationDataExists}
+                        cnaDataExists={this.cnaDataExists}
+                        svDataExists={this.svDataExists}
+                        mutationTypeEnabled={this.mutationTypeEnabled}
+                        copyNumberEnabled={this.copyNumberEnabled}
+                        structuralVariantEnabled={
+                            this.structuralVariantEnabled
+                        }
+                        // The map's largest study has no expression profile,
+                        // so the option would grey out most of the points.
+                        mrnaDataExists={false}
+                        onSelectionChange={this.onColoringSelectionChange}
+                        onMutationTypeToggle={this.onMutationTypeToggle}
+                        onCopyNumberToggle={this.onCopyNumberToggle}
+                        onStructuralVariantToggle={
+                            this.onStructuralVariantToggle
+                        }
+                    />
+                </div>
                 <div>
                     <span style={{ ...ROW_LABEL_STYLE, paddingLeft: 2 }}>
                         Viewport
@@ -738,14 +755,6 @@ export default class PatientSimilarityMap extends React.Component<
                         Center
                     </button>
                 </div>
-                {this.failedSampleCount > 0 && (
-                    <div
-                        style={{ color: '#a94442', fontSize: 11 }}
-                        data-test="patient-similarity-map-coloring-incomplete"
-                    >
-                        {`Colors for ${this.failedSampleCount.toLocaleString()} samples could not be loaded; those points are grey.`}
-                    </div>
-                )}
             </div>
         );
     }
@@ -794,30 +803,27 @@ export default class PatientSimilarityMap extends React.Component<
                         </a>
                     )}
                     <div style={{ marginLeft: 'auto', fontSize: 12 }}>
-                        {mapOptions.length > 1 ? (
-                            <Select
-                                name="patient-similarity-map-select"
-                                value={
-                                    mapOptions.find(
-                                        o => o.value === option.value
-                                    ) || null
-                                }
-                                options={mapOptions}
-                                onChange={this.onSelectMap}
-                                isSearchable={false}
-                                styles={{
-                                    ...SELECT_STYLES,
-                                    container: (base: any) => ({
-                                        ...base,
-                                        width: 220,
-                                        display: 'inline-block',
-                                        verticalAlign: 'middle',
-                                    }),
-                                }}
-                            />
-                        ) : (
-                            <strong>{option.label}</strong>
-                        )}
+                        <Select
+                            name="patient-similarity-map-select"
+                            value={
+                                mapOptions.find(
+                                    o => o.value === option.value
+                                ) || null
+                            }
+                            options={mapOptions}
+                            onChange={this.onSelectMap}
+                            isSearchable={false}
+                            isDisabled={mapOptions.length < 2}
+                            styles={{
+                                ...SELECT_STYLES,
+                                container: (base: any) => ({
+                                    ...base,
+                                    width: 260,
+                                    display: 'inline-block',
+                                    verticalAlign: 'middle',
+                                }),
+                            }}
+                        />
                         {this.renderStudyViewLink()}
                     </div>
                 </div>
@@ -827,7 +833,7 @@ export default class PatientSimilarityMap extends React.Component<
                         style={{
                             position: 'relative',
                             minWidth: 0,
-                            height: MAP_HEIGHT,
+                            height: this.mapHeight,
                             overflow: 'hidden',
                             border: '1px solid #eee',
                         }}
@@ -835,7 +841,7 @@ export default class PatientSimilarityMap extends React.Component<
                         <EmbeddingDeckGLVisualization
                             key={this.plotInstance}
                             data={this.plotData}
-                            height={MAP_HEIGHT}
+                            height={this.mapHeight}
                             embeddingType="samples"
                             pointScale={this.pointScale}
                             contextPointBoost={this.contextPointBoost}
@@ -846,7 +852,7 @@ export default class PatientSimilarityMap extends React.Component<
                             onPointSelection={this.onPointSelection}
                             renderControls={renderNoControls}
                             showLegend={true}
-                            colorByLabel={this.coloringAttribute?.displayName}
+                            colorByLabel={this.coloringOption?.label}
                             categoryCounts={this.categoryCounts}
                             visibleCategoryCounts={this.visibleCategoryCounts}
                             categoryColors={this.categoryColors}
@@ -864,10 +870,11 @@ export default class PatientSimilarityMap extends React.Component<
                             }
                             isNumericAttribute={this.isNumericColoring}
                             numericalValueRange={
-                                this.coloringEntry?.numericalValueRange
+                                this.clinicalColoringEntry?.numericalValueRange
                             }
                             numericalValueToColor={
-                                this.coloringEntry?.numericalValueToColor
+                                this.clinicalColoringEntry
+                                    ?.numericalValueToColor
                             }
                             pinnedPoint={this.pinnedPoint}
                             onPinPoint={this.onPinPoint}
@@ -923,10 +930,10 @@ export default class PatientSimilarityMap extends React.Component<
                                     size={'big'}
                                 />
                                 <span style={{ color: '#666' }}>
-                                    {`Loading ${this.coloringAttribute
-                                        ?.displayName ?? 'colors'} for ${this
-                                        .coloringQuery?.studyIds.length ??
-                                        0} studies…`}
+                                    {`Loading ${this.coloringOption?.label ??
+                                        'colors'} for ${
+                                        this.mapStudyIds.length
+                                    } studies…`}
                                 </span>
                             </div>
                         )}
@@ -941,13 +948,6 @@ export default class PatientSimilarityMap extends React.Component<
                             {this.renderControlStack()}
                         </div>
                     </div>
-                </div>
-                <div style={{ color: '#666', marginTop: 8 }}>
-                    {option.data.description.replace(/\.?\s*$/, '.')} Icons mark
-                    this patient's samples. Switch to Select and drag to pick a
-                    neighbourhood; the study view opens the same map, across
-                    every study it covers, with the selected samples carried
-                    over, where they can be filtered and recoloured.
                 </div>
                 {this.unplacedSampleIds.length > 0 && (
                     <div style={{ marginTop: 8, color: '#666' }}>

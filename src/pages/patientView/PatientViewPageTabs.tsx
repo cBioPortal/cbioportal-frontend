@@ -932,6 +932,7 @@ export function tabs(
             >
                 <PatientSimilarityMap
                     studyId={pageComponent.patientViewPageStore.studyId}
+                    patientViewPageStore={pageComponent.patientViewPageStore}
                     sampleManager={sampleManager}
                     hasEmbeddingsFeatureFlag={hasEmbeddingsFlag}
                     clinicalAttributes={
