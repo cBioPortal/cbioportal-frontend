@@ -265,6 +265,8 @@ export interface EmbeddingPlotPoint {
     isInCohort?: boolean;
     // Rendered smaller/more transparent, without changing color or label.
     isDeemphasized?: boolean;
+    // Outlined in this colour when the point is in a map selection.
+    selectionColor?: string;
     // Out-of-cohort points only: the value the embedding itself records for the
     // coloring attribute (its `referenceData`), and that value's legend color.
     referenceLabel?: string;

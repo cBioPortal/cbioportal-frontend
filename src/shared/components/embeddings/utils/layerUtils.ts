@@ -112,6 +112,12 @@ export function createScatterplotLayer(
                 return [200, 200, 200]; // Light gray for ALL unselected
             }
 
+            // A map selection outlines its points in its own colour, so
+            // several selections can be told apart without recolouring them.
+            if (d.selectionColor) {
+                return colorToRgb(d.selectionColor);
+            }
+
             // Use strokeColor when provided (for copy number and structural variants), otherwise use fill color
             const color = d.strokeColor || d.color || '#CCCCCC';
             return colorToRgb(color);
@@ -124,6 +130,11 @@ export function createScatterplotLayer(
 
             if (isSelected) {
                 return 0.01; // Thicker border for selected points
+            }
+
+            // Thick enough that the selection's colour reads as a ring.
+            if (d.selectionColor) {
+                return 0.009;
             }
 
             // Special handling for specific categories

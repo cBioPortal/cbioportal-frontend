@@ -20,7 +20,8 @@ import { EmbeddingsTab } from 'pages/studyView/tabs/EmbeddingsTab';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import {
     getEmbeddingOptionsForSamples,
-    getStudyViewMapUrl,
+    getStudyViewMapHandoff,
+    openStudyViewMapWithSelection,
     SampleEmbeddingOption,
     SampleEmbeddingPoint,
 } from './PatientSimilarityMapUtils';
@@ -126,14 +127,25 @@ export default class PatientSimilarityMap extends React.Component<
                               studyId: this.props.studyId,
                           } as SampleIdentifier)
                   );
+        const { href, needsHandoff } = getStudyViewMapHandoff(
+            studyIds,
+            identifiers,
+            embedding?.value
+        );
         return (
             <a
                 data-test="patient-similarity-map-study-view-link"
-                href={getStudyViewMapUrl(
-                    studyIds,
-                    identifiers,
-                    embedding?.value
-                )}
+                href={href}
+                // A selection past what a URL holds travels on the window the
+                // click opens, so the link stays copyable for smaller ones.
+                onClick={
+                    needsHandoff
+                        ? e => {
+                              e.preventDefault();
+                              openStudyViewMapWithSelection(href, identifiers);
+                          }
+                        : undefined
+                }
                 style={{ whiteSpace: 'nowrap' }}
             >
                 {selectedSamples.length > 0

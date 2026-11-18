@@ -6,6 +6,7 @@ import {
     action,
     makeObservable,
     reaction,
+    runInAction,
     comparer,
 } from 'mobx';
 import { remoteData } from 'cbioportal-frontend-commons';
@@ -39,7 +40,20 @@ import {
     seedLowHighColors,
     pickPercentileRange,
 } from 'shared/components/embeddings/controls/GradientRangeEditor';
-import { Gene, ClinicalData, Sample } from 'cbioportal-ts-api-client';
+import {
+    Gene,
+    ClinicalData,
+    Sample,
+    SampleIdentifier,
+} from 'cbioportal-ts-api-client';
+import comparisonClient from 'shared/api/comparisonGroupClientInstance';
+import { getGroupParameters } from 'pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
+import { getComparisonUrl } from 'shared/api/urls';
+import {
+    MapSelection,
+    MapSelectionSummary,
+    SELECTION_COLORS,
+} from 'shared/components/embeddings/state/MapSelection';
 import { addCancerStudyAttribute } from 'shared/lib/ClinicalAttributeUtils';
 import {
     getLoadedEmbeddingOptions,
@@ -171,9 +185,21 @@ export class EmbeddingsPanel extends React.Component<
         },
     });
     @observable.ref private selectedCategories = new Set<string>();
-    // null means no lasso filter active; applied globally only via
-    // applyFilterGlobally (the "Make Global" button).
-    @observable.ref private lassoSelectedKeys: Set<string> | null = null;
+    // Each lasso makes its own named selection, shown as a chip beside the
+    // map. Everything downstream works off their union.
+    @observable.ref private selections: MapSelection[] = [];
+    private nextSelectionId = 1;
+
+    @computed private get lassoSelectedKeys(): Set<string> | null {
+        if (this.selections.length === 0) {
+            return null;
+        }
+        const keys = new Set<string>();
+        this.selections.forEach(selection =>
+            selection.keys.forEach(key => keys.add(key))
+        );
+        return keys;
+    }
     private urlParameterReactionDisposer?: () => void;
     private urlSyncReactionDisposer?: () => void;
     private viewStateReactionDisposer?: () => void;
@@ -457,7 +483,7 @@ export class EmbeddingsPanel extends React.Component<
     private clearOwnFilters() {
         this.categoryVisibility.reset();
         this.selectedCategories = new Set();
-        this.lassoSelectedKeys = null;
+        this.selections = [];
     }
 
     // Polls the shared viewState holder (a plain mutable object any panel writes to) rather than a reactive prop.
@@ -1425,21 +1451,39 @@ export class EmbeddingsPanel extends React.Component<
 
     // Shared by plotData/categoryCounts/categoryColors so all three agree
     // on what is dimmed.
+    // Which selection each point belongs to, so the map can tell them apart.
+    // A point in two selections takes the colour of the later one, matching
+    // the order the chips are read in.
+    @computed private get selectionColorByKey(): Map<string, string> {
+        const colors = new Map<string, string>();
+        this.selections.forEach(selection =>
+            selection.keys.forEach(key => colors.set(key, selection.color))
+        );
+        return colors;
+    }
+
     @computed private get dimmedPlotData(): EmbeddingPlotPoint[] {
         const deemphasizedKeys = this.deemphasizedKeys;
-        if (deemphasizedKeys.size === 0) {
+        const selectionColors = this.selectionColorByKey;
+        if (deemphasizedKeys.size === 0 && selectionColors.size === 0) {
             return this.rawPlotData;
         }
 
-        // Keeps its own color and category, and just recedes.
+        // Keeps its own color and category, and just recedes or gains an
+        // outline in its selection's colour.
         return this.rawPlotData.map(point => {
             if (point.isInCohort === false) {
                 return point;
             }
             const key = point.sampleId || point.patientId;
-            return key && deemphasizedKeys.has(key)
-                ? { ...point, isDeemphasized: true }
-                : point;
+            if (!key) {
+                return point;
+            }
+            const selectionColor = selectionColors.get(key);
+            if (deemphasizedKeys.has(key)) {
+                return { ...point, isDeemphasized: true };
+            }
+            return selectionColor ? { ...point, selectionColor } : point;
         });
     }
 
@@ -2149,10 +2193,9 @@ export class EmbeddingsPanel extends React.Component<
         });
     }
 
-    /** The selection as the page's own sample records, for whoever acts on it. */
-    @computed get locallySelectedSamples(): Sample[] {
-        const selectedPoints = this.locallySelectedPoints;
-        if (selectedPoints.length === 0 || !this.selectedEmbedding) {
+    /** The page's own sample records for a set of plotted points. */
+    private samplesForPoints(points: EmbeddingPlotPoint[]): Sample[] {
+        if (points.length === 0 || !this.selectedEmbedding) {
             return [];
         }
         const allSamples = this.store.samples.result || [];
@@ -2161,18 +2204,87 @@ export class EmbeddingsPanel extends React.Component<
             // a study, so matching on it alone pulls in same-named samples
             // from the other studies in the cohort.
             const selectedSampleKeys = new Set(
-                selectedPoints.map(p => p.uniqueSampleKey).filter(Boolean)
+                points.map(p => p.uniqueSampleKey).filter(Boolean)
             );
             return allSamples.filter(sample =>
                 selectedSampleKeys.has(sample.uniqueSampleKey)
             );
         }
         const selectedPatientSet = new Set(
-            selectedPoints.map(p => p.patientId).filter(Boolean)
+            points.map(p => p.patientId).filter(Boolean)
         );
         return allSamples.filter(sample =>
             selectedPatientSet.has(sample.patientId)
         );
+    }
+
+    /** The selection as the page's own sample records, for whoever acts on it. */
+    @computed get locallySelectedSamples(): Sample[] {
+        return this.samplesForPoints(this.locallySelectedPoints);
+    }
+
+    private pointsInSelection(selection: MapSelection): EmbeddingPlotPoint[] {
+        return this.rawPlotData.filter(p => {
+            const key = p.sampleId || p.patientId;
+            return !!key && selection.keys.has(key);
+        });
+    }
+
+    @observable private isComparingSelections = false;
+
+    /**
+     * Opens the selections side by side in group comparison.
+     *
+     * Each becomes a group of its own, named and coloured as its chip is, so
+     * the neighbourhoods picked on the map are what the comparison contrasts.
+     */
+    @action.bound
+    compareSelections() {
+        if (this.selections.length < 2 || this.isComparingSelections) {
+            return;
+        }
+        const origin = this.store.queriedPhysicalStudyIds.result || [];
+        const groups = this.selections.map(selection =>
+            getGroupParameters(
+                selection.name,
+                this.samplesForPoints(this.pointsInSelection(selection)).map(
+                    sample =>
+                        ({
+                            studyId: sample.studyId,
+                            sampleId: sample.sampleId,
+                        } as SampleIdentifier)
+                ),
+                origin,
+                selection.color
+            )
+        );
+        if (groups.some(group => group.studies.length === 0)) {
+            return;
+        }
+        this.isComparingSelections = true;
+        // Opened up front: a window opened after the await is a popup the
+        // browser blocks, since the click is no longer what opened it.
+        const comparisonWindow = window.open('', '_blank');
+        comparisonClient
+            .addComparisonSession({
+                groups,
+                origin,
+                clinicalAttributeName: this.selectedEmbedding?.label,
+            })
+            .then(({ id }) => {
+                const url = getComparisonUrl({ comparisonId: id });
+                if (comparisonWindow) {
+                    comparisonWindow.location.href = url;
+                } else {
+                    window.location.href = url;
+                }
+            })
+            .catch(() => comparisonWindow?.close())
+            .then(() =>
+                runInAction(() => {
+                    this.isComparingSelections = false;
+                })
+            );
     }
 
     // Called via ref from "Make Global". Returns whether a selection was actually applied, so a no-op doesn't discard local filters.
@@ -2229,22 +2341,66 @@ export class EmbeddingsPanel extends React.Component<
         return true;
     }
 
-    // A lasso selection becomes a local filter (see lassoSelectedKeys),
-    // applied globally only via applyFilterGlobally ("Make Global").
+    // Each draw adds a selection of its own, so several can be held at once
+    // and compared. Their union is the local filter.
     @action.bound
     private handlePointSelection(selectedPoints: any[]) {
         if (!selectedPoints || selectedPoints.length === 0) {
             return;
         }
-        // Additive, so consecutive draws build up a set instead of replacing it.
-        const keys = new Set<string>(this.lassoSelectedKeys ?? []);
+        const keys = new Set<string>();
         selectedPoints.forEach(p => {
+            // Backdrop points from outside the cohort are pickable but have
+            // no sample behind them here, so they would inflate the count
+            // against what a comparison or a filter could ever contain.
+            if (p.isInCohort === false) {
+                return;
+            }
             const key = p.sampleId || p.patientId;
             if (key) {
                 keys.add(key);
             }
         });
-        this.lassoSelectedKeys = keys;
+        if (keys.size === 0) {
+            return;
+        }
+        const id = this.nextSelectionId++;
+        this.selections = [
+            ...this.selections,
+            {
+                id,
+                name: `Selection ${id}`,
+                color: SELECTION_COLORS[(id - 1) % SELECTION_COLORS.length],
+                keys,
+            },
+        ];
+    }
+
+    @action.bound
+    clearSelections() {
+        this.selections = [];
+    }
+
+    @action.bound
+    removeSelection(id: number) {
+        this.selections = this.selections.filter(s => s.id !== id);
+    }
+
+    @action.bound
+    renameSelection(id: number, name: string) {
+        this.selections = this.selections.map(s =>
+            s.id === id ? { ...s, name } : s
+        );
+    }
+
+    /** What the chips beside the map show. */
+    @computed get selectionSummaries(): MapSelectionSummary[] {
+        return this.selections.map(({ id, name, color, keys }) => ({
+            id,
+            name,
+            color,
+            count: keys.size,
+        }));
     }
 
     // Plain method, not @computed: renderControls' callback reads props
@@ -2379,6 +2535,16 @@ export class EmbeddingsPanel extends React.Component<
                     tooltipFieldGroups={this.tooltipFieldGroups}
                     selectedTooltipFields={this.props.tooltipFields}
                     onTooltipFieldsChange={this.props.onTooltipFieldsChange}
+                    selections={this.selectionSummaries}
+                    onRemoveSelection={this.removeSelection}
+                    onClearSelections={this.clearSelections}
+                    onCompareSelections={this.compareSelections}
+                    isComparingSelections={this.isComparingSelections}
+                    selectionsEmptyHint={
+                        this.props.selectionMode === 'lasso'
+                            ? 'Draw on the map to make one.'
+                            : undefined
+                    }
                     onCenter={this.centerView}
                     isLockedToPrimary={this.props.isLockedToPrimary}
                     onToggleLockedToPrimary={this.props.onToggleLockedToPrimary}

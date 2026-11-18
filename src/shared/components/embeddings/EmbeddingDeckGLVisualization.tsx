@@ -364,11 +364,10 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     private handleMouseUp = (event: React.MouseEvent) => {
         if (!this.state.isSelecting || this.selectionMode === 'none') return;
 
-        // Perform lasso selection
         this.performLassoSelection();
 
-        // Clear selection state and return to pan mode
-        this.setSelectionMode('none');
+        // Select stays armed: each draw adds a selection of its own, and
+        // several are what a comparison is made of.
         this.setState({
             isSelecting: false,
             selectionPath: [],

@@ -2,7 +2,8 @@ import { assert } from 'chai';
 import { EmbeddingDataOption } from 'shared/components/embeddings/EmbeddingTypes';
 import {
     getEmbeddingOptionsForSamples,
-    getStudyViewMapUrl,
+    getStudyViewMapHandoff,
+    STUDY_VIEW_URL_SELECTION_LIMIT,
 } from './PatientSimilarityMapUtils';
 
 function option(
@@ -55,9 +56,9 @@ describe('getEmbeddingOptionsForSamples', () => {
     });
 });
 
-describe('getStudyViewMapUrl', () => {
+describe('getStudyViewMapHandoff', () => {
     it('carries the study, the map and the samples as a selection', () => {
-        const url = getStudyViewMapUrl(
+        const { href, needsHandoff } = getStudyViewMapHandoff(
             ['msktarget'],
             [
                 { studyId: 'msktarget', sampleId: 'P-1-T01-IM7' },
@@ -65,11 +66,12 @@ describe('getStudyViewMapUrl', () => {
             ],
             'msktarget_rna_tsne_mpath'
         );
-        assert.include(url, 'study/embeddings');
-        assert.include(url, 'id=msktarget');
-        assert.include(url, 'embeddings_map=msktarget_rna_tsne_mpath');
+        assert.isFalse(needsHandoff);
+        assert.include(href, 'study/embeddings');
+        assert.include(href, 'id=msktarget');
+        assert.include(href, 'embeddings_map=msktarget_rna_tsne_mpath');
 
-        const [query, hash] = url.split('#');
+        const [query, hash] = href.split('#');
         assert.notInclude(
             query,
             'filterJson',
@@ -87,14 +89,14 @@ describe('getStudyViewMapUrl', () => {
     });
 
     it('omits the map when none is given', () => {
-        const url = getStudyViewMapUrl(['msktarget'], [
+        const { href } = getStudyViewMapHandoff(['msktarget'], [
             { studyId: 'msktarget', sampleId: 'P-1-T01-IM7' },
         ]);
-        assert.notInclude(url.split('#')[0], 'embeddings_map');
+        assert.notInclude(href.split('#')[0], 'embeddings_map');
     });
 
     it('opens every study the map covers, keeping each sample with its own', () => {
-        const url = getStudyViewMapUrl(
+        const { href } = getStudyViewMapHandoff(
             ['brca_tcga', 'luad_tcga', 'msk_impact_50k_2026'],
             [
                 { studyId: 'brca_tcga', sampleId: 'TCGA-A1-A0SB-01' },
@@ -102,13 +104,32 @@ describe('getStudyViewMapUrl', () => {
             ],
             'msk_mosaic_2026_he'
         );
-        assert.include(url, 'id=brca_tcga%2Cluad_tcga%2Cmsk_impact_50k_2026');
+        assert.include(href, 'id=brca_tcga%2Cluad_tcga%2Cmsk_impact_50k_2026');
         const filters = JSON.parse(
-            decodeURIComponent(url.split('#')[1].replace('filterJson=', ''))
+            decodeURIComponent(href.split('#')[1].replace('filterJson=', ''))
         );
         assert.deepEqual(filters.sampleIdentifiers, [
             { studyId: 'brca_tcga', sampleId: 'TCGA-A1-A0SB-01' },
             { studyId: 'msk_impact_50k_2026', sampleId: 'P-0000012-T03' },
         ]);
+    });
+
+    it('leaves a selection no URL could hold for the opened window', () => {
+        const sampleIdentifiers = [];
+        for (let i = 0; i < 20000; i++) {
+            sampleIdentifiers.push({
+                studyId: 'msk_impact_50k_2026',
+                sampleId: `P-${i}-T01-IM7`,
+            });
+        }
+        const { href, needsHandoff } = getStudyViewMapHandoff(
+            ['msk_impact_50k_2026'],
+            sampleIdentifiers,
+            'msk_mosaic_2026_he'
+        );
+        assert.isTrue(needsHandoff);
+        assert.notInclude(href, 'filterJson');
+        assert.include(href, 'id=msk_impact_50k_2026');
+        assert.isBelow(href.length, STUDY_VIEW_URL_SELECTION_LIMIT);
     });
 });

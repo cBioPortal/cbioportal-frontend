@@ -7,6 +7,8 @@ import {
 } from 'shared/components/plots/PlotsTabTypes';
 import { Gene, ClinicalAttribute } from 'cbioportal-ts-api-client';
 import { TooltipDropdown } from 'shared/components/embeddings/controls/TooltipDropdown';
+import { SelectionList } from 'shared/components/embeddings/controls/SelectionList';
+import { MapSelectionSummary } from 'shared/components/embeddings/state/MapSelection';
 
 export interface EmbeddingControlStackProps {
     // Map
@@ -48,6 +50,14 @@ export interface EmbeddingControlStackProps {
     }[];
     selectedTooltipFields: Set<string>;
     onTooltipFieldsChange: (fields: Set<string>) => void;
+
+    // Selections, one per lasso.
+    selections: MapSelectionSummary[];
+    onRemoveSelection: (id: number) => void;
+    onClearSelections: () => void;
+    onCompareSelections?: () => void;
+    isComparingSelections?: boolean;
+    selectionsEmptyHint?: string;
 
     // Pan/Select lives in EmbeddingsTab's top bar, not here.
     onCenter: () => void;
@@ -117,6 +127,12 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
     tooltipFieldGroups,
     selectedTooltipFields,
     onTooltipFieldsChange,
+    selections,
+    onRemoveSelection,
+    onClearSelections,
+    onCompareSelections,
+    isComparingSelections,
+    selectionsEmptyHint,
     onCenter,
     isLockedToPrimary,
     onToggleLockedToPrimary,
@@ -196,6 +212,15 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
                     />
                 </div>
             )}
+
+            <SelectionList
+                selections={selections}
+                onRemove={onRemoveSelection}
+                onClear={onClearSelections}
+                onCompare={onCompareSelections}
+                isComparing={isComparingSelections}
+                emptyHint={selectionsEmptyHint}
+            />
 
             {isPrimaryPanel && (
                 <div>
