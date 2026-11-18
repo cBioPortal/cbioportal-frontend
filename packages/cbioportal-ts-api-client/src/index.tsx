@@ -123,7 +123,6 @@ export {
     SampleTreatmentRow,
     StructuralVariant,
     StructuralVariantFilter,
-    UserMessage,
     StructuralVariantFilterQuery,
     StructuralVariantGeneSubQuery,
     StructuralVariantQuery,

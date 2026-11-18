@@ -3,13 +3,37 @@ import ReactMarkdown from 'react-markdown';
 import { observer } from 'mobx-react';
 import { action, observable, makeObservable } from 'mobx';
 import styles from './styles/styles.module.scss';
-import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
-import { UserMessage } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
-import { QueryStoreComponent } from './QueryStore';
+import { AssistantMessage, QueryStoreComponent } from './QueryStore';
+import {
+    isOqlTranslatorAvailable,
+    OqlTranslation,
+    translateToOql,
+} from './oqlTranslator';
 
 enum OQLError {
     io = 'Something went wrong, please try again',
-    invalid = 'Please submit a valid OQL question',
+}
+
+// One reply per translation: the query and what it means, or why there is none.
+function replyFor(translation: OqlTranslation): AssistantMessage {
+    if (translation.kind === 'ok') {
+        const lines = [
+            ...translation.oql.split('\n').map(line => `\`${line}\``),
+            ...translation.explanation,
+            ...translation.warnings.map(w => `⚠️ ${w.message}`),
+        ];
+        return { speaker: 'AI', text: lines.join('\n'), oql: translation.oql };
+    }
+    if (translation.kind === 'rejected') {
+        return { speaker: 'AI', text: translation.message };
+    }
+    return {
+        speaker: 'AI',
+        text: [
+            translation.message,
+            ...translation.errors.map(e => e.message),
+        ].join('\n'),
+    };
 }
 
 const ErrorMessage: React.FC<{ message: string }> = ({ message }) => (
@@ -22,16 +46,26 @@ export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
         super(props);
         makeObservable(this);
     }
+    @observable private available = false;
     @observable private userMessage = '';
     @observable private pending = false;
     @observable private showErrorMessage = false;
     @observable private errorMessage = OQLError.io;
     private examples = {
-        'Find mutations in tumor suppressor genes':
-            'TP53 RB1 CDKN2A PTEN SMAD4 ARID1A...',
+        'KRAS G12C or STK11 truncating mutations':
+            'KRAS: MUT=G12C; STK11: TRUNC',
         'Somatic missense mutations in PIK3CA': 'PIK3CA: MISSENSE_SOMATIC',
-        'Find KRAS mutations excluding silent ones': 'KRAS: MUT',
+        'MDM2 amplification or CDKN2A deep deletion':
+            'MDM2: AMP; CDKN2A: HOMDEL',
     };
+
+    componentDidMount() {
+        isOqlTranslatorAvailable().then(
+            action((available: boolean) => {
+                this.available = available;
+            })
+        );
+    }
 
     @action.bound
     private toggleSupport() {
@@ -59,44 +93,38 @@ export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
 
         if (!this.userMessage.trim()) return;
 
+        const prompt = this.userMessage.trim();
         this.store.messages.push({
             speaker: 'User',
-            text: this.userMessage,
+            text: prompt,
         });
-        this.getResponse();
         this.userMessage = '';
+        this.getResponse(prompt);
     }
 
     @action.bound
-    private async getResponse() {
+    private async getResponse(prompt: string) {
         this.showErrorMessage = false;
         this.pending = true;
-
-        let userMessage = {
-            message: this.userMessage,
-        } as UserMessage;
-
         try {
-            const response = await internalClient.getSupportUsingPOST({
-                userMessage,
-            });
-            const parts = response.aiResponse.split('OQL: ', 2);
-
-            if (parts.length < 2 || parts[1].trim().toUpperCase() === 'FALSE') {
-                this.showErrorMessage = true;
-                this.errorMessage = OQLError.invalid;
-            } else {
-                this.store.messages.push({
-                    speaker: 'AI',
-                    text: parts[0].trim(),
-                });
-            }
-            this.pending = false;
+            const translation = await translateToOql(prompt);
+            this.addReply(replyFor(translation));
         } catch (error) {
-            this.pending = false;
-            this.showErrorMessage = true;
-            this.errorMessage = OQLError.io;
+            this.showError(OQLError.io);
         }
+    }
+
+    @action.bound
+    private addReply(reply: AssistantMessage) {
+        this.pending = false;
+        this.store.messages.push(reply);
+    }
+
+    @action.bound
+    private showError(message: OQLError) {
+        this.pending = false;
+        this.showErrorMessage = true;
+        this.errorMessage = message;
     }
 
     renderButton() {
@@ -163,17 +191,16 @@ export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
                                 }
                             >
                                 {msg.text.split('\n').map((line, i) => (
-                                    <p key={i} className={styles.messageLine}>
-                                        <ReactMarkdown key={i}>
-                                            {line}
-                                        </ReactMarkdown>
-                                    </p>
+                                    <div key={i} className={styles.messageLine}>
+                                        <ReactMarkdown>{line}</ReactMarkdown>
+                                    </div>
                                 ))}
                             </div>
-                            {!isUser && index !== 0 && (
+                            {msg.oql && (
                                 <div>
                                     <button
-                                        onClick={() => this.submitOQL(msg.text)}
+                                        title="Use this query"
+                                        onClick={() => this.submitOQL(msg.oql!)}
                                         style={{
                                             fontSize: '20px',
                                             color: '#3498db',
@@ -207,6 +234,7 @@ export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
                 <div className={styles.examplestext}>
                     {Object.entries(this.examples).map(([example, genes]) => (
                         <div
+                            key={example}
                             className={styles.exampleitem}
                             onClick={() => this.queryExample(example)}
                         >
@@ -224,6 +252,9 @@ export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
     }
 
     render() {
+        if (!this.available) {
+            return null;
+        }
         return (
             <div className={styles.supportContainer}>
                 {this.renderButton()}
@@ -242,9 +273,9 @@ export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
 
                         <div className={styles.textarea}>
                             <div className={styles.textheader}>
-                                Please ask your cBioPortal querying questions
-                                here, for example how to correctly format a
-                                query using Onco Query Language (OQL).
+                                Describe the genes and alterations to query in
+                                plain language, and get an Onco Query Language
+                                (OQL) query to use.
                             </div>
                             {this.renderMessages()}
                             {this.pending && this.renderThinking()}
@@ -263,7 +294,7 @@ export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
                                     type="text"
                                     value={this.userMessage}
                                     onChange={this.handleInputChange}
-                                    placeholder="Ask me about genes, cancer types or OQL syntax!"
+                                    placeholder="e.g. KRAS G12C or STK11 truncating mutations"
                                 />
                                 <button
                                     type="submit"

@@ -106,6 +106,13 @@ export type CancerStudyQueryUrlParams = {
 
 export type GeneReplacement = { alias: string; genes: Gene[] };
 
+// A Gene Assistant chat message; `oql` is set on replies that carry a query.
+export type AssistantMessage = {
+    speaker: 'AI' | 'User';
+    text: string;
+    oql?: string;
+};
+
 export const CUSTOM_CASE_LIST_ID = '-1';
 export const ALL_CASES_LIST_ID = 'all';
 
@@ -594,11 +601,11 @@ export class QueryStore {
     @observable showMutSigPopup = false;
     @observable showGisticPopup = false;
     @observable showSupport = false;
-    @observable public messages = [
+    @observable public messages: AssistantMessage[] = [
         {
             speaker: 'AI',
             text:
-                'Hi there!\nThis is your place to get help with gene symbols and OQL query construction 🤖',
+                "Hi there!\nDescribe the genes and alterations you're interested in, and I'll write the OQL query for you 🤖",
         },
     ];
     @observable showGenesetsHierarchyPopup = false;
