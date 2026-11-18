@@ -4,11 +4,39 @@ import {
     getFallbackSelectableProfileSuffix,
     getFirstSelectableProfile,
     getSuffixOfMolecularProfile,
+    isTpmExpressionProfile,
 } from './molecularProfileUtils';
 import { getFilteredMolecularProfiles } from './getDefaultMolecularProfiles';
 import { AlterationTypeConstants } from 'shared/constants';
 
 describe('MolecularProfileUtils', () => {
+    describe('isTpmExpressionProfile', () => {
+        const mrna = 'MRNA_EXPRESSION';
+
+        it('recognizes continuous TPM profiles by ID or name', () => {
+            assert.isTrue(
+                isTpmExpressionProfile(mrna, 'CONTINUOUS', 'study_rna_tpm')
+            );
+            assert.isTrue(
+                isTpmExpressionProfile(
+                    mrna,
+                    'CONTINUOUS',
+                    'study_rna',
+                    'RNA-seq (TPM)'
+                )
+            );
+        });
+
+        it('excludes z-scores and profiles with other units', () => {
+            assert.isFalse(
+                isTpmExpressionProfile(mrna, 'Z-SCORE', 'study_tpm_zscores')
+            );
+            assert.isFalse(
+                isTpmExpressionProfile(mrna, 'CONTINUOUS', 'study_read_counts')
+            );
+        });
+    });
+
     describe('getSuffixOfMolecularProfile', () => {
         it('get suffix correctly from molecular profile', () => {
             const profile = {
