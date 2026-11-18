@@ -10,6 +10,7 @@ import {
 } from 'mobx';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
+import { EmbeddingsPanelStore } from 'shared/components/embeddings/EmbeddingsPanelStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
@@ -76,7 +77,7 @@ const EMBEDDING_CONFIG_CATEGORIES = [
 ];
 
 export interface IEmbeddingsPanelProps {
-    store: StudyViewPageStore;
+    store: EmbeddingsPanelStore;
     panelIndex: 1 | 2 | 3 | 4;
     panelCount: number;
     selectionMode: 'none' | 'lasso';
@@ -1851,7 +1852,9 @@ export class EmbeddingsPanel extends React.Component<
 
         if (
             !this.store.samples.isComplete ||
-            !this.store.selectedSamples.isComplete
+            // Absent on a page whose map is not filtered by a cohort, where
+            // there is nothing to wait for.
+            this.store.selectedSamples?.isComplete === false
         ) {
             return true;
         }
@@ -2119,9 +2122,17 @@ export class EmbeddingsPanel extends React.Component<
         this.categoryVisibility.toggleAll(this.categoryCounts?.keys() ?? []);
     }
 
+    /** Whether this page has a cohort a selection could be applied to. */
+    @computed get canApplyFilterGlobally(): boolean {
+        return !!this.store.updateCustomSelect;
+    }
+
     // Called via ref from "Make Global". Returns whether a selection was actually applied, so a no-op doesn't discard local filters.
     @action.bound
     applyFilterGlobally(): boolean {
+        if (!this.store.updateCustomSelect) {
+            return false;
+        }
         if (this.plotData.length === 0 || !this.selectedEmbedding) {
             return false;
         }
@@ -2170,7 +2181,7 @@ export class EmbeddingsPanel extends React.Component<
                 })),
             };
 
-            this.store.updateCustomSelect(customChartData);
+            this.store.updateCustomSelect!(customChartData);
         } else {
             const selectedPatientSet = new Set(
                 selectedPoints.map(p => p.patientId).filter(Boolean)
@@ -2195,7 +2206,7 @@ export class EmbeddingsPanel extends React.Component<
                 })),
             };
 
-            this.store.updateCustomSelect(customChartData);
+            this.store.updateCustomSelect!(customChartData);
         }
         return true;
     }
