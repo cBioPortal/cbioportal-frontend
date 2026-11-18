@@ -341,6 +341,13 @@ export default class PatientSimilarityMap extends React.Component<
                 this.molecularDataForColoring.isPending
             );
         }
+        // Points with no value yet are drawn the same grey as points with no
+        // value at all, so the cover has to stay up until the values are in.
+        const attribute = this.coloringClinicalAttribute;
+        if (attribute) {
+            return !this.coloring.clinicalDataCache.get(attribute as any)
+                .isComplete;
+        }
         return false;
     }
 
