@@ -39,7 +39,7 @@ import {
     seedLowHighColors,
     pickPercentileRange,
 } from 'shared/components/embeddings/controls/GradientRangeEditor';
-import { Gene, ClinicalData } from 'cbioportal-ts-api-client';
+import { Gene, ClinicalData, Sample } from 'cbioportal-ts-api-client';
 import { addCancerStudyAttribute } from 'shared/lib/ClinicalAttributeUtils';
 import {
     getLoadedEmbeddingOptions,
@@ -2127,9 +2127,47 @@ export class EmbeddingsPanel extends React.Component<
         this.categoryVisibility.toggleAll(this.categoryCounts?.keys() ?? []);
     }
 
-    /** Whether this page has a cohort a selection could be applied to. */
-    @computed get canApplyFilterGlobally(): boolean {
-        return !!this.store.updateCustomSelect;
+    // The points a local selection leaves. plotData is already narrowed to
+    // this in filter mode, but not in highlight mode (a hidden category isn't
+    // even dimmed there).
+    @computed get locallySelectedPoints(): EmbeddingPlotPoint[] {
+        if (this.plotData.length === 0 || !this.selectedEmbedding) {
+            return [];
+        }
+        const excludedKeys = this.localSelectionExcludedKeys;
+        if (excludedKeys.size === 0) {
+            return this.plotData;
+        }
+        return this.plotData.filter(p => {
+            const key = p.sampleId || p.patientId;
+            return key ? !excludedKeys.has(key) : true;
+        });
+    }
+
+    /** The selection as the page's own sample records, for whoever acts on it. */
+    @computed get locallySelectedSamples(): Sample[] {
+        const selectedPoints = this.locallySelectedPoints;
+        if (selectedPoints.length === 0 || !this.selectedEmbedding) {
+            return [];
+        }
+        const allSamples = this.store.samples.result || [];
+        if (this.selectedEmbedding.data.embedding_type === 'samples') {
+            // By uniqueSampleKey, not sampleId: an id is only unique within
+            // a study, so matching on it alone pulls in same-named samples
+            // from the other studies in the cohort.
+            const selectedSampleKeys = new Set(
+                selectedPoints.map(p => p.uniqueSampleKey).filter(Boolean)
+            );
+            return allSamples.filter(sample =>
+                selectedSampleKeys.has(sample.uniqueSampleKey)
+            );
+        }
+        const selectedPatientSet = new Set(
+            selectedPoints.map(p => p.patientId).filter(Boolean)
+        );
+        return allSamples.filter(sample =>
+            selectedPatientSet.has(sample.patientId)
+        );
     }
 
     // Called via ref from "Make Global". Returns whether a selection was actually applied, so a no-op doesn't discard local filters.
@@ -2138,39 +2176,17 @@ export class EmbeddingsPanel extends React.Component<
         if (!this.store.updateCustomSelect) {
             return false;
         }
-        if (this.plotData.length === 0 || !this.selectedEmbedding) {
+        if (
+            this.locallySelectedPoints.length === 0 ||
+            !this.selectedEmbedding
+        ) {
             return false;
         }
 
-        // plotData is already narrowed to this in filter mode, but not in
-        // highlight mode (a hidden category isn't even dimmed there).
-        const excludedKeys = this.localSelectionExcludedKeys;
-        const selectedPoints =
-            excludedKeys.size === 0
-                ? this.plotData
-                : this.plotData.filter(p => {
-                      const key = p.sampleId || p.patientId;
-                      return key ? !excludedKeys.has(key) : true;
-                  });
-        if (selectedPoints.length === 0) {
-            return false;
-        }
-
-        const allSamples = this.store.samples.result || [];
+        const samplesForSelection = this.locallySelectedSamples;
         const embeddingType = this.selectedEmbedding.data.embedding_type;
 
         if (embeddingType === 'samples') {
-            // By uniqueSampleKey, not sampleId: an id is only unique within
-            // a study, so matching on it alone pulls in same-named samples
-            // from the other studies in the cohort.
-            const selectedSampleKeys = new Set(
-                selectedPoints.map(p => p.uniqueSampleKey).filter(Boolean)
-            );
-
-            const samplesForSelection = allSamples.filter(sample =>
-                selectedSampleKeys.has(sample.uniqueSampleKey)
-            );
-
             const customChartData = {
                 origin: [this.selectedEmbedding.label],
                 displayName: `${this.selectedEmbedding.label} Sample Selection`,
@@ -2188,14 +2204,6 @@ export class EmbeddingsPanel extends React.Component<
 
             this.store.updateCustomSelect!(customChartData);
         } else {
-            const selectedPatientSet = new Set(
-                selectedPoints.map(p => p.patientId).filter(Boolean)
-            );
-
-            const samplesForSelectedPatients = allSamples.filter(sample =>
-                selectedPatientSet.has(sample.patientId)
-            );
-
             const customChartData = {
                 origin: [this.selectedEmbedding.label],
                 displayName: `${this.selectedEmbedding.label} Patient Selection`,
@@ -2203,7 +2211,7 @@ export class EmbeddingsPanel extends React.Component<
                 datatype: 'STRING',
                 patientAttribute: true,
                 priority: 1,
-                data: samplesForSelectedPatients.map(sample => ({
+                data: samplesForSelection.map(sample => ({
                     studyId: sample.studyId,
                     patientId: sample.patientId,
                     sampleId: sample.sampleId,

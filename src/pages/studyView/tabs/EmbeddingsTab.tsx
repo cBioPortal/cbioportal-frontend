@@ -5,9 +5,13 @@ import { observable, action, computed, makeObservable } from 'mobx';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import { EmbeddingsPanelStore } from 'shared/components/embeddings/EmbeddingsPanelStore';
-import { EmbeddingData } from 'shared/components/embeddings/EmbeddingTypes';
+import {
+    EmbeddingData,
+    EmbeddingDataOption,
+} from 'shared/components/embeddings/EmbeddingTypes';
 import { ViewState } from 'shared/components/embeddings/EmbeddingTypes';
 import { EmbeddingsPanel } from './EmbeddingsPanel';
+import { Sample } from 'cbioportal-ts-api-client';
 
 // Compact variant of EmbeddingControlStack's SELECT_STYLES, for the
 // status bar's inline Map dropdown.
@@ -48,6 +52,16 @@ export interface IEmbeddingsTabProps {
     renderOverlay?: (
         project: (x: number, y: number) => { x: number; y: number },
         embedding?: EmbeddingData
+    ) => React.ReactNode;
+    /**
+     * Rendered in the status bar beside Clear and Make Global, with whatever
+     * the first panel's selection currently covers. A page that can't apply a
+     * selection to a cohort offers its own action here - the patient view
+     * opens the selection in the study view.
+     */
+    renderSelectionActions?: (
+        selectedSamples: Sample[],
+        embedding: EmbeddingDataOption | null
     ) => React.ReactNode;
 }
 
@@ -288,6 +302,25 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
     @computed private get unitLabel(): string {
         return this.reportedEmbeddingType;
+    }
+
+    /** Whether this page has a cohort a selection could be applied to. */
+    @computed private get canApplyFilterGlobally(): boolean {
+        return !!this.props.store.updateCustomSelect;
+    }
+
+    // Read from the panel rather than reported: it is the whole selection, not
+    // a count, and render tracks the panel's computed through it. Plain getter,
+    // because the ref it goes through is not observable and a cached computed
+    // would keep whatever the first render saw.
+    //
+    // Nothing selected means nothing selected, not every point: the panel's
+    // view is unnarrowed then, and reading it would hand out the whole map.
+    private selectedSamples(isSelectionActive: boolean): Sample[] {
+        if (!isSelectionActive) {
+            return [];
+        }
+        return this.panel1Ref.current?.locallySelectedSamples ?? [];
     }
 
     @computed private get hasReportedCounts(): boolean {
@@ -873,24 +906,30 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                         >
                                             Clear
                                         </button>
-                                        <button
-                                            data-test="embeddings-make-global-button"
-                                            onClick={this.onApplyGlobally}
-                                            title="Apply this selection as a Study View selection, affecting every tab on the page"
-                                            style={{
-                                                padding: '4px 10px',
-                                                fontSize: '11px',
-                                                border: '1px solid #ccc',
-                                                borderRadius: '3px',
-                                                backgroundColor: 'white',
-                                                cursor: 'pointer',
-                                            }}
-                                        >
-                                            Make Global
-                                        </button>
+                                        {this.canApplyFilterGlobally && (
+                                            <button
+                                                data-test="embeddings-make-global-button"
+                                                onClick={this.onApplyGlobally}
+                                                title="Apply this selection as a Study View selection, affecting every tab on the page"
+                                                style={{
+                                                    padding: '4px 10px',
+                                                    fontSize: '11px',
+                                                    border: '1px solid #ccc',
+                                                    borderRadius: '3px',
+                                                    backgroundColor: 'white',
+                                                    cursor: 'pointer',
+                                                }}
+                                            >
+                                                Make Global
+                                            </button>
+                                        )}
                                     </>
                                 )}
                             </div>
+                        )}
+                        {this.props.renderSelectionActions?.(
+                            this.selectedSamples(isLocalSelectionActive),
+                            this.panel1Ref.current?.selectedEmbedding ?? null
                         )}
                     </div>
                 </div>

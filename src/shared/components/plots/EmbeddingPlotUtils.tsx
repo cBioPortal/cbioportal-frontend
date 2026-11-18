@@ -257,6 +257,8 @@ export interface EmbeddingPlotPoint {
     patientId?: string;
     sampleId?: string;
     uniqueSampleKey?: string;
+    // The study the point's sample belongs to; absent for out-of-cohort points.
+    studyId?: string;
     color?: string;
     strokeColor?: string;
     displayLabel?: string;
@@ -738,6 +740,7 @@ function transformPatientEmbedding(
             y: coord.y,
             patientId: coord.patientId,
             sampleId: sample?.sampleId,
+            studyId: sample.studyId,
             color,
             strokeColor,
             displayLabel,
@@ -1192,6 +1195,7 @@ function transformSampleEmbedding(
             patientId,
             sampleId: coord.sampleId,
             uniqueSampleKey: sample?.uniqueSampleKey,
+            studyId: sample?.studyId,
             color,
             strokeColor,
             displayLabel,

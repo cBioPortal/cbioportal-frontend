@@ -51,6 +51,8 @@ export interface EmbeddingPoint {
     patientId?: string;
     sampleId?: string;
     uniqueSampleKey?: string;
+    // The study the point's sample belongs to; absent for out-of-cohort points.
+    studyId?: string;
     color?: string;
     strokeColor?: string;
     displayLabel?: string;

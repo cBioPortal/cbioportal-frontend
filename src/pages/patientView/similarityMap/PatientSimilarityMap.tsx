@@ -31,6 +31,7 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import { EmbeddingDeckGLVisualization } from 'shared/components/embeddings';
 import {
     EmbeddingData,
+    EmbeddingDataOption,
     EmbeddingPoint,
     SampleEmbeddingData,
 } from 'shared/components/embeddings/EmbeddingTypes';
@@ -504,14 +505,6 @@ export default class PatientSimilarityMap extends React.Component<
     }
 
     @action.bound
-    private onSelectMap(option: { value: string } | null) {
-        if (option) {
-            this.selectedValue = option.value;
-            this.clearSelection();
-        }
-    }
-
-    @action.bound
     private onMutationTypeToggle(enabled: boolean) {
         this.mutationTypeEnabled = enabled;
     }
@@ -544,238 +537,51 @@ export default class PatientSimilarityMap extends React.Component<
         this.coloring.setColoringGenes(gene ? [gene] : []);
     }
 
-    @action.bound
-    private onSelectionModeChange(mode: 'none' | 'lasso') {
-        this.selectionMode = mode;
-    }
-
-    @action.bound
-    private onToggleAllCategories() {
-        this.categoryVisibility.toggleAll(this.categoryCounts.keys());
-    }
-
-    @action.bound
-    private onPinPoint(point: EmbeddingPoint) {
-        this.pinnedPoint = point;
-    }
-
-    @action.bound
-    private onUnpinPoint() {
-        this.pinnedPoint = null;
-    }
-
-    @action.bound
-    private onPointSelection(points: EmbeddingPoint[]) {
-        this.lassoSelection = points
-            .map(p => p.sampleId)
-            .filter((id): id is string => !!id);
-        this.resolveLassoSelection(this.lassoSelection);
-    }
-
-    // A map's points carry a bare sample id, but the study view needs each one
-    // paired with its study. The colouring fetch already returns every study's
-    // clinical data, so it doubles as that index at no extra cost; anything it
-    // does not cover is asked for against this study.
-    private async resolveLassoSelection(sampleIds: string[]) {
-        const token = ++this.lassoToken;
-        runInAction(() => {
-            this.isResolvingLasso = sampleIds.length > 0;
-            this.lassoSampleIdentifiers = [];
-        });
-        if (sampleIds.length === 0) {
-            return;
-        }
-        const index = this.sampleStudyIds;
-        const found: SampleIdentifier[] = [];
-        const unknown: string[] = [];
-        sampleIds.forEach(sampleId => {
-            const studyId = index.get(sampleId);
-            if (studyId) {
-                found.push({ sampleId, studyId } as SampleIdentifier);
-            } else {
-                unknown.push(sampleId);
-            }
-        });
-        if (unknown.length > 0) {
-            try {
-                const samples = await getClient().fetchSamplesUsingPOST({
-                    projection: 'ID',
-                    sampleFilter: {
-                        sampleIdentifiers: unknown.map(sampleId => ({
-                            sampleId,
-                            studyId: this.props.studyId,
-                        })),
-                    } as SampleFilter,
-                });
-                samples.forEach(s =>
-                    found.push({
-                        sampleId: s.sampleId,
-                        studyId: s.studyId,
-                    } as SampleIdentifier)
-                );
-            } catch (e) {
-                // Leave the unresolved ids out rather than sending the study
-                // view identifiers it would silently drop.
-            }
-        }
-        if (token !== this.lassoToken) {
-            return;
-        }
-        runInAction(() => {
-            this.lassoSampleIdentifiers = found;
-            this.isResolvingLasso = false;
-        });
-    }
-
-    @action.bound
-    private clearSelection() {
-        this.lassoToken++;
-        this.lassoSelection = [];
-        this.lassoSampleIdentifiers = [];
-        this.isResolvingLasso = false;
-        this.plotInstance++;
-    }
-
-    // The link carries the selection when there is one, so a neighbourhood
-    // picked here opens as a selection there; otherwise it carries the patient.
-    @computed get studyViewSampleIdentifiers(): SampleIdentifier[] {
-        return this.lassoSelection.length > 0
-            ? this.lassoSampleIdentifiers
-            : this.sampleIds.map(
-                  sampleId =>
-                      ({
-                          sampleId,
-                          studyId: this.props.studyId,
-                      } as SampleIdentifier)
-              );
-    }
-
-    // Held as a computed because a selection of thousands is serialised into
-    // it, which should happen when the selection changes and not on every
-    // frame of a pan.
-    @computed get studyViewUrl(): string {
-        return getStudyViewMapUrl(
-            this.mapStudyIds,
-            this.studyViewSampleIdentifiers,
-            this.selectedOption?.value
-        );
-    }
-
-    private renderStudyViewLink() {
-        const style = { marginLeft: 10, color: '#666' };
-        if (this.lassoSelection.length === 0) {
-            return (
-                <a
-                    data-test="patient-similarity-map-study-view-link"
-                    href={this.studyViewUrl}
-                    style={{ marginLeft: 10 }}
-                >
-                    Open in study view
-                </a>
-            );
-        }
-        if (this.isResolvingLasso) {
-            return <span style={style}>Checking the selection…</span>;
-        }
-        if (this.lassoSampleIdentifiers.length === 0) {
-            return (
-                <span
-                    style={style}
-                    data-test="patient-similarity-map-empty-selection"
-                >
-                    No selected sample could be matched to a study
-                </span>
-            );
-        }
+    /**
+     * The tab's own selection, opened in the study view.
+     *
+     * The study view is where filtering, colouring and comparison live; this
+     * page hands off rather than reimplementing them. Without a selection the
+     * link carries this patient's samples, so the map opens on them.
+     */
+    private renderStudyViewLink = (
+        selectedSamples: Sample[],
+        embedding: EmbeddingDataOption | null
+    ) => {
+        const studyIds = embedding?.data.studyIds ?? this.mapStudyIds;
+        const identifiers: SampleIdentifier[] =
+            selectedSamples.length > 0
+                ? selectedSamples.map(
+                      s =>
+                          ({
+                              sampleId: s.sampleId,
+                              studyId: s.studyId,
+                          } as SampleIdentifier)
+                  )
+                : this.sampleIds.map(
+                      sampleId =>
+                          ({
+                              sampleId,
+                              studyId: this.props.studyId,
+                          } as SampleIdentifier)
+                  );
         return (
             <a
                 data-test="patient-similarity-map-study-view-link"
-                href={this.studyViewUrl}
-                style={{ marginLeft: 10 }}
+                href={getStudyViewMapUrl(
+                    studyIds,
+                    identifiers,
+                    embedding?.value
+                )}
+                style={{ whiteSpace: 'nowrap' }}
             >
-                {`Open ${this.lassoSampleIdentifiers.length} selected in study view`}
+                {selectedSamples.length > 0
+                    ? `Open ${selectedSamples.length.toLocaleString()} selected in study view`
+                    : 'Open in study view'}
             </a>
         );
-    }
+    };
 
-    private renderControlStack() {
-        return (
-            <div
-                style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 6,
-                    width: 190,
-                    flexShrink: 0,
-                    padding: 8,
-                    borderRadius: 4,
-                    // Floats over the points, so it carries its own backdrop.
-                    backgroundColor: 'rgba(255, 255, 255, 0.85)',
-                    border: '1px solid #ddd',
-                }}
-            >
-                <div className="patient-similarity-map-coloring">
-                    <span style={ROW_LABEL_STYLE}>Color by</span>
-                    <ColorSamplesByDropdown
-                        genes={this.colorableGenes}
-                        clinicalAttributes={this.coloringAttributes}
-                        selectedOption={this.coloringOption}
-                        hasNoQueriedGenes={true}
-                        isLoading={this.isColoringPending}
-                        mutationDataExists={this.mutationDataExists}
-                        cnaDataExists={this.cnaDataExists}
-                        svDataExists={this.svDataExists}
-                        mutationTypeEnabled={this.mutationTypeEnabled}
-                        copyNumberEnabled={this.copyNumberEnabled}
-                        structuralVariantEnabled={
-                            this.structuralVariantEnabled
-                        }
-                        // The map's largest study has no expression profile,
-                        // so the option would grey out most of the points.
-                        mrnaDataExists={false}
-                        onSelectionChange={this.onColoringSelectionChange}
-                        onMutationTypeToggle={this.onMutationTypeToggle}
-                        onCopyNumberToggle={this.onCopyNumberToggle}
-                        onStructuralVariantToggle={
-                            this.onStructuralVariantToggle
-                        }
-                    />
-                </div>
-                <div>
-                    <span style={{ ...ROW_LABEL_STYLE, paddingLeft: 2 }}>
-                        Viewport
-                    </span>
-                    <button
-                        onClick={this.centerView}
-                        style={{
-                            display: 'block',
-                            width: '100%',
-                            marginTop: 2,
-                            padding: '4px 8px',
-                            fontSize: 11,
-                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                            border: '1px solid #ccc',
-                            borderRadius: 4,
-                            cursor: 'pointer',
-                        }}
-                    >
-                        Center
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    // This patient's samples, marked on whichever map the tab is showing.
-    /**
-     * How large to draw this patient's marks.
-     *
-     * The plot sizes its points in data units, so they grow as the map is
-     * zoomed into and a fixed mark shrinks against them. Projecting a unit
-     * step gives the pixels per data unit without the panel having to report
-     * its zoom; comparing that against the zoom which frames the whole map
-     * says how far in the viewer is.
-     */
     private patientMapPoints(embedding?: EmbeddingData): SampleEmbeddingPoint[] {
         return (
             (embedding && embedding.embedding_type === 'samples'
@@ -796,6 +602,15 @@ export default class PatientSimilarityMap extends React.Component<
         return data.filter(p => wanted.has(p.sampleId));
     }
 
+    /**
+     * How large to draw this patient's marks.
+     *
+     * The plot sizes its points in data units, so they grow as the map is
+     * zoomed into and a fixed mark shrinks against them. Projecting a unit
+     * step gives the pixels per data unit without the panel having to report
+     * its zoom; comparing that against the zoom which frames the whole map
+     * says how far in the viewer is.
+     */
     private sampleIconScale(
         project: (x: number, y: number) => { x: number; y: number },
         embedding?: EmbeddingData
@@ -871,6 +686,7 @@ export default class PatientSimilarityMap extends React.Component<
                 <EmbeddingsTab
                     store={this.coloring}
                     renderOverlay={this.renderSampleIcons}
+                    renderSelectionActions={this.renderStudyViewLink}
                 />
                 {this.unplacedSampleIds.length > 0 && (
                     <div style={{ marginTop: 8, color: '#666' }}>
