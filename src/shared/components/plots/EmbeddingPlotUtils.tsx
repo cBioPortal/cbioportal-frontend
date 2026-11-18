@@ -5,7 +5,27 @@ import {
 } from './PlotsTabUtils';
 import { makeUniqueColorGetter } from './PlotUtils';
 import { interpolateReds } from 'd3-scale-chromatic';
-import { StudyViewPageStore } from '../../../pages/studyView/StudyViewPageStore';
+import { MobxPromise } from 'cbioportal-frontend-commons';
+import ClinicalDataCache from '../../cache/ClinicalDataCache';
+import { PlotsTabStore } from './PlotsTabStore';
+import { DriverAnnotationSettings } from '../../alterationFiltering/AnnotationFilteringSettings';
+
+/**
+ * What colouring an embedding needs from the page it is drawn on.
+ *
+ * The study view's page store satisfies this as it stands; stating it as five members
+ * rather than the whole store lets any page that can supply them - the patient
+ * view, over the studies its map covers - colour by the same rules.
+ */
+export interface EmbeddingColoringContext {
+    samples: MobxPromise<Sample[]>;
+    clinicalDataCache: ClinicalDataCache;
+    plotsTabStore: PlotsTabStore;
+    filteredSamplesByDetailedCancerType: MobxPromise<{
+        [cancerType: string]: Sample[];
+    }>;
+    driverAnnotationSettings: DriverAnnotationSettings;
+}
 import { Sample, ClinicalAttribute } from 'cbioportal-ts-api-client';
 import {
     EmbeddingData,
@@ -333,7 +353,7 @@ export interface ExpressionColoring {
  */
 export function makeEmbeddingScatterPlotData(
     embeddingData: EmbeddingData,
-    store: StudyViewPageStore,
+    store: EmbeddingColoringContext,
     coloringOption?: ColoringMenuOmnibarOption,
     mutationTypeEnabled: boolean = true,
     copyNumberEnabled: boolean = true,
@@ -371,7 +391,7 @@ export function makeEmbeddingScatterPlotData(
  */
 function transformPatientEmbedding(
     embeddingData: PatientEmbeddingData,
-    store: StudyViewPageStore,
+    store: EmbeddingColoringContext,
     coloringOption?: ColoringMenuOmnibarOption,
     mutationTypeEnabled: boolean = true,
     copyNumberEnabled: boolean = true,
@@ -729,7 +749,7 @@ function transformPatientEmbedding(
  */
 function transformSampleEmbedding(
     embeddingData: SampleEmbeddingData,
-    store: StudyViewPageStore,
+    store: EmbeddingColoringContext,
     coloringOption?: ColoringMenuOmnibarOption,
     mutationTypeEnabled: boolean = true,
     copyNumberEnabled: boolean = true,
