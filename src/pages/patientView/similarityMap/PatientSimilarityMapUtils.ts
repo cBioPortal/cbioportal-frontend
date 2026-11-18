@@ -35,27 +35,22 @@ export function getEmbeddingOptionsForSamples(
  *
  * The study view is where filtering, colouring and selection live; this page
  * deliberately loads none of that, so it hands off rather than reimplementing.
+ * Every study the map covers is opened together, so the study view shows the
+ * same cohort the map was drawn from rather than one study out of many.
  * The selection travels as a StudyViewFilter in the `filters` query parameter.
  */
 export function getStudyViewMapUrl(
-    studyId: string,
-    sampleIds: string[],
+    studyIds: string[],
+    sampleIdentifiers: { studyId: string; sampleId: string }[],
     mapValue?: string
 ): string {
-    const query: { [key: string]: string } = { id: studyId };
+    const query: { [key: string]: string } = { id: studyIds.join(',') };
     if (mapValue) {
         query.embeddings_map = mapValue;
     }
     // The selection rides in the fragment, which the browser never sends: a
     // few thousand sample ids in the query string exceed what a server accepts.
-    const filterJson = encodeURIComponent(
-        JSON.stringify({
-            sampleIdentifiers: sampleIds.map(sampleId => ({
-                studyId,
-                sampleId,
-            })),
-        })
-    );
+    const filterJson = encodeURIComponent(JSON.stringify({ sampleIdentifiers }));
     return buildCBioPortalPageUrl(
         'study/embeddings',
         query,

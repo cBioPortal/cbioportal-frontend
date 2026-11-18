@@ -14,9 +14,13 @@ import Select from 'react-select';
 import {
     ClinicalAttribute,
     ClinicalData,
+    Sample,
     SampleFilter,
+    SampleIdentifier,
+    StudyViewFilter,
 } from 'cbioportal-ts-api-client';
 import { getClient } from 'shared/api/cbioportalClientInstance';
+import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import { getClinicalAttributeColoring } from 'shared/cache/ClinicalDataCacheUtils';
 import { ClinicalDataCacheEntry } from 'shared/cache/ClinicalDataCache';
@@ -55,9 +59,12 @@ const DEFAULT_COLORING_ATTRIBUTE_ID = 'CANCER_TYPE';
 // SampleLabelHTML draws a 12px icon; enlarged so it stands out on a dense map.
 const SAMPLE_ICON_SIZE = 12;
 const SAMPLE_ICON_SCALE = 1.5;
-// The API answers a burst of per-study requests with 429s, which would leave
-// whole studies uncoloured, so they go a few at a time and a failure is retried.
-const CLINICAL_FETCH_CONCURRENCY = 3;
+// The study view's own fetch, one POST per cohort, scales poorly at this size:
+// resolving every identifier of a 30-study map in one request is slower than
+// splitting it. A few chunks in parallel beat both that and a request per
+// study. The API answers a burst with 429s, so a failure is retried.
+const CLINICAL_FETCH_CHUNK_SIZE = 15000;
+const CLINICAL_FETCH_CONCURRENCY = 5;
 const CLINICAL_FETCH_ATTEMPTS = 3;
 const CLINICAL_FETCH_BACKOFF_MS = 400;
 
@@ -81,9 +88,9 @@ const SELECT_STYLES = {
     container: (base: any) => ({ ...base, width: '100%' }),
 };
 
-// Which studies the colouring could not be read from, so the map can say so
-// instead of showing their samples as though they had no value.
-type MapColoringEntry = ClinicalDataCacheEntry & { failedStudyIds: string[] };
+// How many samples the colouring could not be read for, so the map can say so
+// instead of showing those points as though they had no value.
+type MapColoringEntry = ClinicalDataCacheEntry & { failedSampleCount: number };
 
 function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -111,7 +118,7 @@ export default class PatientSimilarityMap extends React.Component<
         maxZoom: 10,
     };
     @observable.ref private lassoSelection: string[] = [];
-    @observable.ref private lassoStudySampleIds: string[] = [];
+    @observable.ref private lassoSampleIdentifiers: SampleIdentifier[] = [];
     @observable private isResolvingLasso = false;
     @observable.ref private hiddenCategories = new Set<string>();
     @observable.ref private pinnedPoint: EmbeddingPoint | null = null;
@@ -231,34 +238,60 @@ export default class PatientSimilarityMap extends React.Component<
         return this.coloringAttribute?.datatype === 'NUMBER';
     }
 
-    // One request per study the map covers, kept per attribute. The patient
-    // view's own cache holds this study alone, which on a map built from many
-    // studies colours a sliver of the points and greys the rest.
+    // Every sample of every study the map covers, fetched once and shared by
+    // all attributes. It supplies the identifiers the clinical fetch needs and
+    // doubles as the point's study, which a map's bare sample id never carries.
+    private readonly mapSamples = new MobxPromiseCache<
+        { studyIds: string[] },
+        Sample[]
+    >(
+        q => ({
+            invoke: () =>
+                internalClient.fetchFilteredSamplesUsingPOST({
+                    studyViewFilter: { studyIds: q.studyIds } as StudyViewFilter,
+                }),
+        }),
+        q => q.studyIds.join(',')
+    );
+
+    // The study view's fetch, chunked. The patient view's own clinical cache
+    // holds this study alone, which on a map built from many studies colours a
+    // sliver of the points and greys the rest.
     private readonly mapClinicalData = new MobxPromiseCache<
         { attribute: ClinicalAttribute; studyIds: string[] },
         MapColoringEntry
     >(
         q => ({
+            await: () => [this.mapSamples.get({ studyIds: q.studyIds })],
             invoke: async () => {
-                const failedStudyIds: string[] = [];
-                const perStudy = await mapWithConcurrency(
-                    q.studyIds,
+                const samples =
+                    this.mapSamples.get({ studyIds: q.studyIds }).result ?? [];
+                const chunks = _.chunk(samples, CLINICAL_FETCH_CHUNK_SIZE);
+                let failedSampleCount = 0;
+                const perChunk = await mapWithConcurrency(
+                    chunks,
                     CLINICAL_FETCH_CONCURRENCY,
-                    async studyId => {
+                    async chunk => {
                         for (let attempt = 0; ; attempt++) {
                             try {
-                                return await getClient().getAllClinicalDataInStudyUsingGET(
+                                return await getClient().fetchClinicalDataUsingPOST(
                                     {
-                                        studyId,
-                                        attributeId:
-                                            q.attribute.clinicalAttributeId,
                                         clinicalDataType: 'SAMPLE',
                                         projection: 'SUMMARY',
+                                        clinicalDataMultiStudyFilter: {
+                                            attributeIds: [
+                                                q.attribute.clinicalAttributeId,
+                                            ],
+                                            identifiers: chunk.map(s => ({
+                                                entityId: s.sampleId,
+                                                studyId: s.studyId,
+                                            })),
+                                        },
                                     }
                                 );
                             } catch (e) {
                                 if (attempt + 1 >= CLINICAL_FETCH_ATTEMPTS) {
-                                    failedStudyIds.push(studyId);
+                                    failedSampleCount += chunk.length;
                                     return [] as ClinicalData[];
                                 }
                                 await sleep(
@@ -268,10 +301,10 @@ export default class PatientSimilarityMap extends React.Component<
                         }
                     }
                 );
-                const data = _.flatten(perStudy);
+                const data = _.flatten(perChunk);
                 return {
                     data,
-                    failedStudyIds,
+                    failedSampleCount,
                     ...getClinicalAttributeColoring(data, q.attribute.datatype),
                 };
             },
@@ -320,8 +353,27 @@ export default class PatientSimilarityMap extends React.Component<
         return !!query && this.mapClinicalData.get(query).isPending;
     }
 
-    @computed get failedStudyIds(): string[] {
-        return this.coloringEntry?.failedStudyIds ?? [];
+    @computed get failedSampleCount(): number {
+        return this.coloringEntry?.failedSampleCount ?? 0;
+    }
+
+    // Which study each sample of the map belongs to. Empty until the sample
+    // list has loaded.
+    @computed get sampleStudyIds(): Map<string, string> {
+        const index = new Map<string, string>();
+        const option = this.selectedOption;
+        if (option) {
+            this.mapSamples
+                .get({ studyIds: option.data.studyIds })
+                .result?.forEach(s => index.set(s.sampleId, s.studyId));
+        }
+        return index;
+    }
+
+    // Every study the map was built from, so the study view opens the same
+    // cohort rather than whichever one this patient happens to be in.
+    @computed get mapStudyIds(): string[] {
+        return this.selectedOption?.data.studyIds ?? [this.props.studyId];
     }
 
     // Every point the map draws, coloured. Kept separate from what is plotted
@@ -528,38 +580,57 @@ export default class PatientSimilarityMap extends React.Component<
         this.resolveLassoSelection(this.lassoSelection);
     }
 
-    // A map can cover many studies, so a selected point need not be a sample of
-    // this one. The study view is opened on this study, so ask which of them it
-    // actually holds rather than sending ids it would silently drop.
+    // A map's points carry a bare sample id, but the study view needs each one
+    // paired with its study. The colouring fetch already returns every study's
+    // clinical data, so it doubles as that index at no extra cost; anything it
+    // does not cover is asked for against this study.
     private async resolveLassoSelection(sampleIds: string[]) {
         const token = ++this.lassoToken;
         runInAction(() => {
             this.isResolvingLasso = sampleIds.length > 0;
-            this.lassoStudySampleIds = [];
+            this.lassoSampleIdentifiers = [];
         });
         if (sampleIds.length === 0) {
             return;
         }
-        let found: string[] = [];
-        try {
-            const samples = await getClient().fetchSamplesUsingPOST({
-                projection: 'ID',
-                sampleFilter: {
-                    sampleIdentifiers: sampleIds.map(sampleId => ({
-                        sampleId,
-                        studyId: this.props.studyId,
-                    })),
-                } as SampleFilter,
-            });
-            found = samples.map(s => s.sampleId);
-        } catch (e) {
-            found = [];
+        const index = this.sampleStudyIds;
+        const found: SampleIdentifier[] = [];
+        const unknown: string[] = [];
+        sampleIds.forEach(sampleId => {
+            const studyId = index.get(sampleId);
+            if (studyId) {
+                found.push({ sampleId, studyId } as SampleIdentifier);
+            } else {
+                unknown.push(sampleId);
+            }
+        });
+        if (unknown.length > 0) {
+            try {
+                const samples = await getClient().fetchSamplesUsingPOST({
+                    projection: 'ID',
+                    sampleFilter: {
+                        sampleIdentifiers: unknown.map(sampleId => ({
+                            sampleId,
+                            studyId: this.props.studyId,
+                        })),
+                    } as SampleFilter,
+                });
+                samples.forEach(s =>
+                    found.push({
+                        sampleId: s.sampleId,
+                        studyId: s.studyId,
+                    } as SampleIdentifier)
+                );
+            } catch (e) {
+                // Leave the unresolved ids out rather than sending the study
+                // view identifiers it would silently drop.
+            }
         }
         if (token !== this.lassoToken) {
             return;
         }
         runInAction(() => {
-            this.lassoStudySampleIds = found;
+            this.lassoSampleIdentifiers = found;
             this.isResolvingLasso = false;
         });
     }
@@ -568,17 +639,23 @@ export default class PatientSimilarityMap extends React.Component<
     private clearSelection() {
         this.lassoToken++;
         this.lassoSelection = [];
-        this.lassoStudySampleIds = [];
+        this.lassoSampleIdentifiers = [];
         this.isResolvingLasso = false;
         this.plotInstance++;
     }
 
     // The link carries the selection when there is one, so a neighbourhood
     // picked here opens as a selection there; otherwise it carries the patient.
-    @computed get studyViewSampleIds(): string[] {
+    @computed get studyViewSampleIdentifiers(): SampleIdentifier[] {
         return this.lassoSelection.length > 0
-            ? this.lassoStudySampleIds
-            : this.sampleIds;
+            ? this.lassoSampleIdentifiers
+            : this.sampleIds.map(
+                  sampleId =>
+                      ({
+                          sampleId,
+                          studyId: this.props.studyId,
+                      } as SampleIdentifier)
+              );
     }
 
     private renderStudyViewLink(mapValue: string) {
@@ -588,8 +665,8 @@ export default class PatientSimilarityMap extends React.Component<
                 <a
                     data-test="patient-similarity-map-study-view-link"
                     href={getStudyViewMapUrl(
-                        this.props.studyId,
-                        this.studyViewSampleIds,
+                        this.mapStudyIds,
+                        this.studyViewSampleIdentifiers,
                         mapValue
                     )}
                     style={{ marginLeft: 10 }}
@@ -601,13 +678,13 @@ export default class PatientSimilarityMap extends React.Component<
         if (this.isResolvingLasso) {
             return <span style={style}>Checking the selection…</span>;
         }
-        if (this.lassoStudySampleIds.length === 0) {
+        if (this.lassoSampleIdentifiers.length === 0) {
             return (
                 <span
                     style={style}
                     data-test="patient-similarity-map-empty-selection"
                 >
-                    No selected sample belongs to this study
+                    No selected sample could be matched to a study
                 </span>
             );
         }
@@ -615,13 +692,13 @@ export default class PatientSimilarityMap extends React.Component<
             <a
                 data-test="patient-similarity-map-study-view-link"
                 href={getStudyViewMapUrl(
-                    this.props.studyId,
-                    this.studyViewSampleIds,
+                    this.mapStudyIds,
+                    this.studyViewSampleIdentifiers,
                     mapValue
                 )}
                 style={{ marginLeft: 10 }}
             >
-                {`Open ${this.lassoStudySampleIds.length} selected in study view`}
+                {`Open ${this.lassoSampleIdentifiers.length} selected in study view`}
             </a>
         );
     }
@@ -674,23 +751,12 @@ export default class PatientSimilarityMap extends React.Component<
                         Center
                     </button>
                 </div>
-                {this.isColoringPending && (
-                    <div
-                        style={{ color: '#666', fontSize: 11 }}
-                        data-test="patient-similarity-map-coloring-pending"
-                    >
-                        Loading colors for{' '}
-                        {this.coloringQuery?.studyIds.length ?? 0} studies…
-                    </div>
-                )}
-                {this.failedStudyIds.length > 0 && (
+                {this.failedSampleCount > 0 && (
                     <div
                         style={{ color: '#a94442', fontSize: 11 }}
                         data-test="patient-similarity-map-coloring-incomplete"
                     >
-                        {`${this.failedStudyIds.length} of ${this.coloringQuery
-                            ?.studyIds.length ??
-                            0} studies could not be loaded; their samples are grey.`}
+                        {`Colors for ${this.failedSampleCount.toLocaleString()} samples could not be loaded; those points are grey.`}
                     </div>
                 )}
             </div>
@@ -852,14 +918,41 @@ export default class PatientSimilarityMap extends React.Component<
                                 )
                             )}
                         </div>
+                        {this.isColoringPending && (
+                            <div
+                                data-test="patient-similarity-map-coloring-pending"
+                                style={{
+                                    position: 'absolute',
+                                    inset: 0,
+                                    zIndex: 2,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: 8,
+                                    backgroundColor: '#fff',
+                                }}
+                            >
+                                <LoadingIndicator
+                                    isLoading={true}
+                                    size={'big'}
+                                />
+                                <span style={{ color: '#666' }}>
+                                    {`Loading ${this.coloringAttribute
+                                        ?.displayName ?? 'colors'} for ${this
+                                        .coloringQuery?.studyIds.length ??
+                                        0} studies…`}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div style={{ color: '#666', marginTop: 8 }}>
                     {option.data.description.replace(/\.?\s*$/, '.')} Icons mark
                     this patient's samples. Switch to Select and drag to pick a
-                    neighbourhood; the study view opens the same map with
-                    whichever of the selected samples belong to this study,
-                    where they can be filtered and recoloured.
+                    neighbourhood; the study view opens the same map, across
+                    every study it covers, with the selected samples carried
+                    over, where they can be filtered and recoloured.
                 </div>
                 {this.unplacedSampleIds.length > 0 && (
                     <div style={{ marginTop: 8, color: '#666' }}>

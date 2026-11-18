@@ -61,8 +61,11 @@ describe('getEmbeddingOptionsForSamples', () => {
 describe('getStudyViewMapUrl', () => {
     it('carries the study, the map and the samples as a selection', () => {
         const url = getStudyViewMapUrl(
-            'msktarget',
-            ['P-1-T01-IM7', 'P-1-T02-IM7'],
+            ['msktarget'],
+            [
+                { studyId: 'msktarget', sampleId: 'P-1-T01-IM7' },
+                { studyId: 'msktarget', sampleId: 'P-1-T02-IM7' },
+            ],
             'msktarget_rna_tsne_mpath'
         );
         assert.include(url, 'study/embeddings');
@@ -87,8 +90,29 @@ describe('getStudyViewMapUrl', () => {
     });
 
     it('omits the map when none is given', () => {
-        const url = getStudyViewMapUrl('msktarget', ['P-1-T01-IM7']);
+        const url = getStudyViewMapUrl(['msktarget'], [
+            { studyId: 'msktarget', sampleId: 'P-1-T01-IM7' },
+        ]);
         assert.notInclude(url.split('#')[0], 'embeddings_map');
+    });
+
+    it('opens every study the map covers, keeping each sample with its own', () => {
+        const url = getStudyViewMapUrl(
+            ['brca_tcga', 'luad_tcga', 'msk_impact_50k_2026'],
+            [
+                { studyId: 'brca_tcga', sampleId: 'TCGA-A1-A0SB-01' },
+                { studyId: 'msk_impact_50k_2026', sampleId: 'P-0000012-T03' },
+            ],
+            'msk_mosaic_2026_he'
+        );
+        assert.include(url, 'id=brca_tcga%2Cluad_tcga%2Cmsk_impact_50k_2026');
+        const filters = JSON.parse(
+            decodeURIComponent(url.split('#')[1].replace('filterJson=', ''))
+        );
+        assert.deepEqual(filters.sampleIdentifiers, [
+            { studyId: 'brca_tcga', sampleId: 'TCGA-A1-A0SB-01' },
+            { studyId: 'msk_impact_50k_2026', sampleId: 'P-0000012-T03' },
+        ]);
     });
 });
 
