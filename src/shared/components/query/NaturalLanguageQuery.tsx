@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { action, makeObservable, observable } from 'mobx';
-import { getServerConfig } from 'config/config';
+import { buildCBioPortalAPIUrl } from 'shared/api/urls';
 import { QueryStoreComponent } from './QueryStore';
 import styles from './styles/styles.module.scss';
 
@@ -16,6 +16,22 @@ type TranslateResponse = {
     errors?: Issue[];
 };
 
+let availability: Promise<boolean> | undefined;
+
+/**
+ * Whether this portal proxies the NL-to-OQL service (the chat-sidebar-server, under /api/chat/oql)
+ * with a model configured. Checked once per page load.
+ */
+function isTranslatorAvailable(): Promise<boolean> {
+    if (!availability) {
+        availability = fetch(buildCBioPortalAPIUrl('api/chat/oql/health'))
+            .then(res => (res.ok ? res.json() : undefined))
+            .then(body => Boolean(body?.model))
+            .catch(() => false);
+    }
+    return availability;
+}
+
 /**
  * Collapsed by default to a small toggle above the gene/OQL box. When opened, the user describes
  * a query in plain language; the NL-to-OQL service translates it and the result replaces the
@@ -23,6 +39,7 @@ type TranslateResponse = {
  */
 @observer
 export default class NaturalLanguageQuery extends QueryStoreComponent<{}, {}> {
+    @observable available = false;
     @observable open = false;
     @observable prompt = '';
     @observable busy = false;
@@ -33,9 +50,12 @@ export default class NaturalLanguageQuery extends QueryStoreComponent<{}, {}> {
         makeObservable(this);
     }
 
-    get serviceUrl(): string | null {
-        const url = getServerConfig().nl_oql_service_url;
-        return url ? url.replace(/\/+$/, '') : null;
+    componentDidMount() {
+        isTranslatorAvailable().then(
+            action((available: boolean) => {
+                this.available = available;
+            })
+        );
     }
 
     /** All selected studies are sent so the service can check they have the data each alteration needs. */
@@ -77,17 +97,27 @@ export default class NaturalLanguageQuery extends QueryStoreComponent<{}, {}> {
     @action.bound
     async translate() {
         const prompt = this.prompt.trim();
-        if (!prompt || !this.serviceUrl || this.busy) return;
+        if (!prompt || this.busy) return;
         this.busy = true;
         this.result = null;
         let result: TranslateResponse;
         try {
-            const res = await fetch(`${this.serviceUrl}/api/v1/translate`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt, studyIds: this.studyIds }),
-            });
-            result = await res.json();
+            const res = await fetch(
+                buildCBioPortalAPIUrl('api/chat/oql/translate'),
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, studyIds: this.studyIds }),
+                }
+            );
+            // 200 and 422 carry a translation or its reason; anything else
+            // comes from the portal or the proxy.
+            result =
+                res.status === 200 || res.status === 422
+                    ? await res.json()
+                    : {
+                          error: `The translation service returned an error (${res.status})`,
+                      };
         } catch (e) {
             result = {
                 error: `Could not reach the translation service (${e})`,
@@ -106,7 +136,7 @@ export default class NaturalLanguageQuery extends QueryStoreComponent<{}, {}> {
     }
 
     render() {
-        if (!this.serviceUrl) return null;
+        if (!this.available) return null;
         if (!this.open) {
             return (
                 <button
