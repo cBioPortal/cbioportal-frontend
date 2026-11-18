@@ -78,6 +78,11 @@ const EMBEDDING_CONFIG_CATEGORIES = [
 
 export interface IEmbeddingsPanelProps {
     store: EmbeddingsPanelStore;
+    /** Drawn over this panel's plot; see EmbeddingVisualizationProps. */
+    renderOverlay?: (
+        project: (x: number, y: number) => { x: number; y: number },
+        embedding?: EmbeddingData
+    ) => React.ReactNode;
     panelIndex: 1 | 2 | 3 | 4;
     panelCount: number;
     selectionMode: 'none' | 'lasso';
@@ -2279,6 +2284,8 @@ export class EmbeddingsPanel extends React.Component<
             height: this.plotHeight,
             showLegend: true,
             filename: `${this.selectedEmbedding.value}_embedding`,
+            renderOverlay: this.props.renderOverlay,
+            overlayEmbedding: this.selectedEmbedding?.data,
             viewState: this.viewport.current,
             onViewStateChange: this.viewport.set,
             onPointSelection: this.handlePointSelection,

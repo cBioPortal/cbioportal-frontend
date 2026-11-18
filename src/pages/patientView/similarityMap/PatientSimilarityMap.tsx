@@ -29,10 +29,15 @@ import { getClinicalAttributeColoring } from 'shared/cache/ClinicalDataCacheUtil
 import { ClinicalDataCacheEntry } from 'shared/cache/ClinicalDataCache';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { EmbeddingDeckGLVisualization } from 'shared/components/embeddings';
-import { EmbeddingPoint } from 'shared/components/embeddings/EmbeddingTypes';
+import {
+    EmbeddingData,
+    EmbeddingPoint,
+    SampleEmbeddingData,
+} from 'shared/components/embeddings/EmbeddingTypes';
 import { SelectionControls } from 'shared/components/embeddings/controls/SelectionControls';
 import {
     calculateContextPointBoost,
+    calculateDataBounds,
     calculatePointScale,
     calculateSparseMapPointFactor,
 } from 'shared/components/embeddings/utils/dataUtils';
@@ -45,6 +50,7 @@ import { ColoringMenuOmnibarOption } from 'shared/components/plots/PlotsTabTypes
 import ColorSamplesByDropdown from 'shared/components/colorSamplesByDropdown/ColorSamplesByDropdown';
 import { EmbeddingControlStack } from 'shared/components/embeddings/controls/EmbeddingControlStack';
 import { MapColoringContext } from './MapColoringContext';
+import { EmbeddingsTab } from 'pages/studyView/tabs/EmbeddingsTab';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import { EmbeddingViewportState } from 'shared/components/embeddings/state/EmbeddingViewportState';
 import { EmbeddingCategoryVisibility } from 'shared/components/embeddings/state/EmbeddingCategoryVisibility';
@@ -69,9 +75,6 @@ const NO_DATA_LABEL = 'No data';
 const DEFAULT_COLORING_ATTRIBUTE_ID = 'CANCER_TYPE';
 // SampleLabelHTML draws a 12px icon; enlarged so it stands out on a dense map.
 const SAMPLE_ICON_SIZE = 12;
-// The icon's size when the whole map is in view. The plot draws its points in
-// data units, so they grow as you zoom in; the icon follows, between these
-// bounds, or it shrinks away against them.
 const SAMPLE_ICON_SCALE = 1.5;
 const SAMPLE_ICON_MAX_SCALE = 6;
 // The study view's own fetch, one POST per cohort, scales poorly at this size:
@@ -142,8 +145,6 @@ export default class PatientSimilarityMap extends React.Component<
     @observable.ref private pinnedPoint: EmbeddingPoint | null = null;
     @observable private mapWidth = 0;
     @observable private mapHeight = MIN_MAP_HEIGHT;
-    // The zoom at which the whole map fits, which the icon's size is relative to.
-    @observable private fittedZoom = 0;
     // Bumped to remount the plot, the only way to drop the selection it keeps
     // in its own state.
     @observable private plotInstance = 0;
@@ -347,13 +348,6 @@ export default class PatientSimilarityMap extends React.Component<
                 this.molecularDataForColoring.isPending
             );
         }
-        // Points with no value yet are drawn the same grey as points with no
-        // value at all, so the cover has to stay up until the values are in.
-        const attribute = this.coloringClinicalAttribute;
-        if (attribute) {
-            return !this.coloring.clinicalDataCache.get(attribute as any)
-                .isComplete;
-        }
         return false;
     }
 
@@ -506,20 +500,6 @@ export default class PatientSimilarityMap extends React.Component<
     private centerView() {
         this.viewport.centerOn(
             (this.selectedOption?.data.data ?? []) as EmbeddingPoint[]
-        );
-        this.fittedZoom = this.viewport.current.zoom;
-    }
-
-    // Grows with the points, from whatever zoom framed the whole map, and
-    // never below its starting size so it stays legible zoomed out.
-    @computed get sampleIconScale(): number {
-        const zoomedBy = Math.pow(
-            2,
-            this.viewport.current.zoom - this.fittedZoom
-        );
-        return Math.min(
-            SAMPLE_ICON_MAX_SCALE,
-            Math.max(SAMPLE_ICON_SCALE, SAMPLE_ICON_SCALE * zoomedBy)
         );
     }
 
@@ -741,10 +721,6 @@ export default class PatientSimilarityMap extends React.Component<
                         clinicalAttributes={this.coloringAttributes}
                         selectedOption={this.coloringOption}
                         hasNoQueriedGenes={true}
-                        // Lays the alteration checkboxes out under the select
-                        // rather than in a toolbar row, which is what fits a
-                        // narrow panel floating over the map.
-                        stacked
                         isLoading={this.isColoringPending}
                         mutationDataExists={this.mutationDataExists}
                         cnaDataExists={this.cnaDataExists}
@@ -790,6 +766,94 @@ export default class PatientSimilarityMap extends React.Component<
         );
     }
 
+    // This patient's samples, marked on whichever map the tab is showing.
+    /**
+     * How large to draw this patient's marks.
+     *
+     * The plot sizes its points in data units, so they grow as the map is
+     * zoomed into and a fixed mark shrinks against them. Projecting a unit
+     * step gives the pixels per data unit without the panel having to report
+     * its zoom; comparing that against the zoom which frames the whole map
+     * says how far in the viewer is.
+     */
+    private patientMapPoints(embedding?: EmbeddingData): SampleEmbeddingPoint[] {
+        return (
+            (embedding && embedding.embedding_type === 'samples'
+                ? (embedding as SampleEmbeddingData).data
+                : this.selectedOption?.data.data) ?? []
+        );
+    }
+
+    private patientPointsIn(embedding?: EmbeddingData): SampleEmbeddingPoint[] {
+        const data =
+            embedding && embedding.embedding_type === 'samples'
+                ? (embedding as SampleEmbeddingData).data
+                : this.selectedOption?.data.data;
+        if (!data) {
+            return [];
+        }
+        const wanted = new Set(this.sampleIds);
+        return data.filter(p => wanted.has(p.sampleId));
+    }
+
+    private sampleIconScale(
+        project: (x: number, y: number) => { x: number; y: number },
+        embedding?: EmbeddingData
+    ): number {
+        const points = this.patientMapPoints(embedding);
+        if (points.length === 0) {
+            return SAMPLE_ICON_SCALE;
+        }
+        const pixelsPerUnit =
+            project(1, 0).x - project(0, 0).x ||
+            Math.pow(2, calculateDataBounds(points as EmbeddingPoint[]).zoom);
+        const fitted = Math.pow(
+            2,
+            calculateDataBounds(points as EmbeddingPoint[]).zoom
+        );
+        return Math.min(
+            SAMPLE_ICON_MAX_SCALE,
+            Math.max(
+                SAMPLE_ICON_SCALE,
+                (SAMPLE_ICON_SCALE * Math.abs(pixelsPerUnit)) / fitted
+            )
+        );
+    }
+
+    private renderSampleIcons = (
+        project: (x: number, y: number) => { x: number; y: number },
+        embedding?: EmbeddingData
+    ) => {
+        const { sampleManager } = this.props;
+        // Each panel can show a different map, and this patient's samples sit
+        // somewhere different in each, so the marks follow the panel's own.
+        const points = this.patientPointsIn(embedding);
+        if (points.length === 0) {
+            return null;
+        }
+        const scale = this.sampleIconScale(project, embedding);
+        return points.map(point => {
+            const { x: left, y: top } = project(point.x, point.y);
+            return (
+                <div
+                    key={point.sampleId}
+                    data-test="patient-similarity-map-sample"
+                    style={{
+                        position: 'absolute',
+                        left: left - SAMPLE_ICON_SIZE / 2,
+                        top: top - SAMPLE_ICON_SIZE / 2,
+                        lineHeight: 0,
+                        transform: `scale(${scale})`,
+                        filter:
+                            'drop-shadow(0 0 1px white) drop-shadow(0 0 1px white)',
+                    }}
+                >
+                    {sampleManager.getComponentForSample(point.sampleId)}
+                </div>
+            );
+        });
+    };
+
     render() {
         const option = this.selectedOption;
         if (!option) {
@@ -802,184 +866,12 @@ export default class PatientSimilarityMap extends React.Component<
             );
         }
         const { sampleManager } = this.props;
-        const mapOptions = this.options.map(o => ({
-            value: o.value,
-            label: o.label,
-        }));
         return (
             <div data-test="patient-similarity-map">
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 10,
-                        padding: '6px 8px',
-                        marginBottom: 8,
-                        background: '#f8f9fa',
-                        border: '1px solid #e3e3e3',
-                        borderRadius: 4,
-                    }}
-                >
-                    <SelectionControls
-                        selectionMode={this.selectionMode}
-                        onSelectionModeChange={this.onSelectionModeChange}
-                    />
-                    {this.lassoSelection.length > 0 && (
-                        <a
-                            data-test="patient-similarity-map-clear-lasso"
-                            onClick={this.clearSelection}
-                            style={{ cursor: 'pointer', fontSize: 12 }}
-                        >
-                            Clear selection
-                        </a>
-                    )}
-                    <div style={{ marginLeft: 'auto', fontSize: 12 }}>
-                        <Select
-                            name="patient-similarity-map-select"
-                            value={
-                                mapOptions.find(
-                                    o => o.value === option.value
-                                ) || null
-                            }
-                            options={mapOptions}
-                            onChange={this.onSelectMap}
-                            isSearchable={false}
-                            isDisabled={mapOptions.length < 2}
-                            styles={{
-                                ...SELECT_STYLES,
-                                container: (base: any) => ({
-                                    ...base,
-                                    width: 260,
-                                    display: 'inline-block',
-                                    verticalAlign: 'middle',
-                                }),
-                            }}
-                        />
-                        {this.renderStudyViewLink()}
-                    </div>
-                </div>
-                <div>
-                    <div
-                        ref={this.setContainer}
-                        style={{
-                            position: 'relative',
-                            minWidth: 0,
-                            height: this.mapHeight,
-                            overflow: 'hidden',
-                            border: '1px solid #eee',
-                        }}
-                    >
-                        <EmbeddingDeckGLVisualization
-                            key={this.plotInstance}
-                            data={this.plotData}
-                            height={this.mapHeight}
-                            embeddingType="samples"
-                            pointScale={this.pointScale}
-                            contextPointBoost={this.contextPointBoost}
-                            viewState={this.viewport.current}
-                            onViewStateChange={this.viewport.set}
-                            selectionMode={this.selectionMode}
-                            onSelectionModeChange={this.onSelectionModeChange}
-                            onPointSelection={this.onPointSelection}
-                            renderControls={renderNoControls}
-                            showLegend={true}
-                            colorByLabel={this.coloringOption?.label}
-                            categoryCounts={this.categoryCounts}
-                            visibleCategoryCounts={this.visibleCategoryCounts}
-                            categoryColors={this.categoryColors}
-                            hiddenCategories={this.categoryVisibility.hidden}
-                            onToggleCategoryVisibility={
-                                this.categoryVisibility.toggle
-                            }
-                            onToggleAllCategories={this.onToggleAllCategories}
-                            totalSampleCount={this.allPoints.length}
-                            visibleSampleCount={this.plotData.length}
-                            totalCategoryCount={this.categoryCounts.size}
-                            visibleCategoryCount={
-                                this.categoryCounts.size -
-                                this.categoryVisibility.hidden.size
-                            }
-                            isNumericAttribute={this.isNumericColoring}
-                            numericalValueRange={
-                                this.clinicalColoringEntry?.numericalValueRange
-                            }
-                            numericalValueToColor={
-                                this.clinicalColoringEntry
-                                    ?.numericalValueToColor
-                            }
-                            pinnedPoint={this.pinnedPoint}
-                            onPinPoint={this.onPinPoint}
-                            onUnpinPoint={this.onUnpinPoint}
-                            filename={`${option.value}_${this.props.studyId}`}
-                        />
-                        <div
-                            style={{
-                                position: 'absolute',
-                                inset: 0,
-                                pointerEvents: 'none',
-                            }}
-                        >
-                            {this.placedSamples.map(
-                                ({ sampleId, left, top }) => (
-                                    <div
-                                        key={sampleId}
-                                        data-test="patient-similarity-map-sample"
-                                        style={{
-                                            position: 'absolute',
-                                            left: left - SAMPLE_ICON_SIZE / 2,
-                                            top: top - SAMPLE_ICON_SIZE / 2,
-                                            lineHeight: 0,
-                                            transform: `scale(${this.sampleIconScale})`,
-                                            filter:
-                                                'drop-shadow(0 0 1px white) drop-shadow(0 0 1px white)',
-                                        }}
-                                    >
-                                        {sampleManager.getComponentForSample(
-                                            sampleId
-                                        )}
-                                    </div>
-                                )
-                            )}
-                        </div>
-                        {this.isColoringPending && (
-                            <div
-                                data-test="patient-similarity-map-coloring-pending"
-                                style={{
-                                    position: 'absolute',
-                                    inset: 0,
-                                    zIndex: 2,
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: 8,
-                                    backgroundColor: '#fff',
-                                }}
-                            >
-                                <LoadingIndicator
-                                    isLoading={true}
-                                    size={'big'}
-                                />
-                                <span style={{ color: '#666' }}>
-                                    {`Loading ${this.coloringOption?.label ??
-                                        'colors'} for ${
-                                        this.mapStudyIds.length
-                                    } studies…`}
-                                </span>
-                            </div>
-                        )}
-                        <div
-                            style={{
-                                position: 'absolute',
-                                top: 10,
-                                left: 10,
-                                zIndex: 3,
-                            }}
-                        >
-                            {this.renderControlStack()}
-                        </div>
-                    </div>
-                </div>
+                <EmbeddingsTab
+                    store={this.coloring}
+                    renderOverlay={this.renderSampleIcons}
+                />
                 {this.unplacedSampleIds.length > 0 && (
                     <div style={{ marginTop: 8, color: '#666' }}>
                         Not in this map:{' '}

@@ -612,6 +612,20 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                         }}
                     />
 
+                    {this.props.renderOverlay && (
+                        <div
+                            style={{
+                                position: 'absolute',
+                                inset: 0,
+                                pointerEvents: 'none',
+                            }}
+                        >
+                            {this.props.renderOverlay(
+                                this.dataToScreen,
+                                this.props.overlayEmbedding
+                            )}
+                        </div>
+                    )}
                     {this.renderTooltip()}
                     <div
                         style={{

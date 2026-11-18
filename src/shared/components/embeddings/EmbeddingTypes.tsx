@@ -1,3 +1,4 @@
+import * as React from 'react';
 /**
  * Common types and interfaces for embedding visualizations
  */
@@ -72,6 +73,19 @@ export interface ViewState {
 
 export interface EmbeddingVisualizationProps {
     data: EmbeddingPoint[];
+    /**
+     * Drawn over the plot and moving with it, for marks a page wants on the
+     * map that are not points of the embedding - the patient view puts this
+     * patient's samples here. Takes data coordinates to screen ones, and says
+     * which embedding is being drawn, since panels need not show the same one
+     * and a sample sits somewhere different in each.
+     */
+    renderOverlay?: (
+        project: (x: number, y: number) => { x: number; y: number },
+        embedding?: EmbeddingData
+    ) => React.ReactNode;
+    /** The embedding renderOverlay is told about; see above. */
+    overlayEmbedding?: EmbeddingData;
     // Derived from the whole embedding, not `data`, so hiding or filtering points never resizes the rest.
     pointScale?: number;
     contextPointBoost?: number;

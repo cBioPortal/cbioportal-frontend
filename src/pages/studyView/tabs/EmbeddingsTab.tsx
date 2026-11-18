@@ -5,6 +5,7 @@ import { observable, action, computed, makeObservable } from 'mobx';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import { EmbeddingsPanelStore } from 'shared/components/embeddings/EmbeddingsPanelStore';
+import { EmbeddingData } from 'shared/components/embeddings/EmbeddingTypes';
 import { ViewState } from 'shared/components/embeddings/EmbeddingTypes';
 import { EmbeddingsPanel } from './EmbeddingsPanel';
 
@@ -40,6 +41,14 @@ export interface IEmbeddingsTabProps {
      * is not.
      */
     store: EmbeddingsPanelStore;
+    /**
+     * Drawn over every panel's plot. The patient view marks this patient's
+     * samples with it, in whichever map each panel happens to show.
+     */
+    renderOverlay?: (
+        project: (x: number, y: number) => { x: number; y: number },
+        embedding?: EmbeddingData
+    ) => React.ReactNode;
 }
 
 type PanelIndex = 1 | 2 | 3 | 4;
@@ -327,20 +336,23 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         if (targetCount === currentCount) {
             return;
         }
+        // The count is this tab's own state; the URL is only where a page
+        // that has one keeps it, so pages without one still split the view.
         const urlWrapper = (this.props.store as any).urlWrapper;
-        if (!urlWrapper) {
-            return;
-        }
 
         if (targetCount > currentCount) {
-            const updates: { [key: string]: any } = {};
-            for (let i = currentCount + 1; i <= targetCount; i++) {
-                updates[coloringParamName(i)] =
-                    urlWrapper.query?.[coloringParamName(callingPanelIndex)];
-                updates[mapParamName(i)] =
-                    urlWrapper.query?.[mapParamName(callingPanelIndex)];
+            if (urlWrapper) {
+                const updates: { [key: string]: any } = {};
+                for (let i = currentCount + 1; i <= targetCount; i++) {
+                    updates[coloringParamName(i)] =
+                        urlWrapper.query?.[
+                            coloringParamName(callingPanelIndex)
+                        ];
+                    updates[mapParamName(i)] =
+                        urlWrapper.query?.[mapParamName(callingPanelIndex)];
+                }
+                urlWrapper.updateURL(updates);
             }
-            urlWrapper.updateURL(updates);
             this.panelCount = targetCount;
             if (currentCount === 1) {
                 this.sharedLockToPrimary = true;
@@ -356,14 +368,16 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 this.hiddenSampleKeysByPanel.delete(i);
                 this.selectionFlagsByPanel.delete(i);
             }
-            setTimeout(() => {
-                const updates: { [key: string]: any } = {};
-                for (let i = targetCount + 1; i <= currentCount; i++) {
-                    updates[coloringParamName(i)] = undefined;
-                    updates[mapParamName(i)] = undefined;
-                }
-                urlWrapper.updateURL(updates);
-            }, 0);
+            if (urlWrapper) {
+                setTimeout(() => {
+                    const updates: { [key: string]: any } = {};
+                    for (let i = targetCount + 1; i <= currentCount; i++) {
+                        updates[coloringParamName(i)] = undefined;
+                        updates[mapParamName(i)] = undefined;
+                    }
+                    urlWrapper.updateURL(updates);
+                }, 0);
+            }
         }
     }
 
@@ -441,6 +455,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                     >
                         <EmbeddingsPanel
                             store={this.props.store}
+                            renderOverlay={this.props.renderOverlay}
                             panelIndex={panelIndex}
                             panelCount={this.panelCount}
                             panelGridTop={this.panelGridTop}
