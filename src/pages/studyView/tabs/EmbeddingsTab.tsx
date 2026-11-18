@@ -199,8 +199,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @action.bound
-    private onSharedSelectionEffectChange(effect: 'filter' | 'highlight') {
-        this.sharedSelectionEffect = effect;
+    private onToggleFilterToSelection() {
+        this.sharedSelectionEffect =
+            this.sharedSelectionEffect === 'filter' ? 'highlight' : 'filter';
     }
 
     @action.bound
@@ -682,7 +683,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                     {this.reportedTotalSampleCount.toLocaleString()}{' '}
                                     {this.unitLabel}{' '}
                                     {this.sharedSelectionEffect === 'highlight'
-                                        ? 'highlighted'
+                                        ? 'selected'
                                         : 'visible'}
                                 </>
                             ) : this.panelCount === 1 || this.sharedLockMap ? (
@@ -822,73 +823,38 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                     alignItems: 'center',
                                 }}
                             >
-                                <div
+                                <button
+                                    data-test="embeddings-filter-toggle"
+                                    onClick={this.onToggleFilterToSelection}
+                                    title={
+                                        this.sharedSelectionEffect === 'filter'
+                                            ? 'Show the whole map again, with the selection standing out'
+                                            : 'Hide everything outside the selection'
+                                    }
                                     style={{
-                                        display: 'flex',
-                                        gap: '2px',
-                                        border: '1px solid #ccc',
+                                        padding: '4px 10px',
+                                        fontSize: '11px',
                                         borderRadius: '3px',
-                                        padding: '2px',
-                                        backgroundColor: 'white',
+                                        cursor: 'pointer',
+                                        backgroundColor:
+                                            this.sharedSelectionEffect ===
+                                            'filter'
+                                                ? '#007bff'
+                                                : 'white',
+                                        color:
+                                            this.sharedSelectionEffect ===
+                                            'filter'
+                                                ? 'white'
+                                                : '#333',
+                                        border:
+                                            this.sharedSelectionEffect ===
+                                            'filter'
+                                                ? '1px solid #007bff'
+                                                : '1px solid #ccc',
                                     }}
                                 >
-                                    <button
-                                        data-test="embeddings-highlight-mode-button"
-                                        onClick={() =>
-                                            this.onSharedSelectionEffectChange(
-                                                'highlight'
-                                            )
-                                        }
-                                        title="Keep every point visible; dim everything outside the selection"
-                                        style={{
-                                            padding: '4px 8px',
-                                            fontSize: '11px',
-                                            border: 'none',
-                                            borderRadius: '3px',
-                                            cursor: 'pointer',
-                                            backgroundColor:
-                                                this.sharedSelectionEffect ===
-                                                'highlight'
-                                                    ? '#007bff'
-                                                    : 'transparent',
-                                            color:
-                                                this.sharedSelectionEffect ===
-                                                'highlight'
-                                                    ? 'white'
-                                                    : '#333',
-                                        }}
-                                    >
-                                        Highlight
-                                    </button>
-                                    <button
-                                        data-test="embeddings-filter-mode-button"
-                                        onClick={() =>
-                                            this.onSharedSelectionEffectChange(
-                                                'filter'
-                                            )
-                                        }
-                                        title="Hide everything outside the selection"
-                                        style={{
-                                            padding: '4px 8px',
-                                            fontSize: '11px',
-                                            border: 'none',
-                                            borderRadius: '3px',
-                                            cursor: 'pointer',
-                                            backgroundColor:
-                                                this.sharedSelectionEffect ===
-                                                'filter'
-                                                    ? '#007bff'
-                                                    : 'transparent',
-                                            color:
-                                                this.sharedSelectionEffect ===
-                                                'filter'
-                                                    ? 'white'
-                                                    : '#333',
-                                        }}
-                                    >
-                                        Filter
-                                    </button>
-                                </div>
+                                    Filter
+                                </button>
                                 {isLocalSelectionActive && (
                                     <>
                                         <button

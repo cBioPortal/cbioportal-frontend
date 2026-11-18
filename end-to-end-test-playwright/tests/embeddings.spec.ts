@@ -27,6 +27,7 @@ const PAN_BUTTON = '[data-test="embeddings-pan-button"]';
 const SELECT_BUTTON = '[data-test="embeddings-select-button"]';
 const CLEAR_BUTTON = '[data-test="embeddings-clear-button"]';
 const MAKE_GLOBAL_BUTTON = '[data-test="embeddings-make-global-button"]';
+const FILTER_TOGGLE = '[data-test="embeddings-filter-toggle"]';
 const LOCK_MAP_BUTTON = '[data-test="embeddings-lock-map-button"]';
 const panelCountButton = (n: number) =>
     `[data-test="embeddings-panel-count-${n}"]`;
@@ -174,9 +175,7 @@ test.describe('embeddings tab interactions', () => {
             await expect(page.locator(STATUS_BAR)).not.toContainText(
                 /Selection active/
             );
-            await expect(
-                page.locator('[data-test="embeddings-highlight-mode-button"]')
-            ).toHaveCount(0);
+            await expect(page.locator(FILTER_TOGGLE)).toHaveCount(0);
         });
 
         test('status bar switches to "Selection active" once a category is selected, and Clear restores it', async ({
@@ -186,12 +185,12 @@ test.describe('embeddings tab interactions', () => {
             const firstItem = page.locator(LEGEND_ITEM).first();
             await expect(firstItem).toBeVisible();
 
-            // Default mode is Highlight, so the status bar reports a
-            // reduced "highlighted" count, not "visible" (that's Filter
-            // mode's wording - see the dedicated test below).
+            // A selection masks the rest of the map rather than removing
+            // it, so the count reads "selected", not "visible" (that is what
+            // Filter does - see the dedicated test below).
             await firstItem.click({ timeout: 30000 });
             await expect(page.locator(STATUS_BAR)).toContainText(
-                /Selection active.*[\d,]+\s*\/\s*[\d,]+.*highlighted/
+                /Selection active.*[\d,]+\s*\/\s*[\d,]+.*selected/
             );
             await expect(page.locator(CLEAR_BUTTON)).toBeVisible();
             await expect(page.locator(MAKE_GLOBAL_BUTTON)).toBeVisible();
@@ -203,7 +202,7 @@ test.describe('embeddings tab interactions', () => {
             await expect(page.locator(CLEAR_BUTTON)).not.toBeVisible();
         });
 
-        test('legend counts reflect the selection in Highlight mode, where nothing is removed from the plot', async ({
+        test('legend counts reflect the selection while it is only masked, with nothing removed from the plot', async ({
             page,
         }) => {
             await gotoEmbeddings(page);
@@ -223,12 +222,12 @@ test.describe('embeddings tab interactions', () => {
                 'style',
                 /border:\s*1px solid transparent/
             );
-            // Highlight only dims the remainder, but the counts still track
+            // The mask only dims the remainder, but the counts still track
             // the selection: everything outside it reads "0 / total".
             await expect(secondItem).toContainText(/0\s*\/\s*[\d,]+/);
         });
 
-        test('Filter mode reports the same selection as "visible" rather than "highlighted"', async ({
+        test('Filter reports the same selection as "visible" rather than "selected"', async ({
             page,
         }) => {
             await gotoEmbeddings(page);
@@ -237,13 +236,17 @@ test.describe('embeddings tab interactions', () => {
             await expect(firstItem).toBeVisible();
 
             await firstItem.click({ timeout: 30000 });
-            await page
-                .locator('[data-test="embeddings-filter-mode-button"]')
-                .click({ timeout: 30000 });
+            await page.locator(FILTER_TOGGLE).click({ timeout: 30000 });
             await expect(page.locator(STATUS_BAR)).toContainText(
                 /Selection active.*[\d,]+\s*\/\s*[\d,]+.*visible/
             );
             await expect(secondItem).toContainText(/0\s*\/\s*[\d,]+/);
+
+            // Toggling it off puts the rest of the map back.
+            await page.locator(FILTER_TOGGLE).click({ timeout: 30000 });
+            await expect(page.locator(STATUS_BAR)).toContainText(
+                /Selection active.*[\d,]+\s*\/\s*[\d,]+.*selected/
+            );
         });
     });
 
@@ -281,7 +284,7 @@ test.describe('embeddings tab interactions', () => {
             await expect(page.locator(LEGEND)).toContainText(/0\s*\/\s*[\d,]+/);
         });
 
-        test('a study-view filter alone (no local lasso/legend action) still offers the Filter/Highlight toggle', async ({
+        test('a study-view filter alone (no local lasso/legend action) still offers Filter', async ({
             page,
         }) => {
             await page.goto(
@@ -292,20 +295,14 @@ test.describe('embeddings tab interactions', () => {
             await expect(page.locator(LEGEND)).toBeVisible({ timeout: 60000 });
 
             // No local selection was made, so Clear/Make Global shouldn't
-            // show - there's nothing local to clear/promote - but the mode
-            // toggle should, since it also governs this page-wide selection.
-            const highlightModeButton = page.locator(
-                '[data-test="embeddings-highlight-mode-button"]'
-            );
-            const filterModeButton = page.locator(
-                '[data-test="embeddings-filter-mode-button"]'
-            );
-            await expect(highlightModeButton).toBeVisible({ timeout: 60000 });
-            await expect(filterModeButton).toBeVisible();
+            // show - there's nothing local to clear/promote - but Filter
+            // should, since it also governs this page-wide selection.
+            const filterToggle = page.locator(FILTER_TOGGLE);
+            await expect(filterToggle).toBeVisible({ timeout: 60000 });
             await expect(page.locator(CLEAR_BUTTON)).not.toBeVisible();
             await expect(page.locator(MAKE_GLOBAL_BUTTON)).not.toBeVisible();
 
-            await filterModeButton.click({ timeout: 30000 });
+            await filterToggle.click({ timeout: 30000 });
             await expect(page.locator(STATUS_BAR)).toContainText(
                 /Selection active.*[\d,]+\s*\/\s*[\d,]+.*visible/
             );
