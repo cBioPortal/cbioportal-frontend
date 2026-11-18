@@ -20,6 +20,11 @@ import { dataToScreen, colorToRgb } from './utils/coordinateUtils';
 import { calculateDataBounds } from './utils/dataUtils';
 import { createScatterplotLayer } from './utils/layerUtils';
 
+// The layer's updateTriggers compare this by identity, so a caller that passes
+// no patient selection must get the same array every render or deck recomputes
+// every point's color, radius and outline on each frame.
+const NO_SELECTED_PATIENT_IDS: string[] = [];
+
 interface EmbeddingDeckGLVisualizationState {
     hoveredPoint: EmbeddingPoint | null;
     selectedPoints: EmbeddingPoint[];
@@ -134,7 +139,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
             createScatterplotLayer(
                 data,
                 selectedPoints,
-                this.props.selectedPatientIds || [],
+                this.props.selectedPatientIds || NO_SELECTED_PATIENT_IDS,
                 this.onHover,
                 this.onClick,
                 this.props.pointScale,

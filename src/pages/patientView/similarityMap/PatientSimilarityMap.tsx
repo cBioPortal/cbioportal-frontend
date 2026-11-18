@@ -48,6 +48,7 @@ import {
     mapWithConcurrency,
     projectToScreen,
     SampleEmbeddingOption,
+    SampleEmbeddingPoint,
 } from './PatientSimilarityMapUtils';
 
 const MAP_HEIGHT = 560;
@@ -95,6 +96,10 @@ type MapColoringEntry = ClinicalDataCacheEntry & { failedSampleCount: number };
 function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+// The map's own control cluster is replaced by this page's own, and a stable
+// identity keeps panning from re-rendering the plot's subtree each frame.
+const renderNoControls = () => null;
 
 export interface IPatientSimilarityMapProps {
     studyId: string;
@@ -472,29 +477,35 @@ export default class PatientSimilarityMap extends React.Component<
         );
     }
 
+    // Only this patient's points, so panning reprojects a handful rather than
+    // indexing the whole map on every frame.
+    @computed get patientPoints(): SampleEmbeddingPoint[] {
+        const option = this.selectedOption;
+        if (!option) {
+            return [];
+        }
+        const wanted = new Set(this.sampleIds);
+        return option.data.data.filter(p => wanted.has(p.sampleId));
+    }
+
     @computed get placedSamples(): {
         sampleId: string;
         left: number;
         top: number;
     }[] {
-        const option = this.selectedOption;
-        if (!option || this.mapWidth === 0) {
+        if (this.mapWidth === 0) {
             return [];
         }
-        const byId = new Map(option.data.data.map(p => [p.sampleId, p]));
-        return this.sampleIds
-            .filter(id => byId.has(id))
-            .map(sampleId => {
-                const p = byId.get(sampleId)!;
-                const [left, top] = projectToScreen(
-                    p.x,
-                    p.y,
-                    this.viewState,
-                    this.mapWidth,
-                    MAP_HEIGHT
-                );
-                return { sampleId, left, top };
-            });
+        return this.patientPoints.map(p => {
+            const [left, top] = projectToScreen(
+                p.x,
+                p.y,
+                this.viewState,
+                this.mapWidth,
+                MAP_HEIGHT
+            );
+            return { sampleId: p.sampleId, left, top };
+        });
     }
 
     @computed get unplacedSampleIds(): string[] {
@@ -658,17 +669,24 @@ export default class PatientSimilarityMap extends React.Component<
               );
     }
 
-    private renderStudyViewLink(mapValue: string) {
+    // Held as a computed because a selection of thousands is serialised into
+    // it, which should happen when the selection changes and not on every
+    // frame of a pan.
+    @computed get studyViewUrl(): string {
+        return getStudyViewMapUrl(
+            this.mapStudyIds,
+            this.studyViewSampleIdentifiers,
+            this.selectedOption?.value
+        );
+    }
+
+    private renderStudyViewLink() {
         const style = { marginLeft: 10, color: '#666' };
         if (this.lassoSelection.length === 0) {
             return (
                 <a
                     data-test="patient-similarity-map-study-view-link"
-                    href={getStudyViewMapUrl(
-                        this.mapStudyIds,
-                        this.studyViewSampleIdentifiers,
-                        mapValue
-                    )}
+                    href={this.studyViewUrl}
                     style={{ marginLeft: 10 }}
                 >
                     Open in study view
@@ -691,11 +709,7 @@ export default class PatientSimilarityMap extends React.Component<
         return (
             <a
                 data-test="patient-similarity-map-study-view-link"
-                href={getStudyViewMapUrl(
-                    this.mapStudyIds,
-                    this.studyViewSampleIdentifiers,
-                    mapValue
-                )}
+                href={this.studyViewUrl}
                 style={{ marginLeft: 10 }}
             >
                 {`Open ${this.lassoSampleIdentifiers.length} selected in study view`}
@@ -831,7 +845,7 @@ export default class PatientSimilarityMap extends React.Component<
                         ) : (
                             <strong>{option.label}</strong>
                         )}
-                        {this.renderStudyViewLink(option.value)}
+                        {this.renderStudyViewLink()}
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
@@ -859,7 +873,7 @@ export default class PatientSimilarityMap extends React.Component<
                             selectionMode={this.selectionMode}
                             onSelectionModeChange={this.onSelectionModeChange}
                             onPointSelection={this.onPointSelection}
-                            renderControls={() => null}
+                            renderControls={renderNoControls}
                             showLegend={true}
                             colorByLabel={this.coloringAttribute?.displayName}
                             categoryCounts={this.categoryCounts}
