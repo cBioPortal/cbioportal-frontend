@@ -69,7 +69,11 @@ const NO_DATA_LABEL = 'No data';
 const DEFAULT_COLORING_ATTRIBUTE_ID = 'CANCER_TYPE';
 // SampleLabelHTML draws a 12px icon; enlarged so it stands out on a dense map.
 const SAMPLE_ICON_SIZE = 12;
+// The icon's size when the whole map is in view. The plot draws its points in
+// data units, so they grow as you zoom in; the icon follows, between these
+// bounds, or it shrinks away against them.
 const SAMPLE_ICON_SCALE = 1.5;
+const SAMPLE_ICON_MAX_SCALE = 6;
 // The study view's own fetch, one POST per cohort, scales poorly at this size:
 // resolving every identifier of a 30-study map in one request is slower than
 // splitting it. A few chunks in parallel beat both that and a request per
@@ -138,6 +142,8 @@ export default class PatientSimilarityMap extends React.Component<
     @observable.ref private pinnedPoint: EmbeddingPoint | null = null;
     @observable private mapWidth = 0;
     @observable private mapHeight = MIN_MAP_HEIGHT;
+    // The zoom at which the whole map fits, which the icon's size is relative to.
+    @observable private fittedZoom = 0;
     // Bumped to remount the plot, the only way to drop the selection it keeps
     // in its own state.
     @observable private plotInstance = 0;
@@ -500,6 +506,20 @@ export default class PatientSimilarityMap extends React.Component<
     private centerView() {
         this.viewport.centerOn(
             (this.selectedOption?.data.data ?? []) as EmbeddingPoint[]
+        );
+        this.fittedZoom = this.viewport.current.zoom;
+    }
+
+    // Grows with the points, from whatever zoom framed the whole map, and
+    // never below its starting size so it stays legible zoomed out.
+    @computed get sampleIconScale(): number {
+        const zoomedBy = Math.pow(
+            2,
+            this.viewport.current.zoom - this.fittedZoom
+        );
+        return Math.min(
+            SAMPLE_ICON_MAX_SCALE,
+            Math.max(SAMPLE_ICON_SCALE, SAMPLE_ICON_SCALE * zoomedBy)
         );
     }
 
@@ -909,7 +929,7 @@ export default class PatientSimilarityMap extends React.Component<
                                             left: left - SAMPLE_ICON_SIZE / 2,
                                             top: top - SAMPLE_ICON_SIZE / 2,
                                             lineHeight: 0,
-                                            transform: `scale(${SAMPLE_ICON_SCALE})`,
+                                            transform: `scale(${this.sampleIconScale})`,
                                             filter:
                                                 'drop-shadow(0 0 1px white) drop-shadow(0 0 1px white)',
                                         }}
