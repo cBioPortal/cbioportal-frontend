@@ -1071,6 +1071,61 @@ export default class MrnaTabContent extends React.Component<
         this.plotsStore.setMrnaTabSelections([...current, ...toAdd]);
     }
 
+    // Genes ranked by average expression across the patient's available
+    // sample(s), highest first. In sample mode only the focused sample is
+    // fetched (see plotsStore.mrnaTopExpressedGenesData / outlierSampleIds),
+    // so it ranks that sample alone. Missing/non-finite measurements are
+    // excluded from the average. Only evaluated (and thus only triggers the
+    // fetch) while the Top N dialog is open.
+    @computed get topExpressedGenes(): {
+        symbol: string;
+        expression: number;
+    }[] {
+        const data = this.plotsStore.mrnaTopExpressedGenesData.result || [];
+        const genes = this.plotsStore.mrnaTabAllGenes.result || [];
+
+        const symbolByEntrezId = new Map<number, string>(
+            genes.map(g => [g.entrezGeneId, g.hugoGeneSymbol] as [number, string])
+        );
+
+        const expressionByGene = new Map<number, number[]>();
+
+        data.forEach(row => {
+            const value = Number(row.value);
+
+            if (!Number.isFinite(value)) {
+                return;
+            }
+
+            const values = expressionByGene.get(row.entrezGeneId) || [];
+            values.push(value);
+            expressionByGene.set(row.entrezGeneId, values);
+        });
+
+        return Array.from(expressionByGene.entries())
+            .map(([entrezGeneId, values]) => ({
+                symbol: symbolByEntrezId.get(entrezGeneId),
+                expression:
+                    values.reduce((sum, value) => sum + value, 0) /
+                    values.length,
+            }))
+            .filter(
+                (gene): gene is { symbol: string; expression: number } =>
+                    !!gene.symbol
+            )
+            .sort((a, b) => b.expression - a.expression);
+    }
+
+    @action.bound
+    addTopExpressedGenesToChart() {
+        const symbols = this.topExpressedGenes
+            .slice(0, this.topExpressedGeneCount)
+            .map(gene => gene.symbol);
+
+        this.addGeneSymbolsToChart(symbols);
+        this.closeTopExpressedGenesDialog();
+    }
+
     // Explicit, controlled open/close state for the "Add genes to plot"
     // popover (rc-tooltip normally tracks this itself, uncontrolled). Adding
     // a custom gene list re-renders this part of the tree (the table can
@@ -1080,6 +1135,21 @@ export default class MrnaTabContent extends React.Component<
     // most want it to stay open to show a warning. Lifting the open/closed
     // flag up here means a remount just picks the same value back up.
     @observable private geneMenuOpen: boolean = false;
+
+    // "Top N expressed genes" dialog state.
+    @observable private topExpressedGenesDialogOpen: boolean = false;
+    @observable private topExpressedGeneCount: number = 10;
+
+    @action.bound
+    openTopExpressedGenesDialog(count: number) {
+        this.topExpressedGeneCount = count;
+        this.topExpressedGenesDialogOpen = true;
+    }
+
+    @action.bound
+    closeTopExpressedGenesDialog() {
+        this.topExpressedGenesDialogOpen = false;
+    }
 
     @action.bound
     private onGeneMenuVisibleChange(visible: boolean) {
@@ -2086,6 +2156,7 @@ export default class MrnaTabContent extends React.Component<
                     multipleSamples={this.highlightedSampleIds.size > 1}
                     onAddGenes={this.addGeneSymbolsToChart}
                 />
+                {this.renderTopExpressedGenesDialog()}
                 <ReferenceCohortModal
                     plotsStore={this.plotsStore}
                     studyId={store.studyId}
@@ -2409,7 +2480,17 @@ export default class MrnaTabContent extends React.Component<
                         Select genes to plot using a predefined gene set, or
                         paste a custom gene list.
                     </div>
-                    {this.renderGeneSetsButton()}
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            alignItems: 'center',
+                            gap: 6,
+                        }}
+                    >
+                        {this.renderGeneSetsButton()}
+                        {this.renderTopExpressedGenesButton()}
+                    </div>
                 </div>
             );
         }
@@ -2457,7 +2538,12 @@ export default class MrnaTabContent extends React.Component<
                     // columns) that the full toolbar otherwise doesn't fit
                     // on one line.
                     showCopyDownload={false}
-                    customControls={this.renderGeneSetsButton()}
+                    customControls={
+                        <>
+                            {this.renderGeneSetsButton()}
+                            {this.renderTopExpressedGenesButton()}
+                        </>
+                    }
                     // Only offering the one (50-gene) page size means
                     // PaginationControls' own "hide if it all fits on one
                     // page" check (itemsPerPageOptions[0] >= totalItems) is
@@ -2722,6 +2808,89 @@ export default class MrnaTabContent extends React.Component<
                         onClick={this.confirmSaveCustomGeneSet}
                     >
                         Save
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    }
+
+    // "Top 10 / 20 / 50" buttons: each opens a confirmation dialog listing the
+    // patient's highest-expressed genes (see renderTopExpressedGenesDialog).
+    private renderTopExpressedGenesButton(): JSX.Element {
+        return (
+            <div style={{ display: 'inline-flex', gap: 4 }}>
+                {[10, 20, 50].map(count => (
+                    <Button
+                        key={count}
+                        bsStyle="default"
+                        bsSize="small"
+                        onClick={() => this.openTopExpressedGenesDialog(count)}
+                    >
+                        Top {count}
+                    </Button>
+                ))}
+            </div>
+        );
+    }
+
+    // Confirmation dialog for adding the top-N expressed genes. The data fetch
+    // (mrnaTopExpressedGenesData) is only observed while the dialog is open,
+    // so merely rendering the tab never triggers the all-genes fetch.
+    private renderTopExpressedGenesDialog(): JSX.Element {
+        const open = this.topExpressedGenesDialogOpen;
+        const expressionData = this.plotsStore.mrnaTopExpressedGenesData;
+
+        return (
+            <Modal show={open} onHide={this.closeTopExpressedGenesDialog}>
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        Add top {this.topExpressedGeneCount} expressed genes
+                    </Modal.Title>
+                </Modal.Header>
+
+                <Modal.Body>
+                    {!open ? null : expressionData.isPending ? (
+                        <LoadingIndicator
+                            isLoading={true}
+                            size="big"
+                            center
+                        />
+                    ) : this.topExpressedGenes.length === 0 ? (
+                        <p>
+                            No expression data is available for these samples.
+                        </p>
+                    ) : (
+                        <>
+                            <p>
+                                Genes are ranked by average expression across
+                                the patient's available samples.
+                            </p>
+                            <ol>
+                                {this.topExpressedGenes
+                                    .slice(0, this.topExpressedGeneCount)
+                                    .map(gene => (
+                                        <li key={gene.symbol}>{gene.symbol}</li>
+                                    ))}
+                            </ol>
+                        </>
+                    )}
+                </Modal.Body>
+
+                <Modal.Footer>
+                    <Button onClick={this.closeTopExpressedGenesDialog}>
+                        Cancel
+                    </Button>
+
+                    <Button
+                        bsStyle="primary"
+                        disabled={
+                            !open ||
+                            expressionData.isPending ||
+                            this.topExpressedGenes.length === 0
+                        }
+                        onClick={this.addTopExpressedGenesToChart}
+                    >
+                        Add genes to chart
                     </Button>
                 </Modal.Footer>
             </Modal>
