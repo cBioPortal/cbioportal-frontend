@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { action, makeObservable, observable } from 'mobx';
-import { buildCBioPortalAPIUrl } from 'shared/api/urls';
 import { getServerConfig } from 'config/config';
 import { QueryStoreComponent } from './QueryStore';
 import styles from './styles/styles.module.scss';
@@ -16,6 +15,10 @@ type TranslateResponse = {
     error?: string;
     errors?: Issue[];
 };
+
+/** The NL-to-OQL API, served by master.cbioportal.org's chat proxy and called cross-origin. */
+const OQL_TRANSLATE_URL =
+    'https://master.cbioportal.org/api/chat/oql/translate';
 
 /**
  * Collapsed by default to a small toggle above the gene/OQL box. When opened, the user describes
@@ -78,16 +81,13 @@ export default class NaturalLanguageQuery extends QueryStoreComponent<{}, {}> {
         this.result = null;
         let result: TranslateResponse;
         try {
-            const res = await fetch(
-                buildCBioPortalAPIUrl('api/chat/oql/translate'),
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt, studyIds: this.studyIds }),
-                }
-            );
+            const res = await fetch(OQL_TRANSLATE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt, studyIds: this.studyIds }),
+            });
             // 200 and 422 carry a translation or its reason; anything else
-            // comes from the portal or the proxy.
+            // comes from master.cbioportal.org or its proxy.
             result =
                 res.status === 200 || res.status === 422
                     ? await res.json()
