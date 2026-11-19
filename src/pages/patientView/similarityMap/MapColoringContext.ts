@@ -24,6 +24,12 @@ import {
     EmbeddingsPanelStore,
 } from 'shared/components/embeddings/EmbeddingsPanelStore';
 import { EmbeddingColoringContext } from 'shared/components/plots/EmbeddingPlotUtils';
+import {
+    ExtendedClinicalAttribute,
+    getExtendsClinicalAttributesFromCustomData,
+} from 'pages/resultsView/ResultsViewPageStoreUtils';
+import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
+import sessionServiceClient from 'shared/api/sessionServiceInstance';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import { REQUEST_ARG_ENUM } from 'shared/constants';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
@@ -89,7 +95,7 @@ export class MapColoringContext
                 return self.clinicalDataCache;
             },
             clinicalAttributes: patientStore.clinicalAttributes,
-            customAttributes: patientStore.customAttributes,
+            customAttributes: this.customChartAttributes,
             genesets: patientStore.genesets,
             genericAssayEntitiesGroupByMolecularProfileId:
                 patientStore.genericAssayEntitiesGroupedByProfileId,
@@ -108,7 +114,7 @@ export class MapColoringContext
             this.plotsStore.coverageInformation,
             this.sampleKeyToSample,
             this.patientKeyToPatient,
-            patientStore.customAttributes
+            this.customChartAttributes
         );
     }
 
@@ -140,6 +146,36 @@ export class MapColoringContext
                     studyIds: this.studyIds,
                 } as StudyViewFilter,
             });
+        },
+        default: [],
+    });
+
+    /**
+     * Custom chart groups over the map's own studies, resolved against the
+     * map's own samples. The page store's copy resolves against the patient's
+     * reference cohort instead, and reaching it pulls in that cohort's whole
+     * sample list and every clinical attribute on it.
+     */
+    readonly customChartAttributes = remoteData<ExtendedClinicalAttribute[]>({
+        await: () => (this.appStore.isLoggedIn ? [this.samples] : []),
+        invoke: async () => {
+            if (!this.appStore.isLoggedIn || this.studyIds.length === 0) {
+                return [];
+            }
+            try {
+                const sessions = await sessionServiceClient.getCustomDataForStudies(
+                    this.studyIds
+                );
+                return getExtendsClinicalAttributesFromCustomData(
+                    sessions,
+                    ComplexKeyMap.from(this.samples.result!, s => ({
+                        studyId: s.studyId,
+                        sampleId: s.sampleId,
+                    }))
+                );
+            } catch (e) {
+                return [];
+            }
         },
         default: [],
     });
@@ -369,7 +405,7 @@ export class MapColoringContext
     }
 
     @computed get customAttributes() {
-        return this.patientStore.customAttributes;
+        return this.customChartAttributes;
     }
 
     @computed get allGenes() {
