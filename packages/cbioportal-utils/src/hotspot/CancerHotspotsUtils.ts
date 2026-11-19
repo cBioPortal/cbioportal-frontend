@@ -9,6 +9,12 @@ import {
     genomicLocationString,
 } from '../mutation/MutationUtils';
 
+// Genome Nexus can return a hotspot without a type, so normalize before
+// matching instead of calling toLowerCase() on a missing value.
+function hotspotType(hotspot: Hotspot): string {
+    return hotspot.type ? hotspot.type.toLowerCase() : '';
+}
+
 export function groupCancerHotspotDataByPosition(ptmData: Hotspot[]) {
     return _.groupBy(ptmData, 'proteinPosStart');
 }
@@ -72,7 +78,9 @@ export function filterHotspotsByMutation(
         : undefined;
 
     // TODO remove redundant hotspots
-    if (aggregatedHotspots) {
+    // Genome Nexus can return an aggregated entry without its hotspots array,
+    // so keep the empty default rather than filtering a missing value below.
+    if (aggregatedHotspots && aggregatedHotspots.hotspots) {
         hotspots = aggregatedHotspots.hotspots;
     }
 
@@ -110,15 +118,15 @@ export function filterLinearClusterHotspotsByMutations(
                     mutation,
                     index,
                     (hotspot: Hotspot) =>
-                        hotspot.type.toLowerCase().includes('splice')
+                        hotspotType(hotspot).includes('splice')
                 );
             } else {
                 return filterHotspotsByMutation(
                     mutation,
                     index,
                     (hotspot: Hotspot) =>
-                        hotspot.type.toLowerCase().includes('single') ||
-                        hotspot.type.toLowerCase().includes('indel')
+                        hotspotType(hotspot).includes('single') ||
+                        hotspotType(hotspot).includes('indel')
                 );
             }
         })
@@ -130,7 +138,7 @@ export function filter3dHotspotsByMutations(
     index: IHotspotIndex
 ): Hotspot[] {
     return filterHotspotsByMutations(mutations, index, (hotspot: Hotspot) =>
-        hotspot.type.toLowerCase().includes('3d')
+        hotspotType(hotspot).includes('3d')
     );
 }
 
@@ -154,7 +162,7 @@ export function isHotspot(
 }
 
 export function defaultHotspotFilter(hotspot: Hotspot) {
-    const type = hotspot.type.toLowerCase();
+    const type = hotspotType(hotspot);
     return (
         type.includes('single') ||
         type.includes('indel') ||
