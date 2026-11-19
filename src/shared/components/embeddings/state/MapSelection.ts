@@ -11,6 +11,24 @@ export interface MapSelection {
     color: string;
     /** sampleId, or patientId on a patient-level map. */
     keys: Set<string>;
+    /**
+     * The lasso it was drawn with, in data coordinates so it stays over the
+     * same points as the map is panned and zoomed. Absent for a selection
+     * made some other way.
+     */
+    path?: MapPoint[];
+}
+
+export interface MapPoint {
+    x: number;
+    y: number;
+}
+
+/** A committed selection's outline, ready to draw. */
+export interface MapSelectionOutline {
+    id: number;
+    color: string;
+    path: MapPoint[];
 }
 
 /** What a selection looks like to the controls: no key set to re-render on. */

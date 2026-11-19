@@ -103,7 +103,20 @@ export interface EmbeddingVisualizationProps {
     yAxisLabel?: string;
     width?: number;
     height?: number;
-    onPointSelection?: (selectedPoints: EmbeddingPoint[]) => void;
+    onPointSelection?: (
+        selectedPoints: EmbeddingPoint[],
+        /** The lasso it was drawn with, in data coordinates. */
+        path?: Array<{ x: number; y: number }>
+    ) => void;
+    /**
+     * Lassos of selections already made, in data coordinates, drawn over the
+     * plot in each selection's own colour.
+     */
+    selectionOutlines?: Array<{
+        id: number;
+        color: string;
+        path: Array<{ x: number; y: number }>;
+    }>;
     selectedPatientIds?: string[];
     showLegend?: boolean;
     filename?: string;

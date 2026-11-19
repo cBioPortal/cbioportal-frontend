@@ -52,8 +52,8 @@ import { getComparisonUrl } from 'shared/api/urls';
 import {
     MapSelection,
     MapSelectionSummary,
-    SELECTION_COLORS,
 } from 'shared/components/embeddings/state/MapSelection';
+import { MapSelectionList } from 'shared/components/embeddings/state/MapSelectionList';
 import { addCancerStudyAttribute } from 'shared/lib/ClinicalAttributeUtils';
 import {
     getLoadedEmbeddingOptions,
@@ -187,19 +187,12 @@ export class EmbeddingsPanel extends React.Component<
     @observable.ref private selectedCategories = new Set<string>();
     // Each lasso makes its own named selection, shown as a chip beside the
     // map. Everything downstream works off their union.
-    @observable.ref private selections: MapSelection[] = [];
-    private nextSelectionId = 1;
+    private readonly selections = new MapSelectionList();
 
     @computed private get lassoSelectedKeys(): Set<string> | null {
-        if (this.selections.length === 0) {
-            return null;
-        }
-        const keys = new Set<string>();
-        this.selections.forEach(selection =>
-            selection.keys.forEach(key => keys.add(key))
-        );
-        return keys;
+        return this.selections.keys;
     }
+
     private urlParameterReactionDisposer?: () => void;
     private urlSyncReactionDisposer?: () => void;
     private viewStateReactionDisposer?: () => void;
@@ -498,7 +491,7 @@ export class EmbeddingsPanel extends React.Component<
     private clearOwnFilters() {
         this.categoryVisibility.reset();
         this.selectedCategories = new Set();
-        this.selections = [];
+        this.selections.clear();
     }
 
     // Polls the shared viewState holder (a plain mutable object any panel writes to) rather than a reactive prop.
@@ -1500,11 +1493,7 @@ export class EmbeddingsPanel extends React.Component<
     // A point in two selections takes the colour of the later one, matching
     // the order the chips are read in.
     @computed private get selectionColorByKey(): Map<string, string> {
-        const colors = new Map<string, string>();
-        this.selections.forEach(selection =>
-            selection.keys.forEach(key => colors.set(key, selection.color))
-        );
-        return colors;
+        return this.selections.colorByKey;
     }
 
     @computed private get dimmedPlotData(): EmbeddingPlotPoint[] {
@@ -2306,7 +2295,7 @@ export class EmbeddingsPanel extends React.Component<
             return;
         }
         const origin = this.store.queriedPhysicalStudyIds.result || [];
-        const groups = this.selections.map(selection =>
+        const groups = this.selections.all.map(selection =>
             getGroupParameters(
                 selection.name,
                 this.samplesForPoints(this.pointsInSelection(selection)).map(
@@ -2406,7 +2395,10 @@ export class EmbeddingsPanel extends React.Component<
     // Each draw adds a selection of its own, so several can be held at once
     // and compared. Their union is the local filter.
     @action.bound
-    private handlePointSelection(selectedPoints: any[]) {
+    private handlePointSelection(
+        selectedPoints: any[],
+        path?: Array<{ x: number; y: number }>
+    ) {
         if (!selectedPoints || selectedPoints.length === 0) {
             return;
         }
@@ -2426,43 +2418,27 @@ export class EmbeddingsPanel extends React.Component<
         if (keys.size === 0) {
             return;
         }
-        const id = this.nextSelectionId++;
-        this.selections = [
-            ...this.selections,
-            {
-                id,
-                name: `Selection ${id}`,
-                color: SELECTION_COLORS[(id - 1) % SELECTION_COLORS.length],
-                keys,
-            },
-        ];
+        this.selections.add(keys, path);
     }
 
     @action.bound
     clearSelections() {
-        this.selections = [];
+        this.selections.clear();
     }
 
     @action.bound
     removeSelection(id: number) {
-        this.selections = this.selections.filter(s => s.id !== id);
+        this.selections.remove(id);
     }
 
     @action.bound
     renameSelection(id: number, name: string) {
-        this.selections = this.selections.map(s =>
-            s.id === id ? { ...s, name } : s
-        );
+        this.selections.rename(id, name);
     }
 
     /** What the chips beside the map show. */
     @computed get selectionSummaries(): MapSelectionSummary[] {
-        return this.selections.map(({ id, name, color, keys }) => ({
-            id,
-            name,
-            color,
-            count: keys.size,
-        }));
+        return this.selections.summaries;
     }
 
     // Plain method, not @computed: renderControls' callback reads props
@@ -2520,6 +2496,7 @@ export class EmbeddingsPanel extends React.Component<
             viewState: this.viewport.current,
             onViewStateChange: this.viewport.set,
             onPointSelection: this.handlePointSelection,
+            selectionOutlines: this.selections.outlines,
             selectedPatientIds: this.selectedPatientIds,
             embeddingType: this.selectedEmbedding.data.embedding_type,
             categoryCounts: this.categoryCounts,

@@ -21,6 +21,13 @@ const BOX_STYLE: React.CSSProperties = {
     borderRadius: '4px',
 };
 
+/** The status bar's colours for a live selection, so the two read as one state. */
+const ACTIVE_BOX_STYLE: React.CSSProperties = {
+    ...BOX_STYLE,
+    backgroundColor: '#fff8e1',
+    border: '1px solid #ffe082',
+};
+
 const ROW_LABEL_STYLE: React.CSSProperties = {
     fontSize: '9px',
     textTransform: 'uppercase',
@@ -67,7 +74,11 @@ export const SelectionList: React.FC<SelectionListProps> = ({
             </span>
             <div
                 data-test="embeddings-selection-list"
-                style={{ ...BOX_STYLE, marginTop: '2px', padding: '4px' }}
+                style={{
+                    ...ACTIVE_BOX_STYLE,
+                    marginTop: '2px',
+                    padding: '4px',
+                }}
             >
                 {selections.map(selection => (
                     <div

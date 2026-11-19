@@ -518,7 +518,18 @@ export class EmbeddingDeckGLVisualization extends React.Component<
 
             // Notify parent component of selection
             if (this.props.onPointSelection && uniquePoints.length > 0) {
-                this.props.onPointSelection(uniquePoints);
+                const dataPath = selectionPath
+                    .map(p => this.screenToData(p.x, p.y))
+                    .filter(p => p !== null) as Array<{
+                    x: number;
+                    y: number;
+                }>;
+                this.props.onPointSelection(
+                    uniquePoints,
+                    dataPath.length === selectionPath.length
+                        ? dataPath
+                        : undefined
+                );
             }
         } catch (error) {
             this.setState({ selectedPoints: [] });
@@ -579,6 +590,25 @@ export class EmbeddingDeckGLVisualization extends React.Component<
         return dataToScreen(dataX, dataY, viewState, actualWidth, actualHeight);
     };
 
+    /** The inverse of dataToScreen, through the same viewport. */
+    private screenToData = (
+        screenX: number,
+        screenY: number
+    ): { x: number; y: number } | null => {
+        try {
+            // dataToScreen builds and caches the viewport for this view state.
+            this.dataToScreen(0, 0);
+            const viewport = this.cachedViewport?.viewport;
+            const [x, y] = viewport.unproject([screenX, screenY]);
+            if (Number.isFinite(x) && Number.isFinite(y)) {
+                return { x, y };
+            }
+        } catch (e) {
+            // No viewport to invert through yet.
+        }
+        return null;
+    };
+
     private renderControls() {
         const selectionMode = this.selectionMode;
 
@@ -610,11 +640,20 @@ export class EmbeddingDeckGLVisualization extends React.Component<
         const { isSelecting, selectionPath } = this.state;
         const selectionMode = this.selectionMode;
 
+        const committedOutlines = (this.props.selectionOutlines || []).map(
+            outline => ({
+                id: outline.id,
+                color: outline.color,
+                path: outline.path.map(p => this.dataToScreen(p.x, p.y)),
+            })
+        );
+
         return (
             <SelectionOverlay
                 isSelecting={isSelecting}
                 selectionMode={selectionMode}
                 selectionPath={selectionPath}
+                committedOutlines={committedOutlines}
             />
         );
     }

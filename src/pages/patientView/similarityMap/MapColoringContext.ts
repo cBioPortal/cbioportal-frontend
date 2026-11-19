@@ -15,7 +15,10 @@ import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import ClinicalDataCache from 'shared/cache/ClinicalDataCache';
 import { PlotsTabStore } from 'shared/components/plots/PlotsTabStore';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
-import { filterAndAnnotateMutations } from 'shared/lib/StoreUtils';
+import {
+    filterAndAnnotateMolecularData,
+    filterAndAnnotateMutations,
+} from 'shared/lib/StoreUtils';
 import {
     EmbeddingsPanelMolecularStore,
     EmbeddingsPanelStore,
@@ -270,15 +273,86 @@ export class MapColoringContext
         },
     }));
 
-    // What colours the points. Everything comes from the shared store except
-    // the mutations: its per-profile cache asks each study separately, which
-    // suits a cohort inside one study and stalls on thirty.
+    /**
+     * Copy number for the whole map in one request.
+     *
+     * The shared cache asks each study's discrete CNA profile separately,
+     * which is thirty requests here; the browser runs six at a time and the
+     * rest queue, and the public API rate-limits the burst. Asking the
+     * multi-profile endpoint for the profiles themselves returns the same
+     * rows once, and without naming every sample.
+     */
+    public readonly mapCnaCache = new MobxPromiseCache<
+        { entrezGeneId: number },
+        any[]
+    >(q => ({
+        await: () => [
+            this.plotsStore.studyToMolecularProfileDiscreteCna,
+            this.plotsStore.getDiscreteCNAPutativeDriverInfo,
+            this.patientStore.entrezGeneIdToGeneAll,
+        ],
+        invoke: async () => {
+            const profileIds = _.values(
+                this.plotsStore.studyToMolecularProfileDiscreteCna.result!
+            ).map(p => p.molecularProfileId);
+            if (profileIds.length === 0) {
+                return [];
+            }
+            const data = await getClient().fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
+                {
+                    projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                    molecularDataMultipleStudyFilter: {
+                        entrezGeneIds: [q.entrezGeneId],
+                        molecularProfileIds: profileIds,
+                    } as any,
+                }
+            );
+            const report = filterAndAnnotateMolecularData(
+                data as any,
+                this.plotsStore.getDiscreteCNAPutativeDriverInfo.result!,
+                this.patientStore.entrezGeneIdToGeneAll.result!
+            );
+            return report.data.concat(report.vus);
+        },
+    }));
+
+    /**
+     * Structural variants for the whole map in one request.
+     *
+     * The shared cache names every sample of every study in the body, which
+     * is fifty thousand identifiers here. Naming the profiles instead asks
+     * for the same rows.
+     */
+    public readonly mapStructuralVariantCache = new MobxPromiseCache<
+        { entrezGeneId: number },
+        any[]
+    >(q => ({
+        await: () => [this.plotsStore.studyToStructuralVariantMolecularProfile],
+        invoke: async () => {
+            const profileIds = _.values(
+                this.plotsStore.studyToStructuralVariantMolecularProfile
+                    .result!
+            ).map((p: MolecularProfile) => p.molecularProfileId);
+            if (profileIds.length === 0) {
+                return [];
+            }
+            return internalClient.fetchStructuralVariantsUsingPOST({
+                structuralVariantFilter: {
+                    entrezGeneIds: [q.entrezGeneId],
+                    molecularProfileIds: profileIds,
+                } as any,
+            });
+        },
+    }));
+
+    // What colours the points. The alteration caches are this map's own: the
+    // shared ones are built for a cohort inside one study and stall on thirty.
     @computed get plotsTabStore(): EmbeddingsPanelMolecularStore {
         const store = this.plotsStore;
         return {
             annotatedMutationCache: this.mapMutationCache,
-            annotatedCnaCache: store.annotatedCnaCache,
-            structuralVariantCache: store.structuralVariantCache,
+            annotatedCnaCache: this.mapCnaCache,
+            structuralVariantCache: this.mapStructuralVariantCache,
             numericGeneMolecularDataCache: store.numericGeneMolecularDataCache,
             isHotspotForOncoprint: store.isHotspotForOncoprint,
             getMutationPutativeDriverInfo: store.getMutationPutativeDriverInfo,
