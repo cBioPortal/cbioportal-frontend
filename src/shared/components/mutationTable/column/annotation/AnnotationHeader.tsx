@@ -82,6 +82,7 @@ export enum AnnotationSources {
     CIVIC = 'civic',
     CANCER_HOTSPOTS = 'cancerHotspots',
     REVUE = 'reVue',
+    ALPHAGENOME = 'alphagenome',
 }
 
 export const sourceTooltipInfo = {
@@ -139,7 +140,52 @@ export const sourceTooltipInfo = {
                 'a repository for variants with unexpected effects (VUE) in cancer',
         },
     ],
+    [AnnotationSources.ALPHAGENOME]: [
+        {
+            sourceUrl: 'https://github.com/google-deepmind/alphagenome',
+            sourceName: 'AlphaGenome',
+            sourceDescription:
+                'regulatory variant-effect predictions (model prediction, not experimental evidence)',
+        },
+    ],
 };
+
+export const alphaGenomeData: LegendDescription[] = [
+    {
+        legend: (
+            <span
+                style={{ fontSize: 11, fontWeight: 'bold', color: '#d7301f' }}
+            >
+                αG
+            </span>
+        ),
+        description: (
+            <span>
+                AlphaGenome strong prediction (|quantile| ≥ 0.99 and raw score
+                above the strong threshold)
+            </span>
+        ),
+    },
+    {
+        legend: (
+            <span
+                style={{ fontSize: 11, fontWeight: 'bold', color: '#fd8d3c' }}
+            >
+                αG
+            </span>
+        ),
+        description: (
+            <span>
+                AlphaGenome moderate prediction (|quantile| ≥ 0.99 and raw score
+                above the moderate threshold)
+            </span>
+        ),
+    },
+    {
+        legend: <span />,
+        description: <span>No prediction or below thresholds</span>,
+    },
+];
 
 export const civicData: LegendDescription[] = [
     {
@@ -419,6 +465,7 @@ const AnnotationHeader: React.FunctionComponent<{
     mergeOncoKbIcons?: boolean;
     onOncoKbIconToggle?: (mergeIcons: boolean) => void;
     showRevueIcon?: boolean;
+    showAlphaGenomeIcon?: boolean;
 }> = props => {
     return (
         <span>
@@ -479,6 +526,40 @@ const AnnotationHeader: React.FunctionComponent<{
                             marginRight: 1,
                         }}
                     />
+                </DefaultTooltip>
+            )}
+            {props.showAlphaGenomeIcon && (
+                <DefaultTooltip
+                    placement="top"
+                    overlay={
+                        <AnnotationHeaderTooltipCard
+                            infoProps={
+                                sourceTooltipInfo[AnnotationSources.ALPHAGENOME]
+                            }
+                            legendDescriptions={alphaGenomeData}
+                        />
+                    }
+                >
+                    <span
+                        style={{
+                            width: 22,
+                            height: 18,
+                            display: 'inline-flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        <span
+                            style={{
+                                fontSize: 10,
+                                fontWeight: 700,
+                                color: '#333',
+                            }}
+                        >
+                            αG
+                        </span>
+                    </span>
                 </DefaultTooltip>
             )}
             {getServerConfig().show_civic && (

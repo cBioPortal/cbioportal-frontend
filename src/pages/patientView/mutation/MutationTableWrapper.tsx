@@ -19,6 +19,7 @@ import { CancerGene } from 'oncokb-ts-api-client';
 import { DEFAULT_ONCOKB_CONTENT_WIDTH } from 'shared/lib/AnnotationColumnUtils';
 import { ILazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import PatientViewMutationTable from './PatientViewMutationTable';
+import { AlphaGenomeScoreButton } from './PatientViewMutationsTab';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
@@ -169,6 +170,12 @@ export default class MutationTableWrapper extends React.Component<
                         <FeatureInstruction content={TABLE_FEATURE_INSTRUCTION}>
                             <PatientViewMutationTable
                                 dataStore={this.props.dataStore}
+                                // Rendered in the table toolbar below the mutation count
+                                customControls={
+                                    <AlphaGenomeScoreButton
+                                        store={this.pageStore}
+                                    />
+                                }
                                 studyIdToStudy={
                                     this.pageStore.studyIdToStudy.result
                                 }
@@ -197,6 +204,9 @@ export default class MutationTableWrapper extends React.Component<
                                 }
                                 indexedVariantAnnotations={
                                     this.pageStore.indexedVariantAnnotations
+                                }
+                                indexedAlphaGenomeAnnotations={
+                                    this.pageStore.indexedAlphaGenomeAnnotations
                                 }
                                 indexedMyVariantInfoAnnotations={
                                     this.pageStore
@@ -254,6 +264,11 @@ export default class MutationTableWrapper extends React.Component<
                                 enableHotspot={getServerConfig().show_hotspot}
                                 enableCivic={getServerConfig().show_civic}
                                 enableRevue={getServerConfig().show_revue}
+                                // Local dev only: Match existing pattern via serverConfig (show_alphagenome).
+                                // Defaults to true in serverConfigDefaults.ts for local AlphaGenome development — TBD to reverify
+                                enableAlphaGenome={
+                                    getServerConfig().show_alphagenome
+                                }
                                 columnVisibility={this.props.columnVisibility}
                                 showGeneFilterMenu={
                                     this.pageStore
