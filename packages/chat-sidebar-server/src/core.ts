@@ -15,11 +15,13 @@ import {
     DynamicToolUIPart,
     LanguageModel,
     OnLanguageModelCallEndCallback,
+    SystemModelMessage,
     TextUIPart,
     ToolSet,
     ToolUIPart,
     UIMessage,
     UIMessageChunk,
+    wrapLanguageModel,
 } from 'ai';
 import { ServerResponse } from 'http';
 import { readFileSync } from 'fs';
@@ -29,6 +31,7 @@ import { z } from 'zod';
 import { createMCPClient, MCPClient } from '@ai-sdk/mcp';
 import { LangfuseClient } from '@langfuse/client';
 import { resolveModels } from './models.js';
+import { CACHE_BREAKPOINT, cacheConversationTail } from './promptCache.js';
 import { langfuseConfig } from './tracing.js';
 
 export { AVAILABLE_MODELS, DEFAULT_MODEL } from './models.js';
@@ -99,16 +102,13 @@ interface SystemPrompt {
 const SYSTEM_PROMPT_NAME =
     process.env.LANGFUSE_SYSTEM_PROMPT_NAME || 'cBioChat Sidebar System Prompt';
 
-async function getSystemPrompt(pageHref?: string): Promise<SystemPrompt> {
+async function getSystemPrompt(): Promise<SystemPrompt> {
     // No label: Langfuse serves the version labelled `production`.
     const fetched = await langfuse?.prompt.get(SYSTEM_PROMPT_NAME, {
         fallback: LOCAL_SYSTEM_PROMPT_TEXT,
     });
-    const systemPrompt = fetched?.prompt ?? LOCAL_SYSTEM_PROMPT_TEXT;
     return {
-        text: pageHref
-            ? `${systemPrompt}\n\nThe user is currently viewing this cBioPortal page: ${pageHref}`
-            : systemPrompt,
+        text: fetched?.prompt ?? LOCAL_SYSTEM_PROMPT_TEXT,
         langfusePrompt: fetched && {
             name: fetched.name,
             version: fetched.version,
@@ -326,10 +326,26 @@ export async function runChat(
     pageHref?: string
 ): Promise<void> {
     const { chat } = resolveModels(model);
-    const [{ text: system, langfusePrompt }, mcpTools] = await Promise.all([
-        getSystemPrompt(pageHref),
-        getMcpTools(),
-    ]);
+    const [
+        { text: systemPrompt, langfusePrompt },
+        mcpTools,
+    ] = await Promise.all([getSystemPrompt(), getMcpTools()]);
+    // The tools and the system prompt are the same for every user, so they're
+    // cached up to the end of the system prompt. The page line comes after
+    // that point, so a page change doesn't invalidate them.
+    const system: SystemModelMessage[] = [
+        {
+            role: 'system',
+            content: systemPrompt,
+            providerOptions: CACHE_BREAKPOINT,
+        },
+    ];
+    if (pageHref) {
+        system.push({
+            role: 'system',
+            content: `The user is currently viewing this cBioPortal page: ${pageHref}`,
+        });
+    }
     const tools: ToolSet = {
         ...mcpTools,
         go_to_page: goToPageTool,
@@ -337,14 +353,21 @@ export async function runChat(
     };
 
     const result = streamText({
-        model: chat,
+        model: wrapLanguageModel({
+            model: chat,
+            middleware: cacheConversationTail,
+        }),
         system,
         tools,
         reasoning: REASONING_EFFORT,
         stopWhen: stepCountIs(30),
-        // A reply stopped mid-tool leaves a call with no result, which the
-        // model API rejects on every later turn; drop such calls.
+        // `tools` converts stored results through each tool's toModelOutput,
+        // as the reply that produced them did, so the history matches what the
+        // model saw and stays cached. A reply stopped mid-tool leaves a call
+        // with no result, which the model API rejects on every later turn;
+        // drop such calls.
         messages: await convertToModelMessages(branch.map(withoutEmptyText), {
+            tools,
             ignoreIncompleteToolCalls: true,
         }),
         abortSignal,
