@@ -1,0 +1,491 @@
+{
+  "study_id": "coadread_tcga_pub",
+  "study_name": "Colorectal Adenocarcinoma (TCGA, Nature 2012)",
+  "study_description": "Whole exome sequencing in 224 of the 276 colorectal carcinoma tumor/normal pairs. The Cancer Genome Atlas (TCGA) Colorectal Cancer project.",
+  "total_samples": 276,
+  "charts": [
+    {
+      "chart_id": "km_plot_overall",
+      "chart_name": "KM Plot: Overall (months)",
+      "chart_type": "Kaplan-Meier survival plot",
+      "summary": "This Kaplan-Meier survival plot shows overall survival data for the cohort. The plot demonstrates survival outcomes over time, though the paper notes that survival data is limited due to prospective collection. The study focused more on molecular characterization than outcomes, but integrated analysis identified molecular signatures associated with tumor aggressiveness including stage, lymph node status, distant metastasis, and vascular invasion at time of surgery.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "hypermutated",
+      "chart_name": "Hypermutated",
+      "chart_type": "Pie chart",
+      "data": {
+        "hypermutated": 189,
+        "non_hypermutated": "~87 (blue)"
+      },
+      "summary": "This chart shows the critical 16% vs 84% split between hypermutated (189 cases shown in red/orange) and non-hypermutated (blue) tumors. The hypermutated cases divide into two groups: 77% with MSI-H typically showing MLH1 methylation and CIMP, and 23% with somatic mismatch repair gene or POLE mutations but lacking MSI-H. This bimodal distribution represents fundamentally different mechanisms of genomic instability and has major implications for prognosis (hypermutated tumors have better survival) and therapy (potential immunotherapy candidates). The mutation rate serves as a better prognostic indicator than traditional staging alone.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "overall_survival_status",
+      "chart_name": "Overall Survival Status",
+      "chart_type": "Pie chart",
+      "data": {
+        "living": 246,
+        "deceased": "some cases"
+      },
+      "summary": "Shows survival status with 246 living (green) and some deceased cases (orange/red). Combined with clinical staging data, this enables identification of molecular markers associated with aggressive disease. The study found that FBXW7 mutations (38 cases) and distant metastasis (32 cases) never co-occurred (P=0.0019), suggesting FBXW7 loss may reduce metastatic potential. Multiple genomic regions showed associations with tumor aggressiveness, including 20q13.12 amplifications and altered expression of genes like SCN5A.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "sex",
+      "chart_name": "Sex",
+      "chart_type": "Pie chart",
+      "data": {
+        "male": 143,
+        "female": 133
+      },
+      "summary": "Shows approximately balanced distribution between male (143) and female (133) patients, representing typical CRC epidemiology. While the paper doesn't emphasize sex-specific differences in genomic patterns, this demographic balance ensures findings are generalizable. The molecular alterations identified (WNT pathway 93%, TP53 60%, KRAS 45%) appear consistent across both sexes.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "methylation_subtype",
+      "chart_name": "Methylation Subtype",
+      "chart_type": "Pie chart",
+      "data": {
+        "cimp_high": "~77 (red/orange)",
+        "cimp_low": "variable",
+        "non_cimp": "~208 (blue)"
+      },
+      "summary": "Displays CIMP classification with three main groups visible (appears to show CIMP-high in red/orange ~77 cases, CIMP-low, and non-CIMP in blue ~208 cases). CIMP-high tumors are strongly enriched for hypermutation (P=3×10⁻¹²), MSI-H status, right colon location, and MLH1 silencing. Seventeen of nineteen MLH1-methylated tumors showed CIMP. This epigenetic phenotype represents an alternative tumor suppressor inactivation mechanism and helps explain why right colon tumors form a distinct molecular subtype with different prognosis and treatment response.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "sequenced",
+      "chart_name": "Sequenced",
+      "chart_type": "Pie chart",
+      "data": {
+        "sequenced": 224
+      },
+      "summary": "Shows which samples (224 in blue) underwent exome sequencing achieving >20-fold coverage of at least 80% of targeted exons. A subset of 97 samples also underwent low-pass whole-genome sequencing (3-4× coverage, 7.5-10× physical coverage) for structural variant detection. The comprehensive sequencing strategy enabled identification of 24 significantly mutated genes, novel mutations in ARID1A and SOX9, and recurrent translocations like NAV2-TCF7L1 fusions.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "icluster",
+      "chart_name": "iCluster",
+      "chart_type": "Pie chart",
+      "data": {
+        "cluster_overlap_cimp": "~87 (red)",
+        "other_clusters": "blue, green"
+      },
+      "summary": "Shows integrated clustering results combining multiple data types (mutation, copy number, methylation, expression). One cluster (red, ~87 cases) significantly overlaps with CIMP-high/hypermutated tumors. The other clusters (blue, green) represent non-hypermutated tumors with chromosomal instability. Critically, this analysis revealed that non-hypermutated colon and rectal tumors are indistinguishable at the genomic level, challenging traditional anatomical classifications and suggesting they should be considered as a unified molecular entity for treatment selection.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "copy_number",
+      "chart_name": "Copy Number",
+      "chart_type": "Pie chart",
+      "data": {
+        "near_diploid": "~207 (blue)",
+        "extensive_alterations": "other"
+      },
+      "summary": "Displays copy number alteration patterns separating hypermutated (near-diploid, ~207 cases in blue) from non-hypermutated tumors (extensive chromosomal instability). The study identified 17 focal amplifications including therapeutically relevant ERBB2 (4%), IGF2/miR-483 (7% at 11p15.5), and MYC (8q24). Twenty-eight focal deletions were found including tumor suppressors SMAD4, APC, PTEN, and TCF7L2. Common arm-level gains include 7, 8q, 13q, 20q and losses include 17p (TP53), 18q (SMAD4), highlighting the stark genomic instability differences between CRC subtypes.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "gene_expression_subtype",
+      "chart_name": "Gene Expression Subtype",
+      "chart_type": "Pie chart",
+      "data": {
+        "cluster_cimp_overlap": "~88 (orange)",
+        "other_clusters": "blue and others"
+      },
+      "summary": "Three expression clusters emerged, with one (orange, ~88 cases) significantly overlapping with CIMP-high tumors (P=3×10⁻¹²). The other two clusters showed no clear methylation correlates. Importantly, colon and rectal tumors were indistinguishable by expression profiling. PARADIGM pathway analysis revealed near-universal alterations in MYC transcriptional targets—both activated and repressed programs—emphasizing MYC's central role despite diverse upstream genetic changes. Expression signatures correlated with tumor aggressiveness provide potential prognostic biomarkers beyond traditional staging.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "methylation_status",
+      "chart_name": "Methylation Status",
+      "chart_type": "Pie chart",
+      "data": {
+        "unmethylated": 220,
+        "methylated": "remaining"
+      },
+      "summary": "Shows binary methylation classification (220 unmethylated in blue, methylated cases in orange). This complements the more detailed Methylation Subtype chart. Hypermethylation associates strongly with MLH1 silencing in MSI-H tumors, representing an epigenetic mechanism of mismatch repair inactivation. The methylation phenotype is clinically significant as it correlates with right colon location, hypermutation, and improved prognosis, though it also predicts resistance to certain chemotherapies.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "msi_status",
+      "chart_name": "MSI Status",
+      "chart_type": "Pie chart",
+      "data": {
+        "msi_high": "~193 (orange)",
+        "msi_stable": "blue"
+      },
+      "summary": "Displays microsatellite instability classification with MSI-H (~193 cases visible in orange) representing approximately 13% of the cohort. MSI-H tumors show 50-fold higher frameshift mutation rates in genes with mononucleotide repeats (ACVR2A, TGFBR2), typically associate with MLH1 methylation, CIMP, and right colon location. Critically, MSI-H status is clinically actionable—these patients have better prognosis, different chemotherapy responses, and are candidates for immune checkpoint inhibitors, making this one of the most important molecular classifications for treatment decisions in CRC.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "oncotype_code",
+      "chart_name": "Oncotype Code",
+      "chart_type": "Pie chart",
+      "data": {
+        "code_172": 172,
+        "other": "orange segment"
+      },
+      "summary": "Shows specimen classification codes (172 in blue, smaller orange segment). This represents the biospecimen processing and quality control codes used by TCGA to ensure sample quality for multi-platform analysis. High-quality samples enabled comprehensive molecular profiling across exome sequencing, copy number arrays, methylation arrays, RNA-seq, and miRNA-seq platforms.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "primary_tumor_pathologic_spread",
+      "chart_name": "Primary Tumor Pathologic Spread",
+      "chart_type": "Pie chart",
+      "data": {
+        "stage_1": 183,
+        "stage_2": 133
+      },
+      "summary": "Shows pathologic staging distribution (appears to show 183 in blue, 133 in orange). This clinical staging data, combined with molecular features, enabled identification of genomic signatures associated with tumor aggressiveness. The study found specific focal amplifications, deletions, and gene expression changes correlating with advanced stage, lymph node involvement, distant metastasis, and vascular invasion. These molecular-clinical correlations provide potential biomarkers for risk stratification beyond traditional staging systems.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "mlh1_silencing",
+      "chart_name": "MLH1 Silencing",
+      "chart_type": "Pie chart",
+      "data": {
+        "unmethylated": 208,
+        "methylated": "orange segment"
+      },
+      "summary": "Displays MLH1 methylation status (208 unmethylated in blue, smaller methylated segment in orange). MLH1 promoter methylation silences this mismatch repair gene, causing MSI-H in 19 samples, with 17 of these also showing CIMP. This epigenetic silencing mechanism is the most common cause of MSI-H in sporadic CRC (versus germline mutations in Lynch syndrome). MLH1-methylated tumors cluster in the right colon, show hypermutation phenotype, and have distinct mutational spectra with frequent BRAF V600E mutations but lower rates of TP53 and APC mutations compared to microsatellite-stable tumors.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "mrna_data",
+      "chart_name": "MRNA Data",
+      "chart_type": "Pie chart",
+      "data": {
+        "with_data": 220
+      },
+      "summary": "Shows samples with mRNA expression data (220 in blue). RNA-seq and Agilent microarray expression profiling enabled identification of three expression clusters, pathway activation analysis via PARADIGM showing universal MYC target alterations, and correlation of expression signatures with clinical aggressiveness. Expression data revealed that colon and rectal tumors are transcriptionally indistinguishable when accounting for hypermutation status, and identified genes like SCN5A associated with invasion and metastasis.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "egfr_copy_number",
+      "chart_name": "EGFR: Putative copy-number alterations",
+      "chart_type": "Pie chart",
+      "data": {
+        "diploid": 141,
+        "altered": 114
+      },
+      "summary": "Shows EGFR amplification status (141 cases with normal diploid in pink, 114 with alterations). While EGFR itself wasn't among the top significantly amplified genes, the ERBB receptor family (EGFR, ERBB2, ERBB3, ERBB4) showed mutations or amplifications in 13% of non-hypermutated and 53% of hypermutated cases. Notably, recurrent ERBB2(V842I) mutations were found in 4 cases and ERBB3(V104M) in 2 cases. ERBB2 focal amplifications (4% at 17q21.1) represent actionable targets potentially responsive to trastuzumab, as demonstrated in breast and gastric cancers.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "custom_data_3",
+      "chart_name": "Custom Data 3",
+      "chart_type": "Pie chart",
+      "data": {
+        "all_samples": 276
+      },
+      "summary": "This appears to be an empty custom data slot in the cBioPortal interface, not containing study-specific data for this publication.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "custom_data_4",
+      "chart_name": "Custom Data 4",
+      "chart_type": "Pie chart",
+      "data": {
+        "all_samples": 275
+      },
+      "summary": "This appears to be an empty custom data slot in the cBioPortal interface, not containing study-specific data for this publication.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "custom_data_5",
+      "chart_name": "Custom Data 5",
+      "chart_type": "Pie chart",
+      "data": {
+        "all_samples": 275
+      },
+      "summary": "This appears to be an empty custom data slot in the cBioPortal interface, not containing study-specific data for this publication.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "mutation_count",
+      "chart_name": "Mutation Count",
+      "chart_type": "Histogram",
+      "data": {
+        "non_hypermutated_median": 58,
+        "hypermutated_median": 728,
+        "threshold": "8.24-12 mutations per megabase"
+      },
+      "summary": "Histogram showing bimodal distribution of mutation burden with clear separation between non-hypermutated (left peak, median 58 non-silent mutations) and hypermutated tumors (right peak, median 728 total mutations, with some >1000). The threshold of 8.24-12 mutations per megabase separates these groups. Six tumors with the highest mutation rates lacked MSI-H but had somatic mismatch repair gene or POLE mutations, representing a distinct hypermutated subtype. This distribution is clinically critical as mutation burden predicts immunotherapy response and overall prognosis better than traditional staging.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "custom_data_4_lower",
+      "chart_name": "Custom Data 4",
+      "chart_type": "Pie chart",
+      "data": {
+        "all_samples": 272
+      },
+      "summary": "This appears to be an empty custom data slot in the cBioPortal interface, not containing study-specific data for this publication.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "cancer_type_detailed",
+      "chart_name": "Cancer Type Detailed",
+      "chart_type": "Table with pie chart",
+      "data": {
+        "colon_adenocarcinoma": {
+          "count": 172,
+          "percentage": 62.3
+        },
+        "rectal_adenocarcinoma": {
+          "count": 62,
+          "percentage": 22.5
+        },
+        "colorectal_adenocarcinoma": {
+          "count": 42,
+          "percentage": 15.2
+        }
+      },
+      "summary": "Breaks down the cohort into Colon Adenocarcinoma (172 cases, 62.3%), Rectal Adenocarcinoma (62 cases, 22.5%), and Colorectal Adenocarcinoma (42 cases, 15.2%). A landmark finding from integrated analysis is that non-hypermutated colon and rectal tumors are genomically indistinguishable—showing similar copy number, methylation, expression, and miRNA patterns. However, hypermutated/CIMP-high tumors preferentially arise in the right colon. This challenges the traditional anatomical distinction and suggests molecular classification should supersede anatomical location for therapeutic decisions, though surgical and radiation management still differ.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "fraction_genome_altered",
+      "chart_name": "Fraction Genome Altered",
+      "chart_type": "Histogram",
+      "summary": "Histogram showing the percentage of genome with copy number alterations. Clear bimodal distribution with hypermutated tumors showing near-diploid genomes (low fraction altered, left side) and non-hypermutated tumors showing extensive chromosomal instability (right side, many with >40% genome altered). This metric quantifies the fundamental genomic instability difference between subtypes. Recurrent arm-level gains (1q, 7, 8q, 12q, 13q, 19q, 20) and losses (1p, 4q, 5q, 8p, 14q, 15q, 17, 18, 20p, 22q) characterize chromosomally unstable tumors and correlate with tumor aggressiveness.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "tp53_expression",
+      "chart_name": "TP53: mRNA expression (RNA Seq RPKM)",
+      "chart_type": "Bar chart",
+      "summary": "Shows TP53 expression levels across samples. While 60% of non-hypermutated tumors have TP53 mutations (mostly biallelic inactivation), only 20% of hypermutated tumors are TP53-mutant (P<0.0001), representing a significant difference. Expression levels combined with mutation and deletion data (chromosome 17p loss) help identify p53 pathway disruption. ATM mutations (7% of cases) show mutual exclusivity with TP53 mutations (P=0.016), suggesting ATM loss represents an alternative mechanism of p53 pathway inactivation. The p53 pathway is disrupted in approximately 66% of all CRCs.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "cancer_type",
+      "chart_name": "Cancer Type",
+      "chart_type": "Pie chart",
+      "data": {
+        "colorectal_cancer": 276,
+        "percentage": 100.0
+      },
+      "summary": "All 276 samples are classified as Colorectal Cancer, representing the unified study cohort from the TCGA project.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "cna_genes",
+      "chart_name": "CNA Genes (257 profiled samples)",
+      "chart_type": "Table",
+      "data": {
+        "top_amplifications": [
+          {
+            "gene": "COX4I2",
+            "cytoband": "20q11.21",
+            "status": "AMP",
+            "samples": 33,
+            "frequency": 12.8
+          },
+          {
+            "gene": "SERINC3",
+            "cytoband": "20q13.12",
+            "status": "AMP",
+            "samples": 34,
+            "frequency": 13.2
+          },
+          {
+            "gene": "DEFB116-119",
+            "cytoband": "20q11.21",
+            "status": "AMP",
+            "samples": 33,
+            "frequency": 12.8
+          }
+        ]
+      },
+      "summary": "Lists the most significant focal copy number alterations from GISTIC analysis. The top amplifications include multiple 20q11.21 genes (COX4I2, DEFB116-119, PDRO1 - all at 33 samples, 12.8% frequency, marked 'AMP' in red). The 20q13.12 region near HNF4A and the 13q12 region near CDK8 also show recurrent amplification. These focal peaks, superimposed on broader arm-level gains, represent high-confidence driver candidates. The 20q amplicon in particular showed multiple molecular associations with tumor aggressiveness, representing a clinically relevant genomic hotspot for both biological understanding and prognostic biomarker development.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "data_types",
+      "chart_name": "Data Types",
+      "chart_type": "Table",
+      "data": {
+        "copy_number_alterations": {
+          "samples": 257,
+          "percentage": 93.1
+        },
+        "mrna_expression": {
+          "samples": 244,
+          "percentage": 88.4
+        },
+        "methylation": {
+          "samples": 236,
+          "percentage": 85.5
+        },
+        "mutations": {
+          "samples": 224,
+          "percentage": 81.2
+        }
+      },
+      "summary": "Shows the multi-platform data available: 257 samples with copy-number alterations (93.1%), 244 samples with mRNA expression data (88.4%), 236 with methylation data (85.5%), and 224 with mutations (81.2%). This comprehensive molecular profiling across DNA, RNA, and epigenetic layers enabled the integrative analyses that revealed pathway-level disruptions, identified mutual exclusivity patterns (KRAS/NRAS/BRAF, IGF2/PI3K pathway mutations), and demonstrated that anatomically distinct colon and rectal tumors are molecularly unified. The multi-platform approach represents the power of TCGA's comprehensive characterization strategy.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "mutation_vs_fraction_genome_altered",
+      "chart_name": "Mutation Count vs Fraction Genome Altered",
+      "chart_type": "Scatter plot",
+      "summary": "Scatter plot showing the inverse relationship between point mutation burden and chromosomal alterations. Hypermutated tumors (high Y-axis, purple dots) cluster with low fraction genome altered (left side), while non-hypermutated tumors (bottom, blue dots) show high chromosomal instability (right side). This visualization elegantly demonstrates the two mutually exclusive mechanisms of genomic instability in CRC: mismatch repair deficiency leading to hypermutation in near-diploid genomes versus chromosomal instability generating extensive SCNAs with lower point mutation rates. Understanding which mechanism drives an individual tumor is critical for prognosis and therapy selection.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "mutated_genes",
+      "chart_name": "Mutated Genes (224 profiled samples)",
+      "chart_type": "Table",
+      "data": {
+        "top_mutated_genes": [
+          {
+            "gene": "APC",
+            "mutations": 247,
+            "samples": 168,
+            "frequency": 76.0
+          },
+          {
+            "gene": "TP53",
+            "mutations": 123,
+            "samples": 121,
+            "frequency": 54.0
+          },
+          {
+            "gene": "KRAS",
+            "mutations": 94,
+            "samples": 94,
+            "frequency": 42.0
+          },
+          {
+            "gene": "PIK3CA",
+            "mutations": 53,
+            "samples": 46,
+            "frequency": 20.1
+          },
+          {
+            "gene": "LRP1B",
+            "mutations": 80,
+            "samples": 40,
+            "frequency": 17.9
+          },
+          {
+            "gene": "SYNE1",
+            "mutations": 73,
+            "samples": 39,
+            "frequency": 17.4
+          },
+          {
+            "gene": "FBXW7",
+            "mutations": 44,
+            "samples": 37,
+            "frequency": 16.5
+          },
+          {
+            "gene": "TCF7L2",
+            "mutations": 30,
+            "samples": 27,
+            "frequency": 12.1
+          },
+          {
+            "gene": "SMAD4",
+            "mutations": 30,
+            "samples": 26,
+            "frequency": 11.6
+          },
+          {
+            "gene": "AMER1",
+            "mutations": 27,
+            "samples": 25,
+            "frequency": 11.2
+          },
+          {
+            "gene": "ACVR2A",
+            "mutations": 32,
+            "samples": 25,
+            "frequency": 11.2
+          }
+        ]
+      },
+      "summary": "Lists the significantly mutated genes with APC leading at 247 mutations in 168 samples (76.0% frequency), followed by TP53 (123 mutations, 121 samples, 54.0%), KRAS (94/94, 42.0%), PIK3CA (53/46, 20.1%), TTN (probably passenger), LRP1B (80/40, 17.9%), SYNE1 (73/39, 17.4%), FBXW7 (44/37, 16.5%), TCF7L2 (30/27, 12.1%), SMAD4 (30/26, 11.6%), AMER1 (27/25, 11.2%), and ACVR2A (32/25, 11.2%). Novel discoveries include frequent ARID1A, SOX9 (first cancer association, all loss-of-function), and FAM123B mutations. The mutual exclusivity of RAS pathway genes (KRAS, NRAS, BRAF) and co-occurrence of RAS and PI3K alterations (33% of tumors) provide insights for combination therapy strategies.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "egfr_mutations",
+      "chart_name": "EGFR: Mutations: Mutated vs Not",
+      "chart_type": "Pie chart",
+      "data": {
+        "not_mutated": 214,
+        "mutated": 62
+      },
+      "summary": "Shows 214 samples without EGFR mutations (orange) and 62 with mutations. While EGFR mutations are less common in CRC than in lung cancer, the broader ERBB family shows important alterations. The study found mutations or amplifications in ERBB family members in 13% of non-hypermutated and 53% of hypermutated cases, with some mutations listed in COSMIC suggesting functional significance. ERBB2 focal amplifications (4%) and recurrent mutations (V842I, V104M in ERBB3) represent potential targets for anti-ERBB2 therapies like trastuzumab, extending precision medicine approaches proven in breast and gastric cancers to CRC.",
+      "max_words": 300
+    },
+    {
+      "chart_id": "case_lists",
+      "chart_name": "Case Lists",
+      "chart_type": "Table",
+      "data": {
+        "all_samples": {
+          "count": 276,
+          "percentage": 100.0
+        },
+        "kq2_copy_number": {
+          "count": 257,
+          "percentage": 93.1
+        },
+        "cna_data": {
+          "count": 257,
+          "percentage": 93.1
+        },
+        "mutation_and_cna": {
+          "count": 244,
+          "percentage": 88.4
+        },
+        "methylation_data": {
+          "count": 236,
+          "percentage": 85.5
+        },
+        "mrna_agilent": {
+          "count": 224,
+          "percentage": 81.2
+        },
+        "mutation_data": {
+          "count": 224,
+          "percentage": 81.2
+        },
+        "complete_samples": {
+          "count": 212,
+          "percentage": 76.8
+        }
+      },
+      "summary": "Shows available sample sets for different analyses: All samples (276, 100%), samples with Kq2 copy number data (257, 93.1%), samples with CNA data (257, 93.1%), samples with mutation and CNA data (244, 88.4%), samples with methylation data (236, 85.5%), samples with mRNA data (Agilent) (224, 81.2%), samples with mutation data (224, 81.2%), and complete samples (212, 76.8%). These overlapping data sets enabled the powerful integrative analyses including PARADIGM pathway modeling, mutual exclusivity testing via MEMo, and clinical correlation studies that identified molecular signatures of tumor aggressiveness beyond what single-platform analyses could reveal.",
+      "max_words": 300
+    }
+  ],
+  "key_findings": {
+    "hypermutation_rate": "16% of tumors",
+    "msi_high_rate": "13% of tumors",
+    "significantly_mutated_genes": 24,
+    "wnt_pathway_alteration": "93-97%",
+    "colon_rectal_similarity": "Non-hypermutated colon and rectal tumors are genomically indistinguishable",
+    "novel_genes": ["ARID1A", "SOX9", "FAM123B"],
+    "therapeutic_targets": ["ERBB2", "IGF2", "BRAF", "PIK3CA"],
+    "structural_variants": ["NAV2-TCF7L1", "VTI1A-TCF7L2", "TTC28 translocations"]
+  },
+  "reference": {
+    "title": "Comprehensive molecular characterization of human colon and rectal cancer",
+    "authors": "The Cancer Genome Atlas Network",
+    "journal": "Nature",
+    "year": 2012,
+    "volume": 487,
+    "pages": "330-337",
+    "doi": "10.1038/nature11252",
+    "pmid": "22810696",
+    "pmcid": "PMC3401966"
+  }
+}
