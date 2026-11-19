@@ -312,8 +312,12 @@ export class UnfilteredClinicalDataCache extends MobxPromiseCache<
                     patientsPromise,
                     studyToMutationMolecularProfilePromise,
                     studyIdToStudyPromise,
-                    coverageInformationPromise,
                     customChartClinicalAttributes,
+                    // Only "Profiled In" reads coverage, and deriving it costs
+                    // a gene panel fetch per study.
+                    ...(clinicalAttributeIsPROFILEDIN(q)
+                        ? [coverageInformationPromise]
+                        : []),
                 ],
                 invoke: async () => {
                     const data: OncoprintClinicalData = await fetch(
@@ -322,7 +326,9 @@ export class UnfilteredClinicalDataCache extends MobxPromiseCache<
                         patientsPromise.result!,
                         studyToMutationMolecularProfilePromise.result!,
                         studyIdToStudyPromise.result!,
-                        coverageInformationPromise.result!,
+                        clinicalAttributeIsPROFILEDIN(q)
+                            ? coverageInformationPromise.result!
+                            : ((undefined as any) as CoverageInformation),
                         customChartClinicalAttributes.result!
                     );
                     const coloring = getClinicalAttributeColoring(

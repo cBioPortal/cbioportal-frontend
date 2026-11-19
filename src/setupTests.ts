@@ -17,3 +17,8 @@ jest.setMock('jquery-migrate', {});
 jest.setMock('igv', {});
 jest.setMock('react-markdown', {});
 jest.setMock('axios', {});
+// deck.gl's published CJS entry points at subpaths jest cannot resolve, and a
+// WebGL plot renders nothing in jsdom anyway.
+jest.setMock('@deck.gl/react', { DeckGL: () => null });
+jest.setMock('@deck.gl/core', { OrthographicView: class {} });
+jest.setMock('@deck.gl/layers', { ScatterplotLayer: class {} });

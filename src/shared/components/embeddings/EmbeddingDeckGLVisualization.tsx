@@ -20,6 +20,11 @@ import { dataToScreen, colorToRgb } from './utils/coordinateUtils';
 import { calculateDataBounds } from './utils/dataUtils';
 import { createScatterplotLayer } from './utils/layerUtils';
 
+// The layer's updateTriggers compare this by identity, so a caller that passes
+// no patient selection must get the same array every render or deck recomputes
+// every point's color, radius and outline on each frame.
+const NO_SELECTED_PATIENT_IDS: string[] = [];
+
 interface EmbeddingDeckGLVisualizationState {
     hoveredPoint: EmbeddingPoint | null;
     selectedPoints: EmbeddingPoint[];
@@ -44,6 +49,12 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     // recreated only when isSelecting flips.
     private cachedView?: OrthographicView;
     private cachedViewIsSelecting?: boolean;
+    private cachedViewport?: {
+        viewState: ViewState;
+        width: number;
+        height: number;
+        viewport: any;
+    };
 
     constructor(props: EmbeddingVisualizationProps) {
         super(props);
@@ -134,15 +145,23 @@ export class EmbeddingDeckGLVisualization extends React.Component<
             createScatterplotLayer(
                 data,
                 selectedPoints,
-                this.props.selectedPatientIds || [],
+                this.props.selectedPatientIds || NO_SELECTED_PATIENT_IDS,
                 this.onHover,
-                this.onClick
+                this.onClick,
+                this.props.pointScale,
+                this.props.contextPointBoost
             ),
         ];
     }
 
+    private hasReportedHover = false;
+
     private onHover = (info: any) => {
         const { object } = info;
+        if (object && !this.hasReportedHover) {
+            this.hasReportedHover = true;
+            this.props.onPointHovered?.();
+        }
         this.setState({
             hoveredPoint: object || null,
         });
@@ -357,11 +376,10 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     private handleMouseUp = (event: React.MouseEvent) => {
         if (!this.state.isSelecting || this.selectionMode === 'none') return;
 
-        // Perform lasso selection
         this.performLassoSelection();
 
-        // Clear selection state and return to pan mode
-        this.setSelectionMode('none');
+        // Select stays armed: each draw adds a selection of its own, and
+        // several are what a comparison is made of.
         this.setState({
             isSelecting: false,
             selectionPath: [],
@@ -500,13 +518,32 @@ export class EmbeddingDeckGLVisualization extends React.Component<
 
             // Notify parent component of selection
             if (this.props.onPointSelection && uniquePoints.length > 0) {
-                this.props.onPointSelection(uniquePoints);
+                const dataPath = selectionPath
+                    .map(p => this.screenToData(p.x, p.y))
+                    .filter(p => p !== null) as Array<{
+                    x: number;
+                    y: number;
+                }>;
+                this.props.onPointSelection(
+                    uniquePoints,
+                    dataPath.length === selectionPath.length
+                        ? dataPath
+                        : undefined
+                );
             }
         } catch (error) {
             this.setState({ selectedPoints: [] });
         }
     };
 
+    /**
+     * Where a data point sits on screen.
+     *
+     * Projects through a viewport built from the view state this render is
+     * drawing, so an overlay moves in the same frame as the points under it.
+     * Deck's own viewports describe the frame it last drew, which during a
+     * drag or a zoom is the frame before this one.
+     */
     private dataToScreen = (
         dataX: number,
         dataY: number
@@ -519,7 +556,57 @@ export class EmbeddingDeckGLVisualization extends React.Component<
             maxZoom: 10,
         };
 
+        try {
+            const cached = this.cachedViewport;
+            if (
+                !cached ||
+                cached.viewState !== viewState ||
+                cached.width !== actualWidth ||
+                cached.height !== actualHeight
+            ) {
+                this.cachedViewport = {
+                    viewState,
+                    width: actualWidth,
+                    height: actualHeight,
+                    viewport: (this.getView() as any).makeViewport({
+                        width: actualWidth,
+                        height: actualHeight,
+                        viewState: viewState as any,
+                    }),
+                };
+            }
+            const [x, y] = this.cachedViewport!.viewport.project([
+                dataX,
+                dataY,
+            ]);
+            if (Number.isFinite(x) && Number.isFinite(y)) {
+                return { x, y };
+            }
+        } catch (e) {
+            // Deck asserts rather than returning nothing on a view state it
+            // cannot make a viewport from; the arithmetic below covers that.
+        }
+
         return dataToScreen(dataX, dataY, viewState, actualWidth, actualHeight);
+    };
+
+    /** The inverse of dataToScreen, through the same viewport. */
+    private screenToData = (
+        screenX: number,
+        screenY: number
+    ): { x: number; y: number } | null => {
+        try {
+            // dataToScreen builds and caches the viewport for this view state.
+            this.dataToScreen(0, 0);
+            const viewport = this.cachedViewport?.viewport;
+            const [x, y] = viewport.unproject([screenX, screenY]);
+            if (Number.isFinite(x) && Number.isFinite(y)) {
+                return { x, y };
+            }
+        } catch (e) {
+            // No viewport to invert through yet.
+        }
+        return null;
     };
 
     private renderControls() {
@@ -553,11 +640,20 @@ export class EmbeddingDeckGLVisualization extends React.Component<
         const { isSelecting, selectionPath } = this.state;
         const selectionMode = this.selectionMode;
 
+        const committedOutlines = (this.props.selectionOutlines || []).map(
+            outline => ({
+                id: outline.id,
+                color: outline.color,
+                path: outline.path.map(p => this.dataToScreen(p.x, p.y)),
+            })
+        );
+
         return (
             <SelectionOverlay
                 isSelecting={isSelecting}
                 selectionMode={selectionMode}
                 selectionPath={selectionPath}
+                committedOutlines={committedOutlines}
             />
         );
     }
@@ -605,6 +701,23 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                         }}
                     />
 
+                    {this.props.renderOverlay && (
+                        <div
+                            style={{
+                                position: 'absolute',
+                                inset: 0,
+                                pointerEvents: 'none',
+                                // Keeps a mark whose point has been panned out
+                                // of the plot from drawing over the page.
+                                overflow: 'hidden',
+                            }}
+                        >
+                            {this.props.renderOverlay(
+                                this.dataToScreen,
+                                this.props.overlayEmbedding
+                            )}
+                        </div>
+                    )}
                     {this.renderTooltip()}
                     <div
                         style={{

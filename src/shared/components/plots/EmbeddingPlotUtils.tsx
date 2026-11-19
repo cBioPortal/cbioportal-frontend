@@ -5,7 +5,29 @@ import {
 } from './PlotsTabUtils';
 import { makeUniqueColorGetter } from './PlotUtils';
 import { interpolateReds } from 'd3-scale-chromatic';
-import { StudyViewPageStore } from '../../../pages/studyView/StudyViewPageStore';
+import { MobxPromise } from 'cbioportal-frontend-commons';
+import ClinicalDataCache from '../../cache/ClinicalDataCache';
+import { MolecularDataStore } from '../../lib/PatientMolecularDataUtils';
+import { DriverAnnotationSettings } from '../../alterationFiltering/AnnotationFilteringSettings';
+
+/**
+ * What colouring an embedding needs from the page it is drawn on.
+ *
+ * The study view's page store satisfies this as it stands; stating it as five members
+ * rather than the whole store lets any page that can supply them - the patient
+ * view, over the studies its map covers - colour by the same rules.
+ */
+export interface EmbeddingColoringContext {
+    samples: MobxPromise<Sample[]>;
+    clinicalDataCache: ClinicalDataCache;
+    // Only the three alteration caches are read, so a page whose map spans
+    // more studies than one cohort can supply its own fetch strategy.
+    plotsTabStore: MolecularDataStore;
+    filteredSamplesByDetailedCancerType: MobxPromise<{
+        [cancerType: string]: Sample[];
+    }>;
+    driverAnnotationSettings: DriverAnnotationSettings;
+}
 import { Sample, ClinicalAttribute } from 'cbioportal-ts-api-client';
 import {
     EmbeddingData,
@@ -235,12 +257,20 @@ export interface EmbeddingPlotPoint {
     patientId?: string;
     sampleId?: string;
     uniqueSampleKey?: string;
+    // The study the point's sample belongs to; absent for out-of-cohort points.
+    studyId?: string;
     color?: string;
     strokeColor?: string;
     displayLabel?: string;
     isInCohort?: boolean;
     // Rendered smaller/more transparent, without changing color or label.
     isDeemphasized?: boolean;
+    // Outlined in this colour when the point is in a map selection.
+    selectionColor?: string;
+    // Out-of-cohort points only: the value the embedding itself records for the
+    // coloring attribute (its `referenceData`), and that value's legend color.
+    referenceLabel?: string;
+    referenceColor?: string;
 }
 
 /**
@@ -314,17 +344,28 @@ export function getGeneAlterationLabel(
 }
 
 /**
+ * Continuous colouring by mRNA expression, keyed by `studyId:sampleId`.
+ * Precomputed by the caller so the legend shares the colour scale.
+ */
+export interface ExpressionColoring {
+    valueBySampleKey: Map<string, number>;
+    colorFn: (x: number) => string;
+    label: string;
+}
+
+/**
  * Transforms embedding data into plot data using the same patterns as PlotsTab
  * This ensures consistency with existing scatter plot infrastructure
  */
 export function makeEmbeddingScatterPlotData(
     embeddingData: EmbeddingData,
-    store: StudyViewPageStore,
+    store: EmbeddingColoringContext,
     coloringOption?: ColoringMenuOmnibarOption,
     mutationTypeEnabled: boolean = true,
     copyNumberEnabled: boolean = true,
     structuralVariantEnabled: boolean = true,
-    numericalValueToColorOverride?: (x: number) => string
+    numericalValueToColorOverride?: (x: number) => string,
+    expressionColoring?: ExpressionColoring
 ): EmbeddingPlotPoint[] {
     if (embeddingData.embedding_type === 'samples') {
         return transformSampleEmbedding(
@@ -334,7 +375,8 @@ export function makeEmbeddingScatterPlotData(
             mutationTypeEnabled,
             copyNumberEnabled,
             structuralVariantEnabled,
-            numericalValueToColorOverride
+            numericalValueToColorOverride,
+            expressionColoring
         );
     } else {
         return transformPatientEmbedding(
@@ -344,7 +386,8 @@ export function makeEmbeddingScatterPlotData(
             mutationTypeEnabled,
             copyNumberEnabled,
             structuralVariantEnabled,
-            numericalValueToColorOverride
+            numericalValueToColorOverride,
+            expressionColoring
         );
     }
 }
@@ -354,12 +397,13 @@ export function makeEmbeddingScatterPlotData(
  */
 function transformPatientEmbedding(
     embeddingData: PatientEmbeddingData,
-    store: StudyViewPageStore,
+    store: EmbeddingColoringContext,
     coloringOption?: ColoringMenuOmnibarOption,
     mutationTypeEnabled: boolean = true,
     copyNumberEnabled: boolean = true,
     structuralVariantEnabled: boolean = true,
-    numericalValueToColorOverride?: (x: number) => string
+    numericalValueToColorOverride?: (x: number) => string,
+    expressionColoring?: ExpressionColoring
 ): EmbeddingPlotPoint[] {
     const allSamples = store.samples.result || [];
     const patientLookupMap = createSampleLookupMap(allSamples);
@@ -453,11 +497,33 @@ function transformPatientEmbedding(
         }
     }
 
+    // Mean across the patient's samples; createSampleLookupMap keeps only one of them.
+    const patientExpressionValue = new Map<string, number>();
+    if (expressionColoring) {
+        const sums = new Map<string, { total: number; n: number }>();
+        allSamples.forEach(s => {
+            const value = expressionColoring.valueBySampleKey.get(
+                `${s.studyId}:${s.sampleId}`
+            );
+            if (value === undefined) {
+                return;
+            }
+            const acc = sums.get(s.patientId) || { total: 0, n: 0 };
+            acc.total += value;
+            acc.n += 1;
+            sums.set(s.patientId, acc);
+        });
+        sums.forEach((acc, patientId) =>
+            patientExpressionValue.set(patientId, acc.total / acc.n)
+        );
+    }
+
     // Pre-compute patient molecular data map
     let patientMolecularDataMap = new Map<string, any>();
     if (
         coloringOption?.info?.entrezGeneId &&
-        coloringOption.info.entrezGeneId !== -3
+        coloringOption.info.entrezGeneId !== -3 &&
+        !expressionColoring
     ) {
         const entrezGeneId = coloringOption.info.entrezGeneId;
 
@@ -501,7 +567,15 @@ function transformPatientEmbedding(
         let strokeColor = DEFAULT_UNKNOWN_COLOR;
         let displayLabel = 'No data';
 
-        if (
+        if (expressionColoring) {
+            // Continuous, replaces the alteration colouring.
+            const value = patientExpressionValue.get(coord.patientId);
+            if (value !== undefined) {
+                color = expressionColoring.colorFn(value);
+                strokeColor = color;
+                displayLabel = expressionColoring.label;
+            }
+        } else if (
             coloringOption?.info?.entrezGeneId &&
             coloringOption.info.entrezGeneId !== -3
         ) {
@@ -668,6 +742,7 @@ function transformPatientEmbedding(
             y: coord.y,
             patientId: coord.patientId,
             sampleId: sample?.sampleId,
+            studyId: sample.studyId,
             color,
             strokeColor,
             displayLabel,
@@ -681,12 +756,13 @@ function transformPatientEmbedding(
  */
 function transformSampleEmbedding(
     embeddingData: SampleEmbeddingData,
-    store: StudyViewPageStore,
+    store: EmbeddingColoringContext,
     coloringOption?: ColoringMenuOmnibarOption,
     mutationTypeEnabled: boolean = true,
     copyNumberEnabled: boolean = true,
     structuralVariantEnabled: boolean = true,
-    numericalValueToColorOverride?: (x: number) => string
+    numericalValueToColorOverride?: (x: number) => string,
+    expressionColoring?: ExpressionColoring
 ): EmbeddingPlotPoint[] {
     const allSamples = store.samples.result || [];
     const sampleLookupMap = createSampleIdLookupMap(allSamples);
@@ -739,6 +815,9 @@ function transformSampleEmbedding(
     // Pre-compute clinical data if needed (skip for embedding data fields)
     let clinicalDataColorMap: Map<string, string> | undefined;
     let clinicalDataValueMap: Map<string, string> | undefined;
+    // Lets samples the portal lacks still be colored from the embedding's own referenceData.
+    let referenceAttributeId: string | undefined;
+    let referenceCategoryToColor: { [category: string]: string } | undefined;
     let patientColorMap: Map<string, string> | undefined;
     let patientValueMap: Map<string, string> | undefined;
     let isNumericClinicalAttribute = false;
@@ -781,6 +860,12 @@ function transformSampleEmbedding(
             clinicalDataValueMap = maps.valueMap;
             patientColorMap = maps.patientColorMap;
             patientValueMap = maps.patientValueMap;
+            if (!isNumericClinicalAttribute) {
+                referenceAttributeId =
+                    coloringOption.info.clinicalAttribute.clinicalAttributeId;
+                referenceCategoryToColor =
+                    clinicalDataCacheEntry.result.categoryToColor;
+            }
         }
     }
 
@@ -788,7 +873,8 @@ function transformSampleEmbedding(
     let sampleMolecularDataMap = new Map<string, any>();
     if (
         coloringOption?.info?.entrezGeneId &&
-        coloringOption.info.entrezGeneId !== -3
+        coloringOption.info.entrezGeneId !== -3 &&
+        !expressionColoring
     ) {
         const entrezGeneId = coloringOption.info.entrezGeneId;
 
@@ -856,6 +942,13 @@ function transformSampleEmbedding(
         const isInCohort = !!sample;
 
         if (!isInCohort) {
+            const referenceValue = referenceAttributeId
+                ? coord.referenceData?.[referenceAttributeId]
+                : undefined;
+            const referenceLabel =
+                referenceValue === undefined || referenceValue === null
+                    ? undefined
+                    : String(referenceValue);
             return {
                 x: coord.x,
                 y: coord.y,
@@ -865,6 +958,12 @@ function transformSampleEmbedding(
                 strokeColor: NON_COHORT_COLOR,
                 displayLabel: getNonCohortLabel(embeddingData.embedding_type),
                 isInCohort: false,
+                ...(referenceLabel !== undefined && {
+                    referenceLabel,
+                    referenceColor:
+                        referenceCategoryToColor?.[referenceLabel] ??
+                        DEFAULT_UNKNOWN_COLOR,
+                }),
             };
         }
 
@@ -873,7 +972,17 @@ function transformSampleEmbedding(
         let strokeColor = DEFAULT_UNKNOWN_COLOR;
         let displayLabel = 'No data';
 
-        if (
+        if (expressionColoring && sample) {
+            // Continuous, so it replaces rather than combines with alteration
+            // colouring; one legend entry covers every value.
+            const sampleKey = `${sample.studyId}:${sample.sampleId}`;
+            const value = expressionColoring.valueBySampleKey.get(sampleKey);
+            if (value !== undefined) {
+                color = expressionColoring.colorFn(value);
+                strokeColor = color;
+                displayLabel = expressionColoring.label;
+            }
+        } else if (
             coloringOption?.info?.entrezGeneId &&
             coloringOption.info.entrezGeneId !== -3 &&
             sample
@@ -1088,6 +1197,7 @@ function transformSampleEmbedding(
             patientId,
             sampleId: coord.sampleId,
             uniqueSampleKey: sample?.uniqueSampleKey,
+            studyId: sample?.studyId,
             color,
             strokeColor,
             displayLabel,

@@ -12,6 +12,7 @@ export enum PatientViewPageTabs {
     MRNA = 'mrna',
     Plots = 'plots',
     ImmuneSignature = 'immuneSignature',
+    SimilarityMap = 'similarityMap',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';

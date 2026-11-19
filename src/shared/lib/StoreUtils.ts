@@ -355,13 +355,14 @@ export async function fetchCanonicalEnsemblGeneIds(
 
 export async function fetchClinicalData(
     clinicalDataMultiStudyFilter: ClinicalDataMultiStudyFilter,
-    client: CBioPortalAPI = getClient()
+    client: CBioPortalAPI = getClient(),
+    projection: 'SUMMARY' | 'DETAILED' = 'DETAILED'
 ) {
     if (clinicalDataMultiStudyFilter) {
         return await client.fetchClinicalDataUsingPOST({
             clinicalDataType: 'SAMPLE',
             clinicalDataMultiStudyFilter: clinicalDataMultiStudyFilter,
-            projection: 'DETAILED',
+            projection,
         });
     } else {
         return [];

@@ -7,6 +7,8 @@ import {
 } from 'shared/components/plots/PlotsTabTypes';
 import { Gene, ClinicalAttribute } from 'cbioportal-ts-api-client';
 import { TooltipDropdown } from 'shared/components/embeddings/controls/TooltipDropdown';
+import { SelectionList } from 'shared/components/embeddings/controls/SelectionList';
+import { MapSelectionSummary } from 'shared/components/embeddings/state/MapSelection';
 
 export interface EmbeddingControlStackProps {
     // Map
@@ -23,6 +25,8 @@ export interface EmbeddingControlStackProps {
 
     // Color by
     genes: Gene[];
+    /** Reaching for the colour-by menu is what starts the gene list loading. */
+    onColorByReached?: () => void;
     clinicalAttributes: ClinicalAttribute[];
     additionalGroups?: ColoringMenuOmnibarGroup[];
     selectedColoringOption?: ColoringMenuOmnibarOption;
@@ -33,10 +37,13 @@ export interface EmbeddingControlStackProps {
     mutationTypeEnabled: boolean;
     copyNumberEnabled: boolean;
     structuralVariantEnabled: boolean;
+    mrnaDataExists: boolean;
+    mrnaEnabled: boolean;
     onColoringSelectionChange: (option?: ColoringMenuOmnibarOption) => void;
     onMutationTypeToggle: (enabled: boolean) => void;
     onCopyNumberToggle: (enabled: boolean) => void;
     onStructuralVariantToggle: (enabled: boolean) => void;
+    onMrnaToggle: (enabled: boolean) => void;
 
     // Tooltip fields
     tooltipFieldGroups: {
@@ -45,6 +52,14 @@ export interface EmbeddingControlStackProps {
     }[];
     selectedTooltipFields: Set<string>;
     onTooltipFieldsChange: (fields: Set<string>) => void;
+
+    // Selections, one per lasso.
+    selections: MapSelectionSummary[];
+    onRemoveSelection: (id: number) => void;
+    onClearSelections: () => void;
+    onCompareSelections?: () => void;
+    isComparingSelections?: boolean;
+    selectionsEmptyHint?: string;
 
     // Pan/Select lives in EmbeddingsTab's top bar, not here.
     onCenter: () => void;
@@ -94,6 +109,7 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
     showMapColorTooltipControls,
     showMapInControlStack = true,
     genes,
+    onColorByReached,
     clinicalAttributes,
     additionalGroups,
     selectedColoringOption,
@@ -104,13 +120,22 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
     mutationTypeEnabled,
     copyNumberEnabled,
     structuralVariantEnabled,
+    mrnaDataExists,
+    mrnaEnabled,
     onColoringSelectionChange,
     onMutationTypeToggle,
     onCopyNumberToggle,
     onStructuralVariantToggle,
+    onMrnaToggle,
     tooltipFieldGroups,
     selectedTooltipFields,
     onTooltipFieldsChange,
+    selections,
+    onRemoveSelection,
+    onClearSelections,
+    onCompareSelections,
+    isComparingSelections,
+    selectionsEmptyHint,
     onCenter,
     isLockedToPrimary,
     onToggleLockedToPrimary,
@@ -149,7 +174,11 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
             )}
 
             {showMapColorTooltipControls && (
-                <div style={{ width: '190px' }}>
+                <div
+                    style={{ width: '190px' }}
+                    onMouseEnter={onColorByReached}
+                    onFocusCapture={onColorByReached}
+                >
                     <span style={ROW_LABEL_STYLE}>Color by</span>
                     <ColorSamplesByDropdown
                         genes={genes}
@@ -164,11 +193,14 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
                         mutationTypeEnabled={mutationTypeEnabled}
                         copyNumberEnabled={copyNumberEnabled}
                         structuralVariantEnabled={structuralVariantEnabled}
+                        mrnaDataExists={mrnaDataExists}
+                        mrnaEnabled={mrnaEnabled}
                         stacked
                         onSelectionChange={onColoringSelectionChange}
                         onMutationTypeToggle={onMutationTypeToggle}
                         onCopyNumberToggle={onCopyNumberToggle}
                         onStructuralVariantToggle={onStructuralVariantToggle}
+                        onMrnaToggle={onMrnaToggle}
                         hideLabel
                         selectStyles={SELECT_STYLES}
                     />
@@ -187,6 +219,15 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
                     />
                 </div>
             )}
+
+            <SelectionList
+                selections={selections}
+                onRemove={onRemoveSelection}
+                onClear={onClearSelections}
+                onCompare={onCompareSelections}
+                isComparing={isComparingSelections}
+                emptyHint={selectionsEmptyHint}
+            />
 
             {isPrimaryPanel && (
                 <div>

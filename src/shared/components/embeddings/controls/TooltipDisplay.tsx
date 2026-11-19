@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { EmbeddingPoint } from '../EmbeddingTypes';
+import { getPatientViewUrl, getSampleViewUrl } from 'shared/api/urls';
 
 export interface TooltipFieldValueMaps {
     // Keyed by clinical attribute id (e.g. 'CANCER_TYPE', 'OS_MONTHS').
@@ -24,6 +25,12 @@ export interface TooltipDisplayProps {
     clinicalAttributeValueMaps?: Map<string, Map<string, string>>;
     mapAttributeValueMaps?: Map<string, Map<string, string>>;
     geneValueMaps?: Map<number, Map<string, string>>;
+}
+
+interface TooltipFieldRow {
+    label: string;
+    value: string;
+    href?: string;
 }
 
 const CLINICAL_ATTRIBUTE_FIELD_PREFIX = 'clinical_';
@@ -170,7 +177,23 @@ export const TooltipDisplay: React.FC<TooltipDisplayProps> = ({
               'cancerTypeDetailed',
           ];
 
-    const allFields: { label: string; value: string }[] = [];
+    const allFields: TooltipFieldRow[] = [];
+
+    // A pinned tooltip takes clicks, so its case ids become links to the
+    // patient and sample pages. The study comes from the point's own sample,
+    // which a map spanning several studies needs.
+    const caseHref = (field: string, value: string): string | undefined => {
+        if (!isPinned || !hoveredPoint.studyId) {
+            return undefined;
+        }
+        if (field === 'patientId') {
+            return getPatientViewUrl(hoveredPoint.studyId, value);
+        }
+        if (field === 'sampleId') {
+            return getSampleViewUrl(hoveredPoint.studyId, value);
+        }
+        return undefined;
+    };
 
     fixedFieldKeys.forEach(field => {
         const def = fieldLabelMap[field];
@@ -179,9 +202,16 @@ export const TooltipDisplay: React.FC<TooltipDisplayProps> = ({
         if (value !== '') {
             const label =
                 field === 'category' && colorByLabel ? colorByLabel : def.label;
-            allFields.push({ label, value });
+            allFields.push({ label, value, href: caseHref(field, value) });
         }
     });
+
+    if (isOutOfCohort && hoveredPoint.referenceLabel !== undefined) {
+        allFields.push({
+            label: `${colorByLabel || 'Category'} (reference map)`,
+            value: hoveredPoint.referenceLabel,
+        });
+    }
 
     // Order dynamically selected fields by type, not by selection order.
     const DYNAMIC_FIELD_PREFIX_ORDER = [
@@ -239,6 +269,7 @@ export const TooltipDisplay: React.FC<TooltipDisplayProps> = ({
 
     return (
         <div
+            data-test="embeddings-tooltip"
             style={{
                 position: 'absolute',
                 zIndex: 1,
@@ -297,7 +328,20 @@ export const TooltipDisplay: React.FC<TooltipDisplayProps> = ({
             )}
             {fields.map((field, i) => (
                 <div key={i}>
-                    <strong>{field.label}:</strong> {field.value}
+                    <strong>{field.label}:</strong>{' '}
+                    {field.href ? (
+                        <a
+                            data-test="embeddings-tooltip-case-link"
+                            href={field.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: '#80c7ff' }}
+                        >
+                            {field.value}
+                        </a>
+                    ) : (
+                        field.value
+                    )}
                 </div>
             ))}
         </div>
