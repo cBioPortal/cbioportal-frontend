@@ -5,16 +5,32 @@
  */
 
 import * as _ from 'lodash';
-import { computed, makeObservable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import { SimpleLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 
 export default class ResultsViewStructuralVariantMapperDataStore extends SimpleLazyMobXTableApplicationDataStore<
     StructuralVariant[]
 > {
+    /** Restricts the table to this structural variant */
+    @observable.ref selectedStructuralVariant: StructuralVariant | undefined;
+    @observable.ref highlightedStructuralVariant: StructuralVariant | undefined;
+
     constructor(data: StructuralVariant[][]) {
         super(data);
         makeObservable(this);
+    }
+
+    @action.bound
+    setSelectedStructuralVariant(sv: StructuralVariant | undefined) {
+        this.selectedStructuralVariant = sv;
+        this.dataSelector = sv ? row => row[0] === sv : () => false;
+    }
+
+    @action.bound
+    setHighlightedStructuralVariant(sv: StructuralVariant | undefined) {
+        this.highlightedStructuralVariant = sv;
+        this.dataHighlighter = sv ? row => row[0] === sv : () => false;
     }
 
     @computed
