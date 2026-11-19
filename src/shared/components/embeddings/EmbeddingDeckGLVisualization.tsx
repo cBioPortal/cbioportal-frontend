@@ -49,6 +49,12 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     // recreated only when isSelecting flips.
     private cachedView?: OrthographicView;
     private cachedViewIsSelecting?: boolean;
+    private cachedViewport?: {
+        viewState: ViewState;
+        width: number;
+        height: number;
+        viewport: any;
+    };
 
     constructor(props: EmbeddingVisualizationProps) {
         super(props);
@@ -522,29 +528,15 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     /**
      * Where a data point sits on screen.
      *
-     * Asks deck's own viewport where it can, so an overlay lands exactly on
-     * the point it marks: the viewport knows the canvas's real size, which
-     * the container's need not match to the pixel. The arithmetic below is
-     * the fallback for before the first render.
+     * Projects through a viewport built from the view state this render is
+     * drawing, so an overlay moves in the same frame as the points under it.
+     * Deck's own viewports describe the frame it last drew, which during a
+     * drag or a zoom is the frame before this one.
      */
     private dataToScreen = (
         dataX: number,
         dataY: number
     ): { x: number; y: number } => {
-        try {
-            const viewport = (this.deckRef.current
-                ?.deck as any)?.getViewports?.()?.[0];
-            if (viewport?.project) {
-                const [x, y] = viewport.project([dataX, dataY]);
-                if (Number.isFinite(x) && Number.isFinite(y)) {
-                    return { x, y };
-                }
-            }
-        } catch (e) {
-            // Deck asserts rather than returning nothing when it has no
-            // viewport yet; the arithmetic below covers that moment.
-        }
-
         const { actualWidth, actualHeight } = this.state;
         const viewState = this.props.viewState || {
             target: [0, 0, 0],
@@ -552,6 +544,37 @@ export class EmbeddingDeckGLVisualization extends React.Component<
             minZoom: -5,
             maxZoom: 10,
         };
+
+        try {
+            const cached = this.cachedViewport;
+            if (
+                !cached ||
+                cached.viewState !== viewState ||
+                cached.width !== actualWidth ||
+                cached.height !== actualHeight
+            ) {
+                this.cachedViewport = {
+                    viewState,
+                    width: actualWidth,
+                    height: actualHeight,
+                    viewport: (this.getView() as any).makeViewport({
+                        width: actualWidth,
+                        height: actualHeight,
+                        viewState: viewState as any,
+                    }),
+                };
+            }
+            const [x, y] = this.cachedViewport!.viewport.project([
+                dataX,
+                dataY,
+            ]);
+            if (Number.isFinite(x) && Number.isFinite(y)) {
+                return { x, y };
+            }
+        } catch (e) {
+            // Deck asserts rather than returning nothing on a view state it
+            // cannot make a viewport from; the arithmetic below covers that.
+        }
 
         return dataToScreen(dataX, dataY, viewState, actualWidth, actualHeight);
     };
@@ -645,6 +668,9 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                                 position: 'absolute',
                                 inset: 0,
                                 pointerEvents: 'none',
+                                // Keeps a mark whose point has been panned out
+                                // of the plot from drawing over the page.
+                                overflow: 'hidden',
                             }}
                         >
                             {this.props.renderOverlay(
