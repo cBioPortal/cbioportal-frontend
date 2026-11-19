@@ -6,6 +6,7 @@ export enum StudyViewPageTabKeyEnum {
     FILES_AND_LINKS = 'filesAndLinks',
     PLOTS = 'plots',
     EMBEDDINGS = 'embeddings',
+    CELL_EXPLORER = 'cellExplorer',
 }
 
 export const StudyViewResourceTabPrefix = 'openResource_';
