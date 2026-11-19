@@ -552,6 +552,10 @@ export default class Oncoprinter extends React.Component<
                         handleSelectedClinicalTrackColorChange={
                             this.handleSelectedClinicalTrackColorChange
                         }
+                        allClinicalTracks={this.props.store.clinicalTracks}
+                        applyPaletteColors={
+                            this.props.store.setUserSelectedClinicalTrackColors
+                        }
                         getSelectedClinicalTrackDefaultColorForValue={
                             this.getSelectedClinicalTrackDefaultColorForValue
                         }
