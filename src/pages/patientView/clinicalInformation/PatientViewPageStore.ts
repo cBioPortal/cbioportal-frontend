@@ -525,8 +525,16 @@ export class PatientViewPageStore {
                     );
                     const clinicalDataMultiStudyFilter = {
                         identifiers,
+                        // The cohort options group on these two and read
+                        // nothing else, so naming them keeps a whole-study
+                        // cohort from pulling every attribute it has.
+                        attributeIds: ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'],
                     } as ClinicalDataMultiStudyFilter;
-                    return fetchClinicalData(clinicalDataMultiStudyFilter);
+                    return fetchClinicalData(
+                        clinicalDataMultiStudyFilter,
+                        undefined,
+                        'SUMMARY'
+                    );
                 }
                 return [];
             },
