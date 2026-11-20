@@ -232,14 +232,21 @@ async function getMcpTools(): Promise<ToolSet> {
 }
 
 // No `execute` — client-side tool; the browser navigates and reports back
-// via addToolOutput.
+// via addToolOutput, after the user approves unless they chose "Always allow".
 const goToPageTool = tool({
-    description: `Immediately navigates the user's browser to a cBioPortal URL — the user is taken there right away, with no confirmation step. Once the navigate_to_* tools have produced URL(s), call this yourself, without waiting to be asked, with the main one: the page that most directly answers the user's request. Call it at most once per reply. Still include that URL and any others as markdown links in your reply, so the user can open them manually if navigation fails. Don't call it when the user is already on that page or is asking about the page they're on. Resolve the correct URL first (e.g. via resolve_and_route / navigate_to_* tools) if you don't already have it.`,
+    description: `Navigates the user's browser to a cBioPortal URL. The user may first be asked to approve; if they decline, the result has \`declined: true\` — don't call it again in this reply, and point them to the link instead. Once the navigate_to_* tools have produced URL(s), call this yourself, without waiting to be asked, with the main one: the page that most directly answers the user's request. Call it at most once per reply. Still include that URL and any others as markdown links in your reply, so the user can open them manually if navigation fails or is declined. Don't call it when the user is already on that page or is asking about the page they're on. Resolve the correct URL first (e.g. via resolve_and_route / navigate_to_* tools) if you don't already have it.`,
     inputSchema: z.object({
         url: z
             .string()
             .describe(
                 'A cBioPortal path, e.g. "/study?id=brca_tcga_pan_can_atlas_2018" or "/results/oncoprint?...".'
+            ),
+        // Shown to the user on the card that asks them to approve the
+        // navigation; the browser goes only by `url`.
+        destination: z
+            .string()
+            .describe(
+                'The URL as a short, human-readable route, shown to the user when asking to open it: the page, then the study, genes or patient it is for, joined by " › ". E.g. "Study view › Breast Invasive Carcinoma (TCGA PanCancer Atlas)", "Results › OncoPrint › TP53 in Low-Grade Glioma (TCGA)", "Patient view › TCGA-02-0003". Use names as they appear in tool results. Not a description of what the page shows, and no study IDs or URLs.'
             ),
     }),
 });

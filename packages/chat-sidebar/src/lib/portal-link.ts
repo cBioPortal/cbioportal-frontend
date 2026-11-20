@@ -117,3 +117,11 @@ export function notifyNavigate(path: string) {
         );
     }
 }
+
+// Opens a link the assistant chose in the portal, in place. False when the
+// link isn't one of the portal's app pages, so nothing was opened.
+export function openPortalPage(href: string): boolean {
+    const path = resolvePortalLink(href)?.path;
+    if (path) notifyNavigate(path);
+    return Boolean(path);
+}

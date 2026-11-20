@@ -12,7 +12,8 @@ import {
 import { useAISDKRuntime } from '@assistant-ui/ai-sdk';
 import { throwIfUnauthorized } from './chatApi';
 import { getSelectedModel } from './chatSession';
-import { notifyNavigate, resolvePortalLink } from './portal-link';
+import { getAlwaysAllowNavigation, GoToPageResult } from './navigationApproval';
+import { openPortalPage, resolvePortalLink } from './portal-link';
 import { getLatestPageEvents } from './page-events';
 import { notifyThreadsChanged } from './threadSync';
 import { refreshUsage, throwIfLimitReached } from './usage';
@@ -67,13 +68,23 @@ export function useChatThreadRuntime(): AssistantRuntime {
         onToolCall: async ({ toolCall }) => {
             if (toolCall.toolName === 'go_to_page') {
                 const { url } = toolCall.input as { url: string };
-                const path = resolvePortalLink(url)?.path;
-                const navigated = Boolean(path);
-                if (path) notifyNavigate(path);
+                // Left without output, the call waits for the user to answer
+                // its approval card (GoToPageApproval), which supplies the
+                // output. A link that can't be opened is answered here, since
+                // there is nothing to approve.
+                if (
+                    resolvePortalLink(url)?.path &&
+                    !getAlwaysAllowNavigation()
+                ) {
+                    return;
+                }
+                const output: GoToPageResult = {
+                    navigated: openPortalPage(url),
+                };
                 addToolOutput({
                     tool: 'go_to_page',
                     toolCallId: toolCall.toolCallId,
-                    output: { navigated },
+                    output,
                 });
                 return;
             }
