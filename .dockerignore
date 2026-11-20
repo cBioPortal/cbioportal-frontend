@@ -1,1 +1,11 @@
 Dockerfile.screenshottest
+.git
+.vercel
+node_modules
+**/node_modules
+dist
+**/dist
+**/.env
+**/.env.local
+**/.env.*.local
+*.log

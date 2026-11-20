@@ -1,0 +1,15 @@
+{"id":"r1","prompt":"kinase sensitive mutations","expected":"REJECT","category":"reject"}
+{"id":"r2","prompt":"what is OQL?","expected":"REJECT","category":"reject"}
+{"id":"r3","prompt":"hello","expected":"REJECT","category":"reject"}
+{"id":"r4","prompt":"show me the most commonly mutated genes","expected":"REJECT","category":"reject"}
+{"id":"r5","prompt":"actionable mutations","expected":"REJECT","category":"reject"}
+{"id":"r6","prompt":"samples that respond to immunotherapy","expected":"REJECT","category":"reject"}
+{"id":"r7","prompt":"high tumor mutational burden","expected":"REJECT","category":"reject"}
+{"id":"r8","prompt":"what genes should I look at for lung cancer?","expected":"REJECT","category":"reject"}
+{"id":"r9","prompt":"oncogenic fusions","expected":"REJECT","category":"reject"}
+{"id":"r10","prompt":"can you make me an oncoprint","expected":"REJECT","category":"reject"}
+{"id":"n1","prompt":"EGFR kinase domain mutations (residues 718-964)","expected":"EGFR: (718-964)","category":"near_miss"}
+{"id":"n2","prompt":"interesting stuff in TP53","expected":"TP53","category":"near_miss"}
+{"id":"n3","prompt":"BRAF??","expected":"BRAF","category":"near_miss"}
+{"id":"n4","prompt":"anything wrong with PTEN","expected":"PTEN","category":"near_miss"}
+{"id":"n5","prompt":"RAS mutations","expected":"KRAS: MUT; NRAS: MUT; HRAS: MUT","category":"near_miss"}

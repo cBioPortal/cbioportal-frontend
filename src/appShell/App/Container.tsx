@@ -5,6 +5,7 @@ import '../../globalStyles/prefixed-global.scss';
 import { ToastContainer } from 'react-toastify';
 
 import PortalHeader from './PortalHeader';
+import ChatSidebar from 'shared/components/chatSidebar/ChatSidebar';
 import { getBrowserWindow, isWebdriver } from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';
 
@@ -165,6 +166,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
                             id="a11y-announcer"
                             className="sr-only"
                         ></div>
+                        <ChatSidebar />
                     </div>
                 </ErrorBoundary>
             </AppContext.Provider>

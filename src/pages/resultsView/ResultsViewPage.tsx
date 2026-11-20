@@ -913,6 +913,7 @@ export default class ResultsViewPage extends React.Component<
                     noMargin={true}
                     hideFooter={true}
                     className={'subhead-dark'}
+                    pageStore={this.resultsViewPageStore}
                 >
                     {this.pageContent}
                 </PageLayout>

@@ -1,0 +1,139 @@
+.chat-sidebar-launcher {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: #3786c2;
+    color: #fff;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+/* Global stylesheets color bare `i` elements, so the glyph needs its own
+ * color rather than inheriting the button's. */
+.chat-sidebar-launcher .fa {
+    color: #fff;
+}
+
+.chat-sidebar-launcher:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+}
+
+.chat-sidebar-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    max-width: 100vw;
+    background: #fff;
+    border-left: 1px solid #e5e5e7;
+    /* Two layers: a tight contact shadow to separate the edge from the page,
+     * and a wide ambient one so the panel reads as floating above content. */
+    box-shadow: -1px 0 2px rgba(0, 0, 0, 0.06), -8px 0 24px rgba(0, 0, 0, 0.12);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Always-visible strip: the wide ambient shadow would weigh too much on the
+ * page's edge, so only the contact shadow is kept. It widens a little on
+ * hover, hinting that a click opens it. Hovering the iframe counts as
+ * hovering the panel, so this works although the rail is drawn inside it. */
+.chat-sidebar-panel-rail {
+    width: 48px;
+    box-shadow: -1px 0 2px rgba(0, 0, 0, 0.06);
+    transition: width 0.15s ease;
+}
+
+.chat-sidebar-panel-rail:hover {
+    width: 56px;
+}
+
+.chat-sidebar-resize-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -5px;
+    width: 10px;
+    cursor: col-resize;
+    touch-action: none;
+    z-index: 2;
+}
+
+/* Full-height rule running the length of the edge. Sits under the grabber
+ * pill, which is wider and darker so it stays legible on top. */
+.chat-sidebar-resize-handle::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 4px;
+    width: 2px;
+    background: #a8aeb5;
+    opacity: 0;
+    transition: opacity 0.14s ease, background 0.14s ease;
+}
+
+/* Grabber pill, vertically centered on the edge: a short rounded bar that
+ * fades in on hover to advertise the drag affordance. */
+.chat-sidebar-resize-handle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 3px;
+    width: 4px;
+    height: 44px;
+    border-radius: 2px;
+    background: #70777e;
+    opacity: 0;
+    transform: translateY(-50%) scaleY(0.6);
+    transition: opacity 0.14s ease, transform 0.14s ease, background 0.14s ease;
+}
+
+.chat-sidebar-resize-handle:hover::before,
+.chat-sidebar-resize-handle:focus-visible::before,
+.chat-sidebar-panel-resizing .chat-sidebar-resize-handle::before {
+    opacity: 1;
+}
+
+.chat-sidebar-resize-handle:hover::after,
+.chat-sidebar-resize-handle:focus-visible::after,
+.chat-sidebar-panel-resizing .chat-sidebar-resize-handle::after {
+    opacity: 1;
+    transform: translateY(-50%) scaleY(1);
+}
+
+.chat-sidebar-panel-resizing .chat-sidebar-resize-handle::before {
+    background: rgba(55, 134, 194, 0.45);
+}
+
+.chat-sidebar-panel-resizing .chat-sidebar-resize-handle::after {
+    background: #3786c2;
+}
+
+body.chat-sidebar-resizing {
+    cursor: col-resize;
+    user-select: none;
+}
+
+body.chat-sidebar-resizing .chat-sidebar-iframe {
+    pointer-events: none;
+}
+
+.chat-sidebar-iframe {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}

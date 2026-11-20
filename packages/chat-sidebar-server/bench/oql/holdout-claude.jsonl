@@ -1,0 +1,45 @@
+{"id": "h1", "prompt": "Show NRAS Q61 mutations", "expected": "NRAS: Q61", "category": "mutation_subtype"}
+{"id": "h2", "prompt": "Find IDH2 R140Q or R172K mutations", "expected": "IDH2: MUT=R140Q MUT=R172K", "category": "mutation_subtype"}
+{"id": "h3", "prompt": "Samples with ERBB2 amplification", "expected": "ERBB2: AMP", "category": "cna"}
+{"id": "h4", "prompt": "Find shallow deletions in ATM", "expected": "ATM: HETLOSS", "category": "cna"}
+{"id": "h5", "prompt": "Show deep deletions in SMARCB1", "expected": "SMARCB1: HOMDEL", "category": "cna"}
+{"id": "h6", "prompt": "Find low-level copy number gains of SOX2", "expected": "SOX2: GAIN", "category": "cna"}
+{"id": "h7", "prompt": "Find samples with FGFR2 fusions", "expected": "FGFR2: FUSION", "category": "fusion"}
+{"id": "h8", "prompt": "Show NRG1 fusions that are known drivers", "expected": "NRG1: FUSION_DRIVER", "category": "fusion"}
+{"id": "h9", "prompt": "Find CCDC6-RET fusions", "expected": "CCDC6::RET", "category": "fusion"}
+{"id": "h10", "prompt": "Find FGFR3-TACC3 fusions", "expected": "FGFR3::TACC3", "category": "fusion"}
+{"id": "h11", "prompt": "Find MET splice site mutations", "expected": "MET: SPLICE", "category": "mutation_subtype"}
+{"id": "h12", "prompt": "Find nonsense mutations in NF1", "expected": "NF1: NONSENSE", "category": "mutation_subtype"}
+{"id": "h13", "prompt": "Truncating mutations in ATRX", "expected": "ATRX: TRUNC", "category": "mutation_subtype"}
+{"id": "h14", "prompt": "Find in-frame insertions or deletions in ERBB2", "expected": "ERBB2: INFRAME", "category": "mutation_subtype"}
+{"id": "h15", "prompt": "Show missense mutations in CTNNB1", "expected": "CTNNB1: MISSENSE", "category": "mutation_subtype"}
+{"id": "h16", "prompt": "Find oncogenic mutations in FGFR2", "expected": "FGFR2: MUT_DRIVER", "category": "mutation_basic"}
+{"id": "h17", "prompt": "Find germline mutations in PALB2", "expected": "PALB2: MUT_GERMLINE", "category": "mutation_basic"}
+{"id": "h18", "prompt": "Somatic truncating TP53 mutations", "expected": "TP53: TRUNC_SOMATIC", "category": "mutation_subtype"}
+{"id": "h19", "prompt": "Find ESR1 mutations in the ligand-binding domain (residues 310-547)", "expected": "ESR1: (310-547)", "category": "mutation_range"}
+{"id": "h20", "prompt": "Find APC mutations entirely within positions 1250 to 1550", "expected": "APC: (1250-1550*)", "category": "mutation_range"}
+{"id": "h21", "prompt": "Find BRCA2 mutations up to position 1000", "expected": "BRCA2: (-1000)", "category": "mutation_range"}
+{"id": "h22", "prompt": "Find PIK3CA mutations other than H1047R", "expected": "PIK3CA: MUT != H1047R", "category": "mutation_exclusion"}
+{"id": "h23", "prompt": "Find NF1 mutations that are not missense", "expected": "NF1: MUT != MISSENSE", "category": "mutation_exclusion"}
+{"id": "h24", "prompt": "High ESR1 mRNA expression (z-score above 2)", "expected": "ESR1: EXP > 2", "category": "expression"}
+{"id": "h25", "prompt": "Low CDH1 mRNA expression, z-score below -1.5", "expected": "CDH1: EXP < -1.5", "category": "expression"}
+{"id": "h26", "prompt": "Show high ERBB2 protein levels (z-score > 1.5)", "expected": "ERBB2: PROT > 1.5", "category": "protein"}
+{"id": "h27", "prompt": "Low phospho-AKT1 S473 levels (z-score < -2)", "expected": "AKT1_PS473: PROT < -2", "category": "protein"}
+{"id": "h28", "prompt": "Find TERT promoter mutations and CDKN2A deep deletions", "expected": "TERT: PROMOTER; CDKN2A: HOMDEL", "category": "mixed_modal"}
+{"id": "h29", "prompt": "Find samples with MET amplification or MET splice site mutations", "expected": "MET: AMP SPLICE", "category": "mixed_modal"}
+{"id": "h30", "prompt": "Show mutations and amplifications in CCND1, CDK4 and CDK6", "expected": "DATATYPES: MUT AMP; CCND1 CDK4 CDK6", "category": "mixed_modal"}
+{"id": "h31", "prompt": "Show all alterations in ARID1A, ARID1B and ARID2", "expected": "ARID1A ARID1B ARID2", "category": "mixed_modal"}
+{"id": "h32", "prompt": "Group KEAP1, NFE2L2 and CUL3 into one track called NRF2 pathway", "expected": "[\"NRF2 pathway\" KEAP1 NFE2L2 CUL3]", "category": "mixed_modal"}
+{"id": "h33", "prompt": "Show STK11 truncating mutations and KEAP1 mutations combined as one row", "expected": "[STK11: TRUNC; KEAP1: MUT]", "category": "mixed_modal"}
+{"id": "h34", "prompt": "Find EGFR amplification or high EGFR mRNA expression (z > 2)", "expected": "EGFR: AMP EXP > 2", "category": "mixed_modal"}
+{"id": "h35", "prompt": "Find samples with either ERBB2 or ERBB3 mutations", "expected": "ERBB2: MUT; ERBB3: MUT", "category": "mutation_basic"}
+{"id": "h36", "prompt": "Find PTEN copy number loss of any depth or PTEN truncating mutations", "expected": "PTEN: CNA <= HETLOSS TRUNC", "category": "mixed_modal"}
+{"id": "h37", "prompt": "Find driver alterations in ERBB2", "expected": "ERBB2: DRIVER", "category": "mutation_basic"}
+{"id": "h38", "prompt": "Find MYCN amplifications that are drivers", "expected": "MYCN: AMP_DRIVER", "category": "cna"}
+{"id": "h39", "prompt": "Show CCNE1 copy number at or above gain", "expected": "CCNE1: CNA >= GAIN", "category": "cna"}
+{"id": "h40", "prompt": "Find IDH1 R132 mutations and IDH2 R172 mutations", "expected": "IDH1: R132; IDH2: R172", "category": "mutation_subtype"}
+{"id": "h41", "prompt": "Find fusions where ROS1 is the downstream partner of any gene", "expected": "ROS1: ::FUSION", "category": "fusion"}
+{"id": "h42", "prompt": "Find activating BRAF V600 mutations", "expected": "BRAF: V600_DRIVER", "category": "mutation_subtype"}
+{"id": "h43", "prompt": "Show HER2 amplifications", "expected": "ERBB2: AMP", "category": "cna"}
+{"id": "h44", "prompt": "Find germline driver mutations in CHEK2", "expected": "CHEK2: MUT_GERMLINE_DRIVER", "category": "mutation_basic"}
+{"id": "h45", "prompt": "Find SF3B1 K700E mutations", "expected": "SF3B1: MUT=K700E", "category": "mutation_subtype"}

@@ -1,0 +1,19 @@
+{"id": "c1", "prompt": "PIK3CA helical domain mutations", "expectWarning": "UNVERIFIED_NUMBERS", "category": "domain"}
+{"id": "c2", "prompt": "EGFR kinase domain mutations", "expectWarning": "UNVERIFIED_NUMBERS", "category": "domain"}
+{"id": "c3", "prompt": "TP53 DNA-binding domain mutations", "expectWarning": "UNVERIFIED_NUMBERS", "category": "domain"}
+{"id": "c4", "prompt": "KRAS hotspot mutations", "category": "hotspot", "expected": "KRAS: MUT_DRIVER"}
+{"id": "c5", "prompt": "IDH2 hotspots", "category": "hotspot", "expected": "IDH2: MUT_DRIVER"}
+{"id": "c6", "prompt": "ERBB2 amplification with more than 6 copies", "expected": "ERBB2: AMP", "expectWarning": "COPY_COUNT_APPROXIMATED", "category": "copy_count"}
+{"id": "c7", "prompt": "MYC with more than 10 copies", "expected": "MYC: AMP", "expectWarning": "COPY_COUNT_APPROXIMATED", "category": "copy_count"}
+{"id": "c8", "prompt": "EGFR mutations at positions 718-854", "expected": "EGFR: (718-854)", "category": "user_numbers"}
+{"id": "c9", "prompt": "NOTCH1 mutations after position 1500", "expected": "NOTCH1: (1501-)", "category": "user_numbers"}
+{"id": "c10", "prompt": "egfr exon 19", "expected": "EGFR: (729-761)", "expectWarning": "EXON_MAPPED", "category": "lookup"}
+{"id":"d1","prompt":"idh activating mutation","expected":"IDH1: MUT_DRIVER; IDH2: MUT_DRIVER","category":"driver_words"}
+{"id":"d2","prompt":"EGFR activating mutations","expected":"EGFR: MUT_DRIVER","category":"driver_words"}
+{"id":"d3","prompt":"inactivating PTEN mutations","expected":"PTEN: MUT_DRIVER","category":"driver_words"}
+{"id":"d4","prompt":"TP53 loss-of-function mutations","expected":"TP53: MUT_DRIVER","category":"driver_words"}
+{"id":"d5","prompt":"pathogenic BRCA2 mutations","expected":"BRCA2: MUT_DRIVER","category":"driver_words"}
+{"id":"d6","prompt":"oncogenic alterations in MYC","expected":"MYC: DRIVER","category":"driver_words"}
+{"id":"d7","prompt":"activating KRAS G12 mutations","expected":"KRAS: MUT=G12_DRIVER","category":"driver_words"}
+{"id":"d8","prompt":"the BRAF V600E hotspot","expected":"BRAF: MUT=V600E","category":"driver_words"}
+{"id":"d9","prompt":"gain-of-function mutations in ras","expected":"KRAS: MUT_DRIVER; NRAS: MUT_DRIVER; HRAS: MUT_DRIVER","category":"driver_words"}

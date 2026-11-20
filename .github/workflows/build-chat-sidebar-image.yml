@@ -1,0 +1,134 @@
+name: Build chat sidebar image
+
+on:
+  push:
+    branches:
+      - master
+      - sidebar-chat-ai-sdk
+    paths:
+      - '.github/workflows/build-chat-sidebar-image.yml'
+      - '.dockerignore'
+      - '.npmrc'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'packages/chat-sidebar/**'
+      - 'packages/chat-sidebar-server/**'
+  workflow_dispatch:
+
+concurrency:
+  group: chat-sidebar-image-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY_IMAGE: cbioportal/cbioportal-dev
+
+jobs:
+  build:
+    if: github.repository == 'cBioPortal/cbioportal-frontend'
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-24.04
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare platform pair
+        env:
+          PLATFORM: ${{ matrix.platform }}
+        run: echo "PLATFORM_PAIR=${PLATFORM//\//-}" >> "$GITHUB_ENV"
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push image by digest
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: packages/chat-sidebar-server/Dockerfile
+          platforms: ${{ matrix.platform }}
+          cache-from: type=gha,scope=chat-sidebar-${{ env.PLATFORM_PAIR }}
+          cache-to: type=gha,mode=max,scope=chat-sidebar-${{ env.PLATFORM_PAIR }}
+          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digest
+        run: |
+          mkdir -p "${{ runner.temp }}/digests"
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-chat-sidebar-${{ env.PLATFORM_PAIR }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    if: github.repository == 'cBioPortal/cbioportal-frontend'
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-chat-sidebar-*
+          merge-multiple: true
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_IMAGE }}
+          flavor: latest=false
+          tags: |
+            type=ref,event=branch,prefix=chat-sidebar-
+            type=sha,prefix=chat-sidebar-sha-
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create and push multi-platform image
+        working-directory: ${{ runner.temp }}/digests
+        env:
+          IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          tag_args=()
+          while IFS= read -r tag; do
+            tag_args+=("-t" "$tag")
+          done <<< "$IMAGE_TAGS"
+
+          docker buildx imagetools create \
+            "${tag_args[@]}" \
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
+
+      - name: Inspect image
+        env:
+          IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          first_tag="$(printf '%s\n' "$IMAGE_TAGS" | head -n 1)"
+          docker buildx imagetools inspect "$first_tag"
