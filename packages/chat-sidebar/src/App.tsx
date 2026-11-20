@@ -8,10 +8,13 @@ import {
 import {
     AssistantRuntimeProvider,
     AuiConfig,
+    defineToolkit,
     Suggestions,
     ToolCallMessagePartComponent,
+    Tools,
     useRemoteThreadListRuntime,
 } from '@assistant-ui/react';
+import { GoToPageApproval } from '@/components/assistant-ui/elements/go-to-page-approval';
 import { Thread } from '@/components/assistant-ui/elements/thread.aui';
 import { ToolFallback } from '@/components/assistant-ui/elements/tool-fallback.aui';
 import { ChatHeader } from '@/components/ChatHeader';
@@ -67,7 +70,20 @@ const AUTH_ERROR_CONTENT: Record<
 
 // go_to_page/get_page_details are internal plumbing, not something worth
 // surfacing as a visible "used tool" card — everything else still does.
+// go_to_page has its own renderer (TOOLKIT), the approval card; it stays here
+// so nothing shows for it before that renderer has registered.
 const SILENT_TOOLS = new Set(['go_to_page', 'get_page_details']);
+
+// Renderers only: these tools are declared and run elsewhere (the server
+// declares go_to_page; useChatThreadRuntime runs it). Standalone keeps the
+// approval card out of the collapsed work block, where it couldn't be seen.
+const TOOLKIT = defineToolkit({
+    go_to_page: {
+        type: 'backend',
+        display: 'standalone',
+        render: GoToPageApproval,
+    },
+});
 
 // Stands in for the whole sidebar, header and chat list included: there is
 // nothing to do until the user has access or a fresh session.
@@ -125,6 +141,7 @@ const ChatRuntime: FC<{
                 label: '',
             }))
         ),
+        tools: Tools({ toolkit: TOOLKIT }),
     });
 
     return (
