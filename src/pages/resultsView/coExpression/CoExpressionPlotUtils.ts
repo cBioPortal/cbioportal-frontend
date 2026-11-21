@@ -1,5 +1,8 @@
 import _ from 'lodash';
-import { IAxisLogScaleParams } from 'shared/components/plots/PlotsTabUtils';
+import {
+    IAxisLogScaleParams,
+    logScalePossibleForProfile,
+} from 'shared/components/plots/PlotsTabUtils';
 import { CoExpressionPlotData } from 'pages/resultsView/coExpression/CoExpressionPlot';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { GeneticEntity } from 'shared/model/GeneticEntity';
@@ -34,6 +37,26 @@ export function axisLabel(
     return `${profileName}: ${geneticEntity.geneticEntityName} ${
         geneticEntity.cytoband ? `(${geneticEntity.cytoband}) ` : ''
     }${logScale ? `(${logScale.label}) ` : ''}`;
+}
+
+const MIN_LOG_ARGUMENT = 0.01;
+
+// The two axes can come from different profiles (e.g. RNA-seq vs. RPPA), so
+// the log scale option is applied per axis: only RNA-seq values are log2
+// transformed. Values of the other profile types are already on a log or
+// relative scale and are often negative.
+export function getAxisLogScale(
+    logScale: boolean,
+    molecularProfileId: string
+): IAxisLogScaleParams | undefined {
+    if (!logScale || !logScalePossibleForProfile(molecularProfileId)) {
+        return undefined;
+    }
+    return {
+        label: 'log2',
+        fLogScale: (x: number) => Math.log2(Math.max(x, MIN_LOG_ARGUMENT)),
+        fInvLogScale: (x: number) => Math.pow(2, x),
+    };
 }
 
 export function isNotProfiled(d: { profiledX: boolean; profiledY: boolean }) {

@@ -12,12 +12,12 @@ import {
 } from 'cbioportal-frontend-commons';
 import {
     axisLabel,
+    getAxisLogScale,
     getDownloadData,
     isNotProfiled,
 } from './CoExpressionPlotUtils';
 import _ from 'lodash';
 import { scatterPlotSize } from '../../../shared/components/plots/PlotUtils';
-import { IAxisLogScaleParams } from 'shared/components/plots/PlotsTabUtils';
 import autobind from 'autobind-decorator';
 import { GeneticEntity } from 'shared/model/GeneticEntity';
 import { getServerConfig } from 'config/config';
@@ -231,7 +231,7 @@ export default class CoExpressionPlot extends React.Component<
                     .geneticEntityName,
                 cytoband: this.props.xAxisGeneticEntity.cytoband,
             },
-            this.axisLogScaleFunction,
+            this.logScaleX,
             this.props.molecularProfileX.name
         );
     }
@@ -242,23 +242,23 @@ export default class CoExpressionPlot extends React.Component<
                 geneticEntityName: this.props.yAxisGeneticEntity
                     .geneticEntityName,
             },
-            this.axisLogScaleFunction,
+            this.logScaleY,
             this.props.molecularProfileY.name
         );
     }
 
-    @computed get axisLogScaleFunction(): IAxisLogScaleParams | undefined {
-        const MIN_LOG_ARGUMENT = 0.01;
+    @computed get logScaleX() {
+        return getAxisLogScale(
+            !!this.props.logScale,
+            this.props.molecularProfileX.molecularProfileId
+        );
+    }
 
-        if (!this.props.logScale) {
-            return undefined;
-        }
-        return {
-            label: 'log2',
-            fLogScale: (x: number, offset: number) =>
-                Math.log2(Math.max(x, MIN_LOG_ARGUMENT)),
-            fInvLogScale: (x: number) => Math.pow(2, x),
-        };
+    @computed get logScaleY() {
+        return getAxisLogScale(
+            !!this.props.logScale,
+            this.props.molecularProfileY.molecularProfileId
+        );
     }
 
     @bind
@@ -279,8 +279,8 @@ export default class CoExpressionPlot extends React.Component<
                 strokeWidth={1.2}
                 legendData={this.mutationLegendElements}
                 showRegressionLine={this.props.showRegressionLine}
-                logX={this.axisLogScaleFunction}
-                logY={this.axisLogScaleFunction}
+                logX={this.logScaleX}
+                logY={this.logScaleY}
                 useLogSpaceTicks={true}
                 axisLabelX={this.axisLabelX}
                 axisLabelY={this.axisLabelY}
