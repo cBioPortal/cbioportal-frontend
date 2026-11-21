@@ -74,6 +74,7 @@ export const StudySearch: FunctionComponent<StudySearchProps> = observer(
                     <SearchMenuToggle
                         onClick={store.toggle}
                         open={store.isMenuOpen}
+                        controlsId="study-search-menu"
                     />
                 </div>
                 <ClearSearchButton
@@ -81,6 +82,7 @@ export const StudySearch: FunctionComponent<StudySearchProps> = observer(
                     onClick={() => handleQueryTyping(props, '')}
                 />
                 <StudySearchControls
+                    id="study-search-menu"
                     query={props.query}
                     filterConfig={props.parser.searchFilters}
                     onChange={(update: QueryUpdate) => {
@@ -115,16 +117,25 @@ function handleQueryUpdate(props: StudySearchProps, update: QueryUpdate) {
 export const SearchMenuToggle: FunctionComponent<{
     onClick: () => void;
     open: boolean;
+    controlsId?: string;
 }> = props => {
     const arrowDirection = props.open ? 'rotate(180deg)' : 'rotate(0deg)';
+    const onKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+            e.preventDefault();
+            props.onClick();
+        }
+    };
     return (
         <div className="input-group-btn">
             <button
                 type="button"
                 className="dropdown-toggle btn btn-sm btn-default"
                 onMouseDown={props.onClick}
+                onKeyDown={onKeyDown}
                 aria-label="Toggle study search menu"
                 aria-expanded={props.open}
+                aria-controls={props.controlsId || 'study-search-menu'}
             >
                 <span className="caret" style={{ transform: arrowDirection }}>
                     &nbsp;
@@ -134,13 +145,15 @@ export const SearchMenuToggle: FunctionComponent<{
     );
 };
 
-const ClearSearchButton: FunctionComponent<{
+export const ClearSearchButton: FunctionComponent<{
     onClick: () => void;
     show: boolean;
 }> = props => {
     return (
-        <div
+        <button
+            type="button"
             data-test="clearStudyFilter"
+            aria-label="Clear study search"
             onClick={props.onClick}
             style={{
                 visibility: props.show ? 'visible' : 'hidden',
@@ -151,9 +164,13 @@ const ClearSearchButton: FunctionComponent<{
                 fontSize: '18px',
                 cursor: 'pointer',
                 color: 'grey',
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                lineHeight: 1,
             }}
         >
-            x
-        </div>
+            <span aria-hidden="true">&times;</span>
+        </button>
     );
 };

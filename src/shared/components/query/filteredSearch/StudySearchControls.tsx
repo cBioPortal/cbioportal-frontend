@@ -16,6 +16,7 @@ export type FilteredSearchDropdownFormProps = {
     filterConfig: CancerTreeSearchFilter[];
     onChange: (change: QueryUpdate) => void;
     parser: QueryParser;
+    id?: string;
 };
 
 /**
@@ -24,6 +25,7 @@ export type FilteredSearchDropdownFormProps = {
 export const StudySearchControls: FunctionComponent<FilteredSearchDropdownFormProps> = props => {
     return (
         <ul
+            id={props.id || 'study-search-menu'}
             data-test="study-search-controls-container"
             className="dropdown-menu"
             style={{
