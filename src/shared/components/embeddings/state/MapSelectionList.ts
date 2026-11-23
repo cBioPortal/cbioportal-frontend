@@ -11,16 +11,24 @@ import {
  * The selections held beside a map, in the order they were drawn.
  *
  * Numbering and colour both follow the selection's id, so they stay in step
- * with the chips. The id restarts once the list is empty: a fresh set of
- * selections reads "Selection 1" again rather than carrying on from whatever
- * the last session reached.
+ * with the chips. A new selection takes the lowest number no chip is using,
+ * so the list always reads 1, 2, 3 - removing one frees its number for the
+ * next draw rather than leaving a gap behind.
  */
 export class MapSelectionList {
     @observable.ref private selections: MapSelection[] = [];
-    private nextId = 1;
 
     constructor() {
         makeObservable(this);
+    }
+
+    @computed private get nextId(): number {
+        const used = new Set(this.selections.map(s => s.id));
+        let id = 1;
+        while (used.has(id)) {
+            id++;
+        }
+        return id;
     }
 
     @computed get all(): MapSelection[] {
@@ -49,7 +57,8 @@ export class MapSelectionList {
 
     /**
      * Which selection's colour each point takes. A point in two selections
-     * takes the colour of the later one, matching the order the chips read in.
+     * takes the colour of the higher-numbered one, which is the one its chip
+     * is read after.
      */
     @computed get colorByKey(): Map<string, string> {
         const colors = new Map<string, string>();
@@ -81,7 +90,9 @@ export class MapSelectionList {
         if (keys.size === 0) {
             return;
         }
-        const id = this.nextId++;
+        const id = this.nextId;
+        // Held in id order, so the chips always read 1, 2, 3 even when a
+        // removed selection's number is taken up again by a later draw.
         this.selections = [
             ...this.selections,
             {
@@ -91,21 +102,17 @@ export class MapSelectionList {
                 keys,
                 path,
             },
-        ];
+        ].sort((a, b) => a.id - b.id);
     }
 
     @action.bound
     clear(): void {
         this.selections = [];
-        this.nextId = 1;
     }
 
     @action.bound
     remove(id: number): void {
         this.selections = this.selections.filter(s => s.id !== id);
-        if (this.isEmpty) {
-            this.nextId = 1;
-        }
     }
 
     @action.bound

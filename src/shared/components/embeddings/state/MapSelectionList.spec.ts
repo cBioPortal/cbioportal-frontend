@@ -48,16 +48,52 @@ describe('MapSelectionList', () => {
         );
     });
 
-    it('keeps counting up while any selection is still held', () => {
-        // Numbers may not be reused under a chip that is still on screen.
+    it('never reuses a number a chip is still showing', () => {
         const list = new MapSelectionList();
         list.add(keys('s1'));
         list.add(keys('s2'));
-        list.remove(list.all[0].id);
         list.add(keys('s3'));
         assert.deepEqual(
             list.summaries.map(s => s.name),
-            ['Selection 2', 'Selection 3']
+            ['Selection 1', 'Selection 2', 'Selection 3']
+        );
+    });
+
+    it('fills the gap a removed selection leaves rather than skipping', () => {
+        const list = new MapSelectionList();
+        list.add(keys('s1'));
+        list.add(keys('s2'));
+        list.add(keys('s3'));
+        list.remove(2);
+        list.add(keys('s4'));
+        assert.deepEqual(
+            list.summaries.map(s => s.name),
+            ['Selection 1', 'Selection 2', 'Selection 3']
+        );
+        // The refilled slot keeps slot 2's colour, and the chips stay in
+        // number order however they were drawn.
+        assert.deepEqual(
+            list.summaries.map(s => s.color),
+            [SELECTION_COLORS[0], SELECTION_COLORS[1], SELECTION_COLORS[2]]
+        );
+        assert.deepEqual(
+            list.summaries.map(s => s.count),
+            [1, 1, 1]
+        );
+        assert.deepEqual(Array.from(list.all[1].keys), ['s4']);
+    });
+
+    it('fills the lowest free slot when several are free', () => {
+        const list = new MapSelectionList();
+        list.add(keys('s1'));
+        list.add(keys('s2'));
+        list.add(keys('s3'));
+        list.remove(1);
+        list.remove(2);
+        list.add(keys('s4'));
+        assert.deepEqual(
+            list.summaries.map(s => s.name),
+            ['Selection 1', 'Selection 3']
         );
     });
 
@@ -80,7 +116,7 @@ describe('MapSelectionList', () => {
         assert.deepEqual(Array.from(list.keys!).sort(), ['a', 'b', 'c']);
     });
 
-    it('gives a point in two selections the colour of the later one', () => {
+    it('gives a point in two selections the higher-numbered colour', () => {
         const list = new MapSelectionList();
         list.add(keys('a', 'shared'));
         list.add(keys('shared'));

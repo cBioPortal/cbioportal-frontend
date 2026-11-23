@@ -48,7 +48,9 @@ export const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
                 width: '100%',
                 height: '100%',
                 pointerEvents: 'none',
-                zIndex: 10,
+                // Under the controls and the legend, so an outline drawn
+                // across them does not cut through what they say.
+                zIndex: 1,
             }}
         >
             {outlines.map(outline => (

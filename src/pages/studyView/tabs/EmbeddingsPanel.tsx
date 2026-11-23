@@ -2497,6 +2497,7 @@ export class EmbeddingsPanel extends React.Component<
             onViewStateChange: this.viewport.set,
             onPointSelection: this.handlePointSelection,
             selectionOutlines: this.selections.outlines,
+            selectionCount: this.selections.length,
             selectedPatientIds: this.selectedPatientIds,
             embeddingType: this.selectedEmbedding.data.embedding_type,
             categoryCounts: this.categoryCounts,

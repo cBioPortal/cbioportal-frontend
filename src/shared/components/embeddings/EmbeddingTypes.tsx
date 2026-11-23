@@ -117,6 +117,12 @@ export interface EmbeddingVisualizationProps {
         color: string;
         path: Array<{ x: number; y: number }>;
     }>;
+    /**
+     * How many selections the owner is holding. The points picked by a lasso
+     * are the owner's from the moment it is handed them, so this falling to
+     * zero is what tells the plot to let go of its own copy.
+     */
+    selectionCount?: number;
     selectedPatientIds?: string[];
     showLegend?: boolean;
     filename?: string;

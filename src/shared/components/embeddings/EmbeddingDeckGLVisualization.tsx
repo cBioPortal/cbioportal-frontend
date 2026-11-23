@@ -77,6 +77,16 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     }
 
     componentDidUpdate(prevProps: EmbeddingVisualizationProps) {
+        // Every point outside a selection is drawn grey, so picks left behind
+        // after the owner drops its selections would grey the whole map.
+        if (
+            this.props.selectionCount === 0 &&
+            prevProps.selectionCount !== 0 &&
+            this.state.selectedPoints.length > 0
+        ) {
+            this.setState({ selectedPoints: [] });
+        }
+
         // actualHeight drives the container's own height, so measuring it
         // back is circular - apply an incoming height prop directly.
         if (
@@ -724,7 +734,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                             position: 'absolute',
                             top: '10px',
                             left: '10px',
-                            zIndex: 1,
+                            zIndex: 2,
                         }}
                     >
                         {this.renderControls()}
@@ -737,7 +747,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                             position: 'absolute',
                             top: '10px',
                             right: '10px',
-                            zIndex: 2,
+                            zIndex: 3,
                         }}
                     >
                         {this.renderLegend()}
