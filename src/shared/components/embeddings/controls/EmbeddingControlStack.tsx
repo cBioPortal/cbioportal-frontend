@@ -56,6 +56,7 @@ export interface EmbeddingControlStackProps {
     // Selections, one per lasso.
     selections: MapSelectionSummary[];
     onRemoveSelection: (id: number) => void;
+    onRenameSelection: (id: number, name: string) => void;
     onClearSelections: () => void;
     onCompareSelections?: () => void;
     isComparingSelections?: boolean;
@@ -132,6 +133,7 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
     onTooltipFieldsChange,
     selections,
     onRemoveSelection,
+    onRenameSelection,
     onClearSelections,
     onCompareSelections,
     isComparingSelections,
@@ -223,6 +225,7 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
             <SelectionList
                 selections={selections}
                 onRemove={onRemoveSelection}
+                onRename={onRenameSelection}
                 onClear={onClearSelections}
                 onCompare={onCompareSelections}
                 isComparing={isComparingSelections}

@@ -4,6 +4,7 @@ import { MapSelectionSummary } from '../state/MapSelection';
 export interface SelectionListProps {
     selections: MapSelectionSummary[];
     onRemove: (id: number) => void;
+    onRename: (id: number, name: string) => void;
     onClear: () => void;
     /**
      * Absent where the page cannot open a group comparison. Enabled from two
@@ -28,6 +29,16 @@ const ACTIVE_BOX_STYLE: React.CSSProperties = {
     border: '1px solid #ffe082',
 };
 
+const ICON_BUTTON_STYLE: React.CSSProperties = {
+    background: 'none',
+    border: 'none',
+    color: '#888',
+    cursor: 'pointer',
+    padding: '0 2px',
+    lineHeight: 1,
+    fontSize: '10px',
+};
+
 const ROW_LABEL_STYLE: React.CSSProperties = {
     fontSize: '9px',
     textTransform: 'uppercase',
@@ -39,11 +50,22 @@ const ROW_LABEL_STYLE: React.CSSProperties = {
 export const SelectionList: React.FC<SelectionListProps> = ({
     selections,
     onRemove,
+    onRename,
     onClear,
     onCompare,
     isComparing,
     emptyHint,
 }) => {
+    const [editingId, setEditingId] = React.useState<number | null>(null);
+    const [draft, setDraft] = React.useState('');
+
+    const commit = () => {
+        if (editingId !== null && draft.trim()) {
+            onRename(editingId, draft.trim());
+        }
+        setEditingId(null);
+    };
+
     if (selections.length === 0) {
         return emptyHint ? (
             <div style={{ width: '190px' }}>
@@ -101,36 +123,69 @@ export const SelectionList: React.FC<SelectionListProps> = ({
                                 flexShrink: 0,
                             }}
                         />
-                        <span
-                            style={{
-                                flex: 1,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                            }}
-                            title={selection.name}
-                        >
-                            {selection.name}
-                        </span>
-                        <span style={{ color: '#888' }}>
-                            {selection.count.toLocaleString()}
-                        </span>
-                        <button
-                            data-test="embeddings-selection-remove"
-                            onClick={() => onRemove(selection.id)}
-                            title={`Remove ${selection.name}`}
-                            style={{
-                                background: 'none',
-                                border: 'none',
-                                color: '#888',
-                                cursor: 'pointer',
-                                padding: '0 2px',
-                                lineHeight: 1,
-                                fontSize: '13px',
-                            }}
-                        >
-                            ×
-                        </button>
+                        {editingId === selection.id ? (
+                            <input
+                                data-test="embeddings-selection-name-input"
+                                autoFocus
+                                value={draft}
+                                onChange={e => setDraft(e.target.value)}
+                                onBlur={commit}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                        commit();
+                                    } else if (e.key === 'Escape') {
+                                        setEditingId(null);
+                                    }
+                                }}
+                                style={{
+                                    flex: 1,
+                                    minWidth: 0,
+                                    font: 'inherit',
+                                    padding: '0 2px',
+                                    border: '1px solid #ccc',
+                                    borderRadius: '2px',
+                                }}
+                            />
+                        ) : (
+                            <>
+                                <span
+                                    style={{
+                                        flex: 1,
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                    title={selection.name}
+                                >
+                                    {selection.name}
+                                </span>
+                                <span style={{ color: '#888' }}>
+                                    {selection.count.toLocaleString()}
+                                </span>
+                                <button
+                                    data-test="embeddings-selection-rename"
+                                    onClick={() => {
+                                        setDraft(selection.name);
+                                        setEditingId(selection.id);
+                                    }}
+                                    title={`Rename ${selection.name}`}
+                                    style={ICON_BUTTON_STYLE}
+                                >
+                                    <i className="fa fa-pencil" />
+                                </button>
+                                <button
+                                    data-test="embeddings-selection-remove"
+                                    onClick={() => onRemove(selection.id)}
+                                    title={`Remove ${selection.name}`}
+                                    style={{
+                                        ...ICON_BUTTON_STYLE,
+                                        fontSize: '13px',
+                                    }}
+                                >
+                                    ×
+                                </button>
+                            </>
+                        )}
                     </div>
                 ))}
                 <div style={{ display: 'flex', gap: '2px', marginTop: '4px' }}>

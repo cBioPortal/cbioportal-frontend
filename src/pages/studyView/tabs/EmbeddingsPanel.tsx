@@ -2585,6 +2585,7 @@ export class EmbeddingsPanel extends React.Component<
                     onTooltipFieldsChange={this.props.onTooltipFieldsChange}
                     selections={this.selectionSummaries}
                     onRemoveSelection={this.removeSelection}
+                    onRenameSelection={this.renameSelection}
                     onClearSelections={this.clearSelections}
                     onCompareSelections={this.compareSelections}
                     isComparingSelections={this.isComparingSelections}
