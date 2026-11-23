@@ -331,6 +331,24 @@ export class EmbeddingDeckGLVisualization extends React.Component<
             : this.state.selectionMode;
     }
 
+    // deck.gl writes its own cursor onto the canvas, which wins over the
+    // wrapper's style, so the lasso's crosshair has to come from here.
+    private getCursor = ({
+        isDragging,
+        isHovering,
+    }: {
+        isDragging: boolean;
+        isHovering: boolean;
+    }): string => {
+        if (this.selectionMode === 'lasso') {
+            return 'crosshair';
+        }
+        if (isDragging) {
+            return 'grabbing';
+        }
+        return isHovering ? 'pointer' : 'grab';
+    };
+
     private setSelectionMode = (mode: 'none' | 'lasso') => {
         if (this.props.onSelectionModeChange) {
             this.props.onSelectionModeChange(mode);
@@ -699,6 +717,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                             }
                         }
                         onViewStateChange={this.onViewStateChange}
+                        getCursor={this.getCursor}
                         layers={this.getLayers()}
                         width={actualWidth}
                         height={actualHeight}
