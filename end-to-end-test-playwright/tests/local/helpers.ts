@@ -27,7 +27,12 @@ const KEYCLOAK_PASSWORD = process.env.KEYCLOAK_PASSWORD ?? 'P@ssword1';
  * at the cbioportal origin (already authenticated). We don't need an
  * additional waitForFunction guard.
  */
-export async function keycloakLogin(page: Page, timeoutMs = 30000) {
+export async function keycloakLogin(
+    page: Page,
+    timeoutMs = 30000,
+    username = KEYCLOAK_USERNAME,
+    password = KEYCLOAK_PASSWORD
+) {
     // page.goto resolves at the 'load' event of whatever document it
     // first lands on, which during the SAML round-trip is often the
     // intermediate /saml2/authenticate auto-submit form (a static HTML
@@ -36,20 +41,22 @@ export async function keycloakLogin(page: Page, timeoutMs = 30000) {
     // cbioportal origin (already authenticated).
     await page.waitForFunction(
         () => {
-            const u = location.href;
+            const u = location.pathname;
             if (u.includes('/saml2/authenticate')) return false;
             if (u.includes('/login/saml2/')) return false;
+            if (u.includes('/oauth2/authorization/')) return false;
+            if (u.includes('/login/oauth2/')) return false;
             return true;
         },
         null,
         { timeout: timeoutMs }
     );
-    if (!page.url().includes('/auth/realms/cbio')) {
+    if (!new URL(page.url()).pathname.includes('/auth/realms/cbio')) {
         return; // already past the login page (existing keycloak session)
     }
 
-    await page.locator('#username').fill(KEYCLOAK_USERNAME);
-    await page.locator('#password').fill(KEYCLOAK_PASSWORD);
+    await page.locator('#username').fill(username);
+    await page.locator('#password').fill(password);
     // Submitting the keycloak form bounces the page through several
     // origins/paths in quick succession:
     //   keycloak login-actions/authenticate (POST 200, sets a self-
@@ -61,11 +68,14 @@ export async function keycloakLogin(page: Page, timeoutMs = 30000) {
     await Promise.all([
         page.waitForURL(
             url => {
-                const s = url.toString();
+                // Match on the path only: the Keycloak OIDC login URL
+                // carries the portal callback path in its redirect_uri.
+                const s = url.pathname;
                 return (
                     !s.includes('/auth/realms/cbio') &&
                     !s.includes('/login/saml2/') &&
-                    !s.includes('/saml2/authenticate')
+                    !s.includes('/saml2/authenticate') &&
+                    !s.includes('/login/oauth2/')
                 );
             },
             { timeout: timeoutMs, waitUntil: 'load' }

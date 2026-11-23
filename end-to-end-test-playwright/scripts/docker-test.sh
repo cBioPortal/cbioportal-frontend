@@ -84,6 +84,7 @@ exec docker run --rm -i \
     -e CI="${CI:-}" \
     -e LOCALDEV="${LOCALDEV}" \
     -e PW_LOCAL="${PW_LOCAL:-}" \
+    -e PW_AUTH_MODE="${PW_AUTH_MODE:-}" \
     ${LOCALDEV_ARGS[@]+"${LOCALDEV_ARGS[@]}"} \
     "${IMAGE}" \
     pnpm exec playwright test "$@"
