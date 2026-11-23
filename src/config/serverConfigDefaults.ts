@@ -208,6 +208,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     study_availability_enabled: false,
     oql_wizard_enabled: false,
+    chat_sidebar_enabled: false,
 
     skin_home_page_unauthorized_studies_global_message:
         'The study is unauthorized. You need to request access.',

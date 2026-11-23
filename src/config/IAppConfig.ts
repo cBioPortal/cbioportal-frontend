@@ -177,6 +177,7 @@ export interface IServerConfig {
     skin_home_page_show_unauthorized_studies: boolean;
     study_availability_enabled: boolean;
     oql_wizard_enabled: boolean;
+    chat_sidebar_enabled: boolean;
     skin_home_page_show_reference_genome: string;
     skin_home_page_unauthorized_studies_global_message: string;
     skin_mutation_table_namespace_column_show_by_default: boolean;

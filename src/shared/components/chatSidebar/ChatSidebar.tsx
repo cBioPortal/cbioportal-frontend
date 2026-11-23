@@ -8,6 +8,7 @@ import { PortalWebMcp } from './portalWebMcp';
 import { PageEvent, PageEventPublisher } from './pageEvents';
 import {
     captureViewport,
+    installNetworkPatch,
     waitForNetworkIdle,
     waitForViewReady,
 } from './screenshot';
@@ -110,6 +111,7 @@ export default class ChatSidebar extends React.Component<{}, {}> {
     }
 
     componentDidMount() {
+        installNetworkPatch();
         window.addEventListener('message', this.onMessage);
         window.addEventListener('resize', this.onWindowResize);
         this.onWindowResize();

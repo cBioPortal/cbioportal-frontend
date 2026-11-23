@@ -166,7 +166,9 @@ export default class Container extends React.Component<IContainerProps, {}> {
                             id="a11y-announcer"
                             className="sr-only"
                         ></div>
-                        <ChatSidebar />
+                        {getServerConfig().chat_sidebar_enabled && (
+                            <ChatSidebar />
+                        )}
                     </div>
                 </ErrorBoundary>
             </AppContext.Provider>

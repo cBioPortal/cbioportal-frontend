@@ -8,7 +8,8 @@ const MAX_LONG_SIDE = 1024;
 const ONCOPRINT_RASTERIZE_TIMEOUT_MS = 5000;
 
 // Track in-flight host-page network requests so we can defer the screenshot
-// until cBioPortal is quiescent. Patches fetch + XHR exactly once.
+// until cBioPortal is quiescent. Patches fetch + XHR at most once, and only
+// once the sidebar mounts.
 const PATCH_FLAG = '__chatSidebarNetIdlePatched';
 let inflight = 0;
 let lastChangeAt = Date.now();
@@ -28,7 +29,7 @@ function isOurRequest(url: string): boolean {
     return url.includes('/api/chat/');
 }
 
-(function installNetworkPatch() {
+export function installNetworkPatch() {
     const w = window as any;
     if (typeof window === 'undefined' || w[PATCH_FLAG]) return;
     w[PATCH_FLAG] = true;
@@ -67,7 +68,7 @@ function isOurRequest(url: string): boolean {
         }
         return origSend.call(this, body);
     } as any;
-})();
+}
 
 // Resolves once there's been no in-flight cBioPortal request for `idleMs`ms;
 // falls through on timeout so a stuck connection can't block the screenshot.
