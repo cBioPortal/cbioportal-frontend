@@ -1957,7 +1957,10 @@ export class EmbeddingsPanel extends React.Component<
             const cacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
                 this.selectedColoringOption.info.clinicalAttribute
             );
-            if (!cacheEntry.isComplete) {
+            // Pending rather than not-complete: a fetch the API refused is
+            // never going to complete, and the map it would have coloured is
+            // worth more than a spinner that never stops.
+            if (cacheEntry.isPending) {
                 return true;
             }
         }
@@ -1968,7 +1971,7 @@ export class EmbeddingsPanel extends React.Component<
                 this.copyNumberEnabled ||
                 this.structuralVariantEnabled ||
                 this.mrnaEnabled) &&
-            !this.molecularDataForColoring.isComplete
+            this.molecularDataForColoring.isPending
         ) {
             return true;
         }

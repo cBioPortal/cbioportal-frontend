@@ -220,6 +220,15 @@ export interface IPlotsTabStoreInput {
 
     /** Whether the context has no OQL-queried genes (true for PatientView/StudyView, false for ResultsView). */
     hasNoQueriedGenes: boolean;
+
+    /**
+     * Copy-number rows to derive OncoKB annotation from. Left out, the store
+     * reads its own, which it assembles with one discrete-copy-number request
+     * per study. A context spanning many studies passes the same rows from a
+     * single multi-profile request instead, since the burst is large enough
+     * for the API to rate-limit part of it away.
+     */
+    cnaDataForOncoKb?: MobxPromise<CustomDriverNumericGeneMolecularData[]>;
 }
 
 export class PlotsTabStore {
@@ -947,16 +956,22 @@ export class PlotsTabStore {
         onError: () => {},
     });
 
+    @computed private get cnaDataForOncoKbAnnotation(): MobxPromise<
+        CustomDriverNumericGeneMolecularData[]
+    > {
+        return this.input.cnaDataForOncoKb || this.discreteCNAMolecularData;
+    }
+
     readonly cnaOncoKbDataForOncoprint = remoteData<IOncoKbData | Error>(
         {
             await: () => [
                 this.input.oncoKbAnnotatedGenes,
-                this.discreteCNAMolecularData,
+                this.cnaDataForOncoKbAnnotation,
             ],
             invoke: async () =>
                 fetchCnaOncoKbDataForOncoprint(
                     this.input.oncoKbAnnotatedGenes,
-                    this.discreteCNAMolecularData
+                    this.cnaDataForOncoKbAnnotation
                 ),
         },
         ONCOKB_DEFAULT

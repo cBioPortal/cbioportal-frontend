@@ -30,6 +30,7 @@ import {
 } from 'pages/resultsView/ResultsViewPageStoreUtils';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import sessionServiceClient from 'shared/api/sessionServiceInstance';
+import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import { REQUEST_ARG_ENUM } from 'shared/constants';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
@@ -104,6 +105,7 @@ export class MapColoringContext
             filteredSampleKeyToSample: this.sampleKeyToSample,
             sampleKeyToSample: this.sampleKeyToSample,
             studyIdToStudy: this.studyIdToStudy,
+            cnaDataForOncoKb: this.cnaDataForOncoKb,
         });
 
         this.clinicalDataCache = new ClinicalDataCache(
@@ -275,7 +277,45 @@ export class MapColoringContext
         default: {},
     });
 
-
+    /**
+     * The coloured genes' copy number across the map, in one request, as the
+     * source OncoKB annotation is derived from.
+     *
+     * The shared store would assemble the same rows from one
+     * discrete-copy-number request per study, which is thirty here; the API
+     * answers roughly half of that burst with 429, and a refused request
+     * leaves the colouring promise incomplete and the panel on a spinner.
+     */
+    readonly cnaDataForOncoKb = remoteData<CustomDriverNumericGeneMolecularData[]>(
+        {
+            await: () => [
+                this.plotsSelectedGenes,
+                this.plotsStore.studyToMolecularProfileDiscreteCna,
+            ],
+            invoke: async () => {
+                const profileIds = _.values(
+                    this.plotsStore.studyToMolecularProfileDiscreteCna.result!
+                ).map(p => p.molecularProfileId);
+                const entrezGeneIds = this.plotsSelectedGenes.result!.map(
+                    g => g.entrezGeneId
+                );
+                if (profileIds.length === 0 || entrezGeneIds.length === 0) {
+                    return [];
+                }
+                const data = await getClient().fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
+                    {
+                        projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                        molecularDataMultipleStudyFilter: {
+                            entrezGeneIds,
+                            molecularProfileIds: profileIds,
+                        } as any,
+                    }
+                );
+                return data as CustomDriverNumericGeneMolecularData[];
+            },
+            default: [],
+        }
+    );
 
     /**
      * Mutations for the whole map in one request.
@@ -310,38 +350,21 @@ export class MapColoringContext
     }));
 
     /**
-     * Copy number for the whole map in one request.
-     *
-     * The shared cache asks each study's discrete CNA profile separately,
-     * which is thirty requests here; the browser runs six at a time and the
-     * rest queue, and the public API rate-limits the burst. Asking the
-     * multi-profile endpoint for the profiles themselves returns the same
-     * rows once, and without naming every sample.
+     * Copy number for the whole map, annotated. The rows are the ones already
+     * fetched for OncoKB, so colouring costs no request of its own.
      */
     public readonly mapCnaCache = new MobxPromiseCache<
         { entrezGeneId: number },
         any[]
     >(q => ({
         await: () => [
-            this.plotsStore.studyToMolecularProfileDiscreteCna,
+            this.cnaDataForOncoKb,
             this.plotsStore.getDiscreteCNAPutativeDriverInfo,
             this.patientStore.entrezGeneIdToGeneAll,
         ],
         invoke: async () => {
-            const profileIds = _.values(
-                this.plotsStore.studyToMolecularProfileDiscreteCna.result!
-            ).map(p => p.molecularProfileId);
-            if (profileIds.length === 0) {
-                return [];
-            }
-            const data = await getClient().fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
-                {
-                    projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
-                    molecularDataMultipleStudyFilter: {
-                        entrezGeneIds: [q.entrezGeneId],
-                        molecularProfileIds: profileIds,
-                    } as any,
-                }
+            const data = this.cnaDataForOncoKb.result!.filter(
+                d => d.entrezGeneId === q.entrezGeneId
             );
             const report = filterAndAnnotateMolecularData(
                 data as any,
