@@ -21,6 +21,13 @@ const isUnfilledCategory = (displayLabel: string): boolean => {
     );
 };
 
+const isOutOfCohortCategory = (displayLabel: string): boolean => {
+    return (
+        displayLabel === 'Case not in this cohort' ||
+        displayLabel === 'Sample not in this cohort'
+    );
+};
+
 const isVUSCategory = (displayLabel: string): boolean => {
     return displayLabel.endsWith('(VUS)');
 };
@@ -44,6 +51,9 @@ const getVUSColor = (displayLabel: string): string | undefined => {
     }
     return undefined;
 };
+
+/** Side of the square box each legend dot is centred in. */
+const DOT_BOX_SIZE = 12;
 
 const ROW_ACTION_STYLE: React.CSSProperties = {
     marginLeft: '4px',
@@ -83,6 +93,8 @@ const LegendItemRow: React.FC<LegendItemRowProps> = ({
 }) => {
     const [isHovered, setIsHovered] = React.useState(false);
     const isDimmed = isHidden;
+    // Smaller for the out-of-cohort entries, which stand for dimmed points.
+    const dotSize = isOutOfCohortCategory(displayLabel) ? 4 : DOT_BOX_SIZE;
     const canSelect = isClickable && !isHidden && !!onToggleCategorySelected;
     const rowBackground = isSelected
         ? '#e7f1ff'
@@ -117,26 +129,22 @@ const LegendItemRow: React.FC<LegendItemRowProps> = ({
         >
             <div
                 style={{
-                    width: '10px', // Keep container width consistent
-                    height: '10px', // Keep container height consistent
+                    width: `${DOT_BOX_SIZE}px`,
+                    height: `${DOT_BOX_SIZE}px`,
                     marginRight: '6px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    flexShrink: 0,
                 }}
             >
                 <div
                     style={{
-                        width:
-                            displayLabel === 'Case not in this cohort' ||
-                            displayLabel === 'Sample not in this cohort'
-                                ? '4px'
-                                : '12px', // Slightly larger dots for better visibility
-                        height:
-                            displayLabel === 'Case not in this cohort' ||
-                            displayLabel === 'Sample not in this cohort'
-                                ? '4px'
-                                : '12px', // Slightly larger dots for better visibility
+                        width: `${dotSize}px`,
+                        height: `${dotSize}px`,
+                        // The dot is drawn as a circle, so the flex row must
+                        // not shrink its width and leave an ellipse.
+                        flexShrink: 0,
                         backgroundColor: isDimmed
                             ? '#CCCCCC'
                             : isUnfilledCategory(displayLabel)
