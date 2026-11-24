@@ -33,6 +33,10 @@ function msktargetEmbeddingLoader(file: string, label: string) {
             }
             return response.json();
         },
+        // This host is MSK-internal, so failing off the network is ordinary
+        // and the page says so itself; keep it out of the site's error
+        // reporting. isError still drives that hint.
+        onError: () => {},
     });
 }
 

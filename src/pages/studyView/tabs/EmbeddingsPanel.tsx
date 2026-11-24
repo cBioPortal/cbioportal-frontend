@@ -1085,11 +1085,16 @@ export class EmbeddingsPanel extends React.Component<
         return isAnyEmbeddingPending(this.embeddingScope);
     }
 
-    // Scoped to the study the map belongs to, so other studies get no hint.
+    /**
+     * Scoped to the study the map belongs to, so other studies get no hint.
+     * The study is checked first: observing the loader's status is what
+     * starts its fetch, and nothing else should ask an unrelated study view
+     * to reach an MSK-internal host.
+     */
     @computed get isTargetRnaEmbeddingUnreachable(): boolean {
         return (
-            msktargetMpathTsneData.isError &&
-            this.currentStudyIds.includes(MSKTARGET_STUDY_ID)
+            this.currentStudyIds.includes(MSKTARGET_STUDY_ID) &&
+            msktargetMpathTsneData.isError
         );
     }
 
