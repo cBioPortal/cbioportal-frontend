@@ -98,8 +98,6 @@ export class MapColoringContext
             clinicalAttributes: patientStore.clinicalAttributes,
             customAttributes: this.customChartAttributes,
             genesets: patientStore.genesets,
-            genericAssayEntitiesGroupByMolecularProfileId:
-                patientStore.genericAssayEntitiesGroupedByProfileId,
             selectedGenericAssayEntitiesGroupByMolecularProfileId: {},
             hasNoQueriedGenes: true,
             filteredSampleKeyToSample: this.sampleKeyToSample,
