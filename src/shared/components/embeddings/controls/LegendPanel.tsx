@@ -129,39 +129,6 @@ const LegendItemRow: React.FC<LegendItemRowProps> = ({
         >
             <div
                 style={{
-                    width: `${DOT_BOX_SIZE}px`,
-                    height: `${DOT_BOX_SIZE}px`,
-                    marginRight: '6px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                }}
-            >
-                <div
-                    style={{
-                        width: `${dotSize}px`,
-                        height: `${dotSize}px`,
-                        // The dot is drawn as a circle, so the flex row must
-                        // not shrink its width and leave an ellipse.
-                        flexShrink: 0,
-                        backgroundColor: isDimmed
-                            ? '#CCCCCC'
-                            : isUnfilledCategory(displayLabel)
-                            ? 'transparent' // Use transparent background for unfilled categories
-                            : styling.fillColor,
-                        borderRadius: '50%',
-                        border: isDimmed
-                            ? '1px solid #CCCCCC'
-                            : styling.hasStroke
-                            ? `2px solid ${styling.strokeColor}` // Use strokeColor with moderately thick border
-                            : `1px solid ${styling.fillColor}`,
-                        opacity: isDimmed ? 0.4 : 1,
-                    }}
-                />
-            </div>
-            <div
-                style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
@@ -171,18 +138,62 @@ const LegendItemRow: React.FC<LegendItemRowProps> = ({
                 }}
             >
                 <span
-                    title={displayLabel}
                     style={{
-                        textDecoration: isDimmed ? 'line-through' : 'none',
-                        color: isDimmed ? '#CCCCCC' : 'inherit',
-                        opacity: isDimmed ? 0.6 : 1,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
                         minWidth: 0,
                     }}
                 >
-                    {displayLabel}
+                    {/* Inline, not a flex item, so `vertical-align: middle`
+                        puts the dot on the text's optical centre - the
+                        baseline plus half the x-height. Centring it in the
+                        row instead lands it on the centre of the line box,
+                        which sits above or below that depending on the
+                        font's ascent and descent. */}
+                    <span
+                        style={{
+                            display: 'inline-flex',
+                            verticalAlign: 'middle',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: `${DOT_BOX_SIZE}px`,
+                            height: `${DOT_BOX_SIZE}px`,
+                            marginRight: '6px',
+                        }}
+                    >
+                        <span
+                            style={{
+                                width: `${dotSize}px`,
+                                height: `${dotSize}px`,
+                                // The dot is drawn as a circle, so flex must
+                                // not shrink its width and leave an ellipse.
+                                flexShrink: 0,
+                                backgroundColor: isDimmed
+                                    ? '#CCCCCC'
+                                    : isUnfilledCategory(displayLabel)
+                                    ? 'transparent' // Use transparent background for unfilled categories
+                                    : styling.fillColor,
+                                borderRadius: '50%',
+                                border: isDimmed
+                                    ? '1px solid #CCCCCC'
+                                    : styling.hasStroke
+                                    ? `2px solid ${styling.strokeColor}` // Use strokeColor with moderately thick border
+                                    : `1px solid ${styling.fillColor}`,
+                                opacity: isDimmed ? 0.4 : 1,
+                            }}
+                        />
+                    </span>
+                    <span
+                        title={displayLabel}
+                        style={{
+                            textDecoration: isDimmed ? 'line-through' : 'none',
+                            color: isDimmed ? '#CCCCCC' : 'inherit',
+                            opacity: isDimmed ? 0.6 : 1,
+                        }}
+                    >
+                        {displayLabel}
+                    </span>
                 </span>
                 <span
                     style={{
