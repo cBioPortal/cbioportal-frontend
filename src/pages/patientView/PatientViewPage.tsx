@@ -383,12 +383,12 @@ export class PatientViewPageInner extends React.Component<
     ) {
         if (!e.shiftKey && !e.altKey && !e.metaKey) {
             e.preventDefault();
-            // fusionId names a fusion of the previous case; drop it.
-            this.urlWrapper.updateURL({
-                caseId: undefined,
-                sampleId: id,
-                fusionId: undefined,
-            });
+            // clear: params of the previous case (e.g. fusionId) don't carry over
+            this.urlWrapper.updateURL(
+                { studyId: this.urlWrapper.query.studyId, sampleId: id },
+                undefined,
+                true
+            );
         }
         // otherwise do nothing, we want default behavior of link
         // namely that href will open in a new window/tab
@@ -404,21 +404,10 @@ export class PatientViewPageInner extends React.Component<
     @action.bound
     handlePatientClick(id: string) {
         let values = id.split(':');
-        // fusionId names a fusion of the previous patient; drop it.
-        if (values.length == 2) {
-            this.urlWrapper.updateURL({
-                studyId: values[0],
-                caseId: values[1],
-                sampleId: undefined,
-                fusionId: undefined,
-            });
-        } else {
-            this.urlWrapper.updateURL({
-                caseId: id,
-                sampleId: undefined,
-                fusionId: undefined,
-            });
-        }
+        const [studyId, caseId] =
+            values.length == 2 ? values : [this.urlWrapper.query.studyId, id];
+        // clear: params of the previous patient (e.g. fusionId) don't carry over
+        this.urlWrapper.updateURL({ studyId, caseId }, undefined, true);
     }
 
     @action.bound
@@ -899,14 +888,16 @@ export class PatientViewPageInner extends React.Component<
                 url.indexOf('#') + 1
             );
         }
-        this.urlWrapper.updateURL({
-            studyId: navCaseIds[currentIndex].studyId,
-            caseId: navCaseIds[currentIndex].patientId,
-            sampleId: undefined,
-            // The open viewers and their item belong to the patient being left.
-            openResources: undefined,
-            resourceUrl: undefined,
-        });
+        // clear: params of the patient being left (open resources, fusionId)
+        // don't carry over
+        this.urlWrapper.updateURL(
+            {
+                studyId: navCaseIds[currentIndex].studyId,
+                caseId: navCaseIds[currentIndex].patientId,
+            },
+            undefined,
+            true
+        );
     }
 
     @computed

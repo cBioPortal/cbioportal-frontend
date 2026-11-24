@@ -24,6 +24,7 @@ describe('PatientViewPage', () => {
             mock = {
                 urlWrapper: {
                     updateURL: updateURLStub,
+                    query: { studyId: 'study_a', fusionId: 'F1' },
                 },
             };
 
@@ -39,13 +40,13 @@ describe('PatientViewPage', () => {
             assert.isTrue(preventDefaultStub.called);
         });
 
-        it('clears the fusion-viewer fusionId when switching sample', () => {
+        it('clears the previous case params, keeping the study', () => {
             handleSampleClick.call(mock, 'S2', ev);
-            assert.deepEqual(updateURLStub.firstCall.args[0], {
-                caseId: undefined,
-                sampleId: 'S2',
-                fusionId: undefined,
-            });
+            assert.deepEqual(updateURLStub.firstCall.args, [
+                { studyId: 'study_a', sampleId: 'S2' },
+                undefined,
+                true,
+            ]);
         });
 
         it('does not call updateRoute or preventDefault if altKey is true', () => {
@@ -78,26 +79,30 @@ describe('PatientViewPage', () => {
 
         beforeEach(() => {
             updateURLStub = sinon.stub();
-            mock = { urlWrapper: { updateURL: updateURLStub } };
+            mock = {
+                urlWrapper: {
+                    updateURL: updateURLStub,
+                    query: { studyId: 'study_a', fusionId: 'F1' },
+                },
+            };
         });
 
-        it('clears the fusion-viewer fusionId when switching patient', () => {
+        it('clears the previous patient params, keeping the study', () => {
             handlePatientClick.call(mock, 'PATIENT_2');
-            assert.deepEqual(updateURLStub.firstCall.args[0], {
-                caseId: 'PATIENT_2',
-                sampleId: undefined,
-                fusionId: undefined,
-            });
+            assert.deepEqual(updateURLStub.firstCall.args, [
+                { studyId: 'study_a', caseId: 'PATIENT_2' },
+                undefined,
+                true,
+            ]);
         });
 
-        it('clears fusionId for a study-qualified patient id', () => {
+        it('uses the study of a study-qualified patient id', () => {
             handlePatientClick.call(mock, 'study_b:PATIENT_2');
-            assert.deepEqual(updateURLStub.firstCall.args[0], {
-                studyId: 'study_b',
-                caseId: 'PATIENT_2',
-                sampleId: undefined,
-                fusionId: undefined,
-            });
+            assert.deepEqual(updateURLStub.firstCall.args, [
+                { studyId: 'study_b', caseId: 'PATIENT_2' },
+                undefined,
+                true,
+            ]);
         });
     });
 });
