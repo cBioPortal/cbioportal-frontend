@@ -63,6 +63,12 @@ export interface IEmbeddingsTabProps {
         selectedSamples: Sample[],
         embedding: EmbeddingDataOption | null
     ) => React.ReactNode;
+    /**
+     * How much room the page keeps below the panel grid for content of its
+     * own. The plots fill the viewport, so without it anything the page
+     * renders under the tab falls below the fold.
+     */
+    bottomReserve?: number;
 }
 
 type PanelIndex = 1 | 2 | 3 | 4;
@@ -508,6 +514,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                             panelIndex={panelIndex}
                             panelCount={this.panelCount}
                             panelGridTop={this.panelGridTop}
+                            bottomReserve={this.props.bottomReserve}
                             selectionMode={this.sharedSelectionMode}
                             onSelectionModeChange={
                                 this.onSharedSelectionModeChange

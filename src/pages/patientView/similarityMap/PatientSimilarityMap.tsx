@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { computed, makeObservable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import SampleManager from 'pages/patientView/SampleManager';
 import { Sample, SampleIdentifier } from 'cbioportal-ts-api-client';
@@ -63,6 +63,41 @@ export default class PatientSimilarityMap extends React.Component<
         super(props);
         makeObservable(this);
     }
+
+    componentWillUnmount() {
+        this.footerResizeObserver?.disconnect();
+    }
+
+    /**
+     * The map sizes itself to the rest of the viewport, so the note below it
+     * only stays on screen if the map is told to leave room for it. Measured
+     * rather than assumed, since the note wraps with the sample count.
+     */
+    @observable.ref private footerHeight = 0;
+    private footerResizeObserver: ResizeObserver | undefined;
+
+    @action.bound
+    private setFooterHeight(height: number) {
+        if (height !== this.footerHeight) {
+            this.footerHeight = height;
+        }
+    }
+
+    private setFooterRef = (el: HTMLDivElement | null) => {
+        this.footerResizeObserver?.disconnect();
+        this.footerResizeObserver = undefined;
+        if (!el) {
+            this.setFooterHeight(0);
+            return;
+        }
+        this.setFooterHeight(el.offsetHeight);
+        if (typeof ResizeObserver !== 'undefined') {
+            this.footerResizeObserver = new ResizeObserver(() =>
+                this.setFooterHeight(el.offsetHeight)
+            );
+            this.footerResizeObserver.observe(el);
+        }
+    };
 
     @computed get sampleIds(): string[] {
         return this.props.sampleManager.getSampleIdsInOrder();
@@ -264,9 +299,13 @@ export default class PatientSimilarityMap extends React.Component<
                     store={this.coloring}
                     renderOverlay={this.renderSampleIcons}
                     renderSelectionActions={this.renderStudyViewLink}
+                    bottomReserve={this.footerHeight}
                 />
                 {this.unplacedSampleIds.length > 0 && (
-                    <div style={{ marginTop: 8, color: '#666' }}>
+                    <div
+                        ref={this.setFooterRef}
+                        style={{ paddingTop: 8, color: '#666' }}
+                    >
                         Not in this map:{' '}
                         {this.unplacedSampleIds.map(sampleId => (
                             <span key={sampleId} style={{ marginRight: 6 }}>
