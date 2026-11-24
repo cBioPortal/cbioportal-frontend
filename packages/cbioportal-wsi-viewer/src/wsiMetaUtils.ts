@@ -9,6 +9,7 @@ import {
 import { cleanStain, fmtFileSize, normalizeBlockLabel } from './wsiNavUtils';
 import { blockName, realPartDescription } from './wsiSpecimenUtils';
 import { formatSlideId } from './wsiSlideId';
+import { matchLevelHelpText, stainHelpText } from './wsiFilterHelp';
 import { WSI_STAIN_COLORS } from './wsiTheme';
 import { nativeObjectivePower } from './wsiScaleUtils';
 import { getWsiViewerRuntime } from './wsiViewerConfig';
@@ -160,7 +161,8 @@ export function buildPathRows(
             label: 'Stain',
             labelTip: 'Staining protocol used for this slide',
             value: stainValue(stainBadge, stainName),
-            valueTip: `Stain group: ${stainBadge}. Stain: ${stainName || '—'}`,
+            valueTip: `Stain group: ${stainBadge}. Stain: ${stainName ||
+                '—'}. ${stainHelpText(slide.stain_kind)}`,
         },
         {
             label: 'Sample',
@@ -176,14 +178,16 @@ export function buildPathRows(
     if (part) {
         rows.push({
             label: 'Part',
-            labelTip: 'Pathology part containing this slide',
+            labelTip:
+                'The part this slide comes from, often called the specimen. Tissue removed in a biopsy or surgery is divided into parts, separate pieces of tissue, often from different sites.',
             value: part,
         });
     }
     if (block) {
         rows.push({
             label: 'Block',
-            labelTip: 'Tissue block this slide was cut from',
+            labelTip:
+                'The paraffin block this slide was cut from. Each part is embedded in one or more blocks, and slides are thin sections cut from a block.',
             value: blockName(block),
         });
     }
@@ -191,12 +195,9 @@ export function buildPathRows(
         rows.push({
             label: 'Match',
             labelTip:
-                'How this pathology slide was matched to the sequenced sample',
+                'How closely this slide matches the tissue that was sequenced for this sample: Block-matched (cut from the sequenced block) is closer than Part-matched (same part, block not known).',
             value: matchLevel === 'BLOCK' ? 'Block-matched' : 'Part-matched',
-            valueTip:
-                matchLevel === 'BLOCK'
-                    ? 'The slide was cut from the same tissue block that was sequenced for this sample'
-                    : 'The slide comes from the same part as the sequenced sample; the sequenced block is not confirmed',
+            valueTip: matchLevelHelpText(matchLevel),
         });
     }
     if (partDesc) {

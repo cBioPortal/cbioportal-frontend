@@ -86,6 +86,24 @@ localdb tests without waiting for a Docker pull.
 script name is forwarded to `playwright test`, so flags like
 `--debug`, `--headed`, `--grep`, `--trace on` all work.
 
+## Login specs (tests/local/auth)
+
+The specs in `tests/local/auth` log in through the Keycloak setups in
+cbioportal-docker-compose (`dev/keycloak`, users listed in its
+`dev/README.md`). `PW_AUTH_MODE` names the backend's `authenticate`
+value, and each spec runs only in the modes it covers:
+
+| `PW_AUTH_MODE` | Compose files after `dev/keycloak/keycloak.yml` | Specs |
+| --- | --- | --- |
+| `saml` (default) | none | `login` |
+| `saml_plus_basic` | `dev/keycloak/keycloak-saml-plus-basic.yml` | `login`, `basic-login`, `data-access-token` |
+| `oauth2` | `dev/keycloak/keycloak-oidc.yml` | `login` |
+
+```bash
+PW_LOCAL=1 PW_AUTH_MODE=saml_plus_basic CBIOPORTAL_URL=http://localhost:8080 \
+    ./scripts/docker-test.sh tests/local/auth
+```
+
 ## Pointing at a different backend (CBIOPORTAL_URL)
 
 All test entry points route through `scripts/with-env.sh`, which resolves

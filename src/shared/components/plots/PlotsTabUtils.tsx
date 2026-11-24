@@ -3903,6 +3903,19 @@ export function isGenericAssaySelected(selection: AxisMenuSelection) {
     return selection.genericAssayDataType !== undefined;
 }
 
+// Whether the selection is from a numeric (LIMIT-VALUE) generic assay profile,
+// regardless of the selected entity. The axis data type options depend on this,
+// and an axis' data type depends on those options, so it must not read the
+// selected entity (which in turn reads the data type).
+export function isLimitValueGenericAssayProfileSelected(
+    selection: AxisMenuSelection
+) {
+    return (
+        isGenericAssaySelected(selection) &&
+        selection.genericAssayDataType === DataTypeConstants.LIMITVALUE
+    );
+}
+
 // Whether the selection is a numeric (LIMIT-VALUE) generic assay entity.
 // Derived entities are categorical even in a numeric profile.
 export function isLimitValueGenericAssaySelected(selection: AxisMenuSelection) {

@@ -22,7 +22,6 @@ import './shared/lib/ajaxQuiet';
 import _ from 'lodash';
 import $ from 'jquery';
 import * as superagent from 'superagent';
-import { buildCBioPortalPageUrl } from './shared/api/urls';
 import browser from 'bowser';
 import { setNetworkListener } from './shared/lib/ajaxQuiet';
 import { initializeTracking, sendToLoggly } from 'shared/lib/tracking';
@@ -35,6 +34,10 @@ import {
 } from 'cbioportal-frontend-commons';
 import { AppStore } from './AppStore';
 import { handleLongUrls } from 'shared/lib/handleLongUrls';
+import {
+    isRedirectingToLogin,
+    redirectToLogin,
+} from 'shared/lib/redirectHelpers';
 import 'shared/polyfill/canvasToBlob';
 import { setCurrentURLHeader } from 'shared/lib/extraHeader';
 import Container from 'appShell/App/Container';
@@ -184,32 +187,14 @@ eventBus.on('error', (err: SiteError) => {
 //@ts-ignore
 const end = superagent.Request.prototype.end;
 
-let redirecting = false;
-
 //@ts-ignore
 superagent.Request.prototype.end = function(callback) {
     return end.call(this, (error: any, response: any) => {
-        if (redirecting) {
+        if (isRedirectingToLogin()) {
             return;
         }
         if (response && response.statusCode === 401) {
-            var storageKey = `login-redirect`;
-
-            localStorage.setItem(storageKey, window.location.href);
-
-            // build URL with a reference to storage key so that /restore route can restore it after login
-            //@ts-ignore because we're using buildCBioPortalPageUrl without a pathname, which is normally required
-            const loginUrl = buildCBioPortalPageUrl({
-                query: {
-                    'spring-security-redirect': buildCBioPortalPageUrl({
-                        pathname: 'restore',
-                        query: { key: storageKey },
-                    }),
-                },
-            });
-
-            redirecting = true;
-            window.location.href = loginUrl;
+            redirectToLogin();
         } else if (response && response.statusCode === 423) {
             const message =
                 (response.body && response.body.message) ||
