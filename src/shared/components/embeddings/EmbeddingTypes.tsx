@@ -1,3 +1,4 @@
+import * as React from 'react';
 /**
  * Common types and interfaces for embedding visualizations
  */
@@ -30,6 +31,9 @@ export interface SampleEmbeddingData extends BaseEmbeddingData {
         x: number;
         y: number;
         data?: Record<string, any>;
+        // Clinical values keyed by cBioPortal attribute id, used only when the
+        // portal has no such sample (e.g. a reference map's own cohort).
+        referenceData?: Record<string, string | number>;
     }[];
 }
 
@@ -47,13 +51,21 @@ export interface EmbeddingPoint {
     patientId?: string;
     sampleId?: string;
     uniqueSampleKey?: string;
+    // The study the point's sample belongs to; absent for out-of-cohort points.
+    studyId?: string;
     color?: string;
     strokeColor?: string;
     displayLabel?: string;
     isInCohort?: boolean;
     // Rendered smaller/more transparent, without changing color or label.
     isDeemphasized?: boolean;
+    // Outlined in this colour when the point is in a map selection.
+    selectionColor?: string;
     [key: string]: any; // Allow additional properties for extensibility
+    // Out-of-cohort points only: the value the embedding itself records for the
+    // coloring attribute (its `referenceData`), and that value's legend color.
+    referenceLabel?: string;
+    referenceColor?: string;
 }
 
 export interface ViewState {
@@ -65,12 +77,52 @@ export interface ViewState {
 
 export interface EmbeddingVisualizationProps {
     data: EmbeddingPoint[];
+    /**
+     * Drawn over the plot and moving with it, for marks a page wants on the
+     * map that are not points of the embedding - the patient view puts this
+     * patient's samples here. Takes data coordinates to screen ones, and says
+     * which embedding is being drawn, since panels need not show the same one
+     * and a sample sits somewhere different in each.
+     */
+    /**
+     * Called the first time a point is hovered, so a page can hold back what
+     * only a tooltip needs until there is one to fill.
+     */
+    onPointHovered?: () => void;
+    renderOverlay?: (
+        project: (x: number, y: number) => { x: number; y: number },
+        embedding?: EmbeddingData
+    ) => React.ReactNode;
+    /** The embedding renderOverlay is told about; see above. */
+    overlayEmbedding?: EmbeddingData;
+    // Derived from the whole embedding, not `data`, so hiding or filtering points never resizes the rest.
+    pointScale?: number;
+    contextPointBoost?: number;
     title?: string;
     xAxisLabel?: string;
     yAxisLabel?: string;
     width?: number;
     height?: number;
-    onPointSelection?: (selectedPoints: EmbeddingPoint[]) => void;
+    onPointSelection?: (
+        selectedPoints: EmbeddingPoint[],
+        /** The lasso it was drawn with, in data coordinates. */
+        path?: Array<{ x: number; y: number }>
+    ) => void;
+    /**
+     * Lassos of selections already made, in data coordinates, drawn over the
+     * plot in each selection's own colour.
+     */
+    selectionOutlines?: Array<{
+        id: number;
+        color: string;
+        path: Array<{ x: number; y: number }>;
+    }>;
+    /**
+     * How many selections the owner is holding. The points picked by a lasso
+     * are the owner's from the moment it is handed them, so this falling to
+     * zero is what tells the plot to let go of its own copy.
+     */
+    selectionCount?: number;
     selectedPatientIds?: string[];
     showLegend?: boolean;
     filename?: string;

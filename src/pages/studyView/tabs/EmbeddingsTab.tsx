@@ -4,8 +4,14 @@ import { observer } from 'mobx-react';
 import { observable, action, computed, makeObservable } from 'mobx';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
+import { EmbeddingsPanelStore } from 'shared/components/embeddings/EmbeddingsPanelStore';
+import {
+    EmbeddingData,
+    EmbeddingDataOption,
+} from 'shared/components/embeddings/EmbeddingTypes';
 import { ViewState } from 'shared/components/embeddings/EmbeddingTypes';
 import { EmbeddingsPanel } from './EmbeddingsPanel';
+import { Sample } from 'cbioportal-ts-api-client';
 
 // Compact variant of EmbeddingControlStack's SELECT_STYLES, for the
 // status bar's inline Map dropdown.
@@ -29,7 +35,40 @@ const MAP_SELECT_STYLES = {
 };
 
 export interface IEmbeddingsTabProps {
-    store: StudyViewPageStore;
+    /**
+     * The page the maps are drawn on. The study view's store satisfies this;
+     * the patient view supplies the same members over the studies its map
+     * covers, so both pages run this one tab.
+     *
+     * Panel and map choices are kept in the URL through the store's
+     * urlWrapper where there is one, and simply not persisted where there
+     * is not.
+     */
+    store: EmbeddingsPanelStore;
+    /**
+     * Drawn over every panel's plot. The patient view marks this patient's
+     * samples with it, in whichever map each panel happens to show.
+     */
+    renderOverlay?: (
+        project: (x: number, y: number) => { x: number; y: number },
+        embedding?: EmbeddingData
+    ) => React.ReactNode;
+    /**
+     * Rendered in the status bar beside Clear and Make Global, with whatever
+     * the first panel's selection currently covers. A page that can't apply a
+     * selection to a cohort offers its own action here - the patient view
+     * opens the selection in the study view.
+     */
+    renderSelectionActions?: (
+        selectedSamples: Sample[],
+        embedding: EmbeddingDataOption | null
+    ) => React.ReactNode;
+    /**
+     * How much room the page keeps below the panel grid for content of its
+     * own. The plots fill the viewport, so without it anything the page
+     * renders under the tab falls below the fold.
+     */
+    bottomReserve?: number;
 }
 
 type PanelIndex = 1 | 2 | 3 | 4;
@@ -116,6 +155,12 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     // applyFilterGlobally() directly.
     private readonly panel1Ref = React.createRef<EmbeddingsPanel>();
 
+    // Page offset of the panel grid's top edge; panels size their maps to the
+    // viewport below it. It moves when e.g. the filter bar appears.
+    private readonly panelGridRef = React.createRef<HTMLDivElement>();
+    @observable private panelGridTop: number | undefined;
+    private pageResizeObserver: ResizeObserver | undefined;
+
     // Increments on "Clear" - every panel resets its own filters in
     // response (see EmbeddingsPanel.componentDidUpdate).
     @observable private sharedClearFilterRequestId = 0;
@@ -160,8 +205,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @action.bound
-    private onSharedSelectionEffectChange(effect: 'filter' | 'highlight') {
-        this.sharedSelectionEffect = effect;
+    private onToggleFilterToSelection() {
+        this.sharedSelectionEffect =
+            this.sharedSelectionEffect === 'filter' ? 'highlight' : 'filter';
     }
 
     @action.bound
@@ -265,6 +311,25 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return this.reportedEmbeddingType;
     }
 
+    /** Whether this page has a cohort a selection could be applied to. */
+    @computed private get canApplyFilterGlobally(): boolean {
+        return !!this.props.store.updateCustomSelect;
+    }
+
+    // Read from the panel rather than reported: it is the whole selection, not
+    // a count, and render tracks the panel's computed through it. Plain getter,
+    // because the ref it goes through is not observable and a cached computed
+    // would keep whatever the first render saw.
+    //
+    // Nothing selected means nothing selected, not every point: the panel's
+    // view is unnarrowed then, and reading it would hand out the whole map.
+    private selectedSamples(isSelectionActive: boolean): Sample[] {
+        if (!isSelectionActive) {
+            return [];
+        }
+        return this.panel1Ref.current?.locallySelectedSamples ?? [];
+    }
+
     @computed private get hasReportedCounts(): boolean {
         return this.reportedTotalSampleCount > 0;
     }
@@ -273,12 +338,27 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return this.reportedCohortCount > this.reportedTotalSampleCount;
     }
 
+    /**
+     * Whether leaving samples out of the map is worth warning about.
+     *
+     * It is on a page whose cohort the reader chose: the map then answers for
+     * less than they asked for. Where the "cohort" is only the studies the map
+     * happens to span, as on the patient view, there is nothing to warn about
+     * and the same note is simply information.
+     */
+    @computed private get hasChosenCohort(): boolean {
+        return !!this.props.store.updateCustomSelect;
+    }
+
     @computed private get hasExtraNonCohortSamples(): boolean {
         return this.reportedEmbeddingSampleSize > this.reportedTotalSampleCount;
     }
 
     @computed private get hasEmbeddingWarning(): boolean {
-        return this.hasMissingCohortSamples || this.hasExtraNonCohortSamples;
+        return (
+            this.hasChosenCohort &&
+            (this.hasMissingCohortSamples || this.hasExtraNonCohortSamples)
+        );
     }
 
     @action.bound
@@ -311,20 +391,23 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         if (targetCount === currentCount) {
             return;
         }
+        // The count is this tab's own state; the URL is only where a page
+        // that has one keeps it, so pages without one still split the view.
         const urlWrapper = (this.props.store as any).urlWrapper;
-        if (!urlWrapper) {
-            return;
-        }
 
         if (targetCount > currentCount) {
-            const updates: { [key: string]: any } = {};
-            for (let i = currentCount + 1; i <= targetCount; i++) {
-                updates[coloringParamName(i)] =
-                    urlWrapper.query?.[coloringParamName(callingPanelIndex)];
-                updates[mapParamName(i)] =
-                    urlWrapper.query?.[mapParamName(callingPanelIndex)];
+            if (urlWrapper) {
+                const updates: { [key: string]: any } = {};
+                for (let i = currentCount + 1; i <= targetCount; i++) {
+                    updates[coloringParamName(i)] =
+                        urlWrapper.query?.[
+                            coloringParamName(callingPanelIndex)
+                        ];
+                    updates[mapParamName(i)] =
+                        urlWrapper.query?.[mapParamName(callingPanelIndex)];
+                }
+                urlWrapper.updateURL(updates);
             }
-            urlWrapper.updateURL(updates);
             this.panelCount = targetCount;
             if (currentCount === 1) {
                 this.sharedLockToPrimary = true;
@@ -340,14 +423,50 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 this.hiddenSampleKeysByPanel.delete(i);
                 this.selectionFlagsByPanel.delete(i);
             }
-            setTimeout(() => {
-                const updates: { [key: string]: any } = {};
-                for (let i = targetCount + 1; i <= currentCount; i++) {
-                    updates[coloringParamName(i)] = undefined;
-                    updates[mapParamName(i)] = undefined;
-                }
-                urlWrapper.updateURL(updates);
-            }, 0);
+            if (urlWrapper) {
+                setTimeout(() => {
+                    const updates: { [key: string]: any } = {};
+                    for (let i = targetCount + 1; i <= currentCount; i++) {
+                        updates[coloringParamName(i)] = undefined;
+                        updates[mapParamName(i)] = undefined;
+                    }
+                    urlWrapper.updateURL(updates);
+                }, 0);
+            }
+        }
+    }
+
+    componentDidMount() {
+        this.measurePanelGridTop();
+        window.addEventListener('resize', this.measurePanelGridTop);
+        if (typeof ResizeObserver !== 'undefined') {
+            this.pageResizeObserver = new ResizeObserver(
+                this.measurePanelGridTop
+            );
+            this.pageResizeObserver.observe(document.body);
+        }
+    }
+
+    componentDidUpdate() {
+        this.measurePanelGridTop();
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('resize', this.measurePanelGridTop);
+        this.pageResizeObserver?.disconnect();
+    }
+
+    @action.bound
+    private measurePanelGridTop() {
+        const grid = this.panelGridRef.current;
+        if (!grid) {
+            return;
+        }
+        const top = Math.round(
+            grid.getBoundingClientRect().top + window.scrollY
+        );
+        if (top !== this.panelGridTop) {
+            this.panelGridTop = top;
         }
     }
 
@@ -362,6 +481,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
         return (
             <div
+                ref={this.panelGridRef}
                 style={
                     isSquareLayout
                         ? {
@@ -390,8 +510,11 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                     >
                         <EmbeddingsPanel
                             store={this.props.store}
+                            renderOverlay={this.props.renderOverlay}
                             panelIndex={panelIndex}
                             panelCount={this.panelCount}
+                            panelGridTop={this.panelGridTop}
+                            bottomReserve={this.props.bottomReserve}
                             selectionMode={this.sharedSelectionMode}
                             onSelectionModeChange={
                                 this.onSharedSelectionModeChange
@@ -582,7 +705,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                     {this.reportedTotalSampleCount.toLocaleString()}{' '}
                                     {this.unitLabel}{' '}
                                     {this.sharedSelectionEffect === 'highlight'
-                                        ? 'highlighted'
+                                        ? 'selected'
                                         : 'visible'}
                                 </>
                             ) : this.panelCount === 1 || this.sharedLockMap ? (
@@ -661,16 +784,30 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                                         so only the{' '}
                                                         {this.unitLabel} that
                                                         were part of building it
+                                                        or projected into it
                                                         show up here (in this
                                                         case,{' '}
                                                         <strong>
                                                             {this.reportedTotalSampleCount.toLocaleString()}
-                                                        </strong>{' '}
-                                                        of this cohort&apos;s{' '}
-                                                        <strong>
-                                                            {this.reportedCohortCount.toLocaleString()}
-                                                        </strong>{' '}
-                                                        {this.unitLabel}).
+                                                        </strong>
+                                                        {this
+                                                            .hasChosenCohort ? (
+                                                            <>
+                                                                {' '}
+                                                                of this
+                                                                cohort&apos;s{' '}
+                                                                <strong>
+                                                                    {this.reportedCohortCount.toLocaleString()}
+                                                                </strong>{' '}
+                                                                {this.unitLabel}
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                {' '}
+                                                                {this.unitLabel}
+                                                            </>
+                                                        )}
+                                                        ).
                                                     </>
                                                 )}
                                             </div>
@@ -721,73 +858,38 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                     alignItems: 'center',
                                 }}
                             >
-                                <div
+                                <button
+                                    data-test="embeddings-filter-toggle"
+                                    onClick={this.onToggleFilterToSelection}
+                                    title={
+                                        this.sharedSelectionEffect === 'filter'
+                                            ? 'Show the whole map again, with the selection standing out'
+                                            : 'Hide everything outside the selection'
+                                    }
                                     style={{
-                                        display: 'flex',
-                                        gap: '2px',
-                                        border: '1px solid #ccc',
+                                        padding: '4px 10px',
+                                        fontSize: '11px',
                                         borderRadius: '3px',
-                                        padding: '2px',
-                                        backgroundColor: 'white',
+                                        cursor: 'pointer',
+                                        backgroundColor:
+                                            this.sharedSelectionEffect ===
+                                            'filter'
+                                                ? '#007bff'
+                                                : 'white',
+                                        color:
+                                            this.sharedSelectionEffect ===
+                                            'filter'
+                                                ? 'white'
+                                                : '#333',
+                                        border:
+                                            this.sharedSelectionEffect ===
+                                            'filter'
+                                                ? '1px solid #007bff'
+                                                : '1px solid #ccc',
                                     }}
                                 >
-                                    <button
-                                        data-test="embeddings-highlight-mode-button"
-                                        onClick={() =>
-                                            this.onSharedSelectionEffectChange(
-                                                'highlight'
-                                            )
-                                        }
-                                        title="Keep every point visible; dim everything outside the selection"
-                                        style={{
-                                            padding: '4px 8px',
-                                            fontSize: '11px',
-                                            border: 'none',
-                                            borderRadius: '3px',
-                                            cursor: 'pointer',
-                                            backgroundColor:
-                                                this.sharedSelectionEffect ===
-                                                'highlight'
-                                                    ? '#007bff'
-                                                    : 'transparent',
-                                            color:
-                                                this.sharedSelectionEffect ===
-                                                'highlight'
-                                                    ? 'white'
-                                                    : '#333',
-                                        }}
-                                    >
-                                        Highlight
-                                    </button>
-                                    <button
-                                        data-test="embeddings-filter-mode-button"
-                                        onClick={() =>
-                                            this.onSharedSelectionEffectChange(
-                                                'filter'
-                                            )
-                                        }
-                                        title="Hide everything outside the selection"
-                                        style={{
-                                            padding: '4px 8px',
-                                            fontSize: '11px',
-                                            border: 'none',
-                                            borderRadius: '3px',
-                                            cursor: 'pointer',
-                                            backgroundColor:
-                                                this.sharedSelectionEffect ===
-                                                'filter'
-                                                    ? '#007bff'
-                                                    : 'transparent',
-                                            color:
-                                                this.sharedSelectionEffect ===
-                                                'filter'
-                                                    ? 'white'
-                                                    : '#333',
-                                        }}
-                                    >
-                                        Filter
-                                    </button>
-                                </div>
+                                    Filter
+                                </button>
                                 {isLocalSelectionActive && (
                                     <>
                                         <button
@@ -805,24 +907,30 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                         >
                                             Clear
                                         </button>
-                                        <button
-                                            data-test="embeddings-make-global-button"
-                                            onClick={this.onApplyGlobally}
-                                            title="Apply this selection as a Study View selection, affecting every tab on the page"
-                                            style={{
-                                                padding: '4px 10px',
-                                                fontSize: '11px',
-                                                border: '1px solid #ccc',
-                                                borderRadius: '3px',
-                                                backgroundColor: 'white',
-                                                cursor: 'pointer',
-                                            }}
-                                        >
-                                            Make Global
-                                        </button>
+                                        {this.canApplyFilterGlobally && (
+                                            <button
+                                                data-test="embeddings-make-global-button"
+                                                onClick={this.onApplyGlobally}
+                                                title="Apply this selection as a Study View selection, affecting every tab on the page"
+                                                style={{
+                                                    padding: '4px 10px',
+                                                    fontSize: '11px',
+                                                    border: '1px solid #ccc',
+                                                    borderRadius: '3px',
+                                                    backgroundColor: 'white',
+                                                    cursor: 'pointer',
+                                                }}
+                                            >
+                                                Make Global
+                                            </button>
+                                        )}
                                     </>
                                 )}
                             </div>
+                        )}
+                        {this.props.renderSelectionActions?.(
+                            this.selectedSamples(isLocalSelectionActive),
+                            this.panel1Ref.current?.selectedEmbedding ?? null
                         )}
                     </div>
                 </div>

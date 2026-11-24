@@ -6,10 +6,12 @@ import {
     action,
     makeObservable,
     reaction,
+    runInAction,
     comparer,
 } from 'mobx';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
+import { EmbeddingsPanelStore } from 'shared/components/embeddings/EmbeddingsPanelStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
@@ -23,7 +25,9 @@ import {
     EMBEDDING_DATA_PREFIX,
     preComputeEmbeddingDataColors,
     getGeneAlterationLabel,
+    ExpressionColoring,
 } from 'shared/components/plots/EmbeddingPlotUtils';
+import { interpolateReds } from 'd3-scale-chromatic';
 import {
     EmbeddingDeckGLVisualization,
     EmbeddingDataOption,
@@ -36,23 +40,63 @@ import {
     seedLowHighColors,
     pickPercentileRange,
 } from 'shared/components/embeddings/controls/GradientRangeEditor';
-import { Gene, ClinicalData } from 'cbioportal-ts-api-client';
+import {
+    Gene,
+    ClinicalData,
+    Sample,
+    SampleIdentifier,
+} from 'cbioportal-ts-api-client';
+import comparisonClient from 'shared/api/comparisonGroupClientInstance';
+import { getGroupParameters } from 'pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
+import { getComparisonUrl } from 'shared/api/urls';
+import {
+    MapSelection,
+    MapSelectionSummary,
+} from 'shared/components/embeddings/state/MapSelection';
+import { MapSelectionList } from 'shared/components/embeddings/state/MapSelectionList';
 import { addCancerStudyAttribute } from 'shared/lib/ClinicalAttributeUtils';
+import {
+    getLoadedEmbeddingOptions,
+    isAnyEmbeddingPending,
+    EmbeddingScope,
+    msktargetMpathTsneData,
+    MSKTARGET_STUDY_ID,
+} from 'shared/components/embeddings/embeddingSources';
 
 import {
     EmbeddingData,
     ViewState,
     EmbeddingPoint,
 } from 'shared/components/embeddings/EmbeddingTypes';
-import { calculateDataBounds } from 'shared/components/embeddings/utils/dataUtils';
+import {
+    calculateContextPointBoost,
+    calculateDataBounds,
+    calculatePointScale,
+    calculateSparseMapPointFactor,
+} from 'shared/components/embeddings/utils/dataUtils';
+import { EmbeddingViewportState } from 'shared/components/embeddings/state/EmbeddingViewportState';
+import { EmbeddingCategoryVisibility } from 'shared/components/embeddings/state/EmbeddingCategoryVisibility';
 import {
     preComputeClinicalDataMaps,
     getMolecularDataForGeneSync,
     aggregateMolecularDataByPatient,
 } from 'shared/lib/PatientMolecularDataUtils';
+import { FeatureFlagEnum } from 'shared/featureFlags';
+
+// Out-of-cohort points, whose visibility belongs to the cohort control
+// rather than to the legend's "hide all".
+const EMBEDDING_CONFIG_CATEGORIES = [
+    'Sample not in this cohort',
+    'Case not in this cohort',
+];
 
 export interface IEmbeddingsPanelProps {
-    store: StudyViewPageStore;
+    store: EmbeddingsPanelStore;
+    /** Drawn over this panel's plot; see EmbeddingVisualizationProps. */
+    renderOverlay?: (
+        project: (x: number, y: number) => { x: number; y: number },
+        embedding?: EmbeddingData
+    ) => React.ReactNode;
     panelIndex: 1 | 2 | 3 | 4;
     panelCount: number;
     selectionMode: 'none' | 'lasso';
@@ -92,22 +136,17 @@ export interface IEmbeddingsPanelProps {
     sharedMapValue?: string;
     onSharedMapChange: (value: string) => void;
     onSetPanelCount: (target: number) => void;
+    // Page offset of the top of the panel grid, once measured.
+    panelGridTop?: number;
+    // Space below the grid the page needs for its own content, so the plot
+    // leaves it on screen rather than pushing it under the fold.
+    bottomReserve?: number;
 }
 
-const EMBEDDING_BASE_URL =
-    'https://datahub.assets.cbioportal.org/embeddings/msk_mosaic_2026';
-
-// Module-level singleton so every panel shares one fetch.
-const boehmHeData = remoteData<EmbeddingData>({
-    await: () => [],
-    invoke: async () => {
-        const response = await fetch(`${EMBEDDING_BASE_URL}/umap_he_50k.json`);
-        if (!response.ok) {
-            throw new Error('Failed to load H&E embedding data');
-        }
-        return response.json();
-    },
-});
+// Clinical attribute every embedding is coloured by on first load. CANCER_TYPE rather
+// than CANCER_TYPE_DETAILED: the detailed form runs to ~90 categories on a cohort this
+// size, which recycles the palette and leaves the legend unreadable.
+const DEFAULT_COLORING_ATTRIBUTE_ID = 'CANCER_TYPE';
 
 @observer
 export class EmbeddingsPanel extends React.Component<
@@ -123,27 +162,45 @@ export class EmbeddingsPanel extends React.Component<
     @observable private mutationTypeEnabled = true;
     @observable private copyNumberEnabled = true;
     @observable private structuralVariantEnabled = true;
+    @observable private mrnaEnabled = false;
     @observable private selectedEmbeddingValue: string = 'msk_mosaic_2026_he';
-    @observable.ref private viewState: ViewState = {
-        target: [0, 0, 0],
-        zoom: 0,
-        minZoom: -5,
-        maxZoom: 10,
-    };
+    private readonly viewport = new EmbeddingViewportState(viewState => {
+        // While locked, every panel both drives and follows the shared view via the holder they all poll (see startLockPolling).
+        if (this.props.isLockedToPrimary) {
+            this.props.onPrimaryViewStateChange(viewState);
+        }
+    });
     @observable private windowHeight = window.innerHeight;
     @observable private legendCollapsed = false;
     @observable.ref private pinnedPoint: EmbeddingPoint | null = null;
     // Two axes: hidden removes a category from the plot in either mode;
     // selected dims or filters everything else, like a lasso's remainder.
-    @observable.ref private hiddenCategories = new Set<string>();
+    private readonly categoryVisibility = new EmbeddingCategoryVisibility({
+        // QC categories are tracked separately via hiddenQcCategories.
+        alwaysVisible: EMBEDDING_CONFIG_CATEGORIES,
+        onHide: category => {
+            // Can't be part of the selection while it isn't in the plot.
+            if (this.selectedCategories.has(category)) {
+                const next = new Set(this.selectedCategories);
+                next.delete(category);
+                this.selectedCategories = next;
+            }
+        },
+    });
     @observable.ref private selectedCategories = new Set<string>();
-    // null means no lasso filter active; applied globally only via
-    // applyFilterGlobally (the "Make Global" button).
-    @observable.ref private lassoSelectedKeys: Set<string> | null = null;
+    // Each lasso makes its own named selection, shown as a chip beside the
+    // map. Everything downstream works off their union.
+    private readonly selections = new MapSelectionList();
+
+    @computed private get lassoSelectedKeys(): Set<string> | null {
+        return this.selections.keys;
+    }
+
     private urlParameterReactionDisposer?: () => void;
     private urlSyncReactionDisposer?: () => void;
     private viewStateReactionDisposer?: () => void;
     private driverAnnotationReactionDisposer?: () => void;
+    private coloringGeneReactionDisposer?: () => void;
     private filterChangeReactionDisposer?: () => void;
     private hiddenSampleKeysReactionDisposer?: () => void;
     private sampleCountsReportReactionDisposer?: () => void;
@@ -229,8 +286,10 @@ export class EmbeddingsPanel extends React.Component<
         this.urlParameterReactionDisposer = reaction(
             () => {
                 const urlOption = this.coloringFromURLParameter;
-                const clinicalAttributesReady =
-                    this.clinicalAttributes.length > 0;
+                // The list is never empty - a synthetic "Cancer Study"
+                // attribute is always prepended - so ask the fetch, not it.
+                const clinicalAttributesReady = this.store.clinicalAttributes
+                    .isComplete;
                 const urlWrapperReady = !!(this.store as any).urlWrapper;
 
                 return {
@@ -246,11 +305,11 @@ export class EmbeddingsPanel extends React.Component<
                 urlWrapperReady,
                 hasUrlParams,
             }) => {
-                if (!urlWrapperReady || !clinicalAttributesReady) {
+                if (!clinicalAttributesReady) {
                     return;
                 }
 
-                if (urlOption) {
+                if (urlWrapperReady && urlOption) {
                     // Compare logical value, not reference - avoids a
                     // loop when URL sync creates new object references.
                     const currentAttrId = this.selectedColoringOption?.info
@@ -268,13 +327,32 @@ export class EmbeddingsPanel extends React.Component<
                         return;
                     }
                     this.selectedColoringOption = urlOption;
-                } else if (!hasUrlParams) {
+                } else if (
+                    !this.selectedColoringOption &&
+                    (!urlWrapperReady || !hasUrlParams)
+                ) {
+                    // Only while nothing is chosen: this also fires when the
+                    // attribute list grows, which must not undo a choice.
                     const defaultOption = this.getDefaultColoringOption();
                     if (defaultOption) {
                         this.selectedColoringOption = defaultOption;
                         this.syncColoringSelectionToURL(defaultOption);
                     }
                 }
+            },
+            { fireImmediately: true }
+        );
+
+        this.coloringGeneReactionDisposer = reaction(
+            () => this.selectedEntrezGeneId,
+            entrezGeneId => {
+                if (!this.store.setColoringGenes) {
+                    return;
+                }
+                const gene = this.genes.find(
+                    g => g.entrezGeneId === entrezGeneId
+                );
+                this.store.setColoringGenes(gene ? [gene] : []);
             },
             { fireImmediately: true }
         );
@@ -414,9 +492,9 @@ export class EmbeddingsPanel extends React.Component<
 
     @action.bound
     private clearOwnFilters() {
-        this.hiddenCategories = new Set();
+        this.categoryVisibility.reset();
         this.selectedCategories = new Set();
-        this.lassoSelectedKeys = null;
+        this.selections.clear();
     }
 
     // Polls the shared viewState holder (a plain mutable object any panel writes to) rather than a reactive prop.
@@ -434,7 +512,7 @@ export class EmbeddingsPanel extends React.Component<
                 return;
             }
             const primary = this.props.primaryViewStateHolder.current;
-            if (primary && primary !== this.viewState) {
+            if (primary && primary !== this.viewport.current) {
                 this.adoptPrimaryViewState();
             }
             this.lockPollRafId = requestAnimationFrame(poll);
@@ -453,7 +531,7 @@ export class EmbeddingsPanel extends React.Component<
     private adoptPrimaryViewState() {
         const primary = this.props.primaryViewStateHolder.current;
         if (primary) {
-            this.viewState = primary;
+            this.viewport.adopt(primary);
         }
     }
 
@@ -467,6 +545,9 @@ export class EmbeddingsPanel extends React.Component<
         }
         if (this.urlSyncReactionDisposer) {
             this.urlSyncReactionDisposer();
+        }
+        if (this.coloringGeneReactionDisposer) {
+            this.coloringGeneReactionDisposer();
         }
         if (this.driverAnnotationReactionDisposer) {
             this.driverAnnotationReactionDisposer();
@@ -502,8 +583,13 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     private getDefaultColoringOption(): ColoringMenuOmnibarOption | undefined {
+        // Nothing to choose from yet; the reaction above picks one once the
+        // attributes arrive. Falling through here would settle on "None".
+        if (!this.store.clinicalAttributes.isComplete) {
+            return undefined;
+        }
         const cancerTypeAttr = this.clinicalAttributes.find(
-            attr => attr.clinicalAttributeId === 'CANCER_TYPE_DETAILED'
+            attr => attr.clinicalAttributeId === DEFAULT_COLORING_ATTRIBUTE_ID
         );
         if (cancerTypeAttr) {
             return {
@@ -710,14 +796,26 @@ export class EmbeddingsPanel extends React.Component<
         string,
         Map<string, string>
     > {
-        const ids = new Set(
-            EmbeddingsPanel.FIXED_TOOLTIP_CLINICAL_ATTRIBUTE_IDS
-        );
-        this.tooltipFieldsMirror.forEach(field => {
-            if (field.startsWith('clinical_')) {
-                ids.add(field.slice('clinical_'.length));
-            }
-        });
+        // Each attribute here is a fetch across every sample of the map, and
+        // the fixed rows are the same three on every page. Until a tooltip is
+        // actually wanted, offer only what colouring has already paid for.
+        const coloringAttributeId = this.selectedColoringOption?.info
+            ?.clinicalAttribute?.clinicalAttributeId;
+        const wanted =
+            this.tooltipDataRequested || this.tooltipFieldsMirror.size > 0;
+        const ids = new Set<string>();
+        if (wanted) {
+            EmbeddingsPanel.FIXED_TOOLTIP_CLINICAL_ATTRIBUTE_IDS.forEach(id =>
+                ids.add(id)
+            );
+            this.tooltipFieldsMirror.forEach(field => {
+                if (field.startsWith('clinical_')) {
+                    ids.add(field.slice('clinical_'.length));
+                }
+            });
+        } else if (coloringAttributeId) {
+            ids.add(coloringAttributeId);
+        }
 
         const result = new Map<string, Map<string, string>>();
         ids.forEach(id => {
@@ -857,7 +955,22 @@ export class EmbeddingsPanel extends React.Component<
         return !!embeddingsColoringSelection?.selectedOption;
     }
 
+    /** Whether the URL names a gene, which only the list can resolve. */
+    @computed private get urlNamesAGene(): boolean {
+        const selectedOption = (this.store as any).urlWrapper?.query?.[
+            this.coloringParamName
+        ]?.selectedOption;
+        return (
+            typeof selectedOption === 'string' && /^\d+_/.test(selectedOption)
+        );
+    }
+
+    // Every gene in the portal - 3 MB of them - and nothing needs the list
+    // until the colour-by menu is reached for, or a link names one.
     @computed get genes(): Gene[] {
+        if (!this.genesRequested && !this.urlNamesAGene) {
+            return [];
+        }
         const genesResult = this.store.allGenes;
         return genesResult.isComplete ? genesResult.result || [] : [];
     }
@@ -897,7 +1010,8 @@ export class EmbeddingsPanel extends React.Component<
     private isDefaultColoring(option: ColoringMenuOmnibarOption): boolean {
         return (
             option.info?.clinicalAttribute?.clinicalAttributeId ===
-                'CANCER_TYPE_DETAILED' || option.info?.entrezGeneId === -10000
+                DEFAULT_COLORING_ATTRIBUTE_ID ||
+            option.info?.entrezGeneId === -10000
         );
     }
 
@@ -906,10 +1020,12 @@ export class EmbeddingsPanel extends React.Component<
         this.selectedColoringOption = option;
     }
 
+    // Fills the viewport below the panel grid, leaving the tab's bottom padding
+    // and whatever the page reserves under it, so nothing starts off screen.
     @computed get plotHeight(): number {
         const viewportHeight = this.windowHeight;
-        const bottomPadding = 90;
-        const contentTop = 300;
+        const bottomPadding = 24 + (this.props.bottomReserve ?? 0);
+        const contentTop = this.props.panelGridTop ?? 300;
         // 4 panels lay out as a 2x2 grid (see EmbeddingsTab.tsx).
         const rowCount = this.props.panelCount === 4 ? 2 : 1;
         const rowGap = 12;
@@ -936,17 +1052,17 @@ export class EmbeddingsPanel extends React.Component<
         return !!this.store.plotsTabStore.structuralVariantCache;
     }
 
-    @computed get allEmbeddingOptions(): EmbeddingDataOption[] {
-        const options: EmbeddingDataOption[] = [];
-        if (boehmHeData.isComplete && boehmHeData.result) {
-            options.push({
-                value: 'msk_mosaic_2026_he',
-                label: boehmHeData.result.title,
-                data: boehmHeData.result,
-            });
-        }
+    @computed get embeddingScope(): EmbeddingScope {
+        return {
+            studyIds: this.currentStudyIds,
+            hasFeatureFlag: this.store.appStore.featureFlagStore.has(
+                FeatureFlagEnum.EMBEDDINGS
+            ),
+        };
+    }
 
-        return options;
+    @computed get allEmbeddingOptions(): EmbeddingDataOption[] {
+        return getLoadedEmbeddingOptions(this.embeddingScope);
     }
 
     @computed get currentStudyIds(): string[] {
@@ -966,7 +1082,20 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @computed get isEmbeddingDataLoading(): boolean {
-        return boehmHeData.isPending;
+        return isAnyEmbeddingPending(this.embeddingScope);
+    }
+
+    /**
+     * Scoped to the study the map belongs to, so other studies get no hint.
+     * The study is checked first: observing the loader's status is what
+     * starts its fetch, and nothing else should ask an unrelated study view
+     * to reach an MSK-internal host.
+     */
+    @computed get isTargetRnaEmbeddingUnreachable(): boolean {
+        return (
+            this.currentStudyIds.includes(MSKTARGET_STUDY_ID) &&
+            msktargetMpathTsneData.isError
+        );
     }
 
     @computed get hasEmbeddingSupport(): boolean {
@@ -1003,12 +1132,8 @@ export class EmbeddingsPanel extends React.Component<
         await: () => {
             const toAwait: any[] = [];
 
-            if (
-                this.selectedColoringOption?.info?.entrezGeneId &&
-                this.selectedColoringOption.info.entrezGeneId !== -3
-            ) {
-                const entrezGeneId = this.selectedColoringOption.info
-                    .entrezGeneId;
+            const entrezGeneId = this.selectedEntrezGeneId;
+            if (entrezGeneId) {
                 const queries = [{ entrezGeneId }];
                 const driverAnnotationsReady = this.driverAnnotationsEnabled;
 
@@ -1063,6 +1188,16 @@ export class EmbeddingsPanel extends React.Component<
                         )
                     );
                 }
+                if (this.mrnaEnabled && this.mrnaMolecularProfileId) {
+                    toAwait.push(
+                        this.store.plotsTabStore.numericGeneMolecularDataCache.get(
+                            {
+                                entrezGeneId,
+                                molecularProfileId: this.mrnaMolecularProfileId,
+                            }
+                        )
+                    );
+                }
             }
 
             return toAwait;
@@ -1091,6 +1226,94 @@ export class EmbeddingsPanel extends React.Component<
         );
     }
 
+    // undefined for clinical attributes, "Cancer Type" (-3) and "None" (-10000).
+    @computed get selectedEntrezGeneId(): number | undefined {
+        const id = this.selectedColoringOption?.info?.entrezGeneId;
+        if (!id || id === -3 || id === -10000) {
+            return undefined;
+        }
+        return id;
+    }
+
+    // Restricted to studies on screen, so another study's profile is never queried.
+    @computed get mrnaMolecularProfileId(): string | undefined {
+        if (!this.store.molecularProfiles.isComplete) {
+            return undefined;
+        }
+        const studyIds = new Set(this.currentStudyIds);
+        const profile = this.store.molecularProfiles.result!.find(
+            p =>
+                p.molecularAlterationType === 'MRNA_EXPRESSION' &&
+                studyIds.has(p.studyId)
+        );
+        return profile?.molecularProfileId;
+    }
+
+    @computed get mrnaDataExists(): boolean {
+        return !!this.mrnaMolecularProfileId;
+    }
+
+    @computed get isColoringByExpression(): boolean {
+        return (
+            this.mrnaEnabled &&
+            !!this.selectedEntrezGeneId &&
+            !!this.mrnaMolecularProfileId
+        );
+    }
+
+    // Expression per `studyId:sampleId`, log2(x+1) when the profile has no negative
+    // values: TPM spans orders of magnitude, so a few high samples would otherwise
+    // flatten the scale. Profiles with negatives (z-scores) stay linear.
+    @computed get expressionValues():
+        | { valueBySampleKey: Map<string, number>; isLog: boolean }
+        | undefined {
+        if (!this.isColoringByExpression) {
+            return undefined;
+        }
+        const entry = this.store.plotsTabStore.numericGeneMolecularDataCache.get(
+            {
+                entrezGeneId: this.selectedEntrezGeneId!,
+                molecularProfileId: this.mrnaMolecularProfileId!,
+            }
+        );
+        if (!entry.isComplete || !entry.result) {
+            return undefined;
+        }
+        const data = entry.result.filter(
+            d => d.value !== null && d.value !== undefined && !isNaN(d.value)
+        );
+        if (data.length === 0) {
+            return undefined;
+        }
+        const isLog = data.every(d => d.value >= 0);
+        const valueBySampleKey = new Map<string, number>();
+        data.forEach(d =>
+            valueBySampleKey.set(
+                `${d.studyId}:${d.sampleId}`,
+                isLog ? Math.log2(d.value + 1) : d.value
+            )
+        );
+        return { valueBySampleKey, isLog };
+    }
+
+    @computed get expressionColoring(): ExpressionColoring | undefined {
+        const expression = this.expressionValues;
+        const colorFn = this.effectiveNumericalValueToColor;
+        if (!expression || !colorFn) {
+            return undefined;
+        }
+        const geneSymbol =
+            this.genes.find(g => g.entrezGeneId === this.selectedEntrezGeneId)
+                ?.hugoGeneSymbol || 'Expression';
+        return {
+            valueBySampleKey: expression.valueBySampleKey,
+            colorFn,
+            label: `${geneSymbol} expression${
+                expression.isLog ? ' (log2)' : ''
+            }`,
+        };
+    }
+
     @computed get rawPlotData(): EmbeddingPlotPoint[] {
         if (!this.isTabActive) {
             return [];
@@ -1099,9 +1322,7 @@ export class EmbeddingsPanel extends React.Component<
             return [];
         }
 
-        const isColoringByGene =
-            this.selectedColoringOption?.info?.entrezGeneId &&
-            this.selectedColoringOption.info.entrezGeneId !== -3;
+        const isColoringByGene = this.selectedEntrezGeneId !== undefined;
 
         // Only depend on driverAnnotationSettings when coloring by gene, or every panel recomputes on any other panel's gene toggle.
         if (isColoringByGene) {
@@ -1113,7 +1334,8 @@ export class EmbeddingsPanel extends React.Component<
             isColoringByGene &&
             (this.mutationTypeEnabled ||
                 this.copyNumberEnabled ||
-                this.structuralVariantEnabled)
+                this.structuralVariantEnabled ||
+                this.mrnaEnabled)
         ) {
             if (!this.molecularDataForColoring.isComplete) {
                 return [];
@@ -1144,13 +1366,14 @@ export class EmbeddingsPanel extends React.Component<
             this.structuralVariantEnabled,
             this.gradientOverride
                 ? this.effectiveNumericalValueToColor
-                : undefined
+                : undefined,
+            this.expressionColoring
         );
     }
 
     @computed get hasLocalSelection(): boolean {
         return (
-            this.hiddenCategories.size > 0 ||
+            this.categoryVisibility.hidden.size > 0 ||
             this.selectedCategories.size > 0 ||
             this.lassoSelectedKeys !== null
         );
@@ -1172,11 +1395,11 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @computed private get hiddenCategoryKeys(): Set<string> {
-        if (this.hiddenCategories.size === 0) {
+        if (this.categoryVisibility.hidden.size === 0) {
             return new Set<string>();
         }
         return this.collectKeysByLabel(label =>
-            this.hiddenCategories.has(label)
+            this.categoryVisibility.hidden.has(label)
         );
     }
 
@@ -1274,22 +1497,56 @@ export class EmbeddingsPanel extends React.Component<
 
     // Shared by plotData/categoryCounts/categoryColors so all three agree
     // on what is dimmed.
+    // Which selection each point belongs to, so the map can tell them apart.
+    // A point in two selections takes the colour of the later one, matching
+    // the order the chips are read in.
+    @computed private get selectionColorByKey(): Map<string, string> {
+        return this.selections.colorByKey;
+    }
+
     @computed private get dimmedPlotData(): EmbeddingPlotPoint[] {
         const deemphasizedKeys = this.deemphasizedKeys;
-        if (deemphasizedKeys.size === 0) {
+        const selectionColors = this.selectionColorByKey;
+        if (deemphasizedKeys.size === 0 && selectionColors.size === 0) {
             return this.rawPlotData;
         }
 
-        // Keeps its own color and category, and just recedes.
+        // Keeps its own color and category, and just recedes or gains an
+        // outline in its selection's colour.
         return this.rawPlotData.map(point => {
             if (point.isInCohort === false) {
                 return point;
             }
             const key = point.sampleId || point.patientId;
-            return key && deemphasizedKeys.has(key)
-                ? { ...point, isDeemphasized: true }
-                : point;
+            if (!key) {
+                return point;
+            }
+            const selectionColor = selectionColors.get(key);
+            if (deemphasizedKeys.has(key)) {
+                return { ...point, isDeemphasized: true };
+            }
+            return selectionColor ? { ...point, selectionColor } : point;
         });
+    }
+
+    // From the whole embedding rather than plotData, so hiding categories or
+    // out-of-cohort samples leaves the remaining points' size unchanged.
+    @computed get pointScale(): number {
+        const points = this.selectedEmbedding?.data.data ?? [];
+        return (
+            calculatePointScale(points) *
+            calculateSparseMapPointFactor(points.length)
+        );
+    }
+
+    // Divides out the sparse-map factor so out-of-cohort backdrop points keep
+    // their size while sample points shrink.
+    @computed get contextPointBoost(): number {
+        const pointCount = this.selectedEmbedding?.data.data.length ?? 0;
+        return (
+            calculateContextPointBoost(pointCount) /
+            calculateSparseMapPointFactor(pointCount)
+        );
     }
 
     @computed get plotData(): EmbeddingPlotPoint[] {
@@ -1382,7 +1639,25 @@ export class EmbeddingsPanel extends React.Component<
         return false;
     }
 
+    // Continuous coloring of either kind; drives the gradient legend and editor.
+    @computed get isNumericColoring(): boolean {
+        return this.isNumericClinicalAttribute || this.isColoringByExpression;
+    }
+
     @computed get numericalValueRange(): [number, number] | undefined {
+        if (this.isColoringByExpression) {
+            const values = this.numericalRawValues;
+            if (!values || values.length === 0) {
+                return undefined;
+            }
+            let min = Infinity;
+            let max = -Infinity;
+            for (const value of values) {
+                min = Math.min(min, value);
+                max = Math.max(max, value);
+            }
+            return [min, max];
+        }
         if (
             this.selectedColoringOption?.info?.clinicalAttribute &&
             this.isNumericClinicalAttribute
@@ -1419,6 +1694,15 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @computed get numericalValueToColor(): ((x: number) => string) | undefined {
+        if (this.isColoringByExpression) {
+            const range = this.numericalValueRange;
+            if (!range) {
+                return undefined;
+            }
+            const [min, max] = range;
+            const span = max - min || 1;
+            return (x: number) => interpolateReds((x - min) / span);
+        }
         if (
             this.selectedColoringOption?.info?.clinicalAttribute &&
             this.isNumericClinicalAttribute
@@ -1458,6 +1742,12 @@ export class EmbeddingsPanel extends React.Component<
 
     // Raw values for the current numeric coloring attribute - basis for the histogram and percentile clipping.
     @computed get numericalRawValues(): number[] | undefined {
+        if (this.isColoringByExpression) {
+            const expression = this.expressionValues;
+            return expression
+                ? Array.from(expression.valueBySampleKey.values())
+                : undefined;
+        }
         if (
             !this.selectedColoringOption?.info?.clinicalAttribute ||
             !this.isNumericClinicalAttribute
@@ -1601,7 +1891,7 @@ export class EmbeddingsPanel extends React.Component<
         let visibleCount = 0;
         this.categoryCounts.forEach((count, category) => {
             if (
-                !this.hiddenCategories.has(category) &&
+                !this.categoryVisibility.hidden.has(category) &&
                 !this.hiddenQcCategoriesMirror.has(category)
             ) {
                 visibleCount++;
@@ -1653,13 +1943,15 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @computed get isLoading(): boolean {
-        if (boehmHeData.isPending) {
+        if (isAnyEmbeddingPending(this.embeddingScope)) {
             return true;
         }
 
         if (
             !this.store.samples.isComplete ||
-            !this.store.selectedSamples.isComplete
+            // Absent on a page whose map is not filtered by a cohort, where
+            // there is nothing to wait for.
+            this.store.selectedSamples?.isComplete === false
         ) {
             return true;
         }
@@ -1673,18 +1965,21 @@ export class EmbeddingsPanel extends React.Component<
             const cacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
                 this.selectedColoringOption.info.clinicalAttribute
             );
-            if (!cacheEntry.isComplete) {
+            // Pending rather than not-complete: a fetch the API refused is
+            // never going to complete, and the map it would have coloured is
+            // worth more than a spinner that never stops.
+            if (cacheEntry.isPending) {
                 return true;
             }
         }
 
         if (
-            this.selectedColoringOption?.info?.entrezGeneId &&
-            this.selectedColoringOption.info.entrezGeneId !== -3 &&
+            this.selectedEntrezGeneId !== undefined &&
             (this.mutationTypeEnabled ||
                 this.copyNumberEnabled ||
-                this.structuralVariantEnabled) &&
-            !this.molecularDataForColoring.isComplete
+                this.structuralVariantEnabled ||
+                this.mrnaEnabled) &&
+            this.molecularDataForColoring.isPending
         ) {
             return true;
         }
@@ -1698,7 +1993,7 @@ export class EmbeddingsPanel extends React.Component<
         this.gradientOverride = undefined;
         this.viewRange = undefined;
         // Labels from the old coloring's category space - a lasso selection stays identity-based and valid, so it's untouched.
-        this.hiddenCategories = new Set();
+        this.categoryVisibility.reset();
         this.selectedCategories = new Set();
         this.syncColoringSelectionToURL(option);
     }
@@ -1813,19 +2108,49 @@ export class EmbeddingsPanel extends React.Component<
         this.viewRange = [min, max];
     }
 
+    // Expression is continuous and the alteration colorings categorical, so they
+    // can't be blended: turning one kind on turns the other off.
     @action.bound
     private onMutationTypeToggle(enabled: boolean) {
         this.mutationTypeEnabled = enabled;
+        if (enabled) {
+            this.setMrnaEnabled(false);
+        }
     }
 
     @action.bound
     private onCopyNumberToggle(enabled: boolean) {
         this.copyNumberEnabled = enabled;
+        if (enabled) {
+            this.setMrnaEnabled(false);
+        }
     }
 
     @action.bound
     private onStructuralVariantToggle(enabled: boolean) {
         this.structuralVariantEnabled = enabled;
+        if (enabled) {
+            this.setMrnaEnabled(false);
+        }
+    }
+
+    @action.bound
+    private onMrnaToggle(enabled: boolean) {
+        this.setMrnaEnabled(enabled);
+        if (enabled) {
+            this.mutationTypeEnabled = false;
+            this.copyNumberEnabled = false;
+            this.structuralVariantEnabled = false;
+        }
+    }
+
+    // The gradient override is in the old scale's units, so it can't carry over.
+    private setMrnaEnabled(enabled: boolean) {
+        if (this.mrnaEnabled !== enabled) {
+            this.mrnaEnabled = enabled;
+            this.gradientOverride = undefined;
+            this.viewRange = undefined;
+        }
     }
 
     // Public - called via ref from EmbeddingsTab's status bar dropdown.
@@ -1854,36 +2179,13 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @action.bound
-    private setViewState(newViewState: ViewState) {
-        this.viewState = newViewState;
-        // While locked, every panel both drives and follows the shared view via the holder they all poll (see startLockPolling).
-        if (this.props.isLockedToPrimary) {
-            this.props.onPrimaryViewStateChange(newViewState);
-        }
-    }
-
-    @action.bound
-    private onViewStateChange(newViewState: ViewState) {
-        this.setViewState(newViewState);
-    }
-
-    @action.bound
     private centerView() {
-        if (this.plotData && this.plotData.length > 0) {
-            const bounds = calculateDataBounds(
-                this.plotData as EmbeddingPoint[]
-            );
-            this.setViewState({
-                target: [bounds.centerX, bounds.centerY, 0],
-                zoom: bounds.zoom,
-                minZoom: -5,
-                maxZoom: 10,
-            });
-        }
+        this.viewport.centerOn(this.plotData as EmbeddingPoint[]);
     }
 
     @action.bound
     private pinPoint(point: EmbeddingPoint) {
+        this.tooltipDataRequested = true;
         this.pinnedPoint = point;
     }
 
@@ -1905,23 +2207,6 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @action.bound
-    private toggleCategoryVisibility(category: string) {
-        const next = new Set(this.hiddenCategories);
-        if (next.has(category)) {
-            next.delete(category);
-        } else {
-            next.add(category);
-            // Can't be part of the selection while it isn't in the plot.
-            if (this.selectedCategories.has(category)) {
-                const nextSelected = new Set(this.selectedCategories);
-                nextSelected.delete(category);
-                this.selectedCategories = nextSelected;
-            }
-        }
-        this.hiddenCategories = next;
-    }
-
-    @action.bound
     private toggleCategorySelected(category: string) {
         const next = new Set(this.selectedCategories);
         if (next.has(category)) {
@@ -1934,70 +2219,153 @@ export class EmbeddingsPanel extends React.Component<
 
     @action.bound
     private toggleAllCategories() {
-        // QC categories are tracked separately via hiddenQcCategories -
-        // keep this exclusion as a defensive safety net.
-        const embeddingConfigCategories = [
-            'Sample not in this cohort',
-            'Case not in this cohort',
-        ];
+        this.categoryVisibility.toggleAll(this.categoryCounts?.keys() ?? []);
+    }
 
-        if (this.hiddenCategories.size === 0) {
-            const toHide = new Set<string>();
-            if (this.categoryCounts) {
-                this.categoryCounts.forEach((count, category) => {
-                    if (!embeddingConfigCategories.includes(category)) {
-                        toHide.add(category);
-                    }
-                });
-            }
-            this.hiddenCategories = toHide;
-        } else {
-            const keepHidden = new Set<string>();
-            this.hiddenCategories.forEach(category => {
-                if (embeddingConfigCategories.includes(category)) {
-                    keepHidden.add(category);
-                }
-            });
-            this.hiddenCategories = keepHidden;
+    // The points a local selection leaves. plotData is already narrowed to
+    // this in filter mode, but not in highlight mode (a hidden category isn't
+    // even dimmed there).
+    @computed get locallySelectedPoints(): EmbeddingPlotPoint[] {
+        if (this.plotData.length === 0 || !this.selectedEmbedding) {
+            return [];
         }
+        const excludedKeys = this.localSelectionExcludedKeys;
+        if (excludedKeys.size === 0) {
+            return this.plotData;
+        }
+        return this.plotData.filter(p => {
+            const key = p.sampleId || p.patientId;
+            return key ? !excludedKeys.has(key) : true;
+        });
+    }
+
+    /** The page's own sample records for a set of plotted points. */
+    private samplesForPoints(points: EmbeddingPlotPoint[]): Sample[] {
+        if (points.length === 0 || !this.selectedEmbedding) {
+            return [];
+        }
+        const allSamples = this.store.samples.result || [];
+        if (this.selectedEmbedding.data.embedding_type === 'samples') {
+            // By uniqueSampleKey, not sampleId: an id is only unique within
+            // a study, so matching on it alone pulls in same-named samples
+            // from the other studies in the cohort.
+            const selectedSampleKeys = new Set(
+                points.map(p => p.uniqueSampleKey).filter(Boolean)
+            );
+            return allSamples.filter(sample =>
+                selectedSampleKeys.has(sample.uniqueSampleKey)
+            );
+        }
+        const selectedPatientSet = new Set(
+            points.map(p => p.patientId).filter(Boolean)
+        );
+        return allSamples.filter(sample =>
+            selectedPatientSet.has(sample.patientId)
+        );
+    }
+
+    /** The selection as the page's own sample records, for whoever acts on it. */
+    @computed get locallySelectedSamples(): Sample[] {
+        return this.samplesForPoints(this.locallySelectedPoints);
+    }
+
+    private pointsInSelection(selection: MapSelection): EmbeddingPlotPoint[] {
+        return this.rawPlotData.filter(p => {
+            const key = p.sampleId || p.patientId;
+            return !!key && selection.keys.has(key);
+        });
+    }
+
+    @observable private isComparingSelections = false;
+
+    // Fetching what a tooltip or the gene menu needs costs a pass over the
+    // whole map, so it waits until something asks for it. See
+    // tooltipClinicalAttributeValueMaps and genes.
+    @observable private tooltipDataRequested = false;
+    @observable private genesRequested = false;
+
+    @action.bound
+    requestTooltipData() {
+        this.tooltipDataRequested = true;
+    }
+
+    @action.bound
+    requestGenes() {
+        this.genesRequested = true;
+    }
+
+    /**
+     * Opens the selections side by side in group comparison.
+     *
+     * Each becomes a group of its own, named and coloured as its chip is, so
+     * the neighbourhoods picked on the map are what the comparison contrasts.
+     */
+    @action.bound
+    compareSelections() {
+        if (this.selections.length < 2 || this.isComparingSelections) {
+            return;
+        }
+        const origin = this.store.queriedPhysicalStudyIds.result || [];
+        const groups = this.selections.all.map(selection =>
+            getGroupParameters(
+                selection.name,
+                this.samplesForPoints(this.pointsInSelection(selection)).map(
+                    sample =>
+                        ({
+                            studyId: sample.studyId,
+                            sampleId: sample.sampleId,
+                        } as SampleIdentifier)
+                ),
+                origin,
+                selection.color
+            )
+        );
+        if (groups.some(group => group.studies.length === 0)) {
+            return;
+        }
+        this.isComparingSelections = true;
+        // Opened up front: a window opened after the await is a popup the
+        // browser blocks, since the click is no longer what opened it.
+        const comparisonWindow = window.open('', '_blank');
+        comparisonClient
+            .addComparisonSession({
+                groups,
+                origin,
+                clinicalAttributeName: this.selectedEmbedding?.label,
+            })
+            .then(({ id }) => {
+                const url = getComparisonUrl({ comparisonId: id });
+                if (comparisonWindow) {
+                    comparisonWindow.location.href = url;
+                } else {
+                    window.location.href = url;
+                }
+            })
+            .catch(() => comparisonWindow?.close())
+            .then(() =>
+                runInAction(() => {
+                    this.isComparingSelections = false;
+                })
+            );
     }
 
     // Called via ref from "Make Global". Returns whether a selection was actually applied, so a no-op doesn't discard local filters.
     @action.bound
     applyFilterGlobally(): boolean {
-        if (this.plotData.length === 0 || !this.selectedEmbedding) {
+        if (!this.store.updateCustomSelect) {
+            return false;
+        }
+        if (
+            this.locallySelectedPoints.length === 0 ||
+            !this.selectedEmbedding
+        ) {
             return false;
         }
 
-        // plotData is already narrowed to this in filter mode, but not in
-        // highlight mode (a hidden category isn't even dimmed there).
-        const excludedKeys = this.localSelectionExcludedKeys;
-        const selectedPoints =
-            excludedKeys.size === 0
-                ? this.plotData
-                : this.plotData.filter(p => {
-                      const key = p.sampleId || p.patientId;
-                      return key ? !excludedKeys.has(key) : true;
-                  });
-        if (selectedPoints.length === 0) {
-            return false;
-        }
-
-        const allSamples = this.store.samples.result || [];
+        const samplesForSelection = this.locallySelectedSamples;
         const embeddingType = this.selectedEmbedding.data.embedding_type;
 
         if (embeddingType === 'samples') {
-            // By uniqueSampleKey, not sampleId: an id is only unique within
-            // a study, so matching on it alone pulls in same-named samples
-            // from the other studies in the cohort.
-            const selectedSampleKeys = new Set(
-                selectedPoints.map(p => p.uniqueSampleKey).filter(Boolean)
-            );
-
-            const samplesForSelection = allSamples.filter(sample =>
-                selectedSampleKeys.has(sample.uniqueSampleKey)
-            );
-
             const customChartData = {
                 origin: [this.selectedEmbedding.label],
                 displayName: `${this.selectedEmbedding.label} Sample Selection`,
@@ -2013,16 +2381,8 @@ export class EmbeddingsPanel extends React.Component<
                 })),
             };
 
-            this.store.updateCustomSelect(customChartData);
+            this.store.updateCustomSelect!(customChartData);
         } else {
-            const selectedPatientSet = new Set(
-                selectedPoints.map(p => p.patientId).filter(Boolean)
-            );
-
-            const samplesForSelectedPatients = allSamples.filter(sample =>
-                selectedPatientSet.has(sample.patientId)
-            );
-
             const customChartData = {
                 origin: [this.selectedEmbedding.label],
                 displayName: `${this.selectedEmbedding.label} Patient Selection`,
@@ -2030,7 +2390,7 @@ export class EmbeddingsPanel extends React.Component<
                 datatype: 'STRING',
                 patientAttribute: true,
                 priority: 1,
-                data: samplesForSelectedPatients.map(sample => ({
+                data: samplesForSelection.map(sample => ({
                     studyId: sample.studyId,
                     patientId: sample.patientId,
                     sampleId: sample.sampleId,
@@ -2038,27 +2398,58 @@ export class EmbeddingsPanel extends React.Component<
                 })),
             };
 
-            this.store.updateCustomSelect(customChartData);
+            this.store.updateCustomSelect!(customChartData);
         }
         return true;
     }
 
-    // A lasso selection becomes a local filter (see lassoSelectedKeys),
-    // applied globally only via applyFilterGlobally ("Make Global").
+    // Each draw adds a selection of its own, so several can be held at once
+    // and compared. Their union is the local filter.
     @action.bound
-    private handlePointSelection(selectedPoints: any[]) {
+    private handlePointSelection(
+        selectedPoints: any[],
+        path?: Array<{ x: number; y: number }>
+    ) {
         if (!selectedPoints || selectedPoints.length === 0) {
             return;
         }
-        // Additive, so consecutive draws build up a set instead of replacing it.
-        const keys = new Set<string>(this.lassoSelectedKeys ?? []);
+        const keys = new Set<string>();
         selectedPoints.forEach(p => {
+            // Backdrop points from outside the cohort are pickable but have
+            // no sample behind them here, so they would inflate the count
+            // against what a comparison or a filter could ever contain.
+            if (p.isInCohort === false) {
+                return;
+            }
             const key = p.sampleId || p.patientId;
             if (key) {
                 keys.add(key);
             }
         });
-        this.lassoSelectedKeys = keys;
+        if (keys.size === 0) {
+            return;
+        }
+        this.selections.add(keys, path);
+    }
+
+    @action.bound
+    clearSelections() {
+        this.selections.clear();
+    }
+
+    @action.bound
+    removeSelection(id: number) {
+        this.selections.remove(id);
+    }
+
+    @action.bound
+    renameSelection(id: number, name: string) {
+        this.selections.rename(id, name);
+    }
+
+    /** What the chips beside the map show. */
+    @computed get selectionSummaries(): MapSelectionSummary[] {
+        return this.selections.summaries;
     }
 
     // Plain method, not @computed: renderControls' callback reads props
@@ -2103,22 +2494,28 @@ export class EmbeddingsPanel extends React.Component<
         const patientData = this.plotData;
         const visualizationProps = {
             data: patientData,
+            pointScale: this.pointScale,
+            contextPointBoost: this.contextPointBoost,
             title: `${this.selectedEmbedding.label} Embedding - ${this.selectedEmbedding.data.title}`,
             // No Y-axis label - it overlapped the panel controls.
             xAxisLabel: this.selectedEmbedding.label,
             height: this.plotHeight,
             showLegend: true,
             filename: `${this.selectedEmbedding.value}_embedding`,
-            viewState: this.viewState,
-            onViewStateChange: this.onViewStateChange,
+            renderOverlay: this.props.renderOverlay,
+            overlayEmbedding: this.selectedEmbedding?.data,
+            viewState: this.viewport.current,
+            onViewStateChange: this.viewport.set,
             onPointSelection: this.handlePointSelection,
+            selectionOutlines: this.selections.outlines,
+            selectionCount: this.selections.length,
             selectedPatientIds: this.selectedPatientIds,
             embeddingType: this.selectedEmbedding.data.embedding_type,
             categoryCounts: this.categoryCounts,
             visibleCategoryCounts: this.visibleCategoryCounts,
             categoryColors: this.categoryColors,
-            hiddenCategories: this.hiddenCategories,
-            onToggleCategoryVisibility: this.toggleCategoryVisibility,
+            hiddenCategories: this.categoryVisibility.hidden,
+            onToggleCategoryVisibility: this.categoryVisibility.toggle,
             selectedCategories: this.selectedCategories,
             onToggleCategorySelected: this.toggleCategorySelected,
             onToggleAllCategories: this.toggleAllCategories,
@@ -2135,7 +2532,7 @@ export class EmbeddingsPanel extends React.Component<
             totalSampleCount: this.totalSampleCount,
             visibleCategoryCount: this.visibleCategoryCount,
             totalCategoryCount: this.totalCategoryCount,
-            isNumericAttribute: this.isNumericClinicalAttribute,
+            isNumericAttribute: this.isNumericColoring,
             numericalValueRange: this.effectiveNumericalValueRange,
             numericalValueToColor: this.effectiveNumericalValueToColor,
             autoNumericalValueRange: this.viewRange ?? this.numericalValueRange,
@@ -2146,6 +2543,7 @@ export class EmbeddingsPanel extends React.Component<
             onClipToPercentile: this.onClipToPercentile,
             pinnedPoint: this.pinnedPoint,
             onPinPoint: this.pinPoint,
+            onPointHovered: this.requestTooltipData,
             onUnpinPoint: this.unpinPoint,
             selectedTooltipFields: new Set(this.props.tooltipFields), //Clone to ensure prop identity changes and the tooltip re-renders reliably
             colorByLabel: this.effectiveColoringOption?.label,
@@ -2169,16 +2567,23 @@ export class EmbeddingsPanel extends React.Component<
                         this.props.panelCount > 1 && !this.props.isMapLocked
                     }
                     genes={this.genes}
+                    onColorByReached={this.requestGenes}
                     clinicalAttributes={this.clinicalAttributes}
                     additionalGroups={this.embeddingDataGroups}
                     selectedColoringOption={this.effectiveColoringOption}
-                    isLoading={this.isLoading}
+                    isLoading={
+                        this.isLoading ||
+                        (this.genesRequested && !this.store.allGenes.isComplete)
+                    }
                     mutationDataExists={this.mutationDataExists}
                     cnaDataExists={this.cnaDataExists}
                     svDataExists={this.svDataExists}
                     mutationTypeEnabled={this.mutationTypeEnabled}
                     copyNumberEnabled={this.copyNumberEnabled}
                     structuralVariantEnabled={this.structuralVariantEnabled}
+                    mrnaDataExists={this.mrnaDataExists}
+                    mrnaEnabled={this.mrnaEnabled}
+                    onMrnaToggle={this.onMrnaToggle}
                     onColoringSelectionChange={this.onColoringSelectionChange}
                     onMutationTypeToggle={this.onMutationTypeToggle}
                     onCopyNumberToggle={this.onCopyNumberToggle}
@@ -2186,6 +2591,17 @@ export class EmbeddingsPanel extends React.Component<
                     tooltipFieldGroups={this.tooltipFieldGroups}
                     selectedTooltipFields={this.props.tooltipFields}
                     onTooltipFieldsChange={this.props.onTooltipFieldsChange}
+                    selections={this.selectionSummaries}
+                    onRemoveSelection={this.removeSelection}
+                    onRenameSelection={this.renameSelection}
+                    onClearSelections={this.clearSelections}
+                    onCompareSelections={this.compareSelections}
+                    isComparingSelections={this.isComparingSelections}
+                    selectionsEmptyHint={
+                        this.props.selectionMode === 'lasso'
+                            ? 'Draw on the map to make one.'
+                            : undefined
+                    }
                     onCenter={this.centerView}
                     isLockedToPrimary={this.props.isLockedToPrimary}
                     onToggleLockedToPrimary={this.props.onToggleLockedToPrimary}
@@ -2226,6 +2642,22 @@ export class EmbeddingsPanel extends React.Component<
         }
 
         if (!this.hasEmbeddingSupport) {
+            if (this.isTargetRnaEmbeddingUnreachable) {
+                return (
+                    <div style={{ padding: '20px', textAlign: 'center' }}>
+                        <h4>Embeddings Visualization</h4>
+                        <p>
+                            The MSK-TARGET RNA similarity map could not be
+                            loaded. It is hosted on the MSK internal network.
+                        </p>
+                        <p>
+                            Connect to the MSK VPN, or open this page from a
+                            machine on the MSK network, and reload.
+                        </p>
+                    </div>
+                );
+            }
+
             const studyText =
                 this.currentStudyIds.length === 1
                     ? `Current study: ${this.currentStudyIds[0]}`

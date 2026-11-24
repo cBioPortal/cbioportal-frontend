@@ -14,8 +14,11 @@ export function dataToScreen(
     const centerX = width / 2;
     const centerY = height / 2;
 
+    // The plot draws through an OrthographicView built without `flipY`, which
+    // therefore takes its default of true: a top-left origin with data y
+    // growing downward. Screen y runs the same way, so it is not negated.
     const screenX = centerX + (dataX - viewState.target[0]) * scale;
-    const screenY = centerY - (dataY - viewState.target[1]) * scale; // Y is flipped
+    const screenY = centerY + (dataY - viewState.target[1]) * scale;
 
     return { x: screenX, y: screenY };
 }

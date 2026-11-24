@@ -121,6 +121,25 @@ var config = {
     optimization: {
         splitChunks: {
             cacheGroups: {
+                // One copy of the GL stack for the whole app. Its layers
+                // assemble shaders from several of these packages at once, so
+                // two copies in a page link a shader against the wrong macros
+                // and the shader does not compile.
+                //
+                // The production build already resolves them once, into the
+                // app bundle, and emits no chunk from this group. It is the
+                // dev server that needs it: there each page is its own lazily
+                // loaded chunk, and the group below shares node_modules for
+                // initial chunks only, so a page importing another page's
+                // modules picked up a second copy and its maps went blank.
+                deckgl: {
+                    type: 'javascript/auto',
+                    test: /[\\/]node_modules[\\/](@deck\.gl|@luma\.gl|@math\.gl|@probe\.gl)[\\/]/,
+                    name: 'deckgl',
+                    chunks: 'all',
+                    enforce: true,
+                    priority: 10,
+                },
                 // Backend HTML hardcodes common.bundle.js; see output.filename.
                 common: {
                     type: 'javascript/auto',
