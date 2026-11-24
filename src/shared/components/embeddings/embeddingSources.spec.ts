@@ -52,24 +52,43 @@ describe('embeddingSources', () => {
         assert.isTrue(
             hasEmbeddingForStudies({
                 studyIds: [MSKTARGET_STUDY_ID],
+                hasFeatureFlag: true,
+            }),
+            'MSK-TARGET has a map'
+        );
+        assert.isFalse(
+            hasEmbeddingForStudies({
+                studyIds: [MSKTARGET_STUDY_ID],
                 hasFeatureFlag: false,
             }),
-            'MSK-TARGET has a map and does not need the feature flag'
+            'and asks for the feature flag, as every map does for now'
         );
         assert.isFalse(
             hasEmbeddingForStudies({
                 studyIds: ['msk_impact_50k_2026'],
                 hasFeatureFlag: false,
             }),
-            'the Mosaic map asks for the feature flag'
+            'as does the Mosaic map'
         );
+        assert.deepEqual(requested, []);
+    });
+
+    it('fetches nothing for a covered study without the feature flag', () => {
+        const scope = {
+            studyIds: [MSKTARGET_STUDY_ID],
+            hasFeatureFlag: false,
+        };
+        observe(() => {
+            getLoadedEmbeddingOptions(scope);
+            isAnyEmbeddingPending(scope);
+        });
         assert.deepEqual(requested, []);
     });
 
     it('fetches the MSK-TARGET map for its own study', () => {
         const scope = {
             studyIds: [MSKTARGET_STUDY_ID],
-            hasFeatureFlag: false,
+            hasFeatureFlag: true,
         };
         observe(() => {
             getLoadedEmbeddingOptions(scope);

@@ -99,7 +99,7 @@ const EMBEDDING_SOURCES: EmbeddingSource[] = [
         value: 'msktarget_rna_tsne_mpath',
         studyIds: [MSKTARGET_STUDY_ID],
         loader: msktargetMpathTsneData,
-        requiresFeatureFlag: false,
+        requiresFeatureFlag: true,
     },
 ];
 
