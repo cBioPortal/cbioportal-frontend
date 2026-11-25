@@ -366,7 +366,15 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     };
 
     private handleMouseDown = (event: React.MouseEvent) => {
+        // A middle-button drag pans the map; without this, browsers that
+        // autoscroll on a middle click would scroll the page as well.
+        if (event.button === 1) {
+            event.preventDefault();
+        }
         if (this.selectionMode === 'none') return;
+        // Only the left button draws a lasso; the others are left to the
+        // map's controller, so a middle-button drag pans in Select mode too.
+        if (event.button !== 0) return;
 
         const rect = event.currentTarget.getBoundingClientRect();
         const x = event.clientX - rect.left;
