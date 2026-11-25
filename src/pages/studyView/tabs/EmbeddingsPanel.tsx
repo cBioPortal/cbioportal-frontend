@@ -2213,7 +2213,22 @@ export class EmbeddingsPanel extends React.Component<
 
     @action.bound
     private centerView() {
-        this.viewport.centerOn(this.plotData as EmbeddingPoint[]);
+        this.viewport.centerOn(
+            this.plotData as EmbeddingPoint[],
+            this.canvasSize
+        );
+    }
+
+    private canvasSize?: { width: number; height: number };
+
+    // Refits on resize until the user pans or zooms; the first view may also
+    // have been framed before the canvas was measured.
+    @action.bound
+    private onCanvasResize(canvas: { width: number; height: number }) {
+        this.canvasSize = canvas;
+        if (this.viewStateInitialized && this.viewport.isFitted) {
+            this.centerView();
+        }
     }
 
     @action.bound
@@ -2546,6 +2561,7 @@ export class EmbeddingsPanel extends React.Component<
             overlayEmbedding: this.selectedEmbedding?.data,
             viewState: this.viewport.current,
             onViewStateChange: this.viewport.set,
+            onCanvasResize: this.onCanvasResize,
             onPointSelection: this.handlePointSelection,
             selectionOutlines: this.selections.outlines,
             selectionCount: this.selections.length,

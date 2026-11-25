@@ -20,6 +20,9 @@ export class EmbeddingViewportState {
         maxZoom: EMBEDDING_MAX_ZOOM,
     };
 
+    // The view centerOn last set, so a resize can tell whether to refit.
+    private fitted?: ViewState;
+
     constructor(private onChange?: (viewState: ViewState) => void) {
         makeObservable(this);
     }
@@ -37,18 +40,30 @@ export class EmbeddingViewportState {
         this.current = viewState;
     }
 
-    /** Frames these points. Does nothing for an empty set, which has no centre. */
+    /**
+     * Frames these points in a canvas of this size. Does nothing for an empty
+     * set, which has no centre.
+     */
     @action.bound
-    centerOn(points: EmbeddingPoint[]) {
+    centerOn(
+        points: EmbeddingPoint[],
+        canvas?: { width: number; height: number }
+    ) {
         if (!points || points.length === 0) {
             return;
         }
-        const bounds = calculateDataBounds(points);
-        this.set({
+        const bounds = calculateDataBounds(points, canvas);
+        this.fitted = {
             target: [bounds.centerX, bounds.centerY, 0],
             zoom: bounds.zoom,
             minZoom: EMBEDDING_MIN_ZOOM,
             maxZoom: EMBEDDING_MAX_ZOOM,
-        });
+        };
+        this.set(this.fitted);
+    }
+
+    /** True until the view is moved away from what centerOn last framed. */
+    get isFitted() {
+        return this.fitted !== undefined && this.current === this.fitted;
     }
 }

@@ -128,6 +128,8 @@ export interface EmbeddingVisualizationProps {
     filename?: string;
     viewState?: ViewState;
     onViewStateChange?: (viewState: ViewState) => void;
+    /** The canvas's measured size, on first layout and whenever it changes. */
+    onCanvasResize?: (canvas: { width: number; height: number }) => void;
     embeddingType?: 'patients' | 'samples';
     categoryCounts?: Map<string, number>;
     // Shown alongside categoryCounts as "visible / total".

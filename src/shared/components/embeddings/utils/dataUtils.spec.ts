@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 import {
     calculateContextPointBoost,
+    calculateDataBounds,
     calculatePointScale,
     calculateSparseMapPointFactor,
     medianNearestNeighborDistance,
@@ -117,5 +118,43 @@ describe('calculateSparseMapPointFactor', () => {
 
     it('falls back to 1 for an empty map', () => {
         assert.equal(calculateSparseMapPointFactor(0), 1);
+    });
+});
+
+describe('calculateDataBounds', () => {
+    // 20 wide, 10 tall.
+    const points = [
+        { x: 0, y: 0 },
+        { x: 20, y: 10 },
+    ] as EmbeddingPoint[];
+
+    it('centres on the data', () => {
+        const bounds = calculateDataBounds(points, {
+            width: 1000,
+            height: 1000,
+        });
+        assert.equal(bounds.centerX, 10);
+        assert.equal(bounds.centerY, 5);
+    });
+
+    it('fits the canvas it is given, by its tighter side', () => {
+        // Width-bound: 900px for 20 units.
+        assert.closeTo(
+            calculateDataBounds(points, { width: 1000, height: 1000 }).zoom,
+            Math.log2(900 / 20),
+            1e-9
+        );
+        // Height-bound: 270px for 10 units.
+        assert.closeTo(
+            calculateDataBounds(points, { width: 1000, height: 300 }).zoom,
+            Math.log2(270 / 10),
+            1e-9
+        );
+    });
+
+    it('zooms in further on a bigger canvas', () => {
+        const small = calculateDataBounds(points, { width: 600, height: 300 });
+        const big = calculateDataBounds(points, { width: 2400, height: 1200 });
+        assert.closeTo(big.zoom - small.zoom, 2, 1e-9);
     });
 });
