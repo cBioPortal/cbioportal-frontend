@@ -1088,8 +1088,8 @@ export class EmbeddingsPanel extends React.Component<
     /**
      * Scoped to the study the map belongs to, so other studies get no hint.
      * The study is checked first: observing the loader's status is what
-     * starts its fetch, and nothing else should ask an unrelated study view
-     * to reach an MSK-internal host.
+     * starts its fetch, and an unrelated study view should not request a map
+     * that only the MSK portal serves.
      */
     @computed get isTargetRnaEmbeddingUnreachable(): boolean {
         return (
@@ -2648,11 +2648,11 @@ export class EmbeddingsPanel extends React.Component<
                         <h4>Embeddings Visualization</h4>
                         <p>
                             The MSK-TARGET RNA similarity map could not be
-                            loaded. It is hosted on the MSK internal network.
+                            loaded.
                         </p>
                         <p>
-                            Connect to the MSK VPN, or open this page from a
-                            machine on the MSK network, and reload.
+                            Reload the page. If you have been signed out, sign
+                            in again first.
                         </p>
                     </div>
                 );

@@ -1,4 +1,5 @@
 import { remoteData } from 'cbioportal-frontend-commons';
+import { buildCBioPortalAPIUrl } from 'shared/api/urls';
 import { EmbeddingData, EmbeddingDataOption } from './EmbeddingTypes';
 
 const EMBEDDING_BASE_URL =
@@ -18,25 +19,23 @@ export const boehmHeData = remoteData<EmbeddingData>({
 
 export const MSKTARGET_STUDY_ID = 'msktarget';
 
-const MSKTARGET_EMBEDDING_BASE_URL =
-    'https://github.mskcc.org/pages/debruiji/embedding-for-target';
-
+/**
+ * The MSK-TARGET maps are private, so the MSK portal serves them itself under
+ * /embeddings, behind its own login. Fetching them from the portal's origin
+ * sends the session cookie with no CORS involved.
+ */
 function msktargetEmbeddingLoader(file: string, label: string) {
     return remoteData<EmbeddingData>({
         await: () => [], // No dependencies - invoke once immediately and cache
         invoke: async () => {
             const response = await fetch(
-                `${MSKTARGET_EMBEDDING_BASE_URL}/${file}`
+                buildCBioPortalAPIUrl(`embeddings/${file}`)
             );
             if (!response.ok) {
                 throw new Error(`Failed to load ${label} embedding data`);
             }
             return response.json();
         },
-        // This host is MSK-internal, so failing off the network is ordinary
-        // and the page says so itself; keep it out of the site's error
-        // reporting. isError still drives that hint.
-        onError: () => {},
     });
 }
 

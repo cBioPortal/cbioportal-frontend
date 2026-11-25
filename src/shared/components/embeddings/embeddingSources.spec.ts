@@ -1,5 +1,6 @@
 import { assert } from 'chai';
 import { autorun } from 'mobx';
+import { getLoadConfig } from 'config/config';
 import {
     getLoadedEmbeddingOptions,
     hasEmbeddingForStudies,
@@ -16,6 +17,14 @@ describe('embeddingSources', () => {
     let requested: string[] = [];
     let originalFetch: any;
     let disposers: (() => void)[] = [];
+
+    beforeAll(() => {
+        getLoadConfig().apiRoot = 'https://cbioportal.mskcc.org/';
+    });
+
+    afterAll(() => {
+        delete getLoadConfig().apiRoot;
+    });
 
     beforeEach(() => {
         requested = [];
@@ -94,8 +103,9 @@ describe('embeddingSources', () => {
             getLoadedEmbeddingOptions(scope);
             isAnyEmbeddingPending(scope);
         });
+        // From the portal itself, which serves the map behind its login.
         assert.deepEqual(requested, [
-            'https://github.mskcc.org/pages/debruiji/embedding-for-target/msktarget_rna_tsne_mpath.json',
+            'https://cbioportal.mskcc.org/embeddings/msktarget_rna_tsne_mpath.json',
         ]);
     });
 });
