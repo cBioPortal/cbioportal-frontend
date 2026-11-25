@@ -32,6 +32,8 @@ export interface EmbeddingControlStackProps {
     additionalGroups?: ColoringMenuOmnibarGroup[];
     /** Listed at the top of the colour-by menu in place of the full gene list. */
     suggestedGenes?: GeneColoringSuggestions;
+    /** Listed first in the colour-by menu, ahead of every group. */
+    pinnedColoringOptions?: ColoringMenuOmnibarOption[];
     selectedColoringOption?: ColoringMenuOmnibarOption;
     isLoading: boolean;
     mutationDataExists: boolean;
@@ -124,6 +126,7 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
     clinicalAttributes,
     additionalGroups,
     suggestedGenes,
+    pinnedColoringOptions,
     selectedColoringOption,
     isLoading,
     mutationDataExists,
@@ -198,6 +201,7 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
                         clinicalAttributes={clinicalAttributes}
                         additionalGroups={additionalGroups}
                         suggestedGenes={suggestedGenes}
+                        pinnedOptions={pinnedColoringOptions}
                         selectedOption={selectedColoringOption}
                         hasNoQueriedGenes={true}
                         isLoading={isLoading}

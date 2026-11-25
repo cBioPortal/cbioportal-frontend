@@ -61,6 +61,10 @@ export interface ColorSamplesByDropdownProps {
     // so that colouring by gene is visible without knowing to search.
     suggestedGenes?: GeneColoringSuggestions;
 
+    // Listed first, ahead of every group, e.g. the default colouring, which
+    // is the one people come back to. Not repeated in their own group.
+    pinnedOptions?: ColoringMenuOmnibarOption[];
+
     // Omits the built-in "Color by:" label - for callers (e.g. one with its
     // own caption above) that would otherwise show it twice.
     hideLabel?: boolean;
@@ -162,9 +166,11 @@ export class ColorSamplesByDropdown extends React.Component<
     }
 
     /**
-     * The menu before anything is typed. Suggested genes stand in for the
-     * full list, whose first entries are arbitrary; with none to suggest, the
-     * Genes group still shows, as a prompt to search.
+     * The menu before anything is typed: the pinned options, then genes,
+     * then the remaining groups, with None last since it is rarely wanted.
+     * Suggested genes stand in for the full gene list, whose first entries
+     * are arbitrary; with none to suggest, the Genes group still shows, as a
+     * prompt to search.
      */
     @computed get defaultMenuOptions(): (
         | ColoringMenuOmnibarOption
@@ -193,13 +199,41 @@ export class ColorSamplesByDropdown extends React.Component<
                 } as MenuOption,
             ],
         };
-        const others = this.coloringMenuOmnibarOptions.filter(
-            item => !('options' in item && item.label === 'Genes')
+        const pinned = this.props.pinnedOptions || [];
+        const pinnedValues = new Set(pinned.map(option => option.value));
+        const groups: ColoringMenuOmnibarGroup[] = [];
+        const loose: ColoringMenuOmnibarOption[] = [];
+        this.coloringMenuOmnibarOptions.forEach(item => {
+            if (!('options' in item)) {
+                loose.push(item);
+            } else if (item.label !== 'Genes') {
+                const options = item.options.filter(
+                    option => !pinnedValues.has(option.value)
+                );
+                if (options.length > 0) {
+                    groups.push({ ...item, options });
+                }
+            }
+        });
+        return [...pinned, geneGroup, ...groups, ...loose];
+    }
+
+    /**
+     * The menu's own option for the current selection. react-select finds
+     * the option to highlight on opening by identity, so an equal copy, as
+     * the caller passes, would leave the first option highlighted instead.
+     */
+    @computed get selectedMenuOption(): ColoringMenuOmnibarOption | undefined {
+        const selected = this.props.selectedOption;
+        if (!selected) {
+            return selected;
+        }
+        const options = _.flatMap(this.defaultMenuOptions, item =>
+            'options' in item ? item.options : [item]
         );
-        const [first, ...rest] = others;
-        return first && !('options' in first)
-            ? [first, geneGroup, ...rest]
-            : [geneGroup, ...others];
+        return (
+            options.find(option => option.value === selected.value) || selected
+        );
     }
 
     @computed get flattenedOptions(): ColoringMenuOmnibarOption[] {
@@ -390,7 +424,7 @@ export class ColorSamplesByDropdown extends React.Component<
             // Those classes carry fixed-width SCSS meant for the wide
             // toolbar row - skip them in stacked mode.
             className: stacked ? '' : 'color-samples-toolbar-elt gene-select',
-            value: this.props.selectedOption,
+            value: this.selectedMenuOption,
             onChange: this.handleSelectionChange,
             isLoading: this.props.isLoading,
             clearable: false,

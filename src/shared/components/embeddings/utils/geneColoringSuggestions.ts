@@ -12,38 +12,100 @@ export function formatAlteredFraction(altered: number, profiled: number) {
     return percent < 1 ? '<1%' : `${Math.round(percent)}%`;
 }
 
+type GeneCount = {
+    entrezGeneId: number;
+    hugoGeneSymbol: string;
+    numberOfAlteredCases: number;
+    numberOfProfiledCases: number;
+};
+
+// How many kinds a cohort suggestion notes, largest first; more would not fit
+// beside the symbol.
+const MAX_KINDS_NOTED = 2;
+// A further kind is noted only when it is at least this share of the gene's
+// most frequent one, so "Del 10% · Mut 5%" shows but "Mut 45% · Del 1%" is
+// just "Mut 45%".
+const MIN_NOTED_KIND_SHARE = 0.25;
+
 /**
- * The most frequently mutated genes, ranked by mutated cases as the study
- * view's Mutated Genes table ranks them, and noted with the share of profiled
- * cases. Ranking by that share instead would let a gene profiled in only a
- * few cases outrank the cohort's real drivers. Ties go alphabetically so the
- * list is stable.
+ * The cohort's most frequently altered genes, by mutation, amplification,
+ * deep deletion or structural variant, since colouring by a gene shows all of
+ * them. Each kind keeps its own count: the API counts them separately, and
+ * adding them up would count a case with two kinds twice. A gene ranks by its
+ * most frequent kind, by cases as the study view's gene tables rank them;
+ * ranking by share of profiled cases instead would let a gene profiled in
+ * only a few cases outrank the cohort's real drivers. Ties go alphabetically
+ * so the list is stable.
  */
-export function mostFrequentlyMutatedGenes(
-    rows: {
-        entrezGeneId: number;
-        hugoGeneSymbol: string;
-        numberOfAlteredCases: number;
-        numberOfProfiledCases: number;
-    }[],
+export function mostFrequentlyAlteredGenes(
+    counts: {
+        mutations: GeneCount[];
+        cnas: (GeneCount & { alteration: number })[];
+        structuralVariants: GeneCount[];
+    },
     count: number = GENE_COLORING_SUGGESTION_COUNT
 ): GeneColoringSuggestion[] {
-    return rows
-        .filter(row => row.numberOfAlteredCases > 0)
-        .slice()
+    const byGene = new Map<
+        number,
+        {
+            hugoGeneSymbol: string;
+            kinds: { kind: string; altered: number; profiled: number }[];
+        }
+    >();
+    const add = (row: GeneCount, kind: string) => {
+        if (!(row.numberOfAlteredCases > 0)) {
+            return;
+        }
+        const entry = byGene.get(row.entrezGeneId) || {
+            hugoGeneSymbol: row.hugoGeneSymbol,
+            kinds: [],
+        };
+        entry.kinds.push({
+            kind,
+            altered: row.numberOfAlteredCases,
+            profiled: row.numberOfProfiledCases,
+        });
+        byGene.set(row.entrezGeneId, entry);
+    };
+    counts.mutations.forEach(row => add(row, 'Mut'));
+    counts.cnas.forEach(row => {
+        if (row.alteration === 2) {
+            add(row, 'Amp');
+        } else if (row.alteration === -2) {
+            add(row, 'Del');
+        }
+    });
+    counts.structuralVariants.forEach(row => add(row, 'SV'));
+
+    const top = (kinds: { altered: number }[]) =>
+        Math.max(...kinds.map(k => k.altered));
+    return Array.from(byGene.entries())
         .sort(
-            (a, b) =>
-                b.numberOfAlteredCases - a.numberOfAlteredCases ||
+            ([, a], [, b]) =>
+                top(b.kinds) - top(a.kinds) ||
                 a.hugoGeneSymbol.localeCompare(b.hugoGeneSymbol)
         )
         .slice(0, count)
-        .map(row => ({
-            entrezGeneId: row.entrezGeneId,
-            hugoGeneSymbol: row.hugoGeneSymbol,
-            detail: formatAlteredFraction(
-                row.numberOfAlteredCases,
-                row.numberOfProfiledCases
-            ),
+        .map(([entrezGeneId, { hugoGeneSymbol, kinds }]) => ({
+            entrezGeneId,
+            hugoGeneSymbol,
+            detail: kinds
+                .slice()
+                .sort((a, b) => b.altered - a.altered)
+                .filter(
+                    (k, i, sorted) =>
+                        i === 0 ||
+                        k.altered >= MIN_NOTED_KIND_SHARE * sorted[0].altered
+                )
+                .slice(0, MAX_KINDS_NOTED)
+                .map(
+                    k =>
+                        `${k.kind} ${formatAlteredFraction(
+                            k.altered,
+                            k.profiled
+                        )}`
+                )
+                .join(' · '),
         }));
 }
 

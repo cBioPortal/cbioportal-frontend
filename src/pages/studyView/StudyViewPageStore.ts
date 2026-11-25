@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { GeneColoringSuggestions } from 'shared/components/embeddings/EmbeddingsPanelStore';
-import { mostFrequentlyMutatedGenes } from 'shared/components/embeddings/utils/geneColoringSuggestions';
+import { mostFrequentlyAlteredGenes } from 'shared/components/embeddings/utils/geneColoringSuggestions';
 import {
     CaseIdAlias,
     CaseIdAliases,
@@ -24,6 +24,7 @@ import {
 import {
     AlterationCountByGene,
     AlterationFilter,
+    CopyNumberCountByGene,
     AndedPatientTreatmentFilters,
     AndedSampleTreatmentFilters,
     BinsGeneratorConfig,
@@ -10383,17 +10384,47 @@ export class StudyViewPageStore
     });
 
     /**
-     * The cohort's most frequently mutated genes, suggested at the top of the
-     * similarity maps' colour-by menu. From the same counts as the Mutated
-     * Genes table, so it follows the same filters and shares its request.
+     * The cohort's most frequently altered genes - by mutation, copy number
+     * or structural variant, as colouring by a gene shows all three -
+     * suggested at the top of the similarity maps' colour-by menu. From the
+     * same counts as the gene tables, so it follows the same filters and
+     * shares their requests.
      */
     readonly geneColoringSuggestions = remoteData<GeneColoringSuggestions>({
-        await: () => [this.mutatedGeneCounts],
+        await: () => [
+            this.mutatedGeneCounts,
+            this.cnaGeneCounts,
+            this.structuralVariantGeneCounts,
+        ],
         invoke: async () => ({
-            label: 'Frequently mutated in this cohort',
-            genes: mostFrequentlyMutatedGenes(this.mutatedGeneCounts.result!),
+            label: 'Frequently altered in this cohort',
+            genes: mostFrequentlyAlteredGenes({
+                mutations: this.mutatedGeneCounts.result!,
+                cnas: this.cnaGeneCounts.result!,
+                structuralVariants: this.structuralVariantGeneCounts.result!,
+            }),
         }),
         onError: () => {},
+    });
+
+    /**
+     * How many of the cohort's cases each gene has a structural variant in.
+     * The Structural Variant Genes table annotates these with OncoKB;
+     * anything that needs only the counts reads them here, as with
+     * mutatedGeneCounts.
+     */
+    readonly structuralVariantGeneCounts = remoteData<AlterationCountByGene[]>({
+        await: () => [this.structuralVariantProfiles],
+        invoke: async () => {
+            if (_.isEmpty(this.structuralVariantProfiles.result)) {
+                return [];
+            }
+            return this.internalClient.fetchStructuralVariantGenesUsingPOST({
+                studyViewFilter: this.filters,
+            });
+        },
+        onError: () => {},
+        default: [],
     });
 
     readonly structuralVariantGeneTableRowData = remoteData<
@@ -10403,19 +10434,20 @@ export class StudyViewPageStore
             this.oncokbCancerGeneFilterEnabled
                 ? [
                       this.structuralVariantProfiles,
+                      this.structuralVariantGeneCounts,
                       this.oncokbAnnotatedGeneEntrezGeneIds,
                       this.oncokbOncogeneEntrezGeneIds,
                       this.oncokbTumorSuppressorGeneEntrezGeneIds,
                       this.oncokbCancerGeneEntrezGeneIds,
                   ]
-                : [this.structuralVariantProfiles],
+                : [
+                      this.structuralVariantProfiles,
+                      this.structuralVariantGeneCounts,
+                  ],
         invoke: async () => {
             if (!_.isEmpty(this.structuralVariantProfiles.result)) {
-                const structuralVariantGenes = await this.internalClient.fetchStructuralVariantGenesUsingPOST(
-                    {
-                        studyViewFilter: this.filters,
-                    }
-                );
+                const structuralVariantGenes = this.structuralVariantGeneCounts
+                    .result!;
                 return structuralVariantGenes.map(item => {
                     return {
                         ...item,
@@ -10531,24 +10563,40 @@ export class StudyViewPageStore
         default: [],
     });
 
+    /**
+     * How many of the cohort's cases each gene is amplified or deeply deleted
+     * in. The CNA Genes table annotates these with OncoKB; anything that needs
+     * only the counts reads them here, as with mutatedGeneCounts.
+     */
+    readonly cnaGeneCounts = remoteData<CopyNumberCountByGene[]>({
+        await: () => [this.cnaProfiles],
+        invoke: async () => {
+            if (_.isEmpty(this.cnaProfiles.result)) {
+                return [];
+            }
+            return this.internalClient.fetchCNAGenesUsingPOST({
+                studyViewFilter: this.filters,
+            });
+        },
+        onError: () => {},
+        default: [],
+    });
+
     readonly cnaGeneTableRowData = remoteData<MultiSelectionTableRow[]>({
         await: () =>
             this.oncokbCancerGeneFilterEnabled
                 ? [
                       this.cnaProfiles,
+                      this.cnaGeneCounts,
                       this.oncokbAnnotatedGeneEntrezGeneIds,
                       this.oncokbOncogeneEntrezGeneIds,
                       this.oncokbTumorSuppressorGeneEntrezGeneIds,
                       this.oncokbCancerGeneEntrezGeneIds,
                   ]
-                : [this.cnaProfiles],
+                : [this.cnaProfiles, this.cnaGeneCounts],
         invoke: async () => {
             if (!_.isEmpty(this.cnaProfiles.result)) {
-                let cnaGenes = await this.internalClient.fetchCNAGenesUsingPOST(
-                    {
-                        studyViewFilter: this.filters,
-                    }
-                );
+                const cnaGenes = this.cnaGeneCounts.result!;
                 return cnaGenes.map(item => {
                     return {
                         ...item,

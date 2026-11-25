@@ -998,6 +998,16 @@ export class EmbeddingsPanel extends React.Component<
             : undefined;
     }
 
+    /**
+     * The default colouring, listed first in the colour-by menu: it is what
+     * the map opens with and what people come back to, so it shouldn't sit
+     * among dozens of clinical attributes.
+     */
+    @computed get pinnedColoringOptions(): ColoringMenuOmnibarOption[] {
+        const defaultOption = this.getDefaultColoringOption();
+        return defaultOption?.info?.clinicalAttribute ? [defaultOption] : [];
+    }
+
     @computed get coloringFromURLParameter():
         | ColoringMenuOmnibarOption
         | undefined {
@@ -2520,6 +2530,7 @@ export class EmbeddingsPanel extends React.Component<
         // which MobX doesn't track, so suggestions arriving after the menu
         // first opens would never reach it.
         const suggestedGenes = this.geneColoringSuggestions;
+        const pinnedColoringOptions = this.pinnedColoringOptions;
 
         const visualizationProps = {
             data: patientData,
@@ -2600,6 +2611,7 @@ export class EmbeddingsPanel extends React.Component<
                     clinicalAttributes={this.clinicalAttributes}
                     additionalGroups={this.embeddingDataGroups}
                     suggestedGenes={suggestedGenes}
+                    pinnedColoringOptions={pinnedColoringOptions}
                     selectedColoringOption={this.effectiveColoringOption}
                     isLoading={
                         this.isLoading ||

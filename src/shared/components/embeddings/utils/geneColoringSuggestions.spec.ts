@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import {
     formatAlteredFraction,
     genesAlteredInPatient,
-    mostFrequentlyMutatedGenes,
+    mostFrequentlyAlteredGenes,
 } from './geneColoringSuggestions';
 
 const row = (
@@ -38,25 +38,98 @@ describe('geneColoringSuggestions', () => {
         });
     });
 
-    describe('mostFrequentlyMutatedGenes', () => {
-        it('ranks by mutated cases, not by share of profiled cases', () => {
-            const suggestions = mostFrequentlyMutatedGenes([
-                row(1, 'RARE_PANEL', 3, 5),
-                row(7157, 'TP53', 380, 1000),
-                row(3845, 'KRAS', 140, 1000),
-            ]);
+    describe('mostFrequentlyAlteredGenes', () => {
+        const none = { mutations: [], cnas: [], structuralVariants: [] };
+        const cna = (
+            entrezGeneId: number,
+            hugoGeneSymbol: string,
+            alteration: number,
+            altered: number
+        ) => ({ ...row(entrezGeneId, hugoGeneSymbol, altered), alteration });
+
+        it('ranks by cases, not by share of profiled cases', () => {
+            const suggestions = mostFrequentlyAlteredGenes({
+                ...none,
+                mutations: [
+                    row(1, 'RARE_PANEL', 3, 5),
+                    row(7157, 'TP53', 380, 1000),
+                    row(3845, 'KRAS', 140, 1000),
+                ],
+            });
             assert.deepEqual(
                 suggestions.map(s => s.hugoGeneSymbol),
                 ['TP53', 'KRAS', 'RARE_PANEL'],
                 'a gene profiled in five cases must not outrank TP53'
             );
-            assert.equal(suggestions[0].detail, '38%');
-            assert.equal(suggestions[2].detail, '60%');
+            assert.equal(suggestions[0].detail, 'Mut 38%');
+            assert.equal(suggestions[2].detail, 'Mut 60%');
+        });
+
+        it('ranks copy-number and structural-variant genes with mutated ones', () => {
+            const suggestions = mostFrequentlyAlteredGenes({
+                mutations: [row(7157, 'TP53', 45)],
+                cnas: [cna(1029, 'CDKN2A', -2, 12), cna(4609, 'MYC', 1, 30)],
+                structuralVariants: [row(238, 'ALK', 5)],
+            });
+            assert.deepEqual(
+                suggestions,
+                [
+                    {
+                        entrezGeneId: 7157,
+                        hugoGeneSymbol: 'TP53',
+                        detail: 'Mut 45%',
+                    },
+                    {
+                        entrezGeneId: 1029,
+                        hugoGeneSymbol: 'CDKN2A',
+                        detail: 'Del 12%',
+                    },
+                    {
+                        entrezGeneId: 238,
+                        hugoGeneSymbol: 'ALK',
+                        detail: 'SV 5%',
+                    },
+                ],
+                'a gain short of amplification is not suggested'
+            );
+        });
+
+        it('notes up to two kinds per gene, largest first, without adding them', () => {
+            const [erbb2] = mostFrequentlyAlteredGenes({
+                mutations: [row(2064, 'ERBB2', 3)],
+                cnas: [cna(2064, 'ERBB2', 2, 8)],
+                structuralVariants: [row(2064, 'ERBB2', 1)],
+            });
+            assert.equal(erbb2.detail, 'Amp 8% · Mut 3%');
+        });
+
+        it('leaves out a kind that is a small fraction of the main one', () => {
+            const [tp53] = mostFrequentlyAlteredGenes({
+                mutations: [row(7157, 'TP53', 45)],
+                cnas: [cna(7157, 'TP53', -2, 1)],
+                structuralVariants: [],
+            });
+            assert.equal(tp53.detail, 'Mut 45%');
+        });
+
+        it('ranks a gene by its most frequent kind, not their sum', () => {
+            const suggestions = mostFrequentlyAlteredGenes({
+                mutations: [row(1, 'SPLIT', 6), row(2, 'SINGLE', 10)],
+                cnas: [cna(1, 'SPLIT', 2, 6)],
+                structuralVariants: [],
+            });
+            assert.deepEqual(
+                suggestions.map(s => s.hugoGeneSymbol),
+                ['SINGLE', 'SPLIT']
+            );
         });
 
         it('keeps the top ones, breaking ties alphabetically', () => {
-            const suggestions = mostFrequentlyMutatedGenes(
-                [row(2, 'B', 5), row(1, 'A', 5), row(3, 'C', 9)],
+            const suggestions = mostFrequentlyAlteredGenes(
+                {
+                    ...none,
+                    mutations: [row(2, 'B', 5), row(1, 'A', 5), row(3, 'C', 9)],
+                },
                 2
             );
             assert.deepEqual(
@@ -65,8 +138,14 @@ describe('geneColoringSuggestions', () => {
             );
         });
 
-        it('leaves out genes with no mutated cases', () => {
-            assert.deepEqual(mostFrequentlyMutatedGenes([row(1, 'A', 0)]), []);
+        it('leaves out genes with no altered cases', () => {
+            assert.deepEqual(
+                mostFrequentlyAlteredGenes({
+                    ...none,
+                    mutations: [row(1, 'A', 0)],
+                }),
+                []
+            );
         });
     });
 
