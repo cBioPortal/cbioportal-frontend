@@ -1,3 +1,4 @@
+
 import * as React from 'react';
 import { assert } from 'chai';
 import {
@@ -7,10 +8,12 @@ import {
     roundLogRatio,
     toFixedWithoutTrailingZeros,
     getPercentage,
+    getMutationalSignaturePercentage,
     shortenStudyName,
 } from 'shared/lib/FormatUtils';
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
+
 expect.extend(expectJSX);
 
 describe('toFixedWithThreshold', () => {
@@ -82,20 +85,43 @@ describe('#getPercentage', () => {
     it('gets less than 1', () => {
         assert.equal(getPercentage(0.004), '<1%');
     });
+
     it('gets zero perc', () => {
         assert.equal(getPercentage(0), '0%');
     });
+
     it('gets 1%', () => {
         assert.equal(getPercentage(0.01), '1%');
     });
+
     it('rounds down 52.4', () => {
         assert.equal(getPercentage(0.524), '52%');
     });
+
     it('rounds up 52.6', () => {
         assert.equal(getPercentage(0.526), '53%');
     });
+
     it('handles more than 100%', () => {
         assert.equal(getPercentage(1.526), '153%');
+    });
+});
+
+describe('#getMutationalSignaturePercentage', () => {
+    it('returns 0% for an exact zero contribution', () => {
+        assert.equal(getMutationalSignaturePercentage(0), '0%');
+    });
+
+    it('returns <1% for a positive contribution below 1%', () => {
+        assert.equal(getMutationalSignaturePercentage(0.003), '<1%');
+    });
+
+    it('returns 1% for an exact 1% contribution', () => {
+        assert.equal(getMutationalSignaturePercentage(0.01), '1%');
+    });
+
+    it('returns NA for NaN', () => {
+        assert.equal(getMutationalSignaturePercentage(NaN), 'NA');
     });
 });
 
@@ -118,10 +144,12 @@ describe('toFixedWithoutTrailingZeros', () => {
         assert.equal(toFixedWithoutTrailingZeros(2, 5), '2');
         assert.equal(toFixedWithoutTrailingZeros(5, 5), '5');
     });
+
     it('removes trailing zeros not right after decimal point', () => {
         assert.equal(toFixedWithoutTrailingZeros(2.25, 5), '2.25');
         assert.equal(toFixedWithoutTrailingZeros(2.5, 100), '2.5');
     });
+
     it('doesnt remove non-trailing zeros', () => {
         assert.equal(toFixedWithoutTrailingZeros(12.025, 3), '12.025');
         assert.equal(toFixedWithoutTrailingZeros(51.05, 2), '51.05');
@@ -135,6 +163,7 @@ describe('toFixedWithoutTrailingZeros', () => {
         assert.equal(toFixedWithoutTrailingZeros(80, 0), '80');
         assert.equal(toFixedWithoutTrailingZeros(8020, 0), '8020');
     });
+
     it('removes trailing zeros not right after decimal point', () => {
         assert.equal(toFixedWithoutTrailingZeros(2.25, 5), '2.25');
         assert.equal(toFixedWithoutTrailingZeros(2.5, 100), '2.5');
