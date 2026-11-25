@@ -30,6 +30,8 @@ interface EmbeddingDeckGLVisualizationState {
     selectedPoints: EmbeddingPoint[];
     selectionMode: 'none' | 'lasso';
     isSelecting: boolean;
+    // A middle-button drag in progress, which pans in either mode.
+    isMiddlePanning: boolean;
     selectionPath: Array<{ x: number; y: number }>;
     actualWidth: number;
     actualHeight: number;
@@ -64,6 +66,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
             selectedPoints: [],
             selectionMode: 'none',
             isSelecting: false,
+            isMiddlePanning: false,
             selectionPath: [],
             actualWidth: props.width || 800,
             actualHeight: props.height || 600,
@@ -111,7 +114,17 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     componentWillUnmount() {
         window.removeEventListener('resize', this.measureContainer);
         window.removeEventListener('keydown', this.handleKeyDown);
+        window.removeEventListener('mouseup', this.endMiddlePan);
     }
+
+    // On the window, since the button can be released outside the map.
+    private endMiddlePan = (event: MouseEvent) => {
+        if (event.button !== 1) {
+            return;
+        }
+        window.removeEventListener('mouseup', this.endMiddlePan);
+        this.setState({ isMiddlePanning: false });
+    };
 
     private measureContainer = () => {
         if (this.containerRef.current) {
@@ -340,6 +353,11 @@ export class EmbeddingDeckGLVisualization extends React.Component<
         isDragging: boolean;
         isHovering: boolean;
     }): string => {
+        // Ahead of the lasso's crosshair: a middle-button drag pans in Select
+        // mode too, and should look like it.
+        if (this.state.isMiddlePanning) {
+            return 'grabbing';
+        }
         if (this.selectionMode === 'lasso') {
             return 'crosshair';
         }
@@ -370,6 +388,8 @@ export class EmbeddingDeckGLVisualization extends React.Component<
         // autoscroll on a middle click would scroll the page as well.
         if (event.button === 1) {
             event.preventDefault();
+            window.addEventListener('mouseup', this.endMiddlePan);
+            this.setState({ isMiddlePanning: true });
         }
         if (this.selectionMode === 'none') return;
         // Only the left button draws a lasso; the others are left to the
