@@ -21,6 +21,13 @@ const isUnfilledCategory = (displayLabel: string): boolean => {
     );
 };
 
+const isOutOfCohortCategory = (displayLabel: string): boolean => {
+    return (
+        displayLabel === 'Case not in this cohort' ||
+        displayLabel === 'Sample not in this cohort'
+    );
+};
+
 const isVUSCategory = (displayLabel: string): boolean => {
     return displayLabel.endsWith('(VUS)');
 };
@@ -44,6 +51,9 @@ const getVUSColor = (displayLabel: string): string | undefined => {
     }
     return undefined;
 };
+
+/** Side of the square box each legend dot is centred in. */
+const DOT_BOX_SIZE = 12;
 
 const ROW_ACTION_STYLE: React.CSSProperties = {
     marginLeft: '4px',
@@ -83,6 +93,8 @@ const LegendItemRow: React.FC<LegendItemRowProps> = ({
 }) => {
     const [isHovered, setIsHovered] = React.useState(false);
     const isDimmed = isHidden;
+    // Smaller for the out-of-cohort entries, which stand for dimmed points.
+    const dotSize = isOutOfCohortCategory(displayLabel) ? 4 : DOT_BOX_SIZE;
     const canSelect = isClickable && !isHidden && !!onToggleCategorySelected;
     const rowBackground = isSelected
         ? '#e7f1ff'
@@ -117,43 +129,6 @@ const LegendItemRow: React.FC<LegendItemRowProps> = ({
         >
             <div
                 style={{
-                    width: '10px', // Keep container width consistent
-                    height: '10px', // Keep container height consistent
-                    marginRight: '6px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}
-            >
-                <div
-                    style={{
-                        width:
-                            displayLabel === 'Case not in this cohort' ||
-                            displayLabel === 'Sample not in this cohort'
-                                ? '4px'
-                                : '12px', // Slightly larger dots for better visibility
-                        height:
-                            displayLabel === 'Case not in this cohort' ||
-                            displayLabel === 'Sample not in this cohort'
-                                ? '4px'
-                                : '12px', // Slightly larger dots for better visibility
-                        backgroundColor: isDimmed
-                            ? '#CCCCCC'
-                            : isUnfilledCategory(displayLabel)
-                            ? 'transparent' // Use transparent background for unfilled categories
-                            : styling.fillColor,
-                        borderRadius: '50%',
-                        border: isDimmed
-                            ? '1px solid #CCCCCC'
-                            : styling.hasStroke
-                            ? `2px solid ${styling.strokeColor}` // Use strokeColor with moderately thick border
-                            : `1px solid ${styling.fillColor}`,
-                        opacity: isDimmed ? 0.4 : 1,
-                    }}
-                />
-            </div>
-            <div
-                style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
@@ -163,18 +138,65 @@ const LegendItemRow: React.FC<LegendItemRowProps> = ({
                 }}
             >
                 <span
-                    title={displayLabel}
                     style={{
-                        textDecoration: isDimmed ? 'line-through' : 'none',
-                        color: isDimmed ? '#CCCCCC' : 'inherit',
-                        opacity: isDimmed ? 0.6 : 1,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
                         minWidth: 0,
                     }}
                 >
-                    {displayLabel}
+                    {/* Inline, not a flex item, so the browser places the
+                        dot from the font's own metrics rather than from the
+                        line box, whose centre moves with the font's ascent
+                        and descent. `middle` gives the baseline plus half
+                        the x-height; the offset lifts that to half the cap
+                        height, which is the centre of the band these Title
+                        Case labels actually occupy. */}
+                    <span
+                        style={{
+                            display: 'inline-flex',
+                            verticalAlign: 'middle',
+                            position: 'relative',
+                            top: 'calc((1ex - 1cap) / 2)',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: `${DOT_BOX_SIZE}px`,
+                            height: `${DOT_BOX_SIZE}px`,
+                            marginRight: '6px',
+                        }}
+                    >
+                        <span
+                            style={{
+                                width: `${dotSize}px`,
+                                height: `${dotSize}px`,
+                                // The dot is drawn as a circle, so flex must
+                                // not shrink its width and leave an ellipse.
+                                flexShrink: 0,
+                                backgroundColor: isDimmed
+                                    ? '#CCCCCC'
+                                    : isUnfilledCategory(displayLabel)
+                                    ? 'transparent' // Use transparent background for unfilled categories
+                                    : styling.fillColor,
+                                borderRadius: '50%',
+                                border: isDimmed
+                                    ? '1px solid #CCCCCC'
+                                    : styling.hasStroke
+                                    ? `2px solid ${styling.strokeColor}` // Use strokeColor with moderately thick border
+                                    : `1px solid ${styling.fillColor}`,
+                                opacity: isDimmed ? 0.4 : 1,
+                            }}
+                        />
+                    </span>
+                    <span
+                        title={displayLabel}
+                        style={{
+                            textDecoration: isDimmed ? 'line-through' : 'none',
+                            color: isDimmed ? '#CCCCCC' : 'inherit',
+                            opacity: isDimmed ? 0.6 : 1,
+                        }}
+                    >
+                        {displayLabel}
+                    </span>
                 </span>
                 <span
                     style={{
