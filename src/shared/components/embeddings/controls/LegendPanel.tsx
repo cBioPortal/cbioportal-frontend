@@ -145,16 +145,19 @@ const LegendItemRow: React.FC<LegendItemRowProps> = ({
                         minWidth: 0,
                     }}
                 >
-                    {/* Inline, not a flex item, so `vertical-align: middle`
-                        puts the dot on the text's optical centre - the
-                        baseline plus half the x-height. Centring it in the
-                        row instead lands it on the centre of the line box,
-                        which sits above or below that depending on the
-                        font's ascent and descent. */}
+                    {/* Inline, not a flex item, so the browser places the
+                        dot from the font's own metrics rather than from the
+                        line box, whose centre moves with the font's ascent
+                        and descent. `middle` gives the baseline plus half
+                        the x-height; the offset lifts that to half the cap
+                        height, which is the centre of the band these Title
+                        Case labels actually occupy. */}
                     <span
                         style={{
                             display: 'inline-flex',
                             verticalAlign: 'middle',
+                            position: 'relative',
+                            top: 'calc((1ex - 1cap) / 2)',
                             alignItems: 'center',
                             justifyContent: 'center',
                             width: `${DOT_BOX_SIZE}px`,
