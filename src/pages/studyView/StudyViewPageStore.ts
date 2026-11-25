@@ -1,4 +1,6 @@
 import _ from 'lodash';
+import { GeneColoringSuggestions } from 'shared/components/embeddings/EmbeddingsPanelStore';
+import { mostFrequentlyMutatedGenes } from 'shared/components/embeddings/utils/geneColoringSuggestions';
 import {
     CaseIdAlias,
     CaseIdAliases,
@@ -20,6 +22,7 @@ import {
     toJS,
 } from 'mobx';
 import {
+    AlterationCountByGene,
     AlterationFilter,
     AndedPatientTreatmentFilters,
     AndedSampleTreatmentFilters,
@@ -10308,24 +10311,41 @@ export class StudyViewPageStore
         return this.o2glFilterGenes.length > 0;
     }
 
+    /**
+     * How many of the cohort's cases each gene is mutated in. The Mutated
+     * Genes table annotates these with OncoKB; anything that needs only the
+     * counts reads them here, so it neither waits for OncoKB nor repeats the
+     * request.
+     */
+    readonly mutatedGeneCounts = remoteData<AlterationCountByGene[]>({
+        await: () => [this.mutationProfiles],
+        invoke: async () => {
+            if (_.isEmpty(this.mutationProfiles.result)) {
+                return [];
+            }
+            return this.internalClient.fetchMutatedGenesUsingPOST({
+                studyViewFilter: this.filters,
+            });
+        },
+        onError: () => {},
+        default: [],
+    });
+
     readonly mutatedGeneTableRowData = remoteData<MultiSelectionTableRow[]>({
         await: () =>
             this.oncokbCancerGeneFilterEnabled
                 ? [
                       this.mutationProfiles,
+                      this.mutatedGeneCounts,
                       this.oncokbAnnotatedGeneEntrezGeneIds,
                       this.oncokbOncogeneEntrezGeneIds,
                       this.oncokbTumorSuppressorGeneEntrezGeneIds,
                       this.oncokbCancerGeneEntrezGeneIds,
                   ]
-                : [this.mutationProfiles],
+                : [this.mutationProfiles, this.mutatedGeneCounts],
         invoke: async () => {
             if (!_.isEmpty(this.mutationProfiles.result)) {
-                let mutatedGenes = await this.internalClient.fetchMutatedGenesUsingPOST(
-                    {
-                        studyViewFilter: this.filters,
-                    }
-                );
+                const mutatedGenes = this.mutatedGeneCounts.result!;
                 return mutatedGenes.map(item => {
                     return {
                         ...item,
@@ -10360,6 +10380,20 @@ export class StudyViewPageStore
         },
         onError: () => {},
         default: [],
+    });
+
+    /**
+     * The cohort's most frequently mutated genes, suggested at the top of the
+     * similarity maps' colour-by menu. From the same counts as the Mutated
+     * Genes table, so it follows the same filters and shares its request.
+     */
+    readonly geneColoringSuggestions = remoteData<GeneColoringSuggestions>({
+        await: () => [this.mutatedGeneCounts],
+        invoke: async () => ({
+            label: 'Frequently mutated in this cohort',
+            genes: mostFrequentlyMutatedGenes(this.mutatedGeneCounts.result!),
+        }),
+        onError: () => {},
     });
 
     readonly structuralVariantGeneTableRowData = remoteData<

@@ -22,7 +22,9 @@ import {
 import {
     EmbeddingsPanelMolecularStore,
     EmbeddingsPanelStore,
+    GeneColoringSuggestions,
 } from 'shared/components/embeddings/EmbeddingsPanelStore';
+import { genesAlteredInPatient } from 'shared/components/embeddings/utils/geneColoringSuggestions';
 import { EmbeddingColoringContext } from 'shared/components/plots/EmbeddingPlotUtils';
 import {
     ExtendedClinicalAttribute,
@@ -134,6 +136,38 @@ export class MapColoringContext
     readonly plotsSelectedGenes = remoteData<Gene[]>({
         invoke: async () => this.coloringGenes,
         default: [],
+    });
+
+    /**
+     * The genes this patient has alterations in, suggested at the top of the
+     * colour-by menu: where the patient sits on the map, coloured by their
+     * own driver, is the question this page is for. The patient page has
+     * already loaded all of it.
+     */
+    readonly geneColoringSuggestions = remoteData<GeneColoringSuggestions>({
+        await: () => [
+            this.patientStore.mutationData,
+            this.patientStore.discreteCNAData,
+            this.patientStore.structuralVariantData,
+            this.patientStore.oncoKbCancerGenes,
+        ],
+        invoke: async () => ({
+            label: 'Altered in this patient',
+            genes: genesAlteredInPatient(
+                {
+                    mutations: this.patientStore.mutationData.result || [],
+                    cnas: this.patientStore.discreteCNAData.result || [],
+                    structuralVariants:
+                        this.patientStore.structuralVariantData.result || [],
+                },
+                new Set(
+                    (this.patientStore.oncoKbCancerGenes.result || []).map(
+                        gene => gene.entrezGeneId
+                    )
+                )
+            ),
+        }),
+        onError: () => {},
     });
 
     readonly samples = remoteData<Sample[]>({

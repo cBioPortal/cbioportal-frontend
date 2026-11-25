@@ -11,7 +11,10 @@ import {
 } from 'mobx';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
-import { EmbeddingsPanelStore } from 'shared/components/embeddings/EmbeddingsPanelStore';
+import {
+    EmbeddingsPanelStore,
+    GeneColoringSuggestions,
+} from 'shared/components/embeddings/EmbeddingsPanelStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
@@ -343,15 +346,18 @@ export class EmbeddingsPanel extends React.Component<
             { fireImmediately: true }
         );
 
+        // Tracks the resolved gene, not just its id: a suggested gene can be
+        // picked before the full gene list has loaded, and resolves once it
+        // arrives.
         this.coloringGeneReactionDisposer = reaction(
-            () => this.selectedEntrezGeneId,
-            entrezGeneId => {
+            () =>
+                this.genes.find(
+                    g => g.entrezGeneId === this.selectedEntrezGeneId
+                ),
+            gene => {
                 if (!this.store.setColoringGenes) {
                     return;
                 }
-                const gene = this.genes.find(
-                    g => g.entrezGeneId === entrezGeneId
-                );
                 this.store.setColoringGenes(gene ? [gene] : []);
             },
             { fireImmediately: true }
@@ -973,6 +979,23 @@ export class EmbeddingsPanel extends React.Component<
         }
         const genesResult = this.store.allGenes;
         return genesResult.isComplete ? genesResult.result || [] : [];
+    }
+
+    /**
+     * Genes the page suggests at the top of the colour-by menu, so colouring
+     * by gene is visible without knowing to search. Waits, like the gene
+     * list, until the menu is reached for.
+     */
+    @computed get geneColoringSuggestions():
+        | GeneColoringSuggestions
+        | undefined {
+        if (!this.genesRequested) {
+            return undefined;
+        }
+        const suggestions = this.store.geneColoringSuggestions;
+        return suggestions?.isComplete && suggestions.result!.genes.length > 0
+            ? suggestions.result
+            : undefined;
     }
 
     @computed get coloringFromURLParameter():
@@ -2492,6 +2515,12 @@ export class EmbeddingsPanel extends React.Component<
         }
 
         const patientData = this.plotData;
+        // Read here, in the panel's tracked render, rather than inside
+        // renderControls: that callback runs in the visualization's render,
+        // which MobX doesn't track, so suggestions arriving after the menu
+        // first opens would never reach it.
+        const suggestedGenes = this.geneColoringSuggestions;
+
         const visualizationProps = {
             data: patientData,
             pointScale: this.pointScale,
@@ -2570,6 +2599,7 @@ export class EmbeddingsPanel extends React.Component<
                     onColorByReached={this.requestGenes}
                     clinicalAttributes={this.clinicalAttributes}
                     additionalGroups={this.embeddingDataGroups}
+                    suggestedGenes={suggestedGenes}
                     selectedColoringOption={this.effectiveColoringOption}
                     isLoading={
                         this.isLoading ||

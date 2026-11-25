@@ -25,6 +25,20 @@ export interface EmbeddingsPanelMolecularStore {
     oncoKbMutationAnnotationForOncoprint: MobxPromise<any>;
 }
 
+/** A gene the colour-by menu suggests, with a short note on why. */
+export interface GeneColoringSuggestion {
+    entrezGeneId: number;
+    hugoGeneSymbol: string;
+    /** Shown beside the symbol, e.g. "38%" or "Mut · Amp". */
+    detail: string;
+}
+
+export interface GeneColoringSuggestions {
+    /** The menu group's heading, e.g. "Frequently mutated in this cohort". */
+    label: string;
+    genes: GeneColoringSuggestion[];
+}
+
 /**
  * What an embedding panel needs from the page it sits on.
  *
@@ -56,6 +70,13 @@ export interface EmbeddingsPanelStore {
      * alteration data per gene rather than fetching it per gene on demand.
      */
     setColoringGenes?: (genes: Gene[]) => void;
+
+    /**
+     * Genes worth colouring by, listed at the top of the colour-by menu so
+     * that colouring by gene shows before anyone searches. Observed only once
+     * the menu is reached for, so a page that never opens it never fetches.
+     */
+    geneColoringSuggestions?: MobxPromise<GeneColoringSuggestions>;
 
     /** The cohort the page's own filters leave; absent where nothing filters. */
     selectedSamples?: MobxPromise<Sample[]>;

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { GeneColoringSuggestions } from '../EmbeddingsPanelStore';
 import Select from 'react-select';
 import ColorSamplesByDropdown from 'shared/components/colorSamplesByDropdown/ColorSamplesByDropdown';
 import {
@@ -29,6 +30,8 @@ export interface EmbeddingControlStackProps {
     onColorByReached?: () => void;
     clinicalAttributes: ClinicalAttribute[];
     additionalGroups?: ColoringMenuOmnibarGroup[];
+    /** Listed at the top of the colour-by menu in place of the full gene list. */
+    suggestedGenes?: GeneColoringSuggestions;
     selectedColoringOption?: ColoringMenuOmnibarOption;
     isLoading: boolean;
     mutationDataExists: boolean;
@@ -103,6 +106,13 @@ const SELECT_STYLES = {
     multiValue: (base: any) => ({ ...base, fontSize: '11px' }),
 };
 
+// Wider than its box, so the suggested-gene heading and long clinical
+// attribute names fit on one line; it overlays the map, which has room.
+const COLOR_BY_SELECT_STYLES = {
+    ...SELECT_STYLES,
+    menu: (base: any) => ({ ...SELECT_STYLES.menu(base), minWidth: '240px' }),
+};
+
 export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
     mapOptions,
     selectedMapOption,
@@ -113,6 +123,7 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
     onColorByReached,
     clinicalAttributes,
     additionalGroups,
+    suggestedGenes,
     selectedColoringOption,
     isLoading,
     mutationDataExists,
@@ -186,6 +197,7 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
                         genes={genes}
                         clinicalAttributes={clinicalAttributes}
                         additionalGroups={additionalGroups}
+                        suggestedGenes={suggestedGenes}
                         selectedOption={selectedColoringOption}
                         hasNoQueriedGenes={true}
                         isLoading={isLoading}
@@ -204,7 +216,7 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
                         onStructuralVariantToggle={onStructuralVariantToggle}
                         onMrnaToggle={onMrnaToggle}
                         hideLabel
-                        selectStyles={SELECT_STYLES}
+                        selectStyles={COLOR_BY_SELECT_STYLES}
                     />
                 </div>
             )}
