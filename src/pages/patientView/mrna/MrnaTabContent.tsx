@@ -12,8 +12,10 @@ import {
     VictoryScatter,
 } from 'victory';
 import {
+    axisTickLabelStyles,
     CBIOPORTAL_VICTORY_THEME,
     DefaultTooltip,
+    getTextWidth,
     placeArrowBottomLeft,
 } from 'cbioportal-frontend-commons';
 import {
@@ -51,6 +53,11 @@ import {
     getGeneGroupLabelMeta,
 } from 'pages/patientView/mrna/mrnaTabGeneGroups';
 import styles from 'pages/patientView/mrna/styles.module.scss';
+import {
+    computeLogFloor,
+    formatValueTick,
+    logValueTicks,
+} from 'pages/patientView/mrna/mrnaAxisUtils';
 
 // One row of the expression table: a gene and its per-sample expression values.
 type ExpressionTableRow = {
@@ -275,6 +282,14 @@ function geneBackgroundOverlay(symbol: string, curated: any): JSX.Element {
 // curates the gene, also shows the gene's summary/background on hover (no
 // icon — hovering the gene name itself triggers it). Victory supplies the
 // positioning props (x/y/text/style); the OncoKB lookup comes in as a prop.
+// Gene tick label style. The font family is set explicitly so the rendered
+// labels match the font the left padding is measured with.
+const GENE_LABEL_STYLE = {
+    fontFamily: axisTickLabelStyles.fontFamily,
+    fontSize: 12,
+    fill: '#333',
+};
+
 const GeneTickLabel: React.FunctionComponent<any> = props => {
     const { oncokbGeneBySymbol, ...labelProps } = props;
     const raw = labelProps.text;
@@ -319,13 +334,14 @@ function robustZ(value: number, median: number, mad: number): number {
 }
 
 // Short, readable rendering of an mRNA expression value for the bubble
-// tooltip — uses up to 3 significant digits and falls back to fixed notation
-// for typical microarray/log-ratio ranges.
+// tooltip — fixed notation for typical microarray/log-ratio ranges, exponential
+// for tiny non-zero values that would otherwise round to 0.00.
 function formatExpressionValue(v: number): string {
     if (!Number.isFinite(v)) return String(v);
     const abs = Math.abs(v);
     if (abs >= 100) return v.toFixed(0);
     if (abs >= 10) return v.toFixed(1);
+    if (abs > 0 && abs < 0.005) return v.toExponential(2);
     return v.toFixed(2);
 }
 
@@ -1221,6 +1237,7 @@ export default class MrnaTabContent extends React.Component<
             median: number;
             mad: number;
             sortedTransformed: number[];
+            sortedRaw: number[];
         };
     } {
         const result: {
@@ -1228,6 +1245,7 @@ export default class MrnaTabContent extends React.Component<
                 median: number;
                 mad: number;
                 sortedTransformed: number[];
+                sortedRaw: number[];
             };
         } = {};
         const transform = (v: number) =>
@@ -1242,11 +1260,16 @@ export default class MrnaTabContent extends React.Component<
                 .map(d => transform(d.value))
                 .filter(Number.isFinite)
                 .sort((a, b) => a - b);
+            const raw = byEntrez[entrezId]
+                .map(d => d.value)
+                .filter(Number.isFinite)
+                .sort((a, b) => a - b);
             if (transformed.length === 0) {
                 result[entrezId] = {
                     median: 0,
                     mad: 0,
                     sortedTransformed: [],
+                    sortedRaw: [],
                 };
                 return;
             }
@@ -1256,6 +1279,7 @@ export default class MrnaTabContent extends React.Component<
                 median,
                 mad,
                 sortedTransformed: transformed,
+                sortedRaw: raw,
             };
         });
         return result;
@@ -1291,7 +1315,9 @@ export default class MrnaTabContent extends React.Component<
             if (!stats || stats.sortedTransformed.length < 5) return;
             const tv = transform(d.value);
             const z = robustZ(tv, stats.median, stats.mad);
-            const percentile = percentileOf(tv, stats.sortedTransformed);
+            // Rank on raw values: the log transform preserves order, but the
+            // log floor clamps low values together and would create ties.
+            const percentile = percentileOf(d.value, stats.sortedRaw);
             (out[d.entrezGeneId] = out[d.entrezGeneId] || {})[d.sampleId] = {
                 value: d.value,
                 z,
@@ -1630,10 +1656,11 @@ export default class MrnaTabContent extends React.Component<
         return this.plotsStore.logScale && this.canRenderLog;
     }
 
-    // Smallest positive value; the lower bound for the log scale so zeros and
-    // tiny values have somewhere to render.
+    // Lower bound for the log scale; zeros and values below it render at the
+    // bound. Ignores a small fraction of near-zero outliers so they don't
+    // stretch the axis (see computeLogFloor).
     @computed get logFloor(): number {
-        return _.min(this.allValues.filter(v => v > 0)) ?? 1;
+        return computeLogFloor(this.allValues);
     }
 
     // Clamp a value into the plottable range (log can't render <= 0).
@@ -1899,8 +1926,8 @@ export default class MrnaTabContent extends React.Component<
         const min = _.min(vals) ?? 0;
         const max = _.max(vals) ?? 1;
         if (this.useLog) {
-            // pad in log space so the data fills the axis; floor at smallest
-            // positive value so clamped zeros sit just inside the left edge
+            // pad in log space so the data fills the axis; values clamped to
+            // the floor sit just inside the left edge
             const logMin = Math.log10(this.logFloor);
             const logMax = Math.log10(max);
             const pad = Math.max((logMax - logMin) * 0.05, 0.02);
@@ -1916,23 +1943,7 @@ export default class MrnaTabContent extends React.Component<
     @computed get valueTicks(): number[] | undefined {
         const [lo, hi] = this.valueDomain;
         if (this.useLog) {
-            const startExp = Math.floor(Math.log10(lo));
-            const endExp = Math.ceil(Math.log10(hi));
-            const decades = endExp - startExp;
-            // Few decades: 1-2-5 per decade. Many decades: powers of ten only
-            // (optionally every other decade) so the axis stays readable.
-            const mantissas = decades <= 2 ? [1, 2, 5] : [1];
-            const expStep = decades > 6 ? 2 : 1;
-            const ticks: number[] = [];
-            for (let e = startExp; e <= endExp; e += expStep) {
-                mantissas.forEach(m => {
-                    const v = m * Math.pow(10, e);
-                    if (v >= lo && v <= hi) {
-                        ticks.push(v);
-                    }
-                });
-            }
-            return ticks.length ? ticks : undefined;
+            return logValueTicks(lo, hi);
         }
         const span = hi - lo;
         if (!(span > 0)) {
@@ -2870,18 +2881,26 @@ export default class MrnaTabContent extends React.Component<
         // overflowY:hidden — overlays and clips the bottom x-axis.
         const BORDERED_CHART_CHROME = 22;
         // Non-swapped: the gene names are the left-axis tick labels, so the
-        // left padding only needs to fit the longest one (~7px/char at
-        // fontSize 12, plus room for the tick mark) — no need for a big fixed
-        // gutter. Swapped layout needs more left padding (so the rotated
+        // left padding only needs to fit the widest one (measured at the
+        // label font, with ~10% slack for font substitution, plus room for the
+        // tick mark). Swapped layout needs more left padding (so the rotated
         // value-axis label clears the tick numbers) and more bottom padding (so
         // the angled gene tick labels fit beneath the axis without overlapping).
-        const maxGeneLabelLen = this.genes.reduce(
-            (m, g) => Math.max(m, g.symbol.length),
+        const maxGeneLabelWidth = this.plotGenes.reduce(
+            (m, g) =>
+                Math.max(
+                    m,
+                    getTextWidth(
+                        g.symbol,
+                        GENE_LABEL_STYLE.fontFamily,
+                        `${GENE_LABEL_STYLE.fontSize}px`
+                    )
+                ),
             0
         );
         const geneAxisPad = Math.min(
             140,
-            Math.max(50, maxGeneLabelLen * 7 + 16)
+            Math.max(50, Math.ceil(maxGeneLabelWidth * 1.1) + 16)
         );
         const padding = swap
             ? { top: 30, bottom: 110, left: 90, right: 25 + extraRightPad }
@@ -2901,7 +2920,7 @@ export default class MrnaTabContent extends React.Component<
         const oncokbGeneBySymbol = this.plotsStore.oncokbGeneBySymbol;
         const categoryTickLabel = (
             <GeneTickLabel
-                style={{ fontSize: 12, fill: '#333' } as any}
+                style={GENE_LABEL_STYLE as any}
                 oncokbGeneBySymbol={oncokbGeneBySymbol}
             />
         );
@@ -2911,27 +2930,18 @@ export default class MrnaTabContent extends React.Component<
         // the right of the tick.
         const categoryTickLabelSwap = (
             <GeneTickLabel
-                style={{ fontSize: 12, fill: '#333' } as any}
+                style={GENE_LABEL_STYLE as any}
                 dx={-8}
                 oncokbGeneBySymbol={oncokbGeneBySymbol}
             />
         );
-        // Abbreviate thousands so 4+ digit ticks stay compact: 2000 -> "2k",
-        // 1500 -> "1.5k", 12000 -> "12k".
-        const valueTickFormat = (t: number) => {
-            if (Math.abs(t) >= 1000) {
-                const k = t / 1000;
-                return `${Number.isInteger(k) ? k : k.toFixed(1)}k`;
-            }
-            return t >= 1 ? Number(t).toLocaleString('en-US') : `${t}`;
-        };
         // The value-axis label rotates with the axis. When it's on the left
         // (swapped layout), it needs more outward padding so it sits clear of
         // the tick numbers.
         const valueAxisProps = {
             label: valueLabel,
             tickValues: this.valueTicks,
-            tickFormat: valueTickFormat,
+            tickFormat: formatValueTick,
             style: { axisLabel: { padding: swap ? 55 : 38 } },
         };
         // When the gene axis is on the bottom (swapped), rotate the gene
@@ -2961,7 +2971,8 @@ export default class MrnaTabContent extends React.Component<
                   tickFormat: categoryTickFormat,
                   tickLabelComponent: categoryTickLabel,
                   crossAxis: false,
-                  offsetX: 60,
+                  // Pin the gene axis to the plot area's left edge.
+                  offsetX: geneAxisPad,
               };
 
         return (
