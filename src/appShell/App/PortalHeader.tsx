@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { flushSync } from 'react-dom';
 import _ from 'lodash';
 import { Link, NavLink } from 'react-router-dom';
 import { If, Then, Else } from 'react-if';
@@ -17,9 +18,19 @@ import FontAwesome from 'react-fontawesome';
 @observer
 export default class PortalHeader extends React.Component<
     { appStore: AppStore },
-    { datDropdownOpen: boolean; navCollapsed: boolean; navMenuOpen: boolean }
+    {
+        datDropdownOpen: boolean;
+        navCollapsed: boolean;
+        navMenuOpen: boolean;
+        instituteLogoLoaded: boolean;
+    }
 > {
-    state = { datDropdownOpen: false, navCollapsed: false, navMenuOpen: false };
+    state = {
+        datDropdownOpen: false,
+        navCollapsed: false,
+        navMenuOpen: false,
+        instituteLogoLoaded: false,
+    };
 
     private headerRef = React.createRef<HTMLElement>();
     private resizeObserver?: ResizeObserver;
@@ -29,8 +40,11 @@ export default class PortalHeader extends React.Component<
     componentDidMount() {
         const header = this.headerRef.current;
         if (header && typeof ResizeObserver !== 'undefined') {
-            // The sides resize as the user name and institute logo load.
-            this.resizeObserver = new ResizeObserver(this.fitMenu);
+            // Rendered before the browser paints, so an overflowing header
+            // is never shown, however busy the page is.
+            this.resizeObserver = new ResizeObserver(() =>
+                flushSync(this.fitMenu)
+            );
             this.resizeObserver.observe(header);
             Array.from(header.children).forEach(child =>
                 this.resizeObserver!.observe(child)
@@ -72,6 +86,9 @@ export default class PortalHeader extends React.Component<
             this.setState({ navMenuOpen: false });
         }
     };
+
+    private onInstituteLogoLoaded = () =>
+        this.setState({ instituteLogoLoaded: true });
 
     private closeNavMenu = () => this.setState({ navMenuOpen: false });
 
@@ -333,8 +350,15 @@ export default class PortalHeader extends React.Component<
                     <If condition={!!getInstituteLogoUrl()}>
                         <img
                             id="institute-logo"
+                            className={
+                                this.state.instituteLogoLoaded
+                                    ? undefined
+                                    : 'loading'
+                            }
                             src={getInstituteLogoUrl()!}
                             alt="Institute Logo"
+                            onLoad={this.onInstituteLogoLoaded}
+                            onError={this.onInstituteLogoLoaded}
                         />
                     </If>
                 </div>

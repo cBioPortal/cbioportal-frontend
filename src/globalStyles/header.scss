@@ -55,6 +55,13 @@ header {
     margin-left: 10px;
 }
 
+// Holds the largest logo size until it loads, so the menu is fitted to it
+// from the first paint.
+#institute-logo.loading {
+    width: 200px;
+    height: 40px;
+}
+
 #rightHeaderContent {
     display: flex;
     align-items: center;
