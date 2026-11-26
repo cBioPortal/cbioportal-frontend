@@ -47,6 +47,27 @@ describe('EmbeddingViewportState', () => {
         assert.equal(viewport.current.maxZoom, EMBEDDING_MAX_ZOOM);
     });
 
+    it('fits the canvas it is told about', () => {
+        const viewport = new EmbeddingViewportState();
+        viewport.centerOn(points, { width: 400, height: 400 });
+        const small = viewport.current.zoom;
+        viewport.centerOn(points, { width: 1600, height: 1600 });
+        assert.closeTo(viewport.current.zoom - small, 2, 1e-9);
+    });
+
+    it('stays fitted until the view is moved', () => {
+        const viewport = new EmbeddingViewportState();
+        assert.isFalse(viewport.isFitted, 'nothing framed yet');
+        viewport.centerOn(points);
+        assert.isTrue(viewport.isFitted);
+        viewport.set({ ...viewport.current, zoom: viewport.current.zoom + 1 });
+        assert.isFalse(viewport.isFitted, 'zoomed by the user');
+        viewport.centerOn(points);
+        assert.isTrue(viewport.isFitted, 'Center fits again');
+        viewport.adopt({ ...viewport.current, target: [1, 1, 0] });
+        assert.isFalse(viewport.isFitted, 'followed another panel');
+    });
+
     it('leaves the view alone when there is nothing to centre on', () => {
         const viewport = new EmbeddingViewportState();
         viewport.set({

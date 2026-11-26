@@ -1,9 +1,16 @@
 import { EmbeddingPoint } from '../EmbeddingTypes';
 
+// Assumed canvas until the real one has been measured.
+export const DEFAULT_CANVAS_SIZE = { width: 1200, height: 600 };
+
 /**
- * Calculate the bounds of the data for centering the view
+ * The centre of the data, and the zoom that fits all of it in a canvas of this
+ * size with a margin.
  */
-export function calculateDataBounds(data: EmbeddingPoint[]) {
+export function calculateDataBounds(
+    data: EmbeddingPoint[],
+    canvas: { width: number; height: number } = DEFAULT_CANVAS_SIZE
+) {
     if (!data || data.length === 0) {
         return { centerX: 0, centerY: 0, zoom: 0 };
     }
@@ -24,9 +31,7 @@ export function calculateDataBounds(data: EmbeddingPoint[]) {
     const rangeY = maxY - minY;
     const paddingFactor = 0.9;
 
-    // Use typical dimensions for calculation
-    const width = 1200;
-    const height = 600;
+    const { width, height } = canvas;
 
     const scaleX = rangeX > 0 ? (width * paddingFactor) / rangeX : 1;
     const scaleY = rangeY > 0 ? (height * paddingFactor) / rangeY : 1;

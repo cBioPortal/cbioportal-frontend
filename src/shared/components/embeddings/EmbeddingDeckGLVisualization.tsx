@@ -128,8 +128,25 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                     actualHeight: newHeight,
                 });
             }
+            // A hidden tab measures 0 wide; that is no size to fit a map to.
+            const reported = this.reportedCanvasSize;
+            if (
+                this.props.onCanvasResize &&
+                newWidth > 0 &&
+                (!reported ||
+                    reported.width !== newWidth ||
+                    reported.height !== newHeight)
+            ) {
+                this.reportedCanvasSize = {
+                    width: newWidth,
+                    height: newHeight,
+                };
+                this.props.onCanvasResize(this.reportedCanvasSize);
+            }
         }
     };
+
+    private reportedCanvasSize?: { width: number; height: number };
 
     private getView(): OrthographicView {
         if (
@@ -307,7 +324,10 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     };
 
     private centerView = () => {
-        const bounds = calculateDataBounds(this.props.data);
+        const bounds = calculateDataBounds(this.props.data, {
+            width: this.state.actualWidth,
+            height: this.state.actualHeight,
+        });
         const currentViewState = this.props.viewState || {
             target: [0, 0, 0],
             zoom: 0,
