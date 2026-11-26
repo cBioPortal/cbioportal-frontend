@@ -230,10 +230,43 @@ export default class PortalHeader extends React.Component<
         });
     }
 
+    // Collapsed, the menu is a button before the logo, as is usual on phones.
+    private renderNav() {
+        return (
+            <nav
+                id="main-nav"
+                className={this.state.navCollapsed ? 'collapsed' : undefined}
+                aria-label="Main navigation"
+            >
+                {this.state.navCollapsed ? (
+                    <Dropdown
+                        id="main-nav-menu"
+                        open={this.state.navMenuOpen}
+                        onToggle={this.handleNavMenuToggle}
+                    >
+                        <Dropdown.Toggle
+                            noCaret
+                            aria-label="Menu"
+                            data-test="main-nav-menu-button"
+                        >
+                            <FontAwesome name="bars" />
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu onClick={this.closeNavMenu}>
+                            {this.getTabs()}
+                        </Dropdown.Menu>
+                    </Dropdown>
+                ) : (
+                    <ul>{this.getTabs()}</ul>
+                )}
+            </nav>
+        );
+    }
+
     render() {
         return (
             <header ref={this.headerRef}>
                 <div id="leftHeaderContent">
+                    {this.state.navCollapsed && this.renderNav()}
                     <Link to="/" id="cbioportal-logo">
                         <img
                             src={
@@ -244,29 +277,7 @@ export default class PortalHeader extends React.Component<
                             alt="cBioPortal Logo"
                         />
                     </Link>
-                    <nav id="main-nav" aria-label="Main navigation">
-                        {this.state.navCollapsed ? (
-                            <Dropdown
-                                id="main-nav-menu"
-                                open={this.state.navMenuOpen}
-                                onToggle={this.handleNavMenuToggle}
-                            >
-                                <Dropdown.Toggle
-                                    noCaret
-                                    className="btn-sm"
-                                    aria-label="Menu"
-                                    data-test="main-nav-menu-button"
-                                >
-                                    <FontAwesome name="bars" />
-                                </Dropdown.Toggle>
-                                <Dropdown.Menu onClick={this.closeNavMenu}>
-                                    {this.getTabs()}
-                                </Dropdown.Menu>
-                            </Dropdown>
-                        ) : (
-                            <ul>{this.getTabs()}</ul>
-                        )}
-                    </nav>
+                    {!this.state.navCollapsed && this.renderNav()}
                 </div>
                 <div id="rightHeaderContent">
                     <If

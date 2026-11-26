@@ -130,6 +130,19 @@ header {
     margin-left: 15px;
 }
 
+#main-nav.collapsed {
+    margin-left: 0;
+    margin-right: 15px;
+}
+
+// As tall as the logo, so it stays usable on a zoomed-out phone page.
+#main-nav-menu {
+    height: 40px;
+    width: 46px;
+    padding: 0;
+    font-size: 22px;
+}
+
 #main-nav .dropdown-menu li {
     display: block;
     margin-left: 0;
