@@ -10,8 +10,6 @@ header {
     padding: 10px 0;
     width: 100%;
     display: flex !important;
-    // When both sides don't fit, wrap rather than widen the page.
-    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
 }
@@ -25,8 +23,8 @@ header {
 .pageTopContainer {
     background: #eee;
     border-bottom: 1px solid #ddd;
-    // Background spans the content even when it is wider than the window.
-    min-width: fit-content;
+    // The min-width of .contentWidth, so the background spans it.
+    min-width: 1200px;
 }
 
 .pageTopContainer,
@@ -58,7 +56,6 @@ header {
 }
 
 #rightHeaderContent {
-    margin-left: auto;
     display: flex;
     align-items: center;
     color: #777;
@@ -131,6 +128,15 @@ header {
     font: normal normal 400 14px/18px 'Helvetica Neue', Helvetica, Verdana,
         Arial, sans-serif;
     margin-left: 15px;
+}
+
+#main-nav .dropdown-menu li {
+    display: block;
+    margin-left: 0;
+}
+
+#main-nav .dropdown-menu li a {
+    padding: 6px 20px;
 }
 
 #main-nav li a:link,

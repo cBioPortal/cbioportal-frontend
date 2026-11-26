@@ -17,9 +17,63 @@ import FontAwesome from 'react-fontawesome';
 @observer
 export default class PortalHeader extends React.Component<
     { appStore: AppStore },
-    { datDropdownOpen: boolean }
+    { datDropdownOpen: boolean; navCollapsed: boolean; navMenuOpen: boolean }
 > {
-    state = { datDropdownOpen: false };
+    state = { datDropdownOpen: false, navCollapsed: false, navMenuOpen: false };
+
+    private headerRef = React.createRef<HTMLElement>();
+    private resizeObserver?: ResizeObserver;
+    // Header width the full menu needs, recorded when it last overflowed.
+    private expandedWidth = 0;
+
+    componentDidMount() {
+        const header = this.headerRef.current;
+        if (header && typeof ResizeObserver !== 'undefined') {
+            // The sides resize as the user name and institute logo load.
+            this.resizeObserver = new ResizeObserver(this.fitMenu);
+            this.resizeObserver.observe(header);
+            Array.from(header.children).forEach(child =>
+                this.resizeObserver!.observe(child)
+            );
+        }
+        this.fitMenu();
+    }
+
+    componentDidUpdate() {
+        this.fitMenu();
+    }
+
+    componentWillUnmount() {
+        this.resizeObserver?.disconnect();
+    }
+
+    // Collapses the menu into a button when the header is too narrow for it,
+    // so the header never widens the page.
+    private fitMenu = () => {
+        const header = this.headerRef.current;
+        if (!header) {
+            return;
+        }
+        if (!this.state.navCollapsed) {
+            if (header.scrollWidth > header.clientWidth + 1) {
+                this.expandedWidth = header.scrollWidth;
+                this.setState({ navCollapsed: true });
+            }
+        } else if (header.clientWidth >= this.expandedWidth) {
+            this.setState({ navCollapsed: false, navMenuOpen: false });
+        }
+    };
+
+    private handleNavMenuToggle = (isOpen: boolean) => {
+        if (isOpen) {
+            // Deferred for the same reason as handleDatDropdownToggle.
+            setTimeout(() => this.setState({ navMenuOpen: true }), 0);
+        } else {
+            this.setState({ navMenuOpen: false });
+        }
+    };
+
+    private closeNavMenu = () => this.setState({ navMenuOpen: false });
 
     private handleDatDropdownToggle = (isOpen: boolean) => {
         if (isOpen) {
@@ -178,7 +232,7 @@ export default class PortalHeader extends React.Component<
 
     render() {
         return (
-            <header>
+            <header ref={this.headerRef}>
                 <div id="leftHeaderContent">
                     <Link to="/" id="cbioportal-logo">
                         <img
@@ -191,7 +245,27 @@ export default class PortalHeader extends React.Component<
                         />
                     </Link>
                     <nav id="main-nav" aria-label="Main navigation">
-                        <ul>{this.getTabs()}</ul>
+                        {this.state.navCollapsed ? (
+                            <Dropdown
+                                id="main-nav-menu"
+                                open={this.state.navMenuOpen}
+                                onToggle={this.handleNavMenuToggle}
+                            >
+                                <Dropdown.Toggle
+                                    noCaret
+                                    className="btn-sm"
+                                    aria-label="Menu"
+                                    data-test="main-nav-menu-button"
+                                >
+                                    <FontAwesome name="bars" />
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu onClick={this.closeNavMenu}>
+                                    {this.getTabs()}
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        ) : (
+                            <ul>{this.getTabs()}</ul>
+                        )}
                     </nav>
                 </div>
                 <div id="rightHeaderContent">
