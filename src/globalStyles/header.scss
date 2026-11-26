@@ -23,6 +23,8 @@ header {
 .pageTopContainer {
     background: #eee;
     border-bottom: 1px solid #ddd;
+    // The min-width of .contentWidth, so the background spans it.
+    min-width: 1200px;
 }
 
 .pageTopContainer,
@@ -51,6 +53,13 @@ header {
     max-height: 40px;
     max-width: 200px;
     margin-left: 10px;
+}
+
+// Holds the largest logo size until it loads, so the menu is fitted to it
+// from the first paint.
+#institute-logo.loading {
+    width: 200px;
+    height: 40px;
 }
 
 #rightHeaderContent {
@@ -126,6 +135,42 @@ header {
     font: normal normal 400 14px/18px 'Helvetica Neue', Helvetica, Verdana,
         Arial, sans-serif;
     margin-left: 15px;
+}
+
+#main-nav.collapsed {
+    margin-left: 0;
+    margin-right: 15px;
+}
+
+// As tall as the logo, so it stays usable on a zoomed-out phone page.
+#main-nav-menu {
+    height: 30px;
+    width: 38px;
+    padding: 0;
+    font-size: 18px;
+}
+
+// With no menu links beside them, the logos need less height.
+header.navCollapsed {
+    padding: 6px 0;
+
+    #cbioportal-logo img {
+        height: 30px;
+        width: 133px;
+    }
+
+    #institute-logo {
+        max-height: 30px;
+    }
+}
+
+#main-nav .dropdown-menu li {
+    display: block;
+    margin-left: 0;
+}
+
+#main-nav .dropdown-menu li a {
+    padding: 6px 20px;
 }
 
 #main-nav li a:link,
