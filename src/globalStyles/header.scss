@@ -137,10 +137,24 @@ header {
 
 // As tall as the logo, so it stays usable on a zoomed-out phone page.
 #main-nav-menu {
-    height: 40px;
-    width: 46px;
+    height: 30px;
+    width: 38px;
     padding: 0;
-    font-size: 22px;
+    font-size: 18px;
+}
+
+// With no menu links beside them, the logos need less height.
+header.navCollapsed {
+    padding: 6px 0;
+
+    #cbioportal-logo img {
+        height: 30px;
+        width: 133px;
+    }
+
+    #institute-logo {
+        max-height: 30px;
+    }
 }
 
 #main-nav .dropdown-menu li {

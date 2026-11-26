@@ -264,7 +264,10 @@ export default class PortalHeader extends React.Component<
 
     render() {
         return (
-            <header ref={this.headerRef}>
+            <header
+                ref={this.headerRef}
+                className={this.state.navCollapsed ? 'navCollapsed' : undefined}
+            >
                 <div id="leftHeaderContent">
                     {this.state.navCollapsed && this.renderNav()}
                     <Link to="/" id="cbioportal-logo">
