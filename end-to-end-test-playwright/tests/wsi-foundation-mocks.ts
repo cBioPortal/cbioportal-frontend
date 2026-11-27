@@ -38,6 +38,11 @@ export interface FoundationMockOptions {
     ingressStatus?: number;
     /** Which requests the ingress refuses (default: all). */
     ingressRefuses?: IngressRefusal;
+    /**
+     * Replaces the default WSI_SAMPLE slide rows; the tile server serves the
+     * slides they publish.
+     */
+    slideRows?: FoundationSlideRow[];
 }
 
 /** The tile-server requests a refusing ingress applies to. */
@@ -59,13 +64,22 @@ export const tileMetadata = {
     tile_size: 256,
 };
 
-/** One WSI_SAMPLE resource row, as the resource table API returns it. */
-function makeSlideRow(slideKey: string, stainName: string, stainGroup: string) {
+/**
+ * One WSI_SAMPLE resource row, as the resource table API returns it;
+ * `metadata` overrides the default slide fields.
+ */
+export function makeSlideRow(
+    slideKey: string,
+    stainName: string,
+    stainGroup: string,
+    sampleId: string = SAMPLE_ID,
+    metadata: Record<string, unknown> = {}
+) {
     return {
         studyId: STUDY_ID,
         resourceId: 'WSI_SAMPLE',
         patientId: PATIENT_ID,
-        sampleId: SAMPLE_ID,
+        sampleId,
         metadata: {
             slide_key: slideKey,
             reference_sample_id: SAMPLE_ID,
@@ -91,9 +105,12 @@ function makeSlideRow(slideKey: string, stainName: string, stainGroup: string) {
                 thumbnail_height: 768,
                 thumbnail_content_type: 'image/png',
             },
+            ...metadata,
         },
     };
 }
+
+export type FoundationSlideRow = ReturnType<typeof makeSlideRow>;
 
 function makeSlideRows(includeSecondSlide: boolean) {
     const rows = [makeSlideRow(SLIDE_KEY, 'H&E initial', 'H&E (Initial)')];
@@ -170,7 +187,8 @@ export async function installFoundationMocks(
     options: FoundationMockOptions = {}
 ): Promise<string[]> {
     const enrichmentRequests: string[] = [];
-    const slideRows = makeSlideRows(!!options.includeSecondSlide);
+    const slideRows =
+        options.slideRows || makeSlideRows(!!options.includeSecondSlide);
     await page.addInitScript(() => {
         window.localStorage.setItem(
             'frontendConfig',
@@ -211,6 +229,18 @@ export async function installFoundationMocks(
                 : [];
         return route.fulfill(json(rows));
     });
+    // The viewer route loads the patient's clinical events for the sample
+    // sequencing days; the smoke patient has none. Register a later route to
+    // give the patient events.
+    await page.route(
+        `**/api/studies/${STUDY_ID}/patients/${PATIENT_ID}/clinical-events**`,
+        route =>
+            route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify([]),
+            })
+    );
     await page.route(`**/api/studies/${STUDY_ID}/molecular-profiles**`, route =>
         route.fulfill({
             status: 200,

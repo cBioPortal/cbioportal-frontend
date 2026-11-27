@@ -34,6 +34,25 @@ describe('wsiSlidesTabScopeFromQuery', () => {
         });
     });
 
+    it('maps a part key link to a part filter', () => {
+        expect(
+            wsiSlidesTabScopeFromQuery({
+                stainFilter: 'ihc',
+                matchLevel: 'Unmatched',
+                partKey: 'part:0123456789ab',
+            })
+        ).toEqual({
+            preferredSampleId: undefined,
+            pathologyFilter: {
+                sampleId: undefined,
+                matchLevel: 'Unmatched',
+                specimenKey: undefined,
+                partKey: 'part:0123456789ab',
+            },
+            initialStainFilter: 'ihc',
+        });
+    });
+
     it('scopes the slide list to a linked sample', () => {
         expect(wsiSlidesTabScopeFromQuery({ sampleId: 'P-1-T01' })).toEqual({
             preferredSampleId: 'P-1-T01',
@@ -136,6 +155,26 @@ describe('PatientWsiSlidesTab', () => {
         expect(props.pathologyFilter).toBeUndefined();
         expect(props.initialStainFilter).toBeUndefined();
         expect(props.preferredSampleId).toBe('P-1-T01');
+    });
+
+    it('passes the clinical events to the viewer', () => {
+        const clinicalEvents = [
+            {
+                eventType: 'SEQUENCING',
+                startNumberOfDaysSinceDiagnosis: 0,
+                attributes: [{ key: 'SAMPLE_ID', value: 'P-1-T01' }],
+            },
+        ] as any[];
+        render(
+            <PatientWsiSlidesTab
+                {...baseProps}
+                query={{}}
+                clinicalEvents={clinicalEvents}
+            />
+        );
+        const props =
+            mockEntryPoint.mock.calls[mockEntryPoint.mock.calls.length - 1][0];
+        expect(props.clinicalEvents).toBe(clinicalEvents);
     });
 
     it('scopes to a newly picked sample even though the hash names the previous slide', () => {

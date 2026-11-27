@@ -2,6 +2,7 @@ import {
     formatDate,
     getAttributeValue,
     ITimelineConfig,
+    ITrackEventConfig,
     POINT_COLOR,
     TimelineEvent,
     TimelineLegendItem,
@@ -292,15 +293,22 @@ export function configureGenieTimeline(baseConfig: ITimelineConfig) {
     return baseConfig;
 }
 
+/**
+ * @param extraTrackEventRenderers renderers for tracks the page draws itself,
+ * such as the PATHOLOGY SLIDES track of the patient's imported pathology
+ * timeline events.
+ */
 export function buildBaseConfig(
     sampleManager: SampleManager,
-    caseMetaData: ISampleMetaDeta
+    caseMetaData: ISampleMetaDeta,
+    extraTrackEventRenderers: ITrackEventConfig[] = []
 ) {
     let baseConfig: ITimelineConfig = {
         sortOrder: [
             'Specimen',
             'Sample Acquisition',
             'Sequencing',
+            'Pathology Slides',
             'Surgery',
             'Biobank Tissue',
             'Biobank Biofluid',
@@ -321,6 +329,7 @@ export function buildBaseConfig(
             ['LAB_TEST', 'TEST'],
             ['DIAGNOSIS', 'SUBTYPE'],
             ['PATHOLOGY', 'SUBTYPE'],
+            ['PATHOLOGY SLIDES', 'SUBTYPE'],
             ['BIOBANK TISSUE', 'SPECIMEN_TYPE', 'SITE', 'SUBTYPE'],
             ['BIOBANK BIOFLUID', 'SPECIMEN_TYPE', 'CELL_TYPE', 'SUBTYPE'],
         ],
@@ -420,6 +429,7 @@ export function buildBaseConfig(
                     };
                 },
             },
+            ...extraTrackEventRenderers,
             {
                 trackTypeMatch: /SPECIMEN|SAMPLE ACQUISITION|SEQUENCING/i,
                 configureTrack: (cat: TimelineTrackSpecification) => {

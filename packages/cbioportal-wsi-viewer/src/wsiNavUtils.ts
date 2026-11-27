@@ -1,5 +1,26 @@
 import { Sample, UNMATCHED_SAMPLE_ID } from './wsiViewerTypes';
 
+/** A patient timeline day in d-notation: d-242, d0, d+7. */
+export function formatDaysSinceDiagnosis(days: number): string {
+    if (days === 0) return 'd0';
+    return days > 0 ? `d+${days}` : `d${days}`;
+}
+
+/**
+ * A timeline day short enough for the slide list: d-notation within a year,
+ * else years to one decimal (-6.5y, +3y), as on the patient timeline's axis.
+ */
+export function formatDaysSinceDiagnosisShort(days: number): string {
+    if (Math.abs(days) < 365) return formatDaysSinceDiagnosis(days);
+    const years = Math.round((days / 365.25) * 10) / 10;
+    return `${years > 0 ? '+' : ''}${years}y`;
+}
+
+/** Explains the day notation wherever a sample day is shown. */
+export const DAY_ZERO_TOOLTIP =
+    "Days are counted from day 0 (d0) of the patient's timeline: " +
+    'd-242 is 242 days before it, d+7 is 7 days after.';
+
 /**
  * Orders samples for the slide list: matched samples in hierarchy order (as
  * the backend sends them), then the unmatched group. Use with a stable sort.

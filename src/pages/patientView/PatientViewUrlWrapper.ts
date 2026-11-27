@@ -15,12 +15,14 @@ export type PathologySlideSettings = {
     stainFilter?: string;
     matchLevel?: string;
     specimenKey?: string;
+    partKey?: string;
 };
 
 const PATHOLOGY_SLIDE_SETTINGS_KEYS: (keyof PathologySlideSettings)[] = [
     'stainFilter',
     'matchLevel',
     'specimenKey',
+    'partKey',
 ];
 
 export type PatientViewUrlQuery = {
@@ -66,6 +68,7 @@ export default class PatientViewUrlWrapper extends URLWrapper<
                     stainFilter: '',
                     matchLevel: '',
                     specimenKey: '',
+                    partKey: '',
                 },
             },
             openResources: { isSessionProp: false },
