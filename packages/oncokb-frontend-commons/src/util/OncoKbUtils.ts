@@ -134,7 +134,7 @@ export function defaultOncoKbIndicatorFilter(indicator: IndicatorQueryResp) {
         );
     }
 
-    const oncogenic = indicator.oncogenic.toLowerCase().trim();
+    const oncogenic = (indicator.oncogenic || '').toLowerCase().trim();
 
     return oncogenic.includes('oncogenic') || oncogenic.includes('resistance');
 }
@@ -145,7 +145,12 @@ export function generateIdToIndicatorMap(
     const map: { [queryId: string]: IndicatorQueryResp } = {};
 
     _.each(data, function(indicator) {
-        map[indicator.query.id] = indicator;
+        // OncoKB indicators are keyed by the id echoed back in their query.
+        // Skip an indicator that arrives without a query instead of crashing
+        // the whole map build and losing every other annotation with it.
+        if (indicator.query) {
+            map[indicator.query.id] = indicator;
+        }
     });
 
     return map;
