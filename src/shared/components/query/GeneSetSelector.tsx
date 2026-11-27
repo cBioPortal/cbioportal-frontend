@@ -20,6 +20,7 @@ import { Gene } from 'cbioportal-ts-api-client';
 import GenesetsValidator from './GenesetsValidator';
 import FontAwesome from 'react-fontawesome';
 import GeneSymbolValidationError from './GeneSymbolValidationError';
+import NaturalLanguageQuery from './NaturalLanguageQuery';
 
 @observer
 export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
@@ -131,6 +132,8 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
                             (this.store.geneQuery = option ? option.value : '')
                         }
                     />
+
+                    <NaturalLanguageQuery />
 
                     <OQLTextArea
                         focus={this.store.geneQueryErrorDisplayStatus}
