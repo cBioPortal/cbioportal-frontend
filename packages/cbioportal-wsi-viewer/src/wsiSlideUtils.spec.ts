@@ -88,6 +88,35 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         ).toEqual(['1/1', '3/2', '3/B', '3/', 'A/1', 'null/1']);
     });
 
+    it('orders block-matched slides before part-matched ones', () => {
+        const entry = (
+            key: string,
+            partNumber: string,
+            blockNumber: string,
+            matchLevel: Slide['match_level']
+        ) => ({
+            partNumber,
+            slide: makeSlide({
+                slide_key: key,
+                block_number: blockNumber,
+                match_level: matchLevel,
+            }),
+        });
+        const ordered = [
+            entry('part-1/1', '1', '1', 'PART'),
+            entry('none', '1', '1', undefined),
+            entry('block-2/3', '2', '3', 'BLOCK'),
+            entry('part-1/2', '1', '2', 'PART'),
+        ].sort(compareSlidesInSample);
+
+        expect(ordered.map(e => e.slide.slide_key)).toEqual([
+            'block-2/3',
+            'part-1/1',
+            'part-1/2',
+            'none',
+        ]);
+    });
+
     it('orders non-H&E stains in one block by stain name', () => {
         const ordered = [
             makeSlide({
