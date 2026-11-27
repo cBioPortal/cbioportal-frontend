@@ -39,10 +39,17 @@ const WSI_CLINICAL_EXCLUDED_ATTRIBUTE_IDS: ReadonlySet<string> = new Set([
 /** Consent flags, e.g. PARTA_CONSENTED_12_245. */
 const CONSENT_ATTRIBUTE = /CONSENTED/i;
 
+/**
+ * Whole-slide image counts, e.g. WSI_PATIENT_SLIDE_COUNT: the viewer already
+ * lists the patient's slides.
+ */
+const WSI_SLIDE_COUNT_ATTRIBUTE = /^WSI_\w*SLIDE_COUNT$/;
+
 function isExcludedClinicalAttribute(attributeId: string): boolean {
     return (
         WSI_CLINICAL_EXCLUDED_ATTRIBUTE_IDS.has(attributeId) ||
-        CONSENT_ATTRIBUTE.test(attributeId)
+        CONSENT_ATTRIBUTE.test(attributeId) ||
+        WSI_SLIDE_COUNT_ATTRIBUTE.test(attributeId)
     );
 }
 
