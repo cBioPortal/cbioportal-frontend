@@ -175,6 +175,7 @@
     "file-loader": "^6.2.0",
     "fmin": "^0.0.2",
     "fork-ts-checker-webpack-plugin": "^6.3.3",
+    "fuse.js": "^7.5.0",
     "genome-nexus-ts-api-client": "workspace:*",
     "git-revision-webpack-plugin": "^5.0.0",
     "gl-matrix": "2.3.2",
