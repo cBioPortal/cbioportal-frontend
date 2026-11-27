@@ -102,6 +102,8 @@ type LazyMobXTableProps<T> = {
     showPagination?: boolean;
     // used only when showPagination === true (show pagination at bottom otherwise)
     showPaginationAtTop?: boolean;
+    // keeps bottom pagination visible while the table body is scrolled
+    stickyPagination?: boolean;
     paginationProps?: IPaginationControlsProps;
     enableHorizontalScroll?: boolean;
     showColumnVisibility?: boolean;
@@ -890,10 +892,17 @@ export class LazyMobXTableStore<T> {
     }
 }
 
+// smallest body height a sticky-pagination table shrinks to on short viewports
+const STICKY_PAGINATION_MIN_HEIGHT = 300;
+
+type LazyMobXTableState = {
+    stickyPaginationMaxHeight?: number;
+};
+
 @observer
 export default class LazyMobXTable<T> extends React.Component<
     LazyMobXTableProps<T>,
-    {}
+    LazyMobXTableState
 > {
     private store: LazyMobXTableStore<T>;
     private handlers: { [fnName: string]: (...args: any[]) => void };
@@ -901,6 +910,12 @@ export default class LazyMobXTable<T> extends React.Component<
     private filterInput: HTMLInputElement;
     private filterInputReaction: IReactionDisposer;
     private pageToHighlightReaction: IReactionDisposer;
+    private stickyPaginationContainer: HTMLDivElement | null = null;
+    private stickyPaginationResizeObserver?: ResizeObserver;
+    private stickyPaginationResizeFrame?: number;
+    private stickyPaginationCancelFrame?: (handle: number) => void;
+
+    state: LazyMobXTableState = {};
 
     public static defaultProps = {
         showFilter: true,
@@ -964,6 +979,92 @@ export default class LazyMobXTable<T> extends React.Component<
                 });
             }
         });
+    }
+
+    private scheduleStickyPaginationMeasurement = () => {
+        if (
+            !this.props.stickyPagination ||
+            !this.stickyPaginationContainer ||
+            this.stickyPaginationResizeFrame !== undefined
+        ) {
+            return;
+        }
+
+        const requestFrame =
+            typeof window.requestAnimationFrame === 'function'
+                ? window.requestAnimationFrame.bind(window)
+                : (callback: FrameRequestCallback) =>
+                      window.setTimeout(callback, 0);
+        this.stickyPaginationCancelFrame =
+            typeof window.cancelAnimationFrame === 'function'
+                ? window.cancelAnimationFrame.bind(window)
+                : window.clearTimeout.bind(window);
+        this.stickyPaginationResizeFrame = requestFrame(() => {
+            this.stickyPaginationResizeFrame = undefined;
+            this.measureStickyPaginationHeight();
+        });
+    };
+
+    private measureStickyPaginationHeight() {
+        if (!this.stickyPaginationContainer) {
+            return;
+        }
+
+        // Measure from the container's position in the document rather than
+        // in the viewport, so the height does not change as the page scrolls.
+        const documentTop =
+            this.stickyPaginationContainer.getBoundingClientRect().top +
+            window.pageYOffset;
+        const availableHeight = Math.max(
+            STICKY_PAGINATION_MIN_HEIGHT,
+            Math.floor(window.innerHeight - documentTop - 12)
+        );
+
+        if (this.state.stickyPaginationMaxHeight !== availableHeight) {
+            this.setState({ stickyPaginationMaxHeight: availableHeight });
+        }
+    }
+
+    private setupStickyPaginationMeasurement() {
+        if (!this.props.stickyPagination || !this.stickyPaginationContainer) {
+            return;
+        }
+
+        window.addEventListener(
+            'resize',
+            this.scheduleStickyPaginationMeasurement
+        );
+
+        if (typeof ResizeObserver !== 'undefined') {
+            this.stickyPaginationResizeObserver = new ResizeObserver(
+                this.scheduleStickyPaginationMeasurement
+            );
+            let element: Element | null = this.stickyPaginationContainer;
+            while (element) {
+                this.stickyPaginationResizeObserver.observe(element);
+                element = element.parentElement;
+            }
+        }
+
+        this.measureStickyPaginationHeight();
+        this.scheduleStickyPaginationMeasurement();
+    }
+
+    private teardownStickyPaginationMeasurement() {
+        window.removeEventListener(
+            'resize',
+            this.scheduleStickyPaginationMeasurement
+        );
+        this.stickyPaginationResizeObserver?.disconnect();
+        this.stickyPaginationResizeObserver = undefined;
+
+        if (this.stickyPaginationResizeFrame !== undefined) {
+            this.stickyPaginationCancelFrame?.(
+                this.stickyPaginationResizeFrame
+            );
+            this.stickyPaginationResizeFrame = undefined;
+        }
+        this.stickyPaginationCancelFrame = undefined;
     }
 
     protected updateColumnVisibility(id: string, visible: boolean) {
@@ -1039,7 +1140,24 @@ export default class LazyMobXTable<T> extends React.Component<
         );
     }
 
+    componentDidMount() {
+        this.setupStickyPaginationMeasurement();
+    }
+
+    componentDidUpdate(prevProps: LazyMobXTableProps<T>) {
+        if (
+            this.props.stickyPagination !== prevProps.stickyPagination ||
+            this.props.tableMaxHeight !== prevProps.tableMaxHeight
+        ) {
+            this.teardownStickyPaginationMeasurement();
+            this.setupStickyPaginationMeasurement();
+        } else {
+            this.scheduleStickyPaginationMeasurement();
+        }
+    }
+
     componentWillUnmount() {
+        this.teardownStickyPaginationMeasurement();
         this.filterInputReaction();
         this.pageToHighlightReaction();
         if (this.props.storeColumnVisibility) {
@@ -1242,7 +1360,9 @@ export default class LazyMobXTable<T> extends React.Component<
         return (
             <ButtonToolbar
                 style={{ marginLeft: 0, float: 'none' }}
-                className="tableMainToolbar center"
+                className={`tableMainToolbar center${
+                    this.props.stickyPagination ? ' stickyPagination' : ''
+                }`}
             >
                 {this.props.showPagination && (
                     <Observer>{this.getPaginationControls}</Observer>
@@ -1252,6 +1372,54 @@ export default class LazyMobXTable<T> extends React.Component<
     }
 
     private getTable() {
+        const tableContent = (
+            <>
+                {(this.props.showLoading && this.props.loadingComponent) ||
+                    null}
+
+                <span style={{ opacity: this.props.showLoading ? 0.1 : 1.0 }}>
+                    <SimpleTable
+                        headers={this.store.headers}
+                        rows={this.store.rows}
+                        className={this.props.className}
+                    />
+                </span>
+            </>
+        );
+
+        if (this.props.stickyPagination && !this.props.showPaginationAtTop) {
+            return (
+                <div
+                    className="lazy-mobx-table-sticky-container"
+                    ref={element => (this.stickyPaginationContainer = element)}
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden',
+                        ...(this.state.stickyPaginationMaxHeight !==
+                            undefined && {
+                            maxHeight: this.state.stickyPaginationMaxHeight,
+                        }),
+                    }}
+                >
+                    <div
+                        className="lazy-mobx-table-scroll"
+                        style={{
+                            overflowX: this.props.enableHorizontalScroll
+                                ? 'auto'
+                                : 'visible',
+                            overflowY: 'auto',
+                            minHeight: 0,
+                            flex: '1 1 auto',
+                        }}
+                    >
+                        {tableContent}
+                    </div>
+                    <Observer>{this.getBottomToolbar}</Observer>
+                </div>
+            );
+        }
+
         return (
             <div
                 style={{
@@ -1265,16 +1433,7 @@ export default class LazyMobXTable<T> extends React.Component<
                     }),
                 }}
             >
-                {(this.props.showLoading && this.props.loadingComponent) ||
-                    null}
-
-                <span style={{ opacity: this.props.showLoading ? 0.1 : 1.0 }}>
-                    <SimpleTable
-                        headers={this.store.headers}
-                        rows={this.store.rows}
-                        className={this.props.className}
-                    />
-                </span>
+                {tableContent}
             </div>
         );
     }
@@ -1298,9 +1457,10 @@ export default class LazyMobXTable<T> extends React.Component<
                             </strong>
                         </div>
                     )}
-                {!this.props.showPaginationAtTop && (
-                    <Observer>{this.getBottomToolbar}</Observer>
-                )}
+                {!this.props.showPaginationAtTop &&
+                    !this.props.stickyPagination && (
+                        <Observer>{this.getBottomToolbar}</Observer>
+                    )}
             </div>
         );
     }
