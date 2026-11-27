@@ -387,8 +387,26 @@ export default class GroupComparisonStore extends ComparisonStore {
         },
     });
 
-    readonly allSamples = remoteData({
+    // surfaces the 423 of a study whose sample lists are not imported yet
+    private readonly sessionStudiesAvailable = remoteData({
         await: () => [this._session],
+        invoke: async () => {
+            await getClient()
+                .fetchStudiesUsingPOST({
+                    studyIds: getStudyIds(this._session.result!.groups),
+                    projection: REQUEST_ARG_ENUM.PROJECTION_SUMMARY,
+                })
+                .catch(e => {
+                    if (e.status === 423) {
+                        throw e;
+                    }
+                });
+        },
+        onError: () => {},
+    });
+
+    readonly allSamples = remoteData({
+        await: () => [this._session, this.sessionStudiesAvailable],
         invoke: async () => {
             const allStudies = _(this._session.result!.groups)
                 .flatMapDeep(groupData => groupData.studies.map(s => s.id))
@@ -637,7 +655,11 @@ export default class GroupComparisonStore extends ComparisonStore {
     }
     private readonly _studies = remoteData(
         {
-            await: () => [this._session, this.allStudyIdToStudy],
+            await: () => [
+                this._session,
+                this.sessionStudiesAvailable,
+                this.allStudyIdToStudy,
+            ],
             invoke: () => {
                 const studyIds = getStudyIds(this._session.result!.groups);
                 return Promise.resolve(
