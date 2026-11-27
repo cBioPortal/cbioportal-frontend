@@ -1,4 +1,13 @@
 /**
+ * Host services for the molecular tables. Without them, mutation types are
+ * not simplified for coloring.
+ */
+export interface WsiMolecularServices {
+    /** Simplified mutation type (`missense`, `frameshift`, ...). */
+    getSimplifiedMutationType: (mutationType: string) => string;
+}
+
+/**
  * Host services shared by every viewer on the page. Hosts install them once,
  * at startup, with `configureWsiViewerRuntime`.
  */
@@ -21,6 +30,11 @@ export interface WsiViewerConfig {
      */
     fetchImpl?: typeof fetch;
     /**
+     * Molecular services. Portal molecular data is fetched through
+     * `buildApiUrl` and `fetchImpl` either way.
+     */
+    molecular?: WsiMolecularServices;
+    /**
      * Called when a viewer request is refused with 401: the portal session
      * that authorizes slides has ended. Hosts send the page through sign-in,
      * as they do for their own API calls; without it the viewer shows an
@@ -35,6 +49,7 @@ export interface WsiViewerRuntime {
     buildPageUrl: (path: string, query: Record<string, string>) => string;
     fetchImpl: typeof fetch;
     osdPrefixUrl?: string;
+    molecular?: WsiMolecularServices;
     onSessionExpired?: () => void;
 }
 
@@ -82,6 +97,7 @@ export function configureWsiViewerRuntime(config: WsiViewerConfig): void {
               }
             : baseFetch,
         osdPrefixUrl: config.osdPrefixUrl,
+        molecular: config.molecular,
         onSessionExpired,
     };
 }
