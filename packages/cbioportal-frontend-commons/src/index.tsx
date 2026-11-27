@@ -1,5 +1,10 @@
 // any module that is intended to be public needs to be exported here
 
+export {
+    default as AnnotationErrorBoundary,
+    AnnotationErrorLogger,
+    setAnnotationErrorLogger,
+} from './components/AnnotationErrorBoundary';
 export { default as CheckedSelect } from './components/checkedSelect/CheckedSelect';
 export * from './components/checkedSelect/CheckedSelectUtils';
 export { default as BadgeListSelector } from './components/checkedSelect/BadgeListSelector';

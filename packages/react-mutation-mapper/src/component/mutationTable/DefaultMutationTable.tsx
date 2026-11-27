@@ -8,6 +8,7 @@ import {
     RemoteData,
     Pathogenicity,
 } from 'cbioportal-utils';
+import { AnnotationErrorBoundary } from 'cbioportal-frontend-commons';
 import { IOncoKbData } from 'oncokb-frontend-commons';
 import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
@@ -26,6 +27,7 @@ import Hgvsg from '../column/Hgvsg';
 import Signal, { getSignalData } from '../column/Signal';
 import { getHgvscColumnData, getHgvsgColumnData } from '../column/HgvsHelper';
 import { getMyVariantInfoData } from '../column/MyVariantInfoHelper';
+import { errorIcon } from '../StatusHelpers';
 import { MutationFilterValue } from '../../filter/MutationFilter';
 import { DataFilterType } from '../../model/DataFilter';
 import {
@@ -234,53 +236,90 @@ export default class DefaultMutationTable extends React.Component<
                 return (column: any) => <Hgvsg mutation={column.original} />;
             case MutationColumn.HGVSC:
                 return (column: any) => (
-                    <Hgvsc
-                        mutation={column.original}
-                        indexedVariantAnnotations={
-                            this.props.indexedVariantAnnotations
-                        }
-                        selectedTranscriptId={this.props.selectedTranscriptId}
-                    />
+                    <AnnotationErrorBoundary
+                        componentName="Hgvsc"
+                        fallback={errorIcon(
+                            'HGVSc annotation could not be displayed'
+                        )}
+                    >
+                        <Hgvsc
+                            mutation={column.original}
+                            indexedVariantAnnotations={
+                                this.props.indexedVariantAnnotations
+                            }
+                            selectedTranscriptId={
+                                this.props.selectedTranscriptId
+                            }
+                        />
+                    </AnnotationErrorBoundary>
                 );
             case MutationColumn.GNOMAD:
                 return (column: any) => (
-                    <Gnomad
-                        mutation={column.original}
-                        indexedMyVariantInfoAnnotations={
-                            this.props.indexedMyVariantInfoAnnotations
-                        }
-                        indexedVariantAnnotations={
-                            this.props.indexedVariantAnnotations
-                        }
-                    />
+                    <AnnotationErrorBoundary
+                        componentName="Gnomad"
+                        fallback={errorIcon(
+                            'gnomAD annotation could not be displayed'
+                        )}
+                    >
+                        <Gnomad
+                            mutation={column.original}
+                            indexedMyVariantInfoAnnotations={
+                                this.props.indexedMyVariantInfoAnnotations
+                            }
+                            indexedVariantAnnotations={
+                                this.props.indexedVariantAnnotations
+                            }
+                        />
+                    </AnnotationErrorBoundary>
                 );
             case MutationColumn.CLINVAR:
                 return (column: any) => (
-                    <ClinvarInterpretation
-                        mutation={column.original}
-                        indexedVariantAnnotations={
-                            this.props.indexedVariantAnnotations
-                        }
-                    />
+                    <AnnotationErrorBoundary
+                        componentName="ClinvarInterpretation"
+                        fallback={errorIcon(
+                            'ClinVar annotation could not be displayed'
+                        )}
+                    >
+                        <ClinvarInterpretation
+                            mutation={column.original}
+                            indexedVariantAnnotations={
+                                this.props.indexedVariantAnnotations
+                            }
+                        />
+                    </AnnotationErrorBoundary>
                 );
             case MutationColumn.DBSNP:
                 return (column: any) => (
-                    <Dbsnp
-                        mutation={column.original}
-                        indexedMyVariantInfoAnnotations={
-                            this.props.indexedMyVariantInfoAnnotations
-                        }
-                    />
+                    <AnnotationErrorBoundary
+                        componentName="Dbsnp"
+                        fallback={errorIcon(
+                            'dbSNP annotation could not be displayed'
+                        )}
+                    >
+                        <Dbsnp
+                            mutation={column.original}
+                            indexedMyVariantInfoAnnotations={
+                                this.props.indexedMyVariantInfoAnnotations
+                            }
+                        />
+                    </AnnotationErrorBoundary>
                 );
             case MutationColumn.SIGNAL:
                 return (column: any) => (
-                    <Signal
-                        mutation={column.original}
-                        indexedVariantAnnotations={
-                            this.props.indexedVariantAnnotations
-                        }
-                        mutationType={Pathogenicity.GERMLINE}
-                    />
+                    <AnnotationErrorBoundary
+                        componentName="Signal"
+                        fallback={errorIcon(
+                            'SIGNAL annotation could not be displayed'
+                        )}
+                    >
+                        <Signal
+                            mutation={column.original}
+                            indexedVariantAnnotations={
+                                this.props.indexedVariantAnnotations
+                            }
+                            mutationType={Pathogenicity.GERMLINE}
+                        />
+                    </AnnotationErrorBoundary>
                 );
             default:
                 return undefined;

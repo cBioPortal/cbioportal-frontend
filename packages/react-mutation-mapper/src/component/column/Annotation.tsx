@@ -34,10 +34,14 @@ import HotspotAnnotation, {
     sortValue as hotspotSortValue,
 } from './HotspotAnnotation';
 import { USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB } from '../../util/DataFetcherUtils';
-import { CanonicalMutationType } from 'cbioportal-frontend-commons';
+import {
+    AnnotationErrorBoundary,
+    CanonicalMutationType,
+} from 'cbioportal-frontend-commons';
 import { VariantAnnotation, Vues as VUE } from 'genome-nexus-ts-api-client';
 import { RevueCell, sortValue as revueSortValue } from '../revue/Revue';
 import annotationStyles from './annotation.module.scss';
+import { errorIcon } from '../StatusHelpers';
 import {
     getGermlineCdnaChange,
     getOncoKbAlteration,
@@ -343,29 +347,43 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
     return (
         <span style={{ display: 'flex', minWidth: 100 }}>
             {enableOncoKb && (
-                <OncoKB
-                    usingPublicOncoKbInstance={
-                        annotation.usingPublicOncoKbInstance
-                    }
-                    hugoGeneSymbol={annotation.hugoGeneSymbol}
-                    geneNotExist={!annotation.oncoKbGeneExist}
-                    isCancerGene={annotation.isOncoKbCancerGene}
-                    status={annotation.oncoKbStatus}
-                    indicator={annotation.oncoKbIndicator}
-                    isGermline={annotation.isGermline}
-                    cDnaChange={annotation.cDnaChange}
-                    proteinChange={annotation.proteinChange}
-                    availableDataTypes={annotation.oncoKbAvailableDataTypes}
-                    mergeAnnotationIcons={mergeOncoKbIcons}
-                    userDisplayName={userDisplayName}
-                    contentPadding={oncoKbContentPadding}
-                    hasMultipleCancerTypes={hasMultipleCancerTypes}
-                />
+                <AnnotationErrorBoundary
+                    componentName="OncoKB"
+                    fallback={errorIcon(
+                        'OncoKB annotation could not be displayed'
+                    )}
+                >
+                    <OncoKB
+                        usingPublicOncoKbInstance={
+                            annotation.usingPublicOncoKbInstance
+                        }
+                        hugoGeneSymbol={annotation.hugoGeneSymbol}
+                        geneNotExist={!annotation.oncoKbGeneExist}
+                        isCancerGene={annotation.isOncoKbCancerGene}
+                        status={annotation.oncoKbStatus}
+                        indicator={annotation.oncoKbIndicator}
+                        isGermline={annotation.isGermline}
+                        cDnaChange={annotation.cDnaChange}
+                        proteinChange={annotation.proteinChange}
+                        availableDataTypes={annotation.oncoKbAvailableDataTypes}
+                        mergeAnnotationIcons={mergeOncoKbIcons}
+                        userDisplayName={userDisplayName}
+                        contentPadding={oncoKbContentPadding}
+                        hasMultipleCancerTypes={hasMultipleCancerTypes}
+                    />
+                </AnnotationErrorBoundary>
             )}
             {/* only show reVUE when reVUE is enabled and there are reVUE mutations in the query */}
             {enableRevue ? (
                 annotation.vue ? (
-                    <RevueCell vue={annotation.vue} />
+                    <AnnotationErrorBoundary
+                        componentName="reVUE"
+                        fallback={errorIcon(
+                            'reVUE annotation could not be displayed'
+                        )}
+                    >
+                        <RevueCell vue={annotation.vue} />
+                    </AnnotationErrorBoundary>
                 ) : (
                     <span
                         className={`${annotationStyles['annotation-item']}`}
@@ -375,19 +393,33 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
                 <></>
             )}
             {enableCivic && (
-                <Civic
-                    civicEntry={annotation.civicEntry}
-                    civicStatus={annotation.civicStatus}
-                    hasCivicVariants={annotation.hasCivicVariants}
-                />
+                <AnnotationErrorBoundary
+                    componentName="Civic"
+                    fallback={errorIcon(
+                        'Civic annotation could not be displayed'
+                    )}
+                >
+                    <Civic
+                        civicEntry={annotation.civicEntry}
+                        civicStatus={annotation.civicStatus}
+                        hasCivicVariants={annotation.hasCivicVariants}
+                    />
+                </AnnotationErrorBoundary>
             )}
             {enableHotspot && (
-                <HotspotAnnotation
-                    isHotspot={annotation.isHotspot}
-                    is3dHotspot={annotation.is3dHotspot}
-                    isHotspotV3={annotation.isHotspotV3}
-                    status={annotation.hotspotStatus}
-                />
+                <AnnotationErrorBoundary
+                    componentName="HotspotAnnotation"
+                    fallback={errorIcon(
+                        'Hotspot annotation could not be displayed'
+                    )}
+                >
+                    <HotspotAnnotation
+                        isHotspot={annotation.isHotspot}
+                        is3dHotspot={annotation.is3dHotspot}
+                        isHotspotV3={annotation.isHotspotV3}
+                        status={annotation.hotspotStatus}
+                    />
+                </AnnotationErrorBoundary>
             )}
         </span>
     );
