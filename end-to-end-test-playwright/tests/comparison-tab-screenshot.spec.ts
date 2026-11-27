@@ -430,7 +430,10 @@ test.describe('results view comparison tab screenshot tests', () => {
             await expect(
                 page.locator(METHYLATION_ENRICH_DIV).first()
             ).toBeVisible({
-                timeout: 20000,
+                // Methylation enrichments compare every methylation probe
+                // across the groups; on a busy CI runner this can take
+                // longer than 20s.
+                timeout: 60000,
             });
             await clickBoldByText(page, 'HDAC1');
             await expect(
