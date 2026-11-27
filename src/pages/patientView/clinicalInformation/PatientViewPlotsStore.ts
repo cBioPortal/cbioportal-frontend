@@ -1305,6 +1305,49 @@ export class PatientViewPlotsStore {
         []
     );
 
+    // Expression values for all genes in the patient's own samples.
+    // Used to identify the genes with the highest expression values.
+    // Sample ids come from outlierSampleIds: the focused sample in sample
+    // mode, or all of the patient's samples in patient mode. Lazily fetched —
+    // only invoked when something (e.g. the top-expressed-genes dialog)
+    // observes it.
+    readonly mrnaTopExpressedGenesData = remoteData<
+        NumericGeneMolecularData[]
+    >(
+        {
+            await: () => [
+                this.mrnaExpressionMolecularProfile,
+                this.mrnaTabAllGenes,
+            ],
+            invoke: async () => {
+                const profile = this.mrnaExpressionMolecularProfile.result;
+                const genes = this.mrnaTabAllGenes.result || [];
+                const sampleIds = this.outlierSampleIds;
+
+                const entrezGeneIds = genes.map(g => g.entrezGeneId);
+
+                if (
+                    !profile ||
+                    entrezGeneIds.length === 0 ||
+                    sampleIds.length === 0
+                ) {
+                    return [];
+                }
+
+                return getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
+                    {
+                        molecularProfileId: profile.molecularProfileId,
+                        molecularDataFilter: {
+                            entrezGeneIds,
+                            sampleIds,
+                        } as MolecularDataFilter,
+                    }
+                );
+            },
+        },
+        []
+    );
+
     // The patient's highlighted sample ids — the focused sample in sample mode,
     // or all of the patient's samples in patient mode. Mirrors the chart's
     // highlighted-sample logic.
