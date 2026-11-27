@@ -428,14 +428,29 @@ export function fillHeatmapTrackDatum<
                 'Unexpectedly received multiple heatmap profile data for one sample'
             );
         } else {
-            // Handle multiple data points for patient mode
+            // Handle multiple data points for patient mode.
+            // Only consider data for the specific patient being processed
+            // (defensive: callers should pre-filter, but this ensures correctness).
+            const patientKey = case_.uniquePatientKey;
             const dataWithNonNullValues = dataWithValue.filter(
-                d => d.value !== null
+                d =>
+                    d.value !== null &&
+                    d.uniquePatientKey === patientKey
             );
 
             if (dataWithNonNullValues.length === 0) {
                 trackDatum.profile_data = null;
                 trackDatum.na = false;
+            } else if (hasContradictoryValues(dataWithNonNullValues)) {
+                // When samples for this patient have contradictory values
+                // (a mix of positive and negative), show an empty cell and
+                // surface all values via the tooltip instead of picking one
+                // or averaging them.
+                trackDatum.profile_data = null;
+                trackDatum.na = false;
+                trackDatum.contradictoryValues = dataWithNonNullValues.map(
+                    d => d.value as number
+                );
             } else {
                 // aggregate samples for this patient by selecting the highest absolute (Z-)score
                 // default: the most extreme value (pos. or neg.) is shown for data
@@ -519,6 +534,18 @@ function selectRepresentingDataPoint(
     } else {
         return selData[0];
     }
+}
+
+function hasContradictoryValues(data: HeatmapCaseDatum[]): boolean {
+    let hasPositive = false;
+    let hasNegative = false;
+    for (const d of data) {
+        const v = d.value as number;
+        if (v > 0) hasPositive = true;
+        else if (v < 0) hasNegative = true;
+        if (hasPositive && hasNegative) return true;
+    }
+    return false;
 }
 
 function fillCategoricalTrackDatum(
