@@ -3351,6 +3351,7 @@ export async function getAllClinicalDataByStudyViewFilter(
 ): Promise<{
     totalItems: number;
     data: { [uniqueSampleKey: string]: ClinicalData[] };
+    orderedSampleKeys?: string[];
 }> {
     const [remoteClinicalDataCollection, totalItems]: [
         SampleClinicalDataCollection,
@@ -3358,7 +3359,7 @@ export async function getAllClinicalDataByStudyViewFilter(
     ] = await getInternalClient()
         .fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo({
             studyViewFilter,
-            pageSize: pageSize | 500,
+            pageSize,
             pageNumber: pageNumber || 0,
             searchTerm: searchTerm,
             sortBy: sortAttributeId,
@@ -3374,6 +3375,7 @@ export async function getAllClinicalDataByStudyViewFilter(
     return {
         totalItems,
         data: remoteClinicalDataCollection.byUniqueSampleKey,
+        orderedSampleKeys: remoteClinicalDataCollection.orderedSampleKeys,
     };
 }
 
