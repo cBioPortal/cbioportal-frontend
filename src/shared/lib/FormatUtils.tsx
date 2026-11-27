@@ -133,15 +133,16 @@ export function getMutationalSignaturePercentage(
     proportion: number,
     digits: number = 0
 ) {
-    //0.003 -> 0.3
+    // 0.003 -> 0.3
     if (Number.isNaN(proportion)) {
         return 'NA';
-    } else {
-        if (100 * proportion < 1) {
-            return '<1%';
-        }
-        return `${toFixedWithThreshold(100 * proportion, digits)}%`;
+    } else if (proportion === 0) {
+        return '0%';
+    } else if (100 * proportion < 1) {
+        return '<1%';
     }
+
+    return `${toFixedWithThreshold(100 * proportion, digits)}%`;
 }
 
 export function shortenStudyName(studyName: string) {
