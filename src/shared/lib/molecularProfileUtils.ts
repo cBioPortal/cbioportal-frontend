@@ -1,6 +1,19 @@
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { AlterationTypeConstants } from 'shared/constants';
 
+export function isTpmExpressionProfile(
+    alterationType: MolecularProfile['molecularAlterationType'],
+    datatype: MolecularProfile['datatype'],
+    profileId: string,
+    profileName = ''
+): boolean {
+    return (
+        alterationType === AlterationTypeConstants.MRNA_EXPRESSION &&
+        datatype === 'CONTINUOUS' &&
+        /(?:^|[^a-z0-9])tpm(?:$|[^a-z0-9])/i.test(`${profileId} ${profileName}`)
+    );
+}
+
 export function getSuffixOfMolecularProfile(profile: MolecularProfile) {
     return profile.molecularProfileId.replace(profile.studyId + '_', '');
 }
