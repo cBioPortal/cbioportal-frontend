@@ -1304,3 +1304,169 @@ describe('DownloadUtils', () => {
         });
     });
 });
+
+import { getCaseLevelProfilingStatus } from './CaseAlterationTable';
+
+describe('getCaseLevelProfilingStatus', () => {
+    const trackLabels = ['PTEN', 'TP53'];
+    const trackAlterationTypesMap: { [label: string]: string[] } = {
+        PTEN: ['MUT', 'CNA'],
+        TP53: ['MUT'],
+    };
+
+    it('returns Altered when caseAlteration.altered is true', () => {
+        const caseAlteration = {
+            studyId: 'study1',
+            sampleId: 'sample1',
+            patientId: 'patient1',
+            altered: true,
+            oqlData: {
+                PTEN: {
+                    geneSymbol: 'PTEN',
+                    sequenced: true,
+                    mutation: [
+                        {
+                            proteinChange: 'R173C',
+                            isGermline: false,
+                            putativeDriver: false,
+                        },
+                    ],
+                    structuralVariant: [],
+                    cna: [],
+                    mrnaExp: [],
+                    proteinLevel: [],
+                    isMutationNotProfiled: false,
+                    isStructuralVariantNotProfiled: true,
+                    isCnaNotProfiled: false,
+                    isMrnaExpNotProfiled: true,
+                    isProteinLevelNotProfiled: true,
+                    alterationTypes: ['MUT'],
+                },
+                TP53: {
+                    geneSymbol: 'TP53',
+                    sequenced: true,
+                    mutation: [],
+                    structuralVariant: [],
+                    cna: [],
+                    mrnaExp: [],
+                    proteinLevel: [],
+                    isMutationNotProfiled: false,
+                    isStructuralVariantNotProfiled: true,
+                    isCnaNotProfiled: true,
+                    isMrnaExpNotProfiled: true,
+                    isProteinLevelNotProfiled: true,
+                    alterationTypes: [],
+                },
+            },
+            oqlDataByGene: {},
+        };
+        assert.equal(
+            getCaseLevelProfilingStatus(
+                caseAlteration,
+                trackLabels,
+                trackAlterationTypesMap
+            ),
+            'Altered'
+        );
+    });
+
+    it('returns Not Profiled when not altered and at least one track is not profiled', () => {
+        const caseAlteration = {
+            studyId: 'study1',
+            sampleId: 'sample2',
+            patientId: 'patient2',
+            altered: false,
+            oqlData: {
+                PTEN: {
+                    geneSymbol: 'PTEN',
+                    sequenced: false,
+                    mutation: [],
+                    structuralVariant: [],
+                    cna: [],
+                    mrnaExp: [],
+                    proteinLevel: [],
+                    isMutationNotProfiled: true,
+                    isStructuralVariantNotProfiled: true,
+                    isCnaNotProfiled: true,
+                    isMrnaExpNotProfiled: true,
+                    isProteinLevelNotProfiled: true,
+                    alterationTypes: [],
+                },
+                TP53: {
+                    geneSymbol: 'TP53',
+                    sequenced: true,
+                    mutation: [],
+                    structuralVariant: [],
+                    cna: [],
+                    mrnaExp: [],
+                    proteinLevel: [],
+                    isMutationNotProfiled: false,
+                    isStructuralVariantNotProfiled: true,
+                    isCnaNotProfiled: true,
+                    isMrnaExpNotProfiled: true,
+                    isProteinLevelNotProfiled: true,
+                    alterationTypes: [],
+                },
+            },
+            oqlDataByGene: {},
+        };
+        assert.equal(
+            getCaseLevelProfilingStatus(
+                caseAlteration,
+                trackLabels,
+                trackAlterationTypesMap
+            ),
+            'Not Profiled'
+        );
+    });
+
+    it('returns Unaltered when not altered and all tracks are profiled', () => {
+        const caseAlteration = {
+            studyId: 'study1',
+            sampleId: 'sample3',
+            patientId: 'patient3',
+            altered: false,
+            oqlData: {
+                PTEN: {
+                    geneSymbol: 'PTEN',
+                    sequenced: true,
+                    mutation: [],
+                    structuralVariant: [],
+                    cna: [],
+                    mrnaExp: [],
+                    proteinLevel: [],
+                    isMutationNotProfiled: false,
+                    isStructuralVariantNotProfiled: true,
+                    isCnaNotProfiled: false,
+                    isMrnaExpNotProfiled: true,
+                    isProteinLevelNotProfiled: true,
+                    alterationTypes: [],
+                },
+                TP53: {
+                    geneSymbol: 'TP53',
+                    sequenced: true,
+                    mutation: [],
+                    structuralVariant: [],
+                    cna: [],
+                    mrnaExp: [],
+                    proteinLevel: [],
+                    isMutationNotProfiled: false,
+                    isStructuralVariantNotProfiled: true,
+                    isCnaNotProfiled: true,
+                    isMrnaExpNotProfiled: true,
+                    isProteinLevelNotProfiled: true,
+                    alterationTypes: [],
+                },
+            },
+            oqlDataByGene: {},
+        };
+        assert.equal(
+            getCaseLevelProfilingStatus(
+                caseAlteration,
+                trackLabels,
+                trackAlterationTypesMap
+            ),
+            'Unaltered'
+        );
+    });
+});
