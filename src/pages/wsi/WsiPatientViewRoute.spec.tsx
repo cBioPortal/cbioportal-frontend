@@ -45,6 +45,22 @@ describe('WsiPatientViewRoute', () => {
         );
     });
 
+    it('decodes reserved escapes the router leaves in the patient id', () => {
+        renderRoute('?studyId=study-1', 'P%3A1%2B2%2C3');
+
+        expect(mockEntryPoint.mock.calls[0][0]).toEqual(
+            expect.objectContaining({ patientId: 'P:1+2,3' })
+        );
+    });
+
+    it('keeps a patient id with a malformed escape as it is', () => {
+        renderRoute('?studyId=study-1', 'P-1%E0%A4%A');
+
+        expect(mockEntryPoint.mock.calls[0][0]).toEqual(
+            expect.objectContaining({ patientId: 'P-1%E0%A4%A' })
+        );
+    });
+
     it('decodes an encoded slideKey', () => {
         renderRoute(
             `?studyId=study%201&slideKey=${encodeURIComponent(
