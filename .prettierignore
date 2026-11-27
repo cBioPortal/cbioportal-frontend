@@ -21,6 +21,7 @@
 *.toml
 *.xml
 *.py
+*.sql
 *module.scss.d.ts
 **/generated/**
 src/shared/lib/oql/oql-parser.js
@@ -47,3 +48,6 @@ end-to-end-test/local/studies/**
 *.html
 *.crt
 .nx
+.env.example
+.dockerignore
+Dockerfile

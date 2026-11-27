@@ -1,0 +1,53 @@
+{
+    "name": "chat-sidebar-server",
+    "private": true,
+    "version": "0.1.0",
+    "description": "Backend for the cBioPortal chat sidebar. Streams chat responses from Bedrock/Anthropic/OpenAI.",
+    "type": "module",
+    "scripts": {
+        "dev": "NODE_ENV=development tsx watch src/server.ts",
+        "build": "tsc && cp src/systemPrompt.md dist/systemPrompt.md && cp src/reportPrompt.md dist/reportPrompt.md && cp src/followupsPrompt.md dist/followupsPrompt.md && cp src/capabilitiesPrompt.md dist/capabilitiesPrompt.md && mkdir -p dist/oql/dsl/grammar && cp src/oql/dsl/grammar/oql-parser.js dist/oql/dsl/grammar/oql-parser.js",
+        "start": "tsx src/server.ts",
+        "migrate": "tsx src/migrate.ts",
+        "db:generate": "drizzle-kit generate",
+        "test": "cross-env jest $GREP --env=node --runInBand --ci --reporters=default --reporters=jest-junit --passWithNoTests",
+        "typecheck": "tsc --noEmit",
+        "gen:oql-parser": "peggy --format es -o src/oql/dsl/grammar/oql-parser.js src/oql/dsl/grammar/oql-parser.pegjs",
+        "oql:bench": "tsx scripts/oql-bench.ts"
+    },
+    "dependencies": {
+        "@ai-sdk/amazon-bedrock": "^5.0.133",
+        "@ai-sdk/anthropic": "^4.0.97",
+        "@ai-sdk/mcp": "^2.0.91",
+        "@ai-sdk/openai": "^4.0.109",
+        "@ai-sdk/otel": "1.0.163",
+        "@aws-sdk/credential-provider-node": "3.972.82",
+        "@langfuse/client": "^6.0.2",
+        "@langfuse/otel": "6.0.2",
+        "@langfuse/tracing": "6.0.2",
+        "@langfuse/vercel-ai-sdk": "6.0.2",
+        "@opentelemetry/api": "^1.9.1",
+        "@opentelemetry/core": "2.12.0",
+        "@opentelemetry/exporter-trace-otlp-http": "0.223.0",
+        "@opentelemetry/otlp-exporter-base": "0.223.0",
+        "@opentelemetry/sdk-trace-base": "2.12.0",
+        "@opentelemetry/sdk-trace-node": "2.12.0",
+        "ai": "^7.0.163",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.5",
+        "drizzle-orm": "0.45.4",
+        "express": "^4.21.2",
+        "pg": "8.23.1",
+        "zod": "^4.6.7"
+    },
+    "devDependencies": {
+        "@types/cors": "^2.8.17",
+        "@types/express": "^4.17.21",
+        "@types/node": "^22.10.0",
+        "@types/pg": "8.23.1",
+        "drizzle-kit": "0.31.11",
+        "peggy": "5.1.0",
+        "tsx": "^4.19.2",
+        "typescript": "^5.7.2"
+    }
+}

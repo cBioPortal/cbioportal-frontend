@@ -502,6 +502,7 @@ export default class GroupComparisonPage extends React.Component<
                 noMargin={true}
                 hideFooter={true}
                 className={'subhead-dark'}
+                pageStore={this.store}
             >
                 <div>
                     <LoadingIndicator

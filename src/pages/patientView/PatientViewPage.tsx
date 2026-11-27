@@ -1013,7 +1013,11 @@ export class PatientViewPageInner extends React.Component<
         }
 
         return (
-            <PageLayout noMargin={true} hideFooter={true}>
+            <PageLayout
+                noMargin={true}
+                hideFooter={true}
+                pageStore={this.pageStore}
+            >
                 {this.pageStore.patientViewData.isComplete &&
                     this.pageStore.studyMetaData.isComplete && (
                         <Helmet>
