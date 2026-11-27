@@ -375,6 +375,7 @@ export default class PatientViewMutationTable extends MutationTable<
                     showRevueIcon={
                         this.props.enableRevue && this.shouldShowRevue
                     }
+                    showAlphaGenomeIcon={!!this.props.enableAlphaGenome}
                 />
             );
         };

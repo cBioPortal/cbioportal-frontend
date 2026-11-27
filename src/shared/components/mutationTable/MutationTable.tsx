@@ -116,10 +116,14 @@ export interface IMutationTableProps {
     enableHotspot?: boolean;
     enableCivic?: boolean;
     enableRevue?: boolean;
+    enableAlphaGenome?: boolean;
     enableCustomDriver?: boolean;
     enableFunctionalImpact?: boolean;
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
     indexedVariantAnnotations?: RemoteData<
+        { [genomicLocation: string]: VariantAnnotation } | undefined
+    >;
+    indexedAlphaGenomeAnnotations?: RemoteData<
         { [genomicLocation: string]: VariantAnnotation } | undefined
     >;
     indexedMyVariantInfoAnnotations?: RemoteData<
@@ -317,6 +321,7 @@ export default class MutationTable<
         enableHotspot: true,
         enableCivic: false,
         enableRevue: true,
+        enableAlphaGenome: false,
     };
 
     constructor(props: P) {
@@ -1073,7 +1078,8 @@ export default class MutationTable<
                     this.oncokbWidth,
                     this.props.mergeOncoKbIcons,
                     this.handleOncoKbIconModeToggle,
-                    this.shouldShowRevue
+                    this.shouldShowRevue,
+                    !!this.props.enableAlphaGenome
                 ),
             render: (d: Mutation[]) => (
                 <span id="mutation-annotation">
@@ -1095,9 +1101,12 @@ export default class MutationTable<
                         enableHotspot: this.props.enableHotspot as boolean,
                         enableRevue:
                             !!this.props.enableRevue && this.shouldShowRevue,
+                        enableAlphaGenome: !!this.props.enableAlphaGenome,
                         userDisplayName: this.props.userDisplayName,
                         indexedVariantAnnotations: this.props
                             .indexedVariantAnnotations,
+                        indexedAlphaGenomeAnnotations: this.props
+                            .indexedAlphaGenomeAnnotations,
                         resolveTumorType: this.resolveTumorType,
                     })}
                 </span>
@@ -1119,7 +1128,9 @@ export default class MutationTable<
                             this.props.civicGenes,
                             this.props.civicVariants,
                             this.props.indexedVariantAnnotations,
-                            this.resolveTumorType
+                            this.resolveTumorType,
+                            undefined,
+                            this.props.indexedAlphaGenomeAnnotations
                         );
 
                         ret = annotation.isHotspot;
@@ -1138,7 +1149,10 @@ export default class MutationTable<
                     this.props.civicVariants,
                     this.props.indexedVariantAnnotations,
                     this.resolveTumorType,
-                    !!this.props.enableRevue && this.shouldShowRevue
+                    !!this.props.enableRevue && this.shouldShowRevue,
+                    undefined,
+                    this.props.indexedAlphaGenomeAnnotations,
+                    !!this.props.enableAlphaGenome
                 );
             },
             sortBy: (d: Mutation[]) => {
@@ -1151,7 +1165,9 @@ export default class MutationTable<
                     this.props.civicGenes,
                     this.props.civicVariants,
                     this.props.indexedVariantAnnotations,
-                    this.resolveTumorType
+                    this.resolveTumorType,
+                    undefined,
+                    this.props.indexedAlphaGenomeAnnotations
                 );
             },
         };

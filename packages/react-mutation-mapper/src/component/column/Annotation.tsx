@@ -35,8 +35,17 @@ import HotspotAnnotation, {
 } from './HotspotAnnotation';
 import { USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB } from '../../util/DataFetcherUtils';
 import { CanonicalMutationType } from 'cbioportal-frontend-commons';
-import { VariantAnnotation, Vues as VUE } from 'genome-nexus-ts-api-client';
+import {
+    AlphaGenomeAnnotation,
+    VariantAnnotation,
+    Vues as VUE,
+} from 'genome-nexus-ts-api-client';
 import { RevueCell, sortValue as revueSortValue } from '../revue/Revue';
+import {
+    AlphaGenomeCell,
+    AlphaGenomeCellStatus,
+    sortValue as alphaGenomeSortValue,
+} from '../alphagenome/AlphaGenome';
 import annotationStyles from './annotation.module.scss';
 import {
     getGermlineCdnaChange,
@@ -49,6 +58,7 @@ export type AnnotationProps = {
     enableHotspot: boolean;
     enableCivic: boolean;
     enableRevue: boolean;
+    enableAlphaGenome?: boolean;
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>;
@@ -63,6 +73,9 @@ export type AnnotationProps = {
     indexedVariantAnnotations?: RemoteData<
         { [genomicLocation: string]: VariantAnnotation } | undefined
     >;
+    indexedAlphaGenomeAnnotations?: RemoteData<
+        { [genomicLocation: string]: VariantAnnotation } | undefined
+    >;
     userDisplayName?: string;
     hasMultipleCancerTypes?: boolean;
 };
@@ -73,6 +86,7 @@ export type GenericAnnotationProps = {
     enableHotspot: boolean;
     enableOncoKb: boolean;
     enableRevue: boolean;
+    enableAlphaGenome?: boolean;
     mergeOncoKbIcons?: boolean;
     oncoKbContentPadding?: number;
     pubMedCache?: MobxCache;
@@ -99,6 +113,8 @@ export interface IAnnotation {
     hasCivicVariants: boolean;
     hugoGeneSymbol: string;
     vue?: VUE;
+    alphaGenome?: AlphaGenomeAnnotation;
+    alphaGenomeStatus?: AlphaGenomeCellStatus;
 }
 
 export const DEFAULT_ANNOTATION_DATA: IAnnotation = {
@@ -115,6 +131,7 @@ export const DEFAULT_ANNOTATION_DATA: IAnnotation = {
     hugoGeneSymbol: '',
     hasCivicVariants: true,
     civicStatus: 'complete',
+    alphaGenomeStatus: 'complete',
 };
 
 function getDefaultEntrezGeneId(mutation: Mutation): number {
@@ -126,6 +143,32 @@ function getDefaultTumorType(): string {
 }
 
 const memoized: Map<string, IAnnotation> = new Map();
+
+export function clearAnnotationCache(): void {
+    memoized.clear();
+}
+
+function getAlphaGenomeData(
+    mutation: Mutation,
+    indexedAlphaGenomeAnnotations?: RemoteData<
+        { [genomicLocation: string]: VariantAnnotation } | undefined
+    >
+) {
+    return {
+        alphaGenome:
+            indexedAlphaGenomeAnnotations?.isComplete &&
+            indexedAlphaGenomeAnnotations.result
+                ? getVariantAnnotation(
+                      mutation,
+                      indexedAlphaGenomeAnnotations.result
+                  )?.alpha_genome
+                : undefined,
+        alphaGenomeStatus: indexedAlphaGenomeAnnotations
+            ? indexedAlphaGenomeAnnotations.status
+            : 'complete',
+    };
+}
+
 export function getAnnotationData(
     mutation?: Mutation,
     oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>,
@@ -138,7 +181,12 @@ export function getAnnotationData(
         { [genomicLocation: string]: VariantAnnotation } | undefined
     >,
     resolveTumorType: (mutation: Mutation) => string = getDefaultTumorType,
-    resolveEntrezGeneId: (mutation: Mutation) => number = getDefaultEntrezGeneId
+    resolveEntrezGeneId: (
+        mutation: Mutation
+    ) => number = getDefaultEntrezGeneId,
+    indexedAlphaGenomeAnnotations?: RemoteData<
+        { [genomicLocation: string]: VariantAnnotation } | undefined
+    >
 ): IAnnotation {
     let value: Partial<IAnnotation>;
 
@@ -156,6 +204,15 @@ export function getAnnotationData(
             key = JSON.stringify(mutation) + !!usingPublicOncoKbInstance;
             const val = memoized.get(key);
             if (val) {
+                if (indexedAlphaGenomeAnnotations) {
+                    Object.assign(
+                        val,
+                        getAlphaGenomeData(
+                            mutation,
+                            indexedAlphaGenomeAnnotations
+                        )
+                    );
+                }
                 return val;
             }
         }
@@ -240,6 +297,7 @@ export function getAnnotationData(
                           indexedVariantAnnotations.result
                       )?.annotation_summary?.vues
                     : undefined,
+            ...getAlphaGenomeData(mutation, indexedAlphaGenomeAnnotations),
         };
 
         // oncoKbData may exist but it might be an instance of Error, in that case we flag the status as error
@@ -322,6 +380,7 @@ export function sortValue(annotation: IAnnotation): number[] {
         civicSortValue(annotation.civicEntry),
         hotspotSortValue(annotation.isHotspot, annotation.is3dHotspot),
         revueSortValue(annotation.vue),
+        alphaGenomeSortValue(annotation.alphaGenome),
         annotation.isOncoKbCancerGene ? 1 : 0,
     ]);
 }
@@ -333,6 +392,7 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
         enableHotspot,
         enableOncoKb,
         enableRevue,
+        enableAlphaGenome,
         pubMedCache,
         userDisplayName,
         mergeOncoKbIcons,
@@ -374,6 +434,14 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
             ) : (
                 <></>
             )}
+            {enableAlphaGenome ? (
+                <AlphaGenomeCell
+                    annotation={annotation.alphaGenome}
+                    status={annotation.alphaGenomeStatus}
+                />
+            ) : (
+                <></>
+            )}
             {enableCivic && (
                 <Civic
                     civicEntry={annotation.civicEntry}
@@ -412,6 +480,7 @@ export default class Annotation extends React.Component<AnnotationProps, {}> {
             civicGenes,
             civicVariants,
             indexedVariantAnnotations,
+            indexedAlphaGenomeAnnotations,
         } = props;
 
         return getAnnotationData(
@@ -424,7 +493,8 @@ export default class Annotation extends React.Component<AnnotationProps, {}> {
             civicVariants,
             indexedVariantAnnotations,
             resolveTumorType,
-            resolveEntrezGeneId
+            resolveEntrezGeneId,
+            indexedAlphaGenomeAnnotations
         );
     }
 }
