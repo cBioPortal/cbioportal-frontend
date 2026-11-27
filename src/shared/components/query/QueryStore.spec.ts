@@ -227,4 +227,174 @@ describe('QueryStore', () => {
             );
         });
     });
+
+    describe('#resolveCaseIdAliases', () => {
+        let initializeStub: sinon.SinonStub;
+        let getAllStudiesStub: sinon.SinonStub;
+        let fetchAttributesStub: sinon.SinonStub;
+        let getClinicalDataStub: sinon.SinonStub;
+
+        const clinicalDatum = (
+            studyId: string,
+            sampleId: string,
+            patientId: string,
+            clinicalAttributeId: string,
+            value: string
+        ) => ({ studyId, sampleId, patientId, clinicalAttributeId, value });
+
+        beforeEach(() => {
+            if ((QueryStore.prototype.initialize as any).restore) {
+                (QueryStore.prototype.initialize as any).restore();
+            }
+            initializeStub = Sinon.stub(
+                QueryStore.prototype,
+                'initialize'
+            ).callsFake(function() {});
+            getAllStudiesStub = Sinon.stub(
+                client,
+                'getAllStudiesUsingGET'
+            ).resolves([]);
+            fetchAttributesStub = Sinon.stub(
+                client,
+                'fetchClinicalAttributesUsingPOST'
+            ).resolves([
+                {
+                    studyId: 'study1',
+                    clinicalAttributeId: 'SAMPLE_DISPLAY_NAME',
+                    patientAttribute: false,
+                },
+                {
+                    studyId: 'study1',
+                    clinicalAttributeId: 'PATIENT_DISPLAY_NAME',
+                    patientAttribute: true,
+                },
+                {
+                    studyId: 'study1',
+                    clinicalAttributeId: 'CANCER_TYPE',
+                    patientAttribute: false,
+                },
+            ] as any);
+            getClinicalDataStub = Sinon.stub(
+                client,
+                'getAllClinicalDataInStudyUsingGET'
+            ).callsFake(({ attributeId }: any) =>
+                Promise.resolve(
+                    (attributeId === 'SAMPLE_DISPLAY_NAME'
+                        ? [
+                              clinicalDatum(
+                                  'study1',
+                                  'P-1-T01',
+                                  'P-1',
+                                  attributeId,
+                                  'Tumor_A'
+                              ),
+                              clinicalDatum(
+                                  'study1',
+                                  'P-2-T01',
+                                  'P-2',
+                                  attributeId,
+                                  'Tumor_B'
+                              ),
+                              clinicalDatum(
+                                  'study1',
+                                  'P-2-T02',
+                                  'P-2',
+                                  attributeId,
+                                  'Tumor_B'
+                              ),
+                          ]
+                        : [
+                              clinicalDatum(
+                                  'study1',
+                                  '',
+                                  'P-1',
+                                  attributeId,
+                                  'Patient_One'
+                              ),
+                          ]) as any
+                )
+            );
+        });
+
+        afterEach(() => {
+            initializeStub.restore();
+            getAllStudiesStub.restore();
+            fetchAttributesStub.restore();
+            getClinicalDataStub.restore();
+        });
+
+        const resolve = (
+            cases: { id: string; study: string }[],
+            validIds: { [k: string]: boolean },
+            mode: 'sample' | 'patient' = 'sample'
+        ) =>
+            (new QueryStore() as any).resolveCaseIdAliases(
+                cases,
+                validIds,
+                mode
+            );
+
+        it('does not fetch aliases when every entry is a valid ID', async () => {
+            const result = await resolve([{ id: 'P-1-T01', study: 'study1' }], {
+                'study1:P-1-T01': true,
+            });
+            assert.isUndefined(result);
+            assert.isFalse(fetchAttributesStub.called);
+        });
+
+        it('replaces display names by sample IDs, keeping input order', async () => {
+            const result = await resolve(
+                [
+                    { id: 'Tumor_B', study: 'study1' },
+                    { id: 'P-3-T01', study: 'study1' },
+                    { id: 'Tumor_A', study: 'study1' },
+                    { id: 'unknown', study: 'study1' },
+                ],
+                { 'study1:P-3-T01': true }
+            );
+            assert.deepEqual(result, [
+                { id: 'P-2-T01', study: 'study1' },
+                { id: 'P-2-T02', study: 'study1' },
+                { id: 'P-3-T01', study: 'study1' },
+                { id: 'P-1-T01', study: 'study1' },
+                { id: 'unknown', study: 'study1' },
+            ]);
+            assert.deepEqual(
+                getClinicalDataStub.args.map(a => a[0].attributeId),
+                ['SAMPLE_DISPLAY_NAME']
+            );
+        });
+
+        it('does not duplicate a sample given by ID and display name', async () => {
+            const result = await resolve(
+                [
+                    { id: 'P-1-T01', study: 'study1' },
+                    { id: 'Tumor_A', study: 'study1' },
+                ],
+                { 'study1:P-1-T01': true }
+            );
+            assert.deepEqual(result, [{ id: 'P-1-T01', study: 'study1' }]);
+        });
+
+        it('returns undefined when no entry matches an alias', async () => {
+            const result = await resolve(
+                [{ id: 'unknown', study: 'study1' }],
+                {}
+            );
+            assert.isUndefined(result);
+        });
+
+        it('resolves patient display names in patient mode', async () => {
+            const result = await resolve(
+                [{ id: 'Patient_One', study: 'study1' }],
+                {},
+                'patient'
+            );
+            assert.deepEqual(result, [{ id: 'P-1', study: 'study1' }]);
+            assert.deepEqual(
+                getClinicalDataStub.args.map(a => a[0].attributeId),
+                ['PATIENT_DISPLAY_NAME']
+            );
+        });
+    });
 });

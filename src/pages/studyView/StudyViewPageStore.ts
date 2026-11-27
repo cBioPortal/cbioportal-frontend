@@ -4,9 +4,9 @@ import { mostFrequentlyAlteredGenes } from 'shared/components/embeddings/utils/g
 import {
     CaseIdAlias,
     CaseIdAliases,
+    clinicalDataToCaseIdAliases,
     getCaseIdAliasAttributeIds,
-    isUsableAliasValue,
-} from './addChartButton/customCaseSelection/CustomCaseSelectionUtils';
+} from 'shared/lib/CaseIdAliasUtils';
 import { isWsiResourceId } from 'shared/lib/ResourcePolicy';
 import { getClient } from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
@@ -9728,14 +9728,7 @@ export class StudyViewPageStore
                         identifiers,
                     },
                 });
-                return data
-                    .filter(d => isUsableAliasValue(d.value))
-                    .map(d => ({
-                        studyId: d.studyId,
-                        caseId: isPatient ? d.patientId : d.sampleId,
-                        alias: d.value.trim(),
-                        attributeId: d.clinicalAttributeId,
-                    }));
+                return clinicalDataToCaseIdAliases(data, clinicalDataType);
             };
             const [sample, patient] = await Promise.all([
                 fetchAliases(ClinicalDataTypeEnum.SAMPLE),
