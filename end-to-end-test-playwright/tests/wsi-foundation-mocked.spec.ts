@@ -294,32 +294,93 @@ if (process.env.PW_SUITE === 'wsi') {
             expect(accessRequests).toEqual([]);
         });
 
-        // Only refused tiles fail the slide; thumbnails may load or not.
-        for (const [status, refuses] of [
-            [401, 'all'],
-            [403, 'all'],
-            [401, 'tiles'],
-        ] as const) {
-            test(`asks to sign in again when the ingress answers ${status}${
+        // A 401 means the portal session has ended: the page signs in again
+        // and comes back to the same slide through /restore. Only refused
+        // tiles trigger it; thumbnails may load or not.
+        for (const refuses of ['all', 'tiles'] as const) {
+            test(`signs in again when the ingress answers 401${
                 refuses === 'tiles' ? ' for tiles' : ''
             }`, async ({ page }) => {
                 await installFoundationMocks(page, {
-                    ingressStatus: status,
+                    ingressStatus: 401,
                     ingressRefuses: refuses,
                 });
-
-                await page.goto(
-                    `/wsi/patient/${PATIENT_ID}?studyId=${STUDY_ID}`
+                const loginRequests: string[] = [];
+                await page.route(
+                    url => url.searchParams.has('spring-security-redirect'),
+                    route => {
+                        loginRequests.push(route.request().url());
+                        return route.fulfill({
+                            status: 200,
+                            contentType: 'text/html',
+                            body: '<html><body>sign in</body></html>',
+                        });
+                    }
                 );
 
-                await expect(
-                    page.getByTestId('wsi-viewer-error')
-                ).toContainText('sign in again', { timeout: 30000 });
-                await expect(
-                    page.getByRole('button', { name: 'Retry' })
-                ).toBeVisible();
+                const slidePage = `/wsi/patient/${PATIENT_ID}?studyId=${STUDY_ID}`;
+                await page.goto(slidePage);
+
+                await page.waitForURL(
+                    url => url.searchParams.has('spring-security-redirect'),
+                    { timeout: 30000 }
+                );
+                const login = new URL(page.url());
+                expect(login.pathname).toBe('/');
+                const restore = new URL(
+                    login.searchParams.get('spring-security-redirect')!
+                );
+                expect(restore.pathname).toBe('/restore');
+                expect(restore.searchParams.get('key')).toBe('login-redirect');
+                // /restore returns to the slide page saved before sign-in.
+                const saved = await page.evaluate(() =>
+                    window.localStorage.getItem('login-redirect')
+                );
+                expect(saved).toContain(slidePage);
+                // The page leaves for sign-in once.
+                expect(loginRequests).toHaveLength(1);
             });
         }
+
+        // A 403 means the session has no access to the study; signing in
+        // again would not help, so the page stays and offers a reload.
+        test('asks to reload when the ingress answers 403', async ({
+            page,
+        }) => {
+            await installFoundationMocks(page, {
+                ingressStatus: 403,
+                ingressRefuses: 'all',
+            });
+            const loginRequests: string[] = [];
+            page.on('request', request => {
+                if (
+                    new URL(request.url()).searchParams.has(
+                        'spring-security-redirect'
+                    )
+                ) {
+                    loginRequests.push(request.url());
+                }
+            });
+
+            await page.goto(`/wsi/patient/${PATIENT_ID}?studyId=${STUDY_ID}`);
+
+            await expect(page.getByTestId('wsi-viewer-error')).toContainText(
+                'you do not have access to this study',
+                {
+                    timeout: 30000,
+                }
+            );
+            await expect(
+                page.getByRole('button', { name: 'Reload page' })
+            ).toBeVisible();
+            await expect(
+                page.getByRole('button', { name: 'Retry' })
+            ).toHaveCount(0);
+            expect(new URL(page.url()).pathname).toBe(
+                `/wsi/patient/${PATIENT_ID}`
+            );
+            expect(loginRequests).toEqual([]);
+        });
 
         test('opens the slide when the ingress refuses only its thumbnails', async ({
             page,
