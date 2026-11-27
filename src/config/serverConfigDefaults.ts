@@ -4,6 +4,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     app_version: '1.0',
     api_cache_limit: 450,
     dat_method: 'none',
+    dat_uuid_max_number_per_user: 1,
     disabled_tabs: '',
     genomenexus_url: 'https://v1.genomenexus.org',
     genomenexus_url_grch38: 'https://grch38.genomenexus.org',

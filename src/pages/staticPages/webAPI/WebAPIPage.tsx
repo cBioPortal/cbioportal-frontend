@@ -4,6 +4,7 @@ import { observable, makeObservable } from 'mobx';
 import { PageLayout } from '../../../shared/components/PageLayout/PageLayout';
 import './styles.scss';
 import Helmet from 'react-helmet';
+import { Link } from 'react-router-dom';
 import { getServerConfig } from 'config/config';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { buildCBioPortalAPIUrl } from 'shared/api/urls';
@@ -54,13 +55,23 @@ export default class WebAPIPage extends React.Component<{}, {}> {
                         obtain a data access token and present this token with
                         each web service request.
                     </p>
-                    <button
-                        className="btn btn-primary btn-sm"
-                        onClick={() => this.downloadDataAccessTokenFile()}
-                        style={{ marginBottom: 15 }}
-                    >
-                        Download Token
-                    </button>
+                    {getServerConfig().dat_method === 'uuid' ? (
+                        <Link
+                            className="btn btn-primary btn-sm"
+                            to="/tokens"
+                            style={{ marginBottom: 15 }}
+                        >
+                            Manage Data Access Tokens
+                        </Link>
+                    ) : (
+                        <button
+                            className="btn btn-primary btn-sm"
+                            onClick={() => this.downloadDataAccessTokenFile()}
+                            style={{ marginBottom: 15 }}
+                        >
+                            Download Token
+                        </button>
+                    )}
 
                     <p>
                         There are instructions for making requests to the Web
